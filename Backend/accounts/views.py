@@ -1,6 +1,7 @@
 import html
 import hashlib
 import json
+import logging
 import random
 import re
 import secrets
@@ -31,6 +32,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import LoginOTP, PendingSignup, ReturningCheckout, SignupOTP
 from .syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
+
+logger = logging.getLogger(__name__)
 
 
 def _canonical_user_for_email(email: str) -> User | None:
@@ -384,6 +387,28 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
       "paid_at": timezone.now(),
     },
   )
+
+
+def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
+  if not plan_sel:
+    return
+  try:
+    _apply_purchased_plan(user, plan_sel)
+  except Exception:
+    logger.exception("Checkout succeeded but plan entitlement update failed for user_id=%s plan=%s", user.id, plan_sel)
+  try:
+    _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
+  except Exception:
+    logger.exception("Checkout succeeded but plan purchase record write failed for user_id=%s plan=%s", user.id, plan_sel)
+
+
+def _safe_affiliate_referral_ids(user: User) -> dict[str, str]:
+  try:
+    af_profile = ensure_affiliate_profile_for_existing_user(user)
+    return referral_ids_payload(af_profile)
+  except Exception:
+    logger.exception("Checkout succeeded but affiliate profile sync failed for user_id=%s", user.id)
+    return {}
 
 
 def _read_payload(request):
@@ -985,11 +1010,9 @@ def checkout_success_view(request):
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    if plan_sel:
-      _apply_purchased_plan(user, plan_sel)
-      _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
+    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
-    af_profile = ensure_affiliate_profile_for_existing_user(user)
+    referral_ids = _safe_affiliate_referral_ids(user)
 
     return JsonResponse(
       {
@@ -998,7 +1021,7 @@ def checkout_success_view(request):
         "token": auth_token.key,
         "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
         "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids_payload(af_profile),
+        "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
         "affiliate_attribution": {
@@ -1040,11 +1063,9 @@ def checkout_success_view(request):
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    if plan_sel:
-      _apply_purchased_plan(user, plan_sel)
-      _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
+    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
-    af_profile = ensure_affiliate_profile_for_existing_user(user)
+    referral_ids = _safe_affiliate_referral_ids(user)
     return JsonResponse(
       {
         "message": "Payment successful. Thank you for your purchase.",
@@ -1052,7 +1073,7 @@ def checkout_success_view(request):
         "token": auth_token.key,
         "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
         "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids_payload(af_profile),
+        "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
         "affiliate_attribution": {
@@ -1094,11 +1115,9 @@ def checkout_success_view(request):
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    if plan_sel:
-      _apply_purchased_plan(user, plan_sel)
-      _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
+    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
-    af_profile = ensure_affiliate_profile_for_existing_user(user)
+    referral_ids = _safe_affiliate_referral_ids(user)
     return JsonResponse(
       {
         "message": "Payment successful.",
@@ -1106,7 +1125,7 @@ def checkout_success_view(request):
         "token": auth_token.key,
         "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
         "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids_payload(af_profile),
+        "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
         "affiliate_attribution": {

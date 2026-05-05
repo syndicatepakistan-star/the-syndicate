@@ -479,6 +479,7 @@ def _create_and_email_login_otp(email: str):
     username = user_by_email.username if user_by_email is not None else (email.split("@")[0] or "Operator")
     _send_login_otp_email(email=email, otp_code=otp_code, username=username)
   except Exception:
+    logger.exception("Failed to send login OTP email to %s", email)
     if settings.DEBUG:
       print(f"[DEV OTP FALLBACK] login {email}: {otp_code}")
       return None

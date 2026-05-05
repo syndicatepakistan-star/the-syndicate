@@ -466,6 +466,7 @@ EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 # Normalize Gmail app-passwords pasted with spaces.
 EMAIL_HOST_PASSWORD = (os.environ.get("EMAIL_HOST_PASSWORD", "") or "").replace(" ", "")
+EMAIL_TIMEOUT = int((os.environ.get("EMAIL_TIMEOUT") or "15").strip() or "15")
 _email_use_ssl_raw = (os.environ.get("EMAIL_USE_SSL") or "").strip().lower()
 EMAIL_USE_SSL = _email_use_ssl_raw in ("1", "true", "yes")
 _email_use_tls_raw = os.environ.get("EMAIL_USE_TLS")

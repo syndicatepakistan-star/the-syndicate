@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import requests
-import smtplib
-import socket
-import ssl
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
@@ -75,78 +72,6 @@ def _send_via_resend(to_email: str, subject: str, html_body: str, text_body: str
     raise RuntimeError(f"Resend API failed ({resp.status_code}): {resp.text[:400]}")
 
 
-def _create_ipv4_socket(host: str, port: int, timeout: float | None, source_address=None):
-  infos = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
-  if not infos:
-    raise OSError(f"Could not resolve IPv4 address for SMTP host: {host}")
-  last_error: OSError | None = None
-  for family, socktype, proto, _canonname, sockaddr in infos:
-    sock = socket.socket(family, socktype, proto)
-    try:
-      if source_address:
-        sock.bind(source_address)
-      if timeout is not None:
-        sock.settimeout(timeout)
-      sock.connect(sockaddr)
-      return sock
-    except OSError as exc:
-      last_error = exc
-      try:
-        sock.close()
-      except OSError:
-        pass
-  if last_error is not None:
-    raise last_error
-  raise OSError(f"Could not connect to SMTP IPv4 address for host: {host}")
-
-
-class _SMTPIPv4(smtplib.SMTP):
-  def _get_socket(self, host, port, timeout):
-    return _create_ipv4_socket(host, port, timeout, self.source_address)
-
-
-class _SMTPSSLIPv4(smtplib.SMTP_SSL):
-  def _get_socket(self, host, port, timeout):
-    raw_socket = _create_ipv4_socket(host, port, timeout, self.source_address)
-    ssl_context = self.context or ssl.create_default_context()
-    return ssl_context.wrap_socket(raw_socket, server_hostname=host)
-
-
-def _send_via_smtp_ipv4_retry(msg: EmailMultiAlternatives) -> None:
-  host = str(getattr(settings, "EMAIL_HOST", "") or "").strip()
-  if not host:
-    raise RuntimeError("SMTP host is not configured.")
-  port = int(getattr(settings, "EMAIL_PORT", 587) or 587)
-  timeout = _email_timeout_seconds()
-  use_ssl = bool(getattr(settings, "EMAIL_USE_SSL", False))
-  use_tls = bool(getattr(settings, "EMAIL_USE_TLS", False))
-  username = str(getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
-  password = str(getattr(settings, "EMAIL_HOST_PASSWORD", "") or "")
-
-  if use_ssl:
-    client = _SMTPSSLIPv4(host=host, port=port, timeout=timeout)
-  else:
-    client = _SMTPIPv4(host=host, port=port, timeout=timeout)
-
-  try:
-    if (not use_ssl) and use_tls:
-      client.starttls(context=ssl.create_default_context())
-    if username and password:
-      client.login(username, password)
-    sender = msg.from_email or username
-    if not sender:
-      raise RuntimeError("DEFAULT_FROM_EMAIL is required for SMTP sending.")
-    recipients = list(msg.to or [])
-    if not recipients:
-      raise RuntimeError("Recipient email is required for SMTP sending.")
-    client.sendmail(sender, recipients, msg.message().as_string())
-  finally:
-    try:
-      client.quit()
-    except Exception:
-      client.close()
-
-
 def build_syndicate_otp_email_html(
   *,
   header_badge: str,
@@ -213,11 +138,4 @@ def send_syndicate_otp_html_email(to_email: str, subject: str, html_body: str) -
     reply_to=otp_mail_reply_to(),
   )
   msg.attach_alternative(html_body, "text/html")
-  try:
-    msg.send(fail_silently=False)
-  except OSError as exc:
-    # Railway can fail IPv6 SMTP egress with Errno 101. Retry using IPv4-only sockets.
-    if getattr(exc, "errno", None) == 101:
-      _send_via_smtp_ipv4_retry(msg)
-      return
-    raise
+  msg.send(fail_silently=False)

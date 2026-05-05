@@ -61,7 +61,20 @@ export type KingProgramSelectionState = {
 function publicApiBaseRaw(): string {
   const a = (process.env.NEXT_PUBLIC_API_BASE ?? "").trim();
   if (a) return a;
-  return (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim();
+  const b = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim();
+  if (b) return b;
+  const syndicateApi = (process.env.NEXT_PUBLIC_SYNDICATE_API_URL ?? "").trim();
+  if (syndicateApi) {
+    try {
+      const u = new URL(syndicateApi);
+      const path = u.pathname.replace(/\/+$/, "");
+      if (path.endsWith("/api")) return u.origin;
+      return `${u.origin}${path}`.replace(/\/+$/, "");
+    } catch {
+      // Ignore malformed URL and fall through.
+    }
+  }
+  return "";
 }
 
 /**

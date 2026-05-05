@@ -1,10 +1,32 @@
 /** @type {import('next').NextConfig} */
-const backendOrigin = (
-  process.env.BACKEND_INTERNAL_URL ||
-  process.env.DJANGO_API_BASE ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://127.0.0.1:8000"
-).replace(/\/$/, "");
+function normalizedBackendOrigin() {
+  const candidates = [
+    process.env.BACKEND_INTERNAL_URL,
+    process.env.DJANGO_API_BASE,
+    process.env.SYNDICATE_DJANGO_ORIGIN,
+    process.env.NEXT_PUBLIC_API_BASE,
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+    process.env.NEXT_PUBLIC_SYNDICATE_API_URL,
+  ]
+    .map((v) => (v || "").trim())
+    .filter(Boolean);
+
+  for (const raw of candidates) {
+    try {
+      const u = new URL(raw);
+      // If user provided .../api, use service origin only.
+      const path = u.pathname.replace(/\/+$/, "");
+      if (path.endsWith("/api")) return u.origin;
+      return `${u.origin}${path}`.replace(/\/+$/, "");
+    } catch {
+      // Skip invalid URL-ish values.
+    }
+  }
+
+  return "http://127.0.0.1:8000";
+}
+
+const backendOrigin = normalizedBackendOrigin();
 
 const nextConfig = {
   output: "standalone",

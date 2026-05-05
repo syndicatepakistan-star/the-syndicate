@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import requests
+import smtplib
+import socket
+import ssl
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
@@ -21,6 +25,126 @@ def otp_mail_reply_to() -> list[str] | None:
     return None
   addrs = [a.strip() for a in raw.split(",") if a.strip()]
   return addrs or None
+
+
+def _resend_api_key() -> str:
+  return (getattr(settings, "RESEND_API_KEY", None) or "").strip()
+
+
+def _resend_api_url() -> str:
+  raw = (getattr(settings, "RESEND_API_URL", None) or "").strip()
+  return raw or "https://api.resend.com/emails"
+
+
+def _email_timeout_seconds() -> int:
+  raw = getattr(settings, "EMAIL_TIMEOUT", 15)
+  try:
+    value = int(raw)
+  except (TypeError, ValueError):
+    value = 15
+  return value if value > 0 else 15
+
+
+def _send_via_resend(to_email: str, subject: str, html_body: str, text_body: str) -> None:
+  api_key = _resend_api_key()
+  if not api_key:
+    raise RuntimeError("Missing RESEND_API_KEY.")
+
+  payload: dict[str, object] = {
+    "from": settings.DEFAULT_FROM_EMAIL,
+    "to": [to_email],
+    "subject": subject,
+    "html": html_body,
+    "text": text_body,
+    "headers": otp_email_headers(),
+  }
+  reply_to = otp_mail_reply_to()
+  if reply_to:
+    payload["reply_to"] = reply_to
+
+  resp = requests.post(
+    _resend_api_url(),
+    headers={
+      "Authorization": f"Bearer {api_key}",
+      "Content-Type": "application/json",
+    },
+    json=payload,
+    timeout=_email_timeout_seconds(),
+  )
+  if resp.status_code >= 400:
+    raise RuntimeError(f"Resend API failed ({resp.status_code}): {resp.text[:400]}")
+
+
+def _create_ipv4_socket(host: str, port: int, timeout: float | None, source_address=None):
+  infos = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+  if not infos:
+    raise OSError(f"Could not resolve IPv4 address for SMTP host: {host}")
+  last_error: OSError | None = None
+  for family, socktype, proto, _canonname, sockaddr in infos:
+    sock = socket.socket(family, socktype, proto)
+    try:
+      if source_address:
+        sock.bind(source_address)
+      if timeout is not None:
+        sock.settimeout(timeout)
+      sock.connect(sockaddr)
+      return sock
+    except OSError as exc:
+      last_error = exc
+      try:
+        sock.close()
+      except OSError:
+        pass
+  if last_error is not None:
+    raise last_error
+  raise OSError(f"Could not connect to SMTP IPv4 address for host: {host}")
+
+
+class _SMTPIPv4(smtplib.SMTP):
+  def _get_socket(self, host, port, timeout):
+    return _create_ipv4_socket(host, port, timeout, self.source_address)
+
+
+class _SMTPSSLIPv4(smtplib.SMTP_SSL):
+  def _get_socket(self, host, port, timeout):
+    raw_socket = _create_ipv4_socket(host, port, timeout, self.source_address)
+    ssl_context = self.context or ssl.create_default_context()
+    return ssl_context.wrap_socket(raw_socket, server_hostname=host)
+
+
+def _send_via_smtp_ipv4_retry(msg: EmailMultiAlternatives) -> None:
+  host = str(getattr(settings, "EMAIL_HOST", "") or "").strip()
+  if not host:
+    raise RuntimeError("SMTP host is not configured.")
+  port = int(getattr(settings, "EMAIL_PORT", 587) or 587)
+  timeout = _email_timeout_seconds()
+  use_ssl = bool(getattr(settings, "EMAIL_USE_SSL", False))
+  use_tls = bool(getattr(settings, "EMAIL_USE_TLS", False))
+  username = str(getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
+  password = str(getattr(settings, "EMAIL_HOST_PASSWORD", "") or "")
+
+  if use_ssl:
+    client = _SMTPSSLIPv4(host=host, port=port, timeout=timeout)
+  else:
+    client = _SMTPIPv4(host=host, port=port, timeout=timeout)
+
+  try:
+    if (not use_ssl) and use_tls:
+      client.starttls(context=ssl.create_default_context())
+    if username and password:
+      client.login(username, password)
+    sender = msg.from_email or username
+    if not sender:
+      raise RuntimeError("DEFAULT_FROM_EMAIL is required for SMTP sending.")
+    recipients = list(msg.to or [])
+    if not recipients:
+      raise RuntimeError("Recipient email is required for SMTP sending.")
+    client.sendmail(sender, recipients, msg.message().as_string())
+  finally:
+    try:
+      client.quit()
+    except Exception:
+      client.close()
 
 
 def build_syndicate_otp_email_html(
@@ -75,6 +199,11 @@ def build_syndicate_otp_email_html(
 
 def send_syndicate_otp_html_email(to_email: str, subject: str, html_body: str) -> None:
   body = strip_tags(html_body)
+  # Prefer HTTPS mail API in cloud (Railway-friendly). Fall back to SMTP when key is absent.
+  if _resend_api_key():
+    _send_via_resend(to_email=to_email, subject=subject, html_body=html_body, text_body=body)
+    return
+
   msg = EmailMultiAlternatives(
     subject=subject,
     body=body,
@@ -84,4 +213,11 @@ def send_syndicate_otp_html_email(to_email: str, subject: str, html_body: str) -
     reply_to=otp_mail_reply_to(),
   )
   msg.attach_alternative(html_body, "text/html")
-  msg.send(fail_silently=False)
+  try:
+    msg.send(fail_silently=False)
+  except OSError as exc:
+    # Railway can fail IPv6 SMTP egress with Errno 101. Retry using IPv4-only sockets.
+    if getattr(exc, "errno", None) == 101:
+      _send_via_smtp_ipv4_retry(msg)
+      return
+    raise

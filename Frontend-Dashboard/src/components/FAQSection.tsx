@@ -1,12 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Image from 'next/image'
 import styles from './FAQSection.module.css'
-
-gsap.registerPlugin(ScrollTrigger)
 
 type FaqCategory = 'general' | 'pricing' | 'program'
 
@@ -91,8 +87,6 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
 
 export default function FAQSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const titleRef = useRef<HTMLHeadingElement>(null)
-  const itemsRef = useRef<(HTMLDivElement | null)[]>([])
   const [category, setCategory] = useState<FaqCategory>('general')
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
@@ -102,39 +96,6 @@ export default function FAQSection() {
     setOpenIndex(0)
   }, [category])
 
-  useEffect(() => {
-    if (!sectionRef.current) return
-    const items = faqs
-      .map((_, i) => itemsRef.current[i])
-      .filter((el): el is HTMLDivElement => el != null)
-    const title = titleRef.current
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (reduceMotion) {
-      gsap.set([title, ...items], { opacity: 1, y: 0 })
-      return
-    }
-
-    gsap.set([title, ...items], { opacity: 0, y: 20 })
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: 'top 82%',
-        end: 'top 30%',
-        scrub: 1,
-      },
-    })
-    tl.to(title, { opacity: 1, y: 0, duration: 0.45, ease: 'slow(0.7,0.7)' }, 0)
-    items.forEach((el, i) => {
-      tl.to(el, { opacity: 1, y: 0, duration: 0.35, ease: 'slow(0.7,0.7)' }, 0.12 + i * 0.08)
-    })
-
-    return () => {
-      tl.scrollTrigger?.kill()
-      tl.kill()
-    }
-  }, [category, faqs])
-
   return (
     <section ref={sectionRef} id="faq" className={styles.faq}>
       <div className={styles.bgMedia} aria-hidden>
@@ -142,7 +103,7 @@ export default function FAQSection() {
         <div className={styles.bgOverlay} />
       </div>
       <div className={styles.container}>
-        <h2 ref={titleRef} className={styles.title}>
+        <h2 className={styles.title}>
           Frequently Asked Questions
         </h2>
         <p className={styles.subtitle}>Short answers—full legal detail lives in the footer policies.</p>
@@ -164,9 +125,6 @@ export default function FAQSection() {
           {faqs.map((f, i) => (
             <div
               key={`${category}-${f.q}`}
-              ref={(el) => {
-                itemsRef.current[i] = el
-              }}
               className={`${styles.item} ${openIndex === i ? styles.open : ''}`}
             >
               <button type="button" className={styles.question} onClick={() => setOpenIndex(openIndex === i ? null : i)}>

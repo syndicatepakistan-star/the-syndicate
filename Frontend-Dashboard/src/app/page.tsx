@@ -255,7 +255,7 @@ export default async function Home() {
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
                 <div
-                  className="animate-marquee flex w-max items-center gap-3 sm:gap-4"
+                  className="animate-marquee flex w-max items-center gap-2 sm:gap-3"
                   style={{ ['--duration' as string]: '48s', ['--gap' as string]: '1rem' }}
                 >
                   {topRowTrack.map((image, index) => {
@@ -267,7 +267,7 @@ export default async function Home() {
                       target="_blank"
                       rel="noreferrer"
                       aria-label={`Open Instagram: ${image.alt}`}
-                      className={`lightning-glow-card group relative block h-[240px] w-[180px] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 sm:h-[290px] sm:w-[220px] md:h-[330px] md:w-[250px] ${theme.frame} ${theme.glow}`}
+                      className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
                       style={
                         {
                           ['--lightning-color' as any]: theme.lightningColor,
@@ -284,7 +284,7 @@ export default async function Home() {
                         src={image.src}
                         alt={image.alt}
                         fill
-                        sizes="(max-width: 640px) 180px, (max-width: 768px) 220px, 250px"
+                        sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
                         className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                     </a>
@@ -300,7 +300,7 @@ export default async function Home() {
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
                 <div
-                  className="animate-marquee-reverse flex w-max items-center gap-3 sm:gap-4"
+                  className="animate-marquee-reverse flex w-max items-center gap-2 sm:gap-3"
                   style={{ ['--duration' as string]: '52s', ['--gap' as string]: '1rem' }}
                 >
                   {bottomRowTrack.map((image, index) => {
@@ -312,7 +312,7 @@ export default async function Home() {
                       target="_blank"
                       rel="noreferrer"
                       aria-label={`Open TikTok: ${image.alt}`}
-                      className={`lightning-glow-card group relative block h-[240px] w-[180px] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 sm:h-[290px] sm:w-[220px] md:h-[330px] md:w-[250px] ${theme.frame} ${theme.glow}`}
+                      className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
                       style={
                         {
                           ['--lightning-color' as any]: theme.lightningColor,
@@ -329,7 +329,7 @@ export default async function Home() {
                         src={image.src}
                         alt={image.alt}
                         fill
-                        sizes="(max-width: 640px) 180px, (max-width: 768px) 220px, 250px"
+                        sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
                         className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                     </a>

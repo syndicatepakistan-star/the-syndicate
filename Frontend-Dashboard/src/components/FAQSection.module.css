@@ -86,7 +86,7 @@
     radial-gradient(ellipse 55% 45% at 100% 45%, rgba(34, 211, 238, 0.16), transparent 52%),
     radial-gradient(ellipse 70% 50% at 50% -5%, rgba(167, 139, 250, 0.08), transparent 55%);
   filter: blur(0.5px);
-  animation: faqSectionAmbient 5s ease-in-out infinite;
+  animation: none;
 }
 
 .bgMedia {
@@ -190,12 +190,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition:
-    border-color 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease,
-    box-shadow 0.22s ease;
-  animation: faqGlowPulse 2.8s ease-in-out infinite;
+  transition: none;
+  animation: none;
 }
 
 @media (min-width: 640px) {
@@ -226,7 +222,7 @@
     0 0 32px rgba(34, 211, 238, 0.45),
     0 0 56px rgba(251, 191, 36, 0.35),
     0 0 96px rgba(34, 211, 238, 0.12);
-  animation: faqGlowPulse 2.1s ease-in-out infinite;
+  animation: none;
 }
 
 .list {
@@ -249,8 +245,8 @@
     0 12px
   );
   overflow: hidden;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, filter 0.28s ease;
-  animation: faqGlowPulse 3.1s ease-in-out infinite;
+  transition: none;
+  animation: none;
   filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.22)) drop-shadow(0 0 44px rgba(251, 191, 36, 0.14));
 }
 
@@ -271,7 +267,7 @@
     transparent 100%
   );
   background-size: 220% 100%;
-  animation: faqBorderSweep 3.2s linear infinite;
+  animation: none;
 }
 
 .item.open {
@@ -283,7 +279,7 @@
     0 16px 56px rgba(251, 191, 36, 0.28),
     0 0 96px rgba(251, 191, 36, 0.18),
     0 0 140px rgba(34, 211, 238, 0.1);
-  animation: faqGlowPulse 2s ease-in-out infinite;
+  animation: none;
   filter: drop-shadow(0 0 28px rgba(34, 211, 238, 0.38)) drop-shadow(0 0 56px rgba(251, 191, 36, 0.26))
     drop-shadow(0 0 90px rgba(251, 191, 36, 0.12));
 }
@@ -356,7 +352,7 @@
   );
   font-size: 1.45rem;
   line-height: 1;
-  animation: faqGlowPulse 2.4s ease-in-out infinite;
+  animation: none;
 }
 
 @media (min-width: 640px) {
@@ -370,7 +366,7 @@
 .answerWrap {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.38s ease;
+  transition: none;
 }
 
 .item.open .answerWrap {

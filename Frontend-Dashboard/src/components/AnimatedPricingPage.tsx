@@ -468,7 +468,7 @@ export function PricingPage({
           ))}
         </div>
 
-        <AffiliatePublicSection className="mt-16 md:mt-20" />
+        <AffiliatePublicSection className="mt-[clamp(2.75rem,8vw,5rem)]" />
       </div>
     </section>
   )

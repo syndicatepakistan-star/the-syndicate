@@ -254,15 +254,15 @@ export function PlaylistCardsSection({
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
             >
-              <div className={cn("line-clamp-2 text-left text-[11px] font-extrabold uppercase leading-snug tracking-[0.05em] sm:text-[17px] sm:tracking-[0.07em]", theme.title)}>
+              <div className={cn("line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]", theme.title)}>
                 {pl.title}
               </div>
               <div className="mt-2" />
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setDescriptionModalPlaylist(pl)}
-                  className="rounded-xl border border-white/40 bg-black/55 px-2 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3] sm:text-[11px] sm:tracking-[0.14em]"
+                  className="min-w-0 rounded-xl border border-white/40 bg-black/55 px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3] sm:px-2 sm:py-2 sm:tracking-[0.14em]"
                 >
                   Details
                 </button>
@@ -299,7 +299,7 @@ export function PlaylistCardsSection({
                       }
                     })();
                   }}
-                  className="rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-2 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:text-[11px] sm:tracking-[0.15em]"
+                  className="min-w-0 rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:px-2 sm:py-2 sm:tracking-[0.15em]"
                 >
                   {pendingCheckoutPlaylistId === pl.id ? "Loading..." : "Unlock"}
                 </button>

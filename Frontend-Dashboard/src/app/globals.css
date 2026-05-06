@@ -144,6 +144,26 @@
       0 0 26px var(--gold-neon-haze) !important;
   }
 }
+
+@media (max-width: 1023px) {
+  .sidebar-nav-dock {
+    --sidebar-nav-section-pt: clamp(0.68rem, 0.95vh, 0.95rem);
+    --sidebar-nav-section-px: clamp(0.9rem, 1.2vw, 1.35rem);
+    --sidebar-nav-section-pb: clamp(0.34rem, 0.65vh, 0.55rem);
+    --sidebar-nav-item-py: clamp(0.48rem, 0.75vh, 0.66rem);
+    --sidebar-nav-item-px: clamp(0.65rem, 1.15vw, 1rem);
+    --sidebar-nav-label-size: clamp(0.8rem, 1.08vw, 1.02rem);
+    --sidebar-nav-label-tracking: clamp(0.08em, 0.14vw, 0.16em);
+    --sidebar-nav-icon-frame: clamp(21px, 2.2vw, 29px);
+    --sidebar-nav-icon-svg: clamp(12px, 1.2vw, 18px);
+  }
+
+  .sidebar-nav-dock .sidebar-nav-item {
+    min-height: clamp(2.2rem, 4.3vh, 2.8rem);
+    padding-left: calc(var(--sidebar-nav-item-px) + 10px);
+    padding-right: calc(var(--sidebar-nav-item-px) + 10px);
+  }
+}
 .fluid-sidebar-p {
   padding: var(--fluid-sidebar-p);
 }

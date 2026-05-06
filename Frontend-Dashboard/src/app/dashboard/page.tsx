@@ -2189,7 +2189,7 @@ export default function Page() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   /** Below md (768px): main + sidebar sit side-by-side; nav column is 5/12 (~42% width). */
   const [isNarrowViewport, setIsNarrowViewport] = useState(false);
-  /** max-lg: sidebar is a fixed overlay; main stays full width and only dims. */
+  /** max-lg + iPad Pro portrait range: sidebar is a fixed overlay; main stays full width and only dims. */
   const [isOverlaySidebarBp, setIsOverlaySidebarBp] = useState(false);
   /** ≤820px: in-navbar menu under search + overlay rail behavior (tablet/desktop unchanged). */
   const [isMobileNavUi, setIsMobileNavUi] = useState(false);
@@ -2388,8 +2388,8 @@ export default function Page() {
   /** Before paint: match breakpoints + open desktop rail (avoids wrong grid + missing Dashboard until reload). */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    const mq1023 = window.matchMedia("(max-width: 1023px)");
-    const mq820 = window.matchMedia("(max-width: 820px)");
+    const mq1023 = window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))");
+    const mq820 = window.matchMedia("(max-width: 1024px) and (max-height: 1400px)");
     const mq767 = window.matchMedia("(max-width: 767px)");
     setIsOverlaySidebarBp(mq1023.matches);
     setIsMobileNavUi(mq820.matches);
@@ -2399,7 +2399,7 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 1023px)");
+    const mq = window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))");
     const apply = () => {
       const next = mq.matches;
       setIsOverlaySidebarBp(next);
@@ -2412,7 +2412,7 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 820px)");
+    const mq = window.matchMedia("(max-width: 1024px) and (max-height: 1400px)");
     const apply = () => setIsMobileNavUi(mq.matches);
     apply();
     mq.addEventListener("change", apply);
@@ -2426,25 +2426,14 @@ export default function Page() {
     el.scrollTop = 0;
   }, [selectedNavKey, sidebarOpen]);
 
-  /** Overlay only: close slide-out when leaving dashboard so the dimmed shell regains width. */
-  useEffect(() => {
-    if (!isOverlaySidebarBp) return;
-    if (selectedNavKey !== "dashboard") setSidebarOpen(false);
-  }, [selectedNavKey, isOverlaySidebarBp]);
 
   /** lg+: collapse grid rail when not on Dashboard so missions / detail use full shell width (reopen via menu). */
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 1023px)").matches) return;
+    if (window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))").matches) return;
     if (selectedNavKey !== "dashboard") setSidebarOpen(false);
   }, [selectedNavKey]);
 
-  /** Overlay: auto-collapse a few seconds after open (not on dashboard). */
-  useEffect(() => {
-    if (!isOverlaySidebarBp || !sidebarOpen || selectedNavKey === "dashboard") return;
-    const id = window.setTimeout(() => setSidebarOpen(false), 2000);
-    return () => window.clearTimeout(id);
-  }, [isOverlaySidebarBp, sidebarOpen, selectedNavKey]);
 
   /** Overlay menu open: lock scroll so the page feels fixed behind the panel. */
   useEffect(() => {
@@ -2939,7 +2928,7 @@ export default function Page() {
             ref={topbarRef}
             data-anim="in"
             className={cn(
-              "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar relative overflow-visible border bg-[#070707]/80 fluid-nav-pl fluid-nav-pr fluid-nav-py",
+              "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar relative overflow-visible border bg-[#070707]/80 fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
               isMobileNavUi ? "max-lg:grid-rows-[auto_auto_auto]" : "max-lg:grid-rows-[auto_auto]",
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
@@ -3157,7 +3146,7 @@ export default function Page() {
                               nav={nav}
                               selectedNavKey={selectedNavKey}
                               setSelectedNavKey={applyNavKey}
-                              onItemActivate={() => setSidebarOpen(false)}
+                              onItemActivate={() => {}}
                               isNavLocked={isNavLocked}
                             />
                           </div>
@@ -3353,8 +3342,8 @@ export default function Page() {
                 className={cn(
                   "sidebar-nav-dock shell-neon-yellow cut-frame cyber-frame gold-stroke overflow-y-auto border bg-[#060606]/70 no-scrollbar",
                   isMobileNavUi && "mobile-sidebar-rail",
-                  "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[min(88vw,300px)] max-lg:max-w-[300px] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
-                  "max-lg:top-[calc(var(--topbarH,4.5rem)+var(--fluid-main-grid-pt))] max-lg:h-[calc(100dvh-var(--topbarH,4.5rem)-var(--fluid-main-grid-pt))]",
+                  "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
+                  "max-lg:top-[calc(var(--topbarH,4.5rem)+var(--fluid-main-grid-pt))] max-lg:h-[40vh]",
                   /* Mobile: shorter rail (~52px + safe-area) above bottom chrome / FAB; tablet (max-lg) unchanged */
                   "max-[820px]:!top-[calc(var(--topbarH,4.5rem)+3px)] max-[820px]:!h-[calc(100dvh-var(--topbarH,4.5rem)-3px-3.25rem-env(safe-area-inset-bottom))] max-[820px]:box-border max-[820px]:overflow-x-hidden max-[820px]:rounded-br-lg max-[820px]:pb-2",
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
@@ -3366,7 +3355,7 @@ export default function Page() {
                     nav={nav}
                     selectedNavKey={selectedNavKey}
                     setSelectedNavKey={applyNavKey}
-                    onItemActivate={() => setSidebarOpen(false)}
+                    onItemActivate={() => {}}
                     isNavLocked={isNavLocked}
                   />
                 </div>

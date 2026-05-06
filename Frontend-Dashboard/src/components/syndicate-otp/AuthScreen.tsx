@@ -46,6 +46,7 @@ type AuthScreenProps = {
 type ApiPayload = {
   message?: string;
   error?: string;
+  detail?: string;
   redirect_url?: string;
   token?: string;
   signup_token?: string;
@@ -71,6 +72,8 @@ type ApiPayload = {
 function apiErrorMessage(data: ApiPayload, fallback: string): string {
   const fromError = (data.error || "").toString().trim();
   if (fromError) return fromError;
+  const fromDetail = (data.detail || "").toString().trim();
+  if (fromDetail) return fromDetail;
   const fromMessage = (data.message || "").toString().trim();
   if (fromMessage) return fromMessage;
   return fallback;
@@ -614,7 +617,20 @@ export default function AuthScreen({
         }
         // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
         if (response.status === 404) {
-          throw new Error(apiErrorMessage(data, "No account found for this email. Please sign up first."));
+          throw new Error(apiErrorMessage(data, "You do not have any account. Please sign up."));
+        }
+        if (response.status === 400 || response.status === 401) {
+          const msg = apiErrorMessage(data, "Request failed");
+          const normalized = msg.toLowerCase();
+          if (
+            normalized.includes("no account") ||
+            normalized.includes("sign up first") ||
+            normalized.includes("signup required") ||
+            normalized.includes("no active account")
+          ) {
+            throw new Error("You do not have any account. Please sign up.");
+          }
+          throw new Error(msg);
         }
         throw new Error(apiErrorMessage(data, "Request failed"));
       }

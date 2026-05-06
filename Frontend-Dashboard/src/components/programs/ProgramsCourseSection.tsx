@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronLeft, Lock, Star } from "lucide-react";
+import { ChevronLeft, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { CourseVideoPlaylist } from "@/components/programs/CourseVideoPlaylist";
@@ -136,16 +136,6 @@ const PLAYLIST_CATEGORY_LABELS: Record<Exclude<PlaylistCategory, "all">, string>
 function parsePrice(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(n) ? n : 0;
-}
-
-function parseRating(value: string | number | null | undefined): number {
-  const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
-  if (!Number.isFinite(n)) return 0;
-  return Math.max(0, Math.min(5, n));
-}
-
-function roundedStarCount(rating: number): number {
-  return Math.max(0, Math.min(5, Math.round(rating)));
 }
 
 type Course = {
@@ -481,7 +471,6 @@ export function ProgramsCourseSection({
     const comingSoon = !!pl.is_coming_soon;
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
-    const rating = parseRating(pl.rating);
     const price = parsePrice(pl.price);
     const detailSelector = `[${PROGRAM_DETAIL_TRIGGER_ATTR}]`;
     const playlistCardPrimary = () => {
@@ -507,7 +496,7 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex aspect-[3/5] min-h-[20.5rem] w-full flex-col overflow-hidden text-left outline-none sm:min-h-0 sm:aspect-[4/5]",
+          "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left outline-none sm:min-h-[27rem]",
           "rounded-3xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -534,7 +523,7 @@ export function ProgramsCourseSection({
             aria-hidden
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2.5 sm:p-3.5">
-            <div className={cn("relative min-h-[9.4rem] overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem] sm:flex-1", theme.mediaBorder)}>
+            <div className={cn("relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 sm:min-h-[17rem] sm:flex-1", theme.mediaBorder)}>
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -556,8 +545,14 @@ export function ProgramsCourseSection({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
             </div>
             <div className="absolute right-3 top-3 z-[4] flex flex-col items-end gap-1 sm:right-3.5 sm:top-3.5">
-              <span className="rounded-full bg-white/95 px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-neutral-900 shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
-                {pl.video_count} videos
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 font-sans text-[12px] font-black tracking-tight text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]",
+                  theme.priceColor,
+                  theme.priceGlow
+                )}
+              >
+                {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
               </span>
             </div>
             {locked && !comingSoon ? (
@@ -583,7 +578,7 @@ export function ProgramsCourseSection({
             ) : null}
             <div
               className={cn(
-                "shrink-0 flex flex-col overflow-hidden rounded-2xl border-2 px-2 py-1.5 sm:px-3.5 sm:py-3.5",
+                "shrink-0 flex flex-col overflow-hidden rounded-2xl border-2 px-2 py-1.5 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
@@ -599,29 +594,7 @@ export function ProgramsCourseSection({
                   {pl.title}
                 </div>
               </div>
-              <div className="mt-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                <span className="inline-flex min-w-0 items-center gap-0.5 overflow-hidden rounded-full border border-amber-300/45 bg-[#130d03]/92 px-2 py-0.5 font-sans text-[10px] font-bold tracking-[0.01em] text-amber-50 shadow-[0_0_14px_rgba(245,158,11,0.28)] [text-shadow:none] sm:px-3 sm:py-1 sm:text-[13px]">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star
-                      key={`${pl.id}-star-${idx}`}
-                      className={cn(
-                        "h-2.5 w-2.5 sm:h-3 sm:w-3",
-                        idx < roundedStarCount(rating) ? "fill-amber-300 text-amber-300" : "fill-transparent text-amber-100/35"
-                      )}
-                    />
-                  ))}
-                  <span className="ml-1 tabular-nums text-amber-50/95">{rating.toFixed(1)}</span>
-                </span>
-                <span
-                  className={cn(
-                    "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2.5 py-0.5 font-sans text-[13px] font-black tracking-tight text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3.5 sm:py-1 sm:text-[17px]",
-                    theme.priceColor,
-                    theme.priceGlow
-                  )}
-                >
-                  {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-                </span>
-              </div>
+              <div className="mt-1.5" />
               <div className="mt-1.5 grid grid-cols-1 gap-2">
                 <button
                   type="button"

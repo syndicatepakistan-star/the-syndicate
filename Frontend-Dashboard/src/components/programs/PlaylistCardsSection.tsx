@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
@@ -65,10 +64,6 @@ const PLAYLIST_CARD_THEMES = [
 function parseNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(n) ? n : 0;
-}
-
-function roundedStarCount(rating: number): number {
-  return Math.max(0, Math.min(5, Math.round(rating)));
 }
 
 type Props = {
@@ -177,7 +172,6 @@ export function PlaylistCardsSection({
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url);
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
-    const rating = Math.max(0, Math.min(5, parseNumber(pl.rating)));
     const price = parseNumber(pl.price);
     const unlocked = !!pl.is_unlocked;
     const locked = !unlocked;
@@ -185,7 +179,7 @@ export function PlaylistCardsSection({
       <article
         key={`playlist-${pl.id}`}
         className={cn(
-          "group/card relative flex aspect-[3/5] w-full flex-col overflow-hidden text-left",
+          "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left sm:min-h-[27rem]",
           "rounded-3xl border-2",
           theme.dominantBorder,
           theme.glow
@@ -217,7 +211,7 @@ export function PlaylistCardsSection({
         />
         <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
           <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-3 sm:p-3.5">
-            <div className="relative min-h-[9.6rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[14.2rem] sm:flex-1">
+            <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[17rem] sm:flex-1">
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -240,13 +234,16 @@ export function PlaylistCardsSection({
               {locked ? <div className="pointer-events-none absolute inset-0 bg-black/50" /> : null}
             </div>
             <div className="absolute right-3 top-3 z-[4]">
-              <span className="rounded-full bg-white/95 px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-neutral-900 shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
-                {pl.video_count} videos
+              <span
+                className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
+                style={{ fontFamily: "Inter, Arial, Helvetica, sans-serif", fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+              >
+                {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
               </span>
             </div>
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2.5 sm:px-3.5 sm:py-3.5",
+                "flex flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
@@ -254,26 +251,7 @@ export function PlaylistCardsSection({
               <div className={cn("line-clamp-2 text-left text-[11px] font-extrabold uppercase leading-snug tracking-[0.05em] sm:text-[17px] sm:tracking-[0.07em]", theme.title)}>
                 {pl.title}
               </div>
-              <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5">
-                <span className="inline-flex min-w-0 items-center gap-0.5 overflow-hidden rounded-full border border-amber-300/45 bg-[#130d03]/92 px-2 py-0.5 font-sans text-[11px] font-bold text-amber-50 sm:px-3 sm:py-1 sm:text-[13px]">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star
-                      key={`${pl.id}-star-${idx}`}
-                      className={cn(
-                        "h-2.5 w-2.5 sm:h-3 sm:w-3",
-                        idx < roundedStarCount(rating) ? "fill-amber-300 text-amber-300" : "fill-transparent text-amber-100/35"
-                      )}
-                    />
-                  ))}
-                  <span className="ml-1 tabular-nums text-amber-50/95">{rating.toFixed(1)}</span>
-                </span>
-                <span
-                  className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2.5 py-0.5 tabular-nums text-[13px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3.5 sm:py-1 sm:text-[17px]"
-                  style={{ fontFamily: "Inter, Arial, Helvetica, sans-serif", fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
-                >
-                  {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-                </span>
-              </div>
+              <div className="mt-2" />
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <button
                   type="button"

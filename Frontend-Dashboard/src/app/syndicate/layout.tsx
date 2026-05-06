@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Syndicate",
+  title: "THE SYNDICATE",
   description: "Syndicate mode lives in the main dashboard."
 };
 

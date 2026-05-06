@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useInView } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Award, CheckCircle2, Download, Shield } from 'lucide-react'
 import Image from 'next/image'
 
@@ -63,7 +63,7 @@ export default function CertificatesSection({
     <section
       id="certificates"
       aria-label="Certificates section"
-      className="relative min-h-[100dvh] w-full overflow-hidden px-4 py-12 sm:px-6 sm:py-16 md:py-20"
+      className="relative w-full overflow-hidden px-4 py-12 sm:px-6 sm:py-16 md:py-20"
     >
       <div className="pointer-events-none absolute inset-0">
         <Image src="/assets/c.gif" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-30" unoptimized />
@@ -98,13 +98,7 @@ export default function CertificatesSection({
       />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl">
-        <motion.header
-          initial={false}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-16 text-center"
-        >
+        <header className="mb-16 text-center">
           <h2
             className="text-3xl font-bold tracking-wider sm:text-4xl md:text-5xl lg:text-6xl"
             style={{
@@ -117,16 +111,10 @@ export default function CertificatesSection({
           <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-200/80 sm:text-base" style={{ textShadow: '0 0 12px rgba(34,211,238,0.14)' }}>
             Complete our courses and earn verified credentials that elevate your profile. Join leaders who prove their expertise.
           </p>
-        </motion.header>
+        </header>
 
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
-          <motion.div
-            initial={false}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="lg:col-span-6"
-          >
+          <div className="lg:col-span-6">
             <div
               className="relative border-[6px] p-6 sm:p-8 [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]"
               style={{
@@ -144,10 +132,10 @@ export default function CertificatesSection({
                 }}
               />
               <div className="pointer-events-none absolute inset-0 opacity-100 [background:linear-gradient(90deg,rgba(34,211,238,0.98),rgba(217,70,239,0.92),rgba(168,85,247,0.95))] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0,rgba(0,0,0,1)_6px,transparent_6px,transparent_calc(100%-6px),rgba(0,0,0,1)_calc(100%-6px),rgba(0,0,0,1)_100%)]" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[6px] opacity-100 [background:linear-gradient(90deg,transparent_0%,rgba(34,211,238,1)_20%,rgba(217,70,239,1)_52%,rgba(168,85,247,1)_80%,transparent_100%)] animate-[electric-flow_2.4s_linear_infinite]" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] opacity-95 [background:linear-gradient(90deg,transparent_0%,rgba(168,85,247,1)_22%,rgba(217,70,239,1)_52%,rgba(34,211,238,1)_78%,transparent_100%)] animate-[electric-flow_2.8s_linear_infinite_reverse]" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[6px] opacity-100 [background:linear-gradient(90deg,transparent_0%,rgba(34,211,238,1)_20%,rgba(217,70,239,1)_52%,rgba(168,85,247,1)_80%,transparent_100%)]" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] opacity-95 [background:linear-gradient(90deg,transparent_0%,rgba(168,85,247,1)_22%,rgba(217,70,239,1)_52%,rgba(34,211,238,1)_78%,transparent_100%)]" />
               <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(140%_120%_at_15%_15%,rgba(34,211,238,0.22),transparent_48%),radial-gradient(140%_120%_at_86%_84%,rgba(217,70,239,0.16),transparent_52%)]" />
-              <div className="pointer-events-none absolute inset-0 opacity-28 [background:linear-gradient(110deg,transparent_20%,rgba(168,85,247,0.16)_42%,rgba(34,211,238,0.14)_58%,transparent_78%)] animate-[electric-flow_3.4s_linear_infinite]" />
+              <div className="pointer-events-none absolute inset-0 opacity-28 [background:linear-gradient(110deg,transparent_20%,rgba(168,85,247,0.16)_42%,rgba(34,211,238,0.14)_58%,transparent_78%)]" />
               <button
                 type="button"
                 onClick={openPreview}
@@ -187,17 +175,12 @@ export default function CertificatesSection({
                 />
               </button>
             </div>
-          </motion.div>
+          </div>
 
           <div className="space-y-7 lg:col-span-6 lg:pt-2">
             {features.map((feature, i) => (
-              <motion.div
+              <div
                 key={feature.title}
-                initial={false}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: i * 0.1 }}
-                whileHover={{ y: -6, scale: 1.02 }}
                 className="relative overflow-hidden rounded-[18px] p-[3px]"
                 style={{
                   background: 'linear-gradient(132deg, rgba(34,211,238,0.98) 0%, rgba(168,85,247,0.95) 54%, rgba(217,70,239,0.92) 100%)',
@@ -221,7 +204,7 @@ export default function CertificatesSection({
                   style={{ boxShadow: 'inset 0 0 0 1px rgba(30,41,59,0.8), 0 12px 28px rgba(0,0,0,0.85)' }}
                 >
                   <div className="pointer-events-none absolute inset-0 rounded-[15px] opacity-72 [background:radial-gradient(125%_115%_at_8%_20%,rgba(34,211,238,0.2),transparent_46%),radial-gradient(130%_120%_at_88%_80%,rgba(168,85,247,0.16),transparent_52%)]" />
-                  <div className="pointer-events-none absolute inset-0 rounded-[15px] opacity-30 [background:linear-gradient(102deg,transparent_16%,rgba(34,211,238,0.14)_40%,rgba(217,70,239,0.13)_56%,transparent_80%)] animate-[electric-flow_3.6s_linear_infinite]" />
+                  <div className="pointer-events-none absolute inset-0 rounded-[15px] opacity-30 [background:linear-gradient(102deg,transparent_16%,rgba(34,211,238,0.14)_40%,rgba(217,70,239,0.13)_56%,transparent_80%)]" />
                   <div
                     className="flex h-12 w-12 flex-shrink-0 items-center justify-center border-2 sm:h-14 sm:w-14 [clip-path:polygon(9px_0,calc(100%-9px)_0,100%_9px,100%_calc(100%-9px),calc(100%-9px)_100%,9px_100%,0_calc(100%-9px),0_9px)]"
                     style={{ borderColor: 'rgba(34,211,238,0.9)', boxShadow: '0 0 24px rgba(167,139,250,0.42), inset 0 0 14px rgba(34,211,238,0.18)' }}
@@ -237,7 +220,7 @@ export default function CertificatesSection({
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

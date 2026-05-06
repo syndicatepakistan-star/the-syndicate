@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./syndicate-otp.css";
 
 export const metadata: Metadata = {
-  title: "The Syndicate — Member access",
+  title: "THE SYNDICATE",
   description: "OTP login, sign up, and Stripe checkout for The Syndicate."
 };
 

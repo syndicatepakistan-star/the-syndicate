@@ -3,7 +3,7 @@ import LetterGlitch from "@/components/quiz-funnel/LetterGlitch";
 import "./quiz-funnel.css";
 
 export const metadata: Metadata = {
-  title: "Sovereign Entity Audit — Quiz",
+  title: "THE SYNDICATE",
   description: "Syndicate sovereign entity audit funnel.",
 };
 

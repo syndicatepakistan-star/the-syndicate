@@ -19,7 +19,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from accounts.syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
 
-from .models import ApiToken, AffiliateProfile, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral
+from .models import ApiToken, AffiliateProfile, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
 
 CLICK_POINTS = 1
 LEAD_POINTS = 5
@@ -703,3 +703,61 @@ def recent_referrals(request):
         )
     items.sort(key=lambda x: x.get("at") or "", reverse=True)
     return JsonResponse({"affiliate_id": affiliate_id, "items": items[:limit]})
+
+
+@csrf_exempt
+@require_POST
+def request_withdrawal(request):
+    payload = _get_json(request)
+    affiliate_id = str(payload.get("affiliate_id") or "").strip()
+    if not affiliate_id:
+        return _bad_request("affiliate_id is required")
+
+    referral = _get_referral_or_400(affiliate_id)
+    if referral is None:
+        return _bad_request("affiliate_id not found", 404)
+
+    bank_name = str(payload.get("bank_name") or "").strip()
+    account_name = str(payload.get("account_name") or "").strip()
+    account_number = str(payload.get("account_number") or "").strip()
+    iban = str(payload.get("iban") or "").strip()
+    phone_number = str(payload.get("phone_number") or "").strip()
+    branch_name = str(payload.get("branch_name") or "").strip()
+
+    if not bank_name:
+        return _bad_request("bank_name is required")
+    if not account_name:
+        return _bad_request("account_name is required")
+    if not account_number:
+        return _bad_request("account_number is required")
+    if not iban:
+        return _bad_request("iban is required")
+    if not phone_number:
+        return _bad_request("phone_number is required")
+
+    overall = _overall_stats(referral.profile)
+    earnings_total = Decimal(str(overall.get("earnings_total") or "0"))
+    minimum_required = Decimal("50.00")
+    if earnings_total < minimum_required:
+        return _bad_request("Minimum earnings of £50.00 required for withdrawal", 403)
+
+    withdrawal = WithdrawalRequest.objects.create(
+        profile=referral.profile,
+        section_referral=referral,
+        bank_name=bank_name,
+        account_name=account_name,
+        account_number=account_number,
+        iban=iban,
+        phone_number=phone_number,
+        branch_name=branch_name,
+        earnings_snapshot=earnings_total,
+    )
+    return JsonResponse(
+        {
+            "success": True,
+            "withdrawal_request_id": withdrawal.id,
+            "status": withdrawal.status,
+            "earnings_snapshot": str(withdrawal.earnings_snapshot),
+            "created_at": withdrawal.created_at.isoformat(),
+        }
+    )

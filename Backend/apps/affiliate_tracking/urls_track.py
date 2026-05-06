@@ -23,4 +23,6 @@ urlpatterns = [
     path("funnel/", views.funnel),
     path("recent-referrals", views.recent_referrals),
     path("recent-referrals/", views.recent_referrals),
+    path("request-withdrawal", views.request_withdrawal),
+    path("request-withdrawal/", views.request_withdrawal),
 ]

@@ -84,3 +84,23 @@ class SaleEvent(models.Model):
             models.Index(fields=["referral", "visitor_id"]),
             models.Index(fields=["referral", "created_at"]),
         ]
+
+
+class WithdrawalRequest(models.Model):
+    profile = models.ForeignKey(AffiliateProfile, on_delete=models.CASCADE, related_name="withdrawal_requests")
+    section_referral = models.ForeignKey(SectionReferral, on_delete=models.CASCADE, related_name="withdrawal_requests")
+    bank_name = models.CharField(max_length=160)
+    account_name = models.CharField(max_length=160)
+    account_number = models.CharField(max_length=80)
+    iban = models.CharField(max_length=80)
+    phone_number = models.CharField(max_length=40)
+    branch_name = models.CharField(max_length=160, blank=True, default="")
+    earnings_snapshot = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=24, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["profile", "created_at"]),
+            models.Index(fields=["section_referral", "created_at"]),
+        ]

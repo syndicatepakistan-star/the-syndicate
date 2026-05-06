@@ -87,6 +87,24 @@ export type RecentReferralsResponse = {
   items: RecentReferralItem[];
 };
 
+export type WithdrawalRequestPayload = {
+  affiliate_id: string;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  iban: string;
+  phone_number: string;
+  branch_name?: string;
+};
+
+export type WithdrawalRequestResponse = {
+  success: boolean;
+  withdrawal_request_id: number;
+  status: string;
+  earnings_snapshot: string;
+  created_at: string;
+};
+
 export type AuthLoginResponse = {
   success: boolean;
   token: string;

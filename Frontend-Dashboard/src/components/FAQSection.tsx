@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import styles from './FAQSection.module.css'
 
@@ -86,7 +86,6 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
 }
 
 export default function FAQSection() {
-  const sectionRef = useRef<HTMLElement>(null)
   const [category, setCategory] = useState<FaqCategory>('general')
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
@@ -97,7 +96,7 @@ export default function FAQSection() {
   }, [category])
 
   return (
-    <section ref={sectionRef} id="faq" className={styles.faq}>
+    <section id="faq" className={styles.faq}>
       <div className={styles.bgMedia} aria-hidden>
         <Image src="/assets/tt.gif" alt="" fill sizes="100vw" className={styles.bgImage} unoptimized />
         <div className={styles.bgOverlay} />

@@ -2,7 +2,9 @@ import type {
   AffiliateFunnelResponse,
   AffiliateStats,
   AffiliateVisitorsResponse,
-  RecentReferralsResponse
+  RecentReferralsResponse,
+  WithdrawalRequestPayload,
+  WithdrawalRequestResponse
 } from "@/lib/affiliateTypes";
 import { getSyndicateApiBase } from "@/lib/syndicateApiBase";
 
@@ -140,4 +142,8 @@ export async function generateOneTimeReferralLink(affiliateId: string, domain?: 
     body: JSON.stringify({ affiliate_id: affiliateId, domain }),
   });
   return parseJson<{ success: boolean; affiliate_id: string; link: string; created_once: boolean }>(res);
+}
+
+export async function requestAffiliateWithdrawal(payload: WithdrawalRequestPayload): Promise<WithdrawalRequestResponse> {
+  return postTrackJson<WithdrawalRequestResponse>("request-withdrawal", payload);
 }

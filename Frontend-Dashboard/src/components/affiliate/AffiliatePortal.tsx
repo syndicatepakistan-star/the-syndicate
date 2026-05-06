@@ -5,7 +5,8 @@ import {
   getAffiliateFunnel,
   getAffiliateStats,
   getAffiliateVisitors,
-  getRecentReferrals
+  getRecentReferrals,
+  requestAffiliateWithdrawal
 } from "@/lib/affiliateApi";
 import type { AffiliateStats, AffiliateVisitor } from "@/lib/affiliateTypes";
 
@@ -55,6 +56,15 @@ type AffiliatePortalProps = {
   embedded?: boolean;
 };
 
+type WithdrawFormState = {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  iban: string;
+  phoneNumber: string;
+  branchName: string;
+};
+
 export default function AffiliatePortal({ displayName, referralIds, onLogout, embedded = false }: AffiliatePortalProps) {
   const [affiliateId, setAffiliateId] = useState(() => referralIds?.complete?.trim() || "subhan-x91");
   const [loading, setLoading] = useState(false);
@@ -69,6 +79,17 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const [visitorsPage, setVisitorsPage] = useState(1);
   const [activeReferralLink, setActiveReferralLink] = useState("");
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
+  const [withdrawMessage, setWithdrawMessage] = useState<{ text: string; tone: "good" | "bad" | "info" } | null>(null);
+  const [withdrawForm, setWithdrawForm] = useState<WithdrawFormState>({
+    bankName: "",
+    accountName: "",
+    accountNumber: "",
+    iban: "",
+    phoneNumber: "",
+    branchName: "",
+  });
   const RECENT_PAGE_SIZE = 4;
   const VISITORS_PAGE_SIZE = 6;
 
@@ -128,6 +149,17 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   }, [overallStats]);
   const earningsValue = Number(overallStats?.earnings_total ?? "0") || 0;
   const earningsDisplay = formatEarnings(overallStats?.earnings_total ?? "0");
+  const canRequestWithdraw = earningsValue >= 50;
+  const withdrawFormValid = useMemo(() => {
+    return (
+      withdrawForm.bankName.trim().length > 0 &&
+      withdrawForm.accountName.trim().length > 0 &&
+      withdrawForm.accountNumber.trim().length > 0 &&
+      withdrawForm.iban.trim().length > 0 &&
+      withdrawForm.phoneNumber.trim().length > 0
+    );
+  }, [withdrawForm]);
+  const canSubmitWithdraw = canRequestWithdraw && withdrawFormValid && !withdrawSubmitting;
   const earningsCardToneClass =
     earningsValue <= 0
       ? "border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.14),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(193,120,255,0.9),0_0_22px_rgba(193,120,255,0.86),0_0_56px_rgba(193,120,255,0.72),0_0_108px_rgba(193,120,255,0.56),inset_0_0_20px_rgba(193,120,255,0.27)]"
@@ -185,6 +217,41 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         await copyLink(link);
       }
     } catch {}
+  }
+
+  function updateWithdrawField<K extends keyof WithdrawFormState>(key: K, value: WithdrawFormState[K]) {
+    setWithdrawForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function submitWithdrawRequest() {
+    if (!canSubmitWithdraw) return;
+    setWithdrawSubmitting(true);
+    try {
+      await requestAffiliateWithdrawal({
+        affiliate_id: affiliateId.trim(),
+        bank_name: withdrawForm.bankName.trim(),
+        account_name: withdrawForm.accountName.trim(),
+        account_number: withdrawForm.accountNumber.trim(),
+        iban: withdrawForm.iban.trim(),
+        phone_number: withdrawForm.phoneNumber.trim(),
+        branch_name: withdrawForm.branchName.trim(),
+      });
+      setWithdrawMessage({ text: "Withdrawal request submitted successfully.", tone: "good" });
+      setWithdrawOpen(false);
+      setWithdrawForm({
+        bankName: "",
+        accountName: "",
+        accountNumber: "",
+        iban: "",
+        phoneNumber: "",
+        branchName: "",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not submit withdrawal request.";
+      setWithdrawMessage({ text: message, tone: "bad" });
+    } finally {
+      setWithdrawSubmitting(false);
+    }
   }
 
   const refreshData = useCallback(async (silent = false) => {
@@ -269,8 +336,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       <main
         className={
           embedded
-            ? "cut-frame glass-dark mx-auto flex h-auto min-h-[min(58vh,560px)] max-h-[min(82vh,920px)] w-full max-w-none flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.58),0_0_28px_rgba(193,120,255,0.28),0_0_60px_rgba(56,236,255,0.18)] sm:p-5"
-            : "cut-frame glass-dark mx-auto flex h-[calc(100vh-1.5rem)] w-full max-w-[1800px] flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.58),0_0_28px_rgba(193,120,255,0.28),0_0_60px_rgba(56,236,255,0.18)] sm:h-[calc(100vh-2.5rem)] sm:p-5"
+            ? "cut-frame glass-dark mx-auto flex h-auto min-h-[min(58vh,560px)] max-h-[min(82vh,920px)] w-full max-w-none flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:p-5"
+            : "cut-frame glass-dark mx-auto flex h-[calc(100vh-1.5rem)] w-full max-w-[1800px] flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:h-[calc(100vh-2.5rem)] sm:p-5"
         }
       >
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -309,8 +376,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         <div className="min-h-0 flex-1 overflow-auto pr-1 pb-16 no-scrollbar">
           {error ? null : null}
 
-          <div className="cut-frame-sm border border-amber-300/75 bg-black/70 py-4 pl-4 pr-0 shadow-[0_0_0_1px_rgba(252,211,77,0.9),0_0_24px_rgba(193,120,255,0.62),0_0_62px_rgba(56,236,255,0.32),inset_0_0_24px_rgba(252,211,77,0.22)]">
-            <div className="mx-auto w-full max-w-[1720px] cut-frame-sm border border-cyan-300/70 bg-black/80 p-3 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_26px_rgba(193,120,255,0.52),0_0_64px_rgba(56,236,255,0.3),inset_0_0_24px_rgba(56,236,255,0.2)]">
+          <div className="cut-frame-sm border border-amber-300/75 bg-black/70 py-4 pl-4 pr-0 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_12px_rgba(252,211,77,0.22),0_0_24px_rgba(193,120,255,0.48),0_0_56px_rgba(56,236,255,0.24),inset_0_0_24px_rgba(252,211,77,0.22)]">
+            <div className="mx-auto w-full max-w-[1720px] cut-frame-sm border border-cyan-300/70 bg-black/80 p-3 shadow-[0_0_0_1px_rgba(56,236,255,0.92),0_0_12px_rgba(56,236,255,0.24),0_0_26px_rgba(193,120,255,0.44),0_0_52px_rgba(56,236,255,0.22),inset_0_0_24px_rgba(56,236,255,0.2)]">
               <div className="flex flex-col items-center gap-3 md:flex-row md:items-end md:justify-center">
                 <div className="w-full md:max-w-[700px]">
                   <div className="mb-1 h-[25px] text-base font-black uppercase tracking-[0.16em] text-white/90 drop-shadow-[0_0_10px_rgba(255,255,255,0.35)]">Referral Link</div>
@@ -341,6 +408,16 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     className="cut-frame-sm hud-hover-glow min-w-[124px] border border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.24),rgba(25,6,38,0.5))] px-7 py-3 text-base font-black uppercase tracking-[0.16em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.76),0_0_26px_rgba(193,120,255,0.4),0_0_60px_rgba(193,120,255,0.26)] transition duration-300 hover:scale-[1.03] hover:border-violet-200/95 hover:shadow-[0_0_0_1px_rgba(221,173,255,0.95),0_0_36px_rgba(193,120,255,0.54),0_0_74px_rgba(193,120,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Share
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWithdrawMessage(null);
+                      setWithdrawOpen(true);
+                    }}
+                    className="cut-frame-sm hud-hover-glow min-w-[138px] border border-amber-300/85 bg-[linear-gradient(180deg,rgba(255,198,64,0.26),rgba(38,22,0,0.58))] px-7 py-3 text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.78),0_0_28px_rgba(252,211,77,0.42),0_0_62px_rgba(252,211,77,0.26)] transition duration-300 hover:scale-[1.03] hover:border-amber-200/95 hover:shadow-[0_0_0_1px_rgba(255,239,176,0.95),0_0_38px_rgba(252,211,77,0.54),0_0_74px_rgba(252,211,77,0.3)]"
+                  >
+                    Withdraw
                   </button>
                 </div>
               </div>
@@ -537,6 +614,82 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
           </div>
         </div>
       </main>
+      {withdrawOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(2,4,10,0.82)] p-4 backdrop-blur-[3px]">
+          <div className="cut-frame relative w-full max-w-[840px] border-[3px] border-cyan-300/95 bg-[radial-gradient(120%_100%_at_0%_0%,rgba(56,236,255,0.16),transparent_56%),radial-gradient(120%_100%_at_100%_100%,rgba(193,120,255,0.15),transparent_58%),radial-gradient(90%_80%_at_50%_0%,rgba(255,198,64,0.1),transparent_62%),linear-gradient(180deg,rgba(1,6,10,0.98),rgba(3,3,6,0.98))] p-7 shadow-[0_0_0_1px_rgba(56,236,255,0.95),0_0_24px_rgba(56,236,255,0.42),0_0_58px_rgba(193,120,255,0.32),0_0_90px_rgba(252,211,77,0.2)] sm:p-8">
+            <button
+              type="button"
+              onClick={() => setWithdrawOpen(false)}
+              className="absolute right-4 top-4 border-2 border-fuchsia-300/85 bg-[linear-gradient(180deg,rgba(232,121,249,0.3),rgba(18,3,28,0.78))] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.8),0_0_16px_rgba(232,121,249,0.3)] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
+            >
+              Close
+            </button>
+            <h3 className="pr-20 text-[1.55rem] font-black uppercase tracking-[0.1em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.5)] sm:text-[1.9rem]">
+              Enter Account Details To Witdraw
+            </h3>
+            <p className="mt-2 text-base font-bold text-cyan-100">
+              Minimum earnings required for withdrawal: <span className="text-amber-200">£50.000</span>
+            </p>
+            <p className={`mt-1 text-sm font-black uppercase tracking-[0.12em] ${canRequestWithdraw ? "text-emerald-300" : "text-rose-300"}`}>
+              Current earnings: £{earningsDisplay} {canRequestWithdraw ? "Eligible" : "Not eligible yet"}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-amber-100/95">
+              You will get your withdraw amount within 1-2 weeks.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
+                Bank Name
+                <input value={withdrawForm.bankName} onChange={(e) => updateWithdrawField("bankName", e.target.value)} className="cut-frame-sm border-[3px] border-yellow-300/90 bg-[linear-gradient(180deg,rgba(42,28,0,0.86),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-yellow-100 shadow-[0_0_0_1px_rgba(253,224,71,0.9),0_0_22px_rgba(253,224,71,0.3)] outline-none placeholder:text-yellow-100/30 focus:border-yellow-200" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
+                Account Name
+                <input value={withdrawForm.accountName} onChange={(e) => updateWithdrawField("accountName", e.target.value)} className="cut-frame-sm border-[3px] border-pink-300/90 bg-[linear-gradient(180deg,rgba(36,4,24,0.88),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-pink-100 shadow-[0_0_0_1px_rgba(249,168,212,0.9),0_0_22px_rgba(249,168,212,0.3)] outline-none placeholder:text-pink-100/30 focus:border-pink-200" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
+                Account Number
+                <input value={withdrawForm.accountNumber} onChange={(e) => updateWithdrawField("accountNumber", e.target.value)} className="cut-frame-sm border-[3px] border-blue-300/90 bg-[linear-gradient(180deg,rgba(2,10,26,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-blue-100 shadow-[0_0_0_1px_rgba(147,197,253,0.9),0_0_22px_rgba(96,165,250,0.3)] outline-none placeholder:text-blue-100/30 focus:border-blue-200" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
+                IBAN
+                <input value={withdrawForm.iban} onChange={(e) => updateWithdrawField("iban", e.target.value)} className="cut-frame-sm border-[3px] border-purple-300/90 bg-[linear-gradient(180deg,rgba(20,6,38,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-purple-100 shadow-[0_0_0_1px_rgba(216,180,254,0.9),0_0_22px_rgba(192,132,252,0.3)] outline-none placeholder:text-purple-100/30 focus:border-purple-200" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
+                Phone Number
+                <input value={withdrawForm.phoneNumber} onChange={(e) => updateWithdrawField("phoneNumber", e.target.value)} className="cut-frame-sm border-[3px] border-emerald-300/90 bg-[linear-gradient(180deg,rgba(3,24,14,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-emerald-100 shadow-[0_0_0_1px_rgba(110,231,183,0.9),0_0_22px_rgba(52,211,153,0.3)] outline-none placeholder:text-emerald-100/30 focus:border-emerald-200" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
+                Branch Name (Optional)
+                <input value={withdrawForm.branchName} onChange={(e) => updateWithdrawField("branchName", e.target.value)} className="cut-frame-sm border-[3px] border-orange-300/90 bg-[linear-gradient(180deg,rgba(10,10,12,0.95),rgba(0,0,0,0.95))] px-4 py-3 text-base font-bold tracking-[0.03em] text-orange-100 shadow-[0_0_0_1px_rgba(253,186,116,0.9),0_0_20px_rgba(251,146,60,0.28)] outline-none placeholder:text-orange-100/30 focus:border-orange-200" />
+              </label>
+            </div>
+            {withdrawMessage ? (
+              <div
+                className={`mt-4 cut-frame-sm border px-4 py-2 text-sm font-bold ${
+                  withdrawMessage.tone === "good"
+                    ? "border-emerald-300/70 bg-emerald-500/10 text-emerald-200"
+                    : withdrawMessage.tone === "bad"
+                      ? "border-rose-300/70 bg-rose-500/10 text-rose-200"
+                      : "border-cyan-300/70 bg-cyan-500/10 text-cyan-200"
+                }`}
+              >
+                {withdrawMessage.text}
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => void submitWithdrawRequest()}
+                disabled={!canSubmitWithdraw}
+                className="hud-hover-glow min-w-[240px] border-[3px] border-amber-300/90 bg-[linear-gradient(180deg,rgba(255,198,64,0.32),rgba(24,16,2,0.86))] px-7 py-3.5 text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_18px_rgba(252,211,77,0.34),0_0_42px_rgba(252,211,77,0.22)] [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {withdrawSubmitting ? "Submitting..." : "Submit Withdrawal"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

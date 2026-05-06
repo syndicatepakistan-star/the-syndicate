@@ -12,8 +12,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Syndicate — Dashboard",
-  description: "Gold HUD cyber dashboard (Tailwind + GSAP)."
+  title: "THE SYNDICATE",
+  description: "THE SYNDICATE",
+  icons: {
+    icon: "/assets/logo.png",
+    shortcut: "/assets/logo.png",
+    apple: "/assets/logo.png"
+  }
 };
 
 export const viewport: Viewport = {

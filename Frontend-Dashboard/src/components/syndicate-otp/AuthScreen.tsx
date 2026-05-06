@@ -655,7 +655,7 @@ export default function AuthScreen({
           normalized.includes("no account") ||
           normalized.includes("sign up")
         ) {
-          setError("You do not have any account registered with this mail.");
+          setError("You do not have any account with this email.");
         } else {
           setError(rawMessage);
         }

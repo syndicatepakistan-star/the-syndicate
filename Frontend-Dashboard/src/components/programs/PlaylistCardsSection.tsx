@@ -82,17 +82,26 @@ export function PlaylistCardsSection({
   subtitle = "All playlists added from admin are shown here. Open dashboard to continue learning.",
   className,
 }: Props) {
+  const readInitialPlaylistsFromSession = (): StreamPlaylistListItem[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.sessionStorage.getItem("syn:streaming:playlists:v1");
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as { data?: StreamPlaylistListItem[] };
+      return Array.isArray(parsed?.data) ? parsed.data : [];
+    } catch {
+      return [];
+    }
+  };
   const router = useRouter();
-  const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>([]);
+  const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() => readInitialPlaylistsFromSession());
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
   const [pendingCheckoutPlaylistId, setPendingCheckoutPlaylistId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      setLoading(true);
       try {
         const list = await fetchStreamPlaylists();
         if (!cancelled) {
@@ -104,8 +113,6 @@ export function PlaylistCardsSection({
           setPlaylists([]);
           setError("Could not load playlists right now.");
         }
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -188,25 +195,24 @@ export function PlaylistCardsSection({
         <span className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)} aria-hidden />
         <span
           className={cn(
-            "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px] animate-[pulse_1.3s_ease-in-out_infinite]",
+            "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
             theme.spark
           )}
           aria-hidden
         />
         <span
           className={cn(
-            "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px] animate-[pulse_1.8s_ease-in-out_infinite]",
+            "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px]",
             theme.spark
           )}
           aria-hidden
         />
-        <span className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen animate-pulse" aria-hidden />
+        <span className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen" aria-hidden />
         <span
           className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 will-change-transform animate-[spin_5.5s_linear_infinite] motion-reduce:animate-none bg-gradient-to-r",
+            "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r",
             theme.ring
           )}
-          style={{ animationDuration: `${5.3 + (j % 5) * 0.42}s` }}
           aria-hidden
         />
         <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
@@ -315,11 +321,8 @@ export function PlaylistCardsSection({
         <div className="absolute bottom-[-15%] left-[20%] h-[230px] w-[230px] rounded-full bg-violet-400/16 blur-[95px] sm:h-[360px] sm:w-[360px] sm:blur-[130px]" />
         <div className="absolute bottom-[-12%] right-[16%] h-[230px] w-[230px] rounded-full bg-sky-300/14 blur-[95px] sm:h-[350px] sm:w-[350px] sm:blur-[125px]" />
       </div>
-      {loading ? (
-        <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">Loading playlists...</div>
-      ) : null}
       {error ? <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{error}</div> : null}
-      {!loading && !error && visiblePlaylists.length === 0 ? (
+      {!error && visiblePlaylists.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">No playlists are published yet.</div>
       ) : null}
 

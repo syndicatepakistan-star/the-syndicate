@@ -559,8 +559,8 @@ export function ProgramsCourseSection({
               <>
                 <span className="pointer-events-none absolute inset-0 z-[3] bg-black/42" />
                 <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-5 text-center">
-                  <span className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/85 bg-black/75 px-6 py-3 text-[26px] font-black uppercase tracking-[0.18em] text-[#f5c814] shadow-[0_0_28px_rgba(245,200,20,0.42)] sm:text-[32px]">
-                    <Lock className="h-7 w-7 sm:h-8 sm:w-8" />
+                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/75 px-3.5 py-1.5 text-[18px] font-black uppercase tracking-[0.12em] text-[#f5c814] shadow-[0_0_22px_rgba(245,200,20,0.36)] sm:px-4 sm:py-2 sm:text-[20px]">
+                    <Lock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     {checkoutBusyPlaylistId === pl.id ? "Redirecting..." : "Unlock"}
                   </span>
                 </span>
@@ -934,8 +934,8 @@ export function ProgramsCourseSection({
                         <>
                           <span className="pointer-events-none absolute inset-0 z-[2] bg-black/48" />
                           <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-4 text-center">
-                            <span className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/85 bg-black/78 px-4 py-2.5 text-[18px] font-black uppercase tracking-[0.14em] text-[#f5c814] shadow-[0_0_24px_rgba(245,200,20,0.38)] sm:px-5 sm:text-[22px] sm:tracking-[0.16em]">
-                              <Lock className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/78 px-3 py-1.5 text-[16px] font-black uppercase tracking-[0.11em] text-[#f5c814] shadow-[0_0_20px_rgba(245,200,20,0.34)] sm:px-4 sm:py-2 sm:text-[18px] sm:tracking-[0.12em]">
+                              <Lock className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
                               {bundleCheckoutBusy ? "Redirecting..." : "Unlock"}
                             </span>
                           </span>

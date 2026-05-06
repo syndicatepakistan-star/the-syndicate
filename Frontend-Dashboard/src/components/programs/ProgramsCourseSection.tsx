@@ -496,7 +496,7 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex aspect-[3/5] min-h-[19.25rem] w-full max-w-[10.6rem] flex-col overflow-hidden text-left outline-none sm:min-h-0 sm:max-w-none sm:aspect-[4/5]",
+          "group/card relative flex aspect-[4/5] min-h-[18rem] w-full max-w-none flex-col overflow-hidden text-left outline-none sm:min-h-0",
           "rounded-3xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -523,7 +523,7 @@ export function ProgramsCourseSection({
             aria-hidden
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2.5 sm:p-3.5">
-            <div className={cn("relative min-h-[10.6rem] overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem] sm:flex-1", theme.mediaBorder)}>
+            <div className={cn("relative min-h-[10.6rem] flex-1 overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem]", theme.mediaBorder)}>
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -795,9 +795,9 @@ export function ProgramsCourseSection({
                                 <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[5] w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-transparent via-[color:var(--gold)] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_38px_rgba(245,200,20,0.75)]" />
                               </>
                             ) : null}
-                            <div className="grid grid-cols-2 justify-items-center gap-3">
-                              <div>{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
-                              <div>{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
+                            <div className="grid grid-cols-2 justify-items-stretch gap-3">
+                              <div className="w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
+                              <div className="w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
                             </div>
                           </div>
                         ))}

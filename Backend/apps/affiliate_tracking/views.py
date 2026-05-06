@@ -19,7 +19,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from accounts.syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
 
-from .models import ApiToken, AffiliateProfile, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
+from .models import AffiliateProfile, AffiliateWithdrawalAccount, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
 
 CLICK_POINTS = 1
 LEAD_POINTS = 5
@@ -723,6 +723,7 @@ def request_withdrawal(request):
     iban = str(payload.get("iban") or "").strip()
     phone_number = str(payload.get("phone_number") or "").strip()
     branch_name = str(payload.get("branch_name") or "").strip()
+    requested_amount_raw = str(payload.get("requested_amount") or "").strip()
 
     if not bank_name:
         return _bad_request("bank_name is required")
@@ -734,12 +735,33 @@ def request_withdrawal(request):
         return _bad_request("iban is required")
     if not phone_number:
         return _bad_request("phone_number is required")
+    try:
+        requested_amount = Decimal(requested_amount_raw)
+    except (InvalidOperation, TypeError):
+        return _bad_request("A valid requested_amount is required")
+    if requested_amount <= 0:
+        return _bad_request("requested_amount must be greater than 0")
 
     overall = _overall_stats(referral.profile)
     earnings_total = Decimal(str(overall.get("earnings_total") or "0"))
     minimum_required = Decimal("50.00")
     if earnings_total < minimum_required:
         return _bad_request("Minimum earnings of £50.00 required for withdrawal", 403)
+    if requested_amount > earnings_total:
+        return _bad_request("requested_amount cannot exceed current earnings", 400)
+
+    # Persist latest affiliate payout account details for future withdrawals.
+    AffiliateWithdrawalAccount.objects.update_or_create(
+        profile=referral.profile,
+        defaults={
+            "bank_name": bank_name,
+            "account_name": account_name,
+            "account_number": account_number,
+            "iban": iban,
+            "phone_number": phone_number,
+            "branch_name": branch_name,
+        },
+    )
 
     withdrawal = WithdrawalRequest.objects.create(
         profile=referral.profile,
@@ -750,6 +772,7 @@ def request_withdrawal(request):
         iban=iban,
         phone_number=phone_number,
         branch_name=branch_name,
+        requested_amount=requested_amount.quantize(Decimal("0.01")),
         earnings_snapshot=earnings_total,
     )
     return JsonResponse(
@@ -757,6 +780,7 @@ def request_withdrawal(request):
             "success": True,
             "withdrawal_request_id": withdrawal.id,
             "status": withdrawal.status,
+            "requested_amount": str(withdrawal.requested_amount),
             "earnings_snapshot": str(withdrawal.earnings_snapshot),
             "created_at": withdrawal.created_at.isoformat(),
         }

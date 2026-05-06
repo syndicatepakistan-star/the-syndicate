@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
 import { Award, CheckCircle2, Download, Shield } from 'lucide-react'
 import Image from 'next/image'
 
@@ -226,26 +225,18 @@ export default function CertificatesSection({
         </div>
 
       </div>
-      <AnimatePresence>
-        {isPreviewOpen ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] flex items-center justify-center bg-transparent p-4 backdrop-blur-sm"
-            onClick={() => setIsPreviewOpen(false)}
+      {isPreviewOpen ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-transparent p-4 backdrop-blur-sm"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="relative max-h-[95vh] w-full max-w-[980px] overflow-y-auto bg-transparent p-1 sm:p-2"
+            style={{
+              boxShadow: '0 0 90px rgba(217,70,239,0.25), 0 0 130px rgba(56,189,248,0.18)',
+            }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 16 }}
-              transition={{ duration: 0.28 }}
-              onClick={(event) => event.stopPropagation()}
-              className="relative max-h-[95vh] w-full max-w-[980px] overflow-y-auto bg-transparent p-1 sm:p-2"
-              style={{
-                boxShadow: '0 0 90px rgba(217,70,239,0.25), 0 0 130px rgba(56,189,248,0.18)',
-              }}
-            >
               <div className="pointer-events-none absolute inset-0 opacity-[0.16]" style={{ backgroundImage: 'linear-gradient(rgba(217,70,239,0.24) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.24) 1px, transparent 1px)', backgroundSize: '26px 26px' }} />
               <div className="pointer-events-none absolute inset-0 opacity-[0.22]" style={{ background: 'radial-gradient(circle at 24% 12%, rgba(217,70,239,0.26), transparent 42%), radial-gradient(circle at 80% 86%, rgba(56,189,248,0.18), transparent 46%)' }} />
 
@@ -331,10 +322,9 @@ export default function CertificatesSection({
 
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

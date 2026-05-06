@@ -63,6 +63,7 @@ type WithdrawFormState = {
   iban: string;
   phoneNumber: string;
   branchName: string;
+  amount: string;
 };
 
 export default function AffiliatePortal({ displayName, referralIds, onLogout, embedded = false }: AffiliatePortalProps) {
@@ -89,6 +90,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     iban: "",
     phoneNumber: "",
     branchName: "",
+    amount: "",
   });
   const RECENT_PAGE_SIZE = 4;
   const VISITORS_PAGE_SIZE = 6;
@@ -150,16 +152,19 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const earningsValue = Number(overallStats?.earnings_total ?? "0") || 0;
   const earningsDisplay = formatEarnings(overallStats?.earnings_total ?? "0");
   const canRequestWithdraw = earningsValue >= 50;
+  const withdrawAmountValue = Number(withdrawForm.amount || "0");
+  const withdrawAmountValid = Number.isFinite(withdrawAmountValue) && withdrawAmountValue > 0 && withdrawAmountValue <= earningsValue;
   const withdrawFormValid = useMemo(() => {
     return (
       withdrawForm.bankName.trim().length > 0 &&
       withdrawForm.accountName.trim().length > 0 &&
       withdrawForm.accountNumber.trim().length > 0 &&
       withdrawForm.iban.trim().length > 0 &&
-      withdrawForm.phoneNumber.trim().length > 0
+      withdrawForm.phoneNumber.trim().length > 0 &&
+      withdrawForm.amount.trim().length > 0
     );
   }, [withdrawForm]);
-  const canSubmitWithdraw = canRequestWithdraw && withdrawFormValid && !withdrawSubmitting;
+  const canSubmitWithdraw = canRequestWithdraw && withdrawFormValid && withdrawAmountValid && !withdrawSubmitting;
   const earningsCardToneClass =
     earningsValue <= 0
       ? "border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.14),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(193,120,255,0.9),0_0_22px_rgba(193,120,255,0.86),0_0_56px_rgba(193,120,255,0.72),0_0_108px_rgba(193,120,255,0.56),inset_0_0_20px_rgba(193,120,255,0.27)]"
@@ -235,6 +240,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         iban: withdrawForm.iban.trim(),
         phone_number: withdrawForm.phoneNumber.trim(),
         branch_name: withdrawForm.branchName.trim(),
+        requested_amount: withdrawAmountValue.toFixed(2),
       });
       setWithdrawMessage({ text: "Withdrawal request submitted successfully.", tone: "good" });
       setWithdrawOpen(false);
@@ -245,6 +251,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         iban: "",
         phoneNumber: "",
         branchName: "",
+        amount: "",
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not submit withdrawal request.";
@@ -633,9 +640,6 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             <p className={`mt-1 text-sm font-black uppercase tracking-[0.12em] ${canRequestWithdraw ? "text-emerald-300" : "text-rose-300"}`}>
               Current earnings: £{earningsDisplay} {canRequestWithdraw ? "Eligible" : "Not eligible yet"}
             </p>
-            <p className="mt-1 text-sm font-semibold text-amber-100/95">
-              You will get your withdraw amount within 1-2 weeks.
-            </p>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
@@ -662,6 +666,21 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 Branch Name (Optional)
                 <input value={withdrawForm.branchName} onChange={(e) => updateWithdrawField("branchName", e.target.value)} className="cut-frame-sm border-[3px] border-orange-300/90 bg-[linear-gradient(180deg,rgba(10,10,12,0.95),rgba(0,0,0,0.95))] px-4 py-3 text-base font-bold tracking-[0.03em] text-orange-100 shadow-[0_0_0_1px_rgba(253,186,116,0.9),0_0_20px_rgba(251,146,60,0.28)] outline-none placeholder:text-orange-100/30 focus:border-orange-200" />
               </label>
+              <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100 sm:col-span-2">
+                Enter Amount You Want To Withdraw
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={withdrawForm.amount}
+                  onChange={(e) => updateWithdrawField("amount", e.target.value)}
+                  placeholder={`Max £${earningsDisplay}`}
+                  className="cut-frame-sm border-[3px] border-lime-300/90 bg-[linear-gradient(180deg,rgba(7,18,4,0.94),rgba(0,0,0,0.92))] px-4 py-3 text-base font-bold tracking-[0.03em] text-lime-100 shadow-[0_0_0_1px_rgba(190,242,100,0.9),0_0_20px_rgba(132,204,22,0.3)] outline-none placeholder:text-lime-100/30 focus:border-lime-200"
+                />
+                <span className={`text-xs font-bold normal-case tracking-normal ${withdrawAmountValid || !withdrawForm.amount ? "text-lime-200/90" : "text-rose-300"}`}>
+                  Enter up to your balance (max £{earningsDisplay}).
+                </span>
+              </label>
             </div>
             {withdrawMessage ? (
               <div
@@ -677,7 +696,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               </div>
             ) : null}
 
-            <div className="mt-5 flex justify-end">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-amber-100/95">
+                Payout arrives within 1-2 weeks.
+              </p>
               <button
                 type="button"
                 onClick={() => void submitWithdrawRequest()}

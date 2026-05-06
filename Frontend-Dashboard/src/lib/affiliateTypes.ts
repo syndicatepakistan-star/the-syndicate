@@ -95,12 +95,14 @@ export type WithdrawalRequestPayload = {
   iban: string;
   phone_number: string;
   branch_name?: string;
+  requested_amount: string;
 };
 
 export type WithdrawalRequestResponse = {
   success: boolean;
   withdrawal_request_id: number;
   status: string;
+  requested_amount?: string;
   earnings_snapshot: string;
   created_at: string;
 };

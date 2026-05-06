@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AffiliateProfile, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
+from .models import AffiliateProfile, AffiliateWithdrawalAccount, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
 
 
 def _all_model_field_names(model) -> tuple[str, ...]:
@@ -54,3 +54,8 @@ class EmailOTPAdmin(AllFieldsListDisplayAdmin):
 @admin.register(WithdrawalRequest)
 class WithdrawalRequestAdmin(AllFieldsListDisplayAdmin):
     search_fields = ("profile__display_name", "section_referral__referral_id", "account_name", "iban")
+
+
+@admin.register(AffiliateWithdrawalAccount)
+class AffiliateWithdrawalAccountAdmin(AllFieldsListDisplayAdmin):
+    search_fields = ("profile__display_name", "account_name", "iban")

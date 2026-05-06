@@ -82,6 +82,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
+  const [withdrawAttemptedSubmit, setWithdrawAttemptedSubmit] = useState(false);
   const [withdrawMessage, setWithdrawMessage] = useState<{ text: string; tone: "good" | "bad" | "info" } | null>(null);
   const [withdrawForm, setWithdrawForm] = useState<WithdrawFormState>({
     bankName: "",
@@ -165,6 +166,15 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     );
   }, [withdrawForm]);
   const canSubmitWithdraw = canRequestWithdraw && withdrawFormValid && withdrawAmountValid && !withdrawSubmitting;
+  const showWithdrawValidation = withdrawAttemptedSubmit;
+  const missingBankName = showWithdrawValidation && withdrawForm.bankName.trim().length === 0;
+  const missingAccountName = showWithdrawValidation && withdrawForm.accountName.trim().length === 0;
+  const missingAccountNumber = showWithdrawValidation && withdrawForm.accountNumber.trim().length === 0;
+  const missingIban = showWithdrawValidation && withdrawForm.iban.trim().length === 0;
+  const missingPhone = showWithdrawValidation && withdrawForm.phoneNumber.trim().length === 0;
+  const missingAmount = showWithdrawValidation && withdrawForm.amount.trim().length === 0;
+  const invalidAmount = showWithdrawValidation && withdrawForm.amount.trim().length > 0 && !withdrawAmountValid;
+  const withdrawButtonErrorState = !canRequestWithdraw || (showWithdrawValidation && (!withdrawFormValid || !withdrawAmountValid));
   const earningsCardToneClass =
     earningsValue <= 0
       ? "border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.14),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(193,120,255,0.9),0_0_22px_rgba(193,120,255,0.86),0_0_56px_rgba(193,120,255,0.72),0_0_108px_rgba(193,120,255,0.56),inset_0_0_20px_rgba(193,120,255,0.27)]"
@@ -190,6 +200,15 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!withdrawOpen) return;
+    const handleEscapeClose = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setWithdrawOpen(false);
+    };
+    window.addEventListener("keydown", handleEscapeClose);
+    return () => window.removeEventListener("keydown", handleEscapeClose);
+  }, [withdrawOpen]);
 
   useEffect(() => {}, [displayName]);
 
@@ -229,7 +248,17 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   }
 
   async function submitWithdrawRequest() {
-    if (!canSubmitWithdraw) return;
+    setWithdrawAttemptedSubmit(true);
+    if (!canSubmitWithdraw) {
+      if (!canRequestWithdraw) {
+        setWithdrawMessage({ text: "You are not eligible yet. Minimum earnings required: £50.000.", tone: "bad" });
+      } else if (!withdrawFormValid) {
+        setWithdrawMessage({ text: "Please fill all required fields before submitting.", tone: "bad" });
+      } else if (!withdrawAmountValid) {
+        setWithdrawMessage({ text: `Withdrawal amount must be greater than 0 and up to £${earningsDisplay}.`, tone: "bad" });
+      }
+      return;
+    }
     setWithdrawSubmitting(true);
     try {
       await requestAffiliateWithdrawal({
@@ -244,6 +273,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       });
       setWithdrawMessage({ text: "Withdrawal request submitted successfully.", tone: "good" });
       setWithdrawOpen(false);
+      setWithdrawAttemptedSubmit(false);
       setWithdrawForm({
         bankName: "",
         accountName: "",
@@ -344,7 +374,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         className={
           embedded
             ? "cut-frame glass-dark mx-auto flex h-auto min-h-[min(58vh,560px)] max-h-[min(82vh,920px)] w-full max-w-none flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:p-5"
-            : "cut-frame glass-dark mx-auto flex h-[calc(100vh-1.5rem)] w-full max-w-[1800px] flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:h-[calc(100vh-2.5rem)] sm:p-5"
+            : "cut-frame glass-dark mx-auto flex min-h-[calc(100dvh-1.5rem)] w-full max-w-[1800px] flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-3 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:min-h-[calc(100dvh-2.5rem)] sm:p-5"
         }
       >
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -372,7 +402,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               <button
                 type="button"
                 onClick={handleLogout}
-                className="cut-frame-sm hud-hover-glow border border-fuchsia-300/70 bg-[linear-gradient(180deg,rgba(232,121,249,0.22),rgba(46,8,64,0.42))] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.65),0_0_18px_rgba(232,121,249,0.35)]"
+                className="cut-frame-sm hud-hover-glow cursor-pointer border border-fuchsia-300/70 bg-[linear-gradient(180deg,rgba(232,121,249,0.22),rgba(46,8,64,0.42))] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.65),0_0_18px_rgba(232,121,249,0.35)]"
               >
                 Logout
               </button>
@@ -383,16 +413,16 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         <div className="min-h-0 flex-1 overflow-auto pr-1 pb-16 no-scrollbar">
           {error ? null : null}
 
-          <div className="cut-frame-sm border border-amber-300/75 bg-black/70 py-4 pl-4 pr-0 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_12px_rgba(252,211,77,0.22),0_0_24px_rgba(193,120,255,0.48),0_0_56px_rgba(56,236,255,0.24),inset_0_0_24px_rgba(252,211,77,0.22)]">
+          <div className="cut-frame-sm border border-amber-300/75 bg-black/70 p-3 sm:py-4 sm:pl-4 sm:pr-0 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_12px_rgba(252,211,77,0.22),0_0_24px_rgba(193,120,255,0.48),0_0_56px_rgba(56,236,255,0.24),inset_0_0_24px_rgba(252,211,77,0.22)]">
             <div className="mx-auto w-full max-w-[1720px] cut-frame-sm border border-cyan-300/70 bg-black/80 p-3 shadow-[0_0_0_1px_rgba(56,236,255,0.92),0_0_12px_rgba(56,236,255,0.24),0_0_26px_rgba(193,120,255,0.44),0_0_52px_rgba(56,236,255,0.22),inset_0_0_24px_rgba(56,236,255,0.2)]">
               <div className="flex flex-col items-center gap-3 md:flex-row md:items-end md:justify-center">
                 <div className="w-full md:max-w-[700px]">
-                  <div className="mb-1 h-[25px] text-base font-black uppercase tracking-[0.16em] text-white/90 drop-shadow-[0_0_10px_rgba(255,255,255,0.35)]">Referral Link</div>
+                  <div className="mb-1 h-[25px] text-sm sm:text-base font-black uppercase tracking-[0.16em] text-white/90 drop-shadow-[0_0_10px_rgba(255,255,255,0.35)]">Referral Link</div>
                   <input
                     value={activeReferralLink}
                     placeholder="Generate a referral link"
                     readOnly
-                    className={`cut-frame-sm focus-ring-gold w-full border px-4 py-3.5 text-xl font-semibold outline-none placeholder:text-white/35 ${
+                    className={`cut-frame-sm focus-ring-gold w-full border px-4 py-3.5 text-sm sm:text-base font-semibold outline-none placeholder:text-white/35 ${
                       copiedLink && copiedLink === activeReferralLink
                         ? "border-cyan-200/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.22),rgba(10,20,28,0.95))] text-cyan-50 shadow-[0_0_0_1px_rgba(130,245,255,0.9),0_0_26px_rgba(56,236,255,0.5),0_0_58px_rgba(56,236,255,0.3),0_0_110px_rgba(56,236,255,0.2)]"
                         : "border-[rgba(255,215,0,0.5)] bg-black/85 text-white/95 shadow-[0_0_0_1px_rgba(252,211,77,0.6),0_0_24px_rgba(252,211,77,0.3),0_0_54px_rgba(193,120,255,0.24)]"
@@ -404,7 +434,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     type="button"
                     onClick={() => void copyLink(activeReferralLink)}
                     disabled={!activeReferralLink}
-                    className="cut-frame-sm hud-hover-glow min-w-[124px] border border-cyan-300/85 bg-[linear-gradient(180deg,rgba(56,236,255,0.24),rgba(0,24,34,0.5))] px-7 py-3 text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.76),0_0_26px_rgba(56,236,255,0.4),0_0_60px_rgba(56,236,255,0.26)] transition duration-300 hover:scale-[1.03] hover:border-cyan-200/95 hover:shadow-[0_0_0_1px_rgba(130,245,255,0.95),0_0_36px_rgba(56,236,255,0.54),0_0_74px_rgba(56,236,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="cut-frame-sm hud-hover-glow cursor-pointer min-w-[96px] sm:min-w-[124px] border border-cyan-300/85 bg-[linear-gradient(180deg,rgba(56,236,255,0.24),rgba(0,24,34,0.5))] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.76),0_0_26px_rgba(56,236,255,0.4),0_0_60px_rgba(56,236,255,0.26)] transition duration-300 hover:scale-[1.03] hover:border-cyan-200/95 hover:shadow-[0_0_0_1px_rgba(130,245,255,0.95),0_0_36px_rgba(56,236,255,0.54),0_0_74px_rgba(56,236,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {copiedLink && copiedLink === activeReferralLink ? "Copied" : "Copy"}
                   </button>
@@ -412,17 +442,18 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     type="button"
                     onClick={() => void shareLink(activeReferralLink)}
                     disabled={!activeReferralLink}
-                    className="cut-frame-sm hud-hover-glow min-w-[124px] border border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.24),rgba(25,6,38,0.5))] px-7 py-3 text-base font-black uppercase tracking-[0.16em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.76),0_0_26px_rgba(193,120,255,0.4),0_0_60px_rgba(193,120,255,0.26)] transition duration-300 hover:scale-[1.03] hover:border-violet-200/95 hover:shadow-[0_0_0_1px_rgba(221,173,255,0.95),0_0_36px_rgba(193,120,255,0.54),0_0_74px_rgba(193,120,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="cut-frame-sm hud-hover-glow cursor-pointer min-w-[96px] sm:min-w-[124px] border border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.24),rgba(25,6,38,0.5))] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-black uppercase tracking-[0.16em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.76),0_0_26px_rgba(193,120,255,0.4),0_0_60px_rgba(193,120,255,0.26)] transition duration-300 hover:scale-[1.03] hover:border-violet-200/95 hover:shadow-[0_0_0_1px_rgba(221,173,255,0.95),0_0_36px_rgba(193,120,255,0.54),0_0_74px_rgba(193,120,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Share
                   </button>
                   <button
                     type="button"
                     onClick={() => {
+                      setWithdrawAttemptedSubmit(false);
                       setWithdrawMessage(null);
                       setWithdrawOpen(true);
                     }}
-                    className="cut-frame-sm hud-hover-glow min-w-[138px] border border-amber-300/85 bg-[linear-gradient(180deg,rgba(255,198,64,0.26),rgba(38,22,0,0.58))] px-7 py-3 text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.78),0_0_28px_rgba(252,211,77,0.42),0_0_62px_rgba(252,211,77,0.26)] transition duration-300 hover:scale-[1.03] hover:border-amber-200/95 hover:shadow-[0_0_0_1px_rgba(255,239,176,0.95),0_0_38px_rgba(252,211,77,0.54),0_0_74px_rgba(252,211,77,0.3)]"
+                    className="cut-frame-sm hud-hover-glow cursor-pointer min-w-[108px] sm:min-w-[138px] border border-amber-300/85 bg-[linear-gradient(180deg,rgba(255,198,64,0.26),rgba(38,22,0,0.58))] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.78),0_0_28px_rgba(252,211,77,0.42),0_0_62px_rgba(252,211,77,0.26)] transition duration-300 hover:scale-[1.03] hover:border-amber-200/95 hover:shadow-[0_0_0_1px_rgba(255,239,176,0.95),0_0_38px_rgba(252,211,77,0.54),0_0_74px_rgba(252,211,77,0.3)]"
                   >
                     Withdraw
                   </button>
@@ -437,11 +468,11 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             </div>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
               {[
-                { label: "Clicks", value: overallStats?.click_count ?? "-", tone: "border-cyan-300/75 bg-[linear-gradient(180deg,rgba(56,236,255,0.12),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(34,211,238,0.9),0_0_22px_rgba(34,211,238,0.86),0_0_56px_rgba(34,211,238,0.72),0_0_108px_rgba(34,211,238,0.56),inset_0_0_20px_rgba(34,211,238,0.27)]" },
-                { label: "Leads", value: overallStats?.lead_count ?? "-", tone: "border-violet-300/75 bg-[linear-gradient(180deg,rgba(193,120,255,0.12),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(193,120,255,0.9),0_0_22px_rgba(193,120,255,0.86),0_0_56px_rgba(193,120,255,0.72),0_0_108px_rgba(193,120,255,0.56),inset_0_0_20px_rgba(193,120,255,0.27)]" },
-                { label: "Sales", value: overallStats?.sale_count ?? 0, tone: "border-cyan-300/75 bg-[linear-gradient(180deg,rgba(56,236,255,0.12),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_22px_rgba(56,236,255,0.86),0_0_56px_rgba(56,236,255,0.72),0_0_108px_rgba(56,236,255,0.56),inset_0_0_20px_rgba(56,236,255,0.27)]" },
-                { label: "Rate", value: `${conversionRing}%`, tone: "border-amber-300/75 bg-[linear-gradient(180deg,rgba(255,198,64,0.14),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(252,211,77,0.9),0_0_22px_rgba(252,211,77,0.86),0_0_56px_rgba(252,211,77,0.72),0_0_108px_rgba(252,211,77,0.56),inset_0_0_20px_rgba(252,211,77,0.27)]" },
-                { label: "Earnings", value: `£${earningsDisplay}`, tone: earningsCardToneClass },
+                { label: "Clicks", value: overallStats?.click_count ?? "-", tone: "border-orange-300/80 bg-[linear-gradient(180deg,rgba(255,146,43,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(253,186,116,0.92),0_0_24px_rgba(251,146,60,0.86),0_0_58px_rgba(251,146,60,0.66),0_0_108px_rgba(251,146,60,0.48),inset_0_0_20px_rgba(253,186,116,0.3)]" },
+                { label: "Leads", value: overallStats?.lead_count ?? "-", tone: "border-emerald-300/80 bg-[linear-gradient(180deg,rgba(34,197,94,0.18),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(110,231,183,0.92),0_0_24px_rgba(16,185,129,0.82),0_0_58px_rgba(16,185,129,0.62),0_0_108px_rgba(16,185,129,0.46),inset_0_0_20px_rgba(110,231,183,0.28)]" },
+                { label: "Sales", value: overallStats?.sale_count ?? 0, tone: "border-cyan-300/80 bg-[linear-gradient(180deg,rgba(34,211,238,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(103,232,249,0.92),0_0_24px_rgba(6,182,212,0.86),0_0_58px_rgba(6,182,212,0.66),0_0_108px_rgba(6,182,212,0.48),inset_0_0_20px_rgba(103,232,249,0.3)]" },
+                { label: "Rate", value: `${conversionRing}%`, tone: "border-yellow-300/80 bg-[linear-gradient(180deg,rgba(255,215,0,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(254,240,138,0.92),0_0_24px_rgba(250,204,21,0.86),0_0_58px_rgba(250,204,21,0.66),0_0_108px_rgba(250,204,21,0.48),inset_0_0_20px_rgba(254,240,138,0.3)]" },
+                { label: "Earnings", value: `£${earningsDisplay}`, tone: "border-pink-300/80 bg-[linear-gradient(180deg,rgba(244,114,182,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(249,168,212,0.92),0_0_24px_rgba(236,72,153,0.84),0_0_58px_rgba(236,72,153,0.64),0_0_108px_rgba(236,72,153,0.46),inset_0_0_20px_rgba(249,168,212,0.3)]" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -509,7 +540,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             </div>
           </div>
 
-          <div className="mt-5 cut-frame-sm border border-fuchsia-300/75 bg-black/45 py-4 pl-4 pr-4 shadow-[0_0_0_1px_rgba(232,121,249,0.88),0_0_22px_rgba(232,121,249,0.72),0_0_56px_rgba(232,121,249,0.5),0_0_108px_rgba(193,120,255,0.34),inset_0_0_20px_rgba(232,121,249,0.22)]">
+          <div className="mt-5 cut-frame-sm border border-fuchsia-300/75 bg-black/45 p-3 sm:py-4 sm:pl-4 sm:pr-4 shadow-[0_0_0_1px_rgba(232,121,249,0.88),0_0_22px_rgba(232,121,249,0.72),0_0_56px_rgba(232,121,249,0.5),0_0_108px_rgba(193,120,255,0.34),inset_0_0_20px_rgba(232,121,249,0.22)]">
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="text-sm font-black uppercase tracking-[0.2em] text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Recent Referrals</div>
             </div>
@@ -563,7 +594,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             ) : null}
           </div>
 
-          <div className="mt-5 cut-frame-sm border border-amber-300/75 bg-black/45 py-4 pl-4 pr-4 shadow-[0_0_0_1px_rgba(252,211,77,0.86),0_0_22px_rgba(252,211,77,0.72),0_0_56px_rgba(56,236,255,0.32),0_0_108px_rgba(193,120,255,0.22),inset_0_0_20px_rgba(252,211,77,0.2)]">
+          <div className="mt-5 cut-frame-sm border border-amber-300/75 bg-black/45 p-3 sm:py-4 sm:pl-4 sm:pr-4 shadow-[0_0_0_1px_rgba(252,211,77,0.86),0_0_22px_rgba(252,211,77,0.72),0_0_56px_rgba(56,236,255,0.32),0_0_108px_rgba(193,120,255,0.22),inset_0_0_20px_rgba(252,211,77,0.2)]">
             <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Affiliate Visitors</h3>
             <div className="mt-3 max-w-[1400px] overflow-auto no-scrollbar">
               <table className="w-full min-w-[700px] text-left text-base">
@@ -622,19 +653,31 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         </div>
       </main>
       {withdrawOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(2,4,10,0.82)] p-4 backdrop-blur-[3px]">
-          <div className="cut-frame relative w-full max-w-[840px] border-[3px] border-cyan-300/95 bg-[radial-gradient(120%_100%_at_0%_0%,rgba(56,236,255,0.16),transparent_56%),radial-gradient(120%_100%_at_100%_100%,rgba(193,120,255,0.15),transparent_58%),radial-gradient(90%_80%_at_50%_0%,rgba(255,198,64,0.1),transparent_62%),linear-gradient(180deg,rgba(1,6,10,0.98),rgba(3,3,6,0.98))] p-7 shadow-[0_0_0_1px_rgba(56,236,255,0.95),0_0_24px_rgba(56,236,255,0.42),0_0_58px_rgba(193,120,255,0.32),0_0_90px_rgba(252,211,77,0.2)] sm:p-8">
+        <div
+          className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto overscroll-contain touch-pan-y bg-[rgba(2,4,10,0.82)] p-3 backdrop-blur-[3px] sm:items-center sm:p-4"
+          onClick={() => setWithdrawOpen(false)}
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setWithdrawOpen(false);
+          }}
+        >
+          <div
+            className="cut-frame relative my-3 max-h-[calc(100dvh-1.5rem)] w-full max-w-[840px] overflow-y-auto overscroll-contain touch-pan-y border-[3px] border-cyan-300/95 bg-[radial-gradient(120%_100%_at_0%_0%,rgba(56,236,255,0.16),transparent_56%),radial-gradient(120%_100%_at_100%_100%,rgba(193,120,255,0.15),transparent_58%),radial-gradient(90%_80%_at_50%_0%,rgba(255,198,64,0.1),transparent_62%),linear-gradient(180deg,rgba(1,6,10,0.98),rgba(3,3,6,0.98))] p-4 pb-5 shadow-[0_0_0_1px_rgba(56,236,255,0.95),0_0_24px_rgba(56,236,255,0.42),0_0_58px_rgba(193,120,255,0.32),0_0_90px_rgba(252,211,77,0.2)] sm:my-0 sm:max-h-[calc(100dvh-2rem)] sm:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               type="button"
               onClick={() => setWithdrawOpen(false)}
-              className="absolute right-4 top-4 border-2 border-fuchsia-300/85 bg-[linear-gradient(180deg,rgba(232,121,249,0.3),rgba(18,3,28,0.78))] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.8),0_0_16px_rgba(232,121,249,0.3)] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
+              onTouchEnd={() => setWithdrawOpen(false)}
+              onPointerDown={(event) => event.stopPropagation()}
+              aria-label="Close withdrawal form"
+              className="absolute right-3 top-3 z-10 min-h-[40px] min-w-[78px] cursor-pointer touch-manipulation border-2 border-fuchsia-300/85 bg-[linear-gradient(180deg,rgba(232,121,249,0.3),rgba(18,3,28,0.78))] px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.8),0_0_16px_rgba(232,121,249,0.3)] transition-transform duration-200 ease-out hover:scale-110 active:scale-95 sm:right-4 sm:top-4 sm:min-h-11 sm:min-w-0 sm:px-4 sm:py-2 sm:text-xs [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
             >
               Close
             </button>
-            <h3 className="pr-20 text-[1.55rem] font-black uppercase tracking-[0.1em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.5)] sm:text-[1.9rem]">
+            <h3 className="pr-16 text-lg font-black uppercase tracking-[0.1em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.5)] sm:pr-20 sm:text-[1.9rem]">
               Enter Account Details To Witdraw
             </h3>
-            <p className="mt-2 text-base font-bold text-cyan-100">
+            <p className="mt-2 text-sm sm:text-base font-bold text-cyan-100">
               Minimum earnings required for withdrawal: <span className="text-amber-200">£50.000</span>
             </p>
             <p className={`mt-1 text-sm font-black uppercase tracking-[0.12em] ${canRequestWithdraw ? "text-emerald-300" : "text-rose-300"}`}>
@@ -644,23 +687,23 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
                 Bank Name
-                <input value={withdrawForm.bankName} onChange={(e) => updateWithdrawField("bankName", e.target.value)} className="cut-frame-sm border-[3px] border-yellow-300/90 bg-[linear-gradient(180deg,rgba(42,28,0,0.86),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-yellow-100 shadow-[0_0_0_1px_rgba(253,224,71,0.9),0_0_22px_rgba(253,224,71,0.3)] outline-none placeholder:text-yellow-100/30 focus:border-yellow-200" />
+                <input value={withdrawForm.bankName} onChange={(e) => updateWithdrawField("bankName", e.target.value)} className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-yellow-100/30 ${missingBankName ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_22px_rgba(251,113,133,0.35)] focus:border-rose-300" : "border-yellow-300/90 bg-[linear-gradient(180deg,rgba(42,28,0,0.86),rgba(0,0,0,0.9))] text-yellow-100 shadow-[0_0_0_1px_rgba(253,224,71,0.9),0_0_22px_rgba(253,224,71,0.3)] focus:border-yellow-200"}`} />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
                 Account Name
-                <input value={withdrawForm.accountName} onChange={(e) => updateWithdrawField("accountName", e.target.value)} className="cut-frame-sm border-[3px] border-pink-300/90 bg-[linear-gradient(180deg,rgba(36,4,24,0.88),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-pink-100 shadow-[0_0_0_1px_rgba(249,168,212,0.9),0_0_22px_rgba(249,168,212,0.3)] outline-none placeholder:text-pink-100/30 focus:border-pink-200" />
+                <input value={withdrawForm.accountName} onChange={(e) => updateWithdrawField("accountName", e.target.value)} className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-pink-100/30 ${missingAccountName ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_22px_rgba(251,113,133,0.35)] focus:border-rose-300" : "border-pink-300/90 bg-[linear-gradient(180deg,rgba(36,4,24,0.88),rgba(0,0,0,0.9))] text-pink-100 shadow-[0_0_0_1px_rgba(249,168,212,0.9),0_0_22px_rgba(249,168,212,0.3)] focus:border-pink-200"}`} />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
                 Account Number
-                <input value={withdrawForm.accountNumber} onChange={(e) => updateWithdrawField("accountNumber", e.target.value)} className="cut-frame-sm border-[3px] border-blue-300/90 bg-[linear-gradient(180deg,rgba(2,10,26,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-blue-100 shadow-[0_0_0_1px_rgba(147,197,253,0.9),0_0_22px_rgba(96,165,250,0.3)] outline-none placeholder:text-blue-100/30 focus:border-blue-200" />
+                <input value={withdrawForm.accountNumber} onChange={(e) => updateWithdrawField("accountNumber", e.target.value)} className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-blue-100/30 ${missingAccountNumber ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_22px_rgba(251,113,133,0.35)] focus:border-rose-300" : "border-blue-300/90 bg-[linear-gradient(180deg,rgba(2,10,26,0.9),rgba(0,0,0,0.9))] text-blue-100 shadow-[0_0_0_1px_rgba(147,197,253,0.9),0_0_22px_rgba(96,165,250,0.3)] focus:border-blue-200"}`} />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
                 IBAN
-                <input value={withdrawForm.iban} onChange={(e) => updateWithdrawField("iban", e.target.value)} className="cut-frame-sm border-[3px] border-purple-300/90 bg-[linear-gradient(180deg,rgba(20,6,38,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-purple-100 shadow-[0_0_0_1px_rgba(216,180,254,0.9),0_0_22px_rgba(192,132,252,0.3)] outline-none placeholder:text-purple-100/30 focus:border-purple-200" />
+                <input value={withdrawForm.iban} onChange={(e) => updateWithdrawField("iban", e.target.value)} className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-purple-100/30 ${missingIban ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_22px_rgba(251,113,133,0.35)] focus:border-rose-300" : "border-purple-300/90 bg-[linear-gradient(180deg,rgba(20,6,38,0.9),rgba(0,0,0,0.9))] text-purple-100 shadow-[0_0_0_1px_rgba(216,180,254,0.9),0_0_22px_rgba(192,132,252,0.3)] focus:border-purple-200"}`} />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-cyan-100">
                 Phone Number
-                <input value={withdrawForm.phoneNumber} onChange={(e) => updateWithdrawField("phoneNumber", e.target.value)} className="cut-frame-sm border-[3px] border-emerald-300/90 bg-[linear-gradient(180deg,rgba(3,24,14,0.9),rgba(0,0,0,0.9))] px-4 py-3 text-base font-bold tracking-[0.03em] text-emerald-100 shadow-[0_0_0_1px_rgba(110,231,183,0.9),0_0_22px_rgba(52,211,153,0.3)] outline-none placeholder:text-emerald-100/30 focus:border-emerald-200" />
+                <input value={withdrawForm.phoneNumber} onChange={(e) => updateWithdrawField("phoneNumber", e.target.value)} className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-emerald-100/30 ${missingPhone ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_22px_rgba(251,113,133,0.35)] focus:border-rose-300" : "border-emerald-300/90 bg-[linear-gradient(180deg,rgba(3,24,14,0.9),rgba(0,0,0,0.9))] text-emerald-100 shadow-[0_0_0_1px_rgba(110,231,183,0.9),0_0_22px_rgba(52,211,153,0.3)] focus:border-emerald-200"}`} />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-black uppercase tracking-[0.12em] text-fuchsia-100">
                 Branch Name (Optional)
@@ -675,7 +718,11 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   value={withdrawForm.amount}
                   onChange={(e) => updateWithdrawField("amount", e.target.value)}
                   placeholder={`Max £${earningsDisplay}`}
-                  className="cut-frame-sm border-[3px] border-lime-300/90 bg-[linear-gradient(180deg,rgba(7,18,4,0.94),rgba(0,0,0,0.92))] px-4 py-3 text-base font-bold tracking-[0.03em] text-lime-100 shadow-[0_0_0_1px_rgba(190,242,100,0.9),0_0_20px_rgba(132,204,22,0.3)] outline-none placeholder:text-lime-100/30 focus:border-lime-200"
+                  className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-lime-100/30 ${
+                    missingAmount || invalidAmount
+                      ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_20px_rgba(251,113,133,0.32)] focus:border-rose-300"
+                      : "border-lime-300/90 bg-[linear-gradient(180deg,rgba(7,18,4,0.94),rgba(0,0,0,0.92))] text-lime-100 shadow-[0_0_0_1px_rgba(190,242,100,0.9),0_0_20px_rgba(132,204,22,0.3)] focus:border-lime-200"
+                  }`}
                 />
                 <span className={`text-xs font-bold normal-case tracking-normal ${withdrawAmountValid || !withdrawForm.amount ? "text-lime-200/90" : "text-rose-300"}`}>
                   Enter up to your balance (max £{earningsDisplay}).
@@ -704,7 +751,11 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 type="button"
                 onClick={() => void submitWithdrawRequest()}
                 disabled={!canSubmitWithdraw}
-                className="hud-hover-glow min-w-[240px] border-[3px] border-amber-300/90 bg-[linear-gradient(180deg,rgba(255,198,64,0.32),rgba(24,16,2,0.86))] px-7 py-3.5 text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_18px_rgba(252,211,77,0.34),0_0_42px_rgba(252,211,77,0.22)] [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)] disabled:cursor-not-allowed disabled:opacity-40"
+                className={`hud-hover-glow w-full cursor-pointer border-[3px] px-7 py-3.5 text-sm sm:min-w-[240px] sm:w-auto sm:text-base font-black uppercase tracking-[0.16em] [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)] disabled:cursor-not-allowed disabled:opacity-40 ${
+                  withdrawButtonErrorState
+                    ? "border-rose-300/95 bg-[linear-gradient(180deg,rgba(255,95,109,0.3),rgba(40,6,10,0.9))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.94),0_0_18px_rgba(251,113,133,0.4),0_0_42px_rgba(251,113,133,0.24)]"
+                    : "border-amber-300/90 bg-[linear-gradient(180deg,rgba(255,198,64,0.32),rgba(24,16,2,0.86))] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.92),0_0_18px_rgba(252,211,77,0.34),0_0_42px_rgba(252,211,77,0.22)]"
+                }`}
               >
                 {withdrawSubmitting ? "Submitting..." : "Submit Withdrawal"}
               </button>

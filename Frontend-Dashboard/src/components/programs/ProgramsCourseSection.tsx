@@ -496,7 +496,7 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left outline-none sm:min-h-[27rem]",
+          "group/card relative flex aspect-[3/5] min-h-[19.25rem] w-full max-w-[10.6rem] flex-col overflow-hidden text-left outline-none sm:min-h-0 sm:max-w-none sm:aspect-[4/5]",
           "rounded-3xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -523,7 +523,7 @@ export function ProgramsCourseSection({
             aria-hidden
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2.5 sm:p-3.5">
-            <div className={cn("relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 sm:min-h-[17rem] sm:flex-1", theme.mediaBorder)}>
+            <div className={cn("relative min-h-[10.6rem] overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem] sm:flex-1", theme.mediaBorder)}>
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -578,7 +578,7 @@ export function ProgramsCourseSection({
             ) : null}
             <div
               className={cn(
-                "shrink-0 flex flex-col overflow-hidden rounded-2xl border-2 px-2 py-1.5 sm:px-3 sm:py-2.5",
+                "shrink-0 flex min-h-[7.4rem] flex-col overflow-hidden rounded-2xl border-2 px-2 py-2 sm:px-3.5 sm:py-3.5",
                 theme.infoPanel,
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
@@ -594,8 +594,7 @@ export function ProgramsCourseSection({
                   {pl.title}
                 </div>
               </div>
-              <div className="mt-1.5" />
-              <div className="mt-1.5 grid grid-cols-1 gap-2">
+              <div className="mt-2 grid grid-cols-1 gap-2">
                 <button
                   type="button"
                   data-program-playlist-detail=""
@@ -603,7 +602,7 @@ export function ProgramsCourseSection({
                     e.stopPropagation();
                     setPlaylistDescriptionModal(pl);
                   }}
-                  className="relative z-[6] w-full rounded-xl border border-white/40 bg-black/55 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold)] sm:text-[11px] sm:tracking-[0.14em]"
+                  className="relative z-[6] w-full rounded-xl border border-white/40 bg-black/55 px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold)] sm:text-[11px] sm:tracking-[0.14em]"
                 >
                   Details
                 </button>
@@ -796,7 +795,7 @@ export function ProgramsCourseSection({
                                 <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[5] w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-transparent via-[color:var(--gold)] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_38px_rgba(245,200,20,0.75)]" />
                               </>
                             ) : null}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 justify-items-center gap-3">
                               <div>{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
                               <div>{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
                             </div>

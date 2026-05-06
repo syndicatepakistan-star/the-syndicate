@@ -4280,16 +4280,27 @@ body {
   font-weight: 600;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 640px) {
   .footer-typing .neon-badge-text {
     white-space: normal;
-    overflow-wrap: normal;
-    letter-spacing: 0.12em;
-    line-height: 1.28;
-    font-size: clamp(0.86rem, 3.6vw, 1rem);
+    overflow-wrap: anywhere;
+    letter-spacing: 0.1em;
+    line-height: 1.25;
+    font-size: clamp(0.8rem, 3.5vw, 0.95rem);
     text-align: center;
     display: inline-block;
-    width: min(265px, 92vw);
+    width: min(250px, 90vw);
+    text-wrap: balance;
+  }
+}
+
+@media (max-width: 420px) {
+  .footer-typing .neon-badge-text {
+    overflow-wrap: anywhere;
+    letter-spacing: 0.08em;
+    line-height: 1.28;
+    font-size: clamp(0.76rem, 3.4vw, 0.9rem);
+    width: min(230px, 88vw);
     text-wrap: balance;
   }
 }

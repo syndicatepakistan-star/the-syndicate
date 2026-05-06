@@ -486,6 +486,10 @@ OTP_EXPIRES_MINUTES = int(os.environ.get("OTP_EXPIRES_MINUTES", "10"))
 # delete all incoming) so client "Reply" does not reach a monitored inbox. If unset, Reply-To is
 # omitted and replies go to the From address (same as SMTP user for no-reply@).
 OTP_MAIL_REPLY_TO = (os.environ.get("OTP_MAIL_REPLY_TO") or "").strip()
+RESEND_API_KEY = (os.environ.get("RESEND_API_KEY") or "").strip()
+RESEND_API_URL = (os.environ.get("RESEND_API_URL") or "https://api.resend.com/emails").strip()
+EMAIL_FALLBACK_HOSTS = (os.environ.get("EMAIL_FALLBACK_HOSTS") or "").strip()
+EMAIL_FALLBACK_PORTS = (os.environ.get("EMAIL_FALLBACK_PORTS") or "465,587").strip()
 POST_LOGIN_REDIRECT_URL = os.environ.get("POST_LOGIN_REDIRECT_URL", "http://localhost:3000/")
 
 # Stripe checkout (signup -> checkout -> dashboard).

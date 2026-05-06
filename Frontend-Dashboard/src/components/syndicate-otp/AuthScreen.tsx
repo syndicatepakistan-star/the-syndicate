@@ -68,6 +68,14 @@ type ApiPayload = {
   };
 };
 
+function apiErrorMessage(data: ApiPayload, fallback: string): string {
+  const fromError = (data.error || "").toString().trim();
+  if (fromError) return fromError;
+  const fromMessage = (data.message || "").toString().trim();
+  if (fromMessage) return fromMessage;
+  return fallback;
+}
+
 const DASHBOARD_FALLBACK =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "http://localhost:3000/dashboard";
 
@@ -600,11 +608,15 @@ export default function AuthScreen({
       if (!response.ok) {
         if (response.status === 404 && data.code === "SIGNUP_REQUIRED") {
           const loginEmail = (data.email || email.trim()).trim();
-          setMessage(data.error || "No account found. Redirecting to signup...");
+          setMessage(apiErrorMessage(data, "No account found. Redirecting to signup..."));
           router.replace(syndicateOtpSignupHref(loginEmail));
           return;
         }
-        throw new Error(data.error || "Request failed");
+        // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
+        if (response.status === 404) {
+          throw new Error(apiErrorMessage(data, "No account found for this email. Please sign up first."));
+        }
+        throw new Error(apiErrorMessage(data, "Request failed"));
       }
 
       if (!data.otp_required) {

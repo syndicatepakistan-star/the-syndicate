@@ -632,7 +632,7 @@ export default function AuthScreen({
           }
           throw new Error(msg);
         }
-        throw new Error(apiErrorMessage(data, "Request failed"));
+        throw new Error(apiErrorMessage(data, "You do not have any account with this email. Please sign up."));
       }
 
       if (!data.otp_required) {

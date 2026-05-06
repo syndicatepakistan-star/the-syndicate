@@ -872,9 +872,7 @@ export function ProgramsCourseSection({
                     type="button"
                     onClick={() => {
                       if (courseLocked) {
-                        toast.error(
-                          "This LMS course is not included with a single-program purchase. Open your unlocked stream program above, or upgrade for full access."
-                        );
+                        void startBundleCheckout();
                         return;
                       }
                       openProgram(c.id);
@@ -938,7 +936,7 @@ export function ProgramsCourseSection({
                           <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-4 text-center">
                             <span className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/85 bg-black/78 px-4 py-2.5 text-[18px] font-black uppercase tracking-[0.14em] text-[#f5c814] shadow-[0_0_24px_rgba(245,200,20,0.38)] sm:px-5 sm:text-[22px] sm:tracking-[0.16em]">
                               <Lock className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
-                              Locked
+                              {bundleCheckoutBusy ? "Redirecting..." : "Unlock"}
                             </span>
                           </span>
                         </>

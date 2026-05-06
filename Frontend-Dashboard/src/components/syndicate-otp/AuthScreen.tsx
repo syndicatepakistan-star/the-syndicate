@@ -645,11 +645,23 @@ export default function AuthScreen({
         )
       );
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Something went wrong.",
-      );
+      const rawMessage = submitError instanceof Error ? submitError.message : "Something went wrong.";
+      if (!isSignup && !isOtp) {
+        const normalized = rawMessage.toLowerCase();
+        if (
+          normalized.includes("request failed") ||
+          normalized.includes("login failed") ||
+          normalized.includes("invalid json payload") ||
+          normalized.includes("no account") ||
+          normalized.includes("sign up")
+        ) {
+          setError("You do not have any account with this email.");
+        } else {
+          setError(rawMessage);
+        }
+      } else {
+        setError(rawMessage);
+      }
     } finally {
       setLoading(false);
     }

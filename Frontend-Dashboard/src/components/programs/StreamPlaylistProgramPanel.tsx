@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play, Star } from "lucide-react";
+import { Play } from "lucide-react";
 import HlsVideoPlayer from "@/components/streaming/HlsVideoPlayer";
 import {
   fetchStreamPlaylistDetail,
@@ -532,7 +532,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const hlsUrl = activePlayback?.hls_url ?? null;
   const ready = activePlayback?.status === "ready" && !!hlsUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
-  const playlistRating = Math.max(0, Math.min(5, parsePlaylistNumber(playlist.rating)));
 
   return (
     <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-10">
@@ -630,10 +629,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             <h2 className="text-[clamp(1.15rem,2.2vw+0.5rem,1.65rem)] font-black leading-tight tracking-tight text-[#f5c814]">
               {activeVideo?.title ?? "Episode"}
             </h2>
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/45 bg-black/45 px-2.5 py-1 text-[11px] font-bold text-amber-100">
-              <Star className="h-3.5 w-3.5 fill-current text-amber-300" />
-              {playlistRating.toFixed(1)}
-            </span>
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-black text-emerald-200">
               {`£${playlistPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
             </span>
@@ -656,10 +651,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         <div className="border-b border-white/10 px-1 pb-3">
           <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
           <div className="mt-2 flex items-center gap-2 text-[11px]">
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/45 bg-black/45 px-2 py-0.5 font-bold text-amber-100">
-              <Star className="h-3 w-3 fill-current text-amber-300" />
-              {playlistRating.toFixed(1)}
-            </span>
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
               {`£${playlistPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
             </span>

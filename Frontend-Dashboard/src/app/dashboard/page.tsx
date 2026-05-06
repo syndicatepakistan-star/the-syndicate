@@ -1734,12 +1734,14 @@ async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string
   const pageH = 1280;
   const designW = 1260;
   const designH = 1080;
-  const certW = 920;
-  const certH = 1180;
-  const scaleX = certW / designW;
-  const scaleY = certH / designH;
+  // Keep certificate proportions fixed by using a single uniform scale.
+  const maxCertW = pageW - 220;
+  const maxCertH = pageH - 84;
+  const scale = Math.min(maxCertW / designW, maxCertH / designH);
+  const certW = Math.round(designW * scale);
+  const certH = Math.round(designH * scale);
   const offsetX = Math.round((pageW - certW) / 2);
-  const offsetY = 42;
+  const offsetY = Math.round((pageH - certH) / 2);
   const safeBase = escapeXml(assetBaseUrl.replace(/\/$/, ""));
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${pageW}" height="${pageH}" viewBox="0 0 ${pageW} ${pageH}">
@@ -1770,7 +1772,7 @@ async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string
     </pattern>
   </defs>
   <rect width="${pageW}" height="${pageH}" fill="#030614"/>
-  <g transform="translate(${offsetX}, ${offsetY}) scale(${scaleX}, ${scaleY})">
+  <g transform="translate(${offsetX}, ${offsetY}) scale(${scale})">
   <rect width="${designW}" height="${designH}" fill="url(#bgMain)"/>
   <rect width="${designW}" height="${designH}" fill="url(#glowCenter)"/>
   <rect width="${designW}" height="${designH}" fill="url(#glowLeft)"/>

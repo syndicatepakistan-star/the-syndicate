@@ -496,7 +496,7 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex aspect-[3/5] min-h-[19.25rem] w-full max-w-[10.6rem] flex-col overflow-hidden text-left outline-none sm:min-h-0 sm:max-w-none sm:aspect-[4/5]",
+          "group/card relative flex aspect-[4/5] min-h-[18rem] w-full max-w-none flex-col overflow-hidden text-left outline-none sm:min-h-0",
           "rounded-3xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -523,7 +523,7 @@ export function ProgramsCourseSection({
             aria-hidden
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2.5 sm:p-3.5">
-            <div className={cn("relative min-h-[10.6rem] overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem] sm:flex-1", theme.mediaBorder)}>
+            <div className={cn("relative min-h-[10.6rem] flex-1 overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem]", theme.mediaBorder)}>
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -559,8 +559,8 @@ export function ProgramsCourseSection({
               <>
                 <span className="pointer-events-none absolute inset-0 z-[3] bg-black/42" />
                 <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-5 text-center">
-                  <span className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/85 bg-black/75 px-6 py-3 text-[26px] font-black uppercase tracking-[0.18em] text-[#f5c814] shadow-[0_0_28px_rgba(245,200,20,0.42)] sm:text-[32px]">
-                    <Lock className="h-7 w-7 sm:h-8 sm:w-8" />
+                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/75 px-3.5 py-1.5 text-[18px] font-black uppercase tracking-[0.12em] text-[#f5c814] shadow-[0_0_22px_rgba(245,200,20,0.36)] sm:px-4 sm:py-2 sm:text-[20px]">
+                    <Lock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     {checkoutBusyPlaylistId === pl.id ? "Redirecting..." : "Unlock"}
                   </span>
                 </span>
@@ -795,9 +795,9 @@ export function ProgramsCourseSection({
                                 <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[5] w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-transparent via-[color:var(--gold)] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_38px_rgba(245,200,20,0.75)]" />
                               </>
                             ) : null}
-                            <div className="grid grid-cols-2 justify-items-center gap-3">
-                              <div>{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
-                              <div>{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
+                            <div className="grid grid-cols-2 justify-items-stretch gap-3">
+                              <div className="w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
+                              <div className="w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
                             </div>
                           </div>
                         ))}
@@ -872,9 +872,7 @@ export function ProgramsCourseSection({
                     type="button"
                     onClick={() => {
                       if (courseLocked) {
-                        toast.error(
-                          "This LMS course is not included with a single-program purchase. Open your unlocked stream program above, or upgrade for full access."
-                        );
+                        void startBundleCheckout();
                         return;
                       }
                       openProgram(c.id);
@@ -936,9 +934,9 @@ export function ProgramsCourseSection({
                         <>
                           <span className="pointer-events-none absolute inset-0 z-[2] bg-black/48" />
                           <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-4 text-center">
-                            <span className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/85 bg-black/78 px-4 py-2.5 text-[18px] font-black uppercase tracking-[0.14em] text-[#f5c814] shadow-[0_0_24px_rgba(245,200,20,0.38)] sm:px-5 sm:text-[22px] sm:tracking-[0.16em]">
-                              <Lock className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
-                              Locked
+                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/78 px-3 py-1.5 text-[16px] font-black uppercase tracking-[0.11em] text-[#f5c814] shadow-[0_0_20px_rgba(245,200,20,0.34)] sm:px-4 sm:py-2 sm:text-[18px] sm:tracking-[0.12em]">
+                              <Lock className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+                              {bundleCheckoutBusy ? "Redirecting..." : "Unlock"}
                             </span>
                           </span>
                         </>

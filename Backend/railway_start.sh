@@ -14,7 +14,7 @@ run_bootstrap_tasks() {
   echo "railway_start: collectstatic (clear + rebuild)"
   python manage.py collectstatic --noinput --clear
 
-  if [ "${AUTO_LOAD_STREAM_FIXTURE:-true}" = "true" ] && [ -f "fixtures/stream_playlist_backup.json" ]; then
+  if [ "${AUTO_LOAD_STREAM_FIXTURE:-false}" = "true" ] && [ -f "fixtures/stream_playlist_backup.json" ]; then
     echo "railway_start: loaddata fixtures/stream_playlist_backup.json"
     python manage.py loaddata fixtures/stream_playlist_backup.json || true
   fi

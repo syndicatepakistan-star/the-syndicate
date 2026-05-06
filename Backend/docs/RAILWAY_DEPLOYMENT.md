@@ -53,6 +53,7 @@ Streaming/security (recommended):
 - `VIDEO_CDN_PUBLIC_BASE_URL` = `https://<your-backend-domain>`
 - `STREAM_SIGNED_URL_TTL_SECONDS` = `900` (or lower, e.g. `300`)
 - `STREAM_SIGNING_SECRET` = long random string
+- `AUTO_LOAD_STREAM_FIXTURE` = `false` (recommended for production so deploys do not overwrite admin-edited playlists/covers)
 
 Optional (emergency / debugging only): `STREAM_SYNC_TRANSCODE_ON_PLAYBACK=true` runs HLS transcoding inside the web request when a video is still `processing` (e.g. worker was down). Prefer a healthy Celery worker; do not enable under real traffic.
 

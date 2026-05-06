@@ -365,8 +365,10 @@ if USE_S3_OBJECT_STORAGE and _s3_object_storage_cfg:
         AWS_S3_ENDPOINT_URL = _s3_object_storage_cfg["endpoint_url"]
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = True
-    # Private buckets: URLs from default_storage.url() are time-limited presigned GET links.
-    AWS_QUERYSTRING_AUTH = True
+    # Static/public media mode: set MEDIA_SIGNED_URLS=false to emit stable URLs that cache well.
+    # Keep true for private buckets where presigned GET links are required.
+    _media_signed_urls_raw = (os.environ.get("MEDIA_SIGNED_URLS") or "true").strip().lower()
+    AWS_QUERYSTRING_AUTH = _media_signed_urls_raw in ("1", "true", "yes")
     _presign = int((os.environ.get("PRESIGNED_URL_EXPIRE_SECONDS") or "3600").strip() or "3600")
     AWS_QUERYSTRING_EXPIRE = max(60, min(_presign, 604800))
     STORAGES["default"] = {
@@ -494,6 +496,7 @@ POST_LOGIN_REDIRECT_URL = os.environ.get("POST_LOGIN_REDIRECT_URL", "http://loca
 
 # Stripe checkout (signup -> checkout -> dashboard).
 FRONTEND_BASE_URL = (os.environ.get("FRONTEND_BASE_URL") or "http://localhost:3000").strip().rstrip("/")
+MEDIA_PUBLIC_BASE_URL = (os.environ.get("MEDIA_PUBLIC_BASE_URL") or "").strip().rstrip("/")
 STRIPE_SECRET_KEY = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
 STRIPE_PUBLISHABLE_KEY = (os.environ.get("STRIPE_PUBLISHABLE_KEY") or "").strip()
 # Backward compatibility: older env files used a typo `PCHECKOUT_AMOUNT_PENCE`.

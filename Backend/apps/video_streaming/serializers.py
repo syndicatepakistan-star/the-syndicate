@@ -1,3 +1,5 @@
+from urllib.parse import quote
+from django.conf import settings
 from django.urls import reverse
 from rest_framework import serializers
 
@@ -6,21 +8,16 @@ from apps.video_streaming.playlist_description import parse_playlist_description
 
 
 def _safe_media_url_for_field(file_field, request):
-    """Return a URL only when the backing file exists in storage."""
+    """Return media URL quickly without storage existence round-trips."""
     if not file_field:
         return None
     name = getattr(file_field, "name", "") or ""
     if not name:
         return None
-    storage = getattr(file_field, "storage", None)
-    if storage is None:
-        return None
-    try:
-        if not storage.exists(name):
-            return None
-    except Exception:
-        # If storage backend check fails, avoid emitting a likely-broken URL.
-        return None
+    public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+    if public_base:
+        encoded_name = quote(name.lstrip("/"), safe="/")
+        return f"{public_base}/{encoded_name}"
     try:
         url = file_field.url
     except Exception:

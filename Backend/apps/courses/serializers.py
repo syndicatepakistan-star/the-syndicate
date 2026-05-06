@@ -1,5 +1,7 @@
 from typing import Optional
+from urllib.parse import quote
 
+from django.conf import settings
 from rest_framework import serializers
 
 from apps.courses.access import user_can_access_course
@@ -35,6 +37,10 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_cover_image_url(self, obj: Course) -> Optional[str]:
         if not obj.cover_image:
             return None
+        name = (getattr(obj.cover_image, "name", "") or "").strip()
+        public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+        if name and public_base:
+            return f"{public_base}/{quote(name.lstrip('/'), safe='/')}"
         return obj.cover_image.url
 
 
@@ -68,6 +74,10 @@ class VideoSerializer(serializers.ModelSerializer):
     def get_thumbnail_url(self, obj: Video) -> Optional[str]:
         if not obj.thumbnail:
             return None
+        name = (getattr(obj.thumbnail, "name", "") or "").strip()
+        public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+        if name and public_base:
+            return f"{public_base}/{quote(name.lstrip('/'), safe='/')}"
         return obj.thumbnail.url
 
 

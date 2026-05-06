@@ -438,7 +438,9 @@ def public_stream_playlists_view(request):
         )
     )
     data = StreamPlaylistListSerializer(qs, many=True, context={"request": request}).data
-    return JsonResponse(data, safe=False)
+    resp = JsonResponse(data, safe=False)
+    resp["Cache-Control"] = "public, max-age=60, s-maxage=300"
+    return resp
 
 
 class StreamPlaylistCheckoutSessionView(APIView):

@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 from celery import shared_task
@@ -184,12 +185,23 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
 
     media_root = Path(settings.MEDIA_ROOT)
     out_dir = media_root / "hls" / str(video_id)
+    tmp_input_path: Path | None = None
 
     try:
         if out_dir.exists():
             shutil.rmtree(out_dir, ignore_errors=True)
 
-        input_path = Path(video.original_video.path)
+        try:
+            input_path = Path(video.original_video.path)
+        except (NotImplementedError, AttributeError):
+            suffix = Path(video.original_video.name).suffix or ".mp4"
+            with video.original_video.open("rb") as src:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                    for chunk in src.chunks():
+                        tmp.write(chunk)
+                    tmp_input_path = Path(tmp.name)
+            input_path = tmp_input_path
+
         probed = _ffprobe_video_dimensions(input_path)
         _run_ffmpeg_hls(input_path, out_dir)
 
@@ -230,3 +242,9 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
             last_error=str(exc)[:4000],
         )
         raise
+    finally:
+        if tmp_input_path and tmp_input_path.exists():
+            try:
+                tmp_input_path.unlink()
+            except OSError:
+                logger.warning("Could not remove temporary input file: %s", tmp_input_path)

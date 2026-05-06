@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
+  createPlaylistCheckoutSession,
   fetchStreamPlaylists,
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
@@ -91,6 +92,7 @@ export function PlaylistCardsSection({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
+  const [pendingCheckoutPlaylistId, setPendingCheckoutPlaylistId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -282,12 +284,40 @@ export function PlaylistCardsSection({
                 </button>
                 <button
                   type="button"
+                  disabled={pendingCheckoutPlaylistId === pl.id}
                   onClick={() => {
-                    router.push(`/signup?playlist_id=${encodeURIComponent(String(pl.id))}`);
+                    void (async () => {
+                      if (!hasSimpleAuthSessionClient()) {
+                        router.push(`/signup?playlist_id=${encodeURIComponent(String(pl.id))}`);
+                        return;
+                      }
+                      setPendingCheckoutPlaylistId(pl.id);
+                      setError(null);
+                      try {
+                        const payload = await createPlaylistCheckoutSession(pl.id, {
+                          returnBaseUrl: typeof window !== "undefined" ? window.location.origin : "",
+                        });
+                        const checkoutUrl =
+                          typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
+                        if (checkoutUrl) {
+                          window.location.assign(checkoutUrl);
+                          return;
+                        }
+                        if (payload.is_unlocked) {
+                          router.push("/dashboard");
+                          return;
+                        }
+                        router.push(`/signup?playlist_id=${encodeURIComponent(String(pl.id))}`);
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : "Could not start checkout.");
+                      } finally {
+                        setPendingCheckoutPlaylistId((current) => (current === pl.id ? null : current));
+                      }
+                    })();
                   }}
                   className="rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-2 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:text-[11px] sm:tracking-[0.15em]"
                 >
-                  Unlock
+                  {pendingCheckoutPlaylistId === pl.id ? "Loading..." : "Unlock"}
                 </button>
               </div>
             </div>

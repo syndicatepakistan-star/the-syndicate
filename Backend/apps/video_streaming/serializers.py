@@ -14,6 +14,16 @@ def _safe_media_url_for_field(file_field, request):
     name = getattr(file_field, "name", "") or ""
     if not name:
         return None
+    # For private S3-compatible buckets we must preserve presigned query params.
+    # Building MEDIA_PUBLIC_BASE_URL + encoded path would strip signatures and break loads.
+    if bool(getattr(settings, "AWS_QUERYSTRING_AUTH", False)):
+        try:
+            signed_url = file_field.url
+        except Exception:
+            return None
+        if request is not None and isinstance(signed_url, str) and signed_url.startswith("/"):
+            return request.build_absolute_uri(signed_url)
+        return signed_url
     public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
     if public_base:
         encoded_name = quote(name.lstrip("/"), safe="/")

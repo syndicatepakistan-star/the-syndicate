@@ -712,7 +712,14 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                 >
                   <div className="relative h-16 w-[6.4rem] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-violet-800/90 via-neutral-900 to-black">
                     {thumbSrc ? (
-                      <img src={thumbSrc} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+                      <img
+                        src={thumbSrc}
+                        alt=""
+                        loading={i < 3 ? "eager" : "lazy"}
+                        decoding="async"
+                        fetchPriority={i < 3 ? "high" : "auto"}
+                        className="absolute inset-0 h-full w-full object-cover opacity-90"
+                      />
                     ) : null}
                     <span className="pointer-events-none absolute inset-y-0 left-0 z-[2] flex w-7 items-center justify-center bg-gradient-to-r from-black/70 via-black/35 to-transparent">
                       <span className="text-[32px] font-black leading-none text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">

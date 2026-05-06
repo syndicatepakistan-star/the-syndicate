@@ -73,11 +73,50 @@ export type StreamPlaylistPurchaseHistoryItem = {
   updated_at: string;
 };
 
+const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
+const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
+const PLAYBACK_CACHE_TTL_MS = 20 * 1000;
+const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v1";
+
+let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
+const playlistDetailCache = new Map<number, { at: number; data: StreamPlaylistDetail }>();
+const playbackCache = new Map<number, { at: number; data: StreamPayload }>();
+
 function errMessage(status: number, data: unknown, fallback: string): string {
   if (typeof data === "object" && data && "detail" in data) {
     return String((data as { detail?: string }).detail ?? fallback);
   }
   return fallback || `Request failed (${status}).`;
+}
+
+function isFresh(ts: number, ttlMs: number): boolean {
+  return Date.now() - ts < ttlMs;
+}
+
+function readPlaylistsSessionCache(): StreamPlaylistListItem[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_PLAYLISTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at?: number; data?: StreamPlaylistListItem[] };
+    if (!parsed || !Array.isArray(parsed.data) || typeof parsed.at !== "number") return null;
+    if (!isFresh(parsed.at, PLAYLISTS_CACHE_TTL_MS)) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writePlaylistsSessionCache(data: StreamPlaylistListItem[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      SESSION_PLAYLISTS_CACHE_KEY,
+      JSON.stringify({ at: Date.now(), data })
+    );
+  } catch {
+    // Ignore storage quota/private mode errors.
+  }
 }
 
 export async function fetchStreamVideosList(): Promise<StreamVideoListItem[]> {
@@ -104,15 +143,30 @@ export async function fetchStreamVideoDetail(id: number): Promise<StreamVideoDet
 }
 
 export async function fetchStreamPlaylists(options?: { allowPublicFallback?: boolean }): Promise<StreamPlaylistListItem[]> {
+  if (playlistsCache && isFresh(playlistsCache.at, PLAYLISTS_CACHE_TTL_MS)) {
+    return playlistsCache.data;
+  }
+  const sessionCached = readPlaylistsSessionCache();
+  if (sessionCached) {
+    playlistsCache = { at: Date.now(), data: sessionCached };
+    return sessionCached;
+  }
+
   const res = await portalFetch<StreamPlaylistListItem[]>("/api/streaming/playlists/");
   if (res.ok) {
-    return Array.isArray(res.data) ? res.data : [];
+    const list = Array.isArray(res.data) ? res.data : [];
+    playlistsCache = { at: Date.now(), data: list };
+    writePlaylistsSessionCache(list);
+    return list;
   }
   if (!options?.allowPublicFallback) {
     throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
   }
   try {
-    return await fetchPublicStreamPlaylists();
+    const list = await fetchPublicStreamPlaylists();
+    playlistsCache = { at: Date.now(), data: list };
+    writePlaylistsSessionCache(list);
+    return list;
   } catch {
     throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
   }
@@ -196,6 +250,10 @@ export async function fetchBillingPurchaseHistory(): Promise<StreamPlaylistPurch
 }
 
 export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlaylistDetail> {
+  const cached = playlistDetailCache.get(id);
+  if (cached && isFresh(cached.at, PLAYLIST_DETAIL_CACHE_TTL_MS)) {
+    return cached.data;
+  }
   const res = await portalFetch<StreamPlaylistDetail>(`/api/streaming/playlists/${id}/`);
   if (!res.ok) {
     throw new Error(
@@ -206,10 +264,16 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
       )
     );
   }
-  return res.data as StreamPlaylistDetail;
+  const detail = res.data as StreamPlaylistDetail;
+  playlistDetailCache.set(id, { at: Date.now(), data: detail });
+  return detail;
 }
 
 export async function fetchStreamVideoPlayback(id: number): Promise<StreamPayload> {
+  const cached = playbackCache.get(id);
+  if (cached && isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) {
+    return cached.data;
+  }
   const res = await portalFetch<StreamPayload>(`/api/streaming/videos/stream/${id}/`);
   if (!res.ok) {
     throw new Error(
@@ -220,5 +284,7 @@ export async function fetchStreamVideoPlayback(id: number): Promise<StreamPayloa
       )
     );
   }
-  return res.data as StreamPayload;
+  const payload = res.data as StreamPayload;
+  playbackCache.set(id, { at: Date.now(), data: payload });
+  return payload;
 }

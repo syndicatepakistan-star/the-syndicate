@@ -158,6 +158,19 @@ export function PlaylistCardsSection({
     }));
   }, [businessPsychologyPlaylists, businessModelPlaylists]);
 
+  useEffect(() => {
+    // Warm first visible cover images so public route transitions feel snappier.
+    const topCovers = visiblePlaylists
+      .map((pl) => resolveDjangoMediaUrl(pl.cover_image_url))
+      .filter((src): src is string => Boolean(src))
+      .slice(0, 8);
+    topCovers.forEach((src) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+    });
+  }, [visiblePlaylists]);
+
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url);
@@ -210,6 +223,7 @@ export function PlaylistCardsSection({
                     src={coverSrc}
                     alt=""
                     loading={j < 2 ? "eager" : "lazy"}
+                    fetchPriority={j < 2 ? "high" : "auto"}
                     decoding="async"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";

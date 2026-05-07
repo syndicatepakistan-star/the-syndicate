@@ -54,6 +54,10 @@ Streaming/security (recommended):
 - `STREAM_SIGNED_URL_TTL_SECONDS` = `900` (or lower, e.g. `300`)
 - `STREAM_SIGNING_SECRET` = long random string
 - `AUTO_LOAD_STREAM_FIXTURE` = `false` (recommended for production so deploys do not overwrite admin-edited playlists/covers)
+- For large admin uploads (e.g. 9GB+):
+  - `DATA_UPLOAD_MAX_MB=15360`
+  - `FILE_UPLOAD_MAX_MEMORY_MB=8` (keep RAM safe; stream large files to temp storage)
+  - `GUNICORN_TIMEOUT=1800` (avoid 5-minute request timeout during long uploads)
 
 Optional (emergency / debugging only): `STREAM_SYNC_TRANSCODE_ON_PLAYBACK=true` runs HLS transcoding inside the web request when a video is still `processing` (e.g. worker was down). Prefer a healthy Celery worker; do not enable under real traffic.
 

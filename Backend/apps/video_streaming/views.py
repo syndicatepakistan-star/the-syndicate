@@ -22,7 +22,13 @@ from django.http import JsonResponse
 
 from apps.portal.models import UserDashboardEntitlement
 from apps.portal.king_access import king_allowed_playlist_ids, king_selection_completed
-from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
+from apps.video_streaming.models import (
+    StreamPlaylist,
+    StreamPlaylistItem,
+    StreamPlaylistPurchase,
+    StreamVideo,
+    stream_video_original_upload_to,
+)
 from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
 from apps.video_streaming.serializers import (
     StreamPlaylistDetailSerializer,
@@ -645,3 +651,169 @@ class StreamPlaylistCheckoutSuccessView(APIView):
             {"message": "Playlist unlocked successfully.", "playlist_id": playlist.id, "is_unlocked": True},
             status=status.HTTP_200_OK,
         )
+
+
+class StreamVideoMultipartUploadStartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if not getattr(request.user, "is_staff", False):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        if not getattr(settings, "USE_S3_OBJECT_STORAGE", False):
+            return Response({"detail": "Object storage is not configured."}, status=status.HTTP_400_BAD_REQUEST)
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+        if not bucket:
+            return Response({"detail": "Bucket is not configured."}, status=status.HTTP_400_BAD_REQUEST)
+
+        payload = request.data if isinstance(request.data, dict) else {}
+        try:
+            stream_video_id = int(payload.get("stream_video_id"))
+        except (TypeError, ValueError):
+            return Response({"detail": "stream_video_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        filename = str(payload.get("filename", "")).strip()
+        if not filename:
+            return Response({"detail": "filename is required."}, status=status.HTTP_400_BAD_REQUEST)
+        content_type = str(payload.get("content_type", "")).strip() or "application/octet-stream"
+
+        stream_video = get_object_or_404(StreamVideo, pk=stream_video_id)
+        key = stream_video_original_upload_to(stream_video, Path(filename).name)
+        client = _s3_client()
+        if client is None:
+            return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+            result = client.create_multipart_upload(
+                Bucket=bucket,
+                Key=key,
+                ContentType=content_type,
+            )
+        except Exception:
+            return Response({"detail": "Failed to start multipart upload."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        part_size = int((request.data.get("part_size_mb") or 64)) * 1024 * 1024
+        part_size = max(5 * 1024 * 1024, min(part_size, 256 * 1024 * 1024))
+        return Response(
+            {
+                "bucket": bucket,
+                "key": key,
+                "upload_id": result["UploadId"],
+                "part_size": part_size,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class StreamVideoMultipartUploadSignPartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if not getattr(request.user, "is_staff", False):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+        if not bucket:
+            return Response({"detail": "Bucket is not configured."}, status=status.HTTP_400_BAD_REQUEST)
+        payload = request.data if isinstance(request.data, dict) else {}
+        key = str(payload.get("key", "")).strip()
+        upload_id = str(payload.get("upload_id", "")).strip()
+        try:
+            part_number = int(payload.get("part_number"))
+        except (TypeError, ValueError):
+            return Response({"detail": "part_number is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not key or not upload_id:
+            return Response({"detail": "key and upload_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+        client = _s3_client()
+        if client is None:
+            return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            signed_url = client.generate_presigned_url(
+                ClientMethod="upload_part",
+                Params={
+                    "Bucket": bucket,
+                    "Key": key,
+                    "UploadId": upload_id,
+                    "PartNumber": part_number,
+                },
+                ExpiresIn=3600,
+            )
+        except Exception:
+            return Response({"detail": "Failed to sign part URL."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"url": signed_url}, status=status.HTTP_200_OK)
+
+
+class StreamVideoMultipartUploadCompleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if not getattr(request.user, "is_staff", False):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+        if not bucket:
+            return Response({"detail": "Bucket is not configured."}, status=status.HTTP_400_BAD_REQUEST)
+        payload = request.data if isinstance(request.data, dict) else {}
+        key = str(payload.get("key", "")).strip()
+        upload_id = str(payload.get("upload_id", "")).strip()
+        parts = payload.get("parts") if isinstance(payload.get("parts"), list) else []
+        try:
+            stream_video_id = int(payload.get("stream_video_id"))
+        except (TypeError, ValueError):
+            return Response({"detail": "stream_video_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not key or not upload_id or not parts:
+            return Response({"detail": "key, upload_id and parts are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        normalized_parts = []
+        for p in parts:
+            if not isinstance(p, dict):
+                continue
+            try:
+                pn = int(p.get("PartNumber"))
+            except (TypeError, ValueError):
+                continue
+            etag = str(p.get("ETag", "")).strip()
+            if pn > 0 and etag:
+                normalized_parts.append({"PartNumber": pn, "ETag": etag})
+        if not normalized_parts:
+            return Response({"detail": "No valid parts provided."}, status=status.HTTP_400_BAD_REQUEST)
+        normalized_parts.sort(key=lambda item: item["PartNumber"])
+
+        client = _s3_client()
+        if client is None:
+            return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            client.complete_multipart_upload(
+                Bucket=bucket,
+                Key=key,
+                UploadId=upload_id,
+                MultipartUpload={"Parts": normalized_parts},
+            )
+        except Exception:
+            return Response({"detail": "Failed to complete multipart upload."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        stream_video = get_object_or_404(StreamVideo, pk=stream_video_id)
+        stream_video.original_video.name = key
+        stream_video.status = StreamVideo.Status.PROCESSING
+        stream_video.last_error = ""
+        stream_video.hls_path = ""
+        stream_video.save(update_fields=["original_video", "status", "last_error", "hls_path"])
+        return Response({"ok": True, "key": key}, status=status.HTTP_200_OK)
+
+
+class StreamVideoMultipartUploadAbortView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if not getattr(request.user, "is_staff", False):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+        payload = request.data if isinstance(request.data, dict) else {}
+        key = str(payload.get("key", "")).strip()
+        upload_id = str(payload.get("upload_id", "")).strip()
+        if not bucket or not key or not upload_id:
+            return Response({"ok": True}, status=status.HTTP_200_OK)
+        client = _s3_client()
+        if client is None:
+            return Response({"ok": True}, status=status.HTTP_200_OK)
+        try:
+            client.abort_multipart_upload(Bucket=bucket, Key=key, UploadId=upload_id)
+        except Exception:
+            pass
+        return Response({"ok": True}, status=status.HTTP_200_OK)

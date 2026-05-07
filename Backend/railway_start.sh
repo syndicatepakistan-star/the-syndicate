@@ -4,6 +4,7 @@ set -eu
 cd "$(dirname "$0")"
 PORT="${PORT:-8080}"
 MODE="${1:-start}"
+GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-1800}"
 
 run_bootstrap_tasks() {
   mkdir -p staticfiles
@@ -52,5 +53,5 @@ exec python -m gunicorn syndicate_backend.wsgi:application \
   --bind "0.0.0.0:${PORT}" \
   --workers 2 \
   --threads 4 \
-  --timeout 300 \
+  --timeout "${GUNICORN_TIMEOUT}" \
   --preload

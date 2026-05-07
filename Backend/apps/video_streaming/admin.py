@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
 from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
@@ -39,8 +40,21 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
     )
 
 
+class StreamVideoAdminForm(forms.ModelForm):
+    multipart_video = forms.FileField(
+        required=False,
+        help_text="For very large files (9GB+), use this field and click 'Upload large file to bucket' before Save.",
+    )
+    multipart_uploaded_key = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = StreamVideo
+        fields = "__all__"
+
+
 @admin.register(StreamVideo)
 class StreamVideoAdmin(admin.ModelAdmin):
+    form = StreamVideoAdminForm
     list_display = (
         "title",
         "status",
@@ -57,9 +71,17 @@ class StreamVideoAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
-        ("Media", {"fields": ("thumbnail", "original_video")}),
+        ("Media", {"fields": ("thumbnail", "original_video", "multipart_video", "multipart_uploaded_key")}),
         ("Pipeline", {"fields": ("status", "hls_path", "last_error", "created_at")}),
     )
+    class Media:
+        js = ("admin/streamvideo_multipart_upload.js",)
+
+    def save_model(self, request, obj, form, change):
+        uploaded_key = (form.cleaned_data.get("multipart_uploaded_key") or "").strip()
+        if uploaded_key:
+            obj.original_video.name = uploaded_key
+        super().save_model(request, obj, form, change)
 
     @admin.action(description="Re-run HLS transcoding (selected rows with an original file)")
     def reprocess_hls(self, request, queryset):

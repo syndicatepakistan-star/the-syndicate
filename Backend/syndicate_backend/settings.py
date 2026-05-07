@@ -152,10 +152,12 @@ SYNDICATE_DATA_DIR = BASE_DIR / "data"
 SYNDICATE_MAX_DOC_CHARS = 120_000
 
 # Admin/API multipart uploads.
-# Default is set for large admin video uploads (15GB). Lower via DATA_UPLOAD_MAX_MB if desired.
+# Keep large request acceptance high for admin video uploads, but keep in-memory buffering small
+# so large files spool to temporary files on disk instead of exhausting RAM.
 _DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "15360").strip() or "15360")
 DATA_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _DATA_UPLOAD_MAX_MB * 1024 * 1024)
-FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
+_FILE_UPLOAD_MAX_MEMORY_MB = int((os.environ.get("FILE_UPLOAD_MAX_MEMORY_MB") or "8").strip() or "8")
+FILE_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _FILE_UPLOAD_MAX_MEMORY_MB * 1024 * 1024)
 
 
 # Application definition

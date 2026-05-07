@@ -140,8 +140,10 @@ export default async function Home() {
   const bottomRowBase = founderImages.slice(midpoint)
   const safeTopRow = topRowBase.length > 0 ? topRowBase : founderImages
   const safeBottomRow = bottomRowBase.length > 0 ? bottomRowBase : safeTopRow
-  const topRowGroup = Array.from({ length: 4 }, () => safeTopRow).flat()
-  const bottomRowGroup = Array.from({ length: 4 }, () => safeBottomRow).flat()
+  // Keep enough repeated cards for infinite marquee while avoiding
+  // excessive duplicated image nodes that slow first paint/decode.
+  const topRowGroup = Array.from({ length: 2 }, () => safeTopRow).flat()
+  const bottomRowGroup = Array.from({ length: 2 }, () => safeBottomRow).flat()
   const topRowTrack = [...topRowGroup, ...topRowGroup]
   const bottomRowTrack = [...bottomRowGroup, ...bottomRowGroup]
 
@@ -284,6 +286,9 @@ export default async function Home() {
                         src={image.src}
                         alt={image.alt}
                         fill
+                        quality={62}
+                        fetchPriority="low"
+                        decoding="async"
                         sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
                         className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                       />
@@ -329,6 +334,9 @@ export default async function Home() {
                         src={image.src}
                         alt={image.alt}
                         fill
+                        quality={62}
+                        fetchPriority="low"
+                        decoding="async"
                         sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
                         className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                       />

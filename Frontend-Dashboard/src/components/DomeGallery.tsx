@@ -727,8 +727,11 @@ export default function DomeGallery({
                       draggable={false}
                       alt={it.alt}
                       fill
-                      unoptimized
-                      sizes="(max-width: 768px) 40vw, 20vw"
+                      quality={60}
+                      loading="lazy"
+                      fetchPriority="low"
+                      decoding="async"
+                      sizes="(max-width: 768px) 34vw, (max-width: 1280px) 18vw, 220px"
                       className="h-full w-full pointer-events-none object-cover"
                       style={{ backfaceVisibility: 'hidden', filter: `var(--image-filter, ${grayscale ? 'grayscale(1)' : 'none'})` }}
                     />

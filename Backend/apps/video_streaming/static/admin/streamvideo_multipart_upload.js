@@ -32,9 +32,10 @@
     return data;
   }
 
-  async function uploadLargeFile(file, streamVideoId, ui) {
+  async function uploadLargeFile(file, streamVideoId, titleValue, ui) {
     const started = await postJson("/api/streaming/uploads/start/", {
-      stream_video_id: streamVideoId,
+      stream_video_id: streamVideoId || null,
+      title: titleValue || "",
       filename: file.name,
       content_type: file.type || "application/octet-stream",
       part_size_mb: 64,
@@ -69,7 +70,7 @@
       }
 
       await postJson("/api/streaming/uploads/complete/", {
-        stream_video_id: streamVideoId,
+        stream_video_id: streamVideoId || null,
         key,
         upload_id: uploadId,
         parts,
@@ -87,8 +88,7 @@
 
   function init() {
     const streamVideoId = parseStreamVideoId();
-    if (!streamVideoId) return; // Requires existing row (change form).
-
+    const titleInput = document.getElementById("id_title");
     const multipartInput = document.getElementById("id_multipart_video");
     const hiddenKeyInput = document.getElementById("id_multipart_uploaded_key");
     if (!multipartInput || !hiddenKeyInput) return;
@@ -124,7 +124,8 @@
       button.disabled = true;
       progress.textContent = "Preparing multipart upload...";
       try {
-        const key = await uploadLargeFile(file, streamVideoId, ui);
+        const titleValue = titleInput && titleInput.value ? String(titleInput.value).trim() : "";
+        const key = await uploadLargeFile(file, streamVideoId, titleValue, ui);
         hiddenKeyInput.value = key;
         progress.textContent = "Upload complete. Now click Save to trigger processing.";
       } catch (e) {

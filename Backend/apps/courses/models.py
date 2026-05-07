@@ -32,11 +32,6 @@ class Course(models.Model):
         db_index=True,
         help_text="If False, this course is hidden from the dashboard Programs grid (lessons API unchanged).",
     )
-    show_in_programs = models.BooleanField(
-        default=True,
-        db_index=True,
-        help_text="If False, this course is hidden from the dashboard Programs grid (lessons API unchanged).",
-    )
     allow_all_authenticated = models.BooleanField(
         default=True,
         help_text="If True, any authenticated user may view videos. If False, only enrolled users (or staff).",
@@ -180,8 +175,3 @@ class CourseCertificate(models.Model):
                 candidate = _generate_certificate_token_id()
             self.token_id = candidate
         super().save(*args, **kwargs)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["user", "video"], name="courses_videoprogress_user_video"),
-        ]

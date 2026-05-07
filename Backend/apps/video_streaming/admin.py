@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from django.db import transaction
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
 from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
@@ -80,8 +81,28 @@ class StreamVideoAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         uploaded_key = (form.cleaned_data.get("multipart_uploaded_key") or "").strip()
         if uploaded_key:
+            # Multipart path: skip signal auto-transcode during save request to keep
+            # admin response fast/reliable for very large files.
+            obj._skip_auto_transcode = True
             obj.original_video.name = uploaded_key
+            obj.status = StreamVideo.Status.PROCESSING
+            obj.last_error = ""
+            obj.hls_path = ""
         super().save_model(request, obj, form, change)
+        if uploaded_key:
+            from apps.video_streaming.tasks import process_stream_video_to_hls
+
+            def _enqueue(vid: int) -> None:
+                try:
+                    process_stream_video_to_hls.delay(vid)
+                except Exception:
+                    # Keep admin save successful even if broker is temporarily unavailable.
+                    StreamVideo.objects.filter(pk=vid).update(
+                        status=StreamVideo.Status.FAILED,
+                        last_error="Video saved but background processing could not be queued.",
+                    )
+
+            transaction.on_commit(lambda vid=obj.pk: _enqueue(vid))
 
     @admin.action(description="Re-run HLS transcoding (selected rows with an original file)")
     def reprocess_hls(self, request, queryset):

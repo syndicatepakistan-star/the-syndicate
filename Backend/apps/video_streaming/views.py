@@ -15,6 +15,7 @@ from django.http import FileResponse, Http404, HttpResponse, StreamingHttpRespon
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from rest_framework import generics, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -654,6 +655,7 @@ class StreamPlaylistCheckoutSuccessView(APIView):
 
 
 class StreamVideoMultipartUploadStartView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -666,16 +668,20 @@ class StreamVideoMultipartUploadStartView(APIView):
             return Response({"detail": "Bucket is not configured."}, status=status.HTTP_400_BAD_REQUEST)
 
         payload = request.data if isinstance(request.data, dict) else {}
-        try:
-            stream_video_id = int(payload.get("stream_video_id"))
-        except (TypeError, ValueError):
-            return Response({"detail": "stream_video_id is required."}, status=status.HTTP_400_BAD_REQUEST)
         filename = str(payload.get("filename", "")).strip()
         if not filename:
             return Response({"detail": "filename is required."}, status=status.HTTP_400_BAD_REQUEST)
         content_type = str(payload.get("content_type", "")).strip() or "application/octet-stream"
-
-        stream_video = get_object_or_404(StreamVideo, pk=stream_video_id)
+        raw_id = payload.get("stream_video_id")
+        stream_video = None
+        if raw_id not in (None, "", "null"):
+            try:
+                stream_video = get_object_or_404(StreamVideo, pk=int(raw_id))
+            except (TypeError, ValueError):
+                return Response({"detail": "stream_video_id is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        if stream_video is None:
+            provisional_title = str(payload.get("title", "")).strip() or Path(filename).stem or "video"
+            stream_video = StreamVideo(title=provisional_title)
         key = stream_video_original_upload_to(stream_video, Path(filename).name)
         client = _s3_client()
         if client is None:
@@ -704,6 +710,7 @@ class StreamVideoMultipartUploadStartView(APIView):
 
 
 class StreamVideoMultipartUploadSignPartView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -741,6 +748,7 @@ class StreamVideoMultipartUploadSignPartView(APIView):
 
 
 class StreamVideoMultipartUploadCompleteView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -753,10 +761,6 @@ class StreamVideoMultipartUploadCompleteView(APIView):
         key = str(payload.get("key", "")).strip()
         upload_id = str(payload.get("upload_id", "")).strip()
         parts = payload.get("parts") if isinstance(payload.get("parts"), list) else []
-        try:
-            stream_video_id = int(payload.get("stream_video_id"))
-        except (TypeError, ValueError):
-            return Response({"detail": "stream_video_id is required."}, status=status.HTTP_400_BAD_REQUEST)
         if not key or not upload_id or not parts:
             return Response({"detail": "key, upload_id and parts are required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -788,16 +792,52 @@ class StreamVideoMultipartUploadCompleteView(APIView):
         except Exception:
             return Response({"detail": "Failed to complete multipart upload."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        stream_video = get_object_or_404(StreamVideo, pk=stream_video_id)
-        stream_video.original_video.name = key
-        stream_video.status = StreamVideo.Status.PROCESSING
-        stream_video.last_error = ""
-        stream_video.hls_path = ""
-        stream_video.save(update_fields=["original_video", "status", "last_error", "hls_path"])
-        return Response({"ok": True, "key": key}, status=status.HTTP_200_OK)
+        raw_id = payload.get("stream_video_id")
+        stream_video = None
+        if raw_id not in (None, "", "null"):
+            try:
+                stream_video = get_object_or_404(StreamVideo, pk=int(raw_id))
+            except (TypeError, ValueError):
+                return Response({"detail": "stream_video_id is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        if stream_video is None:
+            return Response(
+                {
+                    "ok": True,
+                    "queued": False,
+                    "pending_save": True,
+                    "key": key,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        # IMPORTANT: avoid model save/signals here; in some environments signals may run
+        # transcoding inline and block/kill this request for huge uploads.
+        StreamVideo.objects.filter(pk=stream_video.pk).update(
+            original_video=key,
+            status=StreamVideo.Status.PROCESSING,
+            last_error="",
+            hls_path="",
+        )
+
+        try:
+            from apps.video_streaming.tasks import process_stream_video_to_hls
+
+            process_stream_video_to_hls.delay(stream_video.pk)
+        except Exception:
+            return Response(
+                {
+                    "detail": "Upload stored but could not queue processing. Check worker/broker.",
+                    "ok": False,
+                    "key": key,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({"ok": True, "queued": True, "key": key}, status=status.HTTP_200_OK)
 
 
 class StreamVideoMultipartUploadAbortView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):

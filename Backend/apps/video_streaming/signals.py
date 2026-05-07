@@ -1,9 +1,12 @@
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+import logging
 
 from apps.video_streaming.models import StreamPlaylistItem, StreamVideo
 from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=StreamVideo)
@@ -24,6 +27,8 @@ def _stream_video_remember_original_name(sender, instance: StreamVideo, **kwargs
 @receiver(post_save, sender=StreamVideo)
 def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool, **kwargs) -> None:
     if kwargs.get("raw"):
+        return
+    if getattr(instance, "_skip_auto_transcode", False):
         return
     if not instance.original_video or not instance.original_video.name:
         return
@@ -103,3 +108,58 @@ def _stream_video_thumbnail_sync_playlist_covers(sender, instance: StreamVideo, 
             _sync_playlist_cover_from_first_thumbnail(playlist_id)
 
     transaction.on_commit(lambda ids=playlist_ids: _run(ids))
+
+
+def _delete_s3_prefix(client, bucket: str, prefix: str) -> None:
+    continuation_token = None
+    while True:
+        kwargs = {"Bucket": bucket, "Prefix": prefix, "MaxKeys": 1000}
+        if continuation_token:
+            kwargs["ContinuationToken"] = continuation_token
+        response = client.list_objects_v2(**kwargs)
+        contents = response.get("Contents") or []
+        if contents:
+            client.delete_objects(
+                Bucket=bucket,
+                Delete={"Objects": [{"Key": obj["Key"]} for obj in contents], "Quiet": True},
+            )
+        if not response.get("IsTruncated"):
+            break
+        continuation_token = response.get("NextContinuationToken")
+
+
+@receiver(post_delete, sender=StreamVideo)
+def _stream_video_delete_bucket_objects(sender, instance: StreamVideo, **kwargs) -> None:
+    if kwargs.get("raw"):
+        return
+
+    original_key = (getattr(instance.original_video, "name", "") or "").strip()
+    thumbnail_key = (getattr(instance.thumbnail, "name", "") or "").strip()
+    hls_prefix = f"hls/{instance.pk}/"
+    if not any([original_key, thumbnail_key, instance.pk]):
+        return
+
+    def _run_cleanup() -> None:
+        from django.conf import settings
+        from apps.video_streaming.services.r2_hls import _s3_client
+
+        if not getattr(settings, "USE_S3_OBJECT_STORAGE", False):
+            return
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+        if not bucket:
+            return
+        client = _s3_client()
+        if client is None:
+            return
+        try:
+            keys = [k for k in [original_key, thumbnail_key] if k]
+            if keys:
+                client.delete_objects(
+                    Bucket=bucket,
+                    Delete={"Objects": [{"Key": k} for k in keys], "Quiet": True},
+                )
+            _delete_s3_prefix(client, bucket, hls_prefix)
+        except Exception:
+            logger.exception("Failed deleting bucket objects for StreamVideo %s", instance.pk)
+
+    transaction.on_commit(_run_cleanup)

@@ -261,18 +261,9 @@ export type LoginResponse = {
 };
 
 function formatAuthErrorPayload(data: unknown, status: number): string {
-  if (data && typeof data === "object") {
-    const d = data as Record<string, unknown>;
-    if (typeof d.detail === "string") return d.detail;
-    if (Array.isArray(d.non_field_errors) && d.non_field_errors.length)
-      return String(d.non_field_errors[0]);
-    if (typeof d.username === "string") return d.username;
-    if (Array.isArray(d.username) && d.username.length) return String(d.username[0]);
-    if (typeof d.password === "string") return d.password;
-    if (Array.isArray(d.password) && d.password.length) return String(d.password[0]);
-  }
   if (status === 401) return "No account found or wrong password.";
-  return "Login failed.";
+  if (status === 429) return "Too many attempts. Please try again shortly.";
+  return "Unable to process request right now. Please try again.";
 }
 
 async function parseJsonOrText(res: Response): Promise<{ json: unknown; raw: string }> {
@@ -296,33 +287,19 @@ export async function loginRequest(username: string, password: string): Promise<
       credentials: "omit"
     });
   } catch {
-    throw new Error(
-      `Cannot reach API (${getApiDisplayHint()}). Start Next and Django, or set NEXT_PUBLIC_API_BASE to your backend URL.`
-    );
+    throw new Error("Network issue. Please check your connection and try again.");
   }
   const { json: parsed, raw } = await parseJsonOrText(res);
   const data = parsed as LoginResponse & { detail?: string };
   if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error(
-        `Login endpoint returned 404. Django has no /api/auth/login/ — save syndicate_backend/urls.py, restart runserver, or set BACKEND_INTERNAL_URL if Django is not on 127.0.0.1:8000.`
-      );
-    }
-    if (res.status === 403 && raw.toLowerCase().includes("csrf")) {
-      throw new Error(
-        "Login blocked (CSRF). Backend was updated to exempt JWT login — restart Django (runserver)."
-      );
+    if (res.status === 404 || (res.status === 403 && raw.toLowerCase().includes("csrf"))) {
+      throw new Error("Service is temporarily unavailable. Please try again.");
     }
     const msg = formatAuthErrorPayload(parsed, res.status);
-    if (msg === "Login failed." && raw.length && raw.length < 400) {
-      throw new Error(`${msg} (${res.status}): ${raw}`);
-    }
     throw new Error(msg);
   }
   if (!data.access || !data.refresh) {
-    throw new Error(
-      `Invalid login response (missing tokens). Status ${res.status}. First bytes: ${raw.slice(0, 120)}`
-    );
+    throw new Error("Unexpected response from server. Please try again.");
   }
   return data;
 }
@@ -480,11 +457,10 @@ export async function portalFetch<T>(
     return { ok: res.ok, status: res.status, data };
   } catch (e) {
     const name = e instanceof Error ? e.name : "";
-    const hint = getApiDisplayHint();
     const detail =
       name === "AbortError"
-        ? `Request timed out after ${Math.round(timeoutMs / 1000)}s. Start Django on port 8000 or set BACKEND_INTERNAL_URL / NEXT_PUBLIC_API_BASE (${hint}).`
-        : `Cannot reach API (${hint}).${e instanceof Error && e.message ? ` ${e.message}` : ""}`;
+        ? "Request timed out. Please try again."
+        : "Network issue. Please check your connection and try again.";
     return { ok: false, status: 0, data: { detail } as unknown as T };
   } finally {
     cleanup();

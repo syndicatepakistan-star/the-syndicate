@@ -330,6 +330,7 @@ export function PricingPage({
   const router = useRouter()
   const [billing, setBilling] = useState<BillingKey>('monthly')
   const [checkoutError, setCheckoutError] = useState('')
+  const [redirectingPlan, setRedirectingPlan] = useState<PlanKey | null>(null)
   const goToSignupPurchase = (plan: PlanKey, selectedBilling: BillingKey, amount: string) => {
     const params = new URLSearchParams({
       plan,
@@ -337,28 +338,29 @@ export function PricingPage({
       amount,
       buy: '1',
     })
+    if (typeof window !== 'undefined') {
+      window.location.assign(`/signup?${params.toString()}`)
+      return
+    }
     router.push(`/signup?${params.toString()}`)
   }
-  const goToAuth = (plan: PlanKey, selectedBilling: BillingKey, amount: string) => {
-    const params = new URLSearchParams({
-      plan,
-      billing: selectedBilling,
-      amount,
-    })
-    router.push(`/login?${params.toString()}`)
-  }
   const handleJoinPlan = async (plan: PlanKey, selectedBilling: BillingKey, rawAmount: string) => {
+    if (redirectingPlan) return
     const amount = rawAmount.replace(/[^0-9.]/g, '')
+    setRedirectingPlan(plan)
     if (!hasSimpleAuthSessionClient()) {
-      goToAuth(plan, selectedBilling, amount)
+      goToSignupPurchase(plan, selectedBilling, amount)
       return
     }
     setCheckoutError('')
 
     try {
       const authHeader = getAuthorizationHeader()
+      const ctrl = new AbortController()
+      const timeout = window.setTimeout(() => ctrl.abort(), 8000)
       const response = await fetch(resolveClientApiUrl('/api/auth/checkout/create-session/'), {
         method: 'POST',
+        signal: ctrl.signal,
         headers: {
           'Content-Type': 'application/json',
           ...(authHeader ? { Authorization: authHeader } : {}),
@@ -370,6 +372,7 @@ export function PricingPage({
           selected_amount: amount,
         }),
       })
+      window.clearTimeout(timeout)
       const payload = (await response.json().catch(() => ({}))) as {
         checkout_url?: string;
         is_unlocked?: boolean;
@@ -382,12 +385,19 @@ export function PricingPage({
         return
       }
       if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
-        router.push("/dashboard")
+        if (typeof window !== 'undefined') {
+          window.location.assign('/dashboard')
+        } else {
+          router.push('/dashboard')
+        }
         return
       }
       goToSignupPurchase(plan, selectedBilling, amount)
     } catch {
       goToSignupPurchase(plan, selectedBilling, amount)
+    } finally {
+      // If browser navigation did not happen, allow retry.
+      setRedirectingPlan(null)
     }
   }
 

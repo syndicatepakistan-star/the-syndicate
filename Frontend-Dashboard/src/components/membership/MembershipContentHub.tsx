@@ -231,11 +231,11 @@ export function MembershipContentHub() {
       <div className="relative z-[3] h-1.5 w-full bg-[linear-gradient(90deg,transparent,rgba(250,204,21,0.7),transparent)] opacity-90" aria-hidden />
       <MembershipHudCorners />
 
-      <div className="relative z-[5] flex min-h-0 flex-1 flex-col px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
+      <div className="relative z-[5] flex min-h-0 flex-1 flex-col px-3 pb-5 pt-4 sm:px-6 sm:pb-8 sm:pt-6">
         {tab === "articles" ? (
         <div className="space-y-[clamp(1rem,2.5vw+0.35rem,1.5rem)]">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[220px] flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="min-w-0 flex-1 sm:min-w-[220px]">
               <label htmlFor="membership-article-top-search" className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200/80">
                 Search
               </label>
@@ -246,10 +246,10 @@ export function MembershipContentHub() {
                 onChange={(e) => setTitleSearch(e.target.value)}
                 placeholder="Search by title…"
                 autoComplete="off"
-                className="w-full rounded-xl border border-cyan-300/30 bg-black/60 px-4 py-3 text-[15px] font-semibold text-neutral-100 placeholder:text-neutral-500 outline-none ring-0 transition focus:border-cyan-300/65 focus:shadow-[0_0_20px_rgba(34,211,238,0.14)]"
+                className="w-full rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-2.5 text-[14px] font-semibold text-neutral-100 placeholder:text-neutral-500 outline-none ring-0 transition focus:border-cyan-300/65 focus:shadow-[0_0_20px_rgba(34,211,238,0.14)] sm:px-4 sm:py-3 sm:text-[15px]"
               />
             </div>
-            <div className="ml-auto flex flex-wrap fluid-membership-gap">
+            <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto sm:fluid-membership-gap">
               {(
                 [
                   { id: "articles" as const, label: "Articles", sub: "Text archive" },
@@ -261,14 +261,14 @@ export function MembershipContentHub() {
                     type="button"
                     onClick={() => setTab(t.id)}
                     className={cx(
-                      "group relative overflow-hidden rounded-lg border px-6 py-3.5 text-left transition",
+                      "group relative min-w-0 flex-1 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition sm:flex-none sm:px-6 sm:py-3.5",
                       tab === t.id
                         ? "cut-frame-sm cyber-frame gold-stroke border-[color:var(--gold-neon-border)] bg-[rgba(250,204,21,0.14)] text-[color:var(--gold-neon)] shadow-[0_0_24px_rgba(250,204,21,0.18)]"
                         : "cut-frame-sm cyber-frame border-white/15 bg-black/55 text-neutral-400 hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold-neon)]/90"
                     )}
                   >
-                    <span className="block text-[14px] font-black uppercase tracking-[0.16em]">{t.label}</span>
-                    <span className="mt-0.5 block text-[11px] font-mono uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400">
+                    <span className="block text-[12px] font-black uppercase tracking-[0.14em] sm:text-[14px] sm:tracking-[0.16em]">{t.label}</span>
+                    <span className="mt-0.5 block text-[10px] font-mono uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400 sm:text-[11px]">
                       {t.sub}
                     </span>
                   </button>
@@ -278,12 +278,12 @@ export function MembershipContentHub() {
           <div className="relative overflow-hidden rounded-2xl border border-[color:var(--gold-neon-border-mid)]/35 bg-[linear-gradient(180deg,rgba(20,15,5,0.55),rgba(4,4,4,0.94))] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(250,204,21,0.08)] sm:p-5">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_100%_at_0%_0%,rgba(250,204,21,0.08),transparent_52%)]" />
             <div className="relative flex flex-col gap-4">
-              <div className="grid gap-3 md:grid-cols-[88px_minmax(0,180px)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center">
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[88px_minmax(0,180px)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center">
                 <span className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-200/80">Sort</span>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as "newest" | "oldest")}
-                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-4 py-3 text-[14px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65"
+                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-2.5 text-[13px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65 sm:px-4 sm:py-3 sm:text-[14px]"
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
@@ -292,19 +292,19 @@ export function MembershipContentHub() {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-3 text-[14px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65"
+                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-2.5 text-[13px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65 sm:py-3 sm:text-[14px]"
                 />
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-3 text-[14px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65"
+                  className="rounded-xl border border-cyan-300/30 bg-black/60 px-3 py-2.5 text-[13px] font-semibold text-neutral-100 outline-none transition focus:border-cyan-300/65 sm:py-3 sm:text-[14px]"
                 />
                 {filtersActive ? (
                   <button
                     type="button"
                     onClick={resetFilters}
-                    className="cut-frame-sm cyber-frame gold-stroke rounded-xl border border-[color:var(--gold-neon-border-mid)] bg-[rgba(250,204,21,0.12)] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--gold-neon)] transition hover:border-[color:var(--gold-neon-border)] hover:bg-[rgba(250,204,21,0.18)]"
+                    className="cut-frame-sm cyber-frame gold-stroke rounded-xl border border-[color:var(--gold-neon-border-mid)] bg-[rgba(250,204,21,0.12)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[color:var(--gold-neon)] transition hover:border-[color:var(--gold-neon-border)] hover:bg-[rgba(250,204,21,0.18)] sm:py-2.5 sm:text-[11px] sm:tracking-[0.14em]"
                   >
                     Reset
                   </button>
@@ -387,7 +387,7 @@ export function MembershipContentHub() {
       <AnimatePresence>
         {activeVideo ? (
           <motion.div
-            className="fixed inset-0 z-[200] overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+              className="fixed inset-0 z-[200] overflow-y-auto bg-black/80 p-2 backdrop-blur-sm sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -400,18 +400,18 @@ export function MembershipContentHub() {
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              className="relative mx-auto my-6 w-full max-w-6xl overflow-hidden rounded-xl border border-cyan-300/50 bg-black shadow-[0_0_72px_rgba(34,211,238,0.22),0_0_40px_rgba(220,38,38,0.12),inset_0_0_0_1px_rgba(251,191,36,0.12)]"
+              className="relative mx-auto my-3 w-full max-w-6xl overflow-hidden rounded-xl border border-cyan-300/50 bg-black shadow-[0_0_72px_rgba(34,211,238,0.22),0_0_40px_rgba(220,38,38,0.12),inset_0_0_0_1px_rgba(251,191,36,0.12)] sm:my-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="pointer-events-none absolute inset-0 opacity-[0.07] membership-hazard-stripe" aria-hidden />
-              <div className="relative flex items-center justify-between gap-3 border-b border-cyan-300/25 bg-black/80 px-4 py-3">
-                <div className="min-w-0 line-clamp-1 text-[13px] font-bold text-[#facc15] [text-shadow:0_0_12px_rgba(250,204,21,0.25)]">
+              <div className="relative flex items-center justify-between gap-2 border-b border-cyan-300/25 bg-black/80 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+                <div className="min-w-0 line-clamp-1 text-[12px] font-bold text-[#facc15] [text-shadow:0_0_12px_rgba(250,204,21,0.25)] sm:text-[13px]">
                   {activeVideo.title}
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveVideo(null)}
-                  className="shrink-0 rounded-lg border border-cyan-300/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-cyan-100 hover:border-red-400/40 hover:text-red-200"
+                  className="shrink-0 rounded-lg border border-cyan-300/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-100 hover:border-red-400/40 hover:text-red-200 sm:px-3 sm:py-1.5 sm:text-[10px]"
                 >
                   Close
                 </button>

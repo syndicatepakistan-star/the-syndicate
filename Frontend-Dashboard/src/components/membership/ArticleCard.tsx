@@ -67,7 +67,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.35) }}
       className={cx(
-        "group relative flex h-full min-h-[310px] flex-col overflow-hidden rounded-2xl border bg-black/70 text-left transition duration-300",
+        "group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-2xl border bg-black/70 text-left transition duration-300 sm:min-h-[310px]",
         "border-cyan-300/34 shadow-[0_0_0_1px_rgba(0,0,0,0.45),0_0_28px_rgba(34,211,238,0.14),0_18px_42px_rgba(0,0,0,0.5)] before:absolute before:inset-0 before:bg-[radial-gradient(120%_90%_at_0%_0%,rgba(34,211,238,0.2),transparent_48%),radial-gradient(120%_90%_at_100%_100%,rgba(34,211,238,0.14),transparent_52%)] before:content-['']",
         "hover:-translate-y-1 hover:border-cyan-200/78 hover:shadow-[0_0_58px_rgba(34,211,238,0.32),0_20px_50px_rgba(0,0,0,0.58)]",
         featured && "md:min-h-[350px] md:border-cyan-200/62 md:shadow-[0_0_64px_rgba(34,211,238,0.3)]"
@@ -77,7 +77,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
       <Link
         href={detailHref}
         prefetch
-        className="relative z-[1] flex min-h-0 flex-1 flex-col p-6 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/45"
+        className="relative z-[1] flex min-h-0 flex-1 flex-col p-4 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/45 sm:p-6"
       >
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="rounded-md border border-cyan-300/30 bg-cyan-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">
@@ -102,13 +102,13 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
         <h3
           className={cx(
             "line-clamp-3 font-black italic leading-snug tracking-[0.01em] text-[color:var(--gold-neon)] drop-shadow-[0_0_18px_rgba(250,204,21,0.2)] transition group-hover:text-amber-200 group-hover:drop-shadow-[0_0_24px_rgba(250,204,21,0.3)]",
-            featured ? "text-[21px] sm:text-[24px]" : "text-[18px] sm:text-[20px]"
+            featured ? "text-[18px] sm:text-[24px]" : "text-[16px] sm:text-[20px]"
           )}
         >
           {article.title}
         </h3>
 
-        <p className="mt-3 line-clamp-3 flex-1 text-[16px] font-medium leading-relaxed text-neutral-200 sm:text-[17px]">
+        <p className="mt-2.5 line-clamp-3 flex-1 text-[14px] font-medium leading-relaxed text-neutral-200 sm:mt-3 sm:text-[17px]">
           {article.description}
         </p>
 
@@ -117,7 +117,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
         </span>
       </Link>
 
-      <div className="relative z-[1] mt-auto flex flex-col gap-2 border-t border-cyan-300/10 px-6 pb-6 pt-3 sm:flex-row sm:gap-3">
+      <div className="relative z-[1] mt-auto flex flex-col gap-2 border-t border-cyan-300/10 px-4 pb-4 pt-3 sm:flex-row sm:gap-3 sm:px-6 sm:pb-6">
         {hasPdf && onOpenPdf ? (
           <button
             type="button"
@@ -126,7 +126,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
               e.preventDefault();
               void handlePdf();
             }}
-            className="cut-frame-sm cyber-frame gold-stroke premium-gold-border inline-flex flex-1 items-center justify-center bg-black/40 px-4 py-3.5 text-center text-[13px] font-black uppercase tracking-[0.16em] text-[color:var(--gold-neon)]/92 transition hover:border-[rgba(255,215,0,0.55)] hover:text-[rgba(255,215,0,0.98)] disabled:opacity-50"
+            className="cut-frame-sm cyber-frame gold-stroke premium-gold-border inline-flex flex-1 items-center justify-center bg-black/40 px-3 py-3 text-center text-[11px] font-black uppercase tracking-[0.13em] text-[color:var(--gold-neon)]/92 transition hover:border-[rgba(255,215,0,0.55)] hover:text-[rgba(255,215,0,0.98)] disabled:opacity-50 sm:px-4 sm:py-3.5 sm:text-[13px] sm:tracking-[0.16em]"
           >
             {pdfOpening ? "Loading…" : "View PDF"}
           </button>
@@ -140,6 +140,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
             }}
             className={cx(
               "cut-frame-sm cyber-frame gold-stroke premium-gold-border inline-flex flex-1 items-center justify-center bg-black/40 px-4 py-3.5 text-center text-[13px] font-black uppercase tracking-[0.16em] text-[color:var(--gold-neon)]/92 transition hover:border-[rgba(255,215,0,0.55)] hover:text-[rgba(255,215,0,0.98)]",
+              "px-3 py-3 text-[11px] tracking-[0.13em] sm:px-4 sm:py-3.5 sm:text-[13px] sm:tracking-[0.16em]",
               hasPdf && onOpenPdf && "border-white/20 text-white/80 hover:text-white/95"
             )}
           >

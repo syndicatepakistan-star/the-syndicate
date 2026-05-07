@@ -92,9 +92,9 @@ export function MembershipVideoGallery({
           aria-hidden
         />
 
-        <div className="relative border-b border-white/[0.08] bg-black/35 px-4 py-4 md:px-6 md:py-5">
-          <div className="flex flex-wrap items-end gap-3 xl:flex-nowrap">
-            <label className="block min-w-[170px] flex-1 xl:max-w-[240px]">
+        <div className="relative border-b border-white/[0.08] bg-black/35 px-3 py-3.5 sm:px-4 sm:py-4 md:px-6 md:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap">
+            <label className="block min-w-0 flex-1 sm:min-w-[170px] xl:max-w-[240px]">
               <span className="mb-1.5 block text-[9px] font-black uppercase tracking-[0.2em] text-white/40">From</span>
               <input
                 type="date"
@@ -105,7 +105,7 @@ export function MembershipVideoGallery({
                 className={inputClass}
               />
             </label>
-            <label className="block min-w-[170px] flex-1 xl:max-w-[240px]">
+            <label className="block min-w-0 flex-1 sm:min-w-[170px] xl:max-w-[240px]">
               <span className="mb-1.5 block text-[9px] font-black uppercase tracking-[0.2em] text-white/40">To</span>
               <input
                 type="date"
@@ -116,7 +116,7 @@ export function MembershipVideoGallery({
                 className={inputClass}
               />
             </label>
-            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
+            <div className="flex w-full flex-wrap items-center gap-2 xl:ml-auto xl:w-auto">
               {onSwitchTab
                 ? ([
                     { id: "articles" as const, label: "Articles", sub: "Text archive" },
@@ -127,14 +127,14 @@ export function MembershipVideoGallery({
                   type="button"
                   onClick={() => onSwitchTab(t.id)}
                   className={cx(
-                    "group relative overflow-hidden rounded-lg border px-6 py-3 text-left transition",
+                    "group relative min-w-0 flex-1 overflow-hidden rounded-lg border px-3 py-2 text-left transition sm:flex-none sm:px-6 sm:py-3",
                     activeTab === t.id
                       ? "cut-frame-sm cyber-frame gold-stroke border-[color:var(--gold-neon-border)] bg-[rgba(250,204,21,0.14)] text-[color:var(--gold-neon)] shadow-[0_0_24px_rgba(250,204,21,0.18)]"
                       : "cut-frame-sm cyber-frame border-white/15 bg-black/55 text-neutral-400 hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold-neon)]/90"
                   )}
                 >
-                  <span className="block text-[13px] font-black uppercase tracking-[0.16em]">{t.label}</span>
-                  <span className="mt-0.5 block text-[10px] font-mono uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400">
+                  <span className="block text-[12px] font-black uppercase tracking-[0.14em] sm:text-[13px] sm:tracking-[0.16em]">{t.label}</span>
+                  <span className="mt-0.5 block text-[9px] font-mono uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400 sm:text-[10px]">
                     {t.sub}
                   </span>
                 </button>
@@ -149,7 +149,7 @@ export function MembershipVideoGallery({
           ) : null}
         </div>
 
-        <div className="relative p-4 md:p-6">
+        <div className="relative p-3 sm:p-4 md:p-6">
           {loading && !videos.length ? (
             <VideoGridSkeleton />
           ) : showFilteredEmpty ? (

@@ -20,8 +20,9 @@
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrftoken,
+        "X-Requested-With": "XMLHttpRequest",
       },
-      credentials: "same-origin",
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));

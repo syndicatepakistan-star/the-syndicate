@@ -15,6 +15,7 @@ from django.http import FileResponse, Http404, HttpResponse, StreamingHttpRespon
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from rest_framework import generics, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -654,6 +655,7 @@ class StreamPlaylistCheckoutSuccessView(APIView):
 
 
 class StreamVideoMultipartUploadStartView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -704,6 +706,7 @@ class StreamVideoMultipartUploadStartView(APIView):
 
 
 class StreamVideoMultipartUploadSignPartView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -741,6 +744,7 @@ class StreamVideoMultipartUploadSignPartView(APIView):
 
 
 class StreamVideoMultipartUploadCompleteView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -816,6 +820,7 @@ class StreamVideoMultipartUploadCompleteView(APIView):
 
 
 class StreamVideoMultipartUploadAbortView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):

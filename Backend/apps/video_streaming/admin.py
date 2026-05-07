@@ -42,6 +42,14 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
 
 
 class StreamVideoAdminForm(forms.ModelForm):
+    bucket_video_key = forms.CharField(
+        required=False,
+        label="Bucket video key",
+        help_text=(
+            "Optional. Paste an existing object key uploaded directly to bucket "
+            "(example: stream_videos/originals/Amazon KDP.mp4)."
+        ),
+    )
     multipart_video = forms.FileField(
         required=False,
         help_text="For very large files (9GB+), use this field and click 'Upload large file to bucket' before Save.",
@@ -72,24 +80,26 @@ class StreamVideoAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
-        ("Media", {"fields": ("thumbnail", "original_video", "multipart_video", "multipart_uploaded_key")}),
+        ("Media", {"fields": ("thumbnail", "original_video", "bucket_video_key", "multipart_video", "multipart_uploaded_key")}),
         ("Pipeline", {"fields": ("status", "hls_path", "last_error", "created_at")}),
     )
     class Media:
         js = ("admin/streamvideo_multipart_upload.js",)
 
     def save_model(self, request, obj, form, change):
+        bucket_key = (form.cleaned_data.get("bucket_video_key") or "").strip()
         uploaded_key = (form.cleaned_data.get("multipart_uploaded_key") or "").strip()
-        if uploaded_key:
+        selected_key = bucket_key or uploaded_key
+        if selected_key:
             # Multipart path: skip signal auto-transcode during save request to keep
             # admin response fast/reliable for very large files.
             obj._skip_auto_transcode = True
-            obj.original_video.name = uploaded_key
+            obj.original_video.name = selected_key
             obj.status = StreamVideo.Status.PROCESSING
             obj.last_error = ""
             obj.hls_path = ""
         super().save_model(request, obj, form, change)
-        if uploaded_key:
+        if selected_key:
             from apps.video_streaming.tasks import process_stream_video_to_hls
 
             def _enqueue(vid: int) -> None:

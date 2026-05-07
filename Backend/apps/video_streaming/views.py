@@ -789,12 +789,30 @@ class StreamVideoMultipartUploadCompleteView(APIView):
             return Response({"detail": "Failed to complete multipart upload."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         stream_video = get_object_or_404(StreamVideo, pk=stream_video_id)
-        stream_video.original_video.name = key
-        stream_video.status = StreamVideo.Status.PROCESSING
-        stream_video.last_error = ""
-        stream_video.hls_path = ""
-        stream_video.save(update_fields=["original_video", "status", "last_error", "hls_path"])
-        return Response({"ok": True, "key": key}, status=status.HTTP_200_OK)
+        # IMPORTANT: avoid model save/signals here; in some environments signals may run
+        # transcoding inline and block/kill this request for huge uploads.
+        StreamVideo.objects.filter(pk=stream_video.pk).update(
+            original_video=key,
+            status=StreamVideo.Status.PROCESSING,
+            last_error="",
+            hls_path="",
+        )
+
+        try:
+            from apps.video_streaming.tasks import process_stream_video_to_hls
+
+            process_stream_video_to_hls.delay(stream_video.pk)
+        except Exception:
+            return Response(
+                {
+                    "detail": "Upload stored but could not queue processing. Check worker/broker.",
+                    "ok": False,
+                    "key": key,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({"ok": True, "queued": True, "key": key}, status=status.HTTP_200_OK)
 
 
 class StreamVideoMultipartUploadAbortView(APIView):

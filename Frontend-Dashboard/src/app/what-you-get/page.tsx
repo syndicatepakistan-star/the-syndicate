@@ -122,14 +122,14 @@ export default function WhatYouGetPage() {
                   </div>
                 </div>
               ))}
-              <div className="group relative min-h-[330px] overflow-hidden bg-gradient-to-br from-cyan-300 via-sky-500 to-fuchsia-500 p-[5px] [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]">
+              <div className="group relative min-h-[280px] sm:min-h-[330px] overflow-hidden bg-gradient-to-br from-cyan-300 via-sky-500 to-fuchsia-500 p-[5px] [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]">
                 <div className="relative h-full overflow-hidden bg-[#020205]/92 [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]">
                   <Image
                     src="/assets/Gold-Key.png"
                     alt="Syndicate gold key"
                     fill
                     sizes="(max-width: 1024px) 92vw, 24vw"
-                    className="what-you-get-key-float object-contain p-3 transition duration-500 group-hover:scale-[1.05]"
+                    className="what-you-get-key-float object-contain p-8 sm:p-6 transition duration-500 group-hover:scale-[1.05]"
                   />
                 </div>
               </div>
@@ -148,7 +148,7 @@ export default function WhatYouGetPage() {
           </div>
         </section>
 
-        <section className="px-4 py-12 sm:px-6 sm:py-16">
+        <section className="px-4 pb-6 pt-12 sm:px-6 sm:pb-8 sm:pt-16">
           <div className="mx-auto w-full max-w-[min(1650px,96vw)]">
             <h2 className="text-4xl font-black uppercase tracking-[0.04em] text-white sm:text-6xl">
               Follow the Path of Kings and Emperors
@@ -164,7 +164,7 @@ export default function WhatYouGetPage() {
               ].map((line, idx) => (
                 <div
                   key={line}
-                  className="what-you-get-stagger-row grid gap-3 border-b border-white/12 px-6 py-6 sm:grid-cols-[112px_1fr] sm:px-8 sm:py-8 last:border-b-0"
+                  className="what-you-get-stagger-row relative z-0 grid gap-3 border-b border-white/12 px-6 py-6 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:z-10 hover:-translate-y-1 hover:scale-[1.1] sm:grid-cols-[112px_1fr] sm:px-8 sm:py-8 last:border-b-0"
                   style={{ animationDelay: `${idx * 0.16}s` }}
                 >
                   <span className="text-base font-semibold tracking-[0.2em] text-zinc-400">0{idx + 1}.</span>
@@ -173,7 +173,7 @@ export default function WhatYouGetPage() {
               ))}
               </div>
             </div>
-            <div className="mx-auto mt-6 flex w-full justify-center sm:mt-10">
+            <div className="mx-auto mt-5 flex w-full justify-center sm:mt-8">
               <div className="h-[250px] w-[250px] sm:h-[320px] sm:w-[320px]">
                 <Image
                   src="/assets/coin-gold.png"
@@ -187,7 +187,7 @@ export default function WhatYouGetPage() {
           </div>
         </section>
 
-        <section className="px-4 pb-10 pt-4 sm:px-6 sm:pb-16 sm:pt-8">
+        <section className="px-4 pb-10 pt-1 sm:px-6 sm:pb-16 sm:pt-2">
           <div className="mx-auto w-full max-w-[min(1650px,96vw)] rounded-3xl bg-[#020205]/88 p-6 text-center sm:p-10">
             <div className="mt-6 flex flex-wrap justify-center gap-4 sm:mt-8">
               <div className="group relative rounded-xl bg-gradient-to-r from-cyan-300 via-sky-500 to-fuchsia-500 p-[1px]">
@@ -233,27 +233,37 @@ export default function WhatYouGetPage() {
           }
         }
         .coin-wheel-lr {
-          animation: coinWheelSpin 6.2s linear infinite;
+          animation: coinWheelSpin 5.2s linear infinite;
           transform-origin: center;
         }
         @keyframes coinWheelSpin {
-          from {
-            transform: rotate(0deg);
+          0% {
+            transform: rotate(0deg) translateY(0px);
           }
-          to {
-            transform: rotate(360deg);
+          50% {
+            transform: rotate(180deg) translateY(-6px);
+          }
+          100% {
+            transform: rotate(360deg) translateY(0px);
           }
         }
         .what-you-get-key-float {
-          animation: whatYouGetKeyFloatLocal 4.6s ease-in-out infinite;
+          animation: whatYouGetKeyOrbitLocal 6.8s linear infinite;
+          transform-origin: center;
         }
-        @keyframes whatYouGetKeyFloatLocal {
+        @keyframes whatYouGetKeyOrbitLocal {
           0%,
           100% {
-            transform: translateY(0);
+            transform: translate(0px, 0px) rotate(0deg);
+          }
+          25% {
+            transform: translate(10px, -8px) rotate(90deg);
           }
           50% {
-            transform: translateY(-14px);
+            transform: translate(0px, -12px) rotate(180deg);
+          }
+          75% {
+            transform: translate(-10px, -8px) rotate(270deg);
           }
         }
       `}</style>

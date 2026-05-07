@@ -37,12 +37,12 @@ const INSTAGRAM_URL = 'https://www.instagram.com/followthesyndicate?igsh=MXV5b3E
 const TIKTOK_URL = 'https://www.tiktok.com/@followthesyndicate?_r=1&_t=ZG-95id6R01vZh'
 
 const FEATURED_PROGRAM_IMAGES = [
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_wordpress_blog_dystopian_futuristc_cyber_vibes__56y25d9msuef6h5mvdp7_0.png'), alt: 'WordPress Blog' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_framer_crash_course__dystopian_futuristic_cyber__sv3m15ue62yv42axqzjz_3.png'), alt: 'Framer Crash Course' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_faceless_youtube_ai_content_creator_course_dystopian_6ilaa9szo8ti113v76xv_0.png'), alt: 'Faceless YouTube AI Creator' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_ai_automations_dystopian_futuristic_cyber__jo1dnkoktqk1eiv9foxm_2.png'), alt: 'AI Automations' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_crypto_trading_with_technical_analysis_course__dysto_jne4vbob12582s4qybop_2.png'), alt: 'Crypto Trading TA' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_print_on_demand_clothing___zxxqlpgl77cee8pe59ru_2.png'), alt: 'Print on Demand Clothing' },
+  { src: courseImage('wordpress-blog.png'), alt: 'WordPress Blog' },
+  { src: courseImage('canvics-to-canva.png'), alt: 'Graphics Design using Canva' },
+  { src: courseImage('flutter-app-building.png'), alt: 'App Building using Flutter' },
+  { src: courseImage('automaton-name-change.png'), alt: 'AI Automations' },
+  { src: courseImage('new-project.png'), alt: 'Crypto Trading with Technical Analysis' },
+  { src: courseImage('dystopian-demand.png'), alt: 'Print on Demand Clothing' },
   { src: courseImage('make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0.png'), alt: 'Python Programming' },
   { src: courseImage('new-project (12).png'), alt: 'Building Apps using React JS' },
 ]
@@ -96,6 +96,7 @@ const SOCIAL_CARD_BORDER_THEMES = [
 ] as const
 
 const FOUNDER_DIRS = ['assets/founder'] as const
+const PROGRAM_GALLERY_DIR = 'assets/programs/cources imnages'
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'])
 
 const toLabel = (fileName: string) =>
@@ -133,8 +134,36 @@ const getFounderImages = unstable_cache(readFounderImages, ['home-founder-images
   revalidate: 3600,
 })
 
+async function readProgramGalleryImages() {
+  const absolute = path.join(process.cwd(), 'public', ...PROGRAM_GALLERY_DIR.split('/'))
+  try {
+    const entries = await readdir(absolute, { withFileTypes: true })
+    const files = entries
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => IMAGE_EXTENSIONS.has(path.extname(name).toLowerCase()))
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+
+    if (files.length > 0) {
+      return files.map((file, index) => ({
+        src: courseImage(file),
+        alt: toLabel(file) || `Program image ${index + 1}`,
+      }))
+    }
+  } catch {
+    // Use curated fallback when folder is unavailable.
+  }
+
+  return FEATURED_PROGRAM_IMAGES
+}
+
+const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-program-gallery-images'], {
+  revalidate: 3600,
+})
+
 export default async function Home() {
   const founderImages = await getFounderImages()
+  const programGalleryImages = await getProgramGalleryImages()
   const midpoint = Math.ceil(founderImages.length / 2)
   const topRowBase = founderImages.slice(0, midpoint)
   const bottomRowBase = founderImages.slice(midpoint)
@@ -217,7 +246,7 @@ export default async function Home() {
           </h2>
           <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]">
             <DomeGallery
-              images={FEATURED_PROGRAM_IMAGES}
+              images={programGalleryImages}
               fit={0.58}
               minRadius={260}
               segments={18}

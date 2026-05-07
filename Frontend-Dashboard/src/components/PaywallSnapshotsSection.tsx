@@ -42,10 +42,10 @@ const SNAPSHOTS: SnapshotItem[] = [
     aura: 'from-fuchsia-400/42 via-violet-500/28 to-transparent',
   },
   {
-    src: '/assets/paywall/methods-reference.png',
-    title: 'LIVE CONTENT UPDATES',
+    src: '/assets/paywall/Affiliate%20Portal.png',
+    title: 'AFFILIATE PORTAL',
     description:
-      'Content, resources, and frameworks evolve continuously so your private workspace keeps compounding.',
+      'Track referrals, monitor commissions, and manage withdrawal requests from your private affiliate dashboard.',
     frame: 'border-rose-300/95 border-[8px] shadow-[0_0_0_1px_rgba(251,113,133,0.95),0_0_24px_rgba(251,113,133,0.72),0_0_58px_rgba(251,113,133,0.5),0_0_110px_rgba(251,113,133,0.34),inset_0_0_20px_rgba(251,113,133,0.28)]',
     tone: 'from-rose-500/24 via-red-500/16 to-orange-600/22',
     aura: 'from-rose-400/42 via-orange-500/28 to-transparent',
@@ -84,7 +84,7 @@ export default function PaywallSnapshotsSection() {
               className={`group relative overflow-hidden bg-transparent p-[1px] transition duration-300 [clip-path:polygon(24px_0,calc(100%-24px)_0,100%_24px,100%_calc(100%-28px),calc(100%-28px)_100%,28px_100%,0_calc(100%-24px),0_24px)] ${snapshot.frame}`}
             >
               <span className={`pointer-events-none absolute -inset-8 -z-10 bg-gradient-to-br ${snapshot.aura} blur-[44px]`} />
-              <article className="relative flex h-full min-h-[clamp(360px,44vh,420px)] flex-col border border-zinc-100/35 bg-[#03050b]/94 p-5 [clip-path:polygon(26px_0,calc(100%-26px)_0,100%_26px,100%_calc(100%-30px),calc(100%-30px)_100%,30px_100%,0_calc(100%-26px),0_26px)]">
+              <article className="relative flex h-full min-h-[clamp(320px,40vh,420px)] flex-col border border-zinc-100/35 bg-[#03050b]/94 p-4 sm:p-5 [clip-path:polygon(26px_0,calc(100%-26px)_0,100%_26px,100%_calc(100%-30px),calc(100%-30px)_100%,30px_100%,0_calc(100%-26px),0_26px)]">
                 <span className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${snapshot.tone}`} />
                 <span className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:34px_34px]" />
                 <span className="pointer-events-none absolute inset-0 opacity-[0.09] [background-image:repeating-linear-gradient(0deg,transparent_0px,transparent_2px,rgba(255,255,255,0.15)_2px,rgba(255,255,255,0.15)_3px)]" />
@@ -110,7 +110,7 @@ export default function PaywallSnapshotsSection() {
                     {snapshot.description}
                   </p>
                 </div>
-                <div className="relative mt-4 flex-1 overflow-hidden border border-zinc-100/30 bg-transparent shadow-[0_0_12px_rgba(255,255,255,0.3)] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-24px),calc(100%-24px)_100%,24px_100%,0_calc(100%-22px),0_22px)]">
+                <div className="relative mt-4 h-[clamp(180px,36vw,260px)] sm:h-[clamp(220px,30vw,320px)] lg:h-[clamp(240px,26vw,340px)] overflow-hidden border border-zinc-100/30 bg-transparent shadow-[0_0_12px_rgba(255,255,255,0.3)] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-24px),calc(100%-24px)_100%,24px_100%,0_calc(100%-22px),0_22px)]">
                   <span className="pointer-events-none absolute inset-0 z-[3] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.24))]" />
                   <span className="pointer-events-none absolute left-1/2 top-2 z-[3] h-[1px] w-20 -translate-x-1/2 bg-gradient-to-r from-transparent via-zinc-100/55 to-transparent" />
                   <span className="pointer-events-none absolute bottom-2 right-3 z-[3] h-2 w-2 border-r border-b border-zinc-100/65" />
@@ -118,8 +118,8 @@ export default function PaywallSnapshotsSection() {
                     src={snapshot.src}
                     alt={snapshot.title}
                     fill
-                    sizes="(max-width: 767px) 92vw, (max-width: 1200px) 46vw, 42vw"
-                    className="object-cover object-top saturate-[1.08] contrast-[1.03]"
+                    sizes="(max-width: 639px) 90vw, (max-width: 1023px) 88vw, (max-width: 1200px) 46vw, 42vw"
+                    className="object-cover object-center sm:object-top saturate-[1.08] contrast-[1.03]"
                   />
                 </div>
               </article>

@@ -2195,6 +2195,8 @@ export default function Page() {
   const [isOverlaySidebarBp, setIsOverlaySidebarBp] = useState(false);
   /** ≤820px: in-navbar menu under search + overlay rail behavior (tablet/desktop unchanged). */
   const [isMobileNavUi, setIsMobileNavUi] = useState(false);
+  /** iPad Pro portrait-like viewport: pin topbar row layout and disable nav rail animation. */
+  const [isIpadProPortraitUi, setIsIpadProPortraitUi] = useState(false);
   const [navQuickSearch, setNavQuickSearch] = useState("");
 
   useEffect(() => {
@@ -2390,18 +2392,21 @@ export default function Page() {
   /** Before paint: match breakpoints + open desktop rail (avoids wrong grid + missing Dashboard until reload). */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    const mq1023 = window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))");
-    const mq820 = window.matchMedia("(max-width: 1024px) and (max-height: 1400px)");
+    const mq1023 = window.matchMedia("(max-width: 1023px), ((width: 1024px) and (height: 1366px))");
+    const mq820 = window.matchMedia("(width: 1024px) and (height: 1366px)");
     const mq767 = window.matchMedia("(max-width: 767px)");
+    const isIpadPortraitLike =
+      window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
     setIsOverlaySidebarBp(mq1023.matches);
-    setIsMobileNavUi(mq820.matches);
+    setIsMobileNavUi(mq820.matches || isIpadPortraitLike);
+    setIsIpadProPortraitUi(isIpadPortraitLike);
     setIsNarrowViewport(mq767.matches);
     if (!mq1023.matches) setSidebarOpen(true);
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))");
+    const mq = window.matchMedia("(max-width: 1023px), ((width: 1024px) and (height: 1366px))");
     const apply = () => {
       const next = mq.matches;
       setIsOverlaySidebarBp(next);
@@ -2414,11 +2419,20 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 1024px) and (max-height: 1400px)");
-    const apply = () => setIsMobileNavUi(mq.matches);
+    const mq = window.matchMedia("(width: 1024px) and (height: 1366px)");
+    const apply = () => {
+      const isIpadPortraitLike =
+        window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
+      setIsIpadProPortraitUi(isIpadPortraitLike);
+      setIsMobileNavUi(mq.matches || isIpadPortraitLike);
+    };
     apply();
     mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
+    window.addEventListener("resize", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("resize", apply);
+    };
   }, []);
 
   /** After route change or overlay open, scroll rail to top so Dashboard is never clipped above the fold. */
@@ -2432,7 +2446,7 @@ export default function Page() {
   /** lg+: collapse grid rail when not on Dashboard so missions / detail use full shell width (reopen via menu). */
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 1023px), ((max-width: 1024px) and (max-height: 1400px))").matches) return;
+    if (window.matchMedia("(max-width: 1023px), ((width: 1024px) and (height: 1366px))").matches) return;
     if (selectedNavKey !== "dashboard") setSidebarOpen(false);
   }, [selectedNavKey]);
 
@@ -2932,7 +2946,12 @@ export default function Page() {
             className={cn(
               "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar relative overflow-visible border bg-[#070707]/80 fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
-              isMobileNavUi ? "max-lg:grid-rows-[auto_auto_auto]" : "max-lg:grid-rows-[auto_auto]",
+              isMobileNavUi
+                ? isIpadProPortraitUi
+                  ? "max-lg:grid-rows-[auto_auto]"
+                  : "max-lg:grid-rows-[auto_auto_auto]"
+                : "max-lg:grid-rows-[auto_auto]",
+              isIpadProPortraitUi && "max-lg:!py-2 max-lg:gap-y-1",
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
             )}
           >
@@ -3120,9 +3139,14 @@ export default function Page() {
             </div>
 
             {isMobileNavUi ? (
-              <div className="relative z-[3] min-h-0 max-lg:col-span-3 max-lg:col-start-1 max-lg:row-start-3 max-lg:w-full">
+              <div
+                className={cn(
+                  "relative z-[3] min-h-0 max-lg:col-span-3 max-lg:col-start-1 max-lg:w-full",
+                  isIpadProPortraitUi ? "max-lg:row-start-2 max-lg:mt-0.5" : "max-lg:row-start-3"
+                )}
+              >
                 <AnimatePresence initial={true} mode="sync">
-                  {sidebarOpen && isOverlaySidebarBp ? (
+                  {sidebarOpen && isOverlaySidebarBp && !isIpadProPortraitUi ? (
                     <motion.div
                       key="navbar-mobile-nav"
                       initial={{ height: 0, opacity: 1 }}
@@ -3157,6 +3181,25 @@ export default function Page() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
+                {sidebarOpen && isOverlaySidebarBp && isIpadProPortraitUi ? (
+                  <div className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black/35">
+                    <div
+                      ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
+                      className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 bg-[#060606]/92 pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                    >
+                      <div className="pointer-events-none absolute inset-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                      <div className="relative min-w-0 px-1">
+                        <SidebarNavRailList
+                          nav={nav}
+                          selectedNavKey={selectedNavKey}
+                          setSelectedNavKey={applyNavKey}
+                          onItemActivate={() => {}}
+                          isNavLocked={isNavLocked}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

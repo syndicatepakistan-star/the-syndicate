@@ -81,11 +81,11 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
               <span className="sr-only">How affiliate login works</span>
             </button>
           </div>
-          <p className="mx-auto mt-5 max-w-3xl px-1 text-justify text-[19px] font-medium leading-relaxed tracking-normal text-slate-200/95 sm:px-2 sm:text-[20px] md:mx-0 md:px-0 md:text-left md:text-xl md:leading-relaxed md:tracking-wide">
+          <p className="mx-auto mt-5 max-w-3xl px-1 text-justify text-[19px] font-medium leading-relaxed tracking-normal text-slate-200/95 sm:px-2 sm:text-[20px] md:mx-2 md:px-2 md:text-left md:text-xl md:leading-relaxed md:tracking-wide">
             Become a Syndicate affiliate: share your tracked links, earn when your audience joins and buys, and watch
             clicks, leads, and commissions in your partner dashboard. Built for operators who want leverage — not fluff.
           </p>
-          <p className="mx-auto mt-4 max-w-3xl px-1 text-justify text-[17px] leading-relaxed text-slate-300/90 sm:px-2 sm:text-[18px] md:mx-0 md:px-0 md:text-left md:text-lg md:leading-relaxed">
+          <p className="mx-auto mt-4 max-w-3xl px-1 text-justify text-[17px] leading-relaxed text-slate-300/90 sm:px-2 sm:text-[18px] md:mx-2 md:px-2 md:text-left md:text-lg md:leading-relaxed">
             After you are approved as a partner, use the same email we have on file. You will get a one-time code (same
             luxury OTP experience as member login), then your stats and referral tools unlock instantly.
           </p>
@@ -145,13 +145,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             className="inline-flex min-h-[52px] items-center justify-center rounded-lg border border-cyan-400/55 bg-gradient-to-b from-cyan-500/20 via-black/50 to-fuchsia-900/25 px-8 py-3.5 text-sm font-black uppercase tracking-[0.15em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35),0_0_48px_rgba(217,70,239,0.12),0_12px_32px_rgba(0,0,0,0.75)] transition hover:border-fuchsia-300/50 hover:shadow-[0_0_32px_rgba(217,70,239,0.35),0_0_40px_rgba(34,211,238,0.25)] sm:text-base sm:tracking-[0.18em]"
           >
             Affiliate login
-          </Link>
-          <Link
-            href="/programs"
-            className="text-base font-semibold uppercase tracking-[0.14em] text-fuchsia-200/80 underline-offset-4 transition hover:text-cyan-200 hover:underline hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]"
-          >
-            Explore programs
-          </Link>
+          </Link>      
         </div>
       </div>
     </section>

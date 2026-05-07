@@ -427,16 +427,6 @@ export function ProgramsCourseSection({
     },
     [streamPlaylists, normalizedPlaylistTitleQuery]
   );
-  const sortedApiCourses = useMemo(
-    () =>
-      [...apiCourses].sort((a, b) => {
-        const aUnlocked = a.can_access !== false;
-        const bUnlocked = b.can_access !== false;
-        if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
-        return a.title.localeCompare(b.title);
-      }),
-    [apiCourses]
-  );
   const businessModelPlaylists = useMemo(
     () => searchablePlaylists.filter((playlist) => playlist.category === "business_model"),
     [searchablePlaylists]
@@ -867,11 +857,11 @@ export function ProgramsCourseSection({
                   </div>
                 </div>
               ) : null}
-              {sortedApiCourses.length > 0 ? (
+              {apiCourses.length > 0 ? (
                 <div className="space-y-3">
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-cyan-100/80">Courses</div>
                   <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-              {sortedApiCourses.map((c, i) => {
+              {apiCourses.map((c, i) => {
                 const grad = PROGRAM_CARD_BACKGROUNDS[(streamPlaylists.length + i) % PROGRAM_CARD_BACKGROUNDS.length];
                 const coverSrc = resolveDjangoMediaUrl(c.cover_image_url);
                 const theme = COURSE_CARD_THEMES[i % COURSE_CARD_THEMES.length];

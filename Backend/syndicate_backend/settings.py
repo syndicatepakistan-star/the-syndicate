@@ -151,8 +151,9 @@ USE_S3_OBJECT_STORAGE = _s3_object_storage_cfg is not None
 SYNDICATE_DATA_DIR = BASE_DIR / "data"
 SYNDICATE_MAX_DOC_CHARS = 120_000
 
-# Admin/API multipart uploads (Django default ~2.5MB can reject larger PDFs before the view runs).
-_DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "32").strip() or "32")
+# Admin/API multipart uploads.
+# Default is set for large admin video uploads (15GB). Lower via DATA_UPLOAD_MAX_MB if desired.
+_DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "15360").strip() or "15360")
 DATA_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _DATA_UPLOAD_MAX_MB * 1024 * 1024)
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
@@ -202,8 +203,8 @@ CELERY_TASK_ALWAYS_EAGER = (os.environ.get("CELERY_TASK_ALWAYS_EAGER") or "").st
     "yes",
 )
 CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_TASK_TIME_LIMIT = int((os.environ.get("CELERY_TASK_TIME_LIMIT") or "7200").strip() or "7200")
-CELERY_TASK_SOFT_TIME_LIMIT = int((os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT") or "7000").strip() or "7000")
+CELERY_TASK_TIME_LIMIT = int((os.environ.get("CELERY_TASK_TIME_LIMIT") or "21600").strip() or "21600")
+CELERY_TASK_SOFT_TIME_LIMIT = int((os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT") or "21000").strip() or "21000")
 CELERY_WORKER_PREFETCH_MULTIPLIER = int((os.environ.get("CELERY_WORKER_PREFETCH_MULTIPLIER") or "1").strip() or "1")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

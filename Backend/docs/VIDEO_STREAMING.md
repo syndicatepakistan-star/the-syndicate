@@ -90,6 +90,10 @@ The streaming-related keys are also listed in **`Backend/.env.example`** under t
 | **`VIDEO_CDN_PUBLIC_BASE_URL`** | **Yes** (for any environment) | Local: `http://127.0.0.1:8000` | **You choose** the public base URL that browsers will use to load the **`.m3u8`** link. It must match how users reach your API/media: same scheme, host, and port as Django when testing locally. **Production with R2/CDN:** set this to your **public CDN or custom domain** origin (e.g. `https://cdn.yourdomain.com`) that serves the bucket path `hls/<video_id>/index.m3u8`. It is **not** auto-discovered; set it explicitly. |
 | **`STREAM_SIGNED_URL_TTL_SECONDS`** | Optional | `900` | Lifetime (seconds) for signed playback URLs (`token` + `expires`). |
 | **`STREAM_SIGNING_SECRET`** | Optional but recommended | long random string | Secret used to sign playback tokens. If unset, Django `SECRET_KEY` is used. |
+| **`DATA_UPLOAD_MAX_MB`** | Recommended for large admin uploads | `15360` | Django request body limit in MB. Set `15360` for 15GB uploads. |
+| **`FFMPEG_TIMEOUT_SECONDS`** | Recommended for long videos | `21600` | Max ffmpeg runtime in seconds (default command timeout for HLS processing). |
+| **`CELERY_TASK_SOFT_TIME_LIMIT`** | Recommended for long videos | `21000` | Soft task timeout (seconds) before hard kill. |
+| **`CELERY_TASK_TIME_LIMIT`** | Recommended for long videos | `21600` | Hard task timeout (seconds). |
 
 If this is missing, the transcoder raises an error when building the final URL.
 

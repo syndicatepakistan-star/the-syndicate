@@ -50,12 +50,47 @@ export default function CertificatesSection({
   const [issuedOn, setIssuedOn] = useState(() =>
     new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
   )
+  const [verifyTokenId, setVerifyTokenId] = useState('')
+  const [verifyMessage, setVerifyMessage] = useState<string | null>(null)
+  const [verifyOk, setVerifyOk] = useState<boolean | null>(null)
+  const [verifyLoading, setVerifyLoading] = useState(false)
   const verifyUrl = `https://nexus.syndicate/verify?certificate=${encodeURIComponent(certificateId)}`
 
   const openPreview = () => {
     setCertificateId(buildCertificateId())
     setIssuedOn(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }))
     setIsPreviewOpen(true)
+  }
+
+  const submitVerifyToken = async () => {
+    const token = verifyTokenId.trim().toUpperCase()
+    if (!token) {
+      setVerifyOk(false)
+      setVerifyMessage('Please enter your token ID.')
+      return
+    }
+    setVerifyLoading(true)
+    setVerifyMessage(null)
+    setVerifyOk(null)
+    try {
+      const res = await fetch('/api/courses/certificates/verify/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token_id: token }),
+      })
+      const payload = (await res.json().catch(() => ({}))) as {
+        verified?: boolean
+        message?: string
+      }
+      const verified = Boolean(payload.verified)
+      setVerifyOk(verified)
+      setVerifyMessage(payload.message || (verified ? 'You are Syndicate Certified' : 'You are not Syndicate Certified'))
+    } catch {
+      setVerifyOk(false)
+      setVerifyMessage('Verification service is unavailable. Try again.')
+    } finally {
+      setVerifyLoading(false)
+    }
   }
 
   return (
@@ -177,6 +212,30 @@ export default function CertificatesSection({
           </div>
 
           <div className="space-y-7 lg:col-span-6 lg:pt-2">
+            <div className="relative overflow-hidden rounded-[18px] border border-cyan-300/60 bg-[#04040d]/90 p-5 shadow-[0_0_24px_rgba(34,211,238,0.18)] sm:p-6">
+              <h3 className="text-lg font-semibold tracking-wider text-cyan-100 sm:text-xl">Verify your token ID</h3>
+              <p className="mt-1 text-sm text-cyan-50/75">Enter your certificate token to confirm certification status.</p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  value={verifyTokenId}
+                  onChange={(e) => setVerifyTokenId(e.target.value.toUpperCase())}
+                  placeholder="SYN-XXXX-XXXX-XXXX"
+                  className="w-full rounded-lg border border-cyan-300/35 bg-black/45 px-4 py-3 font-mono text-sm tracking-[0.08em] text-cyan-100 outline-none transition focus:border-cyan-300/70"
+                />
+                <button
+                  type="button"
+                  onClick={submitVerifyToken}
+                  disabled={verifyLoading}
+                  className="rounded-lg border border-cyan-300/55 bg-cyan-500/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {verifyLoading ? 'Checking...' : 'Submit'}
+                </button>
+              </div>
+              {verifyMessage ? (
+                <p className={`mt-3 text-sm ${verifyOk ? 'text-lime-300' : 'text-rose-300'}`}>{verifyMessage}</p>
+              ) : null}
+            </div>
             {features.map((feature, i) => (
               <div
                 key={feature.title}

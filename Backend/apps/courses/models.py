@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
+import secrets
+import string
 
 
 def course_cover_upload_to(instance: "Course", filename: str) -> str:
@@ -138,6 +140,46 @@ class VideoProgress(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["user", "video"], name="courses_videoprogress_user_video"),
         ]
+
+
+def _generate_certificate_token_id() -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    body = "".join(secrets.choice(alphabet) for _ in range(12))
+    return f"SYN-{body[:4]}-{body[4:8]}-{body[8:]}"
+
+
+class CourseCertificate(models.Model):
+    class Status(models.TextChoices):
+        CERTIFIED = "certified", "Certified"
+        REVOKED = "revoked", "Revoked"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="course_certificates",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="certificates",
+    )
+    token_id = models.CharField(max_length=32, unique=True, db_index=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.CERTIFIED, db_index=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "course"], name="courses_certificate_user_course"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.token_id:
+            candidate = _generate_certificate_token_id()
+            while CourseCertificate.objects.filter(token_id=candidate).exclude(pk=self.pk).exists():
+                candidate = _generate_certificate_token_id()
+            self.token_id = candidate
+        super().save(*args, **kwargs)
 
     class Meta:
         constraints = [

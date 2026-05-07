@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,7 +8,7 @@ from rest_framework.views import APIView
 from apps.portal.permissions import IsAuthenticatedStrict
 
 from apps.courses.access import user_can_access_course, user_can_access_video
-from apps.courses.models import Course, Video, VideoProgress
+from apps.courses.models import Course, CourseCertificate, Video, VideoProgress
 from apps.courses.serializers import (
     CourseSerializer,
     CourseWriteSerializer,
@@ -93,4 +94,63 @@ class VideoProgressView(APIView):
                 "completed": ser.validated_data.get("completed", False),
             },
         )
+        if obj.completed:
+            ready_video_ids = list(
+                video.course.videos.filter(status=Video.Status.READY).exclude(video_url="").values_list("id", flat=True)
+            )
+            if ready_video_ids:
+                completed_video_ids = set(
+                    VideoProgress.objects.filter(
+                        user=request.user,
+                        video_id__in=ready_video_ids,
+                        completed=True,
+                    ).values_list("video_id", flat=True)
+                )
+                if len(completed_video_ids) == len(ready_video_ids):
+                    CourseCertificate.objects.get_or_create(
+                        user=request.user,
+                        course=video.course,
+                        defaults={"status": CourseCertificate.Status.CERTIFIED},
+                    )
         return Response(VideoProgressSerializer(obj).data)
+
+
+class CourseCertificateVerifyView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        raw_token = str((request.data or {}).get("token_id", "")).strip().upper()
+        if not raw_token:
+            return Response(
+                {
+                    "verified": False,
+                    "status": "not_certified",
+                    "message": "Token ID is required.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cert = (
+            CourseCertificate.objects.select_related("course")
+            .filter(token_id=raw_token, status=CourseCertificate.Status.CERTIFIED)
+            .first()
+        )
+        if cert:
+            return Response(
+                {
+                    "verified": True,
+                    "status": "certified",
+                    "message": "You are Syndicate Certified",
+                    "token_id": cert.token_id,
+                    "course_title": cert.course.title,
+                    "issued_at": cert.issued_at,
+                }
+            )
+
+        return Response(
+            {
+                "verified": False,
+                "status": "not_certified",
+                "message": "You are not Syndicate Certified",
+            }
+        )

@@ -120,12 +120,13 @@ function getMobileItemNudge(id: NavSectionId, itemCount: number): {
 } {
   if (typeof window === 'undefined' || itemCount < 7) return {}
   const w = window.innerWidth
-  if (w >= 420) return {}
-  // Galaxy Z Fold cover-width tuning: separate bottom pair only on narrow mobile.
-  if (id === 'home') return { marginBottom: '20px' }
-  if (id === 'affiliateLogin' || id === 'whatYouGet') return { marginTop: '20px' }
-  if (id === 'joinNow') return { marginRight: '20px' }
-  if (id === 'syndicateAnalysis') return { marginLeft: '20px' }
+  // Keep extra breathing room on narrow phones + iPhone 15 Pro Max style widths.
+  if (w >= 460) return {}
+  if (id === 'home') return { marginBottom: '22px' }
+  if (id === 'affiliateLogin' || id === 'whatYouGet') return { marginTop: '22px' }
+  // Most visible collapse happens on the last pair; separate them further.
+  if (id === 'joinNow') return { marginRight: '26px' }
+  if (id === 'syndicateAnalysis') return { marginLeft: '26px' }
   return {}
 }
 

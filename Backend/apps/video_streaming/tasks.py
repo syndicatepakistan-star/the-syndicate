@@ -5,7 +5,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
+from typing import Callable
 
 from celery import shared_task
 from django.conf import settings
@@ -91,24 +93,96 @@ def _ffprobe_video_dimensions(input_path: Path) -> tuple[int, int] | None:
     return w, h
 
 
+def _ffprobe_duration_seconds(input_path: Path) -> float | None:
+    probe = _ffprobe_path()
+    if not probe:
+        return None
+    try:
+        cp = subprocess.run(
+            [
+                probe,
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(input_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except (subprocess.CalledProcessError, OSError, ValueError):
+        return None
+    try:
+        duration = float((cp.stdout or "").strip())
+    except (TypeError, ValueError):
+        return None
+    if duration <= 0:
+        return None
+    return duration
+
+
 def _public_cdn_base() -> str:
     return (os.environ.get("VIDEO_CDN_PUBLIC_BASE_URL") or "").strip().rstrip("/")
 
 
-def _run_ffmpeg_hls(input_path: Path, out_dir: Path, playlist_name: str = "index.m3u8") -> None:
+def _run_ffmpeg_hls(
+    input_path: Path,
+    out_dir: Path,
+    *,
+    on_progress: Callable[[int], None] | None = None,
+    duration_seconds: float | None = None,
+    playlist_name: str = "index.m3u8",
+) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     playlist = out_dir / playlist_name
     ffmpeg = _ffmpeg_executable()
 
     def run(args: list[str]) -> None:
-        subprocess.run(
-            args,
-            check=True,
+        timeout_seconds = int((os.environ.get("FFMPEG_TIMEOUT_SECONDS") or "7200").strip() or "7200")
+        process = subprocess.Popen(
+            [*args, "-progress", "pipe:1", "-nostats"],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=int((os.environ.get("FFMPEG_TIMEOUT_SECONDS") or "7200").strip() or "7200"),
+            bufsize=1,
         )
+        started = time.monotonic()
+        last_reported = -1
+        try:
+            while True:
+                if process.stdout is None:
+                    break
+                line = process.stdout.readline()
+                if not line:
+                    if process.poll() is not None:
+                        break
+                    if (time.monotonic() - started) > timeout_seconds:
+                        process.kill()
+                        raise subprocess.TimeoutExpired(args, timeout_seconds)
+                    time.sleep(0.1)
+                    continue
+                if not on_progress or not duration_seconds:
+                    continue
+                if not line.startswith("out_time_ms="):
+                    continue
+                try:
+                    out_time_ms = int(line.split("=", 1)[1].strip() or "0")
+                except ValueError:
+                    continue
+                pct = int(max(0, min(99, (out_time_ms / (duration_seconds * 1_000_000.0)) * 100)))
+                if pct >= last_reported + 2:
+                    last_reported = pct
+                    on_progress(pct)
+        finally:
+            if process.stdout:
+                process.stdout.close()
+        rc = process.wait()
+        if rc != 0:
+            raise subprocess.CalledProcessError(rc, args)
 
     copy_cmd = [
         ffmpeg,
@@ -127,6 +201,8 @@ def _run_ffmpeg_hls(input_path: Path, out_dir: Path, playlist_name: str = "index
     ]
     try:
         run(copy_cmd)
+        if on_progress:
+            on_progress(99)
         return
     except subprocess.CalledProcessError as exc:
         tail = ((exc.stderr or "") + (exc.stdout or ""))[-2000:]
@@ -156,6 +232,8 @@ def _run_ffmpeg_hls(input_path: Path, out_dir: Path, playlist_name: str = "index
         str(playlist),
     ]
     run(encode_cmd)
+    if on_progress:
+        on_progress(99)
 
 
 @shared_task(
@@ -179,6 +257,7 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
 
     StreamVideo.objects.filter(pk=video_id).update(
         status=StreamVideo.Status.PROCESSING,
+        transcode_progress=0,
         last_error="",
         hls_path="",
     )
@@ -203,7 +282,17 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
             input_path = tmp_input_path
 
         probed = _ffprobe_video_dimensions(input_path)
-        _run_ffmpeg_hls(input_path, out_dir)
+        duration_seconds = _ffprobe_duration_seconds(input_path)
+        last_saved_progress = 0
+
+        def _save_progress(pct: int) -> None:
+            nonlocal last_saved_progress
+            if pct <= last_saved_progress:
+                return
+            last_saved_progress = pct
+            StreamVideo.objects.filter(pk=video_id).update(transcode_progress=pct)
+
+        _run_ffmpeg_hls(input_path, out_dir, on_progress=_save_progress, duration_seconds=duration_seconds)
 
         use_s3 = getattr(settings, "USE_S3_OBJECT_STORAGE", False)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
@@ -230,6 +319,7 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
         ready_kwargs: dict = {
             "hls_path": hls_url,
             "status": StreamVideo.Status.READY,
+            "transcode_progress": 100,
             "last_error": "",
         }
         if probed:
@@ -239,6 +329,7 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
         logger.exception("HLS processing failed for video %s", video_id)
         StreamVideo.objects.filter(pk=video_id).update(
             status=StreamVideo.Status.FAILED,
+            transcode_progress=0,
             last_error=str(exc)[:4000],
         )
         raise

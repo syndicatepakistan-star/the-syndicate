@@ -42,6 +42,7 @@ def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool
             logger.exception("Could not enqueue HLS transcoding for video %s", vid)
             StreamVideo.objects.filter(pk=vid).update(
                 status=StreamVideo.Status.FAILED,
+                transcode_progress=0,
                 last_error="Could not start transcoding (Celery broker unavailable). Run a worker or check REDIS_URL.",
             )
 

@@ -58,6 +58,7 @@ Streaming/security (recommended):
   - `DATA_UPLOAD_MAX_MB=15360`
   - `FILE_UPLOAD_MAX_MEMORY_MB=8` (keep RAM safe; stream large files to temp storage)
   - `GUNICORN_TIMEOUT=1800` (avoid 5-minute request timeout during long uploads)
+  - `STREAM_DIRECT_UPLOAD_MAX_GB=5` (block risky direct form uploads above this; force multipart/bucket key flow)
 - Memory / OOM: if logs show `Worker ... was sent SIGKILL! Perhaps out of memory?`, use a **Celery worker service** for HLS (never rely on FFmpeg inside Gunicorn), keep `DJANGO_DEBUG=false`, and optionally raise Railway RAM or set `GUNICORN_WORKERS=1` / `GUNICORN_THREADS=2` (defaults in `railway_start.sh`).
 
 Optional (emergency / debugging only): `STREAM_SYNC_TRANSCODE_ON_PLAYBACK=true` runs HLS transcoding inside the web request when a video is still `processing` (e.g. worker was down). Prefer a healthy Celery worker; do not enable under real traffic.

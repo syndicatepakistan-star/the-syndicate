@@ -158,6 +158,8 @@ _DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "15360").stri
 DATA_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _DATA_UPLOAD_MAX_MB * 1024 * 1024)
 _FILE_UPLOAD_MAX_MEMORY_MB = int((os.environ.get("FILE_UPLOAD_MAX_MEMORY_MB") or "8").strip() or "8")
 FILE_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _FILE_UPLOAD_MAX_MEMORY_MB * 1024 * 1024)
+# Guard admin direct file uploads; force bucket/multipart path for very large videos.
+STREAM_DIRECT_UPLOAD_MAX_GB = float((os.environ.get("STREAM_DIRECT_UPLOAD_MAX_GB") or "5").strip() or "5")
 
 
 # Application definition

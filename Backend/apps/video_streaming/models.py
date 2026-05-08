@@ -59,6 +59,11 @@ class StreamVideo(models.Model):
         default=Status.PROCESSING,
         db_index=True,
     )
+    transcode_progress = models.PositiveSmallIntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Estimated FFmpeg progress percentage while status is Processing.",
+    )
     last_error = models.TextField(blank=True, default="")
     show_in_programs = models.BooleanField(
         default=True,

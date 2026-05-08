@@ -1,5 +1,7 @@
 from django.contrib import admin, messages
+from django.conf import settings
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
@@ -60,6 +62,27 @@ class StreamVideoAdminForm(forms.ModelForm):
         model = StreamVideo
         fields = "__all__"
 
+    def clean(self):
+        cleaned = super().clean()
+        selected_key = (cleaned.get("bucket_video_key") or "").strip() or (cleaned.get("multipart_uploaded_key") or "").strip()
+        uploaded_file = cleaned.get("original_video")
+        if selected_key or not uploaded_file:
+            return cleaned
+
+        max_gb = float(getattr(settings, "STREAM_DIRECT_UPLOAD_MAX_GB", 5))
+        max_bytes = int(max_gb * 1024 * 1024 * 1024)
+        size = int(getattr(uploaded_file, "size", 0) or 0)
+        if size > max_bytes:
+            raise ValidationError(
+                {
+                    "original_video": (
+                        f"This file is {size / (1024 ** 3):.2f} GB. Direct upload is limited to {max_gb:g} GB. "
+                        "Use Multipart video upload (Upload large file to bucket) or paste a bucket video key."
+                    )
+                }
+            )
+        return cleaned
+
 
 @admin.register(StreamVideo)
 class StreamVideoAdmin(admin.ModelAdmin):
@@ -67,6 +90,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "status",
+        "transcode_progress",
         "player_layout",
         "price",
         "show_in_programs",
@@ -75,13 +99,13 @@ class StreamVideoAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "player_layout", "show_in_programs", "show_in_membership")
     search_fields = ("title", "description")
-    readonly_fields = ("hls_path", "status", "last_error", "source_width", "source_height", "created_at")
+    readonly_fields = ("hls_path", "status", "transcode_progress", "last_error", "source_width", "source_height", "created_at")
     actions = ("reprocess_hls",)
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
         ("Media", {"fields": ("thumbnail", "original_video", "bucket_video_key", "multipart_video", "multipart_uploaded_key")}),
-        ("Pipeline", {"fields": ("status", "hls_path", "last_error", "created_at")}),
+        ("Pipeline", {"fields": ("status", "transcode_progress", "hls_path", "last_error", "created_at")}),
     )
     class Media:
         js = ("admin/streamvideo_multipart_upload.js",)
@@ -96,6 +120,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
             obj._skip_auto_transcode = True
             obj.original_video.name = selected_key
             obj.status = StreamVideo.Status.PROCESSING
+            obj.transcode_progress = 0
             obj.last_error = ""
             obj.hls_path = ""
         super().save_model(request, obj, form, change)

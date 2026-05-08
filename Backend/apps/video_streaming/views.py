@@ -815,6 +815,7 @@ class StreamVideoMultipartUploadCompleteView(APIView):
         StreamVideo.objects.filter(pk=stream_video.pk).update(
             original_video=key,
             status=StreamVideo.Status.PROCESSING,
+            transcode_progress=0,
             last_error="",
             hls_path="",
         )

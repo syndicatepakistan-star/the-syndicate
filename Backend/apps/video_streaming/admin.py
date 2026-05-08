@@ -157,9 +157,21 @@ class StreamVideoAdmin(admin.ModelAdmin):
             if not v.original_video or not v.original_video.name:
                 continue
             n += 1
+            StreamVideo.objects.filter(pk=v.pk).update(
+                status=StreamVideo.Status.PROCESSING,
+                transcode_progress=0,
+                transcode_message="Queued from admin action. Waiting for worker to pick task.",
+                last_error="",
+                hls_path="",
+            )
             try:
                 enqueue_stream_video_transcode(v.pk)
             except Exception:
+                StreamVideo.objects.filter(pk=v.pk).update(
+                    status=StreamVideo.Status.FAILED,
+                    transcode_progress=0,
+                    transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
+                )
                 self.message_user(
                     request,
                     f"Could not queue HLS for “{v.title}” (id={v.pk}). Check Celery broker / Redis.",

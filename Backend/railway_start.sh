@@ -5,6 +5,9 @@ cd "$(dirname "$0")"
 PORT="${PORT:-8080}"
 MODE="${1:-start}"
 GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-1800}"
+# Small Railway plans OOM easily with multiple workers + FFmpeg; override if you have more RAM.
+GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
+GUNICORN_THREADS="${GUNICORN_THREADS:-2}"
 
 run_bootstrap_tasks() {
   mkdir -p staticfiles
@@ -51,7 +54,7 @@ python manage.py ensure_superuser
 echo "railway_start: gunicorn"
 exec python -m gunicorn syndicate_backend.wsgi:application \
   --bind "0.0.0.0:${PORT}" \
-  --workers 2 \
-  --threads 4 \
+  --workers "${GUNICORN_WORKERS}" \
+  --threads "${GUNICORN_THREADS}" \
   --timeout "${GUNICORN_TIMEOUT}" \
   --preload

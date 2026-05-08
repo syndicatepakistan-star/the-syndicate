@@ -35,14 +35,18 @@ def _transcode_would_run_in_current_thread() -> bool:
 
 def enqueue_stream_video_transcode(video_id: int) -> None:
     """
-    Start ``process_stream_video_to_hls`` without blocking the caller.
+    Start ``process_stream_video_to_hls`` without blocking the caller when possible.
 
-    - Production (real Celery worker): ``.delay()`` onto the broker.
-    - DEBUG / CELERY_TASK_ALWAYS_EAGER / STREAM_SYNC_TRANSCODE_ON_PLAYBACK: run in a
-      daemon thread so admin and API responses return immediately (large FFmpeg jobs
-      no longer kill the web process or hit HTTP timeouts).
+    - Always uses Celery ``.delay()`` when ``DEBUG`` is false (e.g. Railway): FFmpeg must
+      not run inside Gunicorn workers — it triggers OOM (SIGKILL) on small instances.
+    - Local ``DEBUG`` true: if ``.delay()`` would execute inline (eager / sync policy),
+      runs the task in a daemon thread so admin/API return immediately.
     """
     from apps.video_streaming.tasks import process_stream_video_to_hls
+
+    if not getattr(settings, "DEBUG", False):
+        process_stream_video_to_hls.delay(video_id)
+        return
 
     if not _transcode_would_run_in_current_thread():
         process_stream_video_to_hls.delay(video_id)

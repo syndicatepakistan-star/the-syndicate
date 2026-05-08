@@ -6,8 +6,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-# Postgres migrations also run in syndicate_backend/wsgi.py (with gunicorn --preload in railway_start.sh).
-# Use python -m gunicorn so the app runs even when the gunicorn script dir is not on PATH (Railpack/slim images).
-startCommand = "sh railway_start.sh"
+# Start command is intentionally managed in Railway UI per service
+# (web: sh railway_start.sh, worker: celery -A syndicate_backend worker -l info).
 # Run the same bootstrap pipeline in release mode (migrate + collectstatic + optional fixture/sync).
 releaseCommand = "sh railway_start.sh --release"

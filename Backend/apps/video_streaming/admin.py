@@ -1,9 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django import forms
 from django.db import transaction
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
-from apps.video_streaming.transcode_policy import schedule_stream_video_transcode
+from apps.video_streaming.transcode_policy import enqueue_stream_video_transcode
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -103,8 +103,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
 
             def _enqueue(vid: int) -> None:
                 try:
-                    # Same policy as post_save signal: inline when DEBUG / eager / STREAM_SYNC_TRANSCODE_ON_PLAYBACK.
-                    schedule_stream_video_transcode(vid)
+                    enqueue_stream_video_transcode(vid)
                 except Exception:
                     # Keep admin save successful even if broker is temporarily unavailable.
                     StreamVideo.objects.filter(pk=vid).update(
@@ -121,8 +120,20 @@ class StreamVideoAdmin(admin.ModelAdmin):
             if not v.original_video or not v.original_video.name:
                 continue
             n += 1
-            schedule_stream_video_transcode(v.pk)
-        self.message_user(request, f"HLS transcoding started for {n} video(s).")
+            try:
+                enqueue_stream_video_transcode(v.pk)
+            except Exception:
+                self.message_user(
+                    request,
+                    f"Could not queue HLS for “{v.title}” (id={v.pk}). Check Celery broker / Redis.",
+                    level=messages.ERROR,
+                )
+        if n:
+            self.message_user(
+                request,
+                f"HLS transcoding started for {n} video(s) in the background. Refresh this list in a few minutes; "
+                "check Pipeline → last_error on a video if status stays Processing.",
+            )
 
 
 @admin.register(StreamPlaylistPurchase)

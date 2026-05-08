@@ -4,7 +4,7 @@ from django.dispatch import receiver
 import logging
 
 from apps.video_streaming.models import StreamPlaylistItem, StreamVideo
-from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled, schedule_stream_video_transcode
+from apps.video_streaming.transcode_policy import enqueue_stream_video_transcode
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +36,17 @@ def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool
     if not created and instance.original_video.name == prev:
         return
     def _trigger(vid: int) -> None:
-        schedule_stream_video_transcode(vid)
+        try:
+            enqueue_stream_video_transcode(vid)
+        except Exception:
+            logger.exception("Could not enqueue HLS transcoding for video %s", vid)
+            StreamVideo.objects.filter(pk=vid).update(
+                status=StreamVideo.Status.FAILED,
+                last_error="Could not start transcoding (Celery broker unavailable). Run a worker or check REDIS_URL.",
+            )
 
-    # Inline mode: run on save so admin sees ready status without a worker.
-    # Otherwise defer until commit so the file row + storage are consistent before queueing.
-    if inline_stream_transcode_enabled():
-        _trigger(instance.pk)
-    else:
-        transaction.on_commit(lambda vid=instance.pk: _trigger(vid))
+    # Defer until commit so the DB row + storage are consistent before FFmpeg runs.
+    transaction.on_commit(lambda vid=instance.pk: _trigger(vid))
 
 
 def _sync_playlist_cover_from_first_thumbnail(playlist_id: int) -> None:

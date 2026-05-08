@@ -64,6 +64,12 @@ class StreamVideo(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="Estimated FFmpeg progress percentage while status is Processing.",
     )
+    transcode_message = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Human-readable pipeline status shown in admin during processing.",
+    )
     last_error = models.TextField(blank=True, default="")
     show_in_programs = models.BooleanField(
         default=True,

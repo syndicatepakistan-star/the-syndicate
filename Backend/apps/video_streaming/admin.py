@@ -91,6 +91,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
         "title",
         "status",
         "transcode_progress",
+        "transcode_message",
         "player_layout",
         "price",
         "show_in_programs",
@@ -99,13 +100,22 @@ class StreamVideoAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "player_layout", "show_in_programs", "show_in_membership")
     search_fields = ("title", "description")
-    readonly_fields = ("hls_path", "status", "transcode_progress", "last_error", "source_width", "source_height", "created_at")
+    readonly_fields = (
+        "hls_path",
+        "status",
+        "transcode_progress",
+        "transcode_message",
+        "last_error",
+        "source_width",
+        "source_height",
+        "created_at",
+    )
     actions = ("reprocess_hls",)
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
         ("Media", {"fields": ("thumbnail", "original_video", "bucket_video_key", "multipart_video", "multipart_uploaded_key")}),
-        ("Pipeline", {"fields": ("status", "transcode_progress", "hls_path", "last_error", "created_at")}),
+        ("Pipeline", {"fields": ("status", "transcode_progress", "transcode_message", "hls_path", "last_error", "created_at")}),
     )
     class Media:
         js = ("admin/streamvideo_multipart_upload.js",)
@@ -121,6 +131,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
             obj.original_video.name = selected_key
             obj.status = StreamVideo.Status.PROCESSING
             obj.transcode_progress = 0
+            obj.transcode_message = "Queued from admin. Waiting for worker to start."
             obj.last_error = ""
             obj.hls_path = ""
         super().save_model(request, obj, form, change)
@@ -133,6 +144,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
                     # Keep admin save successful even if broker is temporarily unavailable.
                     StreamVideo.objects.filter(pk=vid).update(
                         status=StreamVideo.Status.FAILED,
+                        transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
                         last_error="Video saved but background processing could not be queued.",
                     )
 

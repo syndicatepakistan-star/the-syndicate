@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -125,6 +126,29 @@ def _ffprobe_duration_seconds(input_path: Path) -> float | None:
     return duration
 
 
+def _ffmpeg_duration_seconds(input_path: Path) -> float | None:
+    ffmpeg = _ffmpeg_executable()
+    try:
+        cp = subprocess.run(
+            [ffmpeg, "-i", str(input_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except (OSError, ValueError):
+        return None
+    text_blob = (cp.stderr or "") + "\n" + (cp.stdout or "")
+    match = re.search(r"Duration:\s*(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)", text_blob)
+    if not match:
+        return None
+    hours = int(match.group(1))
+    minutes = int(match.group(2))
+    seconds = float(match.group(3))
+    total = (hours * 3600) + (minutes * 60) + seconds
+    return total if total > 0 else None
+
+
 def _public_cdn_base() -> str:
     return (os.environ.get("VIDEO_CDN_PUBLIC_BASE_URL") or "").strip().rstrip("/")
 
@@ -152,6 +176,7 @@ def _run_ffmpeg_hls(
         )
         started = time.monotonic()
         last_reported = -1
+        last_fallback_tick = started
         try:
             while True:
                 if process.stdout is None:
@@ -163,6 +188,12 @@ def _run_ffmpeg_hls(
                     if (time.monotonic() - started) > timeout_seconds:
                         process.kill()
                         raise subprocess.TimeoutExpired(args, timeout_seconds)
+                    if on_progress and not duration_seconds:
+                        now = time.monotonic()
+                        if (now - last_fallback_tick) >= 15 and last_reported < 85:
+                            last_fallback_tick = now
+                            last_reported = max(1, last_reported + 1)
+                            on_progress(last_reported)
                     time.sleep(0.1)
                     continue
                 if not on_progress or not duration_seconds:
@@ -251,13 +282,15 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
     if not video.original_video or not video.original_video.name:
         StreamVideo.objects.filter(pk=video_id).update(
             status=StreamVideo.Status.FAILED,
+            transcode_message="Cannot start: original file is missing.",
             last_error="No original_video file on record.",
         )
         return
 
     StreamVideo.objects.filter(pk=video_id).update(
         status=StreamVideo.Status.PROCESSING,
-        transcode_progress=0,
+        transcode_progress=2,
+        transcode_message="Worker picked task. Preparing source file...",
         last_error="",
         hls_path="",
     )
@@ -280,25 +313,45 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
                         tmp.write(chunk)
                     tmp_input_path = Path(tmp.name)
             input_path = tmp_input_path
+        StreamVideo.objects.filter(pk=video_id).update(
+            transcode_progress=5,
+            transcode_message="Source file ready. Probing video metadata...",
+        )
 
         probed = _ffprobe_video_dimensions(input_path)
-        duration_seconds = _ffprobe_duration_seconds(input_path)
+        duration_seconds = _ffprobe_duration_seconds(input_path) or _ffmpeg_duration_seconds(input_path)
         last_saved_progress = 0
+        StreamVideo.objects.filter(pk=video_id).update(
+            transcode_progress=8,
+            transcode_message="Starting FFmpeg HLS packaging...",
+        )
 
         def _save_progress(pct: int) -> None:
             nonlocal last_saved_progress
             if pct <= last_saved_progress:
                 return
             last_saved_progress = pct
-            StreamVideo.objects.filter(pk=video_id).update(transcode_progress=pct)
+            StreamVideo.objects.filter(pk=video_id).update(
+                transcode_progress=pct,
+                transcode_message=f"FFmpeg running... {pct}% complete.",
+            )
 
+        _save_progress(10)
         _run_ffmpeg_hls(input_path, out_dir, on_progress=_save_progress, duration_seconds=duration_seconds)
+        _save_progress(95)
+        StreamVideo.objects.filter(pk=video_id).update(
+            transcode_message="FFmpeg complete. Finalizing output and publishing playlist...",
+        )
 
         use_s3 = getattr(settings, "USE_S3_OBJECT_STORAGE", False)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
 
         if use_s3 and bucket:
             upload_hls_directory(out_dir, video_id, bucket)
+            _save_progress(99)
+            StreamVideo.objects.filter(pk=video_id).update(
+                transcode_message="Uploading HLS files to object storage...",
+            )
             shutil.rmtree(out_dir, ignore_errors=True)
             base = _public_cdn_base()
             if not base:
@@ -320,6 +373,7 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
             "hls_path": hls_url,
             "status": StreamVideo.Status.READY,
             "transcode_progress": 100,
+            "transcode_message": "Ready for playback.",
             "last_error": "",
         }
         if probed:
@@ -330,6 +384,7 @@ def process_stream_video_to_hls(self, video_id: int) -> None:
         StreamVideo.objects.filter(pk=video_id).update(
             status=StreamVideo.Status.FAILED,
             transcode_progress=0,
+            transcode_message="Transcoding failed. Open last_error for details.",
             last_error=str(exc)[:4000],
         )
         raise

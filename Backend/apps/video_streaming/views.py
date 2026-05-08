@@ -816,6 +816,7 @@ class StreamVideoMultipartUploadCompleteView(APIView):
             original_video=key,
             status=StreamVideo.Status.PROCESSING,
             transcode_progress=0,
+            transcode_message="Upload complete. Waiting for worker to start transcoding.",
             last_error="",
             hls_path="",
         )

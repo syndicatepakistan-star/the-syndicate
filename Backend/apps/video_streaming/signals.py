@@ -43,6 +43,7 @@ def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool
             StreamVideo.objects.filter(pk=vid).update(
                 status=StreamVideo.Status.FAILED,
                 transcode_progress=0,
+                transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
                 last_error="Could not start transcoding (Celery broker unavailable). Run a worker or check REDIS_URL.",
             )
 

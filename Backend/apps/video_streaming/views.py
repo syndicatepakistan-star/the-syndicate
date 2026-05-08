@@ -30,7 +30,7 @@ from apps.video_streaming.models import (
     StreamVideo,
     stream_video_original_upload_to,
 )
-from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
+from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled, schedule_stream_video_transcode
 from apps.video_streaming.serializers import (
     StreamPlaylistDetailSerializer,
     StreamPlaylistListSerializer,
@@ -820,9 +820,7 @@ class StreamVideoMultipartUploadCompleteView(APIView):
         )
 
         try:
-            from apps.video_streaming.tasks import process_stream_video_to_hls
-
-            process_stream_video_to_hls.delay(stream_video.pk)
+            schedule_stream_video_transcode(stream_video.pk)
         except Exception:
             return Response(
                 {

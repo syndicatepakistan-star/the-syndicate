@@ -3,7 +3,7 @@ from django import forms
 from django.db import transaction
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
-from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
+from apps.video_streaming.transcode_policy import schedule_stream_video_transcode
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -100,11 +100,11 @@ class StreamVideoAdmin(admin.ModelAdmin):
             obj.hls_path = ""
         super().save_model(request, obj, form, change)
         if selected_key:
-            from apps.video_streaming.tasks import process_stream_video_to_hls
 
             def _enqueue(vid: int) -> None:
                 try:
-                    process_stream_video_to_hls.delay(vid)
+                    # Same policy as post_save signal: inline when DEBUG / eager / STREAM_SYNC_TRANSCODE_ON_PLAYBACK.
+                    schedule_stream_video_transcode(vid)
                 except Exception:
                     # Keep admin save successful even if broker is temporarily unavailable.
                     StreamVideo.objects.filter(pk=vid).update(
@@ -116,17 +116,12 @@ class StreamVideoAdmin(admin.ModelAdmin):
 
     @admin.action(description="Re-run HLS transcoding (selected rows with an original file)")
     def reprocess_hls(self, request, queryset):
-        from apps.video_streaming.tasks import process_stream_video_to_hls
-
         n = 0
         for v in queryset:
             if not v.original_video or not v.original_video.name:
                 continue
             n += 1
-            if inline_stream_transcode_enabled():
-                process_stream_video_to_hls(v.pk)
-            else:
-                process_stream_video_to_hls.delay(v.pk)
+            schedule_stream_video_transcode(v.pk)
         self.message_user(request, f"HLS transcoding started for {n} video(s).")
 
 

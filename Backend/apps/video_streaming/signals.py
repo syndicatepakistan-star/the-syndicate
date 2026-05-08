@@ -4,7 +4,7 @@ from django.dispatch import receiver
 import logging
 
 from apps.video_streaming.models import StreamPlaylistItem, StreamVideo
-from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
+from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled, schedule_stream_video_transcode
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +35,8 @@ def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool
     prev = getattr(instance, "_pre_save_original_video_name", "")
     if not created and instance.original_video.name == prev:
         return
-    from apps.video_streaming.tasks import process_stream_video_to_hls
-
     def _trigger(vid: int) -> None:
-        # Local dev: run inline when DEBUG / eager / STREAM_SYNC_TRANSCODE_ON_PLAYBACK.
-        if inline_stream_transcode_enabled():
-            process_stream_video_to_hls(vid)
-            return
-        process_stream_video_to_hls.delay(vid)
+        schedule_stream_video_transcode(vid)
 
     # Inline mode: run on save so admin sees ready status without a worker.
     # Otherwise defer until commit so the file row + storage are consistent before queueing.

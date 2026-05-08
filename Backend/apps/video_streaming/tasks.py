@@ -140,7 +140,7 @@ def _run_ffmpeg_hls(input_path: Path, out_dir: Path, playlist_name: str = "index
         "-c:v",
         "libx264",
         "-preset",
-        (os.environ.get("HLS_FFMPEG_PRESET") or "veryfast").strip(),
+        (os.environ.get("HLS_FFMPEG_PRESET") or "superfast").strip(),
         "-crf",
         (os.environ.get("HLS_FFMPEG_CRF") or "22").strip(),
         "-c:a",

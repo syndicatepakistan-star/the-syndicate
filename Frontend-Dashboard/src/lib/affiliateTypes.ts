@@ -58,6 +58,10 @@ export type AffiliateVisitor = {
   clicked_at: string | null;
   lead_email: string | null;
   lead_at: string | null;
+  /** Total affiliate commission from this visitor’s sale(s) (same as backend sum of SaleEvent.amount). */
+  sale_amount?: string;
+  subscription_name?: string | null;
+  conversion_earning?: string;
 };
 
 export type AffiliateVisitorsResponse = {
@@ -80,6 +84,16 @@ export type RecentReferralItem = {
   email?: string | null;
   status: "joined" | "purchased";
   at: string | null;
+  /** Backend: human-readable product / offer line from checkout attribution. */
+  subscription_name?: string | null;
+  /** Affiliate commission credited for this conversion (SaleEvent.amount). */
+  conversion_earning?: string | null;
+  purchased_program?: string | null;
+  purchased_offer?: string | null;
+  purchased_tier?: string | null;
+  purchase_amount?: string | number | null;
+  purchase_currency?: string | null;
+  purchased_at?: string | null;
 };
 
 export type RecentReferralsResponse = {

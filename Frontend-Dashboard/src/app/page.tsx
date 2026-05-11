@@ -12,6 +12,7 @@ import NeonTypingBadge from '@/components/NeonTypingBadge'
 import PaywallSnapshotsSection from '@/components/PaywallSnapshotsSection'
 import { NavApp } from '@/components/NavApp'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
+import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/components/home/DeferredHomeBackgrounds'
 
 const FEATURED_LOGOS = [
   {
@@ -228,14 +229,7 @@ export default async function Home() {
       </section>
       <section className="relative flex h-auto min-h-0 w-full min-w-0 items-start overflow-hidden bg-[#050508] px-0 py-4 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <iframe
-            src="https://player.vimeo.com/video/988922121?autoplay=1&muted=1&loop=1&background=1"
-            className="h-full w-full scale-[1.22] opacity-60 grayscale saturate-0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-            title="Featured programs background video"
-          />
+          <DeferredVimeoProgramsBackground />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/72" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }} />
@@ -264,16 +258,7 @@ export default async function Home() {
 
       <section className="relative h-auto min-h-0 w-full min-w-0 overflow-hidden bg-black py-8 sm:h-[100dvh] sm:min-h-[100dvh] sm:py-0">
         <div className="pointer-events-none absolute inset-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="h-full w-full object-cover opacity-24"
-          >
-            <source src="/assets/video.mp4" type="video/mp4" />
-          </video>
+          <DeferredMp4Background src="/assets/video.mp4" className="h-full w-full object-cover opacity-24" />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/68" />
         <div className="relative z-10 mx-auto flex h-auto w-full max-w-[1700px] flex-col justify-start px-4 py-0 sm:h-full sm:justify-center sm:px-6 sm:py-12 md:px-8">

@@ -52,12 +52,28 @@ export function NavApp() {
   }, [pathname])
 
   useEffect(() => {
-    // Warm route payloads so menu clicks feel instant.
-    for (const route of Object.values(SECTION_ROUTES)) {
-      router.prefetch(route)
+    if (typeof window === 'undefined') return
+    // Defer prefetch so referral + first paint are not competing with many RSC fetches.
+    const warm = () => {
+      for (const route of Object.values(SECTION_ROUTES)) {
+        router.prefetch(route)
+      }
+      router.prefetch('/login')
+      router.prefetch('/affiliate-login')
     }
-    router.prefetch('/login')
-    router.prefetch('/affiliate-login')
+    let idleHandle: number | undefined
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+    if ('requestIdleCallback' in window) {
+      idleHandle = window.requestIdleCallback(warm, { timeout: 4500 })
+    } else {
+      fallbackTimer = setTimeout(warm, 2800)
+    }
+    return () => {
+      if (idleHandle !== undefined) {
+        window.cancelIdleCallback(idleHandle)
+      }
+      if (fallbackTimer !== undefined) clearTimeout(fallbackTimer)
+    }
   }, [router])
 
   const handleSelect = (id: NavSectionId) => {

@@ -245,8 +245,8 @@
     0 12px
   );
   overflow: hidden;
-  transition: none;
-  animation: none;
+  transition: none !important;
+  animation: none !important;
   filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.22)) drop-shadow(0 0 44px rgba(251, 191, 36, 0.14));
 }
 
@@ -301,6 +301,8 @@
   font-size: clamp(1.12rem, 2.6vw, 1.38rem);
   letter-spacing: 0.02em;
   line-height: 1.35;
+  transition: none !important;
+  animation: none !important;
   text-shadow:
     0 0 14px rgba(34, 211, 238, 0.35),
     0 0 28px rgba(251, 191, 36, 0.22),
@@ -363,14 +365,16 @@
   }
 }
 
+/* Instant show/hide — avoid max-height accordion (layout thrash feels “slow” even with transition: none). */
 .answerWrap {
-  max-height: 0;
+  display: none;
   overflow: hidden;
-  transition: none;
+  transition: none !important;
+  animation: none !important;
 }
 
 .item.open .answerWrap {
-  max-height: 1200px;
+  display: block;
 }
 
 .answer {
@@ -380,6 +384,8 @@
   line-height: 1.72;
   letter-spacing: 0.015em;
   white-space: pre-line;
+  transition: none !important;
+  animation: none !important;
   text-shadow:
     0 0 14px rgba(34, 211, 238, 0.22),
     0 0 28px rgba(251, 191, 36, 0.14),

@@ -583,11 +583,18 @@ def sale(request):
     LeadEvent.objects.get_or_create(referral=referral, visitor_id=visitor_id, defaults={"email": email})
     commission_rate = _commission_rate_for_purchase(purchase_amount)
     commission_amount = _commission_amount_for_purchase(purchase_amount)
+    program = str(payload.get("program") or "").strip()
+    offer = str(payload.get("offer") or "").strip()
+    tier = str(payload.get("tier") or "").strip()
+    subscription_name = " · ".join(part for part in (offer, program, tier) if part)[:280]
     SaleEvent.objects.create(
         referral=referral,
         visitor_id=visitor_id,
         email=email,
         amount=commission_amount,
+        purchase_amount=purchase_amount,
+        subscription_name=subscription_name,
+        currency=currency,
     )
     created = True
     referral.profile.points_total += int(purchase_amount) * SALE_POINTS_PER_DOLLAR
@@ -626,9 +633,16 @@ def affiliate_visitors(request):
     for s in referral.sale_events.all():
         sale_map[s.visitor_id] = (sale_map.get(s.visitor_id) or Decimal("0.00")) + s.amount
 
+    latest_sale_by_vid: dict[str, SaleEvent] = {}
+    for s in referral.sale_events.order_by("-created_at"):
+        if s.visitor_id not in latest_sale_by_vid:
+            latest_sale_by_vid[s.visitor_id] = s
+
     visitors = []
     for vid in set(click_map.keys()) | set(lead_map.keys()) | set(sale_map.keys()):
         lead_obj = lead_map.get(vid)
+        latest_sale = latest_sale_by_vid.get(vid)
+        subscription_name = (latest_sale.subscription_name or "").strip() if latest_sale else ""
         visitors.append(
             {
                 "visitor_id": vid,
@@ -636,6 +650,8 @@ def affiliate_visitors(request):
                 "lead_email": lead_obj.email if lead_obj else None,
                 "lead_at": lead_obj.created_at.isoformat() if lead_obj else None,
                 "sale_amount": str(sale_map.get(vid, Decimal("0.00"))),
+                "subscription_name": subscription_name or None,
+                "conversion_earning": str(sale_map.get(vid, Decimal("0.00"))),
             }
         )
     visitors.sort(key=lambda v: v.get("lead_at") or v.get("clicked_at") or "", reverse=True)
@@ -693,14 +709,21 @@ def recent_referrals(request):
         at = (sale_obj.created_at if sale_obj else None) or (lead_obj.created_at if lead_obj else None) or click_map.get(vid)
         status = "purchased" if sale_obj else "joined"
         email = (sale_obj.email if sale_obj else None) or (lead_obj.email if lead_obj else None)
-        items.append(
-            {
-                "visitor_id": vid,
-                "email": email,
-                "status": status,
-                "at": at.isoformat() if at else None,
-            }
-        )
+        row = {
+            "visitor_id": vid,
+            "email": email,
+            "status": status,
+            "at": at.isoformat() if at else None,
+        }
+        if sale_obj:
+            row["purchased_at"] = sale_obj.created_at.isoformat()
+            row["conversion_earning"] = str(sale_obj.amount)
+            row["subscription_name"] = (sale_obj.subscription_name or "").strip() or None
+            if sale_obj.purchase_amount is not None:
+                row["purchase_amount"] = str(sale_obj.purchase_amount.quantize(Decimal("0.01")))
+            if (sale_obj.currency or "").strip():
+                row["purchase_currency"] = (sale_obj.currency or "").strip().lower()
+        items.append(row)
     items.sort(key=lambda x: x.get("at") or "", reverse=True)
     return JsonResponse({"affiliate_id": affiliate_id, "items": items[:limit]})
 

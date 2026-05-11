@@ -8,7 +8,7 @@ import {
   getRecentReferrals,
   requestAffiliateWithdrawal
 } from "@/lib/affiliateApi";
-import type { AffiliateStats, AffiliateVisitor } from "@/lib/affiliateTypes";
+import type { AffiliateStats, AffiliateVisitor, RecentReferralItem } from "@/lib/affiliateTypes";
 
 type ToastTone = "good" | "warn" | "bad" | "info";
 
@@ -75,7 +75,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const [funnel, setFunnel] = useState<Array<{ stage: string; value: number }>>([]);
   const [funnelHover, setFunnelHover] = useState<{ stage: string; value: number } | null>(null);
   const funnelHoverLeaveTimer = useRef<number | null>(null);
-  const [recentReferrals, setRecentReferrals] = useState<Array<{ visitor_id: string; email?: string | null; status: "joined" | "purchased"; at: string | null }>>([]);
+  const [recentReferrals, setRecentReferrals] = useState<RecentReferralItem[]>([]);
   const [recentPage, setRecentPage] = useState(1);
   const [visitorsPage, setVisitorsPage] = useState(1);
   const [activeReferralLink, setActiveReferralLink] = useState("");
@@ -306,8 +306,6 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       setVisitors(visitorsResult.visitors);
       setFunnel(funnelResult.stages);
       setRecentReferrals(recentResult.items);
-      setRecentPage(1);
-      setVisitorsPage(1);
       if (!silent) showToast("Data loaded.", "good");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Could not fetch affiliate data.";
@@ -362,12 +360,20 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
 
   const totalVisitorPages = Math.max(1, Math.ceil(visitors.length / VISITORS_PAGE_SIZE));
 
+  useEffect(() => {
+    setRecentPage((page) => Math.min(page, Math.max(1, Math.ceil(recentReferrals.length / RECENT_PAGE_SIZE))));
+  }, [recentReferrals.length]);
+
+  useEffect(() => {
+    setVisitorsPage((page) => Math.min(page, Math.max(1, Math.ceil(visitors.length / VISITORS_PAGE_SIZE))));
+  }, [visitors.length]);
+
   return (
     <div
       className={
         embedded
-          ? "affiliate-portal-embed w-full bg-transparent p-0 text-white"
-          : "font-thryon min-h-screen w-full bg-[#090909] p-3 text-white md:p-5"
+          ? "affiliate-portal-embed w-full bg-transparent p-0 font-sans text-white"
+          : "min-h-screen w-full bg-[#090909] p-3 font-sans text-white md:p-5"
       }
     >
       <main
@@ -379,7 +385,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       >
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-[0.08em] text-[#f8efc0] drop-shadow-[0_0_12px_rgba(252,211,77,0.55)] sm:text-3xl">Affiliate Dashboard</h2>
+            <h2 className="font-heading text-2xl font-black uppercase tracking-[0.08em] text-[#f8efc0] drop-shadow-[0_0_12px_rgba(252,211,77,0.55)] sm:text-3xl">Affiliate Dashboard</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div
@@ -540,33 +546,93 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             </div>
           </div>
 
-          <div className="mt-5 cut-frame-sm border border-fuchsia-300/75 bg-black/45 p-3 sm:py-4 sm:pl-4 sm:pr-4 shadow-[0_0_0_1px_rgba(232,121,249,0.88),0_0_22px_rgba(232,121,249,0.72),0_0_56px_rgba(232,121,249,0.5),0_0_108px_rgba(193,120,255,0.34),inset_0_0_20px_rgba(232,121,249,0.22)]">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="text-sm font-black uppercase tracking-[0.2em] text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Recent Referrals</div>
+          <div className="mt-5 cut-frame-sm border-2 border-fuchsia-400/90 bg-[radial-gradient(900px_280px_at_10%_0%,rgba(232,121,249,0.22),transparent_55%),radial-gradient(800px_260px_at_90%_100%,rgba(56,236,255,0.14),transparent_50%),linear-gradient(180deg,rgba(8,4,14,0.92),rgba(0,0,0,0.88))] p-4 shadow-[0_0_0_1px_rgba(232,121,249,0.95),0_0_28px_rgba(232,121,249,0.65),0_0_64px_rgba(193,120,255,0.45),0_0_120px_rgba(56,236,255,0.22),inset_0_0_32px_rgba(232,121,249,0.12)] sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-2 border-b border-fuchsia-500/35 pb-3">
+              <div className="font-heading text-base font-black uppercase tracking-[0.2em] text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.55)] sm:text-lg">Recent Referrals</div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4 min-h-[400px]">
               {recentReferrals.length ? (
-                pagedRecentReferrals.map((r, idx) => (
-                  <div
+                pagedRecentReferrals.map((r, idx) => {
+                  const purchaseProgram =
+                    r.purchased_program ||
+                    (r as RecentReferralItem & { program?: string | null; purchased_item?: string | null }).program ||
+                    (r as RecentReferralItem & { program?: string | null; purchased_item?: string | null }).purchased_item ||
+                    r.purchased_offer;
+                  const purchaseTier = r.purchased_tier || (r as RecentReferralItem & { tier?: string | null }).tier || null;
+                  const purchaseAmountRaw =
+                    r.purchase_amount ??
+                    (r as RecentReferralItem & { amount?: string | number | null }).amount ??
+                    null;
+                  const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "£";
+                  const subscriptionLabel =
+                    (r.subscription_name && r.subscription_name.trim()) ||
+                    purchaseProgram ||
+                    purchaseTier ||
+                    null;
+                  const earningStr = r.conversion_earning != null && String(r.conversion_earning).trim() !== "" ? String(r.conversion_earning).trim() : null;
+                  const rowNeon = [
+                    "border-cyan-300/85 shadow-[0_0_0_1px_rgba(56,236,255,0.75),0_0_22px_rgba(56,236,255,0.45),inset_0_0_24px_rgba(56,236,255,0.08)] bg-[linear-gradient(135deg,rgba(6,18,24,0.92),rgba(0,0,0,0.88))]",
+                    "border-amber-300/85 shadow-[0_0_0_1px_rgba(252,211,77,0.75),0_0_22px_rgba(252,211,77,0.4),inset_0_0_24px_rgba(252,211,77,0.08)] bg-[linear-gradient(135deg,rgba(28,18,4,0.92),rgba(0,0,0,0.88))]",
+                    "border-fuchsia-300/85 shadow-[0_0_0_1px_rgba(232,121,249,0.75),0_0_22px_rgba(232,121,249,0.42),inset_0_0_24px_rgba(232,121,249,0.08)] bg-[linear-gradient(135deg,rgba(24,6,32,0.92),rgba(0,0,0,0.88))]",
+                    "border-emerald-300/85 shadow-[0_0_0_1px_rgba(110,231,183,0.75),0_0_22px_rgba(52,211,153,0.38),inset_0_0_24px_rgba(16,185,129,0.08)] bg-[linear-gradient(135deg,rgba(4,20,14,0.92),rgba(0,0,0,0.88))]",
+                  ][idx % 4];
+                  return (
+                    <div
                     key={`${r.visitor_id}-${idx}`}
-                    className="cut-frame-sm hud-hover-glow flex items-center justify-between gap-3 border border-cyan-300/28 bg-black/40 px-3 py-3"
+                    className={`cut-frame-sm flex min-h-[112px] flex-col gap-3 border-2 px-4 py-4 sm:flex-row sm:items-stretch sm:justify-between sm:gap-4 sm:px-5 sm:py-4 ${rowNeon}`}
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded border border-[rgba(0,191,255,0.35)] bg-black/55 text-base font-black text-[#bfefff]">
+                    <div className="flex min-w-0 flex-1 items-start gap-4">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded border border-white/25 bg-black/50 text-lg font-black text-white/90">
                         {(recentPage - 1) * RECENT_PAGE_SIZE + idx + 1}
                       </div>
-                      <div className="min-w-0">
-                        <div className="truncate text-base font-bold text-white/90">{r.email || "No email captured yet"}</div>
-                        <div className={`text-[11px] font-black uppercase tracking-[0.16em] ${r.status === "purchased" ? "text-[#86ffbf]" : "text-white/55"}`}>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="truncate text-lg font-semibold text-white">{r.email || "No email captured yet"}</div>
+                        <div className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-black uppercase tracking-[0.16em] ${
+                          r.status === "purchased"
+                            ? "border-emerald-300/75 bg-emerald-500/20 text-emerald-200 shadow-[0_0_14px_rgba(52,211,153,0.35)]"
+                            : "border-sky-300/75 bg-sky-500/15 text-sky-200 shadow-[0_0_12px_rgba(56,189,248,0.28)]"
+                        }`}>
                           {r.status}
                         </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="rounded-md border border-violet-400/50 bg-violet-950/40 px-3 py-2 shadow-[0_0_16px_rgba(167,139,250,0.25)]">
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">Subscription</div>
+                            <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">{subscriptionLabel ?? "—"}</div>
+                          </div>
+                          <div className="rounded-md border border-amber-400/55 bg-amber-950/35 px-3 py-2 shadow-[0_0_16px_rgba(251,191,36,0.28)]">
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200/90">Your earning</div>
+                            <div className="mt-1 text-base font-black text-amber-100 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">
+                              {earningStr != null ? `£${formatEarnings(earningStr)}` : "—"}
+                            </div>
+                          </div>
+                        </div>
+                        {r.status === "purchased" ? (
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold sm:text-sm">
+                            {purchaseTier ? (
+                              <span className="rounded border border-fuchsia-300/70 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-200">Tier: {purchaseTier}</span>
+                            ) : null}
+                            {purchaseAmountRaw !== undefined && purchaseAmountRaw !== null && String(purchaseAmountRaw).trim() !== "" ? (
+                              <span className="rounded border border-yellow-300/70 bg-yellow-500/15 px-2 py-0.5 text-yellow-200">
+                                Paid: {purchaseCurrency}
+                                {String(purchaseAmountRaw)}
+                              </span>
+                            ) : null}
+                            <span className="rounded border border-cyan-300/70 bg-cyan-500/15 px-2 py-0.5 text-cyan-200">
+                              {formatAgo(r.purchased_at ?? r.at)}
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                    <div className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-white/65">{formatAgo(r.at)}</div>
+                    <div className="flex shrink-0 flex-col items-end justify-between gap-2 border-t border-white/10 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
+                      <div className="text-xs font-black uppercase tracking-[0.16em] text-white/50">Updated</div>
+                      <div className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-100/90">{formatAgo(r.at)}</div>
+                    </div>
                   </div>
-                ))
+                  );
+                })
               ) : (
-                <div className="text-base text-white/65">No referral activity yet.</div>
+                <div className="text-lg text-white/65">No referral activity yet.</div>
               )}
             </div>
             {recentReferrals.length > RECENT_PAGE_SIZE ? (
@@ -575,18 +641,18 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   type="button"
                   onClick={() => setRecentPage((p) => Math.max(1, p - 1))}
                   disabled={recentPage <= 1}
-                  className="cut-frame-sm min-h-[44px] min-w-[112px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-sm font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Prev
                 </button>
-                <div className="min-w-[122px] text-center text-sm font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
+                <div className="min-w-[144px] text-center text-base font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
                   Page {recentPage} / {totalRecentPages}
                 </div>
                 <button
                   type="button"
                   onClick={() => setRecentPage((p) => Math.min(totalRecentPages, p + 1))}
                   disabled={recentPage >= totalRecentPages}
-                  className="cut-frame-sm min-h-[44px] min-w-[112px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-sm font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>
@@ -594,31 +660,44 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             ) : null}
           </div>
 
-          <div className="mt-5 cut-frame-sm border border-amber-300/75 bg-black/45 p-3 sm:py-4 sm:pl-4 sm:pr-4 shadow-[0_0_0_1px_rgba(252,211,77,0.86),0_0_22px_rgba(252,211,77,0.72),0_0_56px_rgba(56,236,255,0.32),0_0_108px_rgba(193,120,255,0.22),inset_0_0_20px_rgba(252,211,77,0.2)]">
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Affiliate Visitors</h3>
-            <div className="mt-3 max-w-[1400px] overflow-auto no-scrollbar">
-              <table className="w-full min-w-[700px] text-left text-base">
-                <thead className="text-xs uppercase tracking-[0.14em] text-white/70">
-                  <tr className="border-b border-[rgba(255,215,0,0.2)]">
-                    <th className="px-2 py-2">Visitor</th>
-                    <th className="px-2 py-2">Clicked At</th>
-                    <th className="px-2 py-2">Lead Email</th>
-                    <th className="px-2 py-2">Lead At</th>
+          <div className="mt-5 cut-frame-sm border-2 border-amber-400/90 bg-[radial-gradient(880px_280px_at_100%_0%,rgba(252,211,77,0.2),transparent_52%),radial-gradient(760px_260px_at_0%_100%,rgba(56,236,255,0.12),transparent_48%),linear-gradient(180deg,rgba(18,12,4,0.92),rgba(0,0,0,0.88))] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.95),0_0_28px_rgba(252,211,77,0.55),0_0_72px_rgba(56,236,255,0.28),0_0_120px_rgba(193,120,255,0.18),inset_0_0_32px_rgba(252,211,77,0.1)] sm:p-6">
+            <h3 className="font-heading border-b border-amber-500/35 pb-3 text-base font-black uppercase tracking-[0.2em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.45)] sm:text-lg">Affiliate Visitors</h3>
+            <div className="mt-4 min-h-[420px] max-w-[1800px] overflow-auto no-scrollbar">
+              <table className="w-full min-w-[1100px] text-left text-base sm:text-lg">
+                <thead className="text-xs uppercase tracking-[0.14em] sm:text-sm">
+                  <tr className="border-b-2 border-amber-400/40 bg-black/50">
+                    <th className="px-3 py-3.5 text-cyan-200 drop-shadow-[0_0_8px_rgba(56,236,255,0.45)]">Visitor</th>
+                    <th className="px-3 py-3.5 text-sky-200 drop-shadow-[0_0_8px_rgba(125,211,252,0.4)]">Clicked At</th>
+                    <th className="px-3 py-3.5 text-emerald-200 drop-shadow-[0_0_8px_rgba(110,231,183,0.4)]">Lead Email</th>
+                    <th className="px-3 py-3.5 text-fuchsia-200 drop-shadow-[0_0_8px_rgba(232,121,249,0.4)]">Lead At</th>
+                    <th className="px-3 py-3.5 text-violet-200 drop-shadow-[0_0_8px_rgba(196,181,253,0.45)]">Subscription</th>
+                    <th className="px-3 py-3.5 text-amber-200 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">Your earning</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visitors.length > 0 ? (
-                    pagedVisitors.map((v) => (
-                      <tr key={v.visitor_id} className="border-b border-white/10 text-white/85">
-                        <td className="px-2 py-2 font-semibold">{v.visitor_id}</td>
-                        <td className="px-2 py-2">{formatWhen(v.clicked_at)}</td>
-                        <td className="px-2 py-2">{v.lead_email ?? "-"}</td>
-                        <td className="px-2 py-2">{formatWhen(v.lead_at)}</td>
-                      </tr>
-                    ))
+                    pagedVisitors.map((v, vIdx) => {
+                      const sub = (v.subscription_name && v.subscription_name.trim()) || null;
+                      const earnRaw = v.conversion_earning ?? v.sale_amount;
+                      const earn =
+                        earnRaw != null && String(earnRaw).trim() !== "" && Number(earnRaw) !== 0
+                          ? `£${formatEarnings(String(earnRaw))}`
+                          : "—";
+                      const stripe = vIdx % 2 === 0 ? "bg-black/25" : "bg-cyan-950/15";
+                      return (
+                        <tr key={v.visitor_id} className={`border-b border-cyan-500/15 text-white/92 ${stripe}`}>
+                          <td className="px-3 py-3.5 font-semibold text-cyan-100">{v.visitor_id}</td>
+                          <td className="px-3 py-3.5 text-sky-100">{formatWhen(v.clicked_at)}</td>
+                          <td className="px-3 py-3.5 text-emerald-100">{v.lead_email ?? "—"}</td>
+                          <td className="px-3 py-3.5 text-fuchsia-100">{formatWhen(v.lead_at)}</td>
+                          <td className="px-3 py-3.5 text-violet-100">{sub ?? "—"}</td>
+                          <td className="px-3 py-3.5 font-black text-amber-100">{earn}</td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-2 py-5 text-center text-white/45">
+                      <td colSpan={6} className="px-3 py-8 text-center text-lg text-white/50">
                         No visitor activity yet.
                       </td>
                     </tr>
@@ -632,18 +711,18 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   type="button"
                   onClick={() => setVisitorsPage((p) => Math.max(1, p - 1))}
                   disabled={visitorsPage <= 1}
-                  className="cut-frame-sm min-h-[44px] min-w-[112px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-sm font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Prev
                 </button>
-                <div className="min-w-[122px] text-center text-sm font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
+                <div className="min-w-[144px] text-center text-base font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
                   Page {visitorsPage} / {totalVisitorPages}
                 </div>
                 <button
                   type="button"
                   onClick={() => setVisitorsPage((p) => Math.min(totalVisitorPages, p + 1))}
                   disabled={visitorsPage >= totalVisitorPages}
-                  className="cut-frame-sm min-h-[44px] min-w-[112px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-sm font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>

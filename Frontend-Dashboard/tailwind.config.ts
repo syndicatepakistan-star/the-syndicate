@@ -5,6 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        sans: ['"CS Daine Mono"', "ui-monospace", "ui-sans-serif", "system-ui", "sans-serif"],
         heading: ["Thryon", "Thyron", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
       }

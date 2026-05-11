@@ -193,10 +193,10 @@
   font-size: var(--fluid-ui-md);
 }
 
-/* Put your font file in: public/assets/fonts/Thryon.otf */
+/* Display headings: public/fonts/Thryon.otf */
 @font-face {
   font-family: "Thryon";
-  src: url("/assets/fonts/Thryon.otf") format("opentype");
+  src: url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
@@ -210,10 +210,18 @@
   font-style: normal;
 }
 
-/* Optional alias (common typo): use same file */
+@font-face {
+  font-family: "CS Daine Mono";
+  src: url("/fonts/CS%20Daine%20Mono/CSDaineMono-Italic.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Optional alias (common typo): same file as Thryon */
 @font-face {
   font-family: "Thyron";
-  src: url("/assets/fonts/Thryon.otf") format("opentype");
+  src: url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
@@ -1023,7 +1031,13 @@ select {
 }
 
 p,
-label {
+label,
+small,
+li,
+td,
+th,
+blockquote,
+figcaption {
   font-family: var(--font-body);
 }
 
@@ -3795,9 +3809,9 @@ nextjs-portal {
   }
 }
 
-/* Readable body copy (Thryon is display-only on article titles). */
+/* Body copy: CS Daine Mono; titles use Thryon via .membership-article-title */
 .membership-article-prose {
-  font-family: var(--hud-font);
+  font-family: var(--font-body);
   text-rendering: optimizeLegibility;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -3917,14 +3931,6 @@ nextjs-portal {
 
 
 /* frontend-marketing-globals-marker */
-
-@import "tailwindcss";
-
-@font-face {
-  font-family: "Thryon";
-  src: url("/fonts/Thryon.otf") format("opentype");
-  font-display: swap;
-}
 
 :root {
   /* Layout: avoid 100vw scrollbar overflow; use with width: 100% / w-full */

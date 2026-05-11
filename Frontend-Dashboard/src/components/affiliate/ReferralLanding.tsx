@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { startTransition, useLayoutEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { trackClick } from "@/lib/affiliateApi";
+import { trackClickFireAndForget } from "@/lib/affiliateApi";
 import {
   resolveAffiliateDestination,
   saveAffiliateAttribution,
@@ -42,9 +42,8 @@ export function ReferralLanding() {
   const tier = search.get("tier") ?? undefined;
   const program = search.get("program") ?? undefined;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!affiliateId) return;
-    let isCancelled = false;
     const vid = getVisitorIdForAffiliate(affiliateId);
     saveAffiliateAttribution({
       affiliateId,
@@ -55,18 +54,13 @@ export function ReferralLanding() {
     });
     const destination = resolveAffiliateDestination(offer);
 
-    (async () => {
-      try {
-        await trackClick(affiliateId, vid);
-      } catch {}
-      if (!isCancelled) {
-        router.replace(destination);
-      }
-    })();
+    // Start tracking without waiting for response (keepalive survives navigation).
+    trackClickFireAndForget(affiliateId, vid);
 
-    return () => {
-      isCancelled = true;
-    };
+    // Navigate in the same frame / transition so UI does not wait on the track API.
+    startTransition(() => {
+      router.replace(destination);
+    });
   }, [affiliateId, offer, program, router, tier]);
 
   return null;

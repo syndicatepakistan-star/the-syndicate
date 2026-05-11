@@ -76,7 +76,12 @@ class SaleEvent(models.Model):
     referral = models.ForeignKey(SectionReferral, on_delete=models.CASCADE, related_name="sale_events")
     visitor_id = models.CharField(max_length=128)
     email = models.EmailField()
+    # Commission credited to the affiliate for this sale.
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    # Gross checkout amount paid by the buyer (optional for legacy rows).
+    purchase_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    subscription_name = models.CharField(max_length=280, blank=True, default="")
+    currency = models.CharField(max_length=8, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

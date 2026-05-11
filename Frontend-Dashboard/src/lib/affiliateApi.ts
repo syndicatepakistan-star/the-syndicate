@@ -111,6 +111,25 @@ export async function trackClick(affiliateId: string, visitorId: string) {
   });
 }
 
+/**
+ * Non-blocking click tracking: does not await JSON parsing.
+ * Uses keepalive so the request can complete after client navigation away from the referral route.
+ */
+export function trackClickFireAndForget(affiliateId: string, visitorId: string): void {
+  if (typeof window === "undefined") return;
+  const aid = affiliateId.trim();
+  const vid = visitorId.trim();
+  if (!aid || !vid) return;
+  const body = JSON.stringify({ affiliate_id: aid, visitor_id: vid });
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const extra = authHeaders();
+  if (extra && typeof extra === "object" && !Array.isArray(extra)) {
+    Object.assign(headers, extra as Record<string, string>);
+  }
+  const url = `${root()}/track/click`;
+  void fetch(url, { method: "POST", keepalive: true, headers, body }).catch(() => {});
+}
+
 export async function trackLead(affiliateId: string, visitorId: string, email: string) {
   return postTrackJson<{ success: boolean }>("lead", {
     affiliate_id: affiliateId,

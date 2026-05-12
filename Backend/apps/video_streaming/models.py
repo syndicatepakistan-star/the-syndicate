@@ -26,7 +26,7 @@ def stream_playlist_cover_upload_to(instance: "StreamPlaylist", filename: str) -
 class StreamVideo(models.Model):
     """
     Admin-uploaded MP4 stored in private object storage (or local media in dev).
-    Playback uses short-lived signed GET URLs (S3 presigned) or a signed Django file proxy locally.
+    Playback uses short-lived signed URLs to the Django playback proxy (never a raw storage URL in the browser).
     """
 
     class Status(models.TextChoices):

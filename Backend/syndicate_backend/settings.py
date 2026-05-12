@@ -164,6 +164,10 @@ STREAM_DIRECT_UPLOAD_MAX_GB = float((os.environ.get("STREAM_DIRECT_UPLOAD_MAX_GB
 STREAM_PLAYBACK_DECISION_CACHE_SECONDS = int(
     (os.environ.get("STREAM_PLAYBACK_DECISION_CACHE_SECONDS") or "45").strip() or "45"
 )
+# S3→Django→browser streaming read size (bytes). Larger can improve smoothness on long MP4s; max 8MiB.
+STREAM_S3_PROXY_READ_CHUNK_BYTES = int(
+    (os.environ.get("STREAM_S3_PROXY_READ_CHUNK_BYTES") or str(4 * 1024 * 1024)).strip() or str(4 * 1024 * 1024)
+)
 
 
 # Application definition

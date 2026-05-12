@@ -26,8 +26,14 @@ logger = logging.getLogger(__name__)
 
 PLAYBACK_TOKEN_SALT = "video_streaming.playback.mp4.v1"
 
-# Read size when proxying S3 → Django → browser (larger = fewer read iterations).
-S3_PROXY_READ_CHUNK = 1024 * 1024
+
+def s3_proxy_read_chunk_bytes() -> int:
+    """Bytes per read when streaming S3 through Django (larger = fewer reads; cap for memory)."""
+    try:
+        raw = int(getattr(settings, "STREAM_S3_PROXY_READ_CHUNK_BYTES", 4 * 1024 * 1024))
+    except (TypeError, ValueError):
+        raw = 4 * 1024 * 1024
+    return max(256 * 1024, min(raw, 8 * 1024 * 1024))
 
 
 def _playback_signing_secret() -> str:
@@ -206,11 +212,12 @@ def streaming_s3_original_response(request, *, bucket: str, key: str) -> HttpRes
         raise Http404()
 
     body = obj["Body"]
+    chunk_size = s3_proxy_read_chunk_bytes()
 
     def iterator():
         try:
             while True:
-                chunk = body.read(S3_PROXY_READ_CHUNK)
+                chunk = body.read(chunk_size)
                 if not chunk:
                     break
                 yield chunk

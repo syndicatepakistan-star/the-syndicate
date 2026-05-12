@@ -90,6 +90,37 @@ export default function StreamHtmlVideoPlayer({
     lateResumeAppliedKeyRef.current = "";
     setMediaOverlay("loading");
 
+    let waitingBufferingTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const cancelBufferingDebounce = () => {
+      if (waitingBufferingTimer) {
+        clearTimeout(waitingBufferingTimer);
+        waitingBufferingTimer = null;
+      }
+    };
+
+    const scheduleBufferingOverlay = () => {
+      cancelBufferingDebounce();
+      waitingBufferingTimer = setTimeout(() => {
+        waitingBufferingTimer = null;
+        setMediaOverlay("buffering");
+      }, 450);
+    };
+
+    const clearBufferingIfFed = () => {
+      try {
+        if (video.buffered.length === 0) return;
+        const end = video.buffered.end(video.buffered.length - 1);
+        const ahead = end - video.currentTime;
+        if (ahead > 2.5 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          cancelBufferingDebounce();
+          setMediaOverlay((prev) => (prev === "buffering" ? null : prev));
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
     const emitMetadata = () => {
       const width = Number(video.videoWidth || 0);
       const height = Number(video.videoHeight || 0);
@@ -112,6 +143,7 @@ export default function StreamHtmlVideoPlayer({
       const duration = Number(video.duration || 0);
       if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) return;
       onTimeProgressRef.current?.({ currentTime, duration });
+      clearBufferingIfFed();
     };
     const emitEnded = () => {
       onPlaybackEndedRef.current?.();
@@ -136,12 +168,25 @@ export default function StreamHtmlVideoPlayer({
     };
 
     const onLoadStart = () => setMediaOverlay("loading");
-    const onWaiting = () => setMediaOverlay("buffering");
-    const onStalled = () => setMediaOverlay("buffering");
-    const onPlaying = () => setMediaOverlay(null);
-    const onCanPlay = () => setMediaOverlay(null);
-    const onCanPlayThrough = () => setMediaOverlay(null);
-    const onError = () => setMediaOverlay(null);
+    const onWaiting = () => scheduleBufferingOverlay();
+    const onStalled = () => scheduleBufferingOverlay();
+    const onPlaying = () => {
+      cancelBufferingDebounce();
+      setMediaOverlay(null);
+    };
+    const onCanPlay = () => {
+      cancelBufferingDebounce();
+      setMediaOverlay(null);
+    };
+    const onCanPlayThrough = () => {
+      cancelBufferingDebounce();
+      setMediaOverlay(null);
+    };
+    const onError = () => {
+      cancelBufferingDebounce();
+      setMediaOverlay(null);
+    };
+    const onProgress = () => clearBufferingIfFed();
 
     video.src = src;
     video.load();
@@ -158,8 +203,10 @@ export default function StreamHtmlVideoPlayer({
     video.addEventListener("canplay", onCanPlay);
     video.addEventListener("canplaythrough", onCanPlayThrough);
     video.addEventListener("error", onError);
+    video.addEventListener("progress", onProgress);
 
     return () => {
+      cancelBufferingDebounce();
       video.removeEventListener("loadstart", onLoadStart);
       video.removeEventListener("loadedmetadata", emitMetadata);
       video.removeEventListener("timeupdate", emitTimeProgress);
@@ -172,6 +219,7 @@ export default function StreamHtmlVideoPlayer({
       video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("canplaythrough", onCanPlayThrough);
       video.removeEventListener("error", onError);
+      video.removeEventListener("progress", onProgress);
       video.removeAttribute("src");
       video.load();
     };
@@ -256,7 +304,7 @@ export default function StreamHtmlVideoPlayer({
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="metadata"
+        preload="auto"
         playsInline
         controlsList="nodownload"
         disablePictureInPicture
@@ -273,7 +321,7 @@ export default function StreamHtmlVideoPlayer({
         >
           <Loader2 className="h-10 w-10 shrink-0 animate-spin text-amber-300/95" aria-hidden />
           <span className="text-[12px] font-semibold tracking-wide">
-            {mediaOverlay === "buffering" ? "Buffering…" : "Loading…"}
+            {mediaOverlay === "buffering" ? "Buffering..." : "Loading..."}
           </span>
         </div>
       ) : null}

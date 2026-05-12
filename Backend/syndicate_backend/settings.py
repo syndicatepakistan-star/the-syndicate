@@ -168,6 +168,13 @@ STREAM_PLAYBACK_DECISION_CACHE_SECONDS = int(
 STREAM_S3_PROXY_READ_CHUNK_BYTES = int(
     (os.environ.get("STREAM_S3_PROXY_READ_CHUNK_BYTES") or str(4 * 1024 * 1024)).strip() or str(4 * 1024 * 1024)
 )
+# true = <video> uses short-lived S3 presigned GET (smoothest). false = Django proxy (hides storage URL).
+STREAM_PLAYBACK_USE_S3_PRESIGNED_GET = (os.environ.get("STREAM_PLAYBACK_USE_S3_PRESIGNED_GET") or "false").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 
 # Application definition

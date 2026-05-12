@@ -243,15 +243,22 @@ def build_playback_url_for_video(
     access_mode: str = "programs",
 ) -> str | None:
     """
-    Absolute URL for `<video src>`: always same-origin signed URL to StreamVideoPlaybackFileView.
+    Absolute URL for `<video src>`.
 
-    Raw storage presigned URLs are intentionally not returned to clients (they are bearer URLs with no
-    entitlement hook). The proxy re-checks the signed token and access rules on each request.
+    - Default: signed same-origin proxy (entitlement re-check on every Range; storage host hidden).
+    - Optional: short-lived S3 presigned GET when ``STREAM_PLAYBACK_USE_S3_PRESIGNED_GET`` is true
+      (smoothest playback; treat URL as a secret until it expires).
     """
     key = (getattr(video.original_video, "name", None) or "").strip()
     if not key:
         return None
     exp = int(time.time()) + playback_ttl_seconds()
+    bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
+    use_presign = bool(getattr(settings, "STREAM_PLAYBACK_USE_S3_PRESIGNED_GET", False))
+    if use_presign and getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
+        url = presigned_get_object_url(bucket=bucket, key=key, expires_in=playback_ttl_seconds())
+        if url:
+            return url
     token = build_playback_token(user_id=user_id, video_id=video.pk, exp=exp, access_mode=access_mode)
     rel = reverse("streaming-video-playback-file", kwargs={"video_id": video.pk})
     from urllib.parse import urlencode

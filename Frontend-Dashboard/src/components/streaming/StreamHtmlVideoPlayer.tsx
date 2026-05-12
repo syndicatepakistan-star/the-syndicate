@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
@@ -21,8 +20,6 @@ type Props = {
   onSeekSegment?: (payload: { from: number; to: number; duration: number }) => void;
   seekRequest?: { id: number; seconds: number; autoplay?: boolean } | null;
 };
-
-type MediaOverlay = null | "loading" | "buffering";
 
 function lateResumeKey(src: string, startSeconds: number): string {
   return `${src}::${Number(startSeconds).toFixed(3)}`;
@@ -47,7 +44,6 @@ export default function StreamHtmlVideoPlayer({
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
-  const [mediaOverlay, setMediaOverlay] = useState<MediaOverlay>("loading");
   const onMetadataRef = useRef(onMetadata);
   const startAtSecondsRef = useRef(startAtSeconds);
   const onTimeProgressRef = useRef(onTimeProgress);
@@ -88,38 +84,6 @@ export default function StreamHtmlVideoPlayer({
     if (!video || !src) return;
 
     lateResumeAppliedKeyRef.current = "";
-    setMediaOverlay("loading");
-
-    let waitingBufferingTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const cancelBufferingDebounce = () => {
-      if (waitingBufferingTimer) {
-        clearTimeout(waitingBufferingTimer);
-        waitingBufferingTimer = null;
-      }
-    };
-
-    const scheduleBufferingOverlay = () => {
-      cancelBufferingDebounce();
-      waitingBufferingTimer = setTimeout(() => {
-        waitingBufferingTimer = null;
-        setMediaOverlay("buffering");
-      }, 450);
-    };
-
-    const clearBufferingIfFed = () => {
-      try {
-        if (video.buffered.length === 0) return;
-        const end = video.buffered.end(video.buffered.length - 1);
-        const ahead = end - video.currentTime;
-        if (ahead > 2.5 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-          cancelBufferingDebounce();
-          setMediaOverlay((prev) => (prev === "buffering" ? null : prev));
-        }
-      } catch {
-        /* ignore */
-      }
-    };
 
     const emitMetadata = () => {
       const width = Number(video.videoWidth || 0);
@@ -143,7 +107,6 @@ export default function StreamHtmlVideoPlayer({
       const duration = Number(video.duration || 0);
       if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) return;
       onTimeProgressRef.current?.({ currentTime, duration });
-      clearBufferingIfFed();
     };
     const emitEnded = () => {
       onPlaybackEndedRef.current?.();
@@ -167,59 +130,21 @@ export default function StreamHtmlVideoPlayer({
       }
     };
 
-    const onLoadStart = () => setMediaOverlay("loading");
-    const onWaiting = () => scheduleBufferingOverlay();
-    const onStalled = () => scheduleBufferingOverlay();
-    const onPlaying = () => {
-      cancelBufferingDebounce();
-      setMediaOverlay(null);
-    };
-    const onCanPlay = () => {
-      cancelBufferingDebounce();
-      setMediaOverlay(null);
-    };
-    const onCanPlayThrough = () => {
-      cancelBufferingDebounce();
-      setMediaOverlay(null);
-    };
-    const onError = () => {
-      cancelBufferingDebounce();
-      setMediaOverlay(null);
-    };
-    const onProgress = () => clearBufferingIfFed();
-
     video.src = src;
     video.load();
 
-    video.addEventListener("loadstart", onLoadStart);
     video.addEventListener("loadedmetadata", emitMetadata);
     video.addEventListener("timeupdate", emitTimeProgress);
     video.addEventListener("ended", emitEnded);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
-    video.addEventListener("waiting", onWaiting);
-    video.addEventListener("stalled", onStalled);
-    video.addEventListener("playing", onPlaying);
-    video.addEventListener("canplay", onCanPlay);
-    video.addEventListener("canplaythrough", onCanPlayThrough);
-    video.addEventListener("error", onError);
-    video.addEventListener("progress", onProgress);
 
     return () => {
-      cancelBufferingDebounce();
-      video.removeEventListener("loadstart", onLoadStart);
       video.removeEventListener("loadedmetadata", emitMetadata);
       video.removeEventListener("timeupdate", emitTimeProgress);
       video.removeEventListener("ended", emitEnded);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
-      video.removeEventListener("waiting", onWaiting);
-      video.removeEventListener("stalled", onStalled);
-      video.removeEventListener("playing", onPlaying);
-      video.removeEventListener("canplay", onCanPlay);
-      video.removeEventListener("canplaythrough", onCanPlayThrough);
-      video.removeEventListener("error", onError);
-      video.removeEventListener("progress", onProgress);
       video.removeAttribute("src");
       video.load();
     };
@@ -312,19 +237,6 @@ export default function StreamHtmlVideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
       />
-      {mediaOverlay ? (
-        <div
-          className="pointer-events-none absolute inset-0 z-[20] flex flex-col items-center justify-center gap-2 rounded-[inherit] bg-black/55 text-white/95 backdrop-blur-[1px]"
-          role="status"
-          aria-live="polite"
-          aria-label={mediaOverlay === "buffering" ? "Buffering" : "Loading video"}
-        >
-          <Loader2 className="h-10 w-10 shrink-0 animate-spin text-amber-300/95" aria-hidden />
-          <span className="text-[12px] font-semibold tracking-wide">
-            {mediaOverlay === "buffering" ? "Buffering..." : "Loading..."}
-          </span>
-        </div>
-      ) : null}
     </div>
   );
 }

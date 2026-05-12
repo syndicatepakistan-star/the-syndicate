@@ -265,7 +265,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       return;
     }
     setResumeStartSeconds(progressMap[activeVideo.id]?.currentPositionSeconds ?? 0);
-  }, [activeVideo?.id, progressHydrated]);
+  }, [activeVideo?.id, activeIdx, progressHydrated]);
 
   const activePlayback = activeVideo?.id ? playbackCache[activeVideo.id] ?? playback : playback;
   const totalDuration = useMemo(
@@ -541,7 +541,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }
 
   const playbackUrl = activePlayback?.playback_url ?? null;
-  const ready = activePlayback?.status === "ready" && !!playbackUrl;
+  /** Wait for watch-progress hydration so resume snapshot matches localStorage before the player mounts. */
+  const ready = progressHydrated && activePlayback?.status === "ready" && !!playbackUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
 
   return (
@@ -553,12 +554,18 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               className={`flex aspect-video max-h-[min(58vh,640px)] w-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-white/65 sm:max-h-[min(62vh,720px)] ${playerShell}`}
             >
               <span className="rounded-full border border-violet-400/35 bg-violet-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-violet-100/90">
-                {activePlayback?.status === "processing" ? "Processing" : activePlayback?.status ?? "…"}
+                {!progressHydrated
+                  ? "Loading progress…"
+                  : activePlayback?.status === "processing"
+                    ? "Processing"
+                    : activePlayback?.status ?? "…"}
               </span>
               <p>
-                {activePlayback?.status === "processing"
-                  ? "This episode is still being prepared."
-                  : "Choose another episode or refresh when the video is ready."}
+                {!progressHydrated
+                  ? "Restoring your watch position from this device."
+                  : activePlayback?.status === "processing"
+                    ? "This episode is still being prepared."
+                    : "Choose another episode or refresh when the video is ready."}
               </p>
             </div>
           ) : (
@@ -604,10 +611,15 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                 <span
                   className="absolute left-0 top-0 h-full bg-white/75"
                   style={{
-                    width: `${Math.min(
-                      100,
-                      ((activeProgress.currentPositionSeconds ?? 0) / Math.max(1, activeProgress.durationSeconds)) * 100
-                    )}%`,
+                    width: `${(() => {
+                      const dur = Math.max(1, activeProgress.durationSeconds);
+                      const pos = Math.max(0, activeProgress.currentPositionSeconds ?? 0);
+                      const rawPct = (pos / dur) * 100;
+                      if (pos <= 0) return 0;
+                      // Long videos: ~1 min / ~4 h is &lt;1% — keep a small minimum so progress is visible.
+                      const minPct = rawPct > 0 && rawPct < 1.25 ? 1.25 : rawPct;
+                      return Math.min(100, minPct);
+                    })()}%`,
                   }}
                 />
                 {activeUnwatchedRanges.map((range, idx) => {

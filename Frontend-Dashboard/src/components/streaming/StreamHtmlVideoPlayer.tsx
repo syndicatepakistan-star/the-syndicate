@@ -167,6 +167,25 @@ export default function StreamHtmlVideoPlayer({
     };
   }, [seekRequest]);
 
+  /**
+   * When `startAtSeconds` arrives after `loadedmetadata` (watch progress hydrates after playback URL is ready),
+   * seek once while playback is still near the beginning.
+   */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+    const start = Number(startAtSeconds || 0);
+    if (!(start > 0)) return;
+    const dur = Number(video.duration || 0);
+    if (!Number.isFinite(dur) || dur <= 0) return;
+    const target = Math.min(Math.max(0, start), Math.max(0, dur - 0.05));
+    if (!(target > 4)) return;
+    const cur = Number(video.currentTime || 0);
+    if (!Number.isFinite(cur) || cur > 4) return;
+    suppressNextSeekEventRef.current = true;
+    video.currentTime = target;
+  }, [startAtSeconds, src]);
+
   return (
     <div
       className={cn(

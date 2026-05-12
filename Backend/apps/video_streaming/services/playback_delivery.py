@@ -12,7 +12,6 @@ from __future__ import annotations
 import logging
 import mimetypes
 import time
-from typing import Literal
 
 from botocore.exceptions import ClientError
 from django.conf import settings
@@ -25,9 +24,10 @@ from apps.video_streaming.services.object_storage import s3_client
 
 logger = logging.getLogger(__name__)
 
-RangeParse = tuple[int, int] | None | Literal["unsatisfiable"]
-
 PLAYBACK_TOKEN_SALT = "video_streaming.playback.mp4.v1"
+
+# Read size when proxying S3 → Django → browser (larger = fewer read iterations).
+S3_PROXY_READ_CHUNK = 1024 * 1024
 
 
 def _playback_signing_secret() -> str:
@@ -105,56 +105,24 @@ def _guess_video_content_type(file_key: str) -> str:
     return "application/octet-stream"
 
 
-def parse_first_byte_range(range_header: str | None, full_length: int) -> RangeParse:
-    """First `bytes=` range only; inclusive (start, end). None = send full object (200)."""
-    if full_length <= 0:
-        return "unsatisfiable"
+def _first_bytes_range_for_s3(range_header: str | None) -> str | None:
+    """
+    First `bytes=` range only, formatted for S3 GetObject `Range` (e.g. bytes=0- or bytes=1024-2047).
+    Returns None to fetch the full object (initial playback). HTML5 video sends a single range per request.
+    """
     if not range_header:
         return None
     trimmed = range_header.strip()
     if not trimmed.lower().startswith("bytes="):
         return None
     try:
-        _, spec = trimmed.split("=", 1)
+        _, inner = trimmed.split("=", 1)
     except ValueError:
         return None
-    first = spec.split(",", 1)[0].strip()
+    first = inner.strip().split(",", 1)[0].strip()
     if not first:
         return None
-
-    if first.startswith("-"):
-        try:
-            suffix = int(first[1:])
-        except ValueError:
-            return None
-        if suffix <= 0:
-            return None
-        start = max(0, full_length - suffix)
-        end = full_length - 1
-        return (start, end)
-
-    if "-" not in first:
-        return None
-    start_part, end_part = first.split("-", 1)
-    try:
-        start = int(start_part) if start_part.strip() else 0
-    except ValueError:
-        return None
-    if end_part.strip() == "":
-        end = full_length - 1
-    else:
-        try:
-            end = int(end_part)
-        except ValueError:
-            return None
-    if start < 0:
-        start = 0
-    if start >= full_length:
-        return "unsatisfiable"
-    end = min(end, full_length - 1)
-    if start > end:
-        return "unsatisfiable"
-    return (start, end)
+    return f"bytes={first}"
 
 
 def head_s3_original(*, bucket: str, key: str) -> HttpResponse:
@@ -181,68 +149,68 @@ def head_s3_original(*, bucket: str, key: str) -> HttpResponse:
 
 
 def streaming_s3_original_response(request, *, bucket: str, key: str) -> HttpResponse | StreamingHttpResponse:
-    """Stream object bytes through Django with Range support (HTML5 video seeking)."""
+    """
+    Stream object bytes through Django with Range support (HTML5 video seeking).
+
+    Uses a single S3 GetObject per request when possible (no extra HeadObject before ranged reads),
+    which cuts latency roughly in half on each seek/scrub.
+    """
     client = s3_client()
     if client is None:
         raise Http404()
-    ctype = _guess_video_content_type(key)
-
-    try:
-        head = client.head_object(Bucket=bucket, Key=key)
-    except ClientError as e:
-        code = (e.response.get("Error") or {}).get("Code", "")
-        if code in ("404", "NoSuchKey", "NotFound"):
-            raise Http404() from e
-        logger.exception("head_object failed bucket=%s key=%s", bucket, key)
-        raise Http404() from e
-
-    full_length = int(head.get("ContentLength") or 0)
-    if full_length <= 0:
-        raise Http404()
 
     range_header = (request.headers.get("Range") or request.META.get("HTTP_RANGE") or "").strip() or None
-    parsed = parse_first_byte_range(range_header, full_length)
-
-    if parsed == "unsatisfiable":
-        resp = HttpResponse(status=416)
-        resp["Content-Range"] = f"bytes */{full_length}"
-        return resp
+    s3_range = _first_bytes_range_for_s3(range_header)
 
     get_kwargs: dict = {"Bucket": bucket, "Key": key}
-    status = 200
-    content_length = full_length
-    content_range_hdr: str | None = None
-
-    if isinstance(parsed, tuple):
-        start, end = parsed
-        get_kwargs["Range"] = f"bytes={start}-{end}"
-        status = 206
-        content_length = end - start + 1
-        content_range_hdr = f"bytes {start}-{end}/{full_length}"
+    if s3_range:
+        get_kwargs["Range"] = s3_range
 
     try:
         obj = client.get_object(**get_kwargs)
     except ClientError as e:
-        code = (e.response.get("Error") or {}).get("Code", "")
+        err = e.response.get("Error") or {}
+        code = err.get("Code", "")
+        http_status = (e.response.get("ResponseMetadata") or {}).get("HTTPStatusCode")
+        if code == "InvalidRange" or http_status == 416:
+            try:
+                head = client.head_object(Bucket=bucket, Key=key)
+                full = int(head.get("ContentLength") or 0)
+            except ClientError:
+                full = 0
+            resp = HttpResponse(status=416)
+            resp["Content-Range"] = f"bytes */{max(0, full)}"
+            return resp
         if code in ("404", "NoSuchKey", "NotFound"):
             raise Http404() from e
         logger.exception("get_object failed bucket=%s key=%s", bucket, key)
         raise Http404() from e
 
-    body = obj["Body"]
-    if content_range_hdr is None:
-        cr = obj.get("ContentRange")
-        if isinstance(cr, str) and cr.strip():
-            content_range_hdr = cr.strip()
+    meta = obj.get("ResponseMetadata") or {}
+    ctype = (obj.get("ContentType") or "").strip() or _guess_video_content_type(key)
+    content_range_hdr = obj.get("ContentRange")
+    if isinstance(content_range_hdr, str):
+        content_range_hdr = content_range_hdr.strip() or None
+    else:
+        content_range_hdr = None
+
+    status = int(meta.get("HTTPStatusCode") or 0)
+    if status not in (200, 206):
+        status = 206 if s3_range else 200
+    if s3_range and status == 200 and content_range_hdr:
+        status = 206
 
     clen = obj.get("ContentLength")
-    if isinstance(clen, int) and clen > 0:
-        content_length = clen
+    content_length = int(clen) if isinstance(clen, int) and clen > 0 else 0
+    if content_length <= 0:
+        raise Http404()
+
+    body = obj["Body"]
 
     def iterator():
         try:
             while True:
-                chunk = body.read(262_144)
+                chunk = body.read(S3_PROXY_READ_CHUNK)
                 if not chunk:
                     break
                 yield chunk

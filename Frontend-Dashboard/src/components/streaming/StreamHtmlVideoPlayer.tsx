@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
@@ -21,6 +22,12 @@ type Props = {
   seekRequest?: { id: number; seconds: number; autoplay?: boolean } | null;
 };
 
+type MediaOverlay = null | "loading" | "buffering";
+
+function lateResumeKey(src: string, startSeconds: number): string {
+  return `${src}::${Number(startSeconds).toFixed(3)}`;
+}
+
 /**
  * HTML5 MP4 playback for signed URLs (no HLS / MSE).
  * Binds listeners and loads `src` only when `src` changes — not when resume/progress props change.
@@ -40,6 +47,7 @@ export default function StreamHtmlVideoPlayer({
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
+  const [mediaOverlay, setMediaOverlay] = useState<MediaOverlay>("loading");
   const onMetadataRef = useRef(onMetadata);
   const startAtSecondsRef = useRef(startAtSeconds);
   const onTimeProgressRef = useRef(onTimeProgress);
@@ -47,6 +55,8 @@ export default function StreamHtmlVideoPlayer({
   const onSeekSegmentRef = useRef(onSeekSegment);
   const suppressNextSeekEventRef = useRef(false);
   const lastSeekStartRef = useRef(0);
+  /** Prevents duplicate resume seeks (metadata handler + late hydration effect). */
+  const lateResumeAppliedKeyRef = useRef("");
 
   useEffect(() => {
     onMetadataRef.current = onMetadata;
@@ -77,6 +87,9 @@ export default function StreamHtmlVideoPlayer({
     const video = videoRef.current;
     if (!video || !src) return;
 
+    lateResumeAppliedKeyRef.current = "";
+    setMediaOverlay("loading");
+
     const emitMetadata = () => {
       const width = Number(video.videoWidth || 0);
       const height = Number(video.videoHeight || 0);
@@ -90,6 +103,7 @@ export default function StreamHtmlVideoPlayer({
         if (target > 0) {
           suppressNextSeekEventRef.current = true;
           video.currentTime = target;
+          lateResumeAppliedKeyRef.current = lateResumeKey(src, start);
         }
       }
     };
@@ -121,21 +135,43 @@ export default function StreamHtmlVideoPlayer({
       }
     };
 
+    const onLoadStart = () => setMediaOverlay("loading");
+    const onWaiting = () => setMediaOverlay("buffering");
+    const onStalled = () => setMediaOverlay("buffering");
+    const onPlaying = () => setMediaOverlay(null);
+    const onCanPlay = () => setMediaOverlay(null);
+    const onCanPlayThrough = () => setMediaOverlay(null);
+    const onError = () => setMediaOverlay(null);
+
     video.src = src;
     video.load();
 
+    video.addEventListener("loadstart", onLoadStart);
     video.addEventListener("loadedmetadata", emitMetadata);
     video.addEventListener("timeupdate", emitTimeProgress);
     video.addEventListener("ended", emitEnded);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("stalled", onStalled);
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("canplaythrough", onCanPlayThrough);
+    video.addEventListener("error", onError);
 
     return () => {
+      video.removeEventListener("loadstart", onLoadStart);
       video.removeEventListener("loadedmetadata", emitMetadata);
       video.removeEventListener("timeupdate", emitTimeProgress);
       video.removeEventListener("ended", emitEnded);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("stalled", onStalled);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("canplaythrough", onCanPlayThrough);
+      video.removeEventListener("error", onError);
       video.removeAttribute("src");
       video.load();
     };
@@ -168,8 +204,8 @@ export default function StreamHtmlVideoPlayer({
   }, [seekRequest]);
 
   /**
-   * When `startAtSeconds` arrives after `loadedmetadata` (watch progress hydrates after playback URL is ready),
-   * seek once while playback is still near the beginning.
+   * When `startAtSeconds` arrives after `loadedmetadata`, seek once if still near the start
+   * and we have not already applied the same resume key (avoids double-seek stutter).
    */
   useEffect(() => {
     const video = videoRef.current;
@@ -180,10 +216,24 @@ export default function StreamHtmlVideoPlayer({
     if (!Number.isFinite(dur) || dur <= 0) return;
     const target = Math.min(Math.max(0, start), Math.max(0, dur - 0.05));
     if (!(target > 4)) return;
+
+    const key = lateResumeKey(src, start);
+    if (lateResumeAppliedKeyRef.current === key) return;
+
     const cur = Number(video.currentTime || 0);
-    if (!Number.isFinite(cur) || cur > 4) return;
+    if (!Number.isFinite(cur)) return;
+    if (Math.abs(cur - target) < 2.5) {
+      lateResumeAppliedKeyRef.current = key;
+      return;
+    }
+    if (cur > 8) {
+      lateResumeAppliedKeyRef.current = key;
+      return;
+    }
+
     suppressNextSeekEventRef.current = true;
     video.currentTime = target;
+    lateResumeAppliedKeyRef.current = key;
   }, [startAtSeconds, src]);
 
   return (
@@ -206,7 +256,7 @@ export default function StreamHtmlVideoPlayer({
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="auto"
+        preload="metadata"
         playsInline
         controlsList="nodownload"
         disablePictureInPicture
@@ -214,6 +264,19 @@ export default function StreamHtmlVideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
       />
+      {mediaOverlay ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-[20] flex flex-col items-center justify-center gap-2 rounded-[inherit] bg-black/55 text-white/95 backdrop-blur-[1px]"
+          role="status"
+          aria-live="polite"
+          aria-label={mediaOverlay === "buffering" ? "Buffering" : "Loading video"}
+        >
+          <Loader2 className="h-10 w-10 shrink-0 animate-spin text-amber-300/95" aria-hidden />
+          <span className="text-[12px] font-semibold tracking-wide">
+            {mediaOverlay === "buffering" ? "Buffering…" : "Loading…"}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

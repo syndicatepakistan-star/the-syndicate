@@ -158,6 +158,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const [certificateName, setCertificateName] = useState("");
   const [certificateMessage, setCertificateMessage] = useState<string | null>(null);
   const [progressHydrated, setProgressHydrated] = useState(false);
+  /** Snapshot for HTML5 resume only; must not follow live `timeupdate` or the player reloads every tick. */
+  const [resumeStartSeconds, setResumeStartSeconds] = useState(0);
   const [seekRequest, setSeekRequest] = useState<{ id: number; seconds: number; autoplay?: boolean } | null>(null);
   const lastPlaybackPositionRef = useRef<Record<number, number>>({});
   const ignorePlaybackUntilRef = useRef(0);
@@ -256,6 +258,15 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }, [playlist]);
 
   const activeVideo: StreamVideoListItem | null = items[activeIdx]?.stream_video ?? null;
+
+  useEffect(() => {
+    if (!activeVideo?.id) {
+      setResumeStartSeconds(0);
+      return;
+    }
+    setResumeStartSeconds(progressMap[activeVideo.id]?.currentPositionSeconds ?? 0);
+  }, [activeVideo?.id, progressHydrated]);
+
   const activePlayback = activeVideo?.id ? playbackCache[activeVideo.id] ?? playback : playback;
   const totalDuration = useMemo(
     () =>
@@ -552,7 +563,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </div>
           ) : (
             <StreamHtmlVideoPlayer
-              key={playbackUrl}
+              key={activeVideo.id}
               src={playbackUrl}
               className={playerShell}
               playerLayout={activeVideo.player_layout ?? "auto"}
@@ -560,7 +571,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               sourceHeight={activeVideo.source_height ?? null}
               onTimeProgress={handleTimeProgress}
               onPlaybackEnded={handlePlaybackEnded}
-              startAtSeconds={activeVideo?.id ? progressMap[activeVideo.id]?.currentPositionSeconds ?? 0 : 0}
+              startAtSeconds={resumeStartSeconds}
               onSeekSegment={handleSeekSegment}
               seekRequest={seekRequest}
             />

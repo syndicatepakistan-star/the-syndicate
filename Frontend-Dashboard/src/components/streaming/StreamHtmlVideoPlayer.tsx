@@ -15,6 +15,7 @@ type Props = {
   sourceHeight?: number | null;
   onTimeProgress?: (payload: { currentTime: number; duration: number }) => void;
   onPlaybackEnded?: () => void;
+  /** Initial resume position only; do not pass live currentTime or the video element will reload every tick. */
   startAtSeconds?: number;
   onSeekSegment?: (payload: { from: number; to: number; duration: number }) => void;
   seekRequest?: { id: number; seconds: number; autoplay?: boolean } | null;
@@ -22,6 +23,7 @@ type Props = {
 
 /**
  * HTML5 MP4 playback for signed URLs (no HLS / MSE).
+ * Binds listeners and loads `src` only when `src` changes — not when resume/progress props change.
  */
 export default function StreamHtmlVideoPlayer({
   src,
@@ -39,11 +41,21 @@ export default function StreamHtmlVideoPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
   const onMetadataRef = useRef(onMetadata);
+  const startAtSecondsRef = useRef(startAtSeconds);
+  const onTimeProgressRef = useRef(onTimeProgress);
+  const onPlaybackEndedRef = useRef(onPlaybackEnded);
+  const onSeekSegmentRef = useRef(onSeekSegment);
   const suppressNextSeekEventRef = useRef(false);
   const lastSeekStartRef = useRef(0);
+
   useEffect(() => {
     onMetadataRef.current = onMetadata;
   }, [onMetadata]);
+
+  startAtSecondsRef.current = startAtSeconds;
+  onTimeProgressRef.current = onTimeProgress;
+  onPlaybackEndedRef.current = onPlaybackEnded;
+  onSeekSegmentRef.current = onSeekSegment;
 
   useEffect(() => {
     setMeasured(null);
@@ -72,8 +84,9 @@ export default function StreamHtmlVideoPlayer({
         setMeasured({ width, height });
         onMetadataRef.current?.({ width, height });
       }
-      if (startAtSeconds > 0 && Number.isFinite(video.duration) && video.duration > 0) {
-        const target = Math.min(Math.max(0, startAtSeconds), Math.max(0, video.duration - 1));
+      const start = Number(startAtSecondsRef.current || 0);
+      if (start > 0 && Number.isFinite(video.duration) && video.duration > 0) {
+        const target = Math.min(Math.max(0, start), Math.max(0, video.duration - 0.05));
         if (target > 0) {
           suppressNextSeekEventRef.current = true;
           video.currentTime = target;
@@ -84,10 +97,10 @@ export default function StreamHtmlVideoPlayer({
       const currentTime = Number(video.currentTime || 0);
       const duration = Number(video.duration || 0);
       if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) return;
-      onTimeProgress?.({ currentTime, duration });
+      onTimeProgressRef.current?.({ currentTime, duration });
     };
     const emitEnded = () => {
-      onPlaybackEnded?.();
+      onPlaybackEndedRef.current?.();
     };
     const onSeeking = () => {
       lastSeekStartRef.current = Number.isFinite(video.currentTime) ? video.currentTime : 0;
@@ -100,7 +113,11 @@ export default function StreamHtmlVideoPlayer({
         return;
       }
       if (duration > 0 && to - lastSeekStartRef.current > 2) {
-        onSeekSegment?.({ from: Math.max(0, lastSeekStartRef.current), to: Math.min(duration, to), duration });
+        onSeekSegmentRef.current?.({
+          from: Math.max(0, lastSeekStartRef.current),
+          to: Math.min(duration, to),
+          duration,
+        });
       }
     };
 
@@ -122,7 +139,7 @@ export default function StreamHtmlVideoPlayer({
       video.removeAttribute("src");
       video.load();
     };
-  }, [src, onPlaybackEnded, onSeekSegment, onTimeProgress, startAtSeconds]);
+  }, [src]);
 
   useEffect(() => {
     const video = videoRef.current;

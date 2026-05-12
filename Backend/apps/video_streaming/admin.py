@@ -116,7 +116,13 @@ class StreamVideoAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
-        ("Media", {"fields": ("thumbnail", "original_video", "bucket_video_key", "multipart_video", "multipart_uploaded_key")}),
+        ("Media", {
+            "fields": ("thumbnail", "original_video", "bucket_video_key", "multipart_video", "multipart_uploaded_key"),
+            "description": (
+                "Playback starts faster in the browser if the MP4 has the moov atom at the beginning of the file "
+                "(“fast start”). Example: ffmpeg -i input.mp4 -c copy -movflags +faststart output.mp4 then upload output.mp4."
+            ),
+        }),
         ("Pipeline", {"fields": ("status", "transcode_progress", "transcode_message", "hls_path", "last_error", "created_at")}),
     )
     class Media:

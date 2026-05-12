@@ -160,6 +160,10 @@ _FILE_UPLOAD_MAX_MEMORY_MB = int((os.environ.get("FILE_UPLOAD_MAX_MEMORY_MB") or
 FILE_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _FILE_UPLOAD_MAX_MEMORY_MB * 1024 * 1024)
 # Guard admin direct file uploads; force bucket/multipart path for very large videos.
 STREAM_DIRECT_UPLOAD_MAX_GB = float((os.environ.get("STREAM_DIRECT_UPLOAD_MAX_GB") or "5").strip() or "5")
+# Short cache for playback entitlement checks (HTML5 sends many Range requests). 0 = disable.
+STREAM_PLAYBACK_DECISION_CACHE_SECONDS = int(
+    (os.environ.get("STREAM_PLAYBACK_DECISION_CACHE_SECONDS") or "45").strip() or "45"
+)
 
 
 # Application definition

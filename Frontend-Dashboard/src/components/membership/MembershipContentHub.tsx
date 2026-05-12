@@ -419,6 +419,7 @@ export function MembershipContentHub() {
               <div className="bg-black p-3 sm:p-4">
                 <StreamVideoProgramPanel
                   streamVideoId={activeVideo.id}
+                  playbackContext="membership"
                   onPlaybackReady={refreshVideosSilently}
                   detailsOverride={MEMBERSHIP_SYNDICATE_VISION}
                 />

@@ -1,24 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Hls from "hls.js";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { getAuthorizationHeader } from "@/lib/portal-api";
 
-export type HlsPlayerLayoutMode = "auto" | "landscape" | "portrait";
+export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
 
 type Props = {
+  /** Absolute playback URL (S3 presigned GET or signed Django proxy URL). */
   src: string;
   className?: string;
-  /**
-   * Send portal JWT or DRF token on every HLS request (required for /api/streaming/videos/hls/...).
-   * Native Safari HLS cannot set this header; use a Chromium-based browser for protected streams.
-   */
-  requireAuthHeaders?: boolean;
   onMetadata?: (size: { width: number; height: number }) => void;
-  /** From API / admin: auto uses decoded video pixels; landscape/portrait fix a 16:9 or 9:16 frame. */
-  playerLayout?: HlsPlayerLayoutMode;
-  /** Hint from transcoding (ffprobe); refined when the browser fires loadedmetadata. */
+  playerLayout?: StreamHtmlPlayerLayoutMode;
   sourceWidth?: number | null;
   sourceHeight?: number | null;
   onTimeProgress?: (payload: { currentTime: number; duration: number }) => void;
@@ -29,16 +21,11 @@ type Props = {
 };
 
 /**
- * HLS playback with auth headers on segment requests.
- *
- * **Limits:** Browser video cannot reliably block downloads, screen capture, or force a black recording.
- * Mitigations here are UX friction + watermarking. For studio-grade restrictions use a DRM provider
- * (Widevine / FairPlay) with encrypted DASH or HLS and a license service.
+ * HTML5 MP4 playback for signed URLs (no HLS / MSE).
  */
-export default function HlsVideoPlayer({
+export default function StreamHtmlVideoPlayer({
   src,
   className,
-  requireAuthHeaders = true,
   onMetadata,
   playerLayout = "auto",
   sourceWidth = null,
@@ -77,6 +64,7 @@ export default function HlsVideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
+
     const emitMetadata = () => {
       const width = Number(video.videoWidth || 0);
       const height = Number(video.videoHeight || 0);
@@ -115,59 +103,26 @@ export default function HlsVideoPlayer({
         onSeekSegment?.({ from: Math.max(0, lastSeekStartRef.current), to: Math.min(duration, to), duration });
       }
     };
+
+    video.src = src;
+    video.load();
+
     video.addEventListener("loadedmetadata", emitMetadata);
     video.addEventListener("timeupdate", emitTimeProgress);
     video.addEventListener("ended", emitEnded);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        startFragPrefetch: true,
-        maxBufferLength: 20,
-        backBufferLength: 10
-      });
-      if (requireAuthHeaders) {
-        hls.config.xhrSetup = (xhr) => {
-          const auth = getAuthorizationHeader();
-          if (auth) xhr.setRequestHeader("Authorization", auth);
-        };
-      }
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            hls.recoverMediaError();
-          } else {
-            hls.destroy();
-          }
-        }
-      });
-      return () => {
-        video.removeEventListener("loadedmetadata", emitMetadata);
-        video.removeEventListener("timeupdate", emitTimeProgress);
-        video.removeEventListener("ended", emitEnded);
-        video.removeEventListener("seeking", onSeeking);
-        video.removeEventListener("seeked", onSeeked);
-        hls.destroy();
-      };
-    }
-
-    // No MSE: fall back to native HLS (cannot attach Authorization — protected URLs will fail).
-    video.src = src;
     return () => {
       video.removeEventListener("loadedmetadata", emitMetadata);
       video.removeEventListener("timeupdate", emitTimeProgress);
       video.removeEventListener("ended", emitEnded);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
+      video.removeAttribute("src");
+      video.load();
     };
-  }, [src, requireAuthHeaders, onPlaybackEnded, onSeekSegment, onTimeProgress]);
+  }, [src, onPlaybackEnded, onSeekSegment, onTimeProgress, startAtSeconds]);
 
   useEffect(() => {
     const video = videoRef.current;

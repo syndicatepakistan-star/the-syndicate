@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
-import HlsVideoPlayer from "@/components/streaming/HlsVideoPlayer";
+import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
 import {
   fetchStreamPlaylistDetail,
   fetchStreamVideoPlayback,
@@ -529,8 +529,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     );
   }
 
-  const hlsUrl = activePlayback?.hls_url ?? null;
-  const ready = activePlayback?.status === "ready" && !!hlsUrl;
+  const playbackUrl = activePlayback?.playback_url ?? null;
+  const ready = activePlayback?.status === "ready" && !!playbackUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
 
   return (
@@ -551,9 +551,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               </p>
             </div>
           ) : (
-            <HlsVideoPlayer
-              key={hlsUrl}
-              src={hlsUrl}
+            <StreamHtmlVideoPlayer
+              key={playbackUrl}
+              src={playbackUrl}
               className={playerShell}
               playerLayout={activeVideo.player_layout ?? "auto"}
               sourceWidth={activeVideo.source_width ?? null}

@@ -124,8 +124,8 @@ class MembershipVideoAdmin(AllFieldsListDisplayAdmin):
 @admin.register(MembershipStreamVideo)
 class MembershipStreamVideoAdmin(admin.ModelAdmin):
     """
-    Secure upload section for Membership videos.
-    Uses the same HLS transcode pipeline as Programs, but separated by visibility flags.
+    Secure upload section for Membership videos (same StreamVideo storage as Programs;
+    use show_in_membership + signed MP4 playback).
     """
 
     list_display = ("title", "status", "price", "show_in_membership", "show_in_programs", "created_at")

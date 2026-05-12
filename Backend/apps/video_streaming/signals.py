@@ -4,7 +4,6 @@ from django.dispatch import receiver
 import logging
 
 from apps.video_streaming.models import StreamPlaylistItem, StreamVideo
-from apps.video_streaming.transcode_policy import enqueue_stream_video_transcode
 
 logger = logging.getLogger(__name__)
 
@@ -25,30 +24,31 @@ def _stream_video_remember_original_name(sender, instance: StreamVideo, **kwargs
 
 
 @receiver(post_save, sender=StreamVideo)
-def _stream_video_enqueue_transcode(sender, instance: StreamVideo, created: bool, **kwargs) -> None:
+def _stream_video_mark_ready_after_upload(sender, instance: StreamVideo, created: bool, **kwargs) -> None:
+    """When an original file is attached, mark the row ready for signed-URL playback (no transcoding)."""
     if kwargs.get("raw"):
         return
-    if getattr(instance, "_skip_auto_transcode", False):
+    if getattr(instance, "_skip_auto_ready", False):
         return
     if not instance.original_video or not instance.original_video.name:
         return
     prev = getattr(instance, "_pre_save_original_video_name", "")
     if not created and instance.original_video.name == prev:
         return
-    def _trigger(vid: int) -> None:
-        try:
-            enqueue_stream_video_transcode(vid)
-        except Exception:
-            logger.exception("Could not enqueue HLS transcoding for video %s", vid)
-            StreamVideo.objects.filter(pk=vid).update(
-                status=StreamVideo.Status.FAILED,
-                transcode_progress=0,
-                transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
-                last_error="Could not start transcoding (Celery broker unavailable). Run a worker or check REDIS_URL.",
-            )
 
-    # Defer until commit so the DB row + storage are consistent before FFmpeg runs.
-    transaction.on_commit(lambda vid=instance.pk: _trigger(vid))
+    def _mark_ready(vid: int) -> None:
+        try:
+            StreamVideo.objects.filter(pk=vid).update(
+                status=StreamVideo.Status.READY,
+                transcode_progress=100,
+                transcode_message="Upload complete. Ready for playback.",
+                last_error="",
+                hls_path="",
+            )
+        except Exception:
+            logger.exception("Could not mark StreamVideo %s ready after upload", vid)
+
+    transaction.on_commit(lambda vid=instance.pk: _mark_ready(vid))
 
 
 def _sync_playlist_cover_from_first_thumbnail(playlist_id: int) -> None:
@@ -102,6 +102,7 @@ def _stream_video_thumbnail_sync_playlist_covers(sender, instance: StreamVideo, 
     )
     if not playlist_ids:
         return
+
     def _run(ids: list[int]) -> None:
         for playlist_id in ids:
             _sync_playlist_cover_from_first_thumbnail(playlist_id)
@@ -140,14 +141,14 @@ def _stream_video_delete_bucket_objects(sender, instance: StreamVideo, **kwargs)
 
     def _run_cleanup() -> None:
         from django.conf import settings
-        from apps.video_streaming.services.r2_hls import _s3_client
+        from apps.video_streaming.services.object_storage import s3_client
 
         if not getattr(settings, "USE_S3_OBJECT_STORAGE", False):
             return
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
         if not bucket:
             return
-        client = _s3_client()
+        client = s3_client()
         if client is None:
             return
         try:

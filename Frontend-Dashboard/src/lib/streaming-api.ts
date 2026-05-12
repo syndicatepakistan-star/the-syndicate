@@ -16,14 +16,12 @@ export type StreamVideoListItem = {
   created_at: string;
 };
 
-export type StreamVideoDetail = StreamVideoListItem & {
-  hls_path: string;
-};
+export type StreamVideoDetail = StreamVideoListItem;
 
 export type StreamPayload = {
   id: number;
   status: string;
-  hls_url: string | null;
+  playback_url: string | null;
 };
 
 /** Parsed from admin `description` when section title lines are used (see API / admin help). */
@@ -80,7 +78,11 @@ const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v1";
 
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
 const playlistDetailCache = new Map<number, { at: number; data: StreamPlaylistDetail }>();
-const playbackCache = new Map<number, { at: number; data: StreamPayload }>();
+const playbackCache = new Map<string, { at: number; data: StreamPayload }>();
+
+function playbackCacheKey(id: number, context: "programs" | "membership"): string {
+  return `${context}:${id}`;
+}
 
 function errMessage(status: number, data: unknown, fallback: string): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -269,12 +271,21 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
   return detail;
 }
 
-export async function fetchStreamVideoPlayback(id: number): Promise<StreamPayload> {
-  const cached = playbackCache.get(id);
+export async function fetchStreamVideoPlayback(
+  id: number,
+  options?: { context?: "programs" | "membership" }
+): Promise<StreamPayload> {
+  const ctx = options?.context === "membership" ? "membership" : "programs";
+  const cacheKey = playbackCacheKey(id, ctx);
+  const cached = playbackCache.get(cacheKey);
   if (cached && isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) {
     return cached.data;
   }
-  const res = await portalFetch<StreamPayload>(`/api/streaming/videos/stream/${id}/`);
+  const path =
+    ctx === "membership"
+      ? `/api/portal/membership/secure-videos/stream/${id}/`
+      : `/api/streaming/videos/stream/${id}/`;
+  const res = await portalFetch<StreamPayload>(path);
   if (!res.ok) {
     throw new Error(
       errMessage(
@@ -285,6 +296,6 @@ export async function fetchStreamVideoPlayback(id: number): Promise<StreamPayloa
     );
   }
   const payload = res.data as StreamPayload;
-  playbackCache.set(id, { at: Date.now(), data: payload });
+  playbackCache.set(cacheKey, { at: Date.now(), data: payload });
   return payload;
 }

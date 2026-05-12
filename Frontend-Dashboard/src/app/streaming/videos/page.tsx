@@ -45,7 +45,7 @@ export default function StreamVideosIndexPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-white">
       <h1 className="text-2xl font-semibold tracking-tight">Stream videos</h1>
-      <p className="mt-2 text-sm text-white/60">HLS catalog from Django (Celery + FFmpeg + R2).</p>
+      <p className="mt-2 text-sm text-white/60">Secure MP4 catalog from Django (private storage + signed URLs).</p>
       <ul className="mt-8 space-y-4">
         {items.map((v) => (
           <li key={v.id} className="rounded-lg border border-white/10 bg-white/5 p-4">

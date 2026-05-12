@@ -15,9 +15,9 @@ urlpatterns = [
     path("playlists/<int:pk>/", views.StreamPlaylistDetailView.as_view(), name="streaming-playlists-detail"),
     path("playlists/", views.StreamPlaylistListView.as_view(), name="streaming-playlists-list"),
     path(
-        "videos/hls/<int:video_id>/<path:rel_path>",
-        views.StreamHlsMediaView.as_view(),
-        name="streaming-hls-media",
+        "videos/playback/<int:video_id>/",
+        views.StreamVideoPlaybackFileView.as_view(),
+        name="streaming-video-playback-file",
     ),
     path("videos/stream/<int:pk>/", views.StreamVideoStreamView.as_view(), name="streaming-videos-stream"),
     path("videos/<int:pk>/", views.StreamVideoDetailView.as_view(), name="streaming-videos-detail"),

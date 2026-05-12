@@ -25,7 +25,8 @@ def stream_playlist_cover_upload_to(instance: "StreamPlaylist", filename: str) -
 
 class StreamVideo(models.Model):
     """
-    Admin-uploaded asset transcoded to HLS by Celery + FFmpeg, packaged to R2 (or local media in dev).
+    Admin-uploaded MP4 stored in private object storage (or local media in dev).
+    Playback uses short-lived signed GET URLs (S3 presigned) or a signed Django file proxy locally.
     """
 
     class Status(models.TextChoices):
@@ -45,13 +46,13 @@ class StreamVideo(models.Model):
     original_video = models.FileField(
         upload_to=stream_video_original_upload_to,
         blank=True,
-        help_text="Source file (e.g. MP4). Not exposed via public API; transcoded to HLS only.",
+        help_text="Original MP4 (or other supported format). Stored privately; served only via signed playback URLs.",
     )
     hls_path = models.URLField(
         max_length=2048,
         blank=True,
         default="",
-        help_text="Public playlist URL (index.m3u8) after processing.",
+        help_text="Legacy field from the old HLS pipeline; unused. Left blank for new uploads.",
     )
     status = models.CharField(
         max_length=16,
@@ -62,7 +63,7 @@ class StreamVideo(models.Model):
     transcode_progress = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
-        help_text="Estimated FFmpeg progress percentage while status is Processing.",
+        help_text="Upload / pipeline status. Ready means original file is stored and can be played.",
     )
     transcode_message = models.CharField(
         max_length=255,

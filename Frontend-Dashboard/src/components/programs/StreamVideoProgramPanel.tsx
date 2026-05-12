@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import HlsVideoPlayer from "@/components/streaming/HlsVideoPlayer";
+import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
 import {
   fetchStreamVideoDetail,
   fetchStreamVideoPlayback,
@@ -12,6 +12,8 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 type Props = {
   streamVideoId: number;
+  /** Programs catalog vs membership secure hub (different playback authorization endpoints). */
+  playbackContext?: "programs" | "membership";
   /** Called once when playback becomes ready (e.g. refetch list so "Processing" badges update). */
   onPlaybackReady?: () => void;
   /** Optional custom text block for the right details panel (membership-specific copy). */
@@ -21,7 +23,12 @@ type Props = {
 const playerShell =
   "overflow-hidden rounded-xl border border-amber-300/50 bg-black/50 shadow-[0_0_30px_rgba(251,191,36,0.22),0_0_52px_rgba(34,211,238,0.12),inset_0_0_0_1px_rgba(255,255,255,0.12)]";
 
-export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detailsOverride }: Props) {
+export function StreamVideoProgramPanel({
+  streamVideoId,
+  playbackContext = "programs",
+  onPlaybackReady,
+  detailsOverride
+}: Props) {
   const [detail, setDetail] = useState<StreamVideoDetail | null>(null);
   const [playback, setPlayback] = useState<StreamPayload | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -36,7 +43,7 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
       try {
         const [d, p] = await Promise.all([
           fetchStreamVideoDetail(streamVideoId),
-          fetchStreamVideoPlayback(streamVideoId)
+          fetchStreamVideoPlayback(streamVideoId, { context: playbackContext })
         ]);
         if (!cancelled) {
           setDetail(d);
@@ -51,15 +58,15 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
     return () => {
       cancelled = true;
     };
-  }, [streamVideoId]);
+  }, [streamVideoId, playbackContext]);
 
   useEffect(() => {
     reportedReadyRef.current = false;
-  }, [streamVideoId]);
+  }, [streamVideoId, playbackContext]);
 
   useEffect(() => {
     if (!onPlaybackReady) return;
-    const ready = playback?.status === "ready" && Boolean(playback?.hls_url);
+    const ready = playback?.status === "ready" && Boolean(playback?.playback_url);
     if (ready && !reportedReadyRef.current) {
       reportedReadyRef.current = true;
       onPlaybackReady();
@@ -67,7 +74,7 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
     if (!ready) {
       reportedReadyRef.current = false;
     }
-  }, [playback?.status, playback?.hls_url, onPlaybackReady]);
+  }, [playback?.status, playback?.playback_url, onPlaybackReady]);
 
   useEffect(() => {
     if (!playback || playback.status !== "processing") return;
@@ -75,7 +82,7 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
     const timer = window.setInterval(() => {
       void (async () => {
         try {
-          const p = await fetchStreamVideoPlayback(streamVideoId);
+          const p = await fetchStreamVideoPlayback(streamVideoId, { context: playbackContext });
           if (!cancelled) setPlayback(p);
         } catch {
           // Keep current UI state; next poll may recover.
@@ -86,7 +93,7 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [playback?.status, streamVideoId]);
+  }, [playback?.status, streamVideoId, playbackContext]);
 
   if (loading) {
     return (
@@ -106,8 +113,8 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
     return null;
   }
 
-  const hlsUrl = playback.hls_url;
-  const ready = playback.status === "ready" && !!hlsUrl;
+  const playbackUrl = playback.playback_url;
+  const ready = playback.status === "ready" && !!playbackUrl;
   const statusLabel = playback.status === "ready" ? "available" : playback.status;
   const hasDetailsOverride = Boolean((detailsOverride || "").trim());
   const detailsText = (detailsOverride || "").trim() || (detail.description || "").trim() || "No description added for this video yet.";
@@ -139,8 +146,8 @@ export function StreamVideoProgramPanel({ streamVideoId, onPlaybackReady, detail
               </p>
             </div>
           ) : (
-            <HlsVideoPlayer
-              src={hlsUrl}
+            <StreamHtmlVideoPlayer
+              src={playbackUrl ?? ""}
               className={playerShell}
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}

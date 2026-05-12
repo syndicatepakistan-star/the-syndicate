@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
-from apps.video_streaming.transcode_policy import enqueue_stream_video_transcode
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -110,7 +109,6 @@ class StreamVideoAdmin(admin.ModelAdmin):
         "source_height",
         "created_at",
     )
-    actions = ("reprocess_hls",)
     fieldsets = (
         (None, {"fields": ("title", "description", "price", "show_in_programs", "show_in_membership")}),
         ("Player", {"fields": ("player_layout", "source_width", "source_height")}),
@@ -125,69 +123,11 @@ class StreamVideoAdmin(admin.ModelAdmin):
         uploaded_key = (form.cleaned_data.get("multipart_uploaded_key") or "").strip()
         selected_key = bucket_key or uploaded_key
         if selected_key:
-            # Multipart path: skip signal auto-transcode during save request to keep
-            # admin response fast/reliable for very large files.
-            obj._skip_auto_transcode = True
+            obj._skip_auto_ready = True
             obj.original_video.name = selected_key
-            obj.status = StreamVideo.Status.PROCESSING
-            obj.transcode_progress = 0
-            obj.transcode_message = "Queued from admin. Waiting for worker to start."
+            obj.status = StreamVideo.Status.READY
+            obj.transcode_progress = 100
+            obj.transcode_message = "Upload complete. Ready for playback."
             obj.last_error = ""
             obj.hls_path = ""
         super().save_model(request, obj, form, change)
-        if selected_key:
-
-            def _enqueue(vid: int) -> None:
-                try:
-                    enqueue_stream_video_transcode(vid)
-                except Exception:
-                    # Keep admin save successful even if broker is temporarily unavailable.
-                    StreamVideo.objects.filter(pk=vid).update(
-                        status=StreamVideo.Status.FAILED,
-                        transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
-                        last_error="Video saved but background processing could not be queued.",
-                    )
-
-            transaction.on_commit(lambda vid=obj.pk: _enqueue(vid))
-
-    @admin.action(description="Re-run HLS transcoding (selected rows with an original file)")
-    def reprocess_hls(self, request, queryset):
-        n = 0
-        for v in queryset:
-            if not v.original_video or not v.original_video.name:
-                continue
-            n += 1
-            StreamVideo.objects.filter(pk=v.pk).update(
-                status=StreamVideo.Status.PROCESSING,
-                transcode_progress=0,
-                transcode_message="Queued from admin action. Waiting for worker to pick task.",
-                last_error="",
-                hls_path="",
-            )
-            try:
-                enqueue_stream_video_transcode(v.pk)
-            except Exception:
-                StreamVideo.objects.filter(pk=v.pk).update(
-                    status=StreamVideo.Status.FAILED,
-                    transcode_progress=0,
-                    transcode_message="Could not queue job. Verify Celery worker and Redis broker.",
-                )
-                self.message_user(
-                    request,
-                    f"Could not queue HLS for “{v.title}” (id={v.pk}). Check Celery broker / Redis.",
-                    level=messages.ERROR,
-                )
-        if n:
-            self.message_user(
-                request,
-                f"HLS transcoding started for {n} video(s) in the background. Refresh this list in a few minutes; "
-                "check Pipeline → last_error on a video if status stays Processing.",
-            )
-
-
-@admin.register(StreamPlaylistPurchase)
-class StreamPlaylistPurchaseAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "playlist", "status", "amount_paid", "currency", "paid_at", "updated_at")
-    list_filter = ("status", "currency", "paid_at")
-    search_fields = ("user__username", "user__email", "playlist__title", "stripe_checkout_session_id")
-    autocomplete_fields = ("user", "playlist")

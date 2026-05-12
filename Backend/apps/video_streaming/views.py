@@ -1,17 +1,14 @@
-import mimetypes
+import logging
 import re
-import time
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import urlsplit
 
-from botocore.exceptions import ClientError
 import stripe
 from django.conf import settings
 from django.db.models import Count, Prefetch, Q
-from django.core import signing
 from django.utils import timezone
-from django.http import FileResponse, Http404, HttpResponse, StreamingHttpResponse
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from rest_framework import generics, status
@@ -22,7 +19,21 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 
 from apps.portal.models import UserDashboardEntitlement
-from apps.portal.king_access import king_allowed_playlist_ids, king_selection_completed
+from apps.portal.king_access import king_allowed_playlist_ids
+from apps.video_streaming.entitlements import (
+    playlist_included_by_entitlement,
+    user_stream_playlists_unlocked_by_entitlement,
+)
+from apps.video_streaming.playback_access import (
+    user_can_play_membership_stream_video,
+    user_can_play_programs_stream_video,
+)
+from apps.video_streaming.services.object_storage import s3_client
+from apps.video_streaming.services.playback_delivery import (
+    build_playback_url_for_video,
+    file_response_for_local_original,
+    verify_playback_token,
+)
 from apps.video_streaming.models import (
     StreamPlaylist,
     StreamPlaylistItem,
@@ -30,7 +41,6 @@ from apps.video_streaming.models import (
     StreamVideo,
     stream_video_original_upload_to,
 )
-from apps.video_streaming.transcode_policy import enqueue_stream_video_transcode, inline_stream_transcode_enabled
 from apps.video_streaming.serializers import (
     StreamPlaylistDetailSerializer,
     StreamPlaylistListSerializer,
@@ -39,147 +49,8 @@ from apps.video_streaming.serializers import (
     StreamVideoListSerializer,
     StreamVideoStreamSerializer,
 )
-from apps.video_streaming.services.r2_hls import _s3_client
 
-STREAM_TOKEN_SALT = "video_streaming.hls.v1"
-
-
-def _user_stream_playlists_unlocked_by_entitlement(user) -> bool:
-    """
-    Money Mastery / King / staff-equivalent tiers include all published stream playlists
-    (UI `is_unlocked` + detail queryset), not only per-playlist Stripe purchases.
-    """
-    if not getattr(user, "is_authenticated", False):
-        return False
-    if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
-        return True
-    try:
-        ent = user.dashboard_entitlement
-    except UserDashboardEntitlement.DoesNotExist:
-        return False
-    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
-        return king_selection_completed(user) and bool(king_allowed_playlist_ids(user))
-    return ent.access_tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
-
-
-def _playlist_included_by_entitlement(user, playlist_id: int) -> bool:
-    """
-    Per-playlist entitlement check (used by checkout).
-    King access is selection-based, so only selected playlist IDs are included.
-    """
-    if not getattr(user, "is_authenticated", False):
-        return False
-    if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
-        return True
-    try:
-        ent = user.dashboard_entitlement
-    except UserDashboardEntitlement.DoesNotExist:
-        return False
-    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
-        return king_selection_completed(user) and int(playlist_id) in king_allowed_playlist_ids(user)
-    return ent.access_tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
-
-
-def _normalize_hls_relpath(raw: str) -> str | None:
-    cleaned = (raw or "").strip().replace("\\", "/").lstrip("/")
-    if not cleaned:
-        return None
-    parts = [p for p in cleaned.split("/") if p]
-    for p in parts:
-        if p in (".", ".."):
-            return None
-    return "/".join(parts)
-
-
-def _content_type_for_name(name: str) -> str:
-    lower = name.lower()
-    if lower.endswith(".m3u8"):
-        return "application/vnd.apple.mpegurl"
-    if lower.endswith(".ts"):
-        return "video/mp2t"
-    ct, _ = mimetypes.guess_type(name)
-    return ct or "application/octet-stream"
-
-
-def playback_playlist_path(video_id: int) -> str:
-    """Site-relative URL (works behind Next.js proxy)."""
-    return reverse("streaming-hls-media", kwargs={"video_id": video_id, "rel_path": "index.m3u8"})
-
-
-def _stream_token_secret() -> str:
-    return (getattr(settings, "STREAM_SIGNING_SECRET", "") or "").strip() or settings.SECRET_KEY
-
-
-def _token_ttl_seconds() -> int:
-    raw = str(getattr(settings, "STREAM_SIGNED_URL_TTL_SECONDS", 900)).strip() or "900"
-    try:
-        ttl = int(raw)
-    except ValueError:
-        ttl = 900
-    return max(30, min(ttl, 60 * 60 * 24))
-
-
-def _build_stream_token(*, user_id: int, video_id: int, exp: int) -> str:
-    payload = {"u": int(user_id), "v": int(video_id), "exp": int(exp)}
-    return signing.dumps(payload, key=_stream_token_secret(), salt=STREAM_TOKEN_SALT, compress=True)
-
-
-def _verify_stream_token(*, token: str, video_id: int) -> dict | None:
-    try:
-        payload = signing.loads(token, key=_stream_token_secret(), salt=STREAM_TOKEN_SALT)
-    except signing.BadSignature:
-        return None
-    if not isinstance(payload, dict):
-        return None
-    try:
-        uid = int(payload.get("u"))
-        vid = int(payload.get("v"))
-        exp = int(payload.get("exp"))
-    except (TypeError, ValueError):
-        return None
-    now = int(time.time())
-    if vid != int(video_id) or exp <= now:
-        return None
-    return {"u": uid, "v": vid, "exp": exp}
-
-
-def _append_query_params(url: str, extra: dict[str, str]) -> str:
-    if not url:
-        return url
-    split = urlsplit(url)
-    query = dict(parse_qsl(split.query, keep_blank_values=True))
-    query.update(extra)
-    return urlunsplit((split.scheme, split.netloc, split.path, urlencode(query), split.fragment))
-
-
-def _rewrite_hls_manifest(content: str, token: str, exp: str) -> str:
-    """
-    Ensure each URI in manifest carries auth query params so `.ts` / key files
-    are protected by the same signed token as `index.m3u8`.
-    """
-    extra = {"token": token, "expires": exp}
-    out: list[str] = []
-    uri_attr_re = re.compile(r'URI="([^"]+)"')
-    for raw_line in content.splitlines():
-        line = raw_line.strip()
-        if not line:
-            out.append(raw_line)
-            continue
-        if line.startswith("#"):
-            def _replace_uri(m: re.Match[str]) -> str:
-                return f'URI="{_append_query_params(m.group(1), extra)}"'
-
-            out.append(uri_attr_re.sub(_replace_uri, raw_line))
-            continue
-        out.append(_append_query_params(raw_line, extra))
-    # HLS parsers are happier with trailing newline.
-    return "\n".join(out) + "\n"
+logger = logging.getLogger(__name__)
 
 
 class StreamVideoListView(generics.ListAPIView):
@@ -198,7 +69,8 @@ class StreamVideoStreamView(APIView):
     """
     GET /api/streaming/videos/stream/<id>/
 
-    Returns a site-relative HLS playlist path that is only served by StreamHlsMediaView when authenticated.
+    Authorized users receive a short-lived URL for the original MP4 (S3 presigned GET
+    or signed same-origin proxy for local storage).
     """
 
     permission_classes = [IsAuthenticated]
@@ -209,114 +81,66 @@ class StreamVideoStreamView(APIView):
         except StreamVideo.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Local-dev fallback: stuck "processing" rows (e.g. no worker) transcode on first playback.
-        if (
-            inline_stream_transcode_enabled()
-            and video.status == StreamVideo.Status.PROCESSING
-            and bool(video.original_video and video.original_video.name)
-        ):
-            try:
-                from apps.video_streaming.tasks import process_stream_video_to_hls
+        if not user_can_play_programs_stream_video(request.user, video):
+            return Response(
+                {"detail": "You do not have access to this video."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-                process_stream_video_to_hls(video.pk)
-                video.refresh_from_db(fields=["status", "hls_path", "last_error"])
-            except Exception:
-                video.refresh_from_db(fields=["status", "hls_path", "last_error"])
+        if not video.original_video or not video.original_video.name:
+            payload = {"id": video.id, "status": video.status, "playback_url": None}
+            return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
-        if video.status != StreamVideo.Status.READY or not (video.hls_path or "").strip():
-            payload = {"id": video.id, "status": video.status, "hls_url": None}
-            ser = StreamVideoStreamSerializer(payload)
-            return Response(ser.data, status=status.HTTP_200_OK)
+        if video.status != StreamVideo.Status.READY:
+            payload = {"id": video.id, "status": video.status, "playback_url": None}
+            return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
-        exp = int(time.time()) + _token_ttl_seconds()
-        token = _build_stream_token(user_id=request.user.id, video_id=video.pk, exp=exp)
-        query = urlencode({"token": token, "expires": str(exp)})
-        payload = {
-            "id": video.id,
-            "status": video.status,
-            "hls_url": f"{playback_playlist_path(video.pk)}?{query}",
-        }
-        ser = StreamVideoStreamSerializer(payload)
-        return Response(ser.data, status=status.HTTP_200_OK)
+        url = build_playback_url_for_video(request, user_id=request.user.id, video=video)
+        if not url:
+            logger.error("playback_url missing for video %s (check storage configuration)", video.pk)
+            return Response(
+                {"detail": "Playback is temporarily unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        payload = {"id": video.id, "status": video.status, "playback_url": url}
+        return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
 
-class StreamHlsMediaView(APIView):
+class StreamVideoPlaybackFileView(APIView):
     """
-    Authenticated HLS delivery (playlist + segments). Use hls.js xhrSetup to send Authorization on each request.
+    Signed-file fallback when object storage is disabled (local MEDIA).
+    Query: token, expires — generated by build_playback_url_for_video.
     """
 
     permission_classes = [AllowAny]
 
-    def get(self, request, video_id: int, rel_path: str, *args, **kwargs):
+    def get(self, request, video_id: int, *args, **kwargs):
         token = (request.query_params.get("token") or "").strip()
-        expires = (request.query_params.get("expires") or "").strip()
-        if not token or not expires:
+        if not token:
             raise Http404()
-        claims = _verify_stream_token(token=token, video_id=video_id)
+        claims = verify_playback_token(token=token, video_id=video_id)
         if not claims:
             raise Http404()
-        # If request carries a logged-in user, token must belong to same user.
-        if getattr(request.user, "is_authenticated", False) and request.user.id != claims["u"]:
+        if getattr(settings, "USE_S3_OBJECT_STORAGE", False):
+            raise Http404()
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        try:
+            user = User.objects.get(pk=int(claims["u"]))
+        except (User.DoesNotExist, TypeError, ValueError, KeyError):
             raise Http404()
 
         video = get_object_or_404(StreamVideo, pk=video_id)
-        if video.status != StreamVideo.Status.READY or not (video.hls_path or "").strip():
-            raise Http404()
-
-        sub = _normalize_hls_relpath(rel_path)
-        if not sub:
-            raise Http404()
-
-        media_root = Path(settings.MEDIA_ROOT).resolve()
-        base_local = media_root / "hls" / str(video_id)
-        try:
-            local_file = (base_local / sub).resolve()
-            local_file.relative_to(base_local)
-        except ValueError:
-            raise Http404()
-
-        if local_file.is_file():
-            if sub.lower().endswith(".m3u8"):
-                content = local_file.read_text(encoding="utf-8", errors="replace")
-                rewritten = _rewrite_hls_manifest(content, token=token, exp=expires)
-                resp = HttpResponse(rewritten, content_type=_content_type_for_name(sub))
-            else:
-                resp = FileResponse(local_file.open("rb"), content_type=_content_type_for_name(sub))
-            resp["Cache-Control"] = "private, no-store"
-            return resp
-
-        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
-        if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
-            client = _s3_client()
-            if not client:
+        mode = str(claims.get("m") or "programs").strip() or "programs"
+        if mode == "membership":
+            if not user_can_play_membership_stream_video(user, video):
                 raise Http404()
-            key = f"hls/{video_id}/{sub}"
-            try:
-                obj = client.get_object(Bucket=bucket, Key=key)
-            except ClientError as ex:
-                code = ex.response.get("Error", {}).get("Code", "")
-                if code in ("404", "NoSuchKey", "NotFound"):
-                    raise Http404() from ex
-                raise
-            body = obj["Body"]
-
-            if sub.lower().endswith(".m3u8"):
-                content = body.read().decode("utf-8", errors="replace")
-                rewritten = _rewrite_hls_manifest(content, token=token, exp=expires)
-                resp = HttpResponse(rewritten, content_type=_content_type_for_name(sub))
-            else:
-                def chunks():
-                    while True:
-                        data = body.read(65536)
-                        if not data:
-                            break
-                        yield data
-
-                resp = StreamingHttpResponse(chunks(), content_type=_content_type_for_name(sub))
-            resp["Cache-Control"] = "private, no-store"
-            return resp
-
-        raise Http404()
+        else:
+            if not user_can_play_programs_stream_video(user, video):
+                raise Http404()
+        return file_response_for_local_original(video)
 
 
 class StreamPlaylistListView(generics.ListAPIView):
@@ -350,7 +174,7 @@ class StreamPlaylistListView(generics.ListAPIView):
                     status=StreamPlaylistPurchase.Status.PAID,
                 ).values_list("playlist_id", flat=True)
             )
-            if _user_stream_playlists_unlocked_by_entitlement(user):
+            if user_stream_playlists_unlocked_by_entitlement(user):
                 if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
                     unlocked_ids |= set(
                         StreamPlaylist.objects.filter(is_published=True).values_list("id", flat=True)
@@ -381,7 +205,7 @@ class StreamPlaylistDetailView(generics.RetrieveAPIView):
         qs = StreamPlaylist.objects.all()
         if not getattr(self.request.user, "is_staff", False):
             qs = qs.filter(is_published=True)
-            if not _user_stream_playlists_unlocked_by_entitlement(self.request.user):
+            if not user_stream_playlists_unlocked_by_entitlement(self.request.user):
                 unlocked_ids = set(
                     StreamPlaylistPurchase.objects.filter(
                         user=self.request.user,
@@ -464,7 +288,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if _playlist_included_by_entitlement(request.user, playlist.id):
+        if playlist_included_by_entitlement(request.user, playlist.id):
             return Response(
                 {
                     "is_unlocked": True,
@@ -683,7 +507,7 @@ class StreamVideoMultipartUploadStartView(APIView):
             provisional_title = str(payload.get("title", "")).strip() or Path(filename).stem or "video"
             stream_video = StreamVideo(title=provisional_title)
         key = stream_video_original_upload_to(stream_video, Path(filename).name)
-        client = _s3_client()
+        client = s3_client()
         if client is None:
             return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -728,7 +552,7 @@ class StreamVideoMultipartUploadSignPartView(APIView):
             return Response({"detail": "part_number is required."}, status=status.HTTP_400_BAD_REQUEST)
         if not key or not upload_id:
             return Response({"detail": "key and upload_id are required."}, status=status.HTTP_400_BAD_REQUEST)
-        client = _s3_client()
+        client = s3_client()
         if client is None:
             return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
@@ -779,7 +603,7 @@ class StreamVideoMultipartUploadCompleteView(APIView):
             return Response({"detail": "No valid parts provided."}, status=status.HTTP_400_BAD_REQUEST)
         normalized_parts.sort(key=lambda item: item["PartNumber"])
 
-        client = _s3_client()
+        client = s3_client()
         if client is None:
             return Response({"detail": "Could not initialize object storage client."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
@@ -810,30 +634,16 @@ class StreamVideoMultipartUploadCompleteView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        # IMPORTANT: avoid model save/signals here; in some environments signals may run
-        # transcoding inline and block/kill this request for huge uploads.
         StreamVideo.objects.filter(pk=stream_video.pk).update(
             original_video=key,
-            status=StreamVideo.Status.PROCESSING,
-            transcode_progress=0,
-            transcode_message="Upload complete. Waiting for worker to start transcoding.",
+            status=StreamVideo.Status.READY,
+            transcode_progress=100,
+            transcode_message="Upload complete. Ready for playback.",
             last_error="",
             hls_path="",
         )
 
-        try:
-            enqueue_stream_video_transcode(stream_video.pk)
-        except Exception:
-            return Response(
-                {
-                    "detail": "Upload stored but could not queue processing. Check worker/broker.",
-                    "ok": False,
-                    "key": key,
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        return Response({"ok": True, "queued": True, "key": key}, status=status.HTTP_200_OK)
+        return Response({"ok": True, "ready": True, "key": key}, status=status.HTTP_200_OK)
 
 
 class StreamVideoMultipartUploadAbortView(APIView):
@@ -849,7 +659,7 @@ class StreamVideoMultipartUploadAbortView(APIView):
         upload_id = str(payload.get("upload_id", "")).strip()
         if not bucket or not key or not upload_id:
             return Response({"ok": True}, status=status.HTTP_200_OK)
-        client = _s3_client()
+        client = s3_client()
         if client is None:
             return Response({"ok": True}, status=status.HTTP_200_OK)
         try:

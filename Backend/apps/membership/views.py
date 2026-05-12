@@ -28,12 +28,11 @@ from apps.membership.serializers import ArticleSerializer, VideoSerializer
 from apps.portal.permissions import IsAuthenticatedStrict
 from apps.video_streaming.models import StreamVideo
 from apps.video_streaming.serializers import StreamVideoListSerializer, StreamVideoStreamSerializer
-from apps.video_streaming.transcode_policy import inline_stream_transcode_enabled
-from apps.video_streaming.views import (
-    _build_stream_token,
-    _token_ttl_seconds,
-    playback_playlist_path,
+from apps.video_streaming.playback_access import (
+    user_can_play_membership_stream_video,
+    user_has_membership_stream_catalog_access,
 )
+from apps.video_streaming.services.playback_delivery import build_playback_url_for_video
 
 
 class MembershipPagination(PageNumberPagination):
@@ -154,6 +153,8 @@ class MembershipSecureVideoListView(generics.ListAPIView):
     pagination_class = MembershipPagination
 
     def get_queryset(self):
+        if not user_has_membership_stream_catalog_access(self.request.user):
+            return StreamVideo.objects.none()
         return StreamVideo.objects.filter(show_in_membership=True).order_by("-created_at", "-id")
 
 
@@ -163,28 +164,32 @@ class MembershipSecureVideoStreamView(APIView):
     def get(self, request, pk: int, *args, **kwargs):
         video = get_object_or_404(StreamVideo, pk=pk, show_in_membership=True)
 
-        # Local-dev fallback: process stuck rows on first open (no worker / no eager env).
-        if (
-            inline_stream_transcode_enabled()
-            and video.status == StreamVideo.Status.PROCESSING
-            and bool(video.original_video and video.original_video.name)
-        ):
-            try:
-                from apps.video_streaming.tasks import process_stream_video_to_hls
+        if not user_can_play_membership_stream_video(request.user, video):
+            return Response(
+                {"detail": "You do not have access to this video."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-                process_stream_video_to_hls(video.pk)
-                video.refresh_from_db(fields=["status", "hls_path", "last_error"])
-            except Exception:
-                video.refresh_from_db(fields=["status", "hls_path", "last_error"])
-
-        if video.status != StreamVideo.Status.READY or not (video.hls_path or "").strip():
-            payload = {"id": video.id, "status": video.status, "hls_url": None}
+        if not video.original_video or not video.original_video.name:
+            payload = {"id": video.id, "status": video.status, "playback_url": None}
             return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
-        exp = int(timezone.now().timestamp()) + _token_ttl_seconds()
-        token = _build_stream_token(user_id=request.user.id, video_id=video.pk, exp=exp)
-        hls_url = f"{playback_playlist_path(video.pk)}?token={token}&expires={exp}"
-        payload = {"id": video.id, "status": video.status, "hls_url": hls_url}
+        if video.status != StreamVideo.Status.READY:
+            payload = {"id": video.id, "status": video.status, "playback_url": None}
+            return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
+
+        url = build_playback_url_for_video(
+            request,
+            user_id=request.user.id,
+            video=video,
+            access_mode="membership",
+        )
+        if not url:
+            return Response(
+                {"detail": "Playback is temporarily unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        payload = {"id": video.id, "status": video.status, "playback_url": url}
         return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
 

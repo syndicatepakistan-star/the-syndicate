@@ -198,7 +198,7 @@ INSTALLED_APPS.extend(
 
 # Optional: Redis for membership article search index (inverted index + short-lived result cache).
 REDIS_URL = (os.environ.get("REDIS_URL") or "").strip()
-# Celery (HLS transcoding worker). Broker defaults to REDIS_URL when CELERY_BROKER_URL is unset.
+# Celery (optional background workers). Broker defaults to REDIS_URL when CELERY_BROKER_URL is unset.
 CELERY_BROKER_URL = (os.environ.get("CELERY_BROKER_URL") or "").strip() or (REDIS_URL or "redis://127.0.0.1:6379/0")
 CELERY_RESULT_BACKEND = (os.environ.get("CELERY_RESULT_BACKEND") or "").strip() or CELERY_BROKER_URL
 CELERY_TASK_ALWAYS_EAGER = (os.environ.get("CELERY_TASK_ALWAYS_EAGER") or "").strip().lower() in (

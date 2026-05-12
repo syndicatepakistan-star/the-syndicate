@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import HlsVideoPlayer from "@/components/streaming/HlsVideoPlayer";
+import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
 import {
   fetchStreamVideoDetail,
   fetchStreamVideoPlayback,
@@ -61,7 +61,7 @@ export default function StreamVideoDetailPage() {
     );
   }
 
-  const hls = playback.hls_url;
+  const playbackUrl = playback.playback_url;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-white">
@@ -76,14 +76,14 @@ export default function StreamVideoDetailPage() {
         <p className="text-sm text-white/60">
           Status: <span className="text-white/90">{playback.status}</span>
         </p>
-        {!hls ? (
+        {!playbackUrl ? (
           <p className="rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-            Playback URL is not available yet (processing or failed). Refresh after the Celery worker finishes.
+            Playback URL is not available yet (still processing or missing file). Refresh after upload completes.
           </p>
         ) : (
           <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
-            <HlsVideoPlayer
-              src={hls}
+            <StreamHtmlVideoPlayer
+              src={playbackUrl}
               className="rounded-[inherit]"
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}

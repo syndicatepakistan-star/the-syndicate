@@ -1,6 +1,5 @@
 from urllib.parse import quote
 from django.conf import settings
-from django.urls import reverse
 from rest_framework import serializers
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
@@ -62,24 +61,14 @@ class StreamVideoListSerializer(serializers.ModelSerializer):
 
 
 class StreamVideoDetailSerializer(StreamVideoListSerializer):
-    hls_path = serializers.SerializerMethodField()
-
     class Meta(StreamVideoListSerializer.Meta):
-        fields = (*StreamVideoListSerializer.Meta.fields, "hls_path")
-
-    def get_hls_path(self, obj: StreamVideo):
-        if obj.status != StreamVideo.Status.READY or not (obj.hls_path or "").strip():
-            return ""
-        return reverse(
-            "streaming-hls-media",
-            kwargs={"video_id": obj.pk, "rel_path": "index.m3u8"},
-        )
+        fields = StreamVideoListSerializer.Meta.fields
 
 
 class StreamVideoStreamSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     status = serializers.CharField()
-    hls_url = serializers.CharField(allow_null=True, allow_blank=True)
+    playback_url = serializers.CharField(allow_null=True, allow_blank=True)
 
 
 class StreamPlaylistItemSerializer(serializers.ModelSerializer):

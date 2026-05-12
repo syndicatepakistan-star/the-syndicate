@@ -138,6 +138,9 @@ class MembershipStreamVideoAdmin(admin.ModelAdmin):
         ("Pipeline", {"fields": ("status", "hls_path", "last_error", "created_at")}),
     )
 
+    class Media:
+        js = ("admin/streamvideo_multipart_upload.js",)
+
     def get_queryset(self, request):
         return super().get_queryset(request).filter(show_in_membership=True).order_by("-created_at")
 

@@ -53,7 +53,11 @@ class StreamVideoAdminForm(forms.ModelForm):
     )
     multipart_video = forms.FileField(
         required=False,
-        help_text="For very large files (9GB+), use this field and click 'Upload large file to bucket' before Save.",
+        help_text=(
+            "For very large files (9GB+), pick a file, click “Upload large file to bucket”, wait until it finishes, "
+            "then Save. The file choice is cleared after upload so Save only sends the key—otherwise Django would "
+            "receive the whole video again and Save would be very slow."
+        ),
     )
     multipart_uploaded_key = forms.CharField(required=False, widget=forms.HiddenInput())
 

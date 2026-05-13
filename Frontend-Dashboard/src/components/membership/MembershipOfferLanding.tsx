@@ -135,10 +135,11 @@ if (UNLOCK_FEATURES.length !== FEATURE_CHANNEL.length) {
 }
 
 const CYBER_UNLOCK_CTA = cn(
-  "relative w-full overflow-hidden rounded-xl border-[3px] border-indigo-400/90 bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
-  "px-5 py-4 font-mono text-[clamp(11px,2.4vw,15px)] font-black uppercase tracking-[0.16em] text-indigo-100",
-  "shadow-[0_0_0_1px_rgba(165,180,252,0.45),0_0_32px_rgba(129,140,248,0.55),0_0_72px_rgba(99,102,241,0.28),inset_0_1px_0_rgba(255,255,255,0.12)]",
-  "transition hover:brightness-110 hover:shadow-[0_0_48px_rgba(129,140,248,0.72),0_0_96px_rgba(99,102,241,0.22)]",
+  "relative w-full overflow-hidden rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
+  "px-5 py-4 font-mono text-[clamp(11px,2.4vw,15px)] font-black uppercase tracking-[0.16em] text-[#d4af39]",
+  "[text-shadow:0_0_18px_rgba(212,175,57,0.45),0_1px_2px_rgba(0,0,0,0.85)]",
+  "shadow-[0_0_0_1px_rgba(212,175,57,0.5),0_0_28px_rgba(212,175,57,0.35),0_0_56px_rgba(212,175,57,0.18),inset_0_1px_0_rgba(255,255,255,0.1)]",
+  "transition hover:brightness-110 hover:shadow-[0_0_0_1px_rgba(212,175,57,0.65),0_0_40px_rgba(212,175,57,0.5),0_0_80px_rgba(212,175,57,0.22),inset_0_1px_0_rgba(255,255,255,0.14)]",
   "disabled:cursor-wait disabled:opacity-65"
 );
 

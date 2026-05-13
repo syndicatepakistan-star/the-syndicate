@@ -774,10 +774,9 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
                     </div>
-                    <div className="flex min-w-0 w-full justify-center md:justify-start">
-                      <div className="grid w-max max-w-full grid-cols-2 gap-2 sm:gap-2.5">
-                      <div className="flex w-[min(46vw,168px)] shrink-0 flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:w-[184px] md:w-[188px]">
-                        <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
+                    <div className="grid min-h-0 min-w-0 w-full grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+                      <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-xl border border-amber-400/50 bg-[#070a12]">
+                        <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden md:aspect-[16/10]">
                           <img
                             src={OFFER_PLAN_THUMB_MONEY_MASTERY}
                             alt=""
@@ -791,15 +790,15 @@ export function ProgramsCourseSection({
                             aria-hidden
                           />
                         </div>
-                        <div className="flex flex-col gap-0.5 p-1.5 sm:p-2">
-                          <div className="text-[8px] font-black uppercase leading-tight tracking-[0.1em] text-fuchsia-100 sm:text-[9px]">
+                        <div className="flex flex-col gap-1 p-2 sm:p-2.5">
+                          <div className="text-[9px] font-black uppercase leading-tight tracking-[0.1em] text-fuchsia-100 sm:text-[10px]">
                             Money Mastery Bundle
                           </div>
-                          <p className="line-clamp-2 text-[9px] leading-tight text-cyan-50/90 sm:text-[10px] sm:leading-snug">
+                          <p className="line-clamp-2 text-[10px] leading-snug text-cyan-50/90 sm:text-[11px]">
                             Unlock all programs at once (all playlist categories and courses). One checkout, instant full program access.
                           </p>
-                          <div className="mt-0.5 flex flex-col gap-1 border-t border-white/10 pt-1">
-                            <span className="w-fit shrink-0 rounded border border-amber-300/70 bg-amber-950/70 px-1 py-px text-[9px] font-black text-amber-100 sm:text-[10px]">
+                          <div className="mt-1 flex flex-col gap-1.5 border-t border-white/10 pt-1.5">
+                            <span className="w-fit shrink-0 rounded border border-amber-300/70 bg-amber-950/70 px-1.5 py-0.5 text-[10px] font-black text-amber-100 sm:text-[11px]">
                               £333
                             </span>
                             <button
@@ -809,7 +808,7 @@ export function ProgramsCourseSection({
                               }}
                               disabled={bundleCheckoutBusy}
                               className={cn(
-                                "w-full rounded-md border px-1.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] transition sm:px-2 sm:py-1.5 sm:text-[9px]",
+                                "w-full rounded-lg border px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] transition sm:py-2 sm:text-[10px]",
                                 "border-cyan-300/75 bg-[linear-gradient(135deg,rgba(8,51,68,0.92),rgba(6,78,71,0.9))] text-cyan-50",
                                 "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                               )}
@@ -820,8 +819,8 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                      <div className="flex w-[min(46vw,168px)] shrink-0 flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:w-[184px] md:w-[188px]">
-                        <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
+                      <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-xl border border-violet-400/55 bg-[#07060f]">
+                        <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden md:aspect-[16/10]">
                           <img
                             src={OFFER_PLAN_THUMB_THE_KING}
                             alt=""
@@ -834,15 +833,15 @@ export function ProgramsCourseSection({
                             aria-hidden
                           />
                         </div>
-                        <div className="flex flex-col gap-0.5 p-1.5 sm:p-2">
-                          <div className="text-[8px] font-black uppercase leading-tight tracking-[0.1em] text-violet-100 sm:text-[9px]">
+                        <div className="flex flex-col gap-1 p-2 sm:p-2.5">
+                          <div className="text-[9px] font-black uppercase leading-tight tracking-[0.1em] text-violet-100 sm:text-[10px]">
                             The King
                           </div>
-                          <p className="line-clamp-2 text-[9px] leading-tight text-white/85 sm:text-[10px] sm:leading-snug">
+                          <p className="line-clamp-2 text-[10px] leading-snug text-white/85 sm:text-[11px]">
                             Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.
                           </p>
-                          <div className="mt-0.5 flex flex-col gap-1 border-t border-white/10 pt-1">
-                            <span className="w-fit shrink-0 rounded border border-violet-300/70 bg-violet-950/60 px-1 py-px text-[9px] font-black text-violet-100 sm:text-[10px]">
+                          <div className="mt-1 flex flex-col gap-1.5 border-t border-white/10 pt-1.5">
+                            <span className="w-fit shrink-0 rounded border border-violet-300/70 bg-violet-950/60 px-1.5 py-0.5 text-[10px] font-black text-violet-100 sm:text-[11px]">
                               £19.99
                             </span>
                             <button
@@ -852,7 +851,7 @@ export function ProgramsCourseSection({
                               }}
                               disabled={kingCheckoutBusy}
                               className={cn(
-                                "w-full rounded-md border px-1.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] transition sm:px-2 sm:py-1.5 sm:text-[9px]",
+                                "w-full rounded-lg border px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] transition sm:py-2 sm:text-[10px]",
                                 "border-violet-300/75 bg-[linear-gradient(135deg,rgba(46,16,78,0.92),rgba(60,24,90,0.9))] text-violet-50",
                                 "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                               )}
@@ -862,7 +861,6 @@ export function ProgramsCourseSection({
                           </div>
                         </div>
                       </div>
-                    </div>
                     </div>
                   </div>
                 </div>

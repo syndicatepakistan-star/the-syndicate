@@ -721,58 +721,60 @@ export function ProgramsCourseSection({
           {hasCatalogItems && secureView === "grid" ? (
             <div className="space-y-6">
               {streamPlaylists.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPlaylistCategoryFilter("business_psychology")}
-                      className={cn(
-                        "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
-                        playlistCategoryFilter === "business_psychology"
-                          ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
-                          : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
-                      )}
-                    >
-                      Business Psychology
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlaylistCategoryFilter("business_model")}
-                      className={cn(
-                        "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
-                        playlistCategoryFilter === "business_model"
-                          ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
-                          : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
-                      )}
-                    >
-                      Business Model
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlaylistCategoryFilter("all")}
-                      className={cn(
-                        "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
-                        playlistCategoryFilter === "all"
-                          ? "border-amber-200 bg-[linear-gradient(135deg,rgba(112,70,8,0.98),rgba(54,34,4,0.97))] text-amber-50 shadow-[0_0_26px_rgba(251,191,36,0.92)]"
-                          : "border-amber-400/45 bg-[linear-gradient(135deg,rgba(70,44,7,0.9),rgba(34,22,3,0.9))] text-amber-100/95 hover:border-amber-200/80 hover:bg-[linear-gradient(135deg,rgba(102,64,8,0.95),rgba(46,30,3,0.95))] hover:text-amber-50"
-                      )}
-                    >
-                      All
-                    </button>
-                  </div>
-                  <div className="flex w-full max-w-[min(100%,36rem)] flex-col gap-3 sm:max-w-[34rem]">
-                    <div className="relative w-full">
-                      <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
-                        <input
-                          type="text"
-                          value={playlistTitleQuery}
-                          onChange={(e) => setPlaylistTitleQuery(e.target.value)}
-                          placeholder="Search playlist by title..."
-                          className="w-full rounded-[11px] border-0 bg-black/80 px-3 py-2 text-[13px] text-cyan-50 outline-none transition placeholder:text-cyan-100/45 focus:ring-2 focus:ring-cyan-300/35 lg:px-4 lg:py-3 lg:text-[14px]"
-                        />
+                <div className="w-full space-y-3">
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-[minmax(0,17rem)_1fr] md:items-start md:gap-6 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-8 xl:grid-cols-[minmax(0,26rem)_1fr]">
+                    <div className="flex min-w-0 flex-col gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPlaylistCategoryFilter("business_psychology")}
+                          className={cn(
+                            "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
+                            playlistCategoryFilter === "business_psychology"
+                              ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
+                              : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
+                          )}
+                        >
+                          Business Psychology
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPlaylistCategoryFilter("business_model")}
+                          className={cn(
+                            "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
+                            playlistCategoryFilter === "business_model"
+                              ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
+                              : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
+                          )}
+                        >
+                          Business Model
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPlaylistCategoryFilter("all")}
+                          className={cn(
+                            "rounded-full border px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] transition sm:px-5 sm:py-2.5 sm:text-[13px]",
+                            playlistCategoryFilter === "all"
+                              ? "border-amber-200 bg-[linear-gradient(135deg,rgba(112,70,8,0.98),rgba(54,34,4,0.97))] text-amber-50 shadow-[0_0_26px_rgba(251,191,36,0.92)]"
+                              : "border-amber-400/45 bg-[linear-gradient(135deg,rgba(70,44,7,0.9),rgba(34,22,3,0.9))] text-amber-100/95 hover:border-amber-200/80 hover:bg-[linear-gradient(135deg,rgba(102,64,8,0.95),rgba(46,30,3,0.95))] hover:text-amber-50"
+                          )}
+                        >
+                          All
+                        </button>
+                      </div>
+                      <div className="relative w-full max-w-full">
+                        <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
+                          <input
+                            type="text"
+                            value={playlistTitleQuery}
+                            onChange={(e) => setPlaylistTitleQuery(e.target.value)}
+                            placeholder="Search playlist by title..."
+                            className="w-full rounded-[11px] border-0 bg-black/80 px-3 py-2 text-[13px] text-cyan-50 outline-none transition placeholder:text-cyan-100/45 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/30 lg:px-4 lg:py-3 lg:text-[14px]"
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="grid w-full grid-cols-2 gap-2 sm:gap-3">
+                    <div className="grid min-h-0 min-w-0 w-full grid-cols-2 content-start gap-2 sm:gap-3 md:justify-self-stretch">
                       <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-xl border border-amber-400/50 bg-[#070a12]">
                         <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                           <img

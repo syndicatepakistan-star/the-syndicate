@@ -249,12 +249,22 @@ class MembershipGeneratedArticleMetaView(APIView):
     permission_classes = [MembershipPublicReadOrAuthenticated]
 
     def get(self, request):
+        server_local_date = timezone.localdate().isoformat()
         ds = ArticleKeywordDataset.objects.filter(is_active=True).first()
         if not ds:
-            return Response({"active": False, "categories": {}, "total": 0})
+            return Response(
+                {"active": False, "categories": {}, "total": 0, "server_local_date": server_local_date}
+            )
         rows = ds.rows if isinstance(ds.rows, list) else []
         counts = dataset_category_counts(rows)
-        return Response({"active": True, "categories": counts, "total": len(rows)})
+        return Response(
+            {
+                "active": True,
+                "categories": counts,
+                "total": len(rows),
+                "server_local_date": server_local_date,
+            }
+        )
 
 
 class MembershipGeneratedArticleView(APIView):
@@ -274,6 +284,7 @@ class MembershipGeneratedArticleView(APIView):
                     "already_generated_today": True,
                     "article_id": existing_today.id,
                     "article_slug": existing_today.slug,
+                    "server_local_date": today.isoformat(),
                 },
                 status=status.HTTP_200_OK,
             )
@@ -415,5 +426,6 @@ class MembershipGeneratedArticleView(APIView):
         )
         body["article_id"] = article.id
         body["article_slug"] = article.slug
+        body["server_local_date"] = timezone.localdate().isoformat()
 
         return Response(body)

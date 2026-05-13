@@ -346,6 +346,10 @@ export function PricingPage({
   }
   const handleJoinPlan = async (plan: PlanKey, selectedBilling: BillingKey, rawAmount: string) => {
     if (redirectingPlan) return
+    if (plan !== 'bundle') {
+      router.push('/membership')
+      return
+    }
     const amount = rawAmount.replace(/[^0-9.]/g, '')
     setRedirectingPlan(plan)
     if (!hasSimpleAuthSessionClient()) {

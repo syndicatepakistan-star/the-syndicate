@@ -224,7 +224,13 @@ export function PublicPlanOfferCards() {
                     <button
                       type="button"
                       disabled={busyPlan === offer.plan}
-                      onClick={() => void joinOffer(offer)}
+                      onClick={() => {
+                        if (offer.plan === "king") {
+                          router.push("/membership");
+                          return;
+                        }
+                        void joinOffer(offer);
+                      }}
                       className={cn(
                         "mt-3 w-full rounded-xl px-3 py-3 text-[clamp(11px,2.6vw,13px)] font-black uppercase tracking-[0.12em] transition sm:py-3.5 sm:tracking-[0.16em]",
                         "disabled:cursor-wait disabled:opacity-70",

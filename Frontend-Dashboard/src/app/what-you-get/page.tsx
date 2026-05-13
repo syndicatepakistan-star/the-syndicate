@@ -6,7 +6,6 @@ import { NavApp } from '@/components/NavApp'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import SiteFooter from '@/components/SiteFooter'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
-import { syndicateOtpLoginHref } from '@/lib/syndicate-otp-paths'
 
 const FEATURED_LOGOS = [
   {
@@ -33,8 +32,6 @@ const NEON_CARD_STYLES = [
 ]
 
 export default function WhatYouGetPage() {
-  const loginHref = syndicateOtpLoginHref()
-
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[#020205]">
       <NavApp />
@@ -193,7 +190,7 @@ export default function WhatYouGetPage() {
               <div className="group relative rounded-xl bg-gradient-to-r from-cyan-300 via-sky-500 to-fuchsia-500 p-[1px]">
                 <span className="pointer-events-none absolute inset-[-1px] rounded-xl bg-inherit opacity-70 blur-[10px]" />
                 <Link
-                  href={loginHref}
+                  href="/membership"
                   prefetch
                   className="relative inline-flex min-h-[56px] min-w-[230px] items-center justify-center rounded-xl bg-[#05070c]/92 px-8 py-3 text-base font-bold tracking-[0.08em] text-zinc-100 transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95"
                 >

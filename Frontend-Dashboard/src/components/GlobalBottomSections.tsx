@@ -51,6 +51,7 @@ export default function GlobalBottomSections() {
     router.prefetch('/what-you-get')
     router.prefetch('/our-methods')
     router.prefetch('/programs')
+    router.prefetch('/membership')
     router.prefetch('/login')
     router.prefetch(loginHref)
   }, [router, loginHref])
@@ -122,7 +123,7 @@ export default function GlobalBottomSections() {
                 <div className="cyber-chip-animate group relative bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 p-[1px] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]">
                   <span className="pointer-events-none absolute inset-[-1px] bg-inherit opacity-70 blur-[10px]" />
                   <Link
-                    href={loginHref}
+                    href="/membership"
                     prefetch
                     className="hamburger-attract relative inline-flex min-h-[58px] min-w-[240px] items-center justify-center bg-[#05070c]/92 px-10 py-4 text-lg font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95"
                   >
@@ -143,7 +144,7 @@ export default function GlobalBottomSections() {
             ) : (
               <>
                 <Link
-                  href={loginHref}
+                  href="/membership"
                   prefetch
                   className="hamburger-attract inline-flex min-h-[56px] min-w-[220px] items-center justify-center rounded-xl border border-amber-300/80 bg-black/80 px-10 py-4 text-lg font-bold tracking-[0.03em] text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.45)] transition hover:scale-[1.04] hover:bg-black/95 hover:shadow-[0_0_36px_rgba(251,191,36,0.68)]"
                 >

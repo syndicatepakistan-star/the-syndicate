@@ -1,5 +1,5 @@
 import { NavApp } from '@/components/NavApp'
-import GlobalBottomSections from '@/components/GlobalBottomSections'
+import SiteFooter from '@/components/SiteFooter'
 import { PlaylistCardsSection } from '@/components/programs/PlaylistCardsSection'
 import { PublicPlanOfferCards } from '@/components/programs/PublicPlanOfferCards'
 
@@ -65,7 +65,7 @@ export default function ProgramsPage() {
           />
         </div>
       </section>
-      <GlobalBottomSections />
+      <SiteFooter />
     </div>
   )
 }

@@ -6,7 +6,15 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { ScrambleText } from './ScrambleText'
 import NavLogo from './NavLogo'
 
-export type NavSectionId = 'home' | 'whatYouGet' | 'ourMethods' | 'joinNow' | 'programs' | 'affiliateLogin' | 'syndicateAnalysis'
+export type NavSectionId =
+  | 'home'
+  | 'whatYouGet'
+  | 'ourMethods'
+  | 'joinNow'
+  | 'programs'
+  | 'membership'
+  | 'affiliateLogin'
+  | 'syndicateAnalysis'
 
 export type RadialNavItem = {
   id: NavSectionId
@@ -28,8 +36,9 @@ const defaultItems: RadialNavItem[] = [
   { id: 'whatYouGet', label: 'What You Get' },
   { id: 'ourMethods', label: 'Our Methods' },
   { id: 'syndicateAnalysis', label: 'Syn Diagnosis' },
-  { id: 'joinNow', label: 'Join Now' },
+  { id: 'joinNow', label: 'Login' },
   { id: 'programs', label: 'Programs' },
+  { id: 'membership', label: 'Membership' },
   { id: 'affiliateLogin', label: 'Affiliate Login' },
 ]
 
@@ -45,6 +54,12 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
   },
   joinNow: { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.5)', glow: 'rgba(248, 191, 47, 0.4)' },
   programs: { color: '#f472b6', bg: 'rgba(244,114,182,0.12)', border: 'rgba(208, 70, 243, 0.5)', glow: 'rgba(218, 114, 244, 0.4)' },
+  membership: {
+    color: '#fda4af',
+    bg: 'rgba(253,164,175,0.12)',
+    border: 'rgba(253,164,175,0.5)',
+    glow: 'rgba(251, 113, 133, 0.42)',
+  },
   affiliateLogin: {
     color: '#34d399',
     bg: 'rgba(52,211,153,0.12)',

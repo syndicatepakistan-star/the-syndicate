@@ -46,11 +46,17 @@ export function middleware(request: NextRequest) {
     pathname === "/our-methods" ||
     pathname.startsWith("/our-methods/") ||
     pathname === "/programs" ||
-    pathname.startsWith("/programs/");
+    pathname.startsWith("/programs/") ||
+    pathname === "/membership" ||
+    pathname === "/membership/";
+  const protectedMembershipAppPath =
+    pathname.startsWith("/membership/content") ||
+    pathname.startsWith("/membership/articles") ||
+    pathname.startsWith("/membership/brief");
   const protectedDashboardPath =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
-    pathname.startsWith("/membership/");
+    protectedMembershipAppPath;
   const protectedRootSectionPath = pathname === "/" && dashboardSections.has(section);
   const authFreePath =
     publicMarketingPath ||

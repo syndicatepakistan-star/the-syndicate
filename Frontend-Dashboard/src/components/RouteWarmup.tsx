@@ -9,6 +9,7 @@ const WARM_ROUTES = [
   "/dashboard?section=settings",
   "/dashboard?section=programs",
   "/programs",
+  "/membership",
   "/what-you-get",
   "/our-methods",
   "/quiz",

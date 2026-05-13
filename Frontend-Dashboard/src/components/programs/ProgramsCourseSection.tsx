@@ -68,8 +68,8 @@ const COURSE_CARD_THEMES = [
 
 const PLAYLIST_CARD_THEMES = [
   {
-    glow: "shadow-[0_10px_34px_rgba(0,0,0,0.5),0_0_0_1px_rgba(196,181,253,0.4),0_0_44px_rgba(139,92,246,0.32)]",
-    hoverGlow: "hover:shadow-[0_18px_56px_rgba(0,0,0,0.58),0_0_0_1px_rgba(196,181,253,0.85),0_0_100px_rgba(139,92,246,0.65)]",
+    glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
+    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-violet-300/95 via-purple-400/95 to-fuchsia-300/95",
     title: "text-white",
     panel: "border-violet-300/45 bg-violet-950/30",
@@ -78,12 +78,12 @@ const PLAYLIST_CARD_THEMES = [
     starColor: "text-fuchsia-300",
     infoPanel: "border-fuchsia-300/35 bg-fuchsia-950/28",
     priceColor: "text-fuchsia-300",
-    priceGlow: "[text-shadow:0_0_16px_rgba(232,121,249,0.5)]",
-    dominantBorder: "border-fuchsia-300/75",
+    priceGlow: "",
+    dominantBorder: "border-fuchsia-300/60",
   },
   {
-    glow: "shadow-[0_10px_34px_rgba(0,0,0,0.5),0_0_0_1px_rgba(103,232,249,0.4),0_0_44px_rgba(34,211,238,0.32)]",
-    hoverGlow: "hover:shadow-[0_18px_56px_rgba(0,0,0,0.58),0_0_0_1px_rgba(125,211,252,0.85),0_0_100px_rgba(34,211,238,0.65)]",
+    glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
+    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-cyan-300/95 via-sky-400/95 to-blue-300/95",
     title: "text-white",
     panel: "border-cyan-300/45 bg-cyan-950/30",
@@ -92,12 +92,12 @@ const PLAYLIST_CARD_THEMES = [
     starColor: "text-cyan-300",
     infoPanel: "border-cyan-300/35 bg-cyan-950/28",
     priceColor: "text-cyan-300",
-    priceGlow: "[text-shadow:0_0_16px_rgba(34,211,238,0.5)]",
-    dominantBorder: "border-cyan-300/75",
+    priceGlow: "",
+    dominantBorder: "border-cyan-300/60",
   },
   {
-    glow: "shadow-[0_10px_34px_rgba(0,0,0,0.5),0_0_0_1px_rgba(110,231,183,0.4),0_0_44px_rgba(52,211,153,0.32)]",
-    hoverGlow: "hover:shadow-[0_18px_56px_rgba(0,0,0,0.58),0_0_0_1px_rgba(110,231,183,0.85),0_0_100px_rgba(16,185,129,0.65)]",
+    glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
+    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-emerald-300/95 via-teal-400/95 to-lime-300/95",
     title: "text-white",
     panel: "border-emerald-300/45 bg-emerald-950/30",
@@ -106,12 +106,12 @@ const PLAYLIST_CARD_THEMES = [
     starColor: "text-emerald-300",
     infoPanel: "border-emerald-300/35 bg-emerald-950/28",
     priceColor: "text-emerald-300",
-    priceGlow: "[text-shadow:0_0_16px_rgba(52,211,153,0.5)]",
-    dominantBorder: "border-emerald-300/75",
+    priceGlow: "",
+    dominantBorder: "border-emerald-300/60",
   },
   {
-    glow: "shadow-[0_10px_34px_rgba(0,0,0,0.5),0_0_0_1px_rgba(251,191,36,0.4),0_0_44px_rgba(245,158,11,0.32)]",
-    hoverGlow: "hover:shadow-[0_18px_56px_rgba(0,0,0,0.58),0_0_0_1px_rgba(252,211,77,0.85),0_0_100px_rgba(245,158,11,0.65)]",
+    glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
+    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-amber-300/95 via-yellow-400/95 to-orange-300/95",
     title: "text-white",
     panel: "border-amber-300/45 bg-amber-950/30",
@@ -120,8 +120,8 @@ const PLAYLIST_CARD_THEMES = [
     starColor: "text-amber-300",
     infoPanel: "border-amber-300/35 bg-amber-950/28",
     priceColor: "text-amber-300",
-    priceGlow: "[text-shadow:0_0_16px_rgba(245,158,11,0.5)]",
-    dominantBorder: "border-amber-300/75",
+    priceGlow: "",
+    dominantBorder: "border-amber-300/60",
   },
 ] as const;
 
@@ -554,8 +554,8 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex aspect-[4/5] min-h-[18rem] w-full max-w-none flex-col overflow-hidden text-left outline-none sm:min-h-0",
-          "rounded-3xl border-2",
+          "group/card relative flex aspect-[3/4] w-full max-w-[200px] justify-self-center flex-col overflow-hidden text-left outline-none sm:max-w-[220px]",
+          "rounded-2xl border-2",
           theme.dominantBorder,
           theme.glow,
           "transition-[transform,box-shadow] duration-300 ease-out",
@@ -564,15 +564,7 @@ export function ProgramsCourseSection({
         )}
         aria-disabled={comingSoon}
       >
-        <span
-          className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 z-0 aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 will-change-transform animate-[spin_5.5s_linear_infinite] motion-reduce:animate-none bg-gradient-to-r transition duration-300 group-hover/card:opacity-100 group-hover/card:saturate-150",
-            theme.ring
-          )}
-          style={{ animationDuration: `${5.3 + (j % 5) * 0.42}s` }}
-          aria-hidden
-        />
-        <span className="relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
+        <span className="relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.12rem] bg-[#04060d] ring-1 ring-black/70">
           <span className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.28rem]" aria-hidden>
             <span className="absolute -left-[40%] top-0 h-full w-[45%] -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-0 mix-blend-overlay transition-[transform,opacity] duration-700 ease-out group-hover/card:translate-x-[280%] group-hover/card:opacity-100" />
           </span>
@@ -580,8 +572,8 @@ export function ProgramsCourseSection({
             className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
             aria-hidden
           />
-            <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2.5 sm:p-3.5">
-            <div className={cn("relative min-h-[10.6rem] flex-1 overflow-hidden rounded-2xl border-2 sm:min-h-[14.2rem]", theme.mediaBorder)}>
+            <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2 sm:p-2.5">
+            <div className={cn("relative min-h-[8.25rem] flex-1 overflow-hidden rounded-xl border sm:min-h-[9.25rem]", theme.mediaBorder)}>
               {coverSrc ? (
                 <>
                   <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
@@ -605,7 +597,7 @@ export function ProgramsCourseSection({
             <div className="absolute right-3 top-3 z-[4] flex flex-col items-end gap-1 sm:right-3.5 sm:top-3.5">
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 font-sans text-[12px] font-black tracking-tight text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]",
+                  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 font-sans text-[11px] font-black tracking-tight text-emerald-100 sm:px-2.5 sm:py-0.5 sm:text-[12px]",
                   theme.priceColor,
                   theme.priceGlow
                 )}
@@ -617,7 +609,7 @@ export function ProgramsCourseSection({
               <>
                 <span className="pointer-events-none absolute inset-0 z-[3] bg-black/42" />
                 <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-5 text-center">
-                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/75 px-3.5 py-1.5 text-[18px] font-black uppercase tracking-[0.12em] text-[#f5c814] shadow-[0_0_22px_rgba(245,200,20,0.36)] sm:px-4 sm:py-2 sm:text-[20px]">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/70 bg-black/80 px-2.5 py-1 text-[13px] font-black uppercase tracking-[0.1em] text-[#f5c814] sm:px-3 sm:py-1.5 sm:text-[15px]">
                     <Lock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     {checkoutBusyPlaylistId === pl.id ? "Redirecting..." : "Unlock"}
                   </span>
@@ -628,7 +620,7 @@ export function ProgramsCourseSection({
               <>
                 <span className="pointer-events-none absolute inset-0 z-[3] bg-black/35" />
                 <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-5 text-center">
-                  <span className="rounded-2xl border border-amber-300/65 bg-black/70 px-5 py-3 text-[20px] font-black uppercase tracking-[0.18em] text-[#f5c814] shadow-[0_0_26px_rgba(245,200,20,0.35)] sm:text-[24px]">
+                  <span className="rounded-xl border border-amber-300/60 bg-black/75 px-4 py-2 text-[15px] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:px-5 sm:py-2.5 sm:text-[18px]">
                     Coming Soon
                   </span>
                 </span>
@@ -636,9 +628,9 @@ export function ProgramsCourseSection({
             ) : null}
             <div
               className={cn(
-                "shrink-0 flex min-h-[7.4rem] flex-col overflow-hidden rounded-2xl border-2 px-2 py-2 sm:px-3.5 sm:py-3.5",
+                "shrink-0 flex min-h-[5.75rem] flex-col overflow-hidden rounded-xl border px-2 py-1.5 sm:min-h-[6.25rem] sm:px-2.5 sm:py-2",
                 theme.infoPanel,
-                "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)]",
+                "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
               )}
             >
@@ -784,44 +776,35 @@ export function ProgramsCourseSection({
                         />
                       </div>
                     </div>
-                    <div className="flex min-h-0 flex-col gap-3 lg:max-w-[700px] xl:max-w-[760px]">
-                      <div className="relative min-h-[168px] overflow-hidden rounded-3xl border border-fuchsia-300/85 shadow-[0_0_38px_rgba(217,70,239,0.36),0_0_22px_rgba(34,211,238,0.28)] sm:min-h-[178px]">
-                        <img
-                          src={OFFER_PLAN_THUMB_MONEY_MASTERY}
-                          alt=""
-                          loading="eager"
-                          fetchPriority="high"
-                          decoding="async"
-                          className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality]"
-                        />
-                        <div
-                          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-black/60 to-violet-950/35"
-                          aria-hidden
-                        />
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/20 to-transparent" aria-hidden />
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute inset-[6px] rounded-[1.2rem] border border-cyan-200/25 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.15),inset_0_0_24px_rgba(34,211,238,0.08)]"
-                        />
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute left-3 top-3 h-4 w-8 rounded-sm border-l-2 border-t-2 border-amber-300/75 sm:left-4 sm:top-4"
-                        />
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute bottom-3 right-3 h-4 w-8 rounded-sm border-b-2 border-r-2 border-cyan-300/75 sm:bottom-4 sm:right-4"
-                        />
-                        <div className="relative z-10 flex min-h-[168px] flex-col justify-end px-4 py-3 sm:min-h-[178px] sm:px-5 sm:py-4">
-                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_12px_rgba(217,70,239,0.95)] sm:text-[13px] sm:tracking-[0.18em]">
+                    <div className="flex min-h-0 flex-wrap justify-center gap-3 sm:justify-start sm:gap-4 lg:max-w-[520px] xl:max-w-[560px]">
+                      <div className="flex w-[min(46vw,220px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-amber-400/50 bg-[#070a12] sm:w-[232px]">
+                        <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
+                          <img
+                            src={OFFER_PLAN_THUMB_MONEY_MASTERY}
+                            alt=""
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
+                            className="h-full w-full object-cover object-center [image-rendering:high-quality]"
+                          />
+                          <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/35 to-black/20"
+                            aria-hidden
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2 p-3">
+                          <div className="text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-100">
                             Money Mastery Bundle
                           </div>
-                          <p className="mt-1.5 max-w-[100%] text-[12px] leading-snug text-cyan-50/95 sm:max-w-[98%] sm:text-[14px] sm:leading-relaxed">
+                          <p className="text-[11px] leading-snug text-cyan-50/90 sm:text-[12px]">
                             Unlock all programs at once (all playlist categories and courses). One checkout, instant full program access.
                           </p>
-                          <div className="mt-3 flex flex-row items-center justify-between gap-2 sm:mt-4">
-                            <span className="w-fit shrink-0 border border-amber-300/85 bg-amber-950/65 px-3 py-1 text-[12px] font-black text-amber-100 shadow-[0_0_16px_rgba(251,191,36,0.42)] [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)] sm:px-4 sm:py-1.5 sm:text-[14px]">
-                              £333
-                            </span>
+                          <div className="mt-auto flex flex-col gap-2 border-t border-white/10 pt-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="w-fit shrink-0 rounded-md border border-amber-300/70 bg-amber-950/70 px-2 py-0.5 text-[11px] font-black text-amber-100 sm:text-[12px]">
+                                £333
+                              </span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
@@ -829,10 +812,9 @@ export function ProgramsCourseSection({
                               }}
                               disabled={bundleCheckoutBusy}
                               className={cn(
-                                "w-auto whitespace-nowrap border px-3 py-2 text-[10px] font-black uppercase tracking-[0.11em] transition [clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)] sm:px-5 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em]",
-                                "border-cyan-200/90 bg-[linear-gradient(135deg,rgba(3,57,74,0.95),rgba(9,95,88,0.92),rgba(26,50,9,0.9))] text-cyan-50",
-                                "shadow-[0_0_20px_rgba(34,211,238,0.5),0_0_10px_rgba(16,185,129,0.35)] hover:brightness-110 hover:shadow-[0_0_28px_rgba(34,211,238,0.75)]",
-                                "disabled:cursor-not-allowed disabled:opacity-60"
+                                "w-full rounded-lg border px-2 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition sm:text-[11px]",
+                                "border-cyan-300/75 bg-[linear-gradient(135deg,rgba(8,51,68,0.92),rgba(6,78,71,0.9))] text-cyan-50",
+                                "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                               )}
                             >
                               {bundleCheckoutBusy ? "Redirecting..." : "Unlock All Programs"}
@@ -841,34 +823,33 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                      <div className="relative min-h-[168px] overflow-hidden rounded-3xl border border-violet-300/80 shadow-[0_0_36px_rgba(139,92,246,0.38),0_0_18px_rgba(217,70,239,0.22)] sm:min-h-[178px]">
-                        <img
-                          src={OFFER_PLAN_THUMB_THE_KING}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality]"
-                        />
-                        <div
-                          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-violet-950/50 to-black/40"
-                          aria-hidden
-                        />
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" aria-hidden />
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute inset-[6px] rounded-[1.2rem] border border-violet-200/20 shadow-[inset_0_0_20px_rgba(139,92,246,0.12)]"
-                        />
-                        <div className="relative z-10 flex min-h-[168px] flex-col justify-end px-4 py-3 sm:min-h-[178px] sm:px-5 sm:py-4">
-                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-100 [text-shadow:0_0_12px_rgba(167,139,250,0.9)] sm:text-[13px] sm:tracking-[0.18em]">
+                      <div className="flex w-[min(46vw,220px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-violet-400/55 bg-[#07060f] sm:w-[232px]">
+                        <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
+                          <img
+                            src={OFFER_PLAN_THUMB_THE_KING}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover object-center [image-rendering:high-quality]"
+                          />
+                          <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-violet-950/35 to-black/25"
+                            aria-hidden
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2 p-3">
+                          <div className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-100">
                             The King
                           </div>
-                          <p className="mt-1.5 max-w-[100%] text-[12px] leading-snug text-white/88 sm:max-w-[98%] sm:text-[14px] sm:leading-relaxed">
+                          <p className="text-[11px] leading-snug text-white/85 sm:text-[12px]">
                             Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.
                           </p>
-                          <div className="mt-3 flex flex-row items-center justify-between gap-2 sm:mt-4">
-                            <span className="w-fit shrink-0 border border-violet-300/80 bg-violet-950/55 px-3 py-1 text-[12px] font-black text-violet-100 shadow-[0_0_16px_rgba(167,139,250,0.35)] [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)] sm:px-4 sm:py-1.5 sm:text-[14px]">
-                              £19.99
-                            </span>
+                          <div className="mt-auto flex flex-col gap-2 border-t border-white/10 pt-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="w-fit shrink-0 rounded-md border border-violet-300/70 bg-violet-950/60 px-2 py-0.5 text-[11px] font-black text-violet-100 sm:text-[12px]">
+                                £19.99
+                              </span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
@@ -876,10 +857,9 @@ export function ProgramsCourseSection({
                               }}
                               disabled={kingCheckoutBusy}
                               className={cn(
-                                "w-auto whitespace-nowrap border px-3 py-2 text-[10px] font-black uppercase tracking-[0.11em] transition [clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)] sm:px-5 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em]",
-                                "border-violet-200/90 bg-[linear-gradient(135deg,rgba(46,16,78,0.95),rgba(76,29,99,0.92),rgba(30,27,75,0.9))] text-violet-50",
-                                "shadow-[0_0_20px_rgba(167,139,250,0.45)] hover:brightness-110 hover:shadow-[0_0_28px_rgba(192,132,252,0.65)]",
-                                "disabled:cursor-not-allowed disabled:opacity-60"
+                                "w-full rounded-lg border px-2 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition sm:text-[11px]",
+                                "border-violet-300/75 bg-[linear-gradient(135deg,rgba(46,16,78,0.92),rgba(60,24,90,0.9))] text-violet-50",
+                                "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                               )}
                             >
                               {kingCheckoutBusy ? "Redirecting..." : "Unlock"}
@@ -942,8 +922,8 @@ export function ProgramsCourseSection({
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
                         <div
                           className={cn(
-                            "grid gap-4 sm:gap-5 md:gap-6",
-                            showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                            "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
+                            showBothPlaylistColumns ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5"
                           )}
                         >
                           {visibleBusinessPsychologyPlaylists.map((pl, j) => renderStreamPlaylistCard(pl, j))}
@@ -966,8 +946,8 @@ export function ProgramsCourseSection({
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
                         <div
                           className={cn(
-                            "grid gap-4 sm:gap-5 md:gap-6",
-                            showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                            "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
+                            showBothPlaylistColumns ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5"
                           )}
                         >
                           {visibleBusinessModelPlaylists.map((pl, j) =>

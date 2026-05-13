@@ -263,8 +263,17 @@ function dedupePrimaryMoodSystemRows(rows: ChallengeRow[]): ChallengeRow[] {
   });
 }
 
-/** Distinct slices for pie (categories). */
-const PIE_COLORS = ["#ffd54a", "#4fd1b8", "#7b9cff", "#ff7ab8", "#c792ea", "#ff9f43", "#00e5ff", "#69f0ae"];
+/** Distinct slices — max-saturation neons; rendered via `url(#syndicate-pie-neon-n)` gradients in the stats pie. */
+const PIE_COLORS = [
+  "#00ffff",
+  "#ff00ff",
+  "#ccff00",
+  "#ff0055",
+  "#bf00ff",
+  "#ffaa00",
+  "#00ffaa",
+  "#ff0080",
+];
 
 /** One color per day in the weekly bar chart (7 bars). */
 const WEEK_BAR_COLORS = ["#ff6b9d", "#ffd54a", "#4fd1b8", "#7b9cff", "#c792ea", "#ff9f43", "#69f0ae"];
@@ -1250,19 +1259,6 @@ function formatDurationForPopup(sec: number): string {
   return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
 }
 
-function startOfLocalDayMs(nowMs: number): number {
-  const d = new Date(nowMs);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-function secondsUntilLocalMidnight(nowMs: number): number {
-  const d = new Date(nowMs);
-  const next = new Date(d);
-  next.setHours(24, 0, 0, 0);
-  return Math.max(0, Math.floor((next.getTime() - nowMs) / 1000));
-}
-
 function formatCountdown(sec: number): string {
   const s = Math.max(0, Math.floor(sec));
   const h = Math.floor(s / 3600);
@@ -1555,12 +1551,10 @@ function moodLabelForMissionCard(mood: string | undefined): string {
 function CompactCard({
   row,
   done,
-  dayCountdownSec,
   onView,
 }: {
   row: ChallengeRow;
   done: boolean;
-  dayCountdownSec: number;
   onView: () => void;
 }) {
   const p = row.payload;
@@ -1590,9 +1584,7 @@ function CompactCard({
                 <span className="syndicate-cyber-card__mood">Mood: {moodLine}</span>
                 {done ? (
                   <span className="syndicate-cyber-card__timer syndicate-cyber-card__timer--complete">COMPLETE</span>
-                ) : (
-                  <span className="syndicate-cyber-card__timer tabular-nums">{formatCountdown(dayCountdownSec)}</span>
-                )}
+                ) : null}
               </div>
               {row.user_created ? (
                 <div className="syndicate-cyber-card__tags">
@@ -1694,7 +1686,6 @@ function DetailPane({
       onDraftPersist(draftRef.current);
     };
   }, [row.id, readOnlyCompleted, onDraftPersist]);
-  const remainingSec = secondsUntilLocalMidnight(nowMs);
 
   const [reminderLocal, setReminderLocal] = useState("");
   useEffect(() => {
@@ -1748,14 +1739,6 @@ function DetailPane({
           >
             {row.difficulty} · {row.points} pts
           </span>
-          {!done ? (
-            <span
-              className="rounded border border-cyan-400/40 bg-cyan-500/12 px-1.5 py-0.5 font-mono text-[9px] font-semibold tabular-nums tracking-wide text-cyan-200/95 sm:text-[10px]"
-              title="Time until local midnight (daily mission window)"
-            >
-              {formatCountdown(remainingSec)}
-            </span>
-          ) : null}
         </div>
         {!done && taskTimerStartMs != null ? (
           <div
@@ -2413,7 +2396,7 @@ export function SyndicateAiChallengePanel() {
     return CATEGORIES.map((c, i) => ({
       name: CAT_LABEL[c] ?? c,
       value: day?.byCategory[c] ?? 0,
-      fill: PIE_COLORS[i % PIE_COLORS.length]
+      fill: `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`
     }));
   }, [pointsTotal]);
 
@@ -2445,7 +2428,7 @@ export function SyndicateAiChallengePanel() {
     return CATEGORIES.map((c, i) => ({
       name: CAT_LABEL[c] ?? c,
       value: totals[c] ?? 0,
-      fill: PIE_COLORS[i % PIE_COLORS.length]
+      fill: `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`
     }));
   }, [pointsTotal]);
 
@@ -2758,7 +2741,6 @@ export function SyndicateAiChallengePanel() {
     return sorted.slice(0, 24);
   }, [missionCompletionLog]);
 
-  const dayCountdownSec = useMemo(() => secondsUntilLocalMidnight(nowTick), [nowTick]);
   const completedAgentTodayCount = useMemo(
     () => rows.filter((r) => !r.user_created && doneIds.has(r.id)).length,
     [rows, doneIds]
@@ -2806,6 +2788,22 @@ export function SyndicateAiChallengePanel() {
           <div className="h-[300px] w-full overflow-hidden rounded-lg sm:h-[420px] md:h-[480px] lg:h-[520px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                <defs>
+                  {PIE_COLORS.map((base, i) => (
+                    <radialGradient key={`syndicate-pie-neon-grad-${i}`} id={`syndicate-pie-neon-${i}`} cx="32%" cy="32%" r="82%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
+                      <stop offset="28%" stopColor={base} stopOpacity="1" />
+                      <stop offset="100%" stopColor={base} stopOpacity="0.55" />
+                    </radialGradient>
+                  ))}
+                  <filter id="syndicate-pie-neon-glow" x="-35%" y="-35%" width="170%" height="170%">
+                    <feGaussianBlur stdDeviation="2.2" result="neonBlur" />
+                    <feMerge>
+                      <feMergeNode in="neonBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
                 <Pie
                   data={pieDailyChartData}
                   dataKey="value"
@@ -2814,12 +2812,19 @@ export function SyndicateAiChallengePanel() {
                   cy="48%"
                   innerRadius="22%"
                   outerRadius="78%"
-                  paddingAngle={2}
+                  paddingAngle={5}
+                  stroke="none"
                   labelLine={false}
                   label={false}
+                  filter="url(#syndicate-pie-neon-glow)"
                 >
                   {pieDailyChartData.map((e, i) => (
-                    <Cell key={e.name} stroke="rgba(0,0,0,0.35)" strokeWidth={1} fill={e.fill ?? PIE_COLORS[i % PIE_COLORS.length]} />
+                    <Cell
+                      key={e.name}
+                      stroke="rgba(2,4,10,0.88)"
+                      strokeWidth={1.25}
+                      fill={e.fill ?? `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -3781,21 +3786,7 @@ export function SyndicateAiChallengePanel() {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-3">
-            <div
-              className="rounded-xl border border-cyan-400/25 bg-gradient-to-b from-cyan-950/50 to-black/50 px-2.5 py-3 text-center shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(165,243,252,0.08)] sm:px-3"
-              title="Time until local midnight (daily mission window)"
-            >
-              <div className={cn(HUD_LABEL, "!text-[9px] text-cyan-200/75")}>Day ends</div>
-              <div
-                className={cn(
-                  HUD_VALUE,
-                  "mt-1 text-[19px] text-cyan-50 [text-shadow:0_0_16px_rgba(34,211,238,0.25)] sm:text-[22px]"
-                )}
-              >
-                {formatCountdown(dayCountdownSec)}
-              </div>
-            </div>
+          <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
             <div className="rounded-xl border border-sky-400/25 bg-gradient-to-b from-sky-950/45 to-black/50 px-2.5 py-3 text-center shadow-[0_4px_20px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(186,230,253,0.07)] sm:px-3">
               <div className={cn(HUD_LABEL, "!text-[9px] text-sky-200/80")}>Available</div>
               <div className={cn(HUD_VALUE, "mt-1 text-[21px] text-sky-50 sm:text-[24px]")}>{pointsTotal}</div>
@@ -4094,23 +4085,10 @@ export function SyndicateAiChallengePanel() {
 
             <div className="order-1 min-w-0 space-y-7 lg:order-2 lg:border-l lg:border-white/10 lg:pl-10">
               <div className="syndicate-day-points-card relative overflow-hidden rounded-2xl p-5 sm:p-6">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
-                  <div className="relative z-[1] min-w-0 border-b border-white/10 pb-5 sm:border-b-0 sm:border-r sm:border-white/10 sm:pb-0 sm:pr-6">
-                    <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-cyan-200/80 sm:text-[13px]">Day ends</div>
-                    <div
-                      className="mt-2 select-none font-mono text-[1.05rem] font-black tabular-nums leading-none tracking-tight text-cyan-200 [text-shadow:0_0_12px_rgba(34,211,238,0.38),0_1px_0_rgba(0,0,0,0.88)] sm:text-[1.2rem]"
-                      title="Time until local midnight (daily mission window)"
-                      aria-live="polite"
-                    >
-                      {formatCountdown(dayCountdownSec)}
-                    </div>
-                    <p className="mt-2 text-[11px] font-medium leading-snug text-white/45">Resets with the local day.</p>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/65 sm:text-[13px]">Total points</div>
-                    <div className="mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.22)] sm:text-[1.75rem]">
-                      {pointsTotal}
-                    </div>
+                <div className="min-w-0">
+                  <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/65 sm:text-[13px]">Total points</div>
+                  <div className="mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.22)] sm:text-[1.75rem]">
+                    {pointsTotal}
                   </div>
                 </div>
               </div>
@@ -5564,7 +5542,6 @@ export function SyndicateAiChallengePanel() {
                         key={row.id}
                         row={row}
                         done={doneIds.has(row.id)}
-                        dayCountdownSec={dayCountdownSec}
                         onView={() => openMissionDetail(row)}
                       />
                     ))}
@@ -5583,7 +5560,6 @@ export function SyndicateAiChallengePanel() {
                       key={row.id}
                       row={row}
                       done={doneIds.has(row.id)}
-                      dayCountdownSec={dayCountdownSec}
                       onView={() => openMissionDetail(row)}
                     />
                   ))}

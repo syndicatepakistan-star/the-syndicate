@@ -2682,7 +2682,7 @@ figcaption {
     0 0 36px rgba(124, 58, 237, 0.1);
 }
 
-/* Stats profile: Day ends / Total points — gold frame, smaller clock, interactive glow */
+/* Stats profile: Total points — gold frame, interactive glow */
 .syndicate-day-points-card {
   position: relative;
   isolation: isolate;

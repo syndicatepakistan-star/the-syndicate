@@ -2098,14 +2098,23 @@ export default function Page() {
     (key: string) => {
       const valid = new Set(nav.map((n) => n.key));
       if (!valid.has(key)) return;
+      if (typeof window !== "undefined") {
+        const raw = new URLSearchParams(window.location.search).get("section");
+        const currentKey = raw && valid.has(raw) ? raw : "dashboard";
+        if (currentKey === key) {
+          setNavKeyState(key);
+          return;
+        }
+      }
       setNavKeyState(key);
       const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       params.set("section", key);
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
     [nav, pathname, router]
   );
+
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string>("/assets/a.webp");

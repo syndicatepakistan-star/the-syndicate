@@ -6,10 +6,35 @@ import { Check } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { getAuthorizationHeader, hasSimpleAuthSessionClient, resolveClientApiUrl } from "@/lib/portal-api";
 import { OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
+import { ProgramsGoldPillHeading } from "@/components/programs/ProgramsGoldPillHeading";
 
 const BILLING = "monthly" as const;
 const CHECKOUT_AMOUNT = "19.99";
 const DISPLAY_PRICE = "£19.99";
+
+/** Chamfered “HUD” corners — matches cyber / gaming card silhouette from reference. */
+const CLIP_CARD =
+  "[clip-path:polygon(18px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-18px),calc(100%-18px)_100%,18px_100%,0_calc(100%-18px),0_18px)]";
+
+const CLIP_CARD_INNER =
+  "[clip-path:polygon(16px_0,calc(100%-16px)_0,100%_16px,100%_calc(100%-16px),calc(100%-16px)_100%,16px_100%,0_calc(100%-16px),0_16px)]";
+
+const CLIP_ROW =
+  "[clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]";
+
+const CLIP_ROW_INNER =
+  "[clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]";
+
+/** `box-shadow` is clipped by `clip-path` on the same node — outer bloom lives on this wrapper via `drop-shadow`. */
+const HERO_KING_OUTER_GLOW =
+  "[filter:drop-shadow(0_0_1px_rgba(196,181,253,0.95))_drop-shadow(0_0_14px_rgba(167,139,250,0.85))_drop-shadow(0_0_38px_rgba(139,92,246,0.62))_drop-shadow(0_0_76px_rgba(124,58,237,0.4))_drop-shadow(0_0_120px_rgba(91,33,182,0.22))]";
+
+const HERO_MANIFEST_OUTER_GLOW =
+  "[filter:drop-shadow(0_0_1px_rgba(153,246,228,0.95))_drop-shadow(0_0_14px_rgba(45,212,191,0.82))_drop-shadow(0_0_38px_rgba(20,184,166,0.55))_drop-shadow(0_0_76px_rgba(13,148,136,0.36))_drop-shadow(0_0_120px_rgba(15,118,110,0.18))]";
+
+/** Perk matrix outer frame — stacked neons (clip-safe via wrapper). */
+const SECTION_MATRIX_BLOOM =
+  "[filter:drop-shadow(0_0_16px_rgba(217,70,239,0.38))_drop-shadow(0_0_32px_rgba(34,211,238,0.28))_drop-shadow(0_0_48px_rgba(163,230,53,0.22))_drop-shadow(0_0_64px_rgba(96,165,250,0.16))]";
 
 const UNLOCK_FEATURES: readonly string[] = [
   "Select 4–5 courses yourself from the catalog",
@@ -21,83 +46,101 @@ const UNLOCK_FEATURES: readonly string[] = [
   "Syndicate Mode challenges",
 ];
 
-/** One dystopian neon channel per perk row (length must match `UNLOCK_FEATURES`). */
+/**
+ * Seven distinct neon channels (one per grant row): fuchsia, cyan, emerald, rose, violet, lime, sky.
+ * Each `outerGlow` is a multi-ring bloom keyed to that hue.
+ */
 const FEATURE_CHANNEL = [
   {
-    ring: "linear-gradient(135deg, #00ffc8 0%, #0d9488 42%, #022c22 100%)",
-    bar: "linear-gradient(180deg, #5eead4 0%, #0f766e 42%, #042f2e 100%)",
+    ring: "linear-gradient(135deg, #fae8ff 0%, #d946ef 38%, #581c87 100%)",
+    bar: "linear-gradient(180deg, #f0abfc 0%, #c026d3 40%, #4a044e 100%)",
     outerGlow:
-      "0 0 0 1px rgba(0,255,200,0.92), 0 0 0 3px rgba(15,118,110,0.35), 0 0 6px rgba(0,255,200,0.95), 0 0 42px rgba(45,212,191,0.5), 0 0 88px rgba(13,148,136,0.22)",
-    panel: "linear-gradient(165deg, rgba(2,14,12,0.98) 0%, rgba(0,6,8,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(45,212,191,0.5), 0 0 0 1px rgba(0,255,200,0.25), 0 0 32px rgba(16,185,129,0.2)",
-    check: "text-teal-300 drop-shadow-[0_0_14px_rgba(94,234,212,0.95)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-teal-50/93",
+      "0 0 0 2px rgba(232,121,249,0.85), 0 0 0 5px rgba(88,28,135,0.35), 0 0 28px rgba(217,70,239,0.65), 0 0 72px rgba(168,85,247,0.38), 0 0 120px rgba(192,38,211,0.15)",
+    panel: "linear-gradient(165deg, rgba(12,4,18,0.98), rgba(4,2,10,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(240,171,252,0.45), inset 0 0 36px rgba(88,28,135,0.2), 0 0 24px rgba(217,70,239,0.12)",
+    check: "text-fuchsia-300 drop-shadow-[0_0_14px_rgba(232,121,249,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-fuchsia-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #ff1744 0%, #be123c 48%, #450a0a 100%)",
-    bar: "linear-gradient(180deg, #fda4af 0%, #e11d48 45%, #7f1d1d 100%)",
+    ring: "linear-gradient(135deg, #ecfeff 0%, #22d3ee 36%, #155e75 100%)",
+    bar: "linear-gradient(180deg, #a5f3fc 0%, #06b6d4 42%, #083344 100%)",
     outerGlow:
-      "0 0 0 1px rgba(255,99,132,0.95), 0 0 0 3px rgba(190,18,60,0.4), 0 0 6px rgba(255,23,68,0.95), 0 0 44px rgba(244,63,94,0.55), 0 0 96px rgba(127,29,29,0.25)",
-    panel: "linear-gradient(165deg, rgba(18,4,8,0.98) 0%, rgba(8,2,4,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(251,113,133,0.45), 0 0 0 1px rgba(225,29,72,0.35), 0 0 32px rgba(244,63,94,0.18)",
-    check: "text-rose-400 drop-shadow-[0_0_14px_rgba(251,113,133,0.9)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-rose-50/92",
+      "0 0 0 2px rgba(103,232,249,0.88), 0 0 0 5px rgba(8,145,178,0.32), 0 0 28px rgba(34,211,238,0.62), 0 0 72px rgba(56,189,248,0.35), 0 0 120px rgba(14,165,233,0.14)",
+    panel: "linear-gradient(165deg, rgba(4,14,22,0.98), rgba(2,8,16,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(103,232,249,0.42), inset 0 0 36px rgba(8,145,178,0.16), 0 0 24px rgba(34,211,238,0.1)",
+    check: "text-cyan-300 drop-shadow-[0_0_14px_rgba(34,211,238,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-cyan-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #facc15 0%, #ea580c 40%, #4d7c0f 100%)",
-    bar: "linear-gradient(180deg, #fef08a 0%, #ca8a04 38%, #365314 100%)",
+    ring: "linear-gradient(135deg, #ecfdf5 0%, #22c55e 36%, #14532d 100%)",
+    bar: "linear-gradient(180deg, #86efac 0%, #16a34a 42%, #052e16 100%)",
     outerGlow:
-      "0 0 0 1px rgba(250,204,21,0.95), 0 0 0 3px rgba(234,88,12,0.35), 0 0 6px rgba(250,204,21,0.9), 0 0 40px rgba(251,146,60,0.48), 0 0 90px rgba(101,163,13,0.2)",
-    panel: "linear-gradient(165deg, rgba(12,10,2,0.98) 0%, rgba(8,12,4,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(250,204,21,0.35), 0 0 0 1px rgba(234,88,12,0.28), 0 0 28px rgba(202,138,4,0.18)",
-    check: "text-amber-300 drop-shadow-[0_0_14px_rgba(250,204,21,0.85)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-amber-50/93",
+      "0 0 0 2px rgba(52,211,153,0.88), 0 0 0 5px rgba(21,128,61,0.3), 0 0 28px rgba(74,222,128,0.58), 0 0 72px rgba(34,197,94,0.32), 0 0 120px rgba(22,163,74,0.12)",
+    panel: "linear-gradient(165deg, rgba(4,18,10,0.98), rgba(2,10,6,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(134,239,172,0.4), inset 0 0 36px rgba(22,101,52,0.14), 0 0 24px rgba(52,211,153,0.08)",
+    check: "text-emerald-300 drop-shadow-[0_0_14px_rgba(52,211,153,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-emerald-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #c084fc 0%, #db2777 45%, #ea580c 100%)",
-    bar: "linear-gradient(180deg, #e9d5ff 0%, #a855f7 40%, #c2410c 100%)",
+    ring: "linear-gradient(135deg, #ffe4e6 0%, #fb7185 38%, #9f1239 100%)",
+    bar: "linear-gradient(180deg, #fecdd3 0%, #f43f5e 40%, #4c0519 100%)",
     outerGlow:
-      "0 0 0 1px rgba(233,213,255,0.9), 0 0 0 3px rgba(192,38,211,0.32), 0 0 6px rgba(168,85,247,1), 0 0 44px rgba(236,72,153,0.45), 0 0 96px rgba(234,88,12,0.18)",
-    panel: "linear-gradient(165deg, rgba(14,4,18,0.98) 0%, rgba(12,6,8,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(192,132,252,0.45), 0 0 0 1px rgba(219,39,119,0.3), 0 0 32px rgba(168,85,247,0.16)",
-    check: "text-fuchsia-400 drop-shadow-[0_0_14px_rgba(232,121,249,0.85)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-fuchsia-50/92",
+      "0 0 0 2px rgba(251,113,133,0.9), 0 0 0 5px rgba(190,18,60,0.32), 0 0 28px rgba(251,113,133,0.62), 0 0 72px rgba(244,63,94,0.35), 0 0 120px rgba(225,29,72,0.12)",
+    panel: "linear-gradient(165deg, rgba(18,4,12,0.98), rgba(10,2,8,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(253,164,175,0.42), inset 0 0 36px rgba(136,19,55,0.18), 0 0 24px rgba(251,113,133,0.1)",
+    check: "text-rose-400 drop-shadow-[0_0_14px_rgba(251,113,133,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-rose-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #39ff14 0%, #15803d 45%, #052e16 100%)",
-    bar: "linear-gradient(180deg, #bbf7d0 0%, #22c55e 40%, #14532d 100%)",
+    ring: "linear-gradient(135deg, #ede9fe 0%, #a78bfa 38%, #4c1d95 100%)",
+    bar: "linear-gradient(180deg, #ddd6fe 0%, #7c3aed 40%, #2e1065 100%)",
     outerGlow:
-      "0 0 0 1px rgba(57,255,20,0.95), 0 0 0 3px rgba(21,128,61,0.35), 0 0 6px rgba(57,255,20,0.95), 0 0 40px rgba(74,222,128,0.5), 0 0 90px rgba(22,163,74,0.22)",
-    panel: "linear-gradient(165deg, rgba(4,18,8,0.98) 0%, rgba(2,10,4,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(74,222,128,0.45), 0 0 0 1px rgba(57,255,20,0.22), 0 0 28px rgba(34,197,94,0.18)",
-    check: "text-lime-400 drop-shadow-[0_0_14px_rgba(57,255,20,0.9)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-lime-50/93",
+      "0 0 0 2px rgba(167,139,250,0.9), 0 0 0 5px rgba(76,29,149,0.32), 0 0 28px rgba(139,92,246,0.62), 0 0 72px rgba(124,58,237,0.35), 0 0 120px rgba(109,40,217,0.12)",
+    panel: "linear-gradient(165deg, rgba(12,8,22,0.98), rgba(6,4,14,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(196,181,253,0.42), inset 0 0 36px rgba(76,29,149,0.18), 0 0 24px rgba(139,92,246,0.1)",
+    check: "text-violet-300 drop-shadow-[0_0_14px_rgba(167,139,250,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-violet-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #38bdf8 0%, #2563eb 48%, #0c1929 100%)",
-    bar: "linear-gradient(180deg, #bae6fd 0%, #3b82f6 42%, #1e3a8a 100%)",
+    ring: "linear-gradient(135deg, #f7fee7 0%, #bef264 36%, #365314 100%)",
+    bar: "linear-gradient(180deg, #d9f99d 0%, #84cc16 42%, #1a2e05 100%)",
     outerGlow:
-      "0 0 0 1px rgba(125,211,252,0.95), 0 0 0 3px rgba(37,99,235,0.35), 0 0 6px rgba(56,189,248,0.95), 0 0 42px rgba(59,130,246,0.5), 0 0 88px rgba(30,64,175,0.22)",
-    panel: "linear-gradient(165deg, rgba(4,10,22,0.98) 0%, rgba(2,6,14,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(96,165,250,0.45), 0 0 0 1px rgba(56,189,248,0.25), 0 0 30px rgba(59,130,246,0.16)",
-    check: "text-sky-400 drop-shadow-[0_0_14px_rgba(56,189,248,0.9)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-sky-50/93",
+      "0 0 0 2px rgba(190,242,100,0.9), 0 0 0 5px rgba(63,98,18,0.3), 0 0 28px rgba(163,230,53,0.58), 0 0 72px rgba(132,204,22,0.32), 0 0 120px rgba(101,163,13,0.12)",
+    panel: "linear-gradient(165deg, rgba(12,18,6,0.98), rgba(6,10,3,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(217,249,157,0.4), inset 0 0 36px rgba(63,98,18,0.14), 0 0 24px rgba(163,230,53,0.08)",
+    check: "text-lime-300 drop-shadow-[0_0_14px_rgba(190,242,100,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-lime-100/92",
   },
   {
-    ring: "linear-gradient(135deg, #fb923c 0%, #ea580c 42%, #7c2d12 100%)",
-    bar: "linear-gradient(180deg, #ffedd5 0%, #f97316 40%, #9a3412 100%)",
+    ring: "linear-gradient(135deg, #eff6ff 0%, #60a5fa 36%, #1e3a8a 100%)",
+    bar: "linear-gradient(180deg, #bfdbfe 0%, #2563eb 42%, #0c1a2e 100%)",
     outerGlow:
-      "0 0 0 1px rgba(254,215,170,0.95), 0 0 0 3px rgba(234,88,12,0.35), 0 0 6px rgba(251,146,60,0.95), 0 0 40px rgba(249,115,22,0.48), 0 0 88px rgba(124,45,18,0.2)",
-    panel: "linear-gradient(165deg, rgba(18,8,4,0.98) 0%, rgba(12,6,4,0.99) 100%)",
-    inset: "inset 0 0 0 2px rgba(253,186,116,0.4), 0 0 0 1px rgba(234,88,12,0.28), 0 0 28px rgba(251,146,60,0.14)",
-    check: "text-orange-300 drop-shadow-[0_0_14px_rgba(251,146,60,0.88)] h-5 w-5 sm:h-6 sm:w-6",
-    text: "text-orange-50/93",
+      "0 0 0 2px rgba(147,197,253,0.9), 0 0 0 5px rgba(30,58,138,0.3), 0 0 28px rgba(96,165,250,0.58), 0 0 72px rgba(59,130,246,0.32), 0 0 120px rgba(37,99,235,0.12)",
+    panel: "linear-gradient(165deg, rgba(4,10,22,0.98), rgba(2,8,16,0.995))",
+    inset:
+      "inset 0 0 0 1px rgba(191,219,254,0.4), inset 0 0 36px rgba(30,58,138,0.14), 0 0 24px rgba(96,165,250,0.08)",
+    check: "text-sky-300 drop-shadow-[0_0_14px_rgba(125,211,252,0.95)] h-5 w-5 sm:h-6 sm:w-6",
+    text: "text-sky-100/92",
   },
 ] as const;
 
 if (UNLOCK_FEATURES.length !== FEATURE_CHANNEL.length) {
   throw new Error("UNLOCK_FEATURES and FEATURE_CHANNEL length must match");
 }
+
+const CYBER_UNLOCK_CTA = cn(
+  "relative w-full overflow-hidden rounded-xl border-[3px] border-indigo-400/90 bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
+  "px-5 py-4 font-mono text-[clamp(11px,2.4vw,15px)] font-black uppercase tracking-[0.16em] text-indigo-100",
+  "shadow-[0_0_0_1px_rgba(165,180,252,0.45),0_0_32px_rgba(129,140,248,0.55),0_0_72px_rgba(99,102,241,0.28),inset_0_1px_0_rgba(255,255,255,0.12)]",
+  "transition hover:brightness-110 hover:shadow-[0_0_48px_rgba(129,140,248,0.72),0_0_96px_rgba(99,102,241,0.22)]",
+  "disabled:cursor-wait disabled:opacity-65"
+);
 
 export function MembershipOfferLanding() {
   const router = useRouter();
@@ -166,111 +209,42 @@ export function MembershipOfferLanding() {
 
   return (
     <main className="relative z-10 min-h-[calc(100dvh-4rem)] w-full min-w-0 overflow-x-clip px-[clamp(1rem,3.2vw,1.5rem)] pb-20 pt-24 sm:px-6 sm:pb-24 sm:pt-28">
-      {/* Light HUD readout over page video (video lives on layout) */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.1]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(0,255,200,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,60,0.14) 1px, transparent 1px)",
-            backgroundSize: "52px 52px, 52px 52px",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: "repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.45) 3px, rgba(0,0,0,0.45) 4px)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-35"
-          style={{
-            background:
-              "radial-gradient(ellipse 85% 55% at 50% 0%, rgba(0,255,200,0.08), transparent 52%), radial-gradient(ellipse 70% 50% at 100% 100%, rgba(255,0,60,0.07), transparent 55%)",
-          }}
-        />
-      </div>
-
-      <div className="relative mx-auto w-full max-w-[min(1280px,96vw)] space-y-12 sm:space-y-14">
-        <header className="relative mx-auto w-full max-w-[min(1240px,98vw)]">
-          <div
-            className="relative p-[3px] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-22px),calc(100%-22px)_100%,22px_100%,0_calc(100%-22px),0_22px)]"
-            style={{
-              background: "linear-gradient(125deg, #00ffc8, #ff003c, #ff9f1c, #39ff14, #00ffc8)",
-              backgroundSize: "200% 200%",
-              boxShadow:
-                "0 0 0 1px rgba(255,255,255,0.45), 0 0 0 4px rgba(255,0,60,0.2), 0 0 14px rgba(0,255,200,0.75), 0 0 56px rgba(255,0,60,0.35), 0 0 100px rgba(255,159,28,0.2)",
-            }}
-          >
-            <div
-              className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(6,4,8,0.94)_0%,rgba(2,2,6,0.98)_100%)] px-5 py-8 backdrop-blur-md sm:px-12 sm:py-11 [clip-path:polygon(20px_0,calc(100%-20px)_0,100%_20px,100%_calc(100%-20px),calc(100%-20px)_100%,20px_100%,0_calc(100%-20px),0_20px)]"
-              style={{ boxShadow: "inset 0 0 0 1px rgba(255,159,28,0.22), inset 0 0 60px rgba(0,0,0,0.55)" }}
-            >
-              <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(57,255,20,0.22)_3px,rgba(57,255,20,0.22)_4px)]" />
-              <div className="pointer-events-none absolute left-2 top-2 h-10 w-10 border-l-2 border-t-2 border-amber-400/80 sm:left-4 sm:top-4" />
-              <div className="pointer-events-none absolute bottom-2 right-2 h-10 w-10 border-b-2 border-r-2 border-rose-500/75 sm:bottom-4 sm:right-4" />
-
-              <div className="relative flex flex-col items-center text-center">
-                {/* Metallic title: never combine `filter` with `background-clip: text` on the same node — it can paint blank in WebKit. */}
-                <h1
-                  className="mt-2 max-w-[min(100%,22ch)] text-balance font-black uppercase leading-[0.92] tracking-[0.04em] [font-size:clamp(2.6rem,6.5vw+0.2rem,4.6rem)]"
-                  style={{
-                    background: "linear-gradient(180deg, #fafafa 0%, #d4d4d8 32%, #71717a 68%, #27272a 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    color: "transparent",
-                    textShadow:
-                      "0 2px 0 rgba(0,0,0,0.75), 0 0 28px rgba(0,255,200,0.35), 0 0 52px rgba(255,0,60,0.22)",
-                  }}
-                >
-                  Syndicate membership
-                </h1>
-                <p
-                  className="mx-auto mt-6 max-w-[56ch] font-mono text-lg leading-relaxed text-teal-200/90 sm:text-xl sm:leading-relaxed lg:text-2xl lg:leading-relaxed"
-                  style={{ textShadow: "0 0 18px rgba(45,212,191,0.35), 0 0 32px rgba(0,255,200,0.12)" }}
-                >
-                  Your curriculum, your rhythm: choose programs, unlock the full membership library, Syndicate Mode, and the
-                  complete goals stack. Review what is included, then join to open Stripe checkout when you are signed in—or
-                  create an account first if you are new.
-                </p>
-                <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.35em] text-[#39ff14] sm:text-[11px]" style={{ textShadow: "0 0 14px rgba(57,255,20,0.65)" }}>
-                  // uplink_ready · neon_auth
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="relative mx-auto w-full max-w-[1400px] space-y-10 sm:space-y-12">
+        <header className="space-y-6 text-center sm:space-y-8">
+          <ProgramsGoldPillHeading as="h1" title="Syndicate membership" size="compact" chrome="goldViolet" />
+          <p className="mx-auto max-w-[min(92ch,100%)] font-mono text-base leading-relaxed text-neutral-300 sm:text-lg sm:leading-relaxed">
+            Your curriculum, your rhythm: choose programs, unlock the full membership library, Syndicate Mode, and the
+            complete goals stack. Review what is included, then join to open Stripe checkout when you are signed in—or
+            create an account first if you are new.
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-lime-300 [text-shadow:0_0_16px_rgba(190,242,100,0.65),0_0_32px_rgba(132,204,22,0.28)] sm:text-[11px]">
+            // uplink_ready · member_auth
+          </p>
         </header>
 
-        {/* Hero: two asymmetric HUD cards */}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.28fr)] lg:gap-8">
-          {/* Visual channel — three-tier King billboard */}
-          <div
-            className="relative p-[4px] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-22px),calc(100%-22px)_100%,22px_100%,0_calc(100%-22px),0_22px)]"
-            style={{
-              background: "linear-gradient(135deg, #00ffc8, #ff003c, #ff9f1c, #a855f7)",
-              boxShadow:
-                "0 0 0 1px rgba(0,255,200,0.85), 0 0 0 3px rgba(255,0,60,0.25), 0 0 8px rgba(0,255,200,0.9), 0 0 56px rgba(255,0,60,0.38), 0 0 96px rgba(255,159,28,0.22), 0 0 120px rgba(168,85,247,0.15)",
-            }}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)] lg:gap-8">
+          {/* King — neon violet “rig” frame */}
+          <div className={cn("relative w-full min-w-0", HERO_KING_OUTER_GLOW)}>
+          <article
+            className={cn(
+              "relative flex min-h-[22rem] w-full flex-col overflow-visible p-[3px] sm:min-h-[27rem]",
+              CLIP_CARD,
+              "bg-[linear-gradient(135deg,rgba(196,181,253,0.95),rgba(124,58,237,0.58),rgba(91,33,182,0.82))]",
+              "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+            )}
           >
-            <div
-              className="pointer-events-none absolute inset-[10px] border-[2px] border-teal-400/75 [clip-path:polygon(18px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-18px),calc(100%-18px)_100%,18px_100%,0_calc(100%-18px),0_18px)]"
-              style={{
-                boxShadow:
-                  "inset 0 0 0 1px rgba(45,212,191,0.4), inset 0 0 40px rgba(0,255,200,0.12), 0 0 24px rgba(0,255,200,0.18)",
-              }}
+            <span
+              className="pointer-events-none absolute inset-[-22%] z-0 blur-[56px] bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.62)_0%,rgba(124,58,237,0.34)_38%,transparent_68%)]"
+              aria-hidden
             />
             <div
-              className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l-[3px] border-t-[3px] border-[#00ffc8]/90"
-              style={{ boxShadow: "-2px -2px 12px rgba(0,255,200,0.45)" }}
-            />
-            <div
-              className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b-[3px] border-r-[3px] border-rose-400/90"
-              style={{ boxShadow: "2px 2px 12px rgba(255,23,68,0.45)" }}
-            />
-            <div className="relative flex flex-col overflow-hidden bg-[#040208] [clip-path:polygon(18px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-18px),calc(100%-18px)_100%,18px_100%,0_calc(100%-18px),0_18px)]">
-              {/* Tier 1 — hero art (no title overlay) */}
-              <div className="relative min-h-[200px] sm:min-h-[240px] lg:min-h-[260px]">
+              className={cn(
+                "relative z-[2] flex min-h-0 flex-1 flex-col overflow-hidden bg-[#030308]",
+                CLIP_CARD_INNER,
+                "ring-1 ring-violet-400/28"
+              )}
+            >
+              <div className="relative min-h-[200px] flex-1 overflow-hidden sm:min-h-[240px]">
                 <img
                   src={OFFER_PLAN_THUMB_THE_KING}
                   alt=""
@@ -279,86 +253,60 @@ export function MembershipOfferLanding() {
                   decoding="async"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-black/90" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_20%_30%,rgba(59,130,246,0.25),transparent_50%),radial-gradient(ellipse_70%_50%_at_85%_20%,rgba(249,115,22,0.18),transparent_45%)]" />
-                <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(105deg,transparent_35%,rgba(0,255,200,0.12)_50%,transparent_65%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/75 to-black/95" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_55%)]" />
               </div>
-
-              {/* Toxic scan hairline */}
-              <div
-                className="relative z-10 h-[2px] w-full shrink-0"
-                style={{
-                  background: "linear-gradient(90deg, transparent, rgba(0,255,200,0.95), transparent)",
-                  boxShadow: "0 0 16px rgba(0,255,200,0.75), 0 0 32px rgba(255,0,60,0.25)",
-                }}
-              />
-
-              {/* Tier 2 — uplink bar (angled bottom) */}
-              <div
-                className="relative z-10 min-w-0 bg-black px-5 py-3.5 sm:px-8 sm:py-4 [clip-path:polygon(0_0,100%_0,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px))]"
-                style={{ boxShadow: "inset 0 1px 0 rgba(0,255,200,0.22)" }}
-              >
+              <div className="relative z-[3] border-t border-pink-500/40 bg-black/88 px-4 py-3.5 sm:px-6 sm:py-4">
                 <p className="text-left font-mono text-xs font-bold leading-relaxed text-white/95 sm:text-sm">
-                  <span className="text-rose-400 uppercase tracking-[0.08em] drop-shadow-[0_0_12px_rgba(255,23,68,0.75)]">
+                  <span className="text-pink-400 uppercase tracking-[0.08em] [text-shadow:0_0_14px_rgba(244,114,182,0.85),0_0_28px_rgba(244,63,94,0.35)]">
                     [VISUAL_UPLINK]
                   </span>{" "}
-                  <span className="font-semibold tracking-wide text-teal-100/90 normal-case">
+                  <span className="font-semibold tracking-wide text-neutral-200/95 normal-case">
                     The King tier — full Syndicate OS, not a single course.
                   </span>
                 </p>
               </div>
-
-              {/* Tier 3 — hazard deck + target bracket */}
-              <div className="relative z-10 min-h-[92px] flex-1 bg-gradient-to-b from-orange-600/90 via-rose-900/95 to-[#1a0508] sm:min-h-[108px]">
-                <div
-                  className="pointer-events-none absolute bottom-4 right-4 h-11 w-11 border-b-2 border-r-2 border-white/80"
-                  style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.35)" }}
-                  aria-hidden
-                />
-                <div className="flex min-w-0 flex-col justify-center px-6 py-4 sm:px-9 sm:py-5">
-                  <p className="font-mono text-[10px] font-black uppercase tracking-[0.28em] text-amber-200/90">// protocol_surface</p>
-                  <p className="mt-1 max-w-none break-words font-mono text-xs leading-relaxed text-white/70 sm:text-sm">
-                    Neon frame locked. Full OS access routes through this tier after checkout clears.
-                  </p>
-                </div>
+              <div className="relative z-[3] border-t border-sky-400/35 bg-gradient-to-b from-black via-[#06060a] to-black px-4 py-4 sm:px-6 sm:py-5">
+                <p className="font-mono text-[10px] font-black uppercase tracking-[0.24em] text-sky-300 [text-shadow:0_0_12px_rgba(56,189,248,0.65),0_0_26px_rgba(14,165,233,0.35)]">
+                  // protocol_surface
+                </p>
+                <p className="mt-1 font-mono text-xs leading-relaxed text-neutral-400 sm:text-sm">
+                  Neon frame locked. Full OS access routes through this tier after checkout clears.
+                </p>
               </div>
             </div>
+          </article>
           </div>
 
-          {/* Data shard — pricing + CTA */}
-          <div
-            className="relative flex flex-col justify-center gap-5 p-[4px] [clip-path:polygon(0_0,100%_0,100%_calc(100%-18px),calc(100%-18px)_100%,0_100%)]"
-            style={{
-              background: "linear-gradient(165deg, rgba(251,191,36,0.98), rgba(234,88,12,0.82), rgba(185,28,28,0.62))",
-              boxShadow:
-                "0 0 0 1px rgba(253,224,71,0.95), 0 0 0 3px rgba(220,38,38,0.35), 0 0 6px rgba(251,191,36,1), 0 0 48px rgba(245,158,11,0.42), 0 0 88px rgba(220,38,38,0.24), 0 0 120px rgba(251,191,36,0.12)",
-            }}
+          {/* Access manifest — teal rig + split HUD accents */}
+          <div className={cn("relative w-full min-w-0", HERO_MANIFEST_OUTER_GLOW)}>
+          <article
+            className={cn(
+              "relative flex w-full flex-col justify-center gap-5 overflow-visible p-[3px] sm:gap-6",
+              CLIP_CARD,
+              "bg-[linear-gradient(135deg,rgba(45,212,191,0.92),rgba(20,184,166,0.52),rgba(13,148,136,0.88))]",
+              "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+            )}
           >
+            <span
+              className="pointer-events-none absolute inset-[-22%] z-0 blur-[56px] bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.58)_0%,rgba(13,148,136,0.3)_40%,transparent_70%)]"
+              aria-hidden
+            />
             <div
-              className="relative flex h-full flex-col justify-center gap-5 bg-[linear-gradient(168deg,rgba(10,4,2,0.97),rgba(6,4,12,0.99))] px-6 py-7 sm:gap-6 sm:px-7 sm:py-9 [clip-path:polygon(0_0,100%_0,100%_calc(100%-17px),calc(100%-17px)_100%,0_100%)]"
-              style={{
-                boxShadow:
-                  "inset 0 0 0 1px rgba(251,191,36,0.35), inset 0 0 0 2px rgba(127,29,29,0.22), inset 0 0 48px rgba(251,191,36,0.08)",
-              }}
+              className={cn(
+                "relative z-[2] flex flex-col gap-5 bg-[#030308] p-6 sm:gap-6 sm:p-8",
+                CLIP_CARD_INNER,
+                "ring-1 ring-teal-300/32"
+              )}
             >
-              <div
-                className="pointer-events-none absolute right-3 top-3 h-8 w-8 border-r-[3px] border-t-[3px] border-amber-200/95"
-                style={{ boxShadow: "2px -2px 14px rgba(251,191,36,0.45)" }}
-              />
-              <div
-                className="pointer-events-none absolute bottom-3 left-3 h-8 w-8 border-b-[3px] border-l-[3px] border-red-400/85"
-                style={{ boxShadow: "-2px 2px 14px rgba(248,113,113,0.35)" }}
-              />
-
               <div>
-                <h2
-                  className="font-mono text-sm font-black uppercase tracking-[0.2em] text-amber-200 sm:text-base"
-                  style={{ textShadow: "0 0 18px rgba(251,191,36,0.55), 0 0 32px rgba(245,158,11,0.2)" }}
-                >
+                <h2 className="font-mono text-sm font-black uppercase tracking-[0.2em] text-fuchsia-400 [text-shadow:0_0_14px_rgba(232,121,249,0.65),0_0_28px_rgba(192,38,211,0.3)] sm:text-base">
                   // access_manifest
                 </h2>
-                <h3 className="mt-2 text-2xl font-black uppercase tracking-[0.1em] text-amber-50 sm:text-3xl">Details</h3>
-                <p className="mt-3 font-mono text-[15px] leading-relaxed text-amber-100/78 sm:text-base lg:text-lg">
+                <h3 className="mt-2 font-mono text-2xl font-black uppercase tracking-[0.12em] text-pink-300 [text-shadow:0_0_18px_rgba(249,168,212,0.65),0_0_40px_rgba(236,72,153,0.22)] sm:text-3xl">
+                  Details
+                </h3>
+                <p className="mt-3 font-mono text-[15px] leading-relaxed text-neutral-300 sm:text-base lg:text-lg">
                   One membership unlocks the hub inside the dashboard: protected articles, secure video drops, Syndicate missions,
                   and the full goals experience alongside your selected programs.
                 </p>
@@ -366,152 +314,112 @@ export function MembershipOfferLanding() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <span
-                  className="inline-flex items-center border-[3px] border-[#39ff14]/90 bg-black/75 px-5 py-2.5 font-mono text-2xl font-black tabular-nums text-[#b6ffc4] [clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)] sm:text-3xl"
-                  style={{
-                    fontFeatureSettings: '"tnum" 1, "lnum" 1',
-                    boxShadow:
-                      "0 0 0 1px rgba(57,255,20,0.9), 0 0 0 3px rgba(0,255,200,0.2), 0 0 6px rgba(57,255,20,0.95), 0 0 36px rgba(0,255,200,0.35), inset 0 0 18px rgba(57,255,20,0.12)",
-                    textShadow: "0 0 16px rgba(182,255,196,0.55), 0 0 28px rgba(57,255,20,0.3)",
-                  }}
+                  className={cn(
+                    "inline-flex items-center bg-black/80 px-5 py-2.5 font-mono text-2xl font-black tabular-nums text-cyan-100 sm:text-3xl",
+                    "border-[3px] border-cyan-400/90 [text-shadow:0_0_16px_rgba(103,232,249,0.55),0_0_32px_rgba(34,211,238,0.25)]",
+                    "shadow-[0_0_0_1px_rgba(103,232,249,0.4),0_0_28px_rgba(34,211,238,0.45),0_0_56px_rgba(14,165,233,0.18)]",
+                    "rounded-lg"
+                  )}
+                  style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
                 >
                   {DISPLAY_PRICE}
-                  <span className="ml-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#86efac]/90 sm:text-sm">/ mo</span>
+                  <span className="ml-2.5 text-xs font-bold uppercase tracking-[0.12em] text-neutral-400 sm:text-sm">/ mo</span>
                 </span>
               </div>
 
               {error ? (
-                <div
-                  className="border-[3px] border-rose-500/75 bg-rose-950/45 px-4 py-2.5 font-mono text-sm text-rose-100 [clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)]"
-                  style={{
-                    boxShadow:
-                      "0 0 0 1px rgba(254,205,211,0.85), 0 0 0 3px rgba(190,18,60,0.25), 0 0 6px rgba(244,63,94,0.85), 0 0 32px rgba(244,63,94,0.4)",
-                  }}
-                >
+                <div className="rounded-lg border-2 border-rose-500/60 bg-rose-950/50 px-4 py-3 font-mono text-sm text-rose-100 shadow-[0_0_24px_rgba(244,63,94,0.25)]">
                   {error}
                 </div>
               ) : null}
 
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void unlockMembership()}
-                className={cn(
-                  "relative w-full overflow-hidden border-[3px] border-[#00ffc8]/80 bg-[linear-gradient(135deg,rgba(88,7,28,0.82),rgba(4,12,10,0.98))] px-5 py-4 font-mono text-sm font-black uppercase tracking-[0.18em] text-teal-50 transition [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)] sm:py-5 sm:text-base",
-                  "hover:brightness-110 motion-safe:hover:shadow-[0_0_48px_rgba(0,255,200,0.45)] disabled:cursor-wait disabled:opacity-65",
-                )}
-                style={{
-                  boxShadow:
-                    "0 0 0 1px rgba(213,255,245,0.75), 0 0 0 3px rgba(255,0,60,0.22), 0 0 6px rgba(0,255,200,0.95), 0 0 44px rgba(255,0,60,0.35), 0 0 88px rgba(168,85,247,0.2), inset 0 0 28px rgba(0,255,200,0.08)",
-                  textShadow: "0 0 18px rgba(204,251,241,0.4), 0 0 32px rgba(255,0,60,0.15)",
-                }}
-              >
-                <span className="pointer-events-none absolute inset-0 opacity-35 motion-safe:animate-pulse bg-[linear-gradient(90deg,transparent,rgba(0,255,200,0.18),transparent)]" />
+              <button type="button" disabled={busy} onClick={() => void unlockMembership()} className={CYBER_UNLOCK_CTA}>
                 {busy ? "Opening checkout…" : "Unlock membership"}
               </button>
-              <p className="font-mono text-xs leading-snug text-amber-200/55 sm:text-sm">
+              <p className="font-mono text-xs leading-snug text-neutral-500 sm:text-sm">
                 Signed out? Signup opens with this plan prefilled. Members may route straight to the dashboard.
               </p>
             </div>
+          </article>
           </div>
         </div>
 
-        {/* Perk command deck — chamfered frame + sector rails */}
-        <section
-          className="relative p-[4px] [clip-path:polygon(28px_0,100%_0,100%_calc(100%-28px),calc(100%-28px)_100%,0_100%,0_28px)]"
-          style={{
-            background: "linear-gradient(125deg, #00ffc8, #ff003c, #facc15, #a855f7, #00ffc8)",
-            backgroundSize: "220% 220%",
-            boxShadow:
-              "0 0 0 1px rgba(57,255,20,0.55), 0 0 0 4px rgba(255,0,60,0.15), 0 0 10px rgba(0,255,200,0.85), 0 0 60px rgba(255,0,60,0.35), 0 0 110px rgba(250,204,21,0.18)",
-          }}
-        >
-          <div
-            className="relative m-[3px] bg-[linear-gradient(185deg,rgba(3,4,12,0.97),rgba(2,3,8,0.99))] px-5 py-10 sm:px-9 sm:py-12 [clip-path:polygon(25px_0,100%_0,100%_calc(100%-25px),calc(100%-25px)_100%,0_100%,0_25px)]"
-            style={{
-              boxShadow:
-                "inset 0 0 0 1px rgba(255,159,28,0.3), inset 0 0 0 2px rgba(255,0,60,0.12), inset 0 0 80px rgba(0,255,200,0.05)",
-            }}
+        {/* Perk matrix — neon rim + chamfered gaming tiles */}
+        <div className={cn("relative w-full min-w-0", SECTION_MATRIX_BLOOM)}>
+          <section
+            className={cn(
+              "relative space-y-8 overflow-visible p-[2px] sm:space-y-10",
+              CLIP_CARD,
+              "bg-[linear-gradient(125deg,rgba(167,139,250,0.72),rgba(217,70,239,0.62),rgba(34,211,238,0.52),rgba(163,230,53,0.48),rgba(96,165,250,0.52),rgba(244,63,94,0.48))]",
+              "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+            )}
           >
-            <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(57,255,20,0.25)_2px,rgba(57,255,20,0.25)_3px)]" />
-            <div className="pointer-events-none absolute left-0 top-0 h-24 w-24 border-l-2 border-t-2 border-[#00ffc8]/55" />
-            <div className="pointer-events-none absolute bottom-0 right-0 h-24 w-24 border-b-2 border-r-2 border-[#ff003c]/50" />
-
-            <div className="relative text-center">
-              <p className="font-mono text-[10px] font-black uppercase tracking-[0.35em] text-[#00ffc8]/80 sm:text-[11px]" style={{ textShadow: "0 0 12px rgba(0,255,200,0.45)" }}>
-                // perk_matrix · hazard
-              </p>
-              <h2
-                className="mt-2 font-black uppercase tracking-[0.1em] text-transparent [font-size:clamp(1.45rem,3vw+0.4rem,2.15rem)] bg-clip-text"
-                style={{
-                  backgroundImage: "linear-gradient(92deg, #facc15, #ff003c, #00ffc8, #a855f7, #facc15)",
-                  backgroundSize: "200% auto",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  filter: "drop-shadow(0 0 16px rgba(255,0,60,0.35)) drop-shadow(0 0 24px rgba(0,255,200,0.25))",
-                }}
-              >
-                Unlocked after you join
-              </h2>
-              <p className="mx-auto mt-3 max-w-[58ch] font-mono text-base leading-relaxed text-teal-200/75 sm:text-lg">
+            <div
+              className={cn(
+                "space-y-8 bg-[linear-gradient(180deg,rgba(8,6,14,0.98),rgba(2,2,8,0.99))] px-[clamp(1rem,3.2vw,1.5rem)] py-10 sm:space-y-10 sm:px-8 sm:py-12",
+                CLIP_CARD_INNER,
+                "ring-1 ring-white/8"
+              )}
+            >
+              <div className="text-center">
+              <ProgramsGoldPillHeading as="h2" title="Unlocked after you join" size="compact" chrome="lime" />
+              <p className="mx-auto mt-5 max-w-[58ch] font-mono text-base leading-relaxed text-neutral-400 sm:text-lg">
                 Once The King membership is active, these sectors open inside the Syndicate dashboard.
               </p>
             </div>
 
-            <div className="relative mx-auto mt-10 max-w-[min(1040px,100%)]">
+            <div className="relative mx-auto max-w-[min(1040px,100%)]">
               <div
-                className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-0 hidden w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#ff003c]/40 to-transparent sm:block"
-                style={{ boxShadow: "0 0 16px rgba(255,0,60,0.35)" }}
+                className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-0 hidden w-px -translate-x-1/2 bg-gradient-to-b from-fuchsia-500/25 via-lime-300/35 to-sky-400/25 sm:block [box-shadow:0_0_14px_rgba(217,70,239,0.4),0_0_22px_rgba(163,230,53,0.3),0_0_30px_rgba(56,189,248,0.25)]"
                 aria-hidden
               />
-              <ul className="relative z-[1] grid gap-4 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-4">
-              {UNLOCK_FEATURES.map((line, i) => {
-                const ch = FEATURE_CHANNEL[i];
-                const sector = String(i + 1).padStart(2, "0");
-                return (
-                  <li key={line} className="relative list-none">
-                    <div
-                      className="rounded-[2px] p-[3px]"
-                      style={{
-                        background: ch.ring,
-                        boxShadow: ch.outerGlow,
-                      }}
-                    >
+              <ul className="relative z-[1] grid gap-5 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5">
+                {UNLOCK_FEATURES.map((line, i) => {
+                  const ch = FEATURE_CHANNEL[i];
+                  const sector = String(i + 1).padStart(2, "0");
+                  return (
+                    <li key={line} className="relative list-none">
                       <div
-                        className="flex min-h-[5.75rem] overflow-hidden sm:min-h-[6rem] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
-                        style={{
-                          background: ch.panel,
-                          boxShadow: ch.inset,
-                        }}
+                        className={cn("p-[3px]", CLIP_ROW)}
+                        style={{ background: ch.ring, boxShadow: ch.outerGlow }}
                       >
                         <div
-                          className="w-1.5 shrink-0 sm:w-2"
+                          className={cn("flex min-h-[5.75rem] overflow-hidden sm:min-h-[6rem]", CLIP_ROW_INNER)}
                           style={{
-                            background: ch.bar,
-                            boxShadow: "inset -1px 0 0 rgba(0,0,0,0.35), 0 0 18px rgba(255,255,255,0.12)",
+                            background: ch.panel,
+                            boxShadow: ch.inset,
                           }}
-                          aria-hidden
-                        />
-                        <div className="flex min-w-0 flex-1 items-start gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-4">
-                          <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">
-                            <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/35 sm:text-[10px]">
-                              S{sector}
-                            </span>
-                            <Check className={cn(ch.check)} strokeWidth={2.75} aria-hidden />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Grant</p>
-                            <p className={cn("mt-1 font-mono text-[15px] font-semibold leading-snug sm:text-base lg:text-[17px]", ch.text)}>{line}</p>
+                        >
+                          <div
+                            className="w-1.5 shrink-0 sm:w-2"
+                            style={{
+                              background: ch.bar,
+                              boxShadow: "inset -1px 0 0 rgba(0,0,0,0.45)",
+                            }}
+                            aria-hidden
+                          />
+                          <div className="flex min-w-0 flex-1 items-start gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-4">
+                            <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">
+                              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/40 sm:text-[10px]">
+                                S{sector}
+                              </span>
+                              <Check className={cn(ch.check)} strokeWidth={2.75} aria-hidden />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Grant</p>
+                              <p className={cn("mt-1 font-mono text-[15px] font-semibold leading-snug sm:text-base lg:text-[17px]", ch.text)}>{line}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
         </section>
+        </div>
       </div>
     </main>
   );

@@ -680,7 +680,7 @@ export default function OurMethodsPage() {
                         alt="Gold key symbol"
                         width={560}
                         height={760}
-                        className="h-[210px] w-full object-contain object-center animate-bounce [animation-duration:4.5s] [animation-timing-function:ease-in-out] sm:h-[260px] md:h-[360px]"
+                        className="h-[210px] w-full object-contain object-center will-change-transform motion-safe:animate-bounce motion-safe:[animation-duration:4.5s] motion-safe:[animation-timing-function:ease-in-out] sm:h-[260px] md:h-[360px]"
                       />
                     </div>
                   ) : null}

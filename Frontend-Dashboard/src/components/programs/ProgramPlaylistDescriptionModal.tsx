@@ -436,6 +436,7 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
 export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
   useEffect(() => {
     if (!playlist || typeof document === "undefined") return;
+    const scrollY = window.scrollY;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -445,6 +446,11 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+        });
+      });
     };
   }, [playlist, onClose]);
 

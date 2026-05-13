@@ -88,7 +88,7 @@ const pricingData: Record<PlanKey, PricingTier> = {
     billingMode: 'recurring',
   },
   king: {
-    price: { monthly: '£77.77', yearly: '£777.70' },
+    price: { monthly: '£19.99', yearly: '£239.88' },
     oldPrice: { monthly: '£99.99', yearly: '£999.90' },
     badge: 'THE KING',
     title: 'The King',

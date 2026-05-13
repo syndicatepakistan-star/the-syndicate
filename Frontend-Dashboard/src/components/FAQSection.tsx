@@ -50,7 +50,7 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
     },
     {
       q: 'What do membership tiers cost?',
-      a: 'On the pricing page: The King is listed at £77.77/month (coming soon), with register-your-interest style CTAs.\nThe full bundle lifetime price is shown separately on the same page; use that page as the source of truth.',
+      a: 'On the pricing page: The King is listed at £19.99/month (yearly shown on the same page), with checkout when you are signed in.\nThe full bundle lifetime price is shown separately on the same page; use that page as the source of truth.',
     },
     {
       q: 'What payment methods are accepted?',

@@ -1936,7 +1936,7 @@ function ShellTierLockPanel({
     try {
       const authHeader = getAuthorizationHeader();
       if (!authHeader) {
-        router.push("/login?plan=king&billing=monthly&amount=77.77");
+        router.push("/login?plan=king&billing=monthly&amount=19.99");
         return;
       }
       const res = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
@@ -1949,7 +1949,7 @@ function ShellTierLockPanel({
           return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
           selected_plan: "king",
           selected_billing: "monthly",
-          selected_amount: "77.77"
+          selected_amount: "19.99"
         })
       });
       const data = (await res.json().catch(() => ({}))) as { checkout_url?: string; error?: string };
@@ -1993,7 +1993,7 @@ function ShellTierLockPanel({
               </div>
               <p className="mt-2 text-[12px] leading-snug text-white/58">
                 Full Syndicate Mode, membership library, goals deck, and weekly drops — billed monthly from{" "}
-                <span className="font-semibold text-amber-100/90">£77.77/mo</span> (or yearly on the pricing page).
+                <span className="font-semibold text-amber-100/90">£19.99/mo</span> (or yearly on the pricing page).
               </p>
               <ul className="mt-3 space-y-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
                 <li className="flex gap-2">

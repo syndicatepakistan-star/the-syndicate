@@ -4062,18 +4062,18 @@ export function SyndicateAiChallengePanel() {
         <button
           type="button"
           onClick={goToBonusMissions}
-          className="syndicate-readable group mb-2 flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-xl border border-cyan-400/35 bg-[linear-gradient(92deg,rgba(6,182,212,0.1),rgba(255,215,0,0.08),rgba(6,182,212,0.06))] px-3 py-2.5 text-left shadow-[0_0_20px_rgba(6,182,212,0.14)] ring-1 ring-[rgba(250,204,21,0.12)] transition hover:border-cyan-300/55 hover:shadow-[0_0_26px_rgba(250,204,21,0.22)] sm:px-4 sm:py-3 sm:text-center"
+          className="syndicate-readable group mb-2 flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-cyan-300/55 bg-[linear-gradient(92deg,rgba(6,182,212,0.22),rgba(255,215,0,0.14),rgba(6,182,212,0.18))] px-3 py-3 text-center shadow-[0_0_24px_rgba(6,182,212,0.28),0_0_40px_rgba(250,204,21,0.12)] ring-2 ring-cyan-400/25 transition hover:border-cyan-200/70 hover:shadow-[0_0_32px_rgba(34,211,238,0.35),0_0_48px_rgba(250,204,21,0.2)] sm:gap-2 sm:px-5 sm:py-3.5"
         >
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center justify-center gap-2.5">
             <span
-              className="inline-flex h-2 w-2 shrink-0 animate-pulse rounded-full bg-[color:var(--gold)] shadow-[0_0_12px_rgba(254,222,0,0.85)]"
+              className="inline-flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[color:var(--gold)] shadow-[0_0_14px_rgba(254,222,0,0.95),0_0_28px_rgba(250,204,21,0.5)]"
               aria-hidden
             />
-            <span className="text-[13px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)] sm:text-[14px]">
+            <span className="text-[14px] font-black uppercase leading-tight tracking-[0.16em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(250,204,21,0.55),0_1px_2px_rgba(0,0,0,0.9)] sm:text-[15px] sm:tracking-[0.18em]">
               Bonus mission activated
             </span>
           </span>
-          <span className="text-[12px] font-semibold text-cyan-100/90 sm:text-[13px]">
+          <span className="text-[13px] font-black leading-snug text-white [text-shadow:0_0_18px_rgba(165,243,252,0.45),0_1px_3px_rgba(0,0,0,0.95)] sm:text-[14px]">
             Click to go to the bonus mission section
           </span>
         </button>

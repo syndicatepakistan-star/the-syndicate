@@ -817,9 +817,19 @@ def admin_tasks_active(request):
     return Response({"results": rows})
 
 
+def _admin_task_attachment_is_video(upload) -> bool:
+    if upload is None or getattr(upload, "size", 0) == 0:
+        return False
+    ct = (getattr(upload, "content_type", None) or "").strip().lower()
+    if ct.startswith("video/"):
+        return True
+    name = (getattr(upload, "name", "") or "").lower()
+    return name.endswith((".webm", ".mp4", ".mov", ".mkv", ".m4v", ".ogv", ".avi"))
+
+
 @api_view(["POST"])
 def admin_task_submit(request):
-    """Create one device submission for an admin-assigned task (JSON or multipart for optional file)."""
+    """Create one device submission for an admin-assigned task (multipart with required video)."""
     device = _user_device_key(request)
     try:
         task_id = int(request.data.get("task_id"))
@@ -844,9 +854,15 @@ def admin_task_submit(request):
     upload = request.FILES.get("attachment")
     if upload is not None and getattr(upload, "size", 0) == 0:
         upload = None
-    if upload is not None:
-        if upload.size > ADMIN_TASK_MAX_ATTACHMENT_BYTES:
-            return Response({"detail": "Attachment too large (max 50MB)."}, status=status.HTTP_400_BAD_REQUEST)
+    if not _admin_task_attachment_is_video(upload):
+        return Response(
+            {
+                "detail": "A video attachment is required. Record or upload a video file (e.g. MP4 or WebM), max 50MB.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if upload.size > ADMIN_TASK_MAX_ATTACHMENT_BYTES:
+        return Response({"detail": "Attachment too large (max 50MB)."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Authoritative duration: from when the admin posted the bonus until this submit (server clock).
     elapsed_from_challenge_start = max(0, int((now - task.created_at).total_seconds()))

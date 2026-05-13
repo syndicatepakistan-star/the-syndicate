@@ -88,6 +88,15 @@ function pickMediaRecorderMimeType(): string | undefined {
   return undefined;
 }
 
+/** Mega mission / admin task: a video file must be attached (camera recording or video upload). */
+function adminTaskAttachmentIsVideo(file: File | null | undefined): boolean {
+  if (!file || typeof file.size !== "number" || file.size <= 0) return false;
+  const ct = (file.type || "").trim().toLowerCase();
+  if (ct.startsWith("video/")) return true;
+  const name = (file.name || "").toLowerCase();
+  return /\.(webm|mp4|mov|mkv|m4v|ogv|avi)$/i.test(name);
+}
+
 export type { ChallengeRow } from "@/app/challenges/services/challengesApi";
 
 const CATEGORIES = ["business", "money", "fitness", "power", "grooming", "personal"] as const;
@@ -620,7 +629,7 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
                 <strong className="text-white">Mega mission</strong> is the bonus track: tasks published by admins show up here, often with a visible time limit from when they were posted.
               </p>
               <p>
-                You submit a <strong className="text-white">written response</strong> and can attach a file or recording where the form allows. Staff review submissions in admin; you get <strong className="text-white">one submission per device per task</strong>.
+                You submit a <strong className="text-white">written response</strong> and a <strong className="text-white">video</strong> (use <strong className="text-white">Record video</strong> or upload MP4/WebM/MOV — max 50MB). Staff review in admin; you get <strong className="text-white">one submission per device per task</strong>.
               </p>
               <p>After approval, use <strong className="text-white">Claim reviewed points</strong> on that task to receive the payout—this pipeline is separate from your daily syndicate missions.</p>
             </>
@@ -3275,11 +3284,11 @@ export function SyndicateAiChallengePanel() {
     if (draft.length < 3) {
       if (file) {
         setAdminTaskMsg(
-          "Text is required: type at least 3 characters in the box above. Your video or file is already attached — then press Submit again."
+          "Text is required: type at least 3 characters above. Your video is already attached — then press Submit again."
         );
       } else {
         setAdminTaskMsg(
-          "Text is required: type at least 3 characters in the box above, then press Submit. Add a video or file below if needed."
+          "Text is required: type at least 3 characters above, then attach a video (Record video or choose a video file) and press Submit."
         );
       }
       if (typeof document !== "undefined") {
@@ -3291,11 +3300,25 @@ export function SyndicateAiChallengePanel() {
       }
       return;
     }
-    setAdminTaskMsg(
-      file
-        ? "Submitting your written response and attachment for admin review…"
-        : "Submitting your written response for admin review…"
-    );
+    if (!adminTaskAttachmentIsVideo(file)) {
+      if (file) {
+        setAdminTaskMsg(
+          "Mega mission requires a video file: remove the non-video file, then use Record video or choose MP4/WebM/MOV (max 50MB)."
+        );
+      } else {
+        setAdminTaskMsg(
+          "Video is required: use Record video or choose a video file below, then press Submit again with your written response."
+        );
+      }
+      if (typeof document !== "undefined") {
+        const el = document.getElementById(`admin-task-file-${taskId}`);
+        if (el instanceof HTMLElement) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
+    }
+    setAdminTaskMsg("Submitting your written response and video for admin review…");
     setAdminTaskBusyId(taskId);
     try {
       const device = getDeviceId();
@@ -3327,9 +3350,7 @@ export function SyndicateAiChallengePanel() {
         }
       }
       setAdminTaskMsg(
-        file
-          ? "Saved: your written response and video/file attachment were sent. Staff will review; you will get points after analysis."
-          : "Saved: your written response was sent. Staff will review; you will get points after analysis."
+        "Saved: your written response and video were sent. Staff will review; you will get points after analysis."
       );
     } catch (e) {
       if (e instanceof SyndicateSessionLostError) return;
@@ -3396,7 +3417,7 @@ export function SyndicateAiChallengePanel() {
           }
         } else {
           setAdminTaskMsg(
-            "Recording had no data (try again, record a few seconds, or upload a file). Your written response can still be submitted without a video."
+            "Recording had no data — try again and record a few seconds, or upload a video file. A video is required to submit this mega mission."
           );
         }
         stream.getTracks().forEach((tr) => tr.stop());
@@ -4985,8 +5006,8 @@ export function SyndicateAiChallengePanel() {
                   </h3>
                   <p className="mt-3 text-[14px] font-medium leading-relaxed text-white/88 sm:text-[15px]">
                     When an admin posts a bonus task, it appears below. Submit your{" "}
-                    <span className="font-semibold text-cyan-100">written response</span> and optionally an{" "}
-                    <span className="font-semibold text-cyan-100">attachment</span> — both are stored and visible to staff in Django admin.
+                    <span className="font-semibold text-cyan-100">written response</span> and a{" "}
+                    <span className="font-semibold text-cyan-100">video</span> (record with your camera or upload a video file) — both are required and visible to staff in Django admin.
                   </p>
                   <ul className="mt-4 grid gap-2.5 text-left sm:gap-3">
                     <li className="flex gap-2 border-l-[3px] border-cyan-400/50 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
@@ -5038,6 +5059,7 @@ export function SyndicateAiChallengePanel() {
                       : null;
                   const fileName = adminTaskFiles[t.id]?.name;
                   const isRecording = !!adminTaskRecording[t.id];
+                  const videoAttached = adminTaskAttachmentIsVideo(adminTaskFiles[t.id] ?? null);
                   return (
                     <article
                       key={t.id}
@@ -5093,7 +5115,7 @@ export function SyndicateAiChallengePanel() {
                               {submittedLabel ? (
                                 <p className="mt-2 font-semibold text-white/95">
                                   {submittedLabel}
-                                  {sub.has_attachment ? <span className="text-cyan-200/90"> · File included</span> : null}
+                                  {sub.has_attachment ? <span className="text-cyan-200/90"> · Video included</span> : null}
                                 </p>
                               ) : null}
                               {typeof sub.elapsed_seconds === "number" && sub.elapsed_seconds > 0 ? (
@@ -5145,7 +5167,8 @@ export function SyndicateAiChallengePanel() {
                               <div>
                                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-200/85">Your response</p>
                                 <p className="mt-1 text-[12px] text-white/55">
-                                  <span className="text-emerald-200/90">Text is required</span> (at least 3 characters). Your text and any video/file below are sent together in one submission for admin review (max 50MB attachment).
+                                  <span className="text-emerald-200/90">Text is required</span> (at least 3 characters).{" "}
+                                  <span className="text-amber-200/90">A video is required</span> — use Record video or upload MP4/WebM/MOV (max 50MB). Both are sent in one submission.
                                 </p>
                               </div>
                               <div>
@@ -5163,15 +5186,25 @@ export function SyndicateAiChallengePanel() {
                               </div>
                               <div className="rounded-xl border border-white/12 bg-black/35 p-3">
                                 <label className="block text-[12px] font-semibold text-white/80" htmlFor={`admin-task-file-${t.id}`}>
-                                  Video or file <span className="font-normal text-white/45">(optional — pairs with your written response)</span>
+                                  Video <span className="font-normal text-amber-200/90">(required)</span>{" "}
+                                  <span className="font-normal text-white/45">— record or upload</span>
                                 </label>
                                 <input
                                   id={`admin-task-file-${t.id}`}
                                   type="file"
+                                  accept="video/*,.webm,.mp4,.mov,.mkv,.m4v,.ogv,.avi"
                                   className="mt-2 block w-full cursor-pointer text-[13px] text-white/85 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-cyan-500/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-cyan-50 hover:file:bg-cyan-500/40"
                                   onChange={(e) => {
                                     const f = e.target.files?.[0] ?? null;
                                     if (isRecording) stopAdminTaskVideoRecord(t.id);
+                                    if (f && !adminTaskAttachmentIsVideo(f)) {
+                                      setAdminTaskMsg(
+                                        "Mega mission requires a video file. Choose MP4, WebM, MOV, or use Record video."
+                                      );
+                                      e.target.value = "";
+                                      setAdminTaskFiles((prev) => ({ ...prev, [t.id]: null }));
+                                      return;
+                                    }
                                     setAdminTaskFiles((prev) => ({ ...prev, [t.id]: f }));
                                   }}
                                 />
@@ -5214,22 +5247,36 @@ export function SyndicateAiChallengePanel() {
                                   </p>
                                 ) : null}
                                 {fileName ? (
-                                  <p className="mt-2 text-[12px] text-cyan-200/90">Selected: {fileName}</p>
+                                  <p className="mt-2 text-[12px] text-cyan-200/90">
+                                    Selected: {fileName}
+                                    {!videoAttached ? (
+                                      <span className="ml-2 text-amber-200/95"> — not detected as video; pick a video file or record.</span>
+                                    ) : null}
+                                  </p>
                                 ) : (
-                                  <p className="mt-2 text-[11px] text-white/40">PDF, images, zip, or recorded video. Shown to admin with your text.</p>
+                                  <p className="mt-2 text-[11px] text-white/45">
+                                    Video only (max 50MB). Shown to admin with your text.
+                                  </p>
                                 )}
                               </div>
                               <button
                                 type="button"
-                                disabled={adminTaskBusyId === t.id}
+                                disabled={adminTaskBusyId === t.id || isRecording || !videoAttached}
+                                title={
+                                  !videoAttached
+                                    ? "Attach a video (record or upload) before submitting."
+                                    : isRecording
+                                      ? "Stop recording before submitting."
+                                      : undefined
+                                }
                                 onClick={() => void submitAdminTask(t.id)}
-                                className={cn(
-                                  "w-full px-4 py-3 text-[14px] font-bold uppercase tracking-[0.08em]",
-                                  CTA_BTN
-                                )}
+                                className={cn("w-full px-4 py-3 text-[14px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
                               >
                                 {adminTaskBusyId === t.id ? "Submitting…" : "Submit for admin review"}
                               </button>
+                              {!videoAttached && !isRecording ? (
+                                <p className="text-center text-[11px] text-amber-200/85">Video required — record or choose a video file above.</p>
+                              ) : null}
                             </div>
                           )}
                         </div>

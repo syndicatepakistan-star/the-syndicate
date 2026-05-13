@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type ProgramsGoldPillHeadingChrome = "gold" | "goldViolet" | "violet" | "lime" | "fuchsia" | "cyan";

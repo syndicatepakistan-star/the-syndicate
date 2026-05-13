@@ -554,7 +554,7 @@ export function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         className={cn(
-          "group/card relative flex aspect-[3/4] w-full max-w-[200px] justify-self-center flex-col overflow-hidden text-left outline-none sm:max-w-[220px]",
+          "group/card relative flex aspect-[3/4] w-full min-w-0 max-w-none justify-self-stretch flex-col overflow-hidden text-left outline-none",
           "rounded-2xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -760,9 +760,9 @@ export function ProgramsCourseSection({
                       All
                     </button>
                   </div>
-                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)] xl:grid-cols-[minmax(0,1fr)_minmax(520px,700px)] lg:items-stretch">
-                    <div className="relative w-full max-w-none sm:max-w-[560px] lg:max-w-[700px] xl:max-w-[760px]">
-                      <div className="relative rounded-xl bg-gradient-to-r from-cyan-300/80 via-violet-300/75 to-amber-300/75 p-[1px]">
+                  <div className="flex w-full max-w-[min(100%,36rem)] flex-col gap-3 sm:max-w-[34rem]">
+                    <div className="relative w-full">
+                      <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
                         <input
                           type="text"
                           value={playlistTitleQuery}
@@ -772,8 +772,8 @@ export function ProgramsCourseSection({
                         />
                       </div>
                     </div>
-                    <div className="flex min-h-0 flex-wrap items-start justify-center gap-2 sm:justify-start sm:gap-3 lg:max-w-[720px] xl:max-w-[780px]">
-                      <div className="flex w-[min(90vw,272px)] shrink-0 flex-col overflow-hidden rounded-xl border border-amber-400/50 bg-[#070a12] sm:w-[260px] lg:w-[276px]">
+                    <div className="grid w-full grid-cols-2 gap-2 sm:gap-3">
+                      <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-xl border border-amber-400/50 bg-[#070a12]">
                         <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_MONEY_MASTERY}
@@ -817,7 +817,7 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                      <div className="flex w-[min(90vw,272px)] shrink-0 flex-col overflow-hidden rounded-xl border border-violet-400/55 bg-[#07060f] sm:w-[260px] lg:w-[276px]">
+                      <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-xl border border-violet-400/55 bg-[#07060f]">
                         <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_THE_KING}
@@ -915,7 +915,7 @@ export function ProgramsCourseSection({
                         <div
                           className={cn(
                             "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
-                            showBothPlaylistColumns ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5"
+                            showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 min-[400px]:grid-cols-2"
                           )}
                         >
                           {visibleBusinessPsychologyPlaylists.map((pl, j) => renderStreamPlaylistCard(pl, j))}
@@ -939,7 +939,7 @@ export function ProgramsCourseSection({
                         <div
                           className={cn(
                             "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
-                            showBothPlaylistColumns ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5"
+                            showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 min-[400px]:grid-cols-2"
                           )}
                         >
                           {visibleBusinessModelPlaylists.map((pl, j) =>
@@ -954,7 +954,7 @@ export function ProgramsCourseSection({
               {apiCourses.length > 0 ? (
                 <div className="space-y-3">
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-cyan-100/80">Courses</div>
-                  <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+                  <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 sm:gap-5 min-[400px]:grid-cols-2 md:gap-6">
               {apiCourses.map((c, i) => {
                 const grad = PROGRAM_CARD_BACKGROUNDS[(streamPlaylists.length + i) % PROGRAM_CARD_BACKGROUNDS.length];
                 const coverSrc = resolveDjangoMediaUrl(c.cover_image_url);

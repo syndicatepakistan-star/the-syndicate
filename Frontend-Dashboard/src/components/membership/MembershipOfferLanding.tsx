@@ -228,7 +228,7 @@ export function MembershipOfferLanding() {
           <div className={cn("relative w-full min-w-0", HERO_KING_OUTER_GLOW)}>
           <article
             className={cn(
-              "relative flex min-h-[22rem] w-full flex-col overflow-visible p-[3px] sm:min-h-[27rem]",
+              "relative flex min-h-[20rem] w-full flex-col overflow-visible p-[3px] sm:min-h-[24rem]",
               CLIP_CARD,
               "bg-[linear-gradient(135deg,rgba(196,181,253,0.95),rgba(124,58,237,0.58),rgba(91,33,182,0.82))]",
               "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
@@ -245,7 +245,7 @@ export function MembershipOfferLanding() {
                 "ring-1 ring-violet-400/28"
               )}
             >
-              <div className="relative min-h-[200px] flex-1 overflow-hidden sm:min-h-[240px]">
+              <div className="relative min-h-[220px] flex-[1.15] overflow-hidden sm:min-h-[260px]">
                 <img
                   src={OFFER_PLAN_THUMB_THE_KING}
                   alt=""
@@ -254,25 +254,25 @@ export function MembershipOfferLanding() {
                   decoding="async"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/75 to-black/95" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_55%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-black/35 to-black/65" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_18%,rgba(139,92,246,0.08),transparent_58%)]" />
               </div>
-              <div className="relative z-[3] border-t border-pink-500/40 bg-black/88 px-4 py-3.5 sm:px-6 sm:py-4">
-                <p className="text-left font-mono text-xs font-bold leading-relaxed text-white/95 sm:text-sm">
+              <div className="relative z-[3] border-t border-pink-500/40 bg-black/88 px-3 py-2.5 sm:px-5 sm:py-3">
+                <p className="text-left font-mono text-[11px] font-bold leading-snug text-white/95 sm:text-xs">
                   <span className="text-pink-400 uppercase tracking-[0.08em] [text-shadow:0_0_14px_rgba(244,114,182,0.85),0_0_28px_rgba(244,63,94,0.35)]">
-                    [VISUAL_UPLINK]
+                    [UPLINK]
                   </span>{" "}
                   <span className="font-semibold tracking-wide text-neutral-200/95 normal-case">
-                    The King tier — full Syndicate OS, not a single course.
+                    The King — dashboard, library and Syndicate Mode.
                   </span>
                 </p>
               </div>
-              <div className="relative z-[3] border-t border-sky-400/35 bg-gradient-to-b from-black via-[#06060a] to-black px-4 py-4 sm:px-6 sm:py-5">
-                <p className="font-mono text-[10px] font-black uppercase tracking-[0.24em] text-sky-300 [text-shadow:0_0_12px_rgba(56,189,248,0.65),0_0_26px_rgba(14,165,233,0.35)]">
-                  // protocol_surface
+              <div className="relative z-[3] border-t border-sky-400/35 bg-gradient-to-b from-black via-[#06060a] to-black px-3 py-2.5 sm:px-5 sm:py-3">
+                <p className="font-mono text-[9px] font-black uppercase tracking-[0.22em] text-sky-300/95 [text-shadow:0_0_12px_rgba(56,189,248,0.55),0_0_22px_rgba(14,165,233,0.28)] sm:text-[10px]">
+                  // checkout · full access
                 </p>
-                <p className="mt-1 font-mono text-xs leading-relaxed text-neutral-400 sm:text-sm">
-                  Neon frame locked. Full OS access routes through this tier after checkout clears.
+                <p className="mt-0.5 font-mono text-[11px] leading-snug text-neutral-400 sm:text-xs">
+                  Unlocks after payment clears.
                 </p>
               </div>
             </div>
@@ -301,15 +301,14 @@ export function MembershipOfferLanding() {
               )}
             >
               <div>
-                <h2 className="font-mono text-sm font-black uppercase tracking-[0.2em] text-fuchsia-400 [text-shadow:0_0_14px_rgba(232,121,249,0.65),0_0_28px_rgba(192,38,211,0.3)] sm:text-base">
-                  // access_manifest
+                <h2 className="font-mono text-xs font-black uppercase tracking-[0.2em] text-fuchsia-400 [text-shadow:0_0_14px_rgba(232,121,249,0.65),0_0_28px_rgba(192,38,211,0.3)] sm:text-sm">
+                  // manifest
                 </h2>
-                <h3 className="mt-2 font-mono text-2xl font-black uppercase tracking-[0.12em] text-pink-300 [text-shadow:0_0_18px_rgba(249,168,212,0.65),0_0_40px_rgba(236,72,153,0.22)] sm:text-3xl">
+                <h3 className="mt-1.5 font-mono text-xl font-black uppercase tracking-[0.12em] text-pink-300 [text-shadow:0_0_18px_rgba(249,168,212,0.65),0_0_40px_rgba(236,72,153,0.22)] sm:text-2xl">
                   Details
                 </h3>
-                <p className="mt-3 font-mono text-[15px] leading-relaxed text-neutral-300 sm:text-base lg:text-lg">
-                  One membership unlocks the hub inside the dashboard: protected articles, secure video drops, Syndicate missions,
-                  and the full goals experience alongside your selected programs.
+                <p className="mt-2 font-mono text-sm leading-relaxed text-neutral-300 sm:text-[15px]">
+                  Articles, video hub, missions, goals — inside the dashboard with your chosen programs.
                 </p>
               </div>
 
@@ -364,8 +363,8 @@ export function MembershipOfferLanding() {
             >
               <div className="text-center">
               <ProgramsGoldPillHeading as="h2" title="Unlocked after you join" size="compact" chrome="lime" />
-              <p className="mx-auto mt-5 max-w-[58ch] font-mono text-base leading-relaxed text-neutral-400 sm:text-lg">
-                Once The King membership is active, these sectors open inside the Syndicate dashboard.
+              <p className="mx-auto mt-4 max-w-[48ch] font-mono text-sm leading-relaxed text-neutral-400 sm:text-base">
+                Active membership opens these in the dashboard.
               </p>
             </div>
 

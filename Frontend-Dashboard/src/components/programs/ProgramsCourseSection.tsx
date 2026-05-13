@@ -775,10 +775,10 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
                     </div>
-                    <div className="min-h-0 min-w-0 w-full">
-                      <div className="grid min-h-0 w-full min-w-0 grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-                        <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:rounded-xl">
-                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden sm:aspect-[4/3]">
+                    <div className="flex min-h-0 min-w-0 justify-center md:justify-end">
+                      <div className="grid w-max max-w-full grid-cols-2 gap-2 sm:gap-2.5">
+                        <div className="flex w-[min(42vw,148px)] shrink-0 flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:w-[156px] md:w-[160px]">
+                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_MONEY_MASTERY}
                             alt=""
@@ -821,8 +821,8 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                        <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:rounded-xl">
-                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden sm:aspect-[4/3]">
+                        <div className="flex w-[min(42vw,148px)] shrink-0 flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:w-[156px] md:w-[160px]">
+                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_THE_KING}
                             alt=""

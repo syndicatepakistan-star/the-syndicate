@@ -672,7 +672,7 @@ export function ProgramsCourseSection({
       {showSecureBlock ? (
         <div className="mb-8 space-y-5">
           {!inProgramLessonView ? (
-            <div className="border-b border-[color:var(--gold-neon-border-mid)]/35 pb-4 text-left">
+            <div className="pb-3 text-left sm:pb-4">
               <div className="text-[18px] font-black uppercase tracking-[0.16em] text-[color:var(--gold)]/95 [text-shadow:0_0_12px_rgba(250,204,21,0.2)] sm:text-[24px]">
                 Programs
               </div>
@@ -721,9 +721,10 @@ export function ProgramsCourseSection({
           {hasCatalogItems && secureView === "grid" ? (
             <div className="space-y-6">
               {streamPlaylists.length > 0 ? (
-                <div className="w-full space-y-3">
-                  <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-[minmax(0,max-content)_minmax(0,1fr)] md:items-start md:gap-3 lg:gap-4">
-                    <div className="flex min-w-0 w-full max-w-[15.5rem] flex-col gap-3 sm:max-w-[17rem]">
+                <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
+                  <div className="w-full space-y-3">
+                  <div className="grid w-full min-w-0 grid-cols-1 gap-3 md:grid-cols-[auto_minmax(0,1fr)] md:items-start md:gap-4 lg:gap-5">
+                    <div className="flex min-w-0 w-full max-w-[17rem] shrink-0 flex-col gap-3 sm:max-w-[18rem]">
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
@@ -774,10 +775,10 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
                     </div>
-                    <div className="flex min-h-0 min-w-0 justify-center md:justify-start">
-                      <div className="grid w-max max-w-full grid-cols-2 gap-2 sm:gap-2.5">
-                        <div className="flex w-[min(42vw,158px)] shrink-0 flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:w-[168px] md:w-[172px]">
-                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
+                    <div className="min-h-0 min-w-0 w-full">
+                      <div className="grid min-h-0 w-full min-w-0 grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+                        <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:rounded-xl">
+                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden sm:aspect-[4/3]">
                           <img
                             src={OFFER_PLAN_THUMB_MONEY_MASTERY}
                             alt=""
@@ -820,8 +821,8 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                        <div className="flex w-[min(42vw,158px)] shrink-0 flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:w-[168px] md:w-[172px]">
-                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden">
+                        <div className="flex min-w-0 w-full flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:rounded-xl">
+                          <div className="relative aspect-[5/4] w-full shrink-0 overflow-hidden sm:aspect-[4/3]">
                           <img
                             src={OFFER_PLAN_THUMB_THE_KING}
                             alt=""
@@ -864,6 +865,7 @@ export function ProgramsCourseSection({
                       </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               ) : null}

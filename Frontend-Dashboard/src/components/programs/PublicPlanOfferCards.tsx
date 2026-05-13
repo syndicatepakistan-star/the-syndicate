@@ -123,18 +123,18 @@ export function PublicPlanOfferCards() {
       {error ? (
         <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{error}</div>
       ) : null}
-      <div className="flex flex-row flex-wrap justify-center gap-3 sm:justify-center sm:gap-4">
+      <div className="flex flex-row flex-wrap items-start justify-center gap-2 sm:justify-center sm:gap-3">
         {OFFERS.map((offer) => {
           const theme = offer.theme;
           return (
             <article
               key={offer.plan}
               className={cn(
-                "flex w-[min(92vw,320px)] shrink-0 flex-col overflow-hidden rounded-2xl border-2 bg-[#070a12] sm:w-[300px] lg:w-[328px]",
+                "flex w-[min(90vw,272px)] shrink-0 flex-col overflow-hidden rounded-xl border-2 bg-[#070a12] sm:w-[260px] lg:w-[276px]",
                 theme.dominantBorder
               )}
             >
-              <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
+              <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                 <img
                   src={offer.imageSrc}
                   alt=""
@@ -158,15 +158,15 @@ export function PublicPlanOfferCards() {
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" />
                 <div
                   className={cn(
-                    "absolute inset-x-0 bottom-0 z-[2] p-3 text-[clamp(0.7rem,2.8vw,1rem)] font-extrabold uppercase leading-tight tracking-[0.06em]",
+                    "absolute inset-x-0 bottom-0 z-[2] p-2 text-[clamp(0.65rem,2.4vw,0.85rem)] font-extrabold uppercase leading-tight tracking-[0.06em]",
                     theme.title
                   )}
                 >
                   {offer.title}
                 </div>
               </div>
-              <div className="flex flex-1 flex-col gap-2 border-t border-white/10 p-3">
-                <div className="text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-white/65">
+              <div className="flex flex-col gap-1 border-t border-white/10 p-2">
+                <div className="text-left text-[9px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/65">
                   Syndicate plan
                 </div>
                 <button
@@ -180,7 +180,7 @@ export function PublicPlanOfferCards() {
                     void joinOffer(offer);
                   }}
                   className={cn(
-                    "mt-auto w-full rounded-lg border px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] transition sm:text-[11px]",
+                    "w-full rounded-md border px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] transition sm:text-[10px]",
                     "disabled:cursor-wait disabled:opacity-70",
                     offer.plan === "bundle"
                       ? "border-amber-300/75 bg-[linear-gradient(135deg,rgba(90,70,12,0.5),rgba(28,22,6,0.95))] text-amber-50 hover:brightness-110"

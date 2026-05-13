@@ -762,11 +762,7 @@ export function ProgramsCourseSection({
                   </div>
                   <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)] xl:grid-cols-[minmax(0,1fr)_minmax(520px,700px)] lg:items-stretch">
                     <div className="relative w-full max-w-none sm:max-w-[560px] lg:max-w-[700px] xl:max-w-[760px]">
-                      <div
-                        className="pointer-events-none absolute -inset-1 rounded-2xl bg-cyan-400/15 blur-sm"
-                        aria-hidden
-                      />
-                      <div className="relative rounded-xl bg-gradient-to-r from-cyan-300/80 via-violet-300/75 to-amber-300/75 p-[1px] shadow-[0_0_14px_rgba(56,189,248,0.3)]">
+                      <div className="relative rounded-xl bg-gradient-to-r from-cyan-300/80 via-violet-300/75 to-amber-300/75 p-[1px]">
                         <input
                           type="text"
                           value={playlistTitleQuery}
@@ -776,8 +772,8 @@ export function ProgramsCourseSection({
                         />
                       </div>
                     </div>
-                    <div className="flex min-h-0 flex-wrap justify-center gap-3 sm:justify-start sm:gap-4 lg:max-w-[520px] xl:max-w-[560px]">
-                      <div className="flex w-[min(46vw,220px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-amber-400/50 bg-[#070a12] sm:w-[232px]">
+                    <div className="flex min-h-0 flex-wrap justify-center gap-3 sm:justify-start sm:gap-4 lg:max-w-[720px] xl:max-w-[780px]">
+                      <div className="flex w-[min(92vw,320px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-amber-400/50 bg-[#070a12] sm:w-[300px] lg:w-[328px]">
                         <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_MONEY_MASTERY}
@@ -823,7 +819,7 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
 
-                      <div className="flex w-[min(46vw,220px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-violet-400/55 bg-[#07060f] sm:w-[232px]">
+                      <div className="flex w-[min(92vw,320px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-violet-400/55 bg-[#07060f] sm:w-[300px] lg:w-[328px]">
                         <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
                           <img
                             src={OFFER_PLAN_THUMB_THE_KING}

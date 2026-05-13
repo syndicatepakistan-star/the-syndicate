@@ -130,7 +130,7 @@ export function PublicPlanOfferCards() {
             <article
               key={offer.plan}
               className={cn(
-                "flex w-[min(46vw,220px)] shrink-0 flex-col overflow-hidden rounded-2xl border-2 bg-[#070a12] sm:w-[232px]",
+                "flex w-[min(92vw,320px)] shrink-0 flex-col overflow-hidden rounded-2xl border-2 bg-[#070a12] sm:w-[300px] lg:w-[328px]",
                 theme.dominantBorder
               )}
             >

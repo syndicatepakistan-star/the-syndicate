@@ -9,6 +9,7 @@ import {
   ProgramPlaylistDescriptionModal,
   PROGRAM_DETAIL_TRIGGER_ATTR,
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
+import { OFFER_PLAN_THUMB_MONEY_MASTERY, OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -187,6 +188,7 @@ export function ProgramsCourseSection({
   const [checkoutBusyPlaylistId, setCheckoutBusyPlaylistId] = useState<number | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [bundleCheckoutBusy, setBundleCheckoutBusy] = useState(false);
+  const [kingCheckoutBusy, setKingCheckoutBusy] = useState(false);
   const [playlistDescriptionModal, setPlaylistDescriptionModal] = useState<StreamPlaylistListItem | null>(null);
 
   const reloadApiCourses = useCallback(async () => {
@@ -391,6 +393,62 @@ export function ProgramsCourseSection({
       setBundleCheckoutBusy(false);
     }
   }, [bundleCheckoutBusy, reloadApiCourses, reloadStreamPlaylists]);
+
+  const startKingCheckout = useCallback(async () => {
+    if (kingCheckoutBusy) return;
+    setCheckoutError(null);
+    setKingCheckoutBusy(true);
+    const billing = "monthly";
+    const amount = "19.99";
+    try {
+      if (!hasSimpleAuthSessionClient()) {
+        const params = new URLSearchParams({
+          plan: "king",
+          billing,
+          amount,
+        });
+        window.location.assign(`/signup?${params.toString()}`);
+        return;
+      }
+
+      const authHeader = getAuthorizationHeader();
+      const response = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader ? { Authorization: authHeader } : {}),
+        },
+        body: JSON.stringify({
+          return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
+          selected_plan: "king",
+          selected_billing: billing,
+          selected_amount: amount,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        checkout_url?: string;
+        is_unlocked?: boolean;
+        already_purchased?: boolean;
+        message?: string;
+      };
+      const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
+      if (response.ok && checkoutUrl) {
+        window.location.assign(checkoutUrl);
+        return;
+      }
+      if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+        await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
+        toast.success(payload.message || "The King plan is already active for this account.");
+        return;
+      }
+      throw new Error(payload.message || "Could not start The King checkout.");
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Could not start The King checkout.");
+    } finally {
+      setKingCheckoutBusy(false);
+    }
+  }, [kingCheckoutBusy, reloadApiCourses, reloadStreamPlaylists]);
 
   const backToProgramGrid = () => {
     setSecureView("grid");
@@ -726,44 +784,108 @@ export function ProgramsCourseSection({
                         />
                       </div>
                     </div>
-                    <div className="relative min-h-[190px] overflow-hidden rounded-3xl border border-fuchsia-300/85 bg-[linear-gradient(135deg,rgba(6,30,52,0.96),rgba(44,9,60,0.93),rgba(12,42,26,0.9))] px-4 py-4 sm:min-h-[205px] sm:px-5 sm:py-5 lg:min-h-[220px] lg:px-6 lg:py-6 shadow-[0_0_38px_rgba(217,70,239,0.36),0_0_22px_rgba(34,211,238,0.28)]">
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute inset-[6px] rounded-[1.2rem] border border-cyan-200/35 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.2),inset_0_0_30px_rgba(34,211,238,0.12)]"
-                      />
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute left-4 top-4 h-5 w-10 rounded-sm border-l-2 border-t-2 border-amber-300/80"
-                      />
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute bottom-4 right-4 h-5 w-10 rounded-sm border-b-2 border-r-2 border-cyan-300/80"
-                      />
-                      <div className="relative text-[12px] font-black uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_16px_rgba(217,70,239,0.95)] sm:text-[14px] sm:tracking-[0.18em] lg:text-[16px] lg:tracking-[0.22em]">
-                        Money Mastery Bundle
+                    <div className="flex min-h-0 flex-col gap-3 lg:max-w-[700px] xl:max-w-[760px]">
+                      <div className="relative min-h-[168px] overflow-hidden rounded-3xl border border-fuchsia-300/85 shadow-[0_0_38px_rgba(217,70,239,0.36),0_0_22px_rgba(34,211,238,0.28)] sm:min-h-[178px]">
+                        <img
+                          src={OFFER_PLAN_THUMB_MONEY_MASTERY}
+                          alt=""
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality]"
+                        />
+                        <div
+                          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-black/60 to-violet-950/35"
+                          aria-hidden
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/20 to-transparent" aria-hidden />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-[6px] rounded-[1.2rem] border border-cyan-200/25 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.15),inset_0_0_24px_rgba(34,211,238,0.08)]"
+                        />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute left-3 top-3 h-4 w-8 rounded-sm border-l-2 border-t-2 border-amber-300/75 sm:left-4 sm:top-4"
+                        />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute bottom-3 right-3 h-4 w-8 rounded-sm border-b-2 border-r-2 border-cyan-300/75 sm:bottom-4 sm:right-4"
+                        />
+                        <div className="relative z-10 flex min-h-[168px] flex-col justify-end px-4 py-3 sm:min-h-[178px] sm:px-5 sm:py-4">
+                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_12px_rgba(217,70,239,0.95)] sm:text-[13px] sm:tracking-[0.18em]">
+                            Money Mastery Bundle
+                          </div>
+                          <p className="mt-1.5 max-w-[100%] text-[12px] leading-snug text-cyan-50/95 sm:max-w-[98%] sm:text-[14px] sm:leading-relaxed">
+                            Unlock all programs at once (all playlist categories and courses). One checkout, instant full program access.
+                          </p>
+                          <div className="mt-3 flex flex-row items-center justify-between gap-2 sm:mt-4">
+                            <span className="w-fit shrink-0 border border-amber-300/85 bg-amber-950/65 px-3 py-1 text-[12px] font-black text-amber-100 shadow-[0_0_16px_rgba(251,191,36,0.42)] [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)] sm:px-4 sm:py-1.5 sm:text-[14px]">
+                              £333
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void startBundleCheckout();
+                              }}
+                              disabled={bundleCheckoutBusy}
+                              className={cn(
+                                "w-auto whitespace-nowrap border px-3 py-2 text-[10px] font-black uppercase tracking-[0.11em] transition [clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)] sm:px-5 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em]",
+                                "border-cyan-200/90 bg-[linear-gradient(135deg,rgba(3,57,74,0.95),rgba(9,95,88,0.92),rgba(26,50,9,0.9))] text-cyan-50",
+                                "shadow-[0_0_20px_rgba(34,211,238,0.5),0_0_10px_rgba(16,185,129,0.35)] hover:brightness-110 hover:shadow-[0_0_28px_rgba(34,211,238,0.75)]",
+                                "disabled:cursor-not-allowed disabled:opacity-60"
+                              )}
+                            >
+                              {bundleCheckoutBusy ? "Redirecting..." : "Unlock All Programs"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="relative mt-2 max-w-[100%] text-[13px] leading-[1.45] text-cyan-50/95 sm:max-w-[96%] sm:text-[16px] sm:leading-[1.5] lg:mt-3 lg:text-[19px]">
-                        Unlock all programs at once (all playlist categories and courses). One checkout, instant full program access.
-                      </p>
-                      <div className="relative mt-4 flex flex-row items-center justify-between gap-2 sm:mt-5 sm:gap-3 lg:mt-6 lg:gap-4">
-                        <span className="w-fit shrink-0 border border-amber-300/85 bg-amber-950/55 px-4 py-1.5 text-[14px] font-black text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.48)] [clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)] sm:px-4 sm:py-1.5 sm:text-[14px] lg:px-5 lg:py-2 lg:text-[16px]">
-                          £333
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void startBundleCheckout();
-                          }}
-                          disabled={bundleCheckoutBusy}
-                          className={cn(
-                            "w-auto whitespace-nowrap border px-4 py-2 text-[11px] font-black uppercase tracking-[0.11em] transition [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] sm:px-5 sm:py-2.5 sm:text-[13px] sm:tracking-[0.14em] lg:px-6 lg:py-3 lg:text-[16px] lg:tracking-[0.17em]",
-                            "border-cyan-200/90 bg-[linear-gradient(135deg,rgba(3,57,74,0.95),rgba(9,95,88,0.92),rgba(26,50,9,0.9))] text-cyan-50",
-                            "shadow-[0_0_24px_rgba(34,211,238,0.55),0_0_12px_rgba(16,185,129,0.4)] hover:brightness-110 hover:shadow-[0_0_32px_rgba(34,211,238,0.8),0_0_18px_rgba(16,185,129,0.62)]",
-                            "disabled:cursor-not-allowed disabled:opacity-60"
-                          )}
-                        >
-                          {bundleCheckoutBusy ? "Redirecting..." : "Unlock All Programs"}
-                        </button>
+
+                      <div className="relative min-h-[168px] overflow-hidden rounded-3xl border border-violet-300/80 shadow-[0_0_36px_rgba(139,92,246,0.38),0_0_18px_rgba(217,70,239,0.22)] sm:min-h-[178px]">
+                        <img
+                          src={OFFER_PLAN_THUMB_THE_KING}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality]"
+                        />
+                        <div
+                          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-violet-950/50 to-black/40"
+                          aria-hidden
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" aria-hidden />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-[6px] rounded-[1.2rem] border border-violet-200/20 shadow-[inset_0_0_20px_rgba(139,92,246,0.12)]"
+                        />
+                        <div className="relative z-10 flex min-h-[168px] flex-col justify-end px-4 py-3 sm:min-h-[178px] sm:px-5 sm:py-4">
+                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-100 [text-shadow:0_0_12px_rgba(167,139,250,0.9)] sm:text-[13px] sm:tracking-[0.18em]">
+                            The King
+                          </div>
+                          <p className="mt-1.5 max-w-[100%] text-[12px] leading-snug text-white/88 sm:max-w-[98%] sm:text-[14px] sm:leading-relaxed">
+                            Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.
+                          </p>
+                          <div className="mt-3 flex flex-row items-center justify-between gap-2 sm:mt-4">
+                            <span className="w-fit shrink-0 border border-violet-300/80 bg-violet-950/55 px-3 py-1 text-[12px] font-black text-violet-100 shadow-[0_0_16px_rgba(167,139,250,0.35)] [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)] sm:px-4 sm:py-1.5 sm:text-[14px]">
+                              £19.99
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void startKingCheckout();
+                              }}
+                              disabled={kingCheckoutBusy}
+                              className={cn(
+                                "w-auto whitespace-nowrap border px-3 py-2 text-[10px] font-black uppercase tracking-[0.11em] transition [clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)] sm:px-5 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em]",
+                                "border-violet-200/90 bg-[linear-gradient(135deg,rgba(46,16,78,0.95),rgba(76,29,99,0.92),rgba(30,27,75,0.9))] text-violet-50",
+                                "shadow-[0_0_20px_rgba(167,139,250,0.45)] hover:brightness-110 hover:shadow-[0_0_28px_rgba(192,132,252,0.65)]",
+                                "disabled:cursor-not-allowed disabled:opacity-60"
+                              )}
+                            >
+                              {kingCheckoutBusy ? "Redirecting..." : "Unlock"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

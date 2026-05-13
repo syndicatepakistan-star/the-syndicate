@@ -536,7 +536,7 @@ function syndicateHelpTitle(topic: SyndicateHelpTopic): string {
   if (topic === "hud-streak") return "Streak";
   if (topic === "points-to-pounds") return "Points to pounds";
   if (topic === "unlock") return "Unlock & redeem rewards";
-  if (topic === "mission-reminder") return "Mission reminders";
+  if (topic === "mission-reminder") return "Syndicate mode reminders";
   return "Mega mission";
 }
 
@@ -620,7 +620,7 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
             <>
               <p>
                 A <strong className="text-cyan-100">mission reminder</strong> is optional. It lets you pick a <strong className="text-white">date and time</strong> (your device&apos;s local clock) so you remember to finish this mission. Nothing is saved until you press{" "}
-                <strong className="text-white">Done</strong> — then it appears on the <strong className="text-white">Missions</strong> tab and in <strong className="text-white">Reminders</strong> with a countdown to that target time.
+                <strong className="text-white">Done</strong> — then it appears on the <strong className="text-white">Missions</strong> tab and in <strong className="text-white">Syndicate mode reminders</strong> with a countdown to that target time.
               </p>
               <p>
                 The reminder does <strong className="text-white">not</strong> complete the mission for you. It only tracks the deadline you chose and surfaces actions (open the mission, mark done from the reminder flow, or dismiss).
@@ -2215,12 +2215,6 @@ export function SyndicateAiChallengePanel() {
     adminTaskDraftsRef.current = adminTaskDrafts;
   }, [adminTaskDrafts]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const t = window.setInterval(() => setNowTick(Date.now()), 1000);
-    return () => window.clearInterval(t);
-  }, []);
-
   /** Reminder penalties run on the server (`process_syndicate_reminder_expiries`); poll progress to sync state. */
   useEffect(() => {
     if (!mounted) return;
@@ -2349,6 +2343,25 @@ export function SyndicateAiChallengePanel() {
       document.body.style.overflow = prev;
     };
   }, [recordingAdminTaskId]);
+
+  /**
+   * Wall clock: ticking every second re-renders this entire panel (very large). Use 1s only when live
+   * countdowns are visible; otherwise 30s is enough (mission board TTL is 24h; admin expiry is coarse).
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const reminderKeyCount = Object.keys(missionReminders).length;
+    const needsFastClock =
+      syndicateView === "reminders" ||
+      selected != null ||
+      recordingAdminTaskId != null ||
+      (syndicateView === "dashboard" && reminderKeyCount > 0);
+    const intervalMs = needsFastClock ? 1000 : 30_000;
+    const tick = () => setNowTick(Date.now());
+    tick();
+    const id = window.setInterval(tick, intervalMs);
+    return () => window.clearInterval(id);
+  }, [syndicateView, selected, recordingAdminTaskId, missionReminders]);
 
   const goToBonusMissions = useCallback(() => {
     // Mega mission lives under dashboard and is hidden while Stats & profile is open — close it first
@@ -2796,13 +2809,6 @@ export function SyndicateAiChallengePanel() {
                       <stop offset="100%" stopColor={base} stopOpacity="0.55" />
                     </radialGradient>
                   ))}
-                  <filter id="syndicate-pie-neon-glow" x="-35%" y="-35%" width="170%" height="170%">
-                    <feGaussianBlur stdDeviation="2.2" result="neonBlur" />
-                    <feMerge>
-                      <feMergeNode in="neonBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
                 </defs>
                 <Pie
                   data={pieDailyChartData}
@@ -2816,7 +2822,6 @@ export function SyndicateAiChallengePanel() {
                   stroke="none"
                   labelLine={false}
                   label={false}
-                  filter="url(#syndicate-pie-neon-glow)"
                 >
                   {pieDailyChartData.map((e, i) => (
                     <Cell
@@ -4024,13 +4029,16 @@ export function SyndicateAiChallengePanel() {
               setShowStatsProfile(false);
             }}
             className={cn(
-              "syndicate-nav-action min-h-[40px] min-w-0 touch-manipulation px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.06em] sm:min-w-[128px] sm:px-3 sm:py-2.5 sm:text-[11px] sm:tracking-[0.08em] md:min-w-[136px] md:text-[12px]",
+              "syndicate-nav-action flex min-h-[40px] min-w-0 flex-col items-center justify-center touch-manipulation px-2 py-2 text-[9px] font-bold uppercase leading-tight tracking-[0.05em] sm:min-w-[148px] sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-[0.06em] md:min-w-[168px] md:text-[11px]",
               syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active-cyan"
             )}
           >
-            Reminders
+            <span className="flex flex-col items-center gap-0">
+              <span>Syndicate mode</span>
+              <span>reminders</span>
+            </span>
             {missionsTabReminders.length > 0 ? (
-              <span className="ml-1.5 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black tabular-nums leading-none text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+              <span className="mt-0.5 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black tabular-nums leading-none text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]">
                 {missionsTabReminders.length > 9 ? "9+" : missionsTabReminders.length}
               </span>
             ) : null}
@@ -4642,7 +4650,7 @@ export function SyndicateAiChallengePanel() {
               {missionsTabReminders.length > 0 ? (
                 <section
                   className="syndicate-readable w-full min-w-0 rounded-2xl border border-[rgba(250,204,21,0.38)] bg-[linear-gradient(165deg,rgba(32,26,10,0.72),rgba(6,6,10,0.96))] px-3 py-4 [box-shadow:0_0_0_1px_rgba(250,204,21,0.12),0_8px_36px_rgba(0,0,0,0.45),0_0_28px_rgba(250,204,21,0.08)] sm:px-5 sm:py-5"
-                  aria-label="Mission reminders dashboard"
+                  aria-label="Syndicate mode reminders dashboard"
                 >
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -5706,7 +5714,7 @@ export function SyndicateAiChallengePanel() {
           <>
             <div className="syndicate-readable mb-4 flex flex-wrap items-center justify-between gap-3">
               <h3 className="syndicate-readable text-[21px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)] sm:text-[24px]">
-                Your mission reminders
+                Syndicate mode reminders
               </h3>
               <button
                 type="button"
@@ -5717,7 +5725,7 @@ export function SyndicateAiChallengePanel() {
               </button>
             </div>
             <p className="syndicate-readable mb-3 max-w-3xl text-[13px] leading-relaxed text-white/70 sm:mb-4 sm:text-[14px]">
-              Set date &amp; time under <span className="text-white/85">How will you complete it</span> on an incomplete mission. Reminders stay until the target time or you clear them.
+              Set date &amp; time under <span className="text-white/85">How will you complete it</span> on an incomplete mission. Syndicate mode reminders stay until the target time or you clear them.
               Within 24 hours of the mission appearing, use <span className="font-semibold text-cyan-200/90">Open mission</span>; after that, use{" "}
               <span className="font-semibold text-cyan-200/90">Done</span> or <span className="font-semibold text-cyan-200/90">Dismiss</span>. If the target passes with no action, the server may deduct{" "}
               <span className="font-semibold text-amber-200/90">1 point</span> and remove the reminder.
@@ -5788,7 +5796,7 @@ export function SyndicateAiChallengePanel() {
                 ) : (
                   <section
                     className="syndicate-readable w-full min-w-0 rounded-2xl border border-[rgba(250,204,21,0.38)] bg-[linear-gradient(165deg,rgba(32,26,10,0.72),rgba(6,6,10,0.96))] px-3 py-5 [box-shadow:0_0_0_1px_rgba(250,204,21,0.12),0_8px_36px_rgba(0,0,0,0.45),0_0_28px_rgba(250,204,21,0.08)] sm:px-5 sm:py-6"
-                    aria-label="All mission reminders"
+                    aria-label="All syndicate mode reminders"
                   >
                     {reminderFilterDate ? (
                       <p className="mb-4 text-[12px] text-white/55">

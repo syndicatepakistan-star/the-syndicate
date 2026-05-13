@@ -1706,6 +1706,10 @@ figcaption {
 
 .syndicate-mood-context .syndicate-dash-scanlines {
   opacity: 0.48;
+  contain: strict;
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: opacity;
   background:
     repeating-linear-gradient(
       0deg,

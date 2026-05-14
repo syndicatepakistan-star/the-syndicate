@@ -7,6 +7,8 @@ import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 import ProgressBar from "@/components/quiz-funnel/ProgressBar";
 import { submitAnswers } from "@/lib/quizFunnelApi";
 import { QUIZ_QUESTIONS, type QuizQuestionRow } from "@/lib/quizQuestions";
+import { getAffiliateAttribution } from "@/lib/affiliateAttribution";
+import { trackLead } from "@/lib/affiliateApi";
 
 type LeadStep = "name" | "email" | "phone";
 
@@ -358,6 +360,19 @@ export default function QuizPage() {
     if (validationMessage) {
       setLeadError(validationMessage);
       return;
+    }
+    // When the email gate (Question 11) is satisfied, fire the "Syn Diagnosis lead"
+    // for the referring affiliate so they get credit before the user even finishes
+    // the quiz. Subsequent signup / login on the dashboard will fire the auth lead.
+    if (leadStep === "email") {
+      const email = leadForm.email.trim();
+      const attribution = getAffiliateAttribution();
+      if (attribution && email) {
+        void trackLead(attribution.affiliateId, attribution.visitorId, email, {
+          kind: "diagnosis",
+          label: "Syn Diagnosis lead",
+        }).catch(() => {});
+      }
     }
     setLeadError("");
     setShowLeadGate(false);

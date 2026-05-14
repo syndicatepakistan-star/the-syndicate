@@ -487,8 +487,12 @@ export default function AuthScreen({
         const signupEmail = email.trim();
         const attribution = getAffiliateAttribution();
         if (attribution && signupEmail) {
-          // Record a lead at email capture time so referral dashboards update on signup intent.
-          void trackLead(attribution.affiliateId, attribution.visitorId, signupEmail).catch(() => {});
+          // Record the "Sign up lead" for the referring affiliate. This fills the auth slot
+          // (the diagnosis slot is filled separately when the user submits the quiz email).
+          void trackLead(attribution.affiliateId, attribution.visitorId, signupEmail, {
+            kind: "auth",
+            label: "Sign up lead",
+          }).catch(() => {});
         }
         const directCheckoutUrl = typeof data.checkout_url === "string" ? data.checkout_url.trim() : "";
         if (directCheckoutUrl) {
@@ -511,16 +515,7 @@ export default function AuthScreen({
           affiliate_id: checkoutAttribution?.affiliateId,
           visitor_id: checkoutAttribution?.visitorId,
         };
-        let checkout = await postJson("/api/auth/checkout/create-session/", checkoutPayload);
-        if (!checkout.response.ok && (normalizedPlan || normalizedAmount || normalizedBilling)) {
-          checkout = await postJson("/api/auth/checkout/create-session/", {
-            signup_token: signupToken,
-            return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-            playlist_id: prefilledPlaylistId || undefined,
-            affiliate_id: checkoutAttribution?.affiliateId,
-            visitor_id: checkoutAttribution?.visitorId,
-          });
-        }
+        const checkout = await postJson("/api/auth/checkout/create-session/", checkoutPayload);
         if (!checkout.response.ok) {
           throw new Error(checkout.data.error || "Could not create checkout session.");
         }
@@ -545,6 +540,15 @@ export default function AuthScreen({
         const t = typeof data.token === "string" ? data.token.trim() : "";
         if (t) {
           const loginEmail = (data.user?.email || email.trim()).trim();
+          const authAttribution = getAffiliateAttribution();
+          if (authAttribution && loginEmail) {
+            // Record the auth-slot lead: "Sign up lead" if this OTP completes signup,
+            // otherwise "Login lead" for existing-user logins via the referral link.
+            void trackLead(authAttribution.affiliateId, authAttribution.visitorId, loginEmail, {
+              kind: "auth",
+              label: isSignupOtp ? "Sign up lead" : "Login lead",
+            }).catch(() => {});
+          }
           const rid = data.referral_ids;
           const referralIds =
             rid && typeof rid.complete === "string" && rid.complete.trim()

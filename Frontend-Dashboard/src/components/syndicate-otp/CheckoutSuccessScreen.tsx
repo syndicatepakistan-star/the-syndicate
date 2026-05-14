@@ -7,7 +7,7 @@ import { persistSimpleAuthSession } from "@/lib/portal-api";
 import { resolveClientApiUrl } from "@/lib/portal-api";
 import { resolvePostOtpAppRedirect } from "@/lib/syndicate-otp-paths";
 import { syndicateOtpSignupHref } from "@/lib/syndicate-otp-paths";
-import { clearAffiliateAttribution, getAffiliateAttribution } from "@/lib/affiliateAttribution";
+import { getAffiliateAttribution, saveAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead, trackSale } from "@/lib/affiliateApi";
 
 const SYNDICATE_URL =
@@ -43,6 +43,8 @@ type SuccessPayload = {
   affiliate_attribution?: {
     affiliate_id?: string;
     visitor_id?: string;
+    plan_slug?: string;
+    plan_label?: string;
   };
 };
 
@@ -237,16 +239,19 @@ export default function CheckoutSuccessScreen({
             : SYNDICATE_URL;
 
         const attribution = getAffiliateAttribution();
-        const payloadAffiliateId = (data.affiliate_attribution?.affiliate_id || "").trim();
-        const payloadVisitorId = (data.affiliate_attribution?.visitor_id || "").trim();
+        const payloadAttr = data.affiliate_attribution;
+        const payloadAffiliateId = (payloadAttr?.affiliate_id || "").trim();
+        const payloadVisitorId = (payloadAttr?.visitor_id || "").trim();
+        const planLabel = (payloadAttr?.plan_label || "").trim();
+        const planSlug = (payloadAttr?.plan_slug || "").trim();
         const effectiveAttribution =
           (payloadAffiliateId && payloadVisitorId
             ? {
                 affiliateId: payloadAffiliateId,
                 visitorId: payloadVisitorId,
-                offer: attribution?.offer || "affiliate-offer",
-                tier: attribution?.tier,
-                program: attribution?.program,
+                offer: planLabel || attribution?.offer || "checkout-purchase",
+                tier: planSlug || attribution?.tier,
+                program: planLabel || attribution?.program,
                 createdAt: Date.now(),
               }
             : null) ?? attribution;
@@ -265,7 +270,14 @@ export default function CheckoutSuccessScreen({
           const purchaseAmountValue = checkoutAmount && checkoutAmount > 0 ? checkoutAmount : 0;
           const commissionRate = purchaseAmountValue >= 333 ? 0.3 : 0.15;
           try {
-            await trackLead(effectiveAttribution.affiliateId, effectiveAttribution.visitorId, buyerEmail);
+            // Auth-slot lead: fills "Sign up lead" if it wasn't already filled by the OTP flow,
+            // and is idempotent on repeat purchases (the backend dedupes on (referral, visitor_id, kind)).
+            await trackLead(
+              effectiveAttribution.affiliateId,
+              effectiveAttribution.visitorId,
+              buyerEmail,
+              { kind: "auth", label: "Sign up lead" }
+            );
           } catch {
             // Keep going: sale + earnings should still be recorded even if lead call fails.
           }
@@ -284,7 +296,16 @@ export default function CheckoutSuccessScreen({
                 currency: (typeof data.currency === "string" && data.currency.trim()) ? data.currency.trim().toLowerCase() : "usd",
               }
             );
-            clearAffiliateAttribution();
+            // IMPORTANT: keep the attribution alive in localStorage so subsequent purchases
+            // by the same visitor (within the 30-day window) keep crediting this affiliate.
+            // We refresh `createdAt` to slide the window forward on every successful sale.
+            saveAffiliateAttribution({
+              affiliateId: effectiveAttribution.affiliateId,
+              visitorId: effectiveAttribution.visitorId,
+              offer: effectiveAttribution.offer,
+              tier: effectiveAttribution.tier,
+              program: effectiveAttribution.program,
+            });
           } catch {
             // Payment is already successful; keep UX flow even if affiliate sale sync fails.
           }

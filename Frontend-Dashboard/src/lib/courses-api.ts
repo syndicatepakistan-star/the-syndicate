@@ -35,7 +35,14 @@ export function resolveDjangoMediaUrl(mediaPath: string | null | undefined): str
   }
   const raw = publicApiBaseRaw();
   const useProxy = !raw || raw.toLowerCase() === "proxy";
-  if (useProxy) return p;
+  if (useProxy) {
+    const syndicateApi = (process.env.NEXT_PUBLIC_SYNDICATE_API_URL ?? "").trim().replace(/\/+$/, "");
+    const syndicateOrigin = syndicateApi.replace(/\/api\/?$/i, "");
+    if (syndicateOrigin && p.startsWith("/media/")) {
+      return `${syndicateOrigin}${p}`;
+    }
+    return p;
+  }
   let base = raw.replace(/\/$/, "");
   if (base.includes(":3000") || base === window.location.origin) base = "";
   if (!base) return p;

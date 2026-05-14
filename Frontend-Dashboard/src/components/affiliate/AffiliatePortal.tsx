@@ -1,22 +1,32 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   getAffiliateFunnel,
   getAffiliateStats,
-  getAffiliateVisitors,
   getRecentReferrals,
   requestAffiliateWithdrawal
 } from "@/lib/affiliateApi";
-import type { AffiliateStats, AffiliateVisitor, RecentReferralItem } from "@/lib/affiliateTypes";
+import type { AffiliateStats, RecentReferralItem, ReferralLeadEvent } from "@/lib/affiliateTypes";
 
 type ToastTone = "good" | "warn" | "bad" | "info";
 
-function formatWhen(iso: string | null): string {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString();
+/** Which lead milestone the referral row detail panel is showing (Syn Diagnosis vs sign-up / checkout). */
+type ReferralLeadTab = "diagnosis" | "auth";
+
+function defaultReferralLeadTab(r: RecentReferralItem): ReferralLeadTab {
+  const kinds = new Set((r.lead_events ?? []).map((e) => e.kind));
+  const hasDiagnosis = kinds.has("diagnosis");
+  const hasAuth = kinds.has("auth");
+  if (hasAuth && r.status === "purchased") return "auth";
+  if (hasDiagnosis) return "diagnosis";
+  if (hasAuth) return "auth";
+  return "diagnosis";
+}
+
+function leadTabForEvent(evt: ReferralLeadEvent): ReferralLeadTab {
+  return evt.kind === "diagnosis" ? "diagnosis" : "auth";
 }
 
 function formatAgo(iso: string | null): string {
@@ -38,6 +48,27 @@ function formatEarnings(value: string | number | null | undefined): string {
   const num = Number(value ?? 0);
   if (!Number.isFinite(num)) return "0.000";
   return num.toFixed(3);
+}
+
+/** Human-readable paid line: avoids `Paid: gbp333.00` when currency is ISO code. */
+function formatPaidDisplay(currencyRaw: string | null | undefined, amountRaw: string | number | null | undefined): string | null {
+  if (amountRaw === undefined || amountRaw === null) return null;
+  const rawStr = String(amountRaw).trim();
+  if (!rawStr) return null;
+  const cur = (currencyRaw ?? "£").trim().toLowerCase();
+  const symbol =
+    cur === "gbp" || cur === "£" || cur === "pound" || cur === "pounds"
+      ? "£"
+      : cur === "usd" || cur === "$"
+        ? "$"
+        : cur === "eur" || cur === "€"
+          ? "€"
+          : cur.length <= 4 && /^[a-z]{3}$/i.test(cur)
+            ? `${cur.toUpperCase()} `
+            : `${cur} `;
+  const num = Number(rawStr.replace(/[^0-9.]/g, ""));
+  if (Number.isFinite(num)) return `Paid: ${symbol}${num.toFixed(2)}`;
+  return `Paid: ${symbol}${rawStr}`;
 }
 
 type ReferralIds = {
@@ -71,13 +102,24 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AffiliateStats | null>(null);
-  const [visitors, setVisitors] = useState<AffiliateVisitor[]>([]);
   const [funnel, setFunnel] = useState<Array<{ stage: string; value: number }>>([]);
   const [funnelHover, setFunnelHover] = useState<{ stage: string; value: number } | null>(null);
   const funnelHoverLeaveTimer = useRef<number | null>(null);
   const [recentReferrals, setRecentReferrals] = useState<RecentReferralItem[]>([]);
+  /** Per visitor_id: which lead chip is driving the left detail column (Syn Diagnosis vs sign-up / subscription). */
+  const [referralLeadTabByVisitor, setReferralLeadTabByVisitor] = useState<Record<string, ReferralLeadTab>>({});
   const [recentPage, setRecentPage] = useState(1);
-  const [visitorsPage, setVisitorsPage] = useState(1);
+  /** Newest/oldest by referral activity timestamp. */
+  const [referralsTimeOrder, setReferralsTimeOrder] = useState<"newest" | "oldest">("newest");
+  /** When not `none`, primary sort is by commission amount (then time as tiebreaker). */
+  const [referralsMoneyOrder, setReferralsMoneyOrder] = useState<"none" | "high" | "low">("none");
+  /** Time window filter on the referral `at` timestamp. */
+  const [referralsTimeFilter, setReferralsTimeFilter] = useState<"all" | "today" | "7d" | "30d" | "90d" | "custom">("all");
+  /** Inclusive custom date range (YYYY-MM-DD) applied when `referralsTimeFilter === "custom"`. */
+  const [customFromDate, setCustomFromDate] = useState<string>("");
+  const [customToDate, setCustomToDate] = useState<string>("");
+  /** Money filter on the affiliate's earning for each referral row. */
+  const [referralsMoneyFilter, setReferralsMoneyFilter] = useState<"all" | "upto20" | "upto50" | "upto99" | "over100">("all");
   const [activeReferralLink, setActiveReferralLink] = useState("");
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -93,8 +135,19 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     branchName: "",
     amount: "",
   });
-  const RECENT_PAGE_SIZE = 4;
-  const VISITORS_PAGE_SIZE = 6;
+  /** Confirmation overlay shown immediately after a withdrawal is submitted. */
+  const [withdrawConfirmation, setWithdrawConfirmation] = useState<null | {
+    amount: string;
+    payoutByLabel: string;
+    payoutByISO: string;
+    requestId: number | null;
+  }>(null);
+  const [withdrawNotifyArmed, setWithdrawNotifyArmed] = useState<boolean>(false);
+  /** Bumps whenever withdrawal reminders in localStorage change so we re-arm `setTimeout` timers. */
+  const [withdrawReminderEpoch, setWithdrawReminderEpoch] = useState(0);
+  const withdrawalTimerIdsRef = useRef<number[]>([]);
+  const REFERRALS_PAGE_SIZE = 5;
+  const WITHDRAWAL_REMINDERS_KEY = "affiliate_withdrawal_reminders_v1";
 
   const showFunnelValue = useCallback((row: { stage: string; value: number }) => {
     if (funnelHoverLeaveTimer.current) {
@@ -138,6 +191,26 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     if (!overallStats) return 0;
     return Math.min(100, Math.max(0, Math.round(overallStats.conversion_rate ?? 0)));
   }, [overallStats]);
+
+  const conversionFormula = useMemo(() => {
+    const clicks = overallStats?.click_count ?? 0;
+    const leads = overallStats?.lead_count ?? 0;
+    const sales = overallStats?.sale_count ?? 0;
+    const hasClicks = clicks > 0;
+    const raw = hasClicks ? ((leads / clicks + sales / clicks) / 2) * 100 : 0;
+    return {
+      summary: hasClicks
+        ? "Average of lead rate and sale rate per click."
+        : "No clicks yet — conversion stays at 0%.",
+      formula: "( Leads ÷ Clicks + Sales ÷ Clicks ) ÷ 2 × 100",
+      clicks,
+      leads,
+      sales,
+      rawPercent: raw,
+      finalPercent: conversionRate,
+      hasClicks,
+    };
+  }, [overallStats, conversionRate]);
 
   const dashboardSignal = useMemo(() => {
     const clicks = overallStats?.click_count ?? 0;
@@ -183,6 +256,36 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         : "border-cyan-300/85 bg-[linear-gradient(180deg,rgba(56,236,255,0.16),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_22px_rgba(56,236,255,0.86),0_0_56px_rgba(56,236,255,0.72),0_0_108px_rgba(56,236,255,0.56),inset_0_0_20px_rgba(56,236,255,0.27)]";
 
   const [conversionRing, setConversionRing] = useState(0);
+  const [conversionFormulaOpen, setConversionFormulaOpen] = useState(false);
+  const [conversionPortalMounted, setConversionPortalMounted] = useState(false);
+  const conversionCardRef = useRef<HTMLDivElement | null>(null);
+  const conversionOverlayRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setConversionPortalMounted(true);
+  }, []);
+
+  const handleConversionCardLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const next = e.relatedTarget as Node | null;
+    if (next && conversionOverlayRef.current?.contains(next)) return;
+    setConversionFormulaOpen(false);
+  }, []);
+
+  const handleConversionOverlayLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const next = e.relatedTarget as Node | null;
+    if (next && conversionCardRef.current?.contains(next)) return;
+    setConversionFormulaOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!conversionFormulaOpen) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") setConversionFormulaOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [conversionFormulaOpen]);
+
   useEffect(() => {
     const c = referralIds?.complete?.trim();
     if (c) setAffiliateId(c);
@@ -209,6 +312,152 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     window.addEventListener("keydown", handleEscapeClose);
     return () => window.removeEventListener("keydown", handleEscapeClose);
   }, [withdrawOpen]);
+
+  useEffect(() => {
+    if (!withdrawConfirmation) return;
+    const handleEscapeClose = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setWithdrawConfirmation(null);
+    };
+    window.addEventListener("keydown", handleEscapeClose);
+    return () => window.removeEventListener("keydown", handleEscapeClose);
+  }, [withdrawConfirmation]);
+
+  /**
+   * Pending payout notifications survive page reloads via `localStorage`.
+   * The list contains future-dated entries; on every mount we re-arm `setTimeout` for
+   * any reminder whose `notifyAt` is still in the future, and immediately fire any that
+   * are already due (then drop them).
+   */
+  type WithdrawalReminder = {
+    requestId: number | string;
+    amount: string;
+    affiliateId: string;
+    notifyAt: number;
+  };
+
+  const loadWithdrawalReminders = useCallback((): WithdrawalReminder[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(WITHDRAWAL_REMINDERS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (entry): entry is WithdrawalReminder =>
+          entry &&
+          typeof entry === "object" &&
+          (typeof entry.requestId === "number" || typeof entry.requestId === "string") &&
+          typeof entry.amount === "string" &&
+          typeof entry.affiliateId === "string" &&
+          typeof entry.notifyAt === "number"
+      );
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const persistWithdrawalReminders = useCallback((reminders: WithdrawalReminder[]) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(WITHDRAWAL_REMINDERS_KEY, JSON.stringify(reminders));
+    } catch {
+      // Storage quota / private mode: silently ignore.
+    }
+  }, []);
+
+  const fireWithdrawalNotification = useCallback((reminder: WithdrawalReminder, options?: { immediate?: boolean }) => {
+    if (typeof window === "undefined") return;
+    const title = options?.immediate
+      ? "Withdrawal request received"
+      : "Your withdrawal payout window";
+    const body = options?.immediate
+      ? `We received your £${reminder.amount} request. Expect payout within 1-2 weeks.`
+      : `Reminder: your £${reminder.amount} payout should land in your account around now.`;
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(title, { body, tag: `withdrawal-${reminder.requestId}` });
+      }
+    } catch {
+      // Browser blocked / unsupported — non-fatal.
+    }
+  }, []);
+
+  const scheduleWithdrawalReminder = useCallback(
+    (input: {
+      requestId: number | string;
+      amount: string;
+      affiliateId: string;
+      notifyAtISO: string;
+      immediate?: boolean;
+    }) => {
+      const notifyAt = new Date(input.notifyAtISO).getTime();
+      const reminder: WithdrawalReminder = {
+        requestId: input.requestId,
+        amount: input.amount,
+        affiliateId: input.affiliateId,
+        notifyAt: Number.isFinite(notifyAt) ? notifyAt : Date.now() + 14 * 24 * 60 * 60 * 1000,
+      };
+      // Ask for permission once (no-op if previously decided).
+      try {
+        if (typeof Notification !== "undefined" && Notification.permission === "default") {
+          void Notification.requestPermission().then((perm) => {
+            if (perm === "granted" && input.immediate) {
+              fireWithdrawalNotification(reminder, { immediate: true });
+            }
+          });
+        } else if (input.immediate) {
+          fireWithdrawalNotification(reminder, { immediate: true });
+        }
+      } catch {
+        // Notification API unavailable.
+      }
+      const existing = loadWithdrawalReminders();
+      const next = [...existing.filter((r) => r.requestId !== reminder.requestId), reminder];
+      persistWithdrawalReminders(next);
+      setWithdrawNotifyArmed(true);
+      // Re-run the timer effect so future-dated reminders get a `setTimeout` (not only on full page reload).
+      setWithdrawReminderEpoch((e) => e + 1);
+    },
+    [fireWithdrawalNotification, loadWithdrawalReminders, persistWithdrawalReminders]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    withdrawalTimerIdsRef.current.forEach((id) => window.clearTimeout(id));
+    withdrawalTimerIdsRef.current = [];
+
+    const reminders = loadWithdrawalReminders();
+    if (!reminders.length) {
+      setWithdrawNotifyArmed(false);
+      return;
+    }
+
+    const now = Date.now();
+    const dueNow = reminders.filter((r) => r.notifyAt <= now);
+    let future = reminders.filter((r) => r.notifyAt > now);
+    dueNow.forEach((r) => fireWithdrawalNotification(r));
+    if (dueNow.length) {
+      persistWithdrawalReminders(future);
+    }
+
+    future = loadWithdrawalReminders().filter((r) => r.notifyAt > now);
+    future.forEach((r) => {
+      const delay = Math.max(0, r.notifyAt - Date.now());
+      const id = window.setTimeout(() => {
+        fireWithdrawalNotification(r);
+        const remaining = loadWithdrawalReminders().filter((entry) => entry.requestId !== r.requestId);
+        persistWithdrawalReminders(remaining);
+        setWithdrawReminderEpoch((e) => e + 1);
+      }, delay);
+      withdrawalTimerIdsRef.current.push(id);
+    });
+    setWithdrawNotifyArmed(future.length > 0);
+
+    return () => {
+      withdrawalTimerIdsRef.current.forEach((tid) => window.clearTimeout(tid));
+      withdrawalTimerIdsRef.current = [];
+    };
+  }, [withdrawReminderEpoch, fireWithdrawalNotification, loadWithdrawalReminders, persistWithdrawalReminders]);
 
   useEffect(() => {}, [displayName]);
 
@@ -261,7 +510,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     }
     setWithdrawSubmitting(true);
     try {
-      await requestAffiliateWithdrawal({
+      const response = await requestAffiliateWithdrawal({
         affiliate_id: affiliateId.trim(),
         bank_name: withdrawForm.bankName.trim(),
         account_name: withdrawForm.accountName.trim(),
@@ -271,7 +520,17 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         branch_name: withdrawForm.branchName.trim(),
         requested_amount: withdrawAmountValue.toFixed(2),
       });
-      setWithdrawMessage({ text: "Withdrawal request submitted successfully.", tone: "good" });
+      const submittedAmount = (response.requested_amount ?? withdrawAmountValue.toFixed(2)).toString();
+      // Schedule the user-facing payout window: 14 days from now.
+      const payoutByDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      const payoutByLabel = payoutByDate.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      // Reset the form, close the bank-details modal, then open the confirmation overlay.
+      setWithdrawMessage(null);
       setWithdrawOpen(false);
       setWithdrawAttemptedSubmit(false);
       setWithdrawForm({
@@ -283,6 +542,24 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         branchName: "",
         amount: "",
       });
+      setWithdrawConfirmation({
+        amount: submittedAmount,
+        payoutByLabel,
+        payoutByISO: payoutByDate.toISOString(),
+        requestId: typeof response.withdrawal_request_id === "number" ? response.withdrawal_request_id : null,
+      });
+      // Persist a reminder so we can re-fire a notification on the next page load if
+      // the user closes this tab before the payout date.
+      scheduleWithdrawalReminder({
+        requestId: typeof response.withdrawal_request_id === "number" ? response.withdrawal_request_id : Date.now(),
+        amount: submittedAmount,
+        affiliateId: affiliateId.trim(),
+        notifyAtISO: payoutByDate.toISOString(),
+        // Fire the in-app confirmation notification right away too.
+        immediate: true,
+      });
+      // Immediately refresh stats so the available earnings reflect the reservation.
+      void refreshData(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not submit withdrawal request.";
       setWithdrawMessage({ text: message, tone: "bad" });
@@ -296,14 +573,12 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [statsResult, visitorsResult, funnelResult, recentResult] = await Promise.all([
+      const [statsResult, funnelResult, recentResult] = await Promise.all([
         getAffiliateStats(affiliateId.trim()),
-        getAffiliateVisitors(affiliateId.trim(), 25),
         getAffiliateFunnel(affiliateId.trim()),
-        getRecentReferrals(affiliateId.trim(), 8),
+        getRecentReferrals(affiliateId.trim(), 150),
       ]);
       setStats(statsResult);
-      setVisitors(visitorsResult.visitors);
       setFunnel(funnelResult.stages);
       setRecentReferrals(recentResult.items);
       if (!silent) showToast("Data loaded.", "good");
@@ -346,27 +621,119 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     window.setTimeout(() => onLogout?.(), 320);
   }
 
+  const referralsSorted = useMemo(() => {
+    let arr = [...recentReferrals];
+
+    if (referralsTimeFilter === "custom") {
+      const fromMs = customFromDate ? new Date(`${customFromDate}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+      const toMs = customToDate ? new Date(`${customToDate}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
+      if (Number.isFinite(fromMs) || Number.isFinite(toMs)) {
+        arr = arr.filter((r) => {
+          const t = r.at ? new Date(r.at).getTime() : 0;
+          return t >= fromMs && t <= toMs;
+        });
+      }
+    } else if (referralsTimeFilter !== "all") {
+      const windows: Record<"today" | "7d" | "30d" | "90d", number> = {
+        today: 24 * 60 * 60 * 1000,
+        "7d": 7 * 24 * 60 * 60 * 1000,
+        "30d": 30 * 24 * 60 * 60 * 1000,
+        "90d": 90 * 24 * 60 * 60 * 1000,
+      };
+      const cutoff = Date.now() - (windows[referralsTimeFilter] ?? 0);
+      arr = arr.filter((r) => {
+        const t = r.at ? new Date(r.at).getTime() : 0;
+        return t >= cutoff;
+      });
+    }
+
+    if (referralsMoneyFilter !== "all") {
+      arr = arr.filter((r) => {
+        const earning = Number(r.conversion_earning ?? 0) || 0;
+        switch (referralsMoneyFilter) {
+          case "upto20":
+            return earning <= 20;
+          case "upto50":
+            return earning <= 50;
+          case "upto99":
+            return earning <= 99.9;
+          case "over100":
+            return earning >= 100;
+          default:
+            return true;
+        }
+      });
+    }
+
+    arr.sort((a, b) => {
+      const ta = a.at ? new Date(a.at).getTime() : 0;
+      const tb = b.at ? new Date(b.at).getTime() : 0;
+      const ea = Number(a.conversion_earning ?? 0) || 0;
+      const eb = Number(b.conversion_earning ?? 0) || 0;
+      if (referralsMoneyOrder !== "none") {
+        const moneyCmp = referralsMoneyOrder === "high" ? eb - ea : ea - eb;
+        if (moneyCmp !== 0) return moneyCmp;
+      }
+      const timeDesc = referralsTimeOrder === "newest";
+      return timeDesc ? tb - ta : ta - tb;
+    });
+    return arr;
+  }, [recentReferrals, referralsTimeOrder, referralsMoneyOrder, referralsTimeFilter, referralsMoneyFilter, customFromDate, customToDate]);
+
+  const totalRecentPages = Math.max(1, Math.ceil(referralsSorted.length / REFERRALS_PAGE_SIZE));
+  const safeRecentPage = Math.min(recentPage, totalRecentPages);
+
   const pagedRecentReferrals = useMemo(() => {
-    const start = (recentPage - 1) * RECENT_PAGE_SIZE;
-    return recentReferrals.slice(start, start + RECENT_PAGE_SIZE);
-  }, [recentReferrals, recentPage]);
-
-  const totalRecentPages = Math.max(1, Math.ceil(recentReferrals.length / RECENT_PAGE_SIZE));
-
-  const pagedVisitors = useMemo(() => {
-    const start = (visitorsPage - 1) * VISITORS_PAGE_SIZE;
-    return visitors.slice(start, start + VISITORS_PAGE_SIZE);
-  }, [visitors, visitorsPage]);
-
-  const totalVisitorPages = Math.max(1, Math.ceil(visitors.length / VISITORS_PAGE_SIZE));
+    const start = (safeRecentPage - 1) * REFERRALS_PAGE_SIZE;
+    return referralsSorted.slice(start, start + REFERRALS_PAGE_SIZE);
+  }, [referralsSorted, safeRecentPage]);
 
   useEffect(() => {
-    setRecentPage((page) => Math.min(page, Math.max(1, Math.ceil(recentReferrals.length / RECENT_PAGE_SIZE))));
-  }, [recentReferrals.length]);
+    if (recentPage !== safeRecentPage) setRecentPage(safeRecentPage);
+  }, [recentPage, safeRecentPage]);
 
   useEffect(() => {
-    setVisitorsPage((page) => Math.min(page, Math.max(1, Math.ceil(visitors.length / VISITORS_PAGE_SIZE))));
-  }, [visitors.length]);
+    setRecentPage(1);
+  }, [referralsTimeFilter, referralsMoneyFilter, referralsTimeOrder, referralsMoneyOrder, customFromDate, customToDate]);
+
+  useEffect(() => {
+    if (referralsTimeFilter !== "custom") {
+      setCustomFromDate("");
+      setCustomToDate("");
+    }
+  }, [referralsTimeFilter]);
+
+  const pendingWithdrawalReminders = useMemo(
+    () => loadWithdrawalReminders(),
+    [loadWithdrawalReminders, withdrawReminderEpoch]
+  );
+
+  const syndicateStatementRows = useMemo(() => {
+    return recentReferrals
+      .filter((r) => r.status === "purchased")
+      .map((r) => ({
+        key: r.visitor_id,
+        email: (r.email && r.email.trim()) || "—",
+        product:
+          (r.subscription_name && r.subscription_name.trim()) ||
+          r.purchased_program ||
+          r.purchased_offer ||
+          "Syndicate offer",
+        paid: formatPaidDisplay(r.purchase_currency, r.purchase_amount),
+        yourCut: r.conversion_earning != null && String(r.conversion_earning).trim() !== "" ? `£${formatEarnings(r.conversion_earning)}` : "—",
+        when: formatAgo(r.purchased_at ?? r.at),
+      }));
+  }, [recentReferrals]);
+
+  const syndicateStatementTotal = useMemo(() => {
+    let t = 0;
+    for (const r of recentReferrals) {
+      if (r.status !== "purchased") continue;
+      const n = Number(r.conversion_earning ?? 0);
+      if (Number.isFinite(n)) t += n;
+    }
+    return t;
+  }, [recentReferrals]);
 
   return (
     <div
@@ -477,8 +844,6 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 { label: "Clicks", value: overallStats?.click_count ?? "-", tone: "border-orange-300/80 bg-[linear-gradient(180deg,rgba(255,146,43,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(253,186,116,0.92),0_0_24px_rgba(251,146,60,0.86),0_0_58px_rgba(251,146,60,0.66),0_0_108px_rgba(251,146,60,0.48),inset_0_0_20px_rgba(253,186,116,0.3)]" },
                 { label: "Leads", value: overallStats?.lead_count ?? "-", tone: "border-emerald-300/80 bg-[linear-gradient(180deg,rgba(34,197,94,0.18),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(110,231,183,0.92),0_0_24px_rgba(16,185,129,0.82),0_0_58px_rgba(16,185,129,0.62),0_0_108px_rgba(16,185,129,0.46),inset_0_0_20px_rgba(110,231,183,0.28)]" },
                 { label: "Sales", value: overallStats?.sale_count ?? 0, tone: "border-cyan-300/80 bg-[linear-gradient(180deg,rgba(34,211,238,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(103,232,249,0.92),0_0_24px_rgba(6,182,212,0.86),0_0_58px_rgba(6,182,212,0.66),0_0_108px_rgba(6,182,212,0.48),inset_0_0_20px_rgba(103,232,249,0.3)]" },
-                { label: "Rate", value: `${conversionRing}%`, tone: "border-yellow-300/80 bg-[linear-gradient(180deg,rgba(255,215,0,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(254,240,138,0.92),0_0_24px_rgba(250,204,21,0.86),0_0_58px_rgba(250,204,21,0.66),0_0_108px_rgba(250,204,21,0.48),inset_0_0_20px_rgba(254,240,138,0.3)]" },
-                { label: "Earnings", value: `£${earningsDisplay}`, tone: "border-pink-300/80 bg-[linear-gradient(180deg,rgba(244,114,182,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(249,168,212,0.92),0_0_24px_rgba(236,72,153,0.84),0_0_58px_rgba(236,72,153,0.64),0_0_108px_rgba(236,72,153,0.46),inset_0_0_20px_rgba(249,168,212,0.3)]" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -488,6 +853,39 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   <div className="mt-1 text-2xl font-black text-[#f8d778] drop-shadow-[0_0_12px_rgba(248,215,120,0.5)]">{item.value}</div>
                 </div>
               ))}
+              <div
+                ref={conversionCardRef}
+                role="button"
+                tabIndex={0}
+                aria-expanded={conversionFormulaOpen}
+                aria-haspopup="dialog"
+                aria-controls="affiliate-conversion-formula"
+                onMouseEnter={() => setConversionFormulaOpen(true)}
+                onMouseLeave={handleConversionCardLeave}
+                onFocus={() => setConversionFormulaOpen(true)}
+                onBlur={(e) => {
+                  const next = e.relatedTarget as Node | null;
+                  if (next && conversionOverlayRef.current?.contains(next)) return;
+                  setConversionFormulaOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setConversionFormulaOpen((o) => !o);
+                  }
+                  if (e.key === "Escape") setConversionFormulaOpen(false);
+                }}
+                className="cut-frame-sm cursor-help border border-yellow-300/80 bg-[linear-gradient(180deg,rgba(255,215,0,0.2),rgba(0,0,0,0.32))] px-3 py-2 shadow-[0_0_0_1px_rgba(254,240,138,0.92),0_0_24px_rgba(250,204,21,0.86),0_0_58px_rgba(250,204,21,0.66),0_0_108px_rgba(250,204,21,0.48),inset_0_0_20px_rgba(254,240,138,0.3)] outline-none focus-visible:ring-2 focus-visible:ring-yellow-200/90 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                <div className="text-xs font-black uppercase tracking-[0.14em] text-white/68 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]">Conversion</div>
+                <div className="mt-1 text-2xl font-black text-[#f8d778] drop-shadow-[0_0_12px_rgba(248,215,120,0.5)]">{conversionRing}%</div>
+              </div>
+              <div
+                className="cut-frame-sm border border-pink-300/80 bg-[linear-gradient(180deg,rgba(244,114,182,0.2),rgba(0,0,0,0.32))] px-3 py-2 shadow-[0_0_0_1px_rgba(249,168,212,0.92),0_0_24px_rgba(236,72,153,0.84),0_0_58px_rgba(236,72,153,0.64),0_0_108px_rgba(236,72,153,0.46),inset_0_0_20px_rgba(249,168,212,0.3)]"
+              >
+                <div className="text-xs font-black uppercase tracking-[0.14em] text-white/68 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]">Earnings</div>
+                <div className="mt-1 text-2xl font-black text-[#f8d778] drop-shadow-[0_0_12px_rgba(248,215,120,0.5)]">£{earningsDisplay}</div>
+              </div>
             </div>
 
             <div className="mt-2 relative cut-frame-sm border border-cyan-300/65 bg-black/30 p-3 shadow-[0_0_0_1px_rgba(34,211,238,0.9),0_0_22px_rgba(34,211,238,0.86),0_0_56px_rgba(34,211,238,0.72),0_0_108px_rgba(34,211,238,0.56),inset_0_0_20px_rgba(34,211,238,0.27)]">
@@ -546,12 +944,232 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             </div>
           </div>
 
+          {pendingWithdrawalReminders.length > 0 ? (
+            <div className="mt-5 cut-frame-sm border-2 border-amber-400/90 bg-[linear-gradient(165deg,rgba(28,18,4,0.94),rgba(8,6,14,0.96))] p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.85),0_0_28px_rgba(251,191,36,0.45),inset_0_0_24px_rgba(251,191,36,0.12)] sm:p-6">
+              <div className="mb-3 flex flex-col gap-2 border-b border-amber-500/35 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="font-heading text-base font-black uppercase tracking-[0.18em] text-amber-100 drop-shadow-[0_0_10px_rgba(251,191,36,0.45)] sm:text-lg">
+                  Applied for withdrawal
+                </h3>
+                <p className="max-w-xl font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.1em] text-amber-200/85 sm:text-xs">
+                  Payout window armed in this browser — enable notifications so we can ping you when the wire should hit.
+                </p>
+              </div>
+              <ul className="space-y-3">
+                {pendingWithdrawalReminders.map((row) => (
+                  <li
+                    key={`${row.requestId}-${row.notifyAt}`}
+                    className="flex flex-col gap-3 rounded-lg border border-amber-300/50 bg-black/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200/80">Reserved payout</div>
+                      <div className="mt-1 text-lg font-black text-amber-50">£{row.amount}</div>
+                      <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/60">
+                        Target check-in: {new Date(row.notifyAt).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric" })}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        let perm: NotificationPermission =
+                          typeof Notification !== "undefined" ? Notification.permission : "denied";
+                        if (typeof Notification !== "undefined" && perm === "default") {
+                          try {
+                            perm = await Notification.requestPermission();
+                          } catch {
+                            perm = "denied";
+                          }
+                        }
+                        scheduleWithdrawalReminder({
+                          requestId: row.requestId,
+                          amount: row.amount,
+                          affiliateId: row.affiliateId,
+                          notifyAtISO: new Date(row.notifyAt).toISOString(),
+                          immediate: perm === "granted",
+                        });
+                      }}
+                      className="cut-frame-sm shrink-0 cursor-pointer border border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.22),rgba(20,6,38,0.65))] px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.7),0_0_16px_rgba(193,120,255,0.35)] transition hover:scale-[1.02]"
+                    >
+                      Enable reminder
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="mt-5 cut-frame-sm border-2 border-cyan-400/85 bg-[linear-gradient(165deg,rgba(4,18,22,0.94),rgba(6,6,12,0.96))] p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.85),0_0_28px_rgba(34,211,238,0.4),inset_0_0_24px_rgba(34,211,238,0.1)] sm:p-6">
+            <div className="mb-3 flex flex-col gap-2 border-b border-cyan-500/35 pb-3 sm:flex-row sm:items-end sm:justify-between">
+              <h3 className="font-heading text-base font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.45)] sm:text-lg">
+                Syndicate earnings · statement
+              </h3>
+              <div className="text-right font-mono text-xs font-black uppercase tracking-[0.14em] text-amber-200/95">
+                Total credited (purchases below):{" "}
+                <span className="text-lg text-amber-100">£{formatEarnings(syndicateStatementTotal)}</span>
+              </div>
+            </div>
+            {syndicateStatementRows.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-cyan-500/40 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200/85">
+                      <th className="py-2 pr-3">User</th>
+                      <th className="py-2 pr-3">Offer</th>
+                      <th className="py-2 pr-3">Their pay-in</th>
+                      <th className="py-2 pr-3">Your cut</th>
+                      <th className="py-2">Recorded</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {syndicateStatementRows.map((row) => (
+                      <tr key={row.key} className="border-b border-white/10 font-mono text-xs uppercase tracking-[0.08em] text-white/85 sm:text-sm">
+                        <td className="max-w-[180px] truncate py-2 pr-3 text-cyan-100/95">{row.email}</td>
+                        <td className="max-w-[220px] truncate py-2 pr-3 text-violet-100/90">{row.product}</td>
+                        <td className="py-2 pr-3 text-amber-100/90">{row.paid ?? "—"}</td>
+                        <td className="py-2 pr-3 font-black text-amber-200">{row.yourCut}</td>
+                        <td className="py-2 text-white/70">{row.when}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="font-mono text-sm font-semibold uppercase tracking-[0.1em] text-white/55">
+                No syndicate checkouts yet — when your referrals pay, every line posts here with their spend and your commission.
+              </p>
+            )}
+          </div>
+
           <div className="mt-5 cut-frame-sm border-2 border-fuchsia-400/90 bg-[radial-gradient(900px_280px_at_10%_0%,rgba(232,121,249,0.22),transparent_55%),radial-gradient(800px_260px_at_90%_100%,rgba(56,236,255,0.14),transparent_50%),linear-gradient(180deg,rgba(8,4,14,0.92),rgba(0,0,0,0.88))] p-4 shadow-[0_0_0_1px_rgba(232,121,249,0.95),0_0_28px_rgba(232,121,249,0.65),0_0_64px_rgba(193,120,255,0.45),0_0_120px_rgba(56,236,255,0.22),inset_0_0_32px_rgba(232,121,249,0.12)] sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-2 border-b border-fuchsia-500/35 pb-3">
-              <div className="font-heading text-base font-black uppercase tracking-[0.2em] text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.55)] sm:text-lg">Recent Referrals</div>
+            <div className="mb-4 flex flex-col gap-3 border-b border-fuchsia-500/35 pb-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="font-heading text-base font-black uppercase tracking-[0.2em] text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.55)] sm:text-lg">Referrals</div>
+              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                <label className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-amber-200/90 sm:text-sm">Price</span>
+                  <select
+                    value={referralsMoneyFilter}
+                    onChange={(e) => setReferralsMoneyFilter(e.target.value as typeof referralsMoneyFilter)}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-amber-300/80 bg-[linear-gradient(180deg,rgba(252,211,77,0.18),rgba(28,18,4,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.65),0_0_14px_rgba(252,211,77,0.25)] sm:min-w-[200px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-amber-100"
+                    aria-label="Filter referrals by earnings"
+                  >
+                    <option value="all">All</option>
+                    <option value="upto20">Upto £20</option>
+                    <option value="upto50">Upto £50</option>
+                    <option value="upto99">Upto £99.9</option>
+                    <option value="over100">More than £100</option>
+                  </select>
+                </label>
+                <label className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-200/90 sm:text-sm">Time</span>
+                  <select
+                    value={referralsTimeFilter}
+                    onChange={(e) => setReferralsTimeFilter(e.target.value as typeof referralsTimeFilter)}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-violet-300/80 bg-[linear-gradient(180deg,rgba(193,120,255,0.2),rgba(20,6,38,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.65),0_0_14px_rgba(193,120,255,0.25)] sm:min-w-[180px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-violet-100"
+                    aria-label="Filter referrals by time window"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                    <option value="custom">Custom Range</option>
+                  </select>
+                </label>
+                <label className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-fuchsia-200/90 sm:text-sm">Time order</span>
+                  <select
+                    value={referralsTimeOrder}
+                    onChange={(e) => setReferralsTimeOrder(e.target.value as "newest" | "oldest")}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-cyan-300/80 bg-[linear-gradient(180deg,rgba(56,236,255,0.18),rgba(4,20,28,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.65),0_0_14px_rgba(56,236,255,0.25)] sm:min-w-[180px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-cyan-100"
+                    aria-label="Sort referrals by activity date ascending or descending"
+                  >
+                    <option value="newest">Newest first (descending)</option>
+                    <option value="oldest">Oldest first (ascending)</option>
+                  </select>
+                </label>
+                <label className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-fuchsia-200/90 sm:text-sm">Price order</span>
+                  <select
+                    value={referralsMoneyOrder}
+                    onChange={(e) => setReferralsMoneyOrder(e.target.value as "none" | "high" | "low")}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-emerald-300/80 bg-[linear-gradient(180deg,rgba(52,211,153,0.16),rgba(4,22,12,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-100 shadow-[0_0_0_1px_rgba(52,211,153,0.65),0_0_14px_rgba(52,211,153,0.25)] sm:min-w-[200px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-emerald-100"
+                    aria-label="Sort referrals by commission ascending or descending"
+                  >
+                    <option value="none">Use time order only</option>
+                    <option value="high">Highest commission first</option>
+                    <option value="low">Lowest commission first</option>
+                  </select>
+                </label>
+              </div>
+              </div>
+              {referralsTimeFilter === "custom" ? (
+                <div
+                  className="cut-frame-sm relative border border-violet-300/70 bg-[radial-gradient(900px_220px_at_0%_0%,rgba(193,120,255,0.18),transparent_55%),radial-gradient(700px_200px_at_100%_100%,rgba(56,236,255,0.14),transparent_55%),linear-gradient(180deg,rgba(12,4,22,0.92),rgba(2,2,6,0.96))] px-3 py-3 shadow-[0_0_0_1px_rgba(193,120,255,0.85),0_0_18px_rgba(193,120,255,0.4),0_0_44px_rgba(56,236,255,0.22),inset_0_0_22px_rgba(193,120,255,0.16)] sm:px-4 sm:py-3.5"
+                  role="group"
+                  aria-label="Custom date range filter"
+                >
+                  <div className="pointer-events-none absolute left-3 top-0 h-px w-16 bg-gradient-to-r from-transparent via-fuchsia-300/80 to-transparent" />
+                  <div className="pointer-events-none absolute right-3 bottom-0 h-px w-16 bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent" />
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.22em] text-fuchsia-200/85">Custom Window</span>
+                      <span className="text-xs font-bold text-violet-100/85 sm:text-sm">
+                        Select a start and end date — both are inclusive.
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-fuchsia-200/85">From</span>
+                        <input
+                          type="date"
+                          value={customFromDate}
+                          max={customToDate || undefined}
+                          onChange={(e) => setCustomFromDate(e.target.value)}
+                          aria-label="Custom range start date"
+                          className="cut-frame-sm min-h-[40px] cursor-pointer border border-fuchsia-300/75 bg-[linear-gradient(180deg,rgba(232,121,249,0.18),rgba(20,6,30,0.85))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-fuchsia-100 outline-none shadow-[0_0_0_1px_rgba(232,121,249,0.7),0_0_14px_rgba(232,121,249,0.32),inset_0_0_18px_rgba(232,121,249,0.12)] transition-shadow focus:border-fuchsia-200 focus:shadow-[0_0_0_1px_rgba(249,168,212,0.95),0_0_22px_rgba(232,121,249,0.5),inset_0_0_22px_rgba(232,121,249,0.2)] sm:min-w-[170px] sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator:hover]:opacity-100"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200/85">To</span>
+                        <input
+                          type="date"
+                          value={customToDate}
+                          min={customFromDate || undefined}
+                          onChange={(e) => setCustomToDate(e.target.value)}
+                          aria-label="Custom range end date"
+                          className="cut-frame-sm min-h-[40px] cursor-pointer border border-cyan-300/75 bg-[linear-gradient(180deg,rgba(56,236,255,0.18),rgba(4,18,28,0.85))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-cyan-100 outline-none shadow-[0_0_0_1px_rgba(56,236,255,0.7),0_0_14px_rgba(56,236,255,0.32),inset_0_0_18px_rgba(56,236,255,0.12)] transition-shadow focus:border-cyan-200 focus:shadow-[0_0_0_1px_rgba(130,245,255,0.95),0_0_22px_rgba(56,236,255,0.5),inset_0_0_22px_rgba(56,236,255,0.2)] sm:min-w-[170px] sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator:hover]:opacity-100"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomFromDate("");
+                          setCustomToDate("");
+                        }}
+                        disabled={!customFromDate && !customToDate}
+                        className="cut-frame-sm min-h-[40px] cursor-pointer border border-amber-300/75 bg-[linear-gradient(180deg,rgba(255,198,64,0.2),rgba(28,18,4,0.78))] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.7),0_0_14px_rgba(252,211,77,0.3)] transition-transform hover:scale-[1.03] hover:border-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  {customFromDate || customToDate ? (
+                    <div className="mt-3 inline-flex flex-wrap items-center gap-2 border-t border-violet-400/30 pt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-100/85 sm:text-xs">
+                      <span className="text-fuchsia-200/85">Showing</span>
+                      <span className="rounded border border-fuchsia-300/70 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-100 shadow-[0_0_10px_rgba(232,121,249,0.25)]">
+                        {customFromDate || "Earliest"}
+                      </span>
+                      <span className="text-cyan-200/75">→</span>
+                      <span className="rounded border border-cyan-300/70 bg-cyan-500/15 px-2 py-0.5 text-cyan-100 shadow-[0_0_10px_rgba(56,236,255,0.25)]">
+                        {customToDate || "Latest"}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
             <div className="space-y-4 min-h-[400px]">
-              {recentReferrals.length ? (
+              {referralsSorted.length ? (
                 pagedRecentReferrals.map((r, idx) => {
                   const purchaseProgram =
                     r.purchased_program ||
@@ -563,13 +1181,47 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     r.purchase_amount ??
                     (r as RecentReferralItem & { amount?: string | number | null }).amount ??
                     null;
-                  const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "£";
+                  const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "gbp";
+                  const paidLine = formatPaidDisplay(purchaseCurrency, purchaseAmountRaw);
                   const subscriptionLabel =
                     (r.subscription_name && r.subscription_name.trim()) ||
                     purchaseProgram ||
                     purchaseTier ||
                     null;
                   const earningStr = r.conversion_earning != null && String(r.conversion_earning).trim() !== "" ? String(r.conversion_earning).trim() : null;
+                  const diagnosisEv = r.lead_events?.find((e) => e.kind === "diagnosis");
+                  const authEv = r.lead_events?.find((e) => e.kind === "auth");
+                  let activeLeadTab: ReferralLeadTab = referralLeadTabByVisitor[r.visitor_id] ?? defaultReferralLeadTab(r);
+                  if (activeLeadTab === "diagnosis" && !diagnosisEv) activeLeadTab = authEv ? "auth" : "diagnosis";
+                  if (activeLeadTab === "auth" && !authEv) activeLeadTab = diagnosisEv ? "diagnosis" : "auth";
+                  const hasLeadTabs = Boolean(r.lead_events && r.lead_events.length > 0);
+                  const updatedAtForTab =
+                    hasLeadTabs && activeLeadTab === "diagnosis" && diagnosisEv?.at
+                      ? diagnosisEv.at
+                      : hasLeadTabs && activeLeadTab === "auth" && authEv?.at
+                        ? authEv.at
+                        : r.at;
+                  // Show the per-kind email that matches the active chip so the quiz
+                  // email and signup email never overwrite each other in the header.
+                  const headerEmail =
+                    hasLeadTabs && activeLeadTab === "diagnosis" && diagnosisEv?.email
+                      ? diagnosisEv.email
+                      : hasLeadTabs && activeLeadTab === "auth" && authEv?.email
+                        ? authEv.email
+                        : r.email || diagnosisEv?.email || authEv?.email || null;
+                  const headerEmailKindLabel =
+                    hasLeadTabs && activeLeadTab === "diagnosis" && diagnosisEv?.email
+                      ? "Quiz email"
+                      : hasLeadTabs && activeLeadTab === "auth" && authEv?.email
+                        ? "Signup email"
+                        : null;
+                  const otherTabEmail =
+                    hasLeadTabs && activeLeadTab === "diagnosis"
+                      ? authEv?.email ?? null
+                      : hasLeadTabs && activeLeadTab === "auth"
+                        ? diagnosisEv?.email ?? null
+                        : null;
+                  const showOtherTabHint = Boolean(otherTabEmail && otherTabEmail !== headerEmail);
                   const rowNeon = [
                     "border-cyan-300/85 shadow-[0_0_0_1px_rgba(56,236,255,0.75),0_0_22px_rgba(56,236,255,0.45),inset_0_0_24px_rgba(56,236,255,0.08)] bg-[linear-gradient(135deg,rgba(6,18,24,0.92),rgba(0,0,0,0.88))]",
                     "border-amber-300/85 shadow-[0_0_0_1px_rgba(252,211,77,0.75),0_0_22px_rgba(252,211,77,0.4),inset_0_0_24px_rgba(252,211,77,0.08)] bg-[linear-gradient(135deg,rgba(28,18,4,0.92),rgba(0,0,0,0.88))]",
@@ -583,10 +1235,25 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-4">
                       <div className="grid h-12 w-12 shrink-0 place-items-center rounded border border-white/25 bg-black/50 text-lg font-black text-white/90">
-                        {(recentPage - 1) * RECENT_PAGE_SIZE + idx + 1}
+                        {(safeRecentPage - 1) * REFERRALS_PAGE_SIZE + idx + 1}
                       </div>
                       <div className="min-w-0 flex-1 space-y-2">
-                        <div className="truncate text-lg font-semibold text-white">{r.email || "No email captured yet"}</div>
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="truncate text-lg font-semibold text-white">
+                            {headerEmail || "No email captured yet"}
+                          </span>
+                          {headerEmailKindLabel ? (
+                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/55">
+                              · {headerEmailKindLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        {showOtherTabHint && otherTabEmail ? (
+                          <div className="truncate text-xs font-semibold text-white/55">
+                            {activeLeadTab === "diagnosis" ? "Signup email" : "Quiz email"}:{" "}
+                            <span className="text-white/75">{otherTabEmail}</span>
+                          </div>
+                        ) : null}
                         <div className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-black uppercase tracking-[0.16em] ${
                           r.status === "purchased"
                             ? "border-emerald-300/75 bg-emerald-500/20 text-emerald-200 shadow-[0_0_14px_rgba(52,211,153,0.35)]"
@@ -594,16 +1261,95 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                         }`}>
                           {r.status}
                         </div>
+                        {r.lead_events && r.lead_events.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Lead milestones for this visitor">
+                            {r.lead_events.map((evt, evtIdx) => {
+                              const isDiagnosis = evt.kind === "diagnosis";
+                              const isLogin = !isDiagnosis && /login/i.test(evt.label);
+                              const chipTone = isDiagnosis
+                                ? "border-fuchsia-300/80 bg-fuchsia-500/15 text-fuchsia-100 shadow-[0_0_12px_rgba(232,121,249,0.35)]"
+                                : isLogin
+                                  ? "border-cyan-300/80 bg-cyan-500/15 text-cyan-100 shadow-[0_0_12px_rgba(56,236,255,0.35)]"
+                                  : "border-emerald-300/80 bg-emerald-500/15 text-emerald-100 shadow-[0_0_12px_rgba(52,211,153,0.35)]";
+                              const dotTone = isDiagnosis
+                                ? "bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.85)]"
+                                : isLogin
+                                  ? "bg-cyan-300 shadow-[0_0_8px_rgba(56,236,255,0.85)]"
+                                  : "bg-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.85)]";
+                              const tabForEvt = leadTabForEvent(evt);
+                              const isActive = tabForEvt === activeLeadTab;
+                              return (
+                                <button
+                                  key={`${evt.kind}-${evtIdx}`}
+                                  type="button"
+                                  role="tab"
+                                  aria-selected={isActive}
+                                  onClick={() =>
+                                    setReferralLeadTabByVisitor((prev) => ({
+                                      ...prev,
+                                      [r.visitor_id]: tabForEvt,
+                                    }))
+                                  }
+                                  className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-left text-[10px] font-black uppercase tracking-[0.14em] outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-white/50 sm:text-xs ${chipTone} ${
+                                    isActive ? "ring-2 ring-white/55 ring-offset-2 ring-offset-black/50" : ""
+                                  }`}
+                                  title={evt.at ? `Show this lead · recorded ${formatAgo(evt.at)}` : `Show ${evt.label}`}
+                                >
+                                  <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${dotTone}`} />
+                                  {evt.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : null}
                         <div className="grid gap-2 sm:grid-cols-2">
                           <div className="rounded-md border border-violet-400/50 bg-violet-950/40 px-3 py-2 shadow-[0_0_16px_rgba(167,139,250,0.25)]">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">Subscription</div>
-                            <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">{subscriptionLabel ?? "—"}</div>
+                            {!hasLeadTabs ? (
+                              <>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">Subscription</div>
+                                <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">{subscriptionLabel ?? "—"}</div>
+                              </>
+                            ) : activeLeadTab === "diagnosis" && diagnosisEv ? (
+                              <>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">Syn Diagnosis</div>
+                                <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">Quiz email capture</div>
+                                <div className="mt-1 text-xs font-semibold text-violet-200/90">Recorded {formatAgo(diagnosisEv.at)}</div>
+                                {r.status === "purchased" && subscriptionLabel ? (
+                                  <div className="mt-2 border-t border-violet-400/35 pt-2 text-xs font-semibold leading-snug text-violet-100/95">
+                                    Checkout · {subscriptionLabel}
+                                  </div>
+                                ) : null}
+                              </>
+                            ) : activeLeadTab === "auth" && authEv ? (
+                              <>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">
+                                  {r.status === "purchased" ? "Subscription" : "Sign up"}
+                                </div>
+                                <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">
+                                  {r.status === "purchased" ? subscriptionLabel ?? "—" : authEv.label}
+                                </div>
+                                <div className="mt-1 text-xs font-semibold text-violet-200/90">
+                                  {formatAgo(authEv.at)}
+                                  {r.status === "purchased" ? <span className="text-violet-300/85"> · {authEv.label}</span> : null}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200/90">Subscription</div>
+                                <div className="mt-1 text-sm font-semibold leading-snug text-violet-50">{subscriptionLabel ?? "—"}</div>
+                              </>
+                            )}
                           </div>
                           <div className="rounded-md border border-amber-400/55 bg-amber-950/35 px-3 py-2 shadow-[0_0_16px_rgba(251,191,36,0.28)]">
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200/90">Your earning</div>
                             <div className="mt-1 text-base font-black text-amber-100 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">
                               {earningStr != null ? `£${formatEarnings(earningStr)}` : "—"}
                             </div>
+                            {typeof r.sale_count === "number" && r.sale_count > 1 ? (
+                              <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/80">
+                                Total from {r.sale_count} purchases
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                         {r.status === "purchased" ? (
@@ -611,10 +1357,12 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                             {purchaseTier ? (
                               <span className="rounded border border-fuchsia-300/70 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-200">Tier: {purchaseTier}</span>
                             ) : null}
-                            {purchaseAmountRaw !== undefined && purchaseAmountRaw !== null && String(purchaseAmountRaw).trim() !== "" ? (
-                              <span className="rounded border border-yellow-300/70 bg-yellow-500/15 px-2 py-0.5 text-yellow-200">
-                                Paid: {purchaseCurrency}
-                                {String(purchaseAmountRaw)}
+                            {paidLine ? (
+                              <span className="rounded border border-yellow-300/70 bg-yellow-500/15 px-2 py-0.5 text-yellow-200">{paidLine}</span>
+                            ) : null}
+                            {typeof r.sale_count === "number" && r.sale_count > 1 ? (
+                              <span className="rounded border border-emerald-300/70 bg-emerald-500/15 px-2 py-0.5 text-emerald-200 shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+                                × {r.sale_count} purchases
                               </span>
                             ) : null}
                             <span className="rounded border border-cyan-300/70 bg-cyan-500/15 px-2 py-0.5 text-cyan-200">
@@ -626,111 +1374,260 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     </div>
                     <div className="flex shrink-0 flex-col items-end justify-between gap-2 border-t border-white/10 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
                       <div className="text-xs font-black uppercase tracking-[0.16em] text-white/50">Updated</div>
-                      <div className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-100/90">{formatAgo(r.at)}</div>
+                      <div className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-100/90">{formatAgo(updatedAtForTab)}</div>
                     </div>
                   </div>
                   );
                 })
+              ) : recentReferrals.length > 0 ? (
+                <div className="flex flex-col items-start gap-3 text-lg text-white/65">
+                  <span>No referrals match the selected filters.</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReferralsTimeFilter("all");
+                      setReferralsMoneyFilter("all");
+                      setReferralsTimeOrder("newest");
+                      setReferralsMoneyOrder("none");
+                    }}
+                    className="cut-frame-sm cursor-pointer border border-fuchsia-300/80 bg-[linear-gradient(180deg,rgba(232,121,249,0.22),rgba(28,6,42,0.6))] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.7),0_0_18px_rgba(232,121,249,0.32)]"
+                  >
+                    Reset filters
+                  </button>
+                </div>
               ) : (
-                <div className="text-lg text-white/65">No referral activity yet.</div>
+                <div className="text-lg text-white/65">No leads or sales yet. New visitors still add to Clicks until they sign up or purchase.</div>
               )}
             </div>
-            {recentReferrals.length > RECENT_PAGE_SIZE ? (
+            {referralsSorted.length > REFERRALS_PAGE_SIZE ? (
               <div className="mt-5 flex items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setRecentPage((p) => Math.max(1, p - 1))}
-                  disabled={recentPage <= 1}
+                  onClick={() => setRecentPage((p) => Math.max(1, Math.min(p, totalRecentPages) - 1))}
+                  disabled={safeRecentPage <= 1}
                   className="cut-frame-sm min-h-[48px] min-w-[128px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Prev
                 </button>
                 <div className="min-w-[144px] text-center text-base font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
-                  Page {recentPage} / {totalRecentPages}
+                  Page {safeRecentPage} / {totalRecentPages}
                 </div>
                 <button
                   type="button"
-                  onClick={() => setRecentPage((p) => Math.min(totalRecentPages, p + 1))}
-                  disabled={recentPage >= totalRecentPages}
+                  onClick={() => setRecentPage((p) => Math.min(totalRecentPages, Math.min(p, totalRecentPages) + 1))}
+                  disabled={safeRecentPage >= totalRecentPages}
                   className="cut-frame-sm min-h-[48px] min-w-[128px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>
               </div>
             ) : null}
-          </div>
-
-          <div className="mt-5 cut-frame-sm border-2 border-amber-400/90 bg-[radial-gradient(880px_280px_at_100%_0%,rgba(252,211,77,0.2),transparent_52%),radial-gradient(760px_260px_at_0%_100%,rgba(56,236,255,0.12),transparent_48%),linear-gradient(180deg,rgba(18,12,4,0.92),rgba(0,0,0,0.88))] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.95),0_0_28px_rgba(252,211,77,0.55),0_0_72px_rgba(56,236,255,0.28),0_0_120px_rgba(193,120,255,0.18),inset_0_0_32px_rgba(252,211,77,0.1)] sm:p-6">
-            <h3 className="font-heading border-b border-amber-500/35 pb-3 text-base font-black uppercase tracking-[0.2em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.45)] sm:text-lg">Affiliate Visitors</h3>
-            <div className="mt-4 min-h-[420px] max-w-[1800px] overflow-auto no-scrollbar">
-              <table className="w-full min-w-[1100px] text-left text-base sm:text-lg">
-                <thead className="text-xs uppercase tracking-[0.14em] sm:text-sm">
-                  <tr className="border-b-2 border-amber-400/40 bg-black/50">
-                    <th className="px-3 py-3.5 text-cyan-200 drop-shadow-[0_0_8px_rgba(56,236,255,0.45)]">Visitor</th>
-                    <th className="px-3 py-3.5 text-sky-200 drop-shadow-[0_0_8px_rgba(125,211,252,0.4)]">Clicked At</th>
-                    <th className="px-3 py-3.5 text-emerald-200 drop-shadow-[0_0_8px_rgba(110,231,183,0.4)]">Lead Email</th>
-                    <th className="px-3 py-3.5 text-fuchsia-200 drop-shadow-[0_0_8px_rgba(232,121,249,0.4)]">Lead At</th>
-                    <th className="px-3 py-3.5 text-violet-200 drop-shadow-[0_0_8px_rgba(196,181,253,0.45)]">Subscription</th>
-                    <th className="px-3 py-3.5 text-amber-200 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">Your earning</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visitors.length > 0 ? (
-                    pagedVisitors.map((v, vIdx) => {
-                      const sub = (v.subscription_name && v.subscription_name.trim()) || null;
-                      const earnRaw = v.conversion_earning ?? v.sale_amount;
-                      const earn =
-                        earnRaw != null && String(earnRaw).trim() !== "" && Number(earnRaw) !== 0
-                          ? `£${formatEarnings(String(earnRaw))}`
-                          : "—";
-                      const stripe = vIdx % 2 === 0 ? "bg-black/25" : "bg-cyan-950/15";
-                      return (
-                        <tr key={v.visitor_id} className={`border-b border-cyan-500/15 text-white/92 ${stripe}`}>
-                          <td className="px-3 py-3.5 font-semibold text-cyan-100">{v.visitor_id}</td>
-                          <td className="px-3 py-3.5 text-sky-100">{formatWhen(v.clicked_at)}</td>
-                          <td className="px-3 py-3.5 text-emerald-100">{v.lead_email ?? "—"}</td>
-                          <td className="px-3 py-3.5 text-fuchsia-100">{formatWhen(v.lead_at)}</td>
-                          <td className="px-3 py-3.5 text-violet-100">{sub ?? "—"}</td>
-                          <td className="px-3 py-3.5 font-black text-amber-100">{earn}</td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="px-3 py-8 text-center text-lg text-white/50">
-                        No visitor activity yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {visitors.length > VISITORS_PAGE_SIZE ? (
-              <div className="mt-5 flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setVisitorsPage((p) => Math.max(1, p - 1))}
-                  disabled={visitorsPage <= 1}
-                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.28),rgba(28,6,42,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_24px_rgba(232,121,249,0.44),0_0_52px_rgba(232,121,249,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Prev
-                </button>
-                <div className="min-w-[144px] text-center text-base font-black uppercase tracking-[0.16em] text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
-                  Page {visitorsPage} / {totalVisitorPages}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setVisitorsPage((p) => Math.min(totalVisitorPages, p + 1))}
-                  disabled={visitorsPage >= totalVisitorPages}
-                  className="cut-frame-sm min-h-[48px] min-w-[128px] border border-cyan-300/90 bg-[linear-gradient(180deg,rgba(56,236,255,0.28),rgba(4,24,32,0.62))] px-6 py-2 text-base font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_24px_rgba(56,236,255,0.44),0_0_52px_rgba(56,236,255,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next
-                </button>
-              </div>
-            ) : null}
+            <p className="mt-5 border-t border-fuchsia-500/30 pt-4 text-center text-xs font-semibold leading-relaxed text-fuchsia-200/85 sm:text-sm">
+              Referred purchase commission: <span className="text-amber-300">15%</span> when their spend is under{" "}
+              <span className="font-black text-amber-200">£333</span>; <span className="text-green-300">30%</span> when spend is{" "}
+              <span className="font-black text-green-200">£333 or more</span>
+            </p>
           </div>
         </div>
       </main>
+      {conversionPortalMounted && conversionFormulaOpen
+        ? createPortal(
+            <div
+              ref={conversionOverlayRef}
+              id="affiliate-conversion-formula"
+              role="dialog"
+              aria-modal="false"
+              aria-labelledby="affiliate-conversion-formula-title"
+              className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[3px]"
+              onMouseEnter={() => setConversionFormulaOpen(true)}
+              onMouseLeave={handleConversionOverlayLeave}
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setConversionFormulaOpen(false);
+                }
+              }}
+            >
+              <div className="relative w-full max-w-4xl drop-shadow-[0_0_28px_rgba(250,204,21,0.55)] [filter:drop-shadow(0_0_18px_rgba(232,121,249,0.45))_drop-shadow(0_0_28px_rgba(56,236,255,0.35))]">
+                <div
+                  className="relative max-h-[min(92dvh,820px)] overflow-y-auto overscroll-contain bg-[linear-gradient(160deg,rgba(20,14,2,0.98)_0%,rgba(8,6,18,0.98)_55%,rgba(2,8,18,0.98)_100%)] px-10 pt-16 pb-8 shadow-[inset_0_0_0_2px_rgba(254,240,138,0.95),inset_0_0_0_4px_rgba(0,0,0,0.85),inset_0_0_42px_rgba(252,211,77,0.18)] sm:px-14 sm:pt-20 sm:pb-10 [clip-path:polygon(0%_50%,28px_0%,calc(100%-28px)_0%,100%_50%,calc(100%-28px)_100%,28px_100%)]"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setConversionFormulaOpen(false)}
+                    aria-label="Close conversion formula"
+                    className="absolute right-8 top-5 z-10 grid h-10 w-10 cursor-pointer place-items-center border-2 border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.32),rgba(28,6,42,0.85))] text-fuchsia-50 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_18px_rgba(232,121,249,0.55),inset_0_0_14px_rgba(232,121,249,0.25)] transition duration-200 hover:scale-110 hover:border-fuchsia-200 hover:text-white hover:shadow-[0_0_0_1px_rgba(249,168,212,0.95),0_0_24px_rgba(232,121,249,0.75)] active:scale-95 sm:right-10 sm:top-6 [clip-path:polygon(20%_0,80%_0,100%_50%,80%_100%,20%_100%,0_50%)]"
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                    </svg>
+                  </button>
+
+                  <h3
+                    id="affiliate-conversion-formula-title"
+                    className="pr-12 text-2xl font-black uppercase tracking-[0.16em] text-yellow-100 drop-shadow-[0_0_14px_rgba(252,211,77,0.55)] sm:text-3xl"
+                  >
+                    Conversion Formula
+                  </h3>
+
+                  <p className="mt-3 text-base font-semibold leading-relaxed text-cyan-100/95 sm:text-lg">
+                    {conversionFormula.summary}
+                  </p>
+
+                  <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="border-2 border-cyan-300/85 bg-[linear-gradient(180deg,rgba(34,211,238,0.18),rgba(0,12,20,0.88))] px-3 py-2.5 text-center shadow-[0_0_0_1px_rgba(103,232,249,0.85),0_0_18px_rgba(56,236,255,0.45),inset_0_0_16px_rgba(56,236,255,0.18)] [clip-path:polygon(0%_50%,12px_0,calc(100%-12px)_0,100%_50%,calc(100%-12px)_100%,12px_100%)]">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-200/95 sm:text-xs">Clicks</div>
+                      <div className="mt-1 text-2xl font-black text-cyan-100 drop-shadow-[0_0_10px_rgba(56,236,255,0.55)] sm:text-3xl">{conversionFormula.clicks}</div>
+                    </div>
+                    <div className="border-2 border-emerald-300/85 bg-[linear-gradient(180deg,rgba(16,185,129,0.18),rgba(0,18,12,0.88))] px-3 py-2.5 text-center shadow-[0_0_0_1px_rgba(110,231,183,0.85),0_0_18px_rgba(16,185,129,0.45),inset_0_0_16px_rgba(16,185,129,0.18)] [clip-path:polygon(0%_50%,12px_0,calc(100%-12px)_0,100%_50%,calc(100%-12px)_100%,12px_100%)]">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-emerald-200/95 sm:text-xs">Leads</div>
+                      <div className="mt-1 text-2xl font-black text-emerald-100 drop-shadow-[0_0_10px_rgba(52,211,153,0.55)] sm:text-3xl">{conversionFormula.leads}</div>
+                    </div>
+                    <div className="border-2 border-fuchsia-300/85 bg-[linear-gradient(180deg,rgba(232,121,249,0.2),rgba(20,6,28,0.88))] px-3 py-2.5 text-center shadow-[0_0_0_1px_rgba(249,168,212,0.85),0_0_18px_rgba(232,121,249,0.45),inset_0_0_16px_rgba(232,121,249,0.18)] [clip-path:polygon(0%_50%,12px_0,calc(100%-12px)_0,100%_50%,calc(100%-12px)_100%,12px_100%)]">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-200/95 sm:text-xs">Sales</div>
+                      <div className="mt-1 text-2xl font-black text-fuchsia-100 drop-shadow-[0_0_10px_rgba(232,121,249,0.55)] sm:text-3xl">{conversionFormula.sales}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 border-2 border-amber-300/85 bg-[linear-gradient(180deg,rgba(252,211,77,0.14),rgba(8,6,2,0.94))] px-4 py-4 shadow-[0_0_0_1px_rgba(254,240,138,0.85),0_0_22px_rgba(252,211,77,0.4),inset_0_0_18px_rgba(252,211,77,0.16)] [clip-path:polygon(0%_50%,16px_0,calc(100%-16px)_0,100%_50%,calc(100%-16px)_100%,16px_100%)]">
+                    <div className="text-xs font-black uppercase tracking-[0.22em] text-amber-200/95 sm:text-sm">Formula</div>
+                    <pre className="mt-2 whitespace-pre-wrap break-words text-center font-mono text-base font-black leading-relaxed text-amber-100 drop-shadow-[0_0_10px_rgba(252,211,77,0.5)] sm:text-lg">
+{conversionFormula.formula}
+                    </pre>
+                  </div>
+
+                  {conversionFormula.hasClicks ? (
+                    <div className="mt-5 flex flex-col items-center gap-2 border-2 border-violet-300/80 bg-[linear-gradient(180deg,rgba(193,120,255,0.18),rgba(10,4,20,0.92))] px-4 py-4 text-center shadow-[0_0_0_1px_rgba(216,180,254,0.85),0_0_20px_rgba(193,120,255,0.4),inset_0_0_18px_rgba(193,120,255,0.18)] [clip-path:polygon(0%_50%,16px_0,calc(100%-16px)_0,100%_50%,calc(100%-16px)_100%,16px_100%)]">
+                      <div className="text-xs font-black uppercase tracking-[0.22em] text-violet-200/95 sm:text-sm">Your Result</div>
+                      <div className="text-sm font-bold text-violet-100 sm:text-base">
+                        ({conversionFormula.leads} ÷ {conversionFormula.clicks}) + ({conversionFormula.sales} ÷ {conversionFormula.clicks}) ÷ 2 × 100 ≈ {conversionFormula.rawPercent.toFixed(1)}%
+                      </div>
+                      <div className="text-4xl font-black text-amber-100 drop-shadow-[0_0_14px_rgba(252,211,77,0.6)] sm:text-5xl">
+                        {conversionFormula.finalPercent}%
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <p className="mt-5 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/45 sm:text-[11px]">
+                    Press Esc · Tap outside · or the cross to close
+                  </p>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+      {withdrawConfirmation ? (
+        <div
+          className="fixed inset-0 z-[600] flex items-center justify-center overflow-y-auto overscroll-contain bg-[rgba(2,4,10,0.86)] p-3 backdrop-blur-[4px] sm:p-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setWithdrawConfirmation(null);
+          }}
+        >
+          <div
+            className="relative w-full max-w-[640px] drop-shadow-[0_0_28px_rgba(252,211,77,0.55)] [filter:drop-shadow(0_0_18px_rgba(56,236,255,0.4))_drop-shadow(0_0_22px_rgba(232,121,249,0.32))]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative overflow-hidden bg-[linear-gradient(160deg,rgba(20,14,2,0.98)_0%,rgba(6,8,18,0.98)_55%,rgba(2,12,18,0.98)_100%)] px-8 py-7 shadow-[inset_0_0_0_2px_rgba(254,240,138,0.95),inset_0_0_0_4px_rgba(0,0,0,0.85),inset_0_0_44px_rgba(252,211,77,0.18)] sm:px-10 sm:py-8 [clip-path:polygon(0%_50%,28px_0%,calc(100%-28px)_0%,100%_50%,calc(100%-28px)_100%,28px_100%)]">
+              <button
+                type="button"
+                onClick={() => setWithdrawConfirmation(null)}
+                aria-label="Close confirmation"
+                className="absolute right-8 top-2 z-10 grid h-10 w-10 cursor-pointer place-items-center border-2 border-fuchsia-300/90 bg-[linear-gradient(180deg,rgba(232,121,249,0.32),rgba(28,6,42,0.85))] text-fuchsia-50 shadow-[0_0_0_1px_rgba(232,121,249,0.9),0_0_18px_rgba(232,121,249,0.55),inset_0_0_14px_rgba(232,121,249,0.25)] transition duration-200 hover:scale-110 hover:border-fuchsia-200 hover:text-white active:scale-95 sm:right-10 [clip-path:polygon(20%_0,80%_0,100%_50%,80%_100%,20%_100%,0_50%)]"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+              </button>
+
+              <div className="mx-auto mb-4 grid h-16 w-16 place-items-center border-2 border-emerald-300/90 bg-[linear-gradient(180deg,rgba(52,211,153,0.28),rgba(4,18,12,0.85))] text-emerald-50 shadow-[0_0_0_1px_rgba(110,231,183,0.9),0_0_22px_rgba(52,211,153,0.55),inset_0_0_18px_rgba(52,211,153,0.25)] [clip-path:polygon(50%_0,100%_25%,100%_75%,50%_100%,0_75%,0_25%)]">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+
+              <h3 className="pr-12 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(252,211,77,0.55)] sm:pr-14 sm:text-3xl">
+                Applied for Withdrawal
+              </h3>
+              <p className="mt-3 text-center text-base font-semibold leading-relaxed text-cyan-100/95 sm:text-lg">
+                You will get paid within{" "}
+                <span className="font-black text-amber-200">1-2 weeks</span>.
+              </p>
+
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="border-2 border-amber-300/85 bg-[linear-gradient(180deg,rgba(252,211,77,0.14),rgba(8,6,2,0.94))] px-4 py-3 text-center shadow-[0_0_0_1px_rgba(254,240,138,0.85),0_0_18px_rgba(252,211,77,0.32),inset_0_0_14px_rgba(252,211,77,0.16)] [clip-path:polygon(0%_50%,14px_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,14px_100%)]">
+                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/90 sm:text-xs">Amount Requested</div>
+                  <div className="mt-1 text-2xl font-black text-amber-100 drop-shadow-[0_0_10px_rgba(252,211,77,0.5)] sm:text-3xl">£{withdrawConfirmation.amount}</div>
+                </div>
+                <div className="border-2 border-cyan-300/85 bg-[linear-gradient(180deg,rgba(56,236,255,0.16),rgba(0,12,20,0.92))] px-4 py-3 text-center shadow-[0_0_0_1px_rgba(103,232,249,0.85),0_0_18px_rgba(56,236,255,0.4),inset_0_0_14px_rgba(56,236,255,0.18)] [clip-path:polygon(0%_50%,14px_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,14px_100%)]">
+                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-200/95 sm:text-xs">Expected By</div>
+                  <div className="mt-1 text-lg font-black text-cyan-100 drop-shadow-[0_0_10px_rgba(56,236,255,0.5)] sm:text-xl">{withdrawConfirmation.payoutByLabel}</div>
+                </div>
+              </div>
+
+              <div className="mt-4 border-2 border-violet-300/80 bg-[linear-gradient(180deg,rgba(193,120,255,0.16),rgba(10,4,20,0.92))] px-4 py-3 text-center shadow-[0_0_0_1px_rgba(216,180,254,0.85),0_0_18px_rgba(193,120,255,0.35),inset_0_0_14px_rgba(193,120,255,0.16)] [clip-path:polygon(0%_50%,14px_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,14px_100%)]">
+                <p className="text-xs font-semibold leading-relaxed text-violet-100/95 sm:text-sm">
+                  We&apos;ve reserved this amount from your available earnings.{" "}
+                  {typeof Notification !== "undefined" && Notification.permission === "granted" && withdrawNotifyArmed
+                    ? "We&apos;ll send a browser notification around the payout date."
+                    : withdrawNotifyArmed
+                      ? "A payout reminder is saved in this browser for the expected window."
+                      : "Tap below to save a reminder or allow browser notifications."}
+                </p>
+              </div>
+
+              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                {withdrawConfirmation &&
+                typeof Notification !== "undefined" &&
+                Notification.permission !== "granted" ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!withdrawConfirmation) return;
+                      let perm: NotificationPermission = typeof Notification !== "undefined" ? Notification.permission : "denied";
+                      if (typeof Notification !== "undefined" && perm === "default") {
+                        try {
+                          perm = await Notification.requestPermission();
+                        } catch {
+                          perm = "denied";
+                        }
+                      }
+                      if (perm === "granted") {
+                        setWithdrawNotifyArmed(true);
+                      }
+                      scheduleWithdrawalReminder({
+                        requestId:
+                          withdrawConfirmation.requestId ??
+                          `wr-${affiliateId.trim()}-${withdrawConfirmation.payoutByISO}`,
+                        amount: withdrawConfirmation.amount,
+                        affiliateId: affiliateId.trim(),
+                        notifyAtISO: withdrawConfirmation.payoutByISO,
+                        immediate: perm === "granted",
+                      });
+                    }}
+                    className="cut-frame-sm cursor-pointer border-2 border-violet-300/90 bg-[linear-gradient(180deg,rgba(193,120,255,0.28),rgba(20,6,38,0.6))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.16em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.85),0_0_18px_rgba(193,120,255,0.42),0_0_44px_rgba(193,120,255,0.22)] transition-transform hover:scale-[1.03] hover:border-violet-200 sm:text-sm"
+                  >
+                    {typeof Notification !== "undefined" && Notification.permission === "denied"
+                      ? "Save payout reminder"
+                      : "Enable Reminder"}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setWithdrawConfirmation(null)}
+                  className="cut-frame-sm cursor-pointer border-2 border-amber-300/90 bg-[linear-gradient(180deg,rgba(252,211,77,0.3),rgba(24,16,2,0.78))] px-7 py-2.5 text-xs font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.9),0_0_20px_rgba(252,211,77,0.45),0_0_48px_rgba(252,211,77,0.24)] transition-transform hover:scale-[1.03] hover:border-amber-200 sm:text-sm"
+                >
+                  Got it
+                </button>
+              </div>
+              <p className="mt-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/45 sm:text-[11px]">
+                Press Esc · Tap outside · or the close icon to dismiss
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {withdrawOpen ? (
         <div
           className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto overscroll-contain touch-pan-y bg-[rgba(2,4,10,0.82)] p-3 backdrop-blur-[3px] sm:items-center sm:p-4"
@@ -754,7 +1651,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               Close
             </button>
             <h3 className="pr-16 text-lg font-black uppercase tracking-[0.1em] text-amber-100 drop-shadow-[0_0_12px_rgba(252,211,77,0.5)] sm:pr-20 sm:text-[1.9rem]">
-              Enter Account Details To Witdraw
+              Enter Account Details To Withdraw
             </h3>
             <p className="mt-2 text-sm sm:text-base font-bold text-cyan-100">
               Minimum earnings required for withdrawal: <span className="text-amber-200">£50.000</span>

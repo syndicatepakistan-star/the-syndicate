@@ -13,7 +13,7 @@ export type NavSectionId =
   | 'joinNow'
   | 'programs'
   | 'membership'
-  | 'affiliateLogin'
+  | 'affiliate'
   | 'syndicateAnalysis'
 
 export type RadialNavItem = {
@@ -39,7 +39,7 @@ const defaultItems: RadialNavItem[] = [
   { id: 'joinNow', label: 'Login' },
   { id: 'programs', label: 'Programs' },
   { id: 'membership', label: 'Membership' },
-  { id: 'affiliateLogin', label: 'Affiliate Login' },
+  { id: 'affiliate', label: 'Affiliate' },
 ]
 
 const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; glow: string }> = {
@@ -60,7 +60,7 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
     border: 'rgba(253,164,175,0.5)',
     glow: 'rgba(251, 113, 133, 0.42)',
   },
-  affiliateLogin: {
+  affiliate: {
     color: '#34d399',
     bg: 'rgba(52,211,153,0.12)',
     border: 'rgba(52,211,153,0.5)',
@@ -138,7 +138,7 @@ function getMobileItemNudge(id: NavSectionId, itemCount: number): {
   // Keep extra breathing room on narrow phones + iPhone 15 Pro Max style widths.
   if (w >= 460) return {}
   if (id === 'home') return { marginBottom: '22px' }
-  if (id === 'affiliateLogin' || id === 'whatYouGet') return { marginTop: '22px' }
+  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '22px' }
   // Most visible collapse happens on the last pair; separate them further.
   if (id === 'joinNow') return { marginRight: '26px' }
   if (id === 'syndicateAnalysis') return { marginLeft: '26px' }

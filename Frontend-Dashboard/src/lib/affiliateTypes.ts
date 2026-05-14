@@ -79,9 +79,21 @@ export type AffiliateFunnelResponse = {
   stages: FunnelStage[];
 };
 
+export type ReferralLeadEvent = {
+  /** Backend kind: "diagnosis" (quiz email) or "auth" (signup / login). */
+  kind: "diagnosis" | "auth" | string;
+  /** Display label shown on the affiliate dashboard, e.g. "Syn Diagnosis lead". */
+  label: string;
+  /** Email captured for THIS lead kind (quiz email vs signup email may differ). */
+  email?: string | null;
+  /** ISO timestamp of when this lead event was recorded. */
+  at: string | null;
+};
+
 export type RecentReferralItem = {
   visitor_id: string;
   email?: string | null;
+  /** `joined` = lead captured without purchase yet; `purchased` = sale recorded. */
   status: "joined" | "purchased";
   at: string | null;
   /** Backend: human-readable product / offer line from checkout attribution. */
@@ -94,6 +106,12 @@ export type RecentReferralItem = {
   purchase_amount?: string | number | null;
   purchase_currency?: string | null;
   purchased_at?: string | null;
+  /** Per-event labels (up to two: "Syn Diagnosis lead", "Sign up lead" / "Login lead"). */
+  lead_events?: ReferralLeadEvent[];
+  /** Number of distinct sale events recorded for this visitor (defaults to 1 when at least one sale exists). */
+  sale_count?: number | null;
+  /** Distinct subscription names this visitor purchased, ordered by first purchase. */
+  subscription_names?: string[] | null;
 };
 
 export type RecentReferralsResponse = {
@@ -119,6 +137,12 @@ export type WithdrawalRequestResponse = {
   requested_amount?: string;
   earnings_snapshot: string;
   created_at: string;
+  /** Available balance after this withdrawal is reserved (gross minus all non-refunded withdrawals). */
+  earnings_total?: string;
+  /** Lifetime commission credited. */
+  gross_earnings?: string;
+  /** Sum of every non-refunded withdrawal request. */
+  withdrawn_total?: string;
 };
 
 export type AuthLoginResponse = {

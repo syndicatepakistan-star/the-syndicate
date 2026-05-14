@@ -3,13 +3,81 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { DashboardNavKey } from "../types";
-import type { CourseRec, GoalId } from "./goalPathData";
-import { ROADMAPS, coursesForGoalStep, personalizeCourses } from "./goalPathData";
+import type { CourseRec, GoalId, OpportunityTone } from "./goalPathData";
+import { GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage } from "./goalPathData";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { ArrowConnectorHorizontal, ArrowConnectorVertical } from "./ArrowConnector";
 import { cn } from "../dashboardPrimitives";
 
 const CAROUSEL_MS = 4200;
+
+/** Our Methods–style neon frames (timeline card family). */
+const TONE_SKIN: Record<
+  OpportunityTone,
+  {
+    border: string;
+    glow: string;
+    aura: string;
+    panel: string;
+    chip: string;
+    heading: string;
+    btn: string;
+    btnHover: string;
+  }
+> = {
+  amber: {
+    border: "border-amber-400/90",
+    glow: "shadow-[0_0_0_2px_rgba(251,191,36,0.82),0_0_48px_rgba(245,158,11,0.55),0_0_92px_rgba(234,88,12,0.28)]",
+    aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(251,191,36,0.5),rgba(146,64,14,0.35)_48%,transparent_74%)]",
+    panel: "bg-[linear-gradient(165deg,rgba(24,16,4,0.92),rgba(6,6,4,0.97))]",
+    chip: "border-amber-300/70 bg-amber-950/55 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.45)]",
+    heading: "text-amber-100 drop-shadow-[0_0_12px_rgba(251,191,36,0.45)]",
+    btn: "border-amber-300/75 bg-amber-950/40 text-amber-50 shadow-[0_0_22px_rgba(251,191,36,0.25)]",
+    btnHover: "hover:border-amber-200 hover:shadow-[0_0_32px_rgba(251,191,36,0.4)]",
+  },
+  rose: {
+    border: "border-rose-500/90",
+    glow: "shadow-[0_0_0_2px_rgba(244,63,94,0.82),0_0_48px_rgba(225,29,72,0.55),0_0_92px_rgba(136,19,55,0.35)]",
+    aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(244,63,94,0.55),rgba(136,19,55,0.42)_48%,transparent_74%)]",
+    panel: "bg-[linear-gradient(165deg,rgba(22,6,10,0.94),rgba(8,4,6,0.98))]",
+    chip: "border-rose-400/70 bg-rose-950/50 text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.4)]",
+    heading: "text-rose-100 drop-shadow-[0_0_12px_rgba(251,113,133,0.45)]",
+    btn: "border-rose-400/70 bg-rose-950/35 text-rose-50 shadow-[0_0_22px_rgba(244,63,94,0.28)]",
+    btnHover: "hover:border-rose-300 hover:shadow-[0_0_32px_rgba(244,63,94,0.38)]",
+  },
+  fuchsia: {
+    border: "border-fuchsia-500/90",
+    glow: "shadow-[0_0_0_2px_rgba(217,70,239,0.82),0_0_48px_rgba(192,38,211,0.55),0_0_92px_rgba(134,25,143,0.32)]",
+    aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(217,70,239,0.52),rgba(126,34,206,0.38)_48%,transparent_74%)]",
+    panel: "bg-[linear-gradient(165deg,rgba(18,6,22,0.94),rgba(6,4,12,0.98))]",
+    chip: "border-fuchsia-400/70 bg-fuchsia-950/45 text-fuchsia-100 shadow-[0_0_18px_rgba(232,121,249,0.42)]",
+    heading: "text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.45)]",
+    btn: "border-fuchsia-400/70 bg-fuchsia-950/35 text-fuchsia-50 shadow-[0_0_22px_rgba(217,70,239,0.28)]",
+    btnHover: "hover:border-fuchsia-300 hover:shadow-[0_0_32px_rgba(217,70,239,0.38)]",
+  },
+  cyan: {
+    border: "border-cyan-500/90",
+    glow: "shadow-[0_0_0_2px_rgba(34,211,238,0.82),0_0_48px_rgba(6,182,212,0.55),0_0_92px_rgba(14,116,144,0.32)]",
+    aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(34,211,238,0.48),rgba(14,116,144,0.35)_48%,transparent_74%)]",
+    panel: "bg-[linear-gradient(165deg,rgba(4,16,22,0.94),rgba(4,8,14,0.98))]",
+    chip: "border-cyan-400/70 bg-cyan-950/45 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.4)]",
+    heading: "text-cyan-100 drop-shadow-[0_0_12px_rgba(103,232,249,0.45)]",
+    btn: "border-cyan-400/70 bg-cyan-950/35 text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.28)]",
+    btnHover: "hover:border-cyan-300 hover:shadow-[0_0_32px_rgba(34,211,238,0.38)]",
+  },
+  blue: {
+    border: "border-blue-500/90",
+    glow: "shadow-[0_0_0_2px_rgba(59,130,246,0.82),0_0_48px_rgba(37,99,235,0.55),0_0_92px_rgba(30,64,175,0.32)]",
+    aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(59,130,246,0.48),rgba(30,64,175,0.35)_48%,transparent_74%)]",
+    panel: "bg-[linear-gradient(165deg,rgba(6,12,28,0.94),rgba(4,8,18,0.98))]",
+    chip: "border-blue-400/70 bg-blue-950/45 text-blue-100 shadow-[0_0_18px_rgba(96,165,250,0.4)]",
+    heading: "text-blue-100 drop-shadow-[0_0_12px_rgba(147,197,253,0.45)]",
+    btn: "border-blue-400/70 bg-blue-950/35 text-blue-50 shadow-[0_0_22px_rgba(59,130,246,0.28)]",
+    btnHover: "hover:border-blue-300 hover:shadow-[0_0_32px_rgba(59,130,246,0.38)]",
+  },
+};
+
+const CLIP_HUD = "[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]";
 
 function CourseFlowCard({
   course,
@@ -22,64 +90,51 @@ function CourseFlowCard({
   isAnchor: boolean;
   onContinue: () => void;
 }) {
+  const skin = TONE_SKIN[course.tone];
   return (
     <motion.div
       layout={false}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
       whileHover={isAnchor ? { scale: 1.012 } : { scale: 1.022 }}
       className={cn(
-        "compact-card-ui group relative flex min-h-[clamp(10.5rem,22vh,14rem)] min-w-0 flex-1 flex-col overflow-hidden border",
-        "cut-frame-sm cyber-frame backdrop-blur-[2px]",
-        /* Ledger gold deck–aligned shell (MissionCommandDeckCard DECK_NOTES family) */
-        "border-[rgba(255,215,0,0.46)] bg-gradient-to-b from-[rgba(255,215,0,0.11)] via-[#060606]/96 to-[#050505]",
-        "shadow-[0_14px_48px_rgba(0,0,0,0.48),0_0_0_1px_rgba(255,215,0,0.14),0_0_44px_rgba(255,215,0,0.12),0_0_72px_rgba(255,200,0,0.06),inset_0_1px_0_rgba(255,255,255,0.06)]",
+        "compact-card-ui group relative flex min-h-[clamp(10.5rem,22vh,14rem)] min-w-0 flex-1 flex-col overflow-hidden border-2 backdrop-blur-[2px]",
+        CLIP_HUD,
+        skin.border,
+        skin.panel,
+        skin.glow,
         "transition-[box-shadow,border-color,filter] duration-300",
-        isAnchor
-          ? "z-[3] gold-stroke-strong hud-selected-glow hover:!brightness-[1.12] hover:shadow-[0_14px_52px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,235,160,0.45),0_0_56px_rgba(255,215,0,0.28),0_0_96px_rgba(255,200,0,0.14),0_0_120px_rgba(255,180,0,0.08),inset_0_1px_0_rgba(255,248,220,0.12)]"
-          : "z-[1] gold-stroke hud-hover-glow hover:border-[rgba(255,235,160,0.72)] hover:shadow-[0_14px_52px_rgba(0,0,0,0.48),0_0_0_1px_rgba(255,215,0,0.28),0_0_56px_rgba(255,215,0,0.2),0_0_88px_rgba(255,200,0,0.1),inset_0_1px_0_rgba(255,248,220,0.08)]"
+        isAnchor && "z-[3] hover:!brightness-[1.08]",
+        !isAnchor && "z-[1] hover:brightness-[1.05]",
       )}
     >
-      {/* Sun + ledger wash — globals.css */}
-      <div className="opportunity-card-ledger-glow" aria-hidden />
-      <div className={cn("opportunity-card-sun", isAnchor && "opportunity-card-sun-strong")} aria-hidden />
-      <div className="opportunity-card-sun-ray" aria-hidden />
-      {/* Horizon glint */}
+      <span className={cn("pointer-events-none absolute -inset-3 rounded-[1.05rem] opacity-80 blur-2xl", skin.aura)} aria-hidden />
+      <span className="pointer-events-none absolute inset-[5px] rounded-[10px] border border-black/40" aria-hidden />
+      <span className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:repeating-linear-gradient(180deg,rgba(0,0,0,0.22)_0px,rgba(0,0,0,0.22)_1px,transparent_1px,transparent_3px)]" aria-hidden />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[42%] opacity-80 [background:linear-gradient(180deg,rgba(255,252,235,0.08),transparent_72%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[38%] opacity-70 [background:linear-gradient(180deg,rgba(255,255,255,0.06),transparent_72%)]"
         aria-hidden
       />
-      {isAnchor ? (
-        <div
-          className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_100%_70%_at_50%_0%,rgba(255,248,220,0.1),transparent_55%)]"
-          aria-hidden
-        />
-      ) : null}
 
       <div className="relative z-[1] flex flex-1 flex-col p-[var(--fluid-card-p)]">
         <div className="flex items-center justify-between gap-2">
-          <span
-            className={cn(
-              "font-mono fluid-text-ui-xs font-black uppercase tracking-[0.2em]",
-              isAnchor ? "heading-glow text-[color:var(--gold)]" : "text-[color:var(--gold)] drop-shadow-[0_0_12px_rgba(250,204,21,0.35)]"
-            )}
-          >
+          <span className={cn("font-mono fluid-text-ui-xs font-black uppercase tracking-[0.2em]", skin.heading)}>
             {variant === "focus" ? "Recommended now" : variant === "support" ? "Supporting" : "Up next"}
           </span>
           {isAnchor ? (
-            <span className="rounded-md border border-[rgba(255,235,160,0.55)] bg-[rgba(255,215,0,0.18)] px-[clamp(0.35rem,1vw+0.1rem,0.5rem)] py-[clamp(0.1rem,0.4vw+0.05rem,0.35rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em] text-[color:var(--gold)] shadow-[0_0_18px_rgba(250,204,21,0.45),inset_0_1px_0_rgba(255,248,220,0.12)]">
+            <span
+              className={cn(
+                "rounded-md border px-[clamp(0.35rem,1vw+0.1rem,0.5rem)] py-[clamp(0.1rem,0.4vw+0.05rem,0.35rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em]",
+                skin.chip,
+              )}
+            >
               Flow
             </span>
           ) : null}
         </div>
-        <h3
-          className={cn(
-            "mt-[clamp(0.65rem,1.5vw+0.2rem,1rem)] text-[clamp(0.78rem,0.6vw+0.55rem,1rem)] font-bold leading-snug text-white",
-            isAnchor && "drop-shadow-[0_0_20px_rgba(255,248,220,0.15)]"
-          )}
-        >
+        <h3 className="mt-[clamp(0.65rem,1.5vw+0.2rem,1rem)] text-[clamp(0.78rem,0.6vw+0.55rem,1rem)] font-bold leading-snug text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.65)]">
           {course.title}
         </h3>
-        <p className="mt-2 text-[clamp(0.68rem,0.45vw+0.5rem,0.9rem)] leading-relaxed text-white/90">{course.outcome}</p>
+        <p className="mt-2 text-[clamp(0.68rem,0.45vw+0.5rem,0.9rem)] leading-relaxed text-white/88">{course.outcome}</p>
         <p className="mt-2 font-mono fluid-text-ui-xs font-bold uppercase tracking-[0.14em] text-emerald-200 [text-shadow:0_0_14px_rgba(52,211,153,0.35)]">
           {course.earningHint}
         </p>
@@ -91,9 +146,8 @@ function CourseFlowCard({
             whileTap={{ scale: 0.98 }}
             className={cn(
               "w-full rounded-lg border px-[clamp(0.5rem,1.2vw+0.2rem,0.85rem)] py-[clamp(0.45rem,1vw+0.2rem,0.85rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em] transition",
-              isAnchor
-                ? "border-[rgba(255,215,0,0.58)] bg-[rgba(255,215,0,0.14)] text-[color:var(--gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.22),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.82)] hover:bg-[rgba(255,215,0,0.2)] hover:shadow-[0_0_28px_rgba(255,215,0,0.35)]"
-                : "border-[rgba(255,215,0,0.44)] bg-black/50 text-white/95 shadow-[0_0_0_1px_rgba(255,215,0,0.12),inset_0_1px_0_rgba(255,215,0,0.08)] hover:border-[rgba(255,235,160,0.65)] hover:shadow-[0_0_24px_rgba(255,200,0,0.18)]"
+              skin.btn,
+              skin.btnHover,
             )}
           >
             Continue path
@@ -116,7 +170,7 @@ export function CourseFlow({
   onNavigate: (nav: DashboardNavKey) => void;
 }) {
   const go = () => onNavigate("programs");
-  const roadmapLen = ROADMAPS[goal].length;
+  const roadmapLen = GOAL_PATH_STAGE_COUNT;
   const maxSlides = Math.min(5, roadmapLen);
 
   const [slideIndex, setSlideIndex] = useState(0);
@@ -137,17 +191,13 @@ export function CourseFlow({
   }, [goal, maxSlides, paused]);
 
   const anchorCourse = useMemo(() => {
-    const row = coursesForGoalStep(goal, stepIdx);
-    const t: [CourseRec, CourseRec, CourseRec] = [row[0]!, row[1]!, row[2]!];
-    const p = personalizeCourses(goal, stepIdx, t, courses);
-    return p[0]!;
+    const [a] = opportunityTriplesForStage(goal, stepIdx, courses);
+    return a;
   }, [goal, stepIdx, courses]);
 
   const { movingB, movingC } = useMemo(() => {
-    const row = coursesForGoalStep(goal, slideIndex);
-    const t: [CourseRec, CourseRec, CourseRec] = [row[0]!, row[1]!, row[2]!];
-    const p = personalizeCourses(goal, slideIndex, t, courses);
-    return { movingB: p[1]!, movingC: p[2]! };
+    const [, b, c] = opportunityTriplesForStage(goal, slideIndex, courses);
+    return { movingB: b, movingC: c };
   }, [goal, slideIndex, courses]);
 
   return (

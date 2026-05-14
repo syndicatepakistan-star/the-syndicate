@@ -43,7 +43,10 @@ const nextConfig = {
     imageSizes: [256, 384, 480, 640, 768],
     remotePatterns: [
       { protocol: "http", hostname: "127.0.0.1", port: "8000", pathname: "/media/**" },
-      { protocol: "http", hostname: "localhost", port: "8000", pathname: "/media/**" }
+      { protocol: "http", hostname: "localhost", port: "8000", pathname: "/media/**" },
+      // TikTok oEmbed poster URLs (home “Most viewed” marquee).
+      { protocol: "https", hostname: "p16-common-sign.tiktokcdn.com", pathname: "/**" },
+      { protocol: "https", hostname: "p19-common-sign.tiktokcdn.com", pathname: "/**" }
     ]
   },
   async rewrites() {

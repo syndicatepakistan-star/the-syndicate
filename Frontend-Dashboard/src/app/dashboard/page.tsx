@@ -13,6 +13,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieCh
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
+import NeonTypingBadge from "@/components/NeonTypingBadge";
 import type { DashboardNavKey } from "@/components/dashboard/types";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
@@ -34,6 +35,7 @@ import {
   writeDashboardProfileAvatarRaw,
   writeDashboardProfileDisplayName
 } from "@/lib/dashboardProfileStorage";
+import { DASHBOARD_SHELL_NAV_EVENT, type DashboardShellNavEventDetail } from "@/lib/dashboardShellNavEvent";
 import {
   fetchKingProgramSelection,
   fetchPortalIdentity,
@@ -2385,6 +2387,17 @@ export default function Page() {
     return () => window.removeEventListener("popstate", syncFromUrl);
   }, [nav, router]);
 
+  /** Floating Quick Access (Goals overlay) → shell section without prop drilling. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onShellNav = (e: Event) => {
+      const d = (e as CustomEvent<DashboardShellNavEventDetail>).detail;
+      if (d?.key) applyNavKey(d.key);
+    };
+    window.addEventListener(DASHBOARD_SHELL_NAV_EVENT, onShellNav);
+    return () => window.removeEventListener(DASHBOARD_SHELL_NAV_EVENT, onShellNav);
+  }, [applyNavKey]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 767px)");
@@ -2989,8 +3002,8 @@ export default function Page() {
                   type="button"
                   aria-label="Syndicate"
                   className={cn(
-                    "logo-glow-shell cut-frame-sm cyber-frame gold-stroke relative z-[1] mx-auto grid w-full max-w-[min(100%,160px)] place-items-center overflow-hidden sm:mx-0 sm:max-w-[188px] md:max-w-[200px] lg:max-w-[218px]",
-                    "border border-[color:var(--gold-neon-border-mid)] bg-black/70",
+                    "logo-glow-shell relative z-[1] mx-auto grid w-full max-w-[min(100%,160px)] place-items-center overflow-visible sm:mx-0 sm:max-w-[188px] md:max-w-[200px] lg:max-w-[218px]",
+                    "border-0 bg-transparent",
                     "px-[clamp(0.28rem,0.9vw+0.08rem,0.6rem)] py-[clamp(0.12rem,0.45vw+0.04rem,0.4rem)] max-lg:min-h-[2.35rem] lg:min-h-[var(--fluid-logo-min-h)]"
                   )}
                 >
@@ -3453,12 +3466,14 @@ export default function Page() {
             >
               {selectedNavKey !== "monk" && selectedNavKey !== "programs" ? (
                 <header className="mb-[clamp(0.65rem,1.5vw+0.2rem,1.1rem)] shrink-0 border-b border-[color:var(--gold-neon-border-mid)] pb-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] pr-1">
-                  <div className="heading-glow fluid-hero-title font-black italic tracking-[0.02em] text-[color:var(--gold-neon)] drop-shadow-[0_0_28px_rgba(250,204,21,0.35)]">
-                    THE SYNDICATE
+                  <div className="mx-auto flex w-[min(100%,96vw)] max-w-[min(56rem,92vw)] justify-center px-[clamp(0.35rem,2vw,1rem)]">
+                    <NeonTypingBadge
+                      phrases={["HONOUR · MONEY · POWER · FREEDOM"]}
+                      typingSpeed={34}
+                      deletingSpeed={24}
+                      pauseMs={420}
+                    />
                   </div>
-                  <p className="mt-[clamp(0.35rem,0.9vw+0.12rem,0.55rem)] max-w-[min(100%,52rem)] text-[clamp(0.5rem,1.05vw+0.22rem,0.72rem)] font-black italic uppercase leading-snug tracking-[0.14em] text-[color:var(--gold-neon)]/88 drop-shadow-[0_0_14px_rgba(250,204,21,0.22)] sm:tracking-[0.18em]">
-                    MONEY, POWER, FREEDOM, HONOUR
-                  </p>
                 </header>
               ) : null}
               {selectedNavKey === "monk" ? (

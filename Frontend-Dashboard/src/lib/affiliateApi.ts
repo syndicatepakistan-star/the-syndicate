@@ -130,11 +130,36 @@ export function trackClickFireAndForget(affiliateId: string, visitorId: string):
   void fetch(url, { method: "POST", keepalive: true, headers, body }).catch(() => {});
 }
 
-export async function trackLead(affiliateId: string, visitorId: string, email: string) {
-  return postTrackJson<{ success: boolean }>("lead", {
+/**
+ * Lead milestone for a referred visitor.
+ * One visitor may produce up to two distinct leads:
+ *   - kind="diagnosis" → "Syn Diagnosis lead" (email captured during the quiz)
+ *   - kind="auth"      → "Sign up lead" or "Login lead" (account creation / login)
+ * The backend dedupes per (affiliate_id, visitor_id, kind), so calling this
+ * twice with the same kind is safe and only refreshes the stored email/label.
+ */
+export type TrackLeadKind = "diagnosis" | "auth";
+
+export type TrackLeadOptions = {
+  /** Defaults to "auth" when omitted (back-compat with older callers). */
+  kind?: TrackLeadKind;
+  /** Human-friendly label shown in the affiliate dashboard chips. */
+  label?: string;
+};
+
+export async function trackLead(
+  affiliateId: string,
+  visitorId: string,
+  email: string,
+  options: TrackLeadOptions = {}
+) {
+  const kind: TrackLeadKind = options.kind ?? "auth";
+  return postTrackJson<{ success: boolean; lead_recorded: boolean; lead_kind?: string; lead_label?: string }>("lead", {
     affiliate_id: affiliateId,
     visitor_id: visitorId,
     email,
+    lead_kind: kind,
+    ...(options.label ? { lead_label: options.label } : {}),
   });
 }
 

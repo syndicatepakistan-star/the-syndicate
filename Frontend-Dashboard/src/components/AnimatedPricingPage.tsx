@@ -1,12 +1,16 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getAuthorizationHeader, hasSimpleAuthSessionClient, resolveClientApiUrl } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
+import {
+  OFFER_PLAN_THUMB_MONEY_MASTERY,
+  OFFER_PLAN_THUMB_THE_KING,
+} from '@/components/programs/offerPlanThumbnails'
 
 type PlanKey = 'bundle' | 'pawn' | 'knight' | 'king'
 type BillingKey = 'monthly' | 'yearly'
@@ -27,6 +31,10 @@ interface PricingTier {
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
+
+/** Octagonal / tech clip shared by pricing cards (matches home social marquees). */
+const PRICING_NOTCH_CLIP =
+  '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
 
 const pricingData: Record<PlanKey, PricingTier> = {
   bundle: {
@@ -130,6 +138,7 @@ function TierCard({
     PlanKey,
     {
       panel: string
+      panelBorder: string
       accentText: string
       frameOuter: string
       frameInner: string
@@ -145,20 +154,24 @@ function TierCard({
   > = {
     bundle: {
       panel: 'bg-[linear-gradient(160deg,rgba(5,9,22,0.96)_0%,rgba(4,5,15,0.98)_55%,rgba(3,8,22,0.98)_100%)]',
+      panelBorder:
+        'border-cyan-400/50 shadow-[0_0_0_1px_rgba(34,211,238,0.65),0_0_28px_rgba(34,211,238,0.5),0_0_56px_rgba(139,92,246,0.35),0_0_96px_rgba(232,121,249,0.18),inset_0_0_26px_rgba(34,211,238,0.14)]',
       accentText: 'text-cyan-300',
-      frameOuter: 'border-cyan-300/50',
-      frameInner: 'border-violet-300/30',
-      frameOuterGlow: 'shadow-[0_0_30px_rgba(34,211,238,0.72),0_0_62px_rgba(34,211,238,0.42)]',
-      frameInnerGlow: 'shadow-[inset_0_0_18px_rgba(167,139,250,0.42),0_0_22px_rgba(167,139,250,0.32)]',
+      frameOuter: 'border-cyan-300/60',
+      frameInner: 'border-fuchsia-400/35',
+      frameOuterGlow: 'shadow-[0_0_34px_rgba(34,211,238,0.82),0_0_68px_rgba(34,211,238,0.48)]',
+      frameInnerGlow: 'shadow-[inset_0_0_20px_rgba(192,132,252,0.45),0_0_28px_rgba(232,121,249,0.38)]',
       underGlow: 'radial-gradient(65%_85%_at_50%_100%, rgba(34,211,238,0.5) 0%, rgba(139,92,246,0.28) 45%, transparent 78%)',
       lightningColor: 'rgba(34,211,238,0.96)',
-      lightningSoft: 'rgba(34,211,238,0.62)',
+      lightningSoft: 'rgba(192,132,252,0.62)',
       frame: 'border-transparent hover:border-transparent',
       glow: 'shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_42px_rgba(56,236,255,0.6),0_0_104px_rgba(139,92,246,0.34)]',
-      row: 'border-cyan-300/35 bg-cyan-950/10',
+      row: 'border-cyan-300/45 bg-cyan-950/15 shadow-[0_0_12px_rgba(34,211,238,0.12)]',
     },
     pawn: {
       panel: 'bg-[linear-gradient(160deg,rgba(11,7,18,0.96)_0%,rgba(8,5,16,0.98)_55%,rgba(4,9,22,0.98)_100%)]',
+      panelBorder:
+        'border-violet-400/40 shadow-[0_0_0_1px_rgba(192,132,252,0.45),0_0_26px_rgba(192,132,252,0.35),inset_0_0_18px_rgba(192,132,252,0.08)]',
       accentText: 'text-violet-300',
       frameOuter: 'border-violet-300/50',
       frameInner: 'border-cyan-300/30',
@@ -173,6 +186,8 @@ function TierCard({
     },
     knight: {
       panel: 'bg-[linear-gradient(160deg,rgba(10,7,14,0.96)_0%,rgba(8,5,13,0.98)_55%,rgba(9,6,15,0.98)_100%)]',
+      panelBorder:
+        'border-fuchsia-400/40 shadow-[0_0_0_1px_rgba(232,121,249,0.48),0_0_26px_rgba(232,121,249,0.36),inset_0_0_18px_rgba(232,121,249,0.08)]',
       accentText: 'text-violet-300',
       frameOuter: 'border-fuchsia-300/50',
       frameInner: 'border-cyan-300/25',
@@ -187,17 +202,19 @@ function TierCard({
     },
     king: {
       panel: 'bg-[linear-gradient(160deg,rgba(7,14,8,0.96)_0%,rgba(5,12,7,0.98)_55%,rgba(8,16,10,0.98)_100%)]',
+      panelBorder:
+        'border-lime-400/50 shadow-[0_0_0_1px_rgba(190,242,100,0.55),0_0_28px_rgba(132,204,22,0.52),0_0_58px_rgba(16,185,129,0.32),0_0_88px_rgba(52,211,153,0.15),inset_0_0_22px_rgba(132,204,22,0.12)]',
       accentText: 'text-lime-300',
-      frameOuter: 'border-lime-300/55',
-      frameInner: 'border-emerald-300/35',
-      frameOuterGlow: 'shadow-[0_0_30px_rgba(132,204,22,0.72),0_0_62px_rgba(16,185,129,0.42)]',
-      frameInnerGlow: 'shadow-[inset_0_0_18px_rgba(16,185,129,0.38),0_0_22px_rgba(16,185,129,0.28)]',
+      frameOuter: 'border-lime-300/65',
+      frameInner: 'border-emerald-400/40',
+      frameOuterGlow: 'shadow-[0_0_34px_rgba(132,204,22,0.78),0_0_68px_rgba(16,185,129,0.45)]',
+      frameInnerGlow: 'shadow-[inset_0_0_20px_rgba(16,185,129,0.42),0_0_26px_rgba(52,211,153,0.32)]',
       underGlow: 'radial-gradient(65%_85%_at_50%_100%, rgba(132,204,22,0.52) 0%, rgba(16,185,129,0.3) 45%, transparent 78%)',
       lightningColor: 'rgba(132,204,22,0.96)',
       lightningSoft: 'rgba(16,185,129,0.62)',
       frame: 'border-transparent hover:border-transparent',
       glow: 'shadow-[0_0_0_1px_rgba(190,242,100,0.9),0_0_40px_rgba(132,204,22,0.56),0_0_98px_rgba(16,185,129,0.32)]',
-      row: 'border-lime-300/35 bg-lime-950/12',
+      row: 'border-lime-300/45 bg-lime-950/15 shadow-[0_0_12px_rgba(132,204,22,0.12)]',
     },
   }
   const accentText = hudThemeByPlan[planKey].accentText
@@ -210,7 +227,8 @@ function TierCard({
       />
       <div
         className={cn(
-          'lightning-glow-card relative flex min-h-0 flex-1 flex-col rounded-3xl p-0 [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]',
+          'lightning-glow-card relative flex min-h-0 flex-1 flex-col rounded-3xl p-0',
+          PRICING_NOTCH_CLIP,
         )}
         style={{
           ['--lightning-color' as any]: hudThemeByPlan[planKey].lightningColor,
@@ -218,18 +236,43 @@ function TierCard({
         }}
       >
         <span className="pointer-events-none absolute inset-[-1px] bg-inherit opacity-95 blur-[16px]" />
-      <div
-        className={cn(
-          'relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border transition-all duration-300 will-change-transform hover:scale-[1.02] [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]',
-          hudThemeByPlan[planKey].panel,
-          'border-transparent',
-          highlighted && 'ring-1 ring-white/10',
-        )}
-      >
+        <div
+          className={cn(
+            'relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border transition-all duration-300 will-change-transform hover:scale-[1.02]',
+            PRICING_NOTCH_CLIP,
+            hudThemeByPlan[planKey].panel,
+            hudThemeByPlan[planKey].panelBorder,
+            highlighted && 'ring-1 ring-white/10',
+          )}
+        >
         <div className={cn('pointer-events-none absolute inset-[6px] rounded-[20px] border', hudThemeByPlan[planKey].frameOuter, hudThemeByPlan[planKey].frameOuterGlow)} />
         <div className={cn('pointer-events-none absolute inset-[12px] rounded-[16px] border', hudThemeByPlan[planKey].frameInner, hudThemeByPlan[planKey].frameInnerGlow)} />
 
         <div className="relative flex min-h-0 flex-1 flex-col p-5 sm:p-6">
+        {(planKey === 'bundle' || planKey === 'king') && (
+          <div className="relative mb-4 aspect-[4/3] w-full shrink-0 overflow-hidden rounded-2xl border border-white/10">
+            <Image
+              src={planKey === 'bundle' ? OFFER_PLAN_THUMB_MONEY_MASTERY : OFFER_PLAN_THUMB_THE_KING}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, min(560px, 50vw)"
+              className="object-cover object-center"
+              priority={planKey === 'bundle'}
+              fetchPriority={planKey === 'bundle' ? 'high' : undefined}
+            />
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-0 bg-gradient-to-t opacity-70',
+                planKey === 'bundle'
+                  ? 'from-amber-900/55 via-orange-950/25 to-transparent'
+                  : 'from-violet-900/55 via-fuchsia-950/25 to-transparent',
+              )}
+              aria-hidden
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden />
+          </div>
+        )}
+
         <div className="flex shrink-0 items-center justify-between gap-4">
           <div
             className={cn(
@@ -426,41 +469,76 @@ export function PricingPage({
         <div className="absolute inset-0 bg-black/70" />
       </div>
       <div className="relative mx-auto flex w-full max-w-none flex-col items-center">
-        <header className="mb-12 px-6 py-8 text-center md:mb-16 md:px-10 md:py-10">
-          <h2 className="mt-2 font-display text-6xl font-black uppercase tracking-[0.14em] text-white md:text-7xl">
-            Syndicate Offers
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-mono text-lg tracking-[0.1em] text-zinc-300 md:text-xl">
-            Choose your access tier: Money Mastery lifetime bundle, or The King membership with 4–5 self-selected courses,
-            weekly content, dashboard, articles, and Syndicate Mode challenges.
-          </p>
-          {checkoutError ? (
-            <p className="mx-auto mt-3 max-w-3xl text-sm text-rose-300">{checkoutError}</p>
-          ) : null}
-
-          <div className="mt-8 inline-flex items-center justify-center gap-4 rounded-xl bg-black/10 px-6 py-4 text-sm font-mono tracking-[0.2em] uppercase shadow-[0_0_18px_rgba(251,191,36,0.2)]">
-            <span className={billing === 'monthly' ? 'text-amber-300' : 'text-zinc-500'}>
-              Monthly
-            </span>
-            <button
-              type="button"
-              onClick={() => setBilling((b) => (b === 'monthly' ? 'yearly' : 'monthly'))}
+        <header className="mb-12 flex w-full justify-center px-[clamp(0.5rem,2vw,1rem)] md:mb-16">
+          <div
+            className={cn('lightning-glow-card relative w-full max-w-[min(920px,calc(100vw-1.5rem))]', PRICING_NOTCH_CLIP)}
+            style={
+              {
+                ['--lightning-color' as string]: 'rgba(34, 211, 238, 0.95)',
+                ['--lightning-color-soft' as string]: 'rgba(192, 132, 252, 0.58)',
+              } as CSSProperties
+            }
+          >
+            <span
+              className="pointer-events-none absolute inset-[-2px] opacity-90 blur-[20px]"
+              style={{
+                background:
+                  'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(34,211,238,0.4), transparent 58%), radial-gradient(ellipse 70% 50% at 80% 100%, rgba(232,121,249,0.22), transparent 55%)',
+              }}
+            />
+            <div
               className={cn(
-                'relative h-7 w-14 rounded-full border border-amber-300/25 bg-black/40 p-1 transition-all duration-200',
-                billing === 'yearly' && 'border-amber-300/45 bg-amber-300/12',
+                'relative overflow-hidden rounded-3xl border border-cyan-400/40 bg-[linear-gradient(165deg,rgba(8,12,28,0.94)_0%,rgba(3,4,18,0.97)_48%,rgba(5,8,22,0.98)_100%)] px-6 py-8 text-center shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_36px_rgba(34,211,238,0.38),0_0_72px_rgba(232,121,249,0.22),inset_0_0_32px_rgba(34,211,238,0.1)] md:px-10 md:py-10',
+                PRICING_NOTCH_CLIP,
               )}
-              aria-label="Toggle billing period"
             >
-              <span
-                className={cn(
-                  'block h-5 w-5 rounded-full bg-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.5)] transition-all duration-200',
-                  billing === 'yearly' ? 'translate-x-7' : 'translate-x-0',
-                )}
+              <div
+                className="pointer-events-none absolute inset-[5px] rounded-[22px] border border-fuchsia-400/30 shadow-[inset_0_0_26px_rgba(192,132,252,0.18),0_0_28px_rgba(192,132,252,0.14)]"
+                style={{ clipPath: 'polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)' }}
               />
-            </button>
-            <span className={billing === 'yearly' ? 'text-amber-300' : 'text-zinc-500'}>
-              Yearly
-            </span>
+              <div className="relative z-[1]">
+                <h2 className="programs-heading-glow font-display text-4xl font-black uppercase tracking-[0.14em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                  SYNDICATE ELITE OFFERS
+                </h2>
+                <div className="mx-auto mt-5 max-w-[52rem] space-y-4 text-left sm:mt-6">
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    <span className="text-fuchsia-200/95">Two gates. One crown.</span> Go nuclear with{' '}
+                    <strong className="text-white">Money Mastery</strong> — pay once, own the lifetime vault and every
+                    lane we run. <span className="text-zinc-400">Or</span> take <strong className="text-white">The King</strong>{' '}
+                    and forge your own war-chest: <strong className="text-amber-200/95">four or five</strong> courses you
+                    choose, weekly drops so you never go cold, full dashboard and field intel, then step into{' '}
+                    <strong className="text-emerald-300/95">Syndicate Mode</strong> and prove it under pressure — not
+                    passive scrolling, <em className="text-white/90 not-italic">active conquest</em>.
+                  </p>
+                </div>
+                {checkoutError ? (
+                  <p className="mx-auto mt-4 max-w-3xl text-center text-sm text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.45)]">
+                    {checkoutError}
+                  </p>
+                ) : null}
+
+                <div className="mt-8 inline-flex items-center justify-center gap-4 rounded-xl border border-amber-400/35 bg-black/50 px-6 py-4 text-sm font-mono tracking-[0.2em] uppercase shadow-[0_0_0_1px_rgba(251,191,36,0.35),0_0_22px_rgba(251,191,36,0.28),inset_0_0_18px_rgba(251,191,36,0.08)]">
+                  <span className={billing === 'monthly' ? 'text-amber-200' : 'text-zinc-500'}>Monthly</span>
+                  <button
+                    type="button"
+                    onClick={() => setBilling((b) => (b === 'monthly' ? 'yearly' : 'monthly'))}
+                    className={cn(
+                      'relative h-7 w-14 rounded-full border border-amber-300/40 bg-black/50 p-1 shadow-[0_0_14px_rgba(251,191,36,0.25)] transition-all duration-200',
+                      billing === 'yearly' && 'border-amber-300/60 bg-amber-300/15 shadow-[0_0_20px_rgba(251,191,36,0.4)]',
+                    )}
+                    aria-label="Toggle billing period"
+                  >
+                    <span
+                      className={cn(
+                        'block h-5 w-5 rounded-full bg-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.55)] transition-all duration-200',
+                        billing === 'yearly' ? 'translate-x-7' : 'translate-x-0',
+                      )}
+                    />
+                  </button>
+                  <span className={billing === 'yearly' ? 'text-amber-200' : 'text-zinc-500'}>Yearly</span>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 

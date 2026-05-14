@@ -4,18 +4,20 @@ import { startTransition, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { type NavSectionId, RadialNav } from '@/components/RadialNav'
 
-const SECTION_ROUTES: Record<Exclude<NavSectionId, 'joinNow' | 'affiliateLogin'>, string> = {
+const SECTION_ROUTES: Record<Exclude<NavSectionId, 'joinNow'>, string> = {
   home: '/',
   whatYouGet: '/what-you-get',
   ourMethods: '/our-methods',
   programs: '/programs',
   membership: '/membership',
   syndicateAnalysis: '/quiz',
+  affiliate: '/affiliate',
 }
 
 function getActiveNavId(pathname: string, hash: string): NavSectionId {
   if (hash === '#joinNowSection') return 'joinNow'
-  if (pathname === '/affiliate-login' || pathname.startsWith('/affiliate-login/')) return 'affiliateLogin'
+  if (pathname === '/affiliate-login' || pathname.startsWith('/affiliate-login/')) return 'affiliate'
+  if (pathname === '/affiliate' || pathname.startsWith('/affiliate/')) return 'affiliate'
   if (pathname === '/quiz' || pathname.startsWith('/quiz/')) return 'syndicateAnalysis'
   if (pathname === '/what-you-get') return 'whatYouGet'
   if (pathname === '/our-methods') return 'ourMethods'
@@ -61,6 +63,7 @@ export function NavApp() {
         router.prefetch(route)
       }
       router.prefetch('/login')
+      router.prefetch('/affiliate')
       router.prefetch('/affiliate-login')
     }
     let idleHandle: number | undefined
@@ -79,11 +82,11 @@ export function NavApp() {
   }, [router])
 
   const handleSelect = (id: NavSectionId) => {
-    if (id === 'affiliateLogin') {
+    if (id === 'affiliate') {
       setActiveId(id)
       handleClose()
       startTransition(() => {
-        router.push('/affiliate-login')
+        router.push('/affiliate')
       })
       return
     }

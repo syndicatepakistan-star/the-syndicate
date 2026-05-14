@@ -62,7 +62,7 @@ const NAV_VISIT_META: Record<
     detail: "Command center & mission deck",
     category: "system",
     moreDetails:
-      "You opened the main dashboard: hero status, missions, learning path, affiliate snapshot, and your live activity timeline."
+      "You opened the main dashboard: hero status, missions, learning path, and your live activity timeline."
   },
   programs: {
     title: "Visited programs",

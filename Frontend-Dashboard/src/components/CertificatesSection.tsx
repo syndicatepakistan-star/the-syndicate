@@ -224,7 +224,18 @@ export default function CertificatesSection({
       className="relative w-full overflow-hidden px-4 py-12 sm:px-6 sm:py-16 md:py-20"
     >
       <div className="pointer-events-none absolute inset-0">
-        <Image src="/assets/c.gif" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-30" unoptimized />
+        <Image
+          src="/assets/c.gif"
+          alt=""
+          aria-hidden
+          fill
+          sizes="100vw"
+          className="object-cover opacity-30"
+          unoptimized
+          loading="eager"
+          fetchPriority="low"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-black/70" />
       </div>
       <div
@@ -257,17 +268,12 @@ export default function CertificatesSection({
 
       <div className="relative z-10 mx-auto w-full max-w-7xl">
         <header className="mb-16 text-center">
-          <h2
-            className="text-3xl font-bold tracking-wider sm:text-4xl md:text-5xl lg:text-6xl"
-            style={{
-              color: '#eaf3ff',
-              textShadow: '0 0 24px rgba(34,211,238,0.55), 0 0 54px rgba(168,85,247,0.34), 0 0 5px rgba(217,70,239,0.55), 0 2px 4px rgba(0,0,0,0.55)',
-            }}
-          >
+          <h2 className="font-heading programs-heading-glow text-3xl font-bold uppercase tracking-[0.12em] text-white sm:text-4xl md:text-5xl md:tracking-[0.14em] lg:text-6xl">
             Become Syndicate Certified
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-200/80 sm:text-base" style={{ textShadow: '0 0 12px rgba(34,211,238,0.14)' }}>
-            Complete our courses and earn verified credentials that elevate your profile. Join leaders who prove their expertise.
+          <p className="mx-auto mt-4 max-w-2xl font-mono text-xs font-semibold uppercase leading-relaxed tracking-[0.08em] text-cyan-100/85 sm:text-sm">
+            Proof you ran the material — cryptographically signed credentials, not a participation sticker. Stack the
+            courses, claim the seal, verify it in the open. Operators only.
           </p>
         </header>
 
@@ -326,6 +332,9 @@ export default function CertificatesSection({
                         height={220}
                         sizes="(max-width: 640px) 176px, 224px"
                         className="relative z-[1] h-[78%] w-[78%] object-contain drop-shadow-[0_0_22px_rgba(251,191,36,0.75)] sm:h-[80%] sm:w-[80%]"
+                        loading="eager"
+                        fetchPriority="low"
+                        decoding="async"
                       />
                     </div>
                   </div>

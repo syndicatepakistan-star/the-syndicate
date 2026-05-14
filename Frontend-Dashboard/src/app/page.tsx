@@ -13,6 +13,7 @@ import PaywallSnapshotsSection from '@/components/PaywallSnapshotsSection'
 import { NavApp } from '@/components/NavApp'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
 import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/components/home/DeferredHomeBackgrounds'
+import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
 
 const FEATURED_LOGOS = [
   {
@@ -34,7 +35,6 @@ const FEATURED_LOGOS = [
 
 const PROGRAM_IMAGE_BASE = '/assets/programs/cources%20imnages'
 const courseImage = (fileName: string) => `${PROGRAM_IMAGE_BASE}/${encodeURIComponent(fileName)}`
-const INSTAGRAM_URL = 'https://www.instagram.com/followthesyndicate?igsh=MXV5b3E5NnF4YWxjNg=='
 const TIKTOK_URL = 'https://www.tiktok.com/@followthesyndicate?_r=1&_t=ZG-95id6R01vZh'
 
 const FEATURED_PROGRAM_IMAGES = [
@@ -166,16 +166,14 @@ export default async function Home() {
   const founderImages = await getFounderImages()
   const programGalleryImages = await getProgramGalleryImages()
   const midpoint = Math.ceil(founderImages.length / 2)
-  const topRowBase = founderImages.slice(0, midpoint)
   const bottomRowBase = founderImages.slice(midpoint)
-  const safeTopRow = topRowBase.length > 0 ? topRowBase : founderImages
-  const safeBottomRow = bottomRowBase.length > 0 ? bottomRowBase : safeTopRow
+  const safeBottomRow = bottomRowBase.length > 0 ? bottomRowBase : founderImages
   // Keep enough repeated cards for infinite marquee while avoiding
   // excessive duplicated image nodes that slow first paint/decode.
-  const topRowGroup = Array.from({ length: 2 }, () => safeTopRow).flat()
   const bottomRowGroup = Array.from({ length: 2 }, () => safeBottomRow).flat()
-  const topRowTrack = [...topRowGroup, ...topRowGroup]
   const bottomRowTrack = [...bottomRowGroup, ...bottomRowGroup]
+  const tiktokMostViewedCycle = [...TIKTOK_MOST_VIEWED, ...TIKTOK_MOST_VIEWED]
+  const tiktokMostViewedTrack = [...tiktokMostViewedCycle, ...tiktokMostViewedCycle]
 
   return (
     <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
@@ -237,7 +235,7 @@ export default async function Home() {
         <div className="relative z-10 h-full w-full px-0">
           <h2 className="mb-3 text-center text-2xl font-black uppercase sm:mb-12 sm:text-3xl md:text-4xl lg:text-5xl">
             <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(251,191,36,0.35)]">
-              Featured PROGRAMS
+              SYNDICATE ELITE PROGRAMS
             </span>
           </h2>
           <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]">
@@ -262,27 +260,26 @@ export default async function Home() {
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/68" />
         <div className="relative z-10 mx-auto flex h-auto w-full max-w-[1700px] flex-col justify-start px-4 py-0 sm:h-full sm:justify-center sm:px-6 sm:py-12 md:px-8">
-          {founderImages.length > 0 ? (
-            <div className="space-y-4 sm:space-y-5">
-              <h3 className="mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:text-3xl md:text-4xl">
-                MOST VIEWED
-              </h3>
-              <div className="relative w-full overflow-hidden">
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
-                <div
-                  className="animate-marquee flex w-max items-center gap-2 sm:gap-3"
-                  style={{ ['--duration' as string]: '48s', ['--gap' as string]: '1rem' }}
-                >
-                  {topRowTrack.map((image, index) => {
-                    const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
-                    return (
+          <div className="space-y-4 sm:space-y-5">
+            <h3 className="mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:text-3xl md:text-4xl">
+              MOST VIEWED
+            </h3>
+            <div className="relative w-full overflow-hidden">
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
+              <div
+                className="animate-marquee flex w-max items-center gap-2 sm:gap-3"
+                style={{ ['--duration' as string]: '48s', ['--gap' as string]: '1rem' }}
+              >
+                {tiktokMostViewedTrack.map((card, index) => {
+                  const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
+                  return (
                     <a
-                      key={`top-${image.src}-${index}`}
-                      href={INSTAGRAM_URL}
+                      key={`tiktok-mv-${card.videoId}-${index}`}
+                      href={card.href}
                       target="_blank"
                       rel="noreferrer"
-                      aria-label={`Open Instagram: ${image.alt}`}
+                      aria-label={`Open TikTok video (${card.approxViewsLabel}): ${card.alt}`}
                       className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
                       style={
                         {
@@ -297,74 +294,78 @@ export default async function Home() {
                       <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
                       <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
                       <Image
-                        src={image.src}
-                        alt={image.alt}
+                        src={card.thumbnailUrl}
+                        alt={card.alt}
                         fill
-                        quality={62}
+                        unoptimized
+                        quality={72}
                         fetchPriority="low"
                         decoding="async"
                         sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
                         className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                     </a>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <h3 className="mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl">
-                MOST INFORMATIVE
-              </h3>
-              <div className="relative w-full overflow-hidden">
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
-                <div
-                  className="animate-marquee-reverse flex w-max items-center gap-2 sm:gap-3"
-                  style={{ ['--duration' as string]: '52s', ['--gap' as string]: '1rem' }}
-                >
-                  {bottomRowTrack.map((image, index) => {
-                    const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
-                    return (
-                    <a
-                      key={`bottom-${image.src}-${index}`}
-                      href={TIKTOK_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Open TikTok: ${image.alt}`}
-                      className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
-                      style={
-                        {
-                          ['--lightning-color' as any]: theme.lightningColor,
-                          ['--lightning-color-soft' as any]: theme.lightningSoft,
-                        }
-                      }
-                    >
-                      <span className={`pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`} />
-                      <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,12,22,0.2),rgba(2,4,12,0.62))]" />
-                      <span className={`pointer-events-none absolute inset-[2px] z-[3] rounded-[10px] border opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${theme.inner}`} />
-                      <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
-                      <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
-                      <Image
-                        src={image.src}
-                        alt={image.alt}
-                        fill
-                        quality={62}
-                        fetchPriority="low"
-                        decoding="async"
-                        sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
-                        className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
-                      />
-                    </a>
-                    )
-                  })}
-                </div>
+                  )
+                })}
               </div>
             </div>
-          ) : (
-            <p className="mx-auto max-w-2xl text-center text-sm text-amber-100/80 sm:text-base">
-              Add founder images to <code>/public/assets/founder</code> to display them in this section.
-            </p>
-          )}
+
+            {founderImages.length > 0 ? (
+              <>
+                <h3 className="mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl">
+                  MOST INFORMATIVE
+                </h3>
+                <div className="relative w-full overflow-hidden">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
+                  <div
+                    className="animate-marquee-reverse flex w-max items-center gap-2 sm:gap-3"
+                    style={{ ['--duration' as string]: '52s', ['--gap' as string]: '1rem' }}
+                  >
+                    {bottomRowTrack.map((image, index) => {
+                      const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
+                      return (
+                        <a
+                          key={`bottom-${image.src}-${index}`}
+                          href={TIKTOK_URL}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`Open TikTok: ${image.alt}`}
+                          className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
+                          style={
+                            {
+                              ['--lightning-color' as any]: theme.lightningColor,
+                              ['--lightning-color-soft' as any]: theme.lightningSoft,
+                            }
+                          }
+                        >
+                          <span className={`pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`} />
+                          <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,12,22,0.2),rgba(2,4,12,0.62))]" />
+                          <span className={`pointer-events-none absolute inset-[2px] z-[3] rounded-[10px] border opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${theme.inner}`} />
+                          <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
+                          <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
+                          <Image
+                            src={image.src}
+                            alt={image.alt}
+                            fill
+                            quality={62}
+                            fetchPriority="low"
+                            decoding="async"
+                            sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
+                            className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+                          />
+                        </a>
+                      )
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-amber-100/80 sm:text-base">
+                Add founder images to <code>/public/assets/founder</code> to fill the “Most informative” marquee below.
+              </p>
+            )}
+          </div>
         </div>
       </section>
       <PricingPage />

@@ -13,8 +13,11 @@ const WARM_ROUTES = [
   "/what-you-get",
   "/our-methods",
   "/quiz",
+  "/affiliate",
+  "/affiliate-login",
   "/login",
 ] as const;
+
 const SESSION_KEY = "syn:route-warmup-v1";
 
 export default function RouteWarmup() {

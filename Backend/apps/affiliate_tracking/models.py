@@ -63,13 +63,31 @@ class ClickEvent(models.Model):
 
 
 class LeadEvent(models.Model):
+    """
+    Capture distinct lead milestones for a referred visitor.
+
+    Two slots are recognised per (referral, visitor_id):
+      - `diagnosis`  -> "Syn Diagnosis lead" (email captured during the funnel quiz)
+      - `auth`       -> "Sign up lead" or "Login lead" (account creation / login)
+    """
+
+    KIND_DIAGNOSIS = "diagnosis"
+    KIND_AUTH = "auth"
+    KIND_CHOICES = [
+        (KIND_DIAGNOSIS, "Syn Diagnosis lead"),
+        (KIND_AUTH, "Sign up / Login lead"),
+    ]
+
     referral = models.ForeignKey(SectionReferral, on_delete=models.CASCADE, related_name="lead_events")
     visitor_id = models.CharField(max_length=128)
     email = models.EmailField()
+    lead_kind = models.CharField(max_length=24, choices=KIND_CHOICES, default=KIND_AUTH)
+    # Human-friendly label shown in the affiliate dashboard (e.g. "Sign up lead", "Login lead").
+    lead_label = models.CharField(max_length=64, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("referral", "visitor_id")
+        unique_together = ("referral", "visitor_id", "lead_kind")
 
 
 class SaleEvent(models.Model):

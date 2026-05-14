@@ -52,6 +52,7 @@ export default function GlobalBottomSections() {
     router.prefetch('/our-methods')
     router.prefetch('/programs')
     router.prefetch('/membership')
+    router.prefetch('/affiliate')
     router.prefetch('/login')
     router.prefetch(loginHref)
   }, [router, loginHref])

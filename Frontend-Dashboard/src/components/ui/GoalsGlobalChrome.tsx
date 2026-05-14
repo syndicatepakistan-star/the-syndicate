@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { FloatingGoalsButton } from "./FloatingGoalsButton";
+import { FloatingQuickAccessInGoalsButton } from "./FloatingQuickAccessInGoalsButton";
 
 /**
  * Floating Goals control on private dashboard shell routes.
@@ -19,5 +20,10 @@ export function GoalsGlobalChrome() {
 
   if (pathname !== "/dashboard") return null;
 
-  return <FloatingGoalsButton />;
+  return (
+    <>
+      <FloatingGoalsButton />
+      <FloatingQuickAccessInGoalsButton />
+    </>
+  );
 }

@@ -29,6 +29,24 @@ COMMISSION_RATE_LOW = Decimal("0.15")
 COMMISSION_RATE_HIGH = Decimal("0.30")
 ONE_TIME_REFERRAL_PATTERN = re.compile(r"^[a-z0-9_]+-syn-\d{6}$")
 
+LEAD_KIND_DIAGNOSIS = "diagnosis"
+LEAD_KIND_AUTH = "auth"
+LEAD_KIND_VALUES = {LEAD_KIND_DIAGNOSIS, LEAD_KIND_AUTH}
+DEFAULT_LEAD_LABELS = {
+    LEAD_KIND_DIAGNOSIS: "Syn Diagnosis lead",
+    LEAD_KIND_AUTH: "Sign up lead",
+}
+
+
+def _normalize_lead_kind(value) -> str:
+    raw = str(value or "").strip().lower()
+    return raw if raw in LEAD_KIND_VALUES else LEAD_KIND_AUTH
+
+
+def _normalize_lead_label(kind: str, value) -> str:
+    label = str(value or "").strip()[:64]
+    return label or DEFAULT_LEAD_LABELS.get(kind, "")
+
 
 def _now_iso() -> str:
     return timezone.now().isoformat()
@@ -260,6 +278,19 @@ def _section_stats(referral: SectionReferral) -> dict:
     }
 
 
+REFUNDED_WITHDRAWAL_STATUSES = {"rejected", "cancelled", "denied", "refunded", "failed"}
+
+
+def _withdrawn_total_for_profile(profile: AffiliateProfile) -> Decimal:
+    """
+    Sum of every WithdrawalRequest for this profile that is NOT refunded back to the
+    affiliate (i.e. anything pending / approved / paid is treated as already deducted).
+    """
+
+    qs = WithdrawalRequest.objects.filter(profile=profile).exclude(status__in=REFUNDED_WITHDRAWAL_STATUSES)
+    return qs.aggregate(v=Sum("requested_amount")).get("v") or Decimal("0.00")
+
+
 def _overall_stats(profile: AffiliateProfile) -> dict:
     all_referrals = profile.section_referrals.all()
     click_qs = ClickEvent.objects.filter(referral__in=all_referrals)
@@ -268,9 +299,17 @@ def _overall_stats(profile: AffiliateProfile) -> dict:
     click_count = click_qs.count()
     lead_count = lead_qs.count()
     sale_count = sale_qs.count()
-    # Earnings are profile-wide (all sections) so dashboard "overall" stays consistent.
-    commission_total = sale_qs.aggregate(v=Sum("amount")).get("v") or Decimal("0.00")
-    profile.earnings_total = commission_total
+    # Gross earnings: sum of every SaleEvent commission credited to this affiliate.
+    gross_earnings = sale_qs.aggregate(v=Sum("amount")).get("v") or Decimal("0.00")
+    # Withdrawn (or being withdrawn) so far. Pending/approved/paid all reduce the
+    # available balance immediately so the affiliate can't double-withdraw.
+    withdrawn_total = _withdrawn_total_for_profile(profile)
+    available_earnings = (gross_earnings - withdrawn_total)
+    if available_earnings < 0:
+        available_earnings = Decimal("0.00")
+    available_earnings = available_earnings.quantize(Decimal("0.01"))
+    # Persist the available balance on the profile so other surfaces stay consistent.
+    profile.earnings_total = available_earnings
     profile.save(update_fields=["earnings_total"])
     # Conversion blends lead-rate and sale-rate so it reflects clicks, leads, and sales together.
     conversion_rate = (
@@ -283,7 +322,10 @@ def _overall_stats(profile: AffiliateProfile) -> dict:
         "sale_count": sale_count,
         "conversion_rate": conversion_rate,
         "point_total": profile.points_total,
-        "earnings_total": str(profile.earnings_total),
+        # `earnings_total` = balance available to withdraw (gross minus non-refunded withdrawals).
+        "earnings_total": str(available_earnings),
+        "gross_earnings": str(gross_earnings.quantize(Decimal("0.01"))),
+        "withdrawn_total": str(withdrawn_total.quantize(Decimal("0.01"))),
         "last_click_at": _iso_or_none(click_qs.aggregate(v=Max("created_at")).get("v")),
         "last_lead_at": _iso_or_none(lead_qs.aggregate(v=Max("created_at")).get("v")),
         "last_sale_at": _iso_or_none(sale_qs.aggregate(v=Max("created_at")).get("v")),
@@ -532,6 +574,11 @@ def lead(request):
     affiliate_id = str(payload.get("affiliate_id") or "").strip()
     visitor_id = str(payload.get("visitor_id") or "").strip()
     email = str(payload.get("email") or "").strip().lower()
+    # Optional payload extensions so a single visitor can produce up to two distinct leads:
+    #   - lead_kind: "diagnosis" (quiz email gate) or "auth" (signup / login)
+    #   - lead_label: human-friendly label for the affiliate dashboard
+    lead_kind = _normalize_lead_kind(payload.get("lead_kind"))
+    lead_label = _normalize_lead_label(lead_kind, payload.get("lead_label"))
     if not affiliate_id:
         return _bad_request("affiliate_id is required")
     if not visitor_id:
@@ -542,15 +589,30 @@ def lead(request):
     if referral is None:
         return _bad_request("affiliate_id not found", 404)
     _, _ = ClickEvent.objects.get_or_create(referral=referral, visitor_id=visitor_id)
-    _, created = LeadEvent.objects.get_or_create(
-        referral=referral, visitor_id=visitor_id, defaults={"email": email}
+    lead_event, created = LeadEvent.objects.get_or_create(
+        referral=referral,
+        visitor_id=visitor_id,
+        lead_kind=lead_kind,
+        defaults={"email": email, "lead_label": lead_label},
     )
-    if not created:
-        LeadEvent.objects.filter(referral=referral, visitor_id=visitor_id).update(email=email)
-    else:
+    if created:
         referral.profile.points_total += LEAD_POINTS
         referral.profile.save(update_fields=["points_total"])
-    return JsonResponse({"success": True, "lead_recorded": created, "stats": _stats_payload(referral)})
+    else:
+        # Refresh email / label on duplicate so the dashboard always shows the latest value.
+        updates: dict[str, str] = {"email": email}
+        if lead_label and lead_event.lead_label != lead_label:
+            updates["lead_label"] = lead_label
+        LeadEvent.objects.filter(pk=lead_event.pk).update(**updates)
+    return JsonResponse(
+        {
+            "success": True,
+            "lead_recorded": created,
+            "lead_kind": lead_kind,
+            "lead_label": lead_label,
+            "stats": _stats_payload(referral),
+        }
+    )
 
 
 @csrf_exempt
@@ -580,13 +642,30 @@ def sale(request):
     if referral is None:
         return _bad_request("affiliate_id not found", 404)
     ClickEvent.objects.get_or_create(referral=referral, visitor_id=visitor_id)
-    LeadEvent.objects.get_or_create(referral=referral, visitor_id=visitor_id, defaults={"email": email})
+    # Ensure the auth-slot lead is recorded for this buyer so the dashboard's
+    # lead count never trails behind a purchase.
+    LeadEvent.objects.get_or_create(
+        referral=referral,
+        visitor_id=visitor_id,
+        lead_kind=LEAD_KIND_AUTH,
+        defaults={"email": email, "lead_label": DEFAULT_LEAD_LABELS[LEAD_KIND_AUTH]},
+    )
     commission_rate = _commission_rate_for_purchase(purchase_amount)
     commission_amount = _commission_amount_for_purchase(purchase_amount)
     program = str(payload.get("program") or "").strip()
     offer = str(payload.get("offer") or "").strip()
     tier = str(payload.get("tier") or "").strip()
-    subscription_name = " · ".join(part for part in (offer, program, tier) if part)[:280]
+    # Some frontends pass the same label for `offer` and `program`. Dedupe while preserving
+    # order so we don't render strings like "The Syndicate · The Syndicate · gold".
+    seen_parts: set[str] = set()
+    subscription_parts: list[str] = []
+    for part in (offer, program, tier):
+        normalized = part.strip()
+        key = normalized.lower()
+        if normalized and key not in seen_parts:
+            seen_parts.add(key)
+            subscription_parts.append(normalized)
+    subscription_name = " · ".join(subscription_parts)[:280]
     SaleEvent.objects.create(
         referral=referral,
         visitor_id=visitor_id,
@@ -694,35 +773,86 @@ def recent_referrals(request):
         limit = int(limit_raw)
     except ValueError:
         limit = 10
-    limit = max(1, min(limit, 50))
+    limit = max(1, min(limit, 200))
 
     click_map = {c.visitor_id: c.created_at for c in referral.click_events.all()}
-    lead_map = {l.visitor_id: l for l in referral.lead_events.all()}
-    sale_map: dict[str, SaleEvent] = {}
-    for s in referral.sale_events.order_by("-created_at"):
-        if s.visitor_id not in sale_map:
-            sale_map[s.visitor_id] = s
+    # Group every LeadEvent for a visitor so we can surface multiple labels
+    # ("Syn Diagnosis lead" + "Sign up lead" / "Login lead") in one row.
+    leads_by_vid: dict[str, list[LeadEvent]] = {}
+    latest_lead_by_vid: dict[str, LeadEvent] = {}
+    for lead_obj in referral.lead_events.order_by("created_at"):
+        leads_by_vid.setdefault(lead_obj.visitor_id, []).append(lead_obj)
+        latest_lead_by_vid[lead_obj.visitor_id] = lead_obj
+    # Group EVERY sale per visitor so repeat purchases by the same referred person
+    # accumulate into a single row (sum of earnings, sum of paid amount, sale count).
+    sales_by_vid: dict[str, list[SaleEvent]] = {}
+    latest_sale_by_vid: dict[str, SaleEvent] = {}
+    for s in referral.sale_events.order_by("created_at"):
+        sales_by_vid.setdefault(s.visitor_id, []).append(s)
+        latest_sale_by_vid[s.visitor_id] = s
     items = []
-    for vid in set(click_map.keys()) | set(lead_map.keys()) | set(sale_map.keys()):
-        lead_obj = lead_map.get(vid)
-        sale_obj = sale_map.get(vid)
-        at = (sale_obj.created_at if sale_obj else None) or (lead_obj.created_at if lead_obj else None) or click_map.get(vid)
-        status = "purchased" if sale_obj else "joined"
-        email = (sale_obj.email if sale_obj else None) or (lead_obj.email if lead_obj else None)
+    for vid in set(click_map.keys()) | set(leads_by_vid.keys()) | set(sales_by_vid.keys()):
+        visitor_leads = leads_by_vid.get(vid, [])
+        latest_lead = latest_lead_by_vid.get(vid)
+        visitor_sales = sales_by_vid.get(vid, [])
+        latest_sale = latest_sale_by_vid.get(vid)
+        # Click-only visitors still increment click_count / funnel; omit from this list until lead or sale.
+        if not visitor_leads and not visitor_sales:
+            continue
+        at = (
+            (latest_sale.created_at if latest_sale else None)
+            or (latest_lead.created_at if latest_lead else None)
+            or click_map.get(vid)
+        )
+        status = "purchased" if visitor_sales else "joined"
+        email = (latest_sale.email if latest_sale else None) or (latest_lead.email if latest_lead else None)
         row = {
             "visitor_id": vid,
             "email": email,
             "status": status,
             "at": at.isoformat() if at else None,
+            # Per-event labels so the dashboard can show 1-2 chips per referred person.
+            # `email` is per-kind so the same visitor can show the quiz email under
+            # "Syn Diagnosis" and a different signup email under "Sign up lead".
+            "lead_events": [
+                {
+                    "kind": lead_obj.lead_kind,
+                    "label": (lead_obj.lead_label or DEFAULT_LEAD_LABELS.get(lead_obj.lead_kind) or "Lead"),
+                    "email": lead_obj.email or None,
+                    "at": lead_obj.created_at.isoformat(),
+                }
+                for lead_obj in visitor_leads
+            ],
         }
-        if sale_obj:
-            row["purchased_at"] = sale_obj.created_at.isoformat()
-            row["conversion_earning"] = str(sale_obj.amount)
-            row["subscription_name"] = (sale_obj.subscription_name or "").strip() or None
-            if sale_obj.purchase_amount is not None:
-                row["purchase_amount"] = str(sale_obj.purchase_amount.quantize(Decimal("0.01")))
-            if (sale_obj.currency or "").strip():
-                row["purchase_currency"] = (sale_obj.currency or "").strip().lower()
+        if visitor_sales:
+            total_earning = sum((s.amount for s in visitor_sales), Decimal("0.00"))
+            total_paid = sum(
+                (s.purchase_amount for s in visitor_sales if s.purchase_amount is not None),
+                Decimal("0.00"),
+            )
+            row["purchased_at"] = latest_sale.created_at.isoformat() if latest_sale else None
+            # Total commission credited from ALL sales by this visitor.
+            row["conversion_earning"] = str(total_earning.quantize(Decimal("0.01")))
+            row["sale_count"] = len(visitor_sales)
+            # Combined paid amount across every purchase. Falls back to the latest sale
+            # if no purchase_amount was ever recorded.
+            if total_paid > 0:
+                row["purchase_amount"] = str(total_paid.quantize(Decimal("0.01")))
+            elif latest_sale and latest_sale.purchase_amount is not None:
+                row["purchase_amount"] = str(latest_sale.purchase_amount.quantize(Decimal("0.01")))
+            # Show every distinct subscription the visitor bought (ordered by first purchase).
+            seen_subs: set[str] = set()
+            subscription_names: list[str] = []
+            for s in visitor_sales:
+                name = (s.subscription_name or "").strip()
+                if name and name.lower() not in seen_subs:
+                    seen_subs.add(name.lower())
+                    subscription_names.append(name)
+            if subscription_names:
+                row["subscription_name"] = " · ".join(subscription_names)[:280]
+                row["subscription_names"] = subscription_names
+            if latest_sale and (latest_sale.currency or "").strip():
+                row["purchase_currency"] = (latest_sale.currency or "").strip().lower()
         items.append(row)
     items.sort(key=lambda x: x.get("at") or "", reverse=True)
     return JsonResponse({"affiliate_id": affiliate_id, "items": items[:limit]})
@@ -798,6 +928,9 @@ def request_withdrawal(request):
         requested_amount=requested_amount.quantize(Decimal("0.01")),
         earnings_snapshot=earnings_total,
     )
+    # Recompute the available balance after the new withdrawal so the frontend can render
+    # the updated number immediately (without waiting for the next stats poll).
+    refreshed = _overall_stats(referral.profile)
     return JsonResponse(
         {
             "success": True,
@@ -806,5 +939,8 @@ def request_withdrawal(request):
             "requested_amount": str(withdrawal.requested_amount),
             "earnings_snapshot": str(withdrawal.earnings_snapshot),
             "created_at": withdrawal.created_at.isoformat(),
+            "earnings_total": refreshed["earnings_total"],
+            "gross_earnings": refreshed["gross_earnings"],
+            "withdrawn_total": refreshed["withdrawn_total"],
         }
     )

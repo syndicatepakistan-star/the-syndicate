@@ -3156,38 +3156,22 @@ aside.shell-neon-yellow .nav-item.is-selected {
     0 0 28px rgba(250, 204, 21, 0.12) !important;
 }
 
-/* Navbar logo: glow on hover / press — no scale */
+/* Navbar logo: soft glow on hover / press — no frame border */
 .logo-glow-shell {
   cursor: pointer;
-  transition:
-    box-shadow 0.35s ease,
-    border-color 0.35s ease,
-    filter 0.35s ease;
+  transition: box-shadow 0.35s ease, filter 0.35s ease;
 }
 .logo-glow-shell:hover {
-  border-color: var(--gold-neon-border) !important;
-  box-shadow:
-    0 0 0 1px var(--gold-neon-border-mid),
-    0 0 18px var(--gold-neon-glow),
-    0 0 36px rgba(250, 204, 21, 0.22),
-    0 0 56px rgba(250, 204, 21, 0.1) !important;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.2), 0 0 48px rgba(250, 204, 21, 0.08) !important;
   filter: brightness(1.07);
 }
 .logo-glow-shell:focus-visible {
-  outline: none;
-  border-color: var(--gold-neon-border) !important;
-  box-shadow:
-    0 0 0 2px rgba(250, 204, 21, 0.45),
-    0 0 24px var(--gold-neon-glow),
-    0 0 44px rgba(250, 204, 21, 0.2) !important;
+  outline: 2px solid rgba(250, 204, 21, 0.45);
+  outline-offset: 3px;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.12) !important;
 }
 .logo-glow-shell:active {
-  border-color: var(--gold-neon-border) !important;
-  box-shadow:
-    0 0 0 1px var(--gold-neon-border),
-    0 0 22px var(--gold-neon-glow-strong),
-    0 0 48px rgba(250, 204, 21, 0.3),
-    0 0 72px rgba(250, 204, 21, 0.12) !important;
+  box-shadow: 0 0 32px rgba(250, 204, 21, 0.28), 0 0 56px rgba(250, 204, 21, 0.1) !important;
   filter: brightness(1.12);
 }
 

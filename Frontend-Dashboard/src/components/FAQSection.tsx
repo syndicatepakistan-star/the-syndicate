@@ -16,71 +16,71 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
   general: [
     {
       q: 'What is The Syndicate?',
-      a: 'An elite organisation focused on money, power, and mastery—practical frameworks inside the real economy, with honour and alliance, not conformity or hype.\nLevel 1 courses (Money, Power, Self) and Our Methods explain how to apply it; deeper paths exist only for those who qualify.',
+      a: 'A closed circuit built for money, power, and mastery in the real economy — frameworks you can run, not slogans you can tweet. Honour and alliance over conformity; execution over hype.\nLevel 1 (Money, Power, Self) plus Our Methods is where you wire it in. Deeper levels stay gated — you earn the key, not the landing page.',
     },
     {
       q: 'How long will I have access to what I buy?',
-      a: 'Level 1 courses are sold as separate products with prices on Courses; they are offered for a limited window and may be removed.\nExact access length and rules are set at checkout and in the legal pages linked in the footer.',
+      a: 'Level 1 is sold as separate products on Courses — windows close, listings can vanish. No infinite “library forever” fantasy unless the checkout says so.\nAccess length and rules are stamped at purchase and in the footer legal stack — that is the contract.',
     },
     {
       q: 'How do levels, vetting, and advanced training work?',
-      a: 'The site describes seven levels of power; only Level 1 foundation is sold online for a limited time.\nAdvanced training is private: selection is strict and only a small fraction of applicants are accepted.',
+      a: 'Seven levels of power are on the record; only Level 1 ships in public, for a limited time.\nBeyond that: private selection, hard vetting, most applicants never clear the gate. If you need a guarantee of admission, you are already off brief.',
     },
     {
       q: 'How often are new programmes or offers released?',
-      a: 'There is no fixed TV-style schedule.\nWatch Courses, pricing, What You Get, and the homepage for enrolment windows and new drops as they go live.',
+      a: 'No broadcast schedule — we drop when the channel is ready.\nWatch Courses, pricing, What You Get, and the homepage for windows and new fire as it goes live.',
     },
     {
       q: 'Will this work if I have a job or study at university?',
-      a: 'Yes—course material is on-demand so you can fit it around work or study.\nThe Syndicate still expects real discipline: this is for people who execute, not casual viewers.',
+      a: 'Yes — the material is on-demand; you stack reps around a job or degree.\nThe Syndicate still demands discipline: on-demand is not “when I feel like it.” If you only consume, you will bleed time and learn nothing.',
     },
   ],
   pricing: [
     {
       q: 'Can I cancel a subscription when memberships go live?',
-      a: 'Memberships are shown as coming soon until checkout is active.\nWhen billing exists, cancellation and renewal rules will be in Subscription Conditions and Terms in the footer—those documents are binding.',
+      a: 'Memberships read “coming soon” until checkout is live — nothing to cancel until billing exists.\nWhen it does: cancellation and renewal live in Subscription Conditions and Terms in the footer. Read them — they win every argument.',
     },
     {
       q: 'How do refunds and guarantees work?',
-      a: 'The footer links to Refund Policy, Terms, Subscription Conditions, and Privacy.\nContent is educational; results are not guaranteed. Use the Refund Policy for any refund request.',
+      a: 'Footer: Refund Policy, Terms, Subscription Conditions, Privacy — all binding.\nThis is education, not a lottery ticket: outcomes are not guaranteed. Refunds follow the Refund Policy only.',
     },
     {
       q: 'Do I have to pay monthly to get started?',
-      a: 'No—you can start with a Level 1 course from Courses without any membership.\nThe King membership on the pricing page is an optional recurring tier once it launches.',
+      a: 'No. Buy a Level 1 course from Courses and move — no membership required.\nThe King tier on pricing is optional recurring muscle once it launches; not a toll gate on your first move.',
     },
     {
       q: 'What do membership tiers cost?',
-      a: 'On the pricing page: The King is listed at £19.99/month (yearly shown on the same page), with checkout when you are signed in.\nThe full bundle lifetime price is shown separately on the same page; use that page as the source of truth.',
+      a: 'Pricing page is source of truth: The King at £19.99/month (yearly on the same card), checkout when signed in.\nFull bundle lifetime is listed there too — do not trust hearsay; trust the page.',
     },
     {
       q: 'What payment methods are accepted?',
-      a: 'Supported methods appear at checkout for your region when you pay.\nUntil a product checkout is live, follow register-interest flows on the site.',
+      a: 'Whatever checkout exposes for your region when you pay is what runs.\nUntil checkout is live, use the register-interest flows on the site.',
     },
   ],
   program: [
     {
       q: 'Is the content live or recorded?',
-      a: 'Level 1 is structured PDF and VIDEO learning with filters on Courses.\nOur Methods stresses applying techniques from the first lesson—not passive theory.',
+      a: 'Level 1 is structured PDF + video on Courses — filter, select, execute.\nOur Methods beats one rule into you: apply from lesson one. No passive “cinema mode.”',
     },
     {
       q: 'What if I need help?',
-      a: 'What You Get describes a network built on integrity alongside the curriculum.\nExact support channels depend on the product you buy—check that product page and the legal terms at purchase.',
+      a: 'What You Get frames the network and integrity layer beside the curriculum.\nConcrete support channels ride on the product you bought — check that product page and the legal terms at purchase.',
     },
     {
       q: 'Who is The Syndicate for?',
-      a: 'People who want money and power mastery with a moral code—founders, professionals, and serious learners willing to strive.\nIt is not for anyone chasing effortless passive income or guaranteed riches.',
+      a: 'Founders, operators, serious learners who want money and power under a moral code — people who strive, not spectators hunting passive income fairy tales.\nIf you want guaranteed riches or zero effort, close the tab.',
     },
     {
       q: 'How do I know if it is right for me?',
-      a: 'If you want practical wealth and influence frameworks and accept that outcomes depend on you, the homepage and Our Methods describe the fit.\nIf you want guaranteed results or entertainment-only content, this is not the match.',
+      a: 'If you want wealth and influence frameworks and you own the outcome, the homepage and Our Methods spell the fit.\nIf you need guaranteed results or entertainment-only fluff, this channel is not yours.',
     },
     {
       q: 'Do I need special tools or software?',
-      a: 'You need a device and internet to stream or download materials.\nAnything extra ships with the course product itself.',
+      a: 'Device + internet to stream or download. That is the baseline.\nAnything specialised ships with the product you buy.',
     },
     {
       q: 'How much time should I commit each week?',
-      a: 'Plan for several focused hours weekly to absorb and apply lessons properly.\nOur Methods is built for immediate use; pacing is still yours.',
+      a: 'Budget several focused hours weekly to absorb and run the drills properly.\nOur Methods is built for immediate use — the cadence is still yours, the standard is not.',
     },
   ],
 }
@@ -98,14 +98,26 @@ export default function FAQSection() {
   return (
     <section id="faq" className={styles.faq}>
       <div className={styles.bgMedia} aria-hidden>
-        <Image src="/assets/tt.gif" alt="" fill sizes="100vw" className={styles.bgImage} unoptimized />
+        <Image
+          src="/assets/tt.gif"
+          alt=""
+          fill
+          sizes="100vw"
+          className={styles.bgImage}
+          unoptimized
+          loading="eager"
+          fetchPriority="low"
+          decoding="async"
+        />
         <div className={styles.bgOverlay} />
       </div>
       <div className={styles.container}>
-        <h2 className={styles.title}>
+        <h2 className={`${styles.title} font-heading programs-heading-glow`}>
           Frequently Asked Questions
         </h2>
-        <p className={styles.subtitle}>Short answers—full legal detail lives in the footer policies.</p>
+        <p className={styles.subtitle}>
+          Hard intel below — the footer policies still own the fine print. Read them before you sign anything.
+        </p>
         <div className={styles.tabs} role="tablist" aria-label="FAQ categories">
           {FAQ_TABS.map((tab) => (
             <button

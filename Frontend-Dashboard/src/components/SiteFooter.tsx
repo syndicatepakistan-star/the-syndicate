@@ -22,7 +22,7 @@ export default function SiteFooter({
 }: SiteFooterProps = {}) {
   return (
     <footer
-      className="relative min-h-[clamp(300px,42vh,320px)] w-full overflow-hidden border-t bg-[#02050b] px-[clamp(1rem,3vw,2rem)] py-[clamp(2.5rem,6vw,4.5rem)]"
+      className="relative min-h-[clamp(260px,34vh,300px)] w-full overflow-hidden border-t bg-[#02050b] px-[clamp(1rem,3vw,2rem)] py-[clamp(2rem,5vw,3.75rem)]"
       style={{
         borderColor: 'rgba(251, 191, 36, 0.6)',
         boxShadow: 'inset 0 1px 0 rgba(251, 191, 36, 0.28), 0 -8px 30px rgba(251, 191, 36, 0.12)',
@@ -41,8 +41,9 @@ export default function SiteFooter({
         <div className="absolute inset-0 bg-black/62" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-[min(1700px,97vw)] flex-col gap-[clamp(1.7rem,4vw,3.25rem)]">
-        <div className="grid grid-cols-1 items-center gap-[clamp(1rem,3vw,2.25rem)] md:grid-cols-[minmax(300px,1.1fr)_minmax(420px,1.2fr)_minmax(360px,1fr)] md:gap-[clamp(1.4rem,2.5vw,3rem)]">
-          <div className="p-1 justify-self-center md:justify-self-start">
+        {/* Logo + slogan + quick links: one row on md, vertically centered to the same row height (footer vh band). */}
+        <div className="grid grid-cols-1 items-center justify-items-center gap-[clamp(0.6rem,1.2vw,1.15rem)] md:grid-cols-[auto_auto_minmax(0,1fr)] md:items-center md:justify-items-stretch md:gap-x-0 md:gap-y-[clamp(1rem,3vw,2.25rem)]">
+          <div className="justify-self-center md:min-w-0 md:justify-self-start md:self-center md:pr-1">
             <Image
               src="/assets/logo.webp"
               alt="syndicate logo"
@@ -53,7 +54,7 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className=" flex w-full max-w-[min(950px,100%)] justify-center px-[clamp(0.25rem,1vw,0.75rem)] py-[clamp(0.25rem,1vw,0.6rem)] text-center md:mx-0 md:justify-self-center md:justify-center md:px-4 md:text-center lg: ml-2 lg:px-6">
+          <div className="flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.25rem,1vw,0.75rem)] py-[clamp(0.25rem,1vw,0.6rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
             <NeonTypingBadge
               phrases={['HONOUR · MONEY · POWER · FREEDOM']}
               typingSpeed={sloganTypingSpeed ?? 24}
@@ -64,23 +65,27 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className="rounded-xl p-[clamp(0.4rem,1vw,0.75rem)] text-center md:justify-self-end md:text-right">
+          <div className="w-full max-w-[min(20rem,92vw)] justify-self-center rounded-xl p-[clamp(0.4rem,1vw,0.75rem)] text-center md:min-w-0 md:max-w-[min(36rem,100%)] md:justify-self-end md:self-center md:shrink-0 md:pl-6 md:pr-0 md:text-right">
             <p
-              className="text-[clamp(0.78rem,1.2vw,0.96rem)] font-semibold uppercase tracking-[0.22em]"
+              className="text-sm font-semibold uppercase tracking-[0.22em] sm:text-base"
               style={{ color: 'rgba(253, 230, 138, 0.95)', textShadow: '0 0 10px rgba(251, 191, 36, 0.35)' }}
             >
               Quick Links
             </p>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-[clamp(1rem,2.2vw,2rem)] gap-y-[clamp(0.4rem,1vw,0.8rem)] text-[clamp(1rem,1.5vw,1.5rem)] font-semibold md:justify-end">
-              <Link href="/" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Home</Link>
-              <Link href="/what-you-get" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>What You Get</Link>
-              <Link href="/our-methods" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Our Methods</Link>
-              <Link href="/programs" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Programs</Link>
-              <Link href="/quiz" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Syn Diagnosis</Link>
-              <Link href="/affiliate-login" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate login</Link>
-              <Link href="/login" prefetch className={footerLinkClass} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Join Now</Link>
-            </div>
-            <div className="mt-5 flex items-center justify-center gap-3 md:justify-end">
+            <nav
+              aria-label="Quick links"
+              className="mt-3 grid max-sm:grid-cols-1 grid-cols-2 gap-x-[clamp(0.85rem,2.2vw,2rem)] gap-y-2.5 text-[clamp(0.82rem,1.25vw,1.05rem)] font-semibold leading-snug max-sm:justify-items-center sm:gap-y-2 md:justify-items-end sm:[&>a:last-child]:col-span-2 sm:[&>a:last-child]:justify-self-end"
+            >
+              <Link href="/" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Home</Link>
+              <Link href="/what-you-get" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>What You Get</Link>
+              <Link href="/our-methods" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Our Methods</Link>
+              <Link href="/programs" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Programs</Link>
+              <Link href="/quiz" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Syn Diagnosis</Link>
+              <Link href="/affiliate" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate</Link>
+              <Link href="/affiliate-login" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate login</Link>
+              <Link href="/login" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Join Now</Link>
+            </nav>
+            <div className="mt-3 flex items-center justify-center gap-3 md:justify-end">
               <a href="https://www.youtube.com/" target="_blank" rel="noreferrer" aria-label="YouTube" className={socialIconClass}>
                 <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current" aria-hidden>
                   <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.7V8.3L15.8 12l-6.2 3.7Z" />

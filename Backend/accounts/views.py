@@ -330,6 +330,29 @@ def _parse_pence_from_amount_payload(raw) -> int | None:
     return None
 
 
+def _checkout_plan_label(plan: str) -> str:
+  p = (plan or "").strip().lower()
+  if p == "king":
+    return "The King membership"
+  if p == "bundle":
+    return "Money Mastery — lifetime bundle"
+  if p == "pawn":
+    return "The Pawn"
+  if p == "knight":
+    return "The Knight"
+  return "The Syndicate — checkout"
+
+
+def _affiliate_attribution_payload(session_meta: dict) -> dict:
+  plan_slug = str(session_meta.get("selected_plan", "") or "").strip().lower()
+  return {
+    "affiliate_id": str(session_meta.get("affiliate_id", "")).strip(),
+    "visitor_id": str(session_meta.get("visitor_id", "")).strip(),
+    "plan_slug": plan_slug,
+    "plan_label": _checkout_plan_label(plan_slug),
+  }
+
+
 def _apply_purchased_plan(user: User, plan: str) -> None:
   plan = (plan or "").strip().lower()
   if plan not in ("bundle", "king", "pawn", "knight"):
@@ -835,12 +858,16 @@ def create_checkout_session_view(request):
   unit_amount = (
     int(max(50, round(float(selected_playlist.price) * 100)))
     if selected_playlist is not None
-    else settings.CHECKOUT_AMOUNT_PENCE
+    else (_parse_pence_from_amount_payload(payload.get("selected_amount")) or settings.CHECKOUT_AMOUNT_PENCE)
   )
   product_name = (
     f"{selected_playlist.title} playlist access"
     if selected_playlist is not None
-    else "The Syndicate Membership Checkout"
+    else (
+      "The King membership"
+      if plan_payload == "king"
+      else ("Money Mastery — lifetime bundle" if plan_payload == "bundle" else "The Syndicate Membership Checkout")
+    )
   )
 
   def _session_create(pm_types: list[str]):
@@ -1025,10 +1052,7 @@ def checkout_success_view(request):
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
-        "affiliate_attribution": {
-          "affiliate_id": str(session_meta.get("affiliate_id", "")).strip(),
-          "visitor_id": str(session_meta.get("visitor_id", "")).strip(),
-        },
+        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
       },
       status=200,
     )
@@ -1077,10 +1101,7 @@ def checkout_success_view(request):
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
-        "affiliate_attribution": {
-          "affiliate_id": str(session_meta.get("affiliate_id", "")).strip(),
-          "visitor_id": str(session_meta.get("visitor_id", "")).strip(),
-        },
+        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
       },
       status=200,
     )
@@ -1129,10 +1150,7 @@ def checkout_success_view(request):
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,
         "currency": paid_currency,
-        "affiliate_attribution": {
-          "affiliate_id": str(session_meta.get("affiliate_id", "")).strip(),
-          "visitor_id": str(session_meta.get("visitor_id", "")).strip(),
-        },
+        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
       },
       status=200,
     )

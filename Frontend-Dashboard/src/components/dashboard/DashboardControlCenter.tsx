@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import type { ActivityCategory, ActivityItem, DashboardNavKey, DashboardSnapshots } from "./types";
 import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardSnapshots";
@@ -464,15 +463,6 @@ function HeroStatusPanel({
               </div>
               <div className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/58">Syndicate level</div>
             </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-white/78">
-                <span>XP toward next level</span>
-                <span className="text-white">{s.syndicate.xpPct}%</span>
-              </div>
-              <div className="mt-2">
-                <ProgressBar pct={s.syndicate.xpPct} tone={themeMode === "danger" ? "danger" : themeMode === "cyberpunk" ? "ice" : "gold"} />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -606,158 +596,6 @@ function HeroStatusPanel({
       </div>
 
     </div>
-  );
-}
-
-function AffiliateSnapshotCard({
-  themeMode,
-  snapshots,
-  onNavigate,
-  onOpenAffiliate
-}: {
-  themeMode: ThemeMode;
-  snapshots: DashboardSnapshots;
-  onNavigate: (nav: DashboardNavKey) => void;
-  onOpenAffiliate: () => void;
-}) {
-  const a = snapshots.affiliate;
-  const [hoverMetric, setHoverMetric] = useState<string | null>(null);
-  return (
-    <Card
-      themeMode={themeMode}
-      title="Affiliate Portal Snapshot"
-      frameVariant="shell"
-      headerImageSrc="/assets/dashboard/affiliate.svg"
-      right={
-        <motion.button
-          type="button"
-          onClick={() => {
-            onOpenAffiliate();
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-          className="text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)]/90"
-        >
-          Open →
-        </motion.button>
-      }
-    >
-      <div className="rounded-md border border-white/10 bg-black/35 p-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Referral link</div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="min-w-0 truncate text-[12px] font-semibold text-white/70">{a.referralLink ?? "—"}</div>
-          <motion.button
-            type="button"
-            onClick={() => {
-              if (a.referralLink) navigator.clipboard?.writeText(a.referralLink);
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            className="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white/70 hover:border-[rgba(197,179,88,0.45)] hover:text-[color:var(--gold)]/95"
-          >
-            Copy
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Mini funnel visualization (hoverable) */}
-      <div className="mt-3 rounded-md border border-[rgba(197,179,88,0.2)] bg-black/30 p-3">
-        <div className="flex items-center justify-between">
-          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Funnel</div>
-          <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)]/90">
-            {hoverMetric ? hoverMetric : "hover"}
-          </div>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            { k: "Infiltrations", v: a.clicks, pct: 100, tone: "rgba(197,179,88,0.65)" },
-            { k: "Operatives", v: a.conversions, pct: Math.max(4, Math.min(100, Math.round((a.conversions / Math.max(1, a.clicks)) * 100))), tone: "rgba(255,215,0,0.5)" },
-            { k: "Credits", v: `${a.earnings}`, pct: Math.max(8, Math.min(100, Math.round((a.earnings / 1200) * 100))), tone: "rgba(197,179,88,0.42)" }
-          ].map((m) => (
-            <motion.div
-              key={m.k}
-              onMouseEnter={() => setHoverMetric(`${m.k}: ${m.v}`)}
-              onMouseLeave={() => setHoverMetric(null)}
-              whileHover={{ y: -2 }}
-              className="rounded-md border border-white/10 bg-black/35 p-2"
-            >
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{m.k}</div>
-              <div className="mt-1 font-mono text-[13px] font-black tabular-nums text-white/90">{String(m.v)}</div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full border border-white/10 bg-black/50">
-                <div className="h-full rounded-full" style={{ width: `${m.pct}%`, background: m.tone, boxShadow: `0 0 18px ${m.tone}` }} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {[
-          ["System infiltrations", a.clicks],
-          ["Operatives synced", a.conversions],
-          ["Mission points", a.earnings]
-        ].map(([k, v]) => (
-          <motion.div
-            key={String(k)}
-            whileHover={{ y: -2 }}
-            className="rounded-md border border-white/10 bg-black/35 px-3 py-2 transition hover:border-[rgba(197,179,88,0.35)] hover:bg-black/60"
-          >
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{k}</div>
-            <div className="mt-1 font-mono text-[14px] font-black tabular-nums text-white/92">{String(v)}</div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="mt-3 rounded-md border border-white/10 bg-black/35 p-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Recent</div>
-        <div className="mt-2 space-y-2">
-          {a.recent.slice(0, 3).map((r) => (
-            <motion.div
-              key={r.who + r.ts}
-              whileHover={{ y: -2 }}
-              className="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-black/30 px-3 py-2 transition hover:border-[rgba(197,179,88,0.35)] hover:bg-black/60"
-            >
-              <div className="text-[12px] font-semibold text-white/80">
-                {r.who} •{" "}
-                <span
-                  className="rounded-md border border-white/10 bg-black/40 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em]"
-                  style={{
-                    borderColor:
-                      r.status === "purchased"
-                        ? "rgba(197,179,88,0.55)"
-                        : r.status === "joined"
-                          ? "rgba(255,215,0,0.42)"
-                          : "rgba(255,255,255,0.18)",
-                    color:
-                      r.status === "purchased"
-                        ? "rgba(255,248,220,0.95)"
-                        : r.status === "joined"
-                          ? "#ffe7a1"
-                          : "rgba(255,255,255,0.72)"
-                  }}
-                >
-                  {r.status}
-                </span>
-              </div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">{timeAgo(r.ts)}</div>
-            </motion.div>
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <motion.button
-            type="button"
-            onClick={() => {
-              onOpenAffiliate();
-            }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="rounded-md border border-[rgba(255,215,0,0.35)] bg-black/20 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--gold)]/90 hover:border-[rgba(255,215,0,0.7)]"
-          >
-            Quick Share
-          </motion.button>
-        </div>
-      </div>
-    </Card>
   );
 }
 
@@ -1032,7 +870,6 @@ export default function DashboardControlCenter({
   onNavigate,
   dashboardNavLocks
 }: DashboardControlCenterProps) {
-  const router = useRouter();
   const { snapshots } = useDashboardSnapshots({ userName, courses });
   const integrityHigh = snapshots.coreIntegrity.integrityPct > 90;
   const syndicateLocked = !!dashboardNavLocks?.monk;
@@ -1066,13 +903,6 @@ export default function DashboardControlCenter({
           />
 
           <GoalPathSystem themeMode={themeMode} courses={courses} onNavigate={onNavigate} />
-
-          <AffiliateSnapshotCard
-            themeMode={themeMode}
-            snapshots={snapshots}
-            onNavigate={onNavigate}
-            onOpenAffiliate={() => router.push("/affiliate-login")}
-          />
 
           <ActivityTimelineCard themeMode={themeMode} />
         </div>

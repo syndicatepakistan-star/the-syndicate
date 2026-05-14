@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import type { ActivityCategory, ActivityItem, DashboardNavKey, DashboardSnapshots } from "./types";
 import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardSnapshots";
-import { accentByKey, Card, cn, ProgressBar, themeAccent, type ThemeMode } from "./dashboardPrimitives";
+import { accentByKey, Card, cn, themeAccent, type ThemeMode } from "./dashboardPrimitives";
 import { GoalPathSystem } from "./path/GoalPathSystem";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
 import { SyndicateReminderDueBanner } from "./SyndicateReminderDueBanner";
@@ -408,8 +408,6 @@ function HeroStatusPanel({
   const s = snapshots;
   const t = themeAccent(themeMode);
   const ongoingPrograms = s.programs.length;
-  const programsAvgPct =
-    s.programs.length > 0 ? Math.round(s.programs.reduce((acc, p) => acc + p.progressPct, 0) / s.programs.length) : 0;
   const completedMissionCount = s.syndicate.completedMissionsCount ?? 0;
   const pendingMissionCount = s.syndicate.pendingMissionsCount ?? (s.syndicate.activeLiveMissionCount ?? (s.syndicate.activeMissionTitle ? 1 : 0));
   const totalMissionPoints = s.syndicate.missionPointsTotal ?? 0;
@@ -467,88 +465,103 @@ function HeroStatusPanel({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className="grid w-full max-w-none grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-4">
             <button
               type="button"
               onClick={() => onNavigate("programs")}
-              className="rounded-md border-2 border-[rgba(255,198,62,0.58)] bg-[linear-gradient(145deg,rgba(255,198,62,0.16),rgba(0,0,0,0.62))] px-3 py-2.5 text-left transition hover:bg-[linear-gradient(145deg,rgba(255,198,62,0.25),rgba(0,0,0,0.7))]"
-              style={{
-                borderColor: "rgba(255,198,62,0.58)",
-                boxShadow: "0 0 0 1px rgba(255,198,62,0.34), 0 0 30px rgba(255,198,62,0.35)"
-              }}
+              className={cn(
+                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_rgba(34,211,238,0.28),0_0_52px_rgba(6,182,212,0.12)]",
+                "hover:border-cyan-200/75 hover:bg-gradient-to-br hover:from-cyan-400/[0.2] hover:to-black/72",
+                "hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_0_40px_rgba(34,211,238,0.42),0_0_88px_rgba(6,182,212,0.22)]"
+              )}
             >
-              <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-100">Active programs</div>
-              <div className="mt-1 space-y-0.5">
-                <div className="font-mono text-[18px] font-black tabular-nums text-white [text-shadow:0_0_14px_rgba(255,198,62,0.35)]">
-                  {ongoingPrograms}{" "}
-                  <span className="text-[9px] font-bold tracking-[0.12em] text-amber-100/70">ONGOING</span>
+              <div className="w-full text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-cyan-100">
+                Active programs
+              </div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+                <div
+                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  style={{ textShadow: "0 0 22px rgba(34,211,238,0.55), 0 0 40px rgba(6,182,212,0.25)" }}
+                >
+                  {ongoingPrograms}
                 </div>
-                <div className="font-mono text-[14px] font-black tabular-nums text-amber-100">{programsAvgPct}%</div>
-              </div>
-              <div className="mt-2">
-                <ProgressBar pct={programsAvgPct} tone="gold" />
+                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-cyan-200/78">Ongoing</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "rounded-md border-2 border-[rgba(255,198,62,0.58)] bg-[linear-gradient(145deg,rgba(255,198,62,0.16),rgba(0,0,0,0.62))] px-3 py-2.5 text-left transition hover:bg-[linear-gradient(145deg,rgba(255,198,62,0.25),rgba(0,0,0,0.7))]",
-                syndicateNavLocked && "opacity-80 ring-1 ring-amber-500/35"
+                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-emerald-400/55 bg-gradient-to-br from-emerald-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "shadow-[0_0_0_1px_rgba(52,211,153,0.22),0_0_28px_rgba(52,211,153,0.26),0_0_52px_rgba(16,185,129,0.12)]",
+                "hover:border-emerald-200/75 hover:bg-gradient-to-br hover:from-emerald-400/[0.2] hover:to-black/72",
+                "hover:shadow-[0_0_0_1px_rgba(110,231,183,0.42),0_0_40px_rgba(52,211,153,0.4),0_0_88px_rgba(16,185,129,0.2)]",
+                syndicateNavLocked && "opacity-80 ring-1 ring-emerald-500/35"
               )}
-              style={{
-                borderColor: "rgba(255,198,62,0.58)",
-                boxShadow: "0 0 0 1px rgba(255,198,62,0.34), 0 0 30px rgba(255,198,62,0.35)"
-              }}
             >
-              <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-emerald-100">
                 Completed missions
-                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
+                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-emerald-200/90" aria-hidden /> : null}
               </div>
-              <div className="mt-1 space-y-0.5">
-                <div className="font-mono text-[18px] font-black tabular-nums text-white [text-shadow:0_0_14px_rgba(255,198,62,0.35)]">{completedMissionCount}</div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100/70">from challenges</div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+                <div
+                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  style={{ textShadow: "0 0 22px rgba(52,211,153,0.5), 0 0 40px rgba(16,185,129,0.22)" }}
+                >
+                  {completedMissionCount}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/78">From challenges</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "rounded-md border-2 border-[rgba(255,198,62,0.58)] bg-[linear-gradient(145deg,rgba(255,198,62,0.16),rgba(0,0,0,0.62))] px-3 py-2.5 text-left transition hover:bg-[linear-gradient(145deg,rgba(255,198,62,0.25),rgba(0,0,0,0.7))]",
+                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-amber-400/58 bg-gradient-to-br from-amber-400/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "shadow-[0_0_0_1px_rgba(251,191,36,0.24),0_0_28px_rgba(251,191,36,0.28),0_0_52px_rgba(245,158,11,0.14)]",
+                "hover:border-amber-200/78 hover:bg-gradient-to-br hover:from-amber-300/[0.2] hover:to-black/72",
+                "hover:shadow-[0_0_0_1px_rgba(253,224,71,0.42),0_0_40px_rgba(251,191,36,0.42),0_0_88px_rgba(234,88,12,0.18)]",
                 syndicateNavLocked && "opacity-80 ring-1 ring-amber-500/35"
               )}
-              style={{
-                borderColor: "rgba(255,198,62,0.58)",
-                boxShadow: "0 0 0 1px rgba(255,198,62,0.34), 0 0 30px rgba(255,198,62,0.35)"
-              }}
             >
-              <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-amber-100">
                 Pending missions
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
               </div>
-              <div className="mt-1 space-y-0.5">
-                <div className="font-mono text-[18px] font-black tabular-nums text-white [text-shadow:0_0_14px_rgba(255,198,62,0.35)]">{pendingMissionCount}</div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100/70">in challenges</div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+                <div
+                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  style={{ textShadow: "0 0 22px rgba(251,191,36,0.48), 0 0 40px rgba(245,158,11,0.22)" }}
+                >
+                  {pendingMissionCount}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200/78">In challenges</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "rounded-md border-2 border-[rgba(255,198,62,0.58)] bg-[linear-gradient(145deg,rgba(255,198,62,0.16),rgba(0,0,0,0.62))] px-3 py-2.5 text-left transition hover:bg-[linear-gradient(145deg,rgba(255,198,62,0.25),rgba(0,0,0,0.7))]",
-                syndicateNavLocked && "opacity-80 ring-1 ring-amber-500/35"
+                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-fuchsia-400/55 bg-gradient-to-br from-fuchsia-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "shadow-[0_0_0_1px_rgba(232,121,249,0.22),0_0_28px_rgba(217,70,239,0.28),0_0_52px_rgba(192,38,211,0.12)]",
+                "hover:border-fuchsia-200/75 hover:bg-gradient-to-br hover:from-fuchsia-400/[0.2] hover:to-black/72",
+                "hover:shadow-[0_0_0_1px_rgba(240,171,252,0.42),0_0_40px_rgba(217,70,239,0.4),0_0_88px_rgba(168,85,247,0.2)]",
+                syndicateNavLocked && "opacity-80 ring-1 ring-fuchsia-500/35"
               )}
-              style={{
-                borderColor: "rgba(255,198,62,0.58)",
-                boxShadow: "0 0 0 1px rgba(255,198,62,0.34), 0 0 30px rgba(255,198,62,0.35)"
-              }}
             >
-              <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-fuchsia-100">
                 Total points
-                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
+                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-fuchsia-200/90" aria-hidden /> : null}
               </div>
-              <div className="mt-1 font-mono text-[18px] font-black tabular-nums text-white [text-shadow:0_0_14px_rgba(255,198,62,0.35)]">
-                {totalMissionPoints}
+              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+                <div
+                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  style={{ textShadow: "0 0 22px rgba(217,70,239,0.52), 0 0 44px rgba(168,85,247,0.22)" }}
+                >
+                  {totalMissionPoints}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/78">Mission pool</div>
               </div>
             </button>
           </div>

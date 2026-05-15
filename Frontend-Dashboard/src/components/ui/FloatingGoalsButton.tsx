@@ -11,7 +11,7 @@ const FAB_SHELL_GOALS =
   "cut-frame-sm hud-hover-glow glass-dark transition border border-[rgba(255,215,0,0.48)] bg-black/55 hover:border-[rgba(255,215,0,0.72)] hover:bg-black/62";
 
 export function FloatingGoalsButton() {
-  const { openGoalsPanel, isGoalsPanelOpen, shellSectionKey, goalsFabLocked } = useGoalsPanel();
+  const { openGoalsPanel, isGoalsPanelOpen, isQuickAccessPanelOpen, shellSectionKey, goalsFabLocked } = useGoalsPanel();
   const [lockedOverlayOpen, setLockedOverlayOpen] = useState(false);
   const lockedTitleId = useId();
   const allowed = shellSectionKey != null && shellSectionKey !== "support" && shellSectionKey !== "settings";
@@ -25,7 +25,7 @@ export function FloatingGoalsButton() {
     return () => window.removeEventListener("keydown", onKey);
   }, [lockedOverlayOpen]);
 
-  if (!allowed || isGoalsPanelOpen) return null;
+  if (!allowed || isGoalsPanelOpen || isQuickAccessPanelOpen) return null;
 
   const lockedDialog =
     lockedOverlayOpen && typeof document !== "undefined"
@@ -97,11 +97,10 @@ export function FloatingGoalsButton() {
           "group",
           FAB_SHELL_GOALS,
           goalsFabLocked && "opacity-[0.92] saturate-[0.65]",
-          "fixed z-[195] flex items-center justify-center text-left text-[color:var(--goals-milestones-gold)]",
+          "relative z-auto flex items-center justify-center text-left text-[color:var(--goals-milestones-gold)]",
           "motion-reduce:transition-none",
-          /* Mobile: icon-only, minimal footprint + safe area */
-          "bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] right-3 h-10 w-10 gap-0 p-0 sm:bottom-6 sm:right-5 sm:h-auto sm:w-auto sm:justify-start sm:gap-2.5 sm:px-3 sm:py-2.5",
-          "md:bottom-6 md:right-6 md:max-w-[calc(100vw-1.5rem)]",
+          "h-10 w-10 gap-0 p-0 sm:h-auto sm:w-auto sm:justify-start sm:gap-2.5 sm:px-3 sm:py-2.5",
+          "md:max-w-[calc(100vw-1.5rem)]",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
         )}
         aria-label={goalsFabLocked ? "Goals and milestones locked — open details" : "Open Goals and Milestones"}

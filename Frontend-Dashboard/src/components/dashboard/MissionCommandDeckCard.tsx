@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { HelpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { portalFetch } from "@/lib/portal-api";
 import {
@@ -14,16 +15,7 @@ import {
 } from "./DeckListPrimitives";
 import { DeckBrowseDateBar, DeckDateField, DeckTimeField } from "./DeckDateTimePickers";
 import { missionLocalDay, noteLocalDay, toYyyyMmDd } from "./deck-date-utils";
-import {
-  clearDeckAlarmCustom,
-  getDeckAlarmCustomDataUrl,
-  isDeckAlarmMuted,
-  playDeckAlarmSound,
-  readAudioFileAsDataUrl,
-  setDeckAlarmCustomDataUrl,
-  setDeckAlarmMuted,
-  unlockDeckAlarmAudio
-} from "@/lib/deck-alarm-sound";
+import { playDeckAlarmSound, unlockDeckAlarmAudio } from "@/lib/deck-alarm-sound";
 import toast from "react-hot-toast";
 import { Card, cn, type ThemeMode } from "./dashboardPrimitives";
 
@@ -231,28 +223,15 @@ type DeckTimeEditTarget =
   | { kind: "reminder"; id: string; title: string; date: string; time: string }
   | { kind: "mission"; id: string; title: string; targetIso: string };
 
-/** Same shell chrome as Quick Access + navbar/sidebar: gold frame, #060606 glass */
-const DECK_SHELL =
-  "relative w-full min-w-0 shrink-0 overflow-hidden rounded-xl border border-[rgba(255,215,0,0.26)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.08),0_0_52px_rgba(255,215,0,0.08),inset_0_1px_0_rgba(255,215,0,0.08)] backdrop-blur-[10px]";
-
-const DECK_MISSIONS = DECK_SHELL;
-
-const DECK_NOTES =
-  "relative w-full min-w-0 shrink-0 overflow-hidden rounded-xl border-[rgba(255,215,0,0.46)] bg-gradient-to-b from-[rgba(255,215,0,0.1)] via-[#060606]/96 to-[#050505] p-[var(--fluid-deck-p)] shadow-[0_14px_48px_rgba(0,0,0,0.48),0_0_0_1px_rgba(255,215,0,0.16),0_0_44px_rgba(255,215,0,0.12),0_0_72px_rgba(255,200,0,0.06),inset_0_1px_0_rgba(255,255,255,0.06)]";
+const DECK_NOTES_OUTER =
+  "relative w-full min-w-0 shrink-0 overflow-hidden rounded-xl p-[2px] shadow-[0_0_40px_rgba(217,70,239,0.12),0_0_56px_rgba(255,215,0,0.08),0_0_72px_rgba(52,211,153,0.1)]";
+const DECK_NOTES_INNER =
+  "relative min-w-0 overflow-hidden rounded-[11px] border border-white/10 bg-[#060606]/88 p-[var(--fluid-deck-p)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-[10px]";
 
 function DeckGlowNotes() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 opacity-[0.88] [background:radial-gradient(780px_300px_at_20%_0%,rgba(255,215,0,0.18),rgba(0,0,0,0)_58%)]"
-      aria-hidden
-    />
-  );
-}
-
-function DeckQuarterGlow() {
-  return (
-    <div
-      className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(255,215,0,0.11),rgba(0,0,0,0)_60%)]"
+      className="pointer-events-none absolute inset-0 opacity-[0.88] [background:radial-gradient(720px_300px_at_18%_0%,rgba(217,70,239,0.12),rgba(0,0,0,0)_58%),radial-gradient(640px_280px_at_88%_20%,rgba(52,211,153,0.1),rgba(0,0,0,0)_55%),radial-gradient(520px_240px_at_50%_100%,rgba(255,215,0,0.08),rgba(0,0,0,0)_52%)]"
       aria-hidden
     />
   );
@@ -261,23 +240,117 @@ function DeckQuarterGlow() {
 const SCROLL_GOLD =
   "[scrollbar-color:rgba(255,215,0,0.45)_rgba(0,0,0,0.35)]";
 
-/** Sub-panels inside missions/reminders (active/missed lists) */
-const DECK_LIST_INNER_BASE =
-  "mt-2 min-h-[clamp(12rem,34vh,17.5rem)] max-h-[min(68vh,720px)] space-y-[clamp(0.4rem,1vw+0.15rem,0.65rem)] overflow-y-auto overflow-x-hidden py-1 pr-[clamp(0.25rem,0.8vw+0.1rem,0.45rem)]";
+const SCROLL_EMERALD =
+  "[scrollbar-color:rgba(52,211,153,0.45)_rgba(0,0,0,0.35)]";
+
+const SCROLL_ROSE =
+  "[scrollbar-color:rgba(251,113,133,0.45)_rgba(0,0,0,0.35)]";
+
+const SCROLL_FUCHSIA =
+  "[scrollbar-color:rgba(217,70,239,0.45)_rgba(0,0,0,0.35)]";
+
+const MISSION_PAGE_SIZE = 5;
+
+/** Missions list body: compact when empty; grows with rows; scroll cap unchanged. */
+function missionListScrollClass(displayedCount: number, scrollbarClass: string) {
+  return cn(
+    "mt-2 space-y-[clamp(0.4rem,1vw+0.15rem,0.65rem)] overflow-x-hidden py-1 pr-[clamp(0.25rem,0.8vw+0.1rem,0.45rem)]",
+    scrollbarClass,
+    displayedCount === 0
+      ? "min-h-0 max-h-none overflow-visible"
+      : cn(
+          "overflow-y-auto max-h-[min(68vh,720px)]",
+          displayedCount <= 1 && "min-h-[7.25rem]",
+          displayedCount === 2 && "min-h-[10rem]",
+          displayedCount >= 3 && "min-h-[min(12.5rem,24vh)]",
+        ),
+  );
+}
+
+function MissionBucketPagination({
+  page,
+  total,
+  onPageChange,
+  accent
+}: {
+  page: number;
+  total: number;
+  onPageChange: (next: number) => void;
+  accent: "gold" | "cyan" | "rose" | "emerald" | "fuchsia";
+}) {
+  const pages = Math.max(1, Math.ceil(total / MISSION_PAGE_SIZE));
+  if (total <= MISSION_PAGE_SIZE) return null;
+  const btn =
+    accent === "gold"
+      ? "border-[rgba(255,215,0,0.48)] bg-black/50 text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,235,160,0.65)] hover:shadow-[0_0_16px_rgba(255,200,0,0.22)] disabled:opacity-35"
+      : accent === "cyan"
+        ? "border-cyan-400/45 bg-black/50 text-cyan-100 hover:border-cyan-300/70 hover:shadow-[0_0_16px_rgba(34,211,238,0.25)] disabled:opacity-35"
+        : accent === "rose"
+          ? "border-rose-400/45 bg-black/50 text-rose-100 hover:border-rose-300/70 hover:shadow-[0_0_16px_rgba(251,113,133,0.22)] disabled:opacity-35"
+          : accent === "fuchsia"
+            ? "border-fuchsia-400/45 bg-black/50 text-fuchsia-100 hover:border-fuchsia-300/70 hover:shadow-[0_0_16px_rgba(217,70,239,0.22)] disabled:opacity-35"
+            : "border-emerald-400/45 bg-black/50 text-emerald-100 hover:border-emerald-300/70 hover:shadow-[0_0_16px_rgba(52,211,153,0.22)] disabled:opacity-35";
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[11px] font-semibold normal-case tracking-normal text-neutral-300/95">
+      <span className="tabular-nums">
+        {total} total · page {page + 1} / {pages}
+      </span>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={page <= 0}
+          onClick={() => onPageChange(page - 1)}
+          className={cn(
+            "rounded-lg px-3 py-2 text-[11px] font-semibold tracking-normal transition motion-safe:duration-200",
+            btn,
+          )}
+        >
+          Prev
+        </button>
+        <button
+          type="button"
+          disabled={page >= pages - 1}
+          onClick={() => onPageChange(page + 1)}
+          className={cn(
+            "rounded-lg px-3 py-2 text-[11px] font-semibold tracking-normal transition motion-safe:duration-200",
+            btn,
+          )}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const FORM_SHELL =
   "mt-[clamp(0.65rem,1.5vw+0.2rem,1.35rem)] space-y-[clamp(0.4rem,1vw+0.15rem,0.75rem)] rounded-xl border border-[rgba(255,215,0,0.22)] bg-black/50 p-[var(--fluid-deck-form-p)] shadow-[0_10px_36px_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.1),inset_0_1px_0_rgba(255,215,0,0.08)]";
 
-const FORM_MISSIONS = FORM_SHELL;
+const FORM_MISSIONS =
+  "mt-[clamp(0.65rem,1.5vw+0.2rem,1.35rem)] space-y-[clamp(0.4rem,1vw+0.15rem,0.75rem)] rounded-xl border-2 border-[rgba(255,215,0,0.42)] bg-gradient-to-br from-[rgba(255,215,0,0.08)] to-black/55 p-[var(--fluid-deck-form-p)] shadow-[0_0_28px_rgba(255,200,0,0.12),inset_0_1px_0_rgba(255,235,160,0.06)]";
 
-/** Inner list panels — match HeroStatusPanel / sidebar gold glass */
-const DECK_SUBPANEL =
-  "min-w-0 rounded-xl border border-[rgba(255,215,0,0.22)] bg-[#060606]/70 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,215,0,0.08),0_0_36px_rgba(255,215,0,0.06),inset_0_1px_0_rgba(255,215,0,0.06)] md:p-4";
-const DECK_SUBPANEL_TITLE =
-  "text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)]/92 md:text-[11px]";
+/** Inner list panels — per-column neon */
+const DECK_SUBPANEL_ACTIVE =
+  "min-w-0 rounded-xl border-2 border-[rgba(255,215,0,0.48)] bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(255,200,0,0.14),inset_0_1px_0_rgba(255,215,0,0.08)] md:p-4";
+const DECK_SUBPANEL_MISSED =
+  "min-w-0 rounded-xl border-2 border-rose-400/42 bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(251,113,133,0.12),inset_0_1px_0_rgba(251,113,133,0.05)] md:p-4";
+const DECK_SUBPANEL_DONE =
+  "min-w-0 rounded-xl border-2 border-emerald-400/42 bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(52,211,153,0.12),inset_0_1px_0_rgba(52,211,153,0.05)] md:p-4";
+
+const DECK_TITLE_ACTIVE =
+  "text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.35)] md:text-[11px]";
+const DECK_TITLE_MISSED =
+  "text-[10px] font-black uppercase tracking-[0.16em] text-rose-200/95 [text-shadow:0_0_14px_rgba(251,113,133,0.32)] md:text-[11px]";
+const DECK_TITLE_DONE =
+  "text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200/95 [text-shadow:0_0_14px_rgba(52,211,153,0.32)] md:text-[11px]";
 
 const FORM_NOTES =
-  "mt-[clamp(0.65rem,1.5vw+0.2rem,1.35rem)] space-y-[clamp(0.4rem,1vw+0.15rem,0.75rem)] rounded-xl border-[rgba(255,215,0,0.4)] bg-black/50 p-[var(--fluid-deck-form-p)] shadow-[0_10px_36px_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.12),inset_0_1px_0_rgba(255,215,0,0.09)]";
+  "mt-[clamp(0.65rem,1.5vw+0.2rem,1.35rem)] space-y-[clamp(0.4rem,1vw+0.15rem,0.75rem)] rounded-xl border-2 border-fuchsia-400/38 bg-gradient-to-br from-fuchsia-950/15 to-black/55 p-[var(--fluid-deck-form-p)] shadow-[0_0_24px_rgba(217,70,239,0.12),inset_0_1px_0_rgba(255,255,255,0.05)]";
+
+const DECK_SUBPANEL_NOTES_LIB =
+  "flex min-h-0 min-w-0 flex-col rounded-xl border-2 border-fuchsia-400/38 bg-[#060606]/78 shadow-[0_0_28px_rgba(217,70,239,0.12),inset_0_1px_0_rgba(217,70,239,0.06)] lg:min-h-0 lg:flex-1";
+const DECK_SUBPANEL_NOTES_READER =
+  "flex min-h-0 min-w-0 flex-col rounded-xl border-2 border-emerald-400/36 bg-[#050a08]/80 shadow-[0_0_28px_rgba(52,211,153,0.1),inset_0_1px_0_rgba(52,211,153,0.06)] lg:min-h-0 lg:flex-1";
 
 /** Primary row actions: 40px+ hit area, neon focus ring (keyboard). */
 const DECK_ROW_BTN_PRIMARY =
@@ -322,16 +395,41 @@ function bucketMissions(missions: MissionRow[]) {
   return { active, missed, done };
 }
 
+type DeckEmptyCtaTone = "gold" | "cyan" | "rose" | "emerald";
+
+const DECK_EMPTY_CTA_BTN: Record<
+  DeckEmptyCtaTone,
+  string
+> = {
+  gold:
+    "border-white/18 bg-black/50 text-white/90 shadow-[0_3px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-[rgba(255,215,0,0.45)] hover:bg-black/60 focus-visible:ring-[rgba(255,215,0,0.45)]",
+  cyan:
+    "border-cyan-400/55 bg-cyan-950/35 text-cyan-50 shadow-[0_3px_0_rgba(0,0,0,0.35),0_0_18px_rgba(34,211,238,0.15),inset_0_1px_0_rgba(34,211,238,0.12)] hover:border-cyan-300/75 hover:bg-cyan-950/50 focus-visible:ring-cyan-400/50",
+  rose:
+    "border-rose-400/55 bg-rose-950/30 text-rose-50 shadow-[0_3px_0_rgba(0,0,0,0.35),0_0_18px_rgba(251,113,133,0.14),inset_0_1px_0_rgba(251,113,133,0.1)] hover:border-rose-300/75 hover:bg-rose-950/45 focus-visible:ring-rose-400/50",
+  emerald:
+    "border-emerald-400/55 bg-emerald-950/28 text-emerald-50 shadow-[0_3px_0_rgba(0,0,0,0.35),0_0_18px_rgba(52,211,153,0.14),inset_0_1px_0_rgba(52,211,153,0.1)] hover:border-emerald-300/75 hover:bg-emerald-950/42 focus-visible:ring-emerald-400/50"
+};
+
+const DECK_EMPTY_CTA_MSG: Record<DeckEmptyCtaTone, string> = {
+  gold: "text-neutral-200/92",
+  cyan: "text-cyan-100/88",
+  rose: "text-rose-100/88",
+  emerald: "text-emerald-100/88"
+};
+
 function DeckEmptyCta({
   message,
   actionLabel,
   onAction,
-  accentClass
+  accentClass,
+  ctaTone = "gold"
 }: {
   message: string;
   actionLabel: string;
   onAction: () => void;
   accentClass: string;
+  ctaTone?: DeckEmptyCtaTone;
 }) {
   return (
     <div
@@ -340,11 +438,14 @@ function DeckEmptyCta({
         accentClass
       )}
     >
-      <p className="text-[14px] font-medium leading-relaxed text-neutral-200/92">{message}</p>
+      <p className={cn("text-[14px] font-medium leading-relaxed", DECK_EMPTY_CTA_MSG[ctaTone])}>{message}</p>
       <button
         type="button"
         onClick={onAction}
-        className="mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg border border-white/18 bg-black/50 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-white/90 shadow-[0_3px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] transition motion-safe:duration-200 hover:border-[rgba(255,215,0,0.45)] hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+        className={cn(
+          "mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg px-4 text-[11px] font-black uppercase tracking-[0.18em] transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+          DECK_EMPTY_CTA_BTN[ctaTone]
+        )}
       >
         {actionLabel}
       </button>
@@ -371,7 +472,6 @@ export function MissionCommandDeckCard({
   const [missions, setMissions] = useState<MissionRow[]>(() => deckInit.missions);
   const [reminders, setReminders] = useState<ReminderRow[]>(() => deckInit.reminders);
   const [notes, setNotes] = useState<NoteRow[]>(() => deckInit.notes);
-  const [notesExpanded, setNotesExpanded] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [portalError, setPortalError] = useState<string | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
@@ -382,6 +482,12 @@ export function MissionCommandDeckCard({
   const [mSortA, setMSortA] = useState<DeckSortDir>("asc");
   const [mSortM, setMSortM] = useState<DeckSortDir>("desc");
   const [mSortC, setMSortC] = useState<DeckSortDir>("desc");
+
+  const [missionsHelpOpen, setMissionsHelpOpen] = useState(false);
+  const [missionPageActive, setMissionPageActive] = useState(0);
+  const [missionPageMissed, setMissionPageMissed] = useState(0);
+  const [missionPageDone, setMissionPageDone] = useState(0);
+  const [notePage, setNotePage] = useState(0);
 
   const [nSearch, setNSearch] = useState("");
   const [nSort, setNSort] = useState<DeckSortDir>("desc");
@@ -418,10 +524,6 @@ export function MissionCommandDeckCard({
   const [timeEdit, setTimeEdit] = useState<DeckTimeEditTarget | null>(null);
   const [timeEditDate, setTimeEditDate] = useState("");
   const [timeEditTime, setTimeEditTime] = useState("");
-
-  const [deckAlarmMutedUi, setDeckAlarmMutedUi] = useState(false);
-  const [deckAlarmHasCustomUi, setDeckAlarmHasCustomUi] = useState(false);
-  const deckAlarmFileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollComposerIntoView = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -603,11 +705,6 @@ export function MissionCommandDeckCard({
   }, []);
 
   useEffect(() => {
-    setDeckAlarmMutedUi(isDeckAlarmMuted());
-    setDeckAlarmHasCustomUi(!!getDeckAlarmCustomDataUrl());
-  }, []);
-
-  useEffect(() => {
     if (!timeEdit) return;
     if (timeEdit.kind === "reminder") {
       setTimeEditDate(timeEdit.date);
@@ -721,21 +818,6 @@ export function MissionCommandDeckCard({
     },
     [canEditReminders, clearMissionToastKeysForId, patchMission]
   );
-
-  const onDeckAlarmFileChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    e.target.value = "";
-    if (!f) return;
-    try {
-      const data = await readAudioFileAsDataUrl(f);
-      setDeckAlarmCustomDataUrl(data);
-      setDeckAlarmHasCustomUi(true);
-      await unlockDeckAlarmAudio();
-      playDeckAlarmSound();
-    } catch (err) {
-      setPortalError(err instanceof Error ? err.message : "Could not load audio");
-    }
-  }, []);
 
   const saveTimeEdit = useCallback(async () => {
     if (!timeEdit) return;
@@ -994,6 +1076,42 @@ export function MissionCommandDeckCard({
     return [...rows].sort((a, b) => sortByTarget(a, b, mSortC));
   }, [completedMissions, mSearchC, mSortC, browseDate]);
 
+  useEffect(() => {
+    setMissionPageActive(0);
+    setMissionPageMissed(0);
+    setMissionPageDone(0);
+  }, [browseDate, mSearchA, mSearchM, mSearchC, mSortA, mSortM, mSortC]);
+
+  useEffect(() => {
+    const maxP = Math.max(0, Math.ceil(filteredActiveMissions.length / MISSION_PAGE_SIZE) - 1);
+    setMissionPageActive((p) => Math.min(p, maxP));
+  }, [filteredActiveMissions.length]);
+
+  useEffect(() => {
+    const maxP = Math.max(0, Math.ceil(filteredMissedMissions.length / MISSION_PAGE_SIZE) - 1);
+    setMissionPageMissed((p) => Math.min(p, maxP));
+  }, [filteredMissedMissions.length]);
+
+  useEffect(() => {
+    const maxP = Math.max(0, Math.ceil(filteredCompletedMissions.length / MISSION_PAGE_SIZE) - 1);
+    setMissionPageDone((p) => Math.min(p, maxP));
+  }, [filteredCompletedMissions.length]);
+
+  const pagedActiveMissions = useMemo(() => {
+    const start = missionPageActive * MISSION_PAGE_SIZE;
+    return filteredActiveMissions.slice(start, start + MISSION_PAGE_SIZE);
+  }, [filteredActiveMissions, missionPageActive]);
+
+  const pagedMissedMissions = useMemo(() => {
+    const start = missionPageMissed * MISSION_PAGE_SIZE;
+    return filteredMissedMissions.slice(start, start + MISSION_PAGE_SIZE);
+  }, [filteredMissedMissions, missionPageMissed]);
+
+  const pagedCompletedMissions = useMemo(() => {
+    const start = missionPageDone * MISSION_PAGE_SIZE;
+    return filteredCompletedMissions.slice(start, start + MISSION_PAGE_SIZE);
+  }, [filteredCompletedMissions, missionPageDone]);
+
   const filteredNotes = useMemo(() => {
     let rows = filterBySearch(notes, (n) => `${n.title} ${n.body}`, nSearch);
     if (browseDate) rows = rows.filter((n) => noteLocalDay(n.createdAt) === browseDate);
@@ -1003,16 +1121,26 @@ export function MissionCommandDeckCard({
     });
   }, [notes, nSearch, nSort, browseDate]);
 
-  const optionNotes = notesExpanded ? filteredNotes : filteredNotes.slice(0, 5);
-  const notesRemaining = Math.max(0, filteredNotes.length - 5);
+  useEffect(() => {
+    setNotePage(0);
+  }, [browseDate, nSearch, nSort]);
 
-  const selectedNote =
-    filteredNotes.find((n) => n.id === selectedNoteId) ?? optionNotes[0] ?? null;
+  useEffect(() => {
+    const maxP = Math.max(0, Math.ceil(filteredNotes.length / MISSION_PAGE_SIZE) - 1);
+    setNotePage((p) => Math.min(p, maxP));
+  }, [filteredNotes.length]);
+
+  const pagedNotes = useMemo(() => {
+    const start = notePage * MISSION_PAGE_SIZE;
+    return filteredNotes.slice(start, start + MISSION_PAGE_SIZE);
+  }, [filteredNotes, notePage]);
 
   useEffect(() => {
     if (!selectedNoteId) return;
     if (!filteredNotes.some((n) => n.id === selectedNoteId)) setSelectedNoteId(null);
   }, [filteredNotes, selectedNoteId]);
+
+  const selectedNote = filteredNotes.find((n) => n.id === selectedNoteId) ?? filteredNotes[0] ?? null;
 
   const addMission = async () => {
     const title = mTitle.trim();
@@ -1072,13 +1200,15 @@ export function MissionCommandDeckCard({
     setNBody("");
   };
 
-  const notesLabel =
+  const missionsFormLabel =
     "text-[11px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)] md:text-[12px]";
-  const notesInput =
+  const missionsFormInput =
     "mt-1.5 w-full rounded-lg border-[rgba(255,215,0,0.46)] bg-[#0a0906] px-3 py-2.5 text-[15px] font-medium leading-relaxed text-[rgba(255,248,220,0.96)] outline-none placeholder:text-[rgba(255,230,150,0.22)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,215,0,0.07)] focus:border-[rgba(255,230,120,0.78)] focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,215,0,0.28),0_0_24px_rgba(255,200,0,0.2)] focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3";
 
-  const missionsLabel = notesLabel;
-  const missionsInput = notesInput;
+  const notesFormLabel =
+    "text-[11px] font-extrabold uppercase tracking-[0.16em] text-fuchsia-200/95 md:text-[12px]";
+  const notesFormInput =
+    "mt-1.5 w-full rounded-lg border-fuchsia-400/42 bg-[#0c0610] px-3 py-2.5 text-[15px] font-medium leading-relaxed text-fuchsia-50/95 outline-none placeholder:text-fuchsia-200/25 shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(217,70,239,0.08)] focus:border-fuchsia-300/78 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(217,70,239,0.28),0_0_24px_rgba(192,132,252,0.18)] focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3";
 
   return (
     <Card
@@ -1118,70 +1248,120 @@ export function MissionCommandDeckCard({
       </div>
 
       <div className="flex w-full max-w-none min-w-0 flex-col gap-6 min-[1400px]:gap-8 lg:gap-7 xl:gap-8">
-        {/* 1 — Missions (shell gold, matches navbar / sidebar) */}
-        <div className={DECK_MISSIONS}>
-          <DeckQuarterGlow />
-          <div className="relative z-[1]">
-          <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
-            Missions
-          </div>
-          <p className="mt-2 max-w-prose text-[15px] font-normal leading-relaxed text-neutral-200/90 md:text-[15px] md:leading-[1.55]">
-            Create a mission with a target date and time. Reminders fire automatically at 1 week, 3 days, 24 hours, 12 hours,
-            6 hours, 1 hour, and 30 minutes before due. Track active, missed, and completed missions below.
-          </p>
+        {/* 1 — Missions: multi-neon shell + paged buckets */}
+        <div
+          className="relative w-full min-w-0 shrink-0 overflow-hidden rounded-xl p-[2px] shadow-[0_0_48px_rgba(34,211,238,0.14),0_0_72px_rgba(251,191,36,0.1),0_0_88px_rgba(192,132,252,0.12)]"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(34,211,238,0.55), rgba(251,191,36,0.42), rgba(192,132,252,0.48))"
+          }}
+        >
+          <div className="relative min-w-0 overflow-hidden rounded-[11px] border border-white/10 bg-[#060606]/88 p-[var(--fluid-deck-p)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-[10px]">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.95] [background:radial-gradient(620px_280px_at_14%_0%,rgba(34,211,238,0.12),transparent_58%),radial-gradient(560px_260px_at_92%_6%,rgba(251,191,36,0.1),transparent_54%),radial-gradient(480px_220px_at_50%_100%,rgba(192,132,252,0.09),transparent_52%)]"
+              aria-hidden
+            />
+            <div className="relative z-[1]">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
+                  Missions
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-[rgba(255,215,0,0.48)] bg-black/55 text-[color:var(--goals-milestones-gold)] shadow-[0_0_16px_rgba(255,200,0,0.22),inset_0_1px_0_rgba(255,235,160,0.08)] transition hover:border-[rgba(255,235,160,0.72)] hover:text-[rgba(255,248,220,0.98)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                  aria-label={missionsHelpOpen ? "Hide missions info" : "What are missions?"}
+                  aria-expanded={missionsHelpOpen}
+                  aria-controls="missions-help-inline"
+                  onClick={() => setMissionsHelpOpen((v) => !v)}
+                >
+                  <HelpCircle className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
 
-          {useApiDeck && !canDeckWrite ? (
-            <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">
-              Read-only: your role can view missions but not edit.
-            </p>
-          ) : null}
+              {missionsHelpOpen ? (
+                <div
+                  id="missions-help-inline"
+                  className="mt-3 rounded-xl border border-[rgba(255,215,0,0.35)] bg-black/55 px-4 py-4 shadow-[0_0_24px_rgba(255,200,0,0.12),inset_0_1px_0_rgba(255,215,0,0.06)] sm:px-5 sm:py-5"
+                  role="region"
+                  aria-labelledby="missions-help-title"
+                >
+                  <h3
+                    id="missions-help-title"
+                    className="text-[11px] font-black uppercase tracking-[0.18em] text-[color:var(--goals-milestones-gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.28)] md:text-xs"
+                  >
+                    Missions — straight talk
+                  </h3>
+                  <div className="mt-3 space-y-3 text-[14px] font-medium leading-relaxed text-neutral-200/92 md:text-[15px] md:leading-relaxed">
+                    <p>
+                      These are <span className="text-[color:var(--goals-milestones-gold)]/95">your</span> custom
+                      missions — not a points farm, not a fake leaderboard, not corporate &quot;wellness&quot; theater.
+                      Nobody scores you here.
+                    </p>
+                    <p>
+                      Name the hit. Lock a deadline. The deck pings you on the way in — 1 week out, 3 days, 24h, down
+                      to 30 minutes — so you move <span className="text-amber-200/95">before</span> the clock eats you,
+                      not after.
+                    </p>
+                    <p>
+                      Active, missed, done: three piles, zero fluff. You decide what matters — ship the build, run the
+                      block, kill the debt, close the loop. Set the line. Hold it.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
 
-          <div id="deck-mission-compose" className={FORM_MISSIONS}>
-            <div>
-              <label className={missionsLabel}>Mission title</label>
-              <input
-                ref={missionTitleInputRef}
-                className={missionsInput}
-                value={mTitle}
-                onChange={(e) => setMTitle(e.target.value)}
-                placeholder="e.g. Deep work — proposal"
-                disabled={useApiDeck && !canDeckWrite}
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <DeckDateField
-                id="mission-target-date"
-                label="Target date"
-                labelClassName={missionsLabel}
-                value={mDate}
-                onValueChange={setMDate}
-                disabled={useApiDeck && !canDeckWrite}
-                tone="gold"
-              />
-              <DeckTimeField
-                id="mission-target-time"
-                label="Target time"
-                labelClassName={missionsLabel}
-                value={mTime}
-                onValueChange={setMTime}
-                disabled={useApiDeck && !canDeckWrite}
-                tone="gold"
-              />
-            </div>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.98 }}
-              onClick={() => void addMission()}
-              disabled={useApiDeck && !canDeckWrite}
-              className="w-full rounded-lg border-[rgba(255,215,0,0.58)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.15em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
-            >
-              Create mission
-            </motion.button>
-          </div>
+              {useApiDeck && !canDeckWrite ? (
+                <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">
+                  Read-only: your role can view missions but not edit.
+                </p>
+              ) : null}
+
+              <div id="deck-mission-compose" className={FORM_MISSIONS}>
+                <div>
+                  <label className={missionsFormLabel}>Mission title</label>
+                  <input
+                    ref={missionTitleInputRef}
+                    className={missionsFormInput}
+                    value={mTitle}
+                    onChange={(e) => setMTitle(e.target.value)}
+                    placeholder="e.g. Deep work — proposal"
+                    disabled={useApiDeck && !canDeckWrite}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <DeckDateField
+                    id="mission-target-date"
+                    label="Target date"
+                    labelClassName={missionsFormLabel}
+                    value={mDate}
+                    onValueChange={setMDate}
+                    disabled={useApiDeck && !canDeckWrite}
+                    tone="gold"
+                  />
+                  <DeckTimeField
+                    id="mission-target-time"
+                    label="Target time"
+                    labelClassName={missionsFormLabel}
+                    value={mTime}
+                    onValueChange={setMTime}
+                    disabled={useApiDeck && !canDeckWrite}
+                    tone="gold"
+                  />
+                </div>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => void addMission()}
+                  disabled={useApiDeck && !canDeckWrite}
+                  className="w-full rounded-lg border-[rgba(255,215,0,0.58)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.15em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
+                >
+                  Create mission
+                </motion.button>
+              </div>
 
           <div className="mt-5 grid w-full min-w-0 grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
-            <div className={DECK_SUBPANEL}>
-              <div className={DECK_SUBPANEL_TITLE}>Active missions</div>
+            <div className={DECK_SUBPANEL_ACTIVE}>
+              <div className={DECK_TITLE_ACTIVE}>Active missions</div>
               <DeckListToolbar
                 tone="gold"
                 search={mSearchA}
@@ -1191,25 +1371,32 @@ export function MissionCommandDeckCard({
                 onSortDirToggle={() => setMSortA((d) => (d === "desc" ? "asc" : "desc"))}
                 placeholder="Search active…"
               />
-              <div className={cn(DECK_LIST_INNER_BASE, SCROLL_GOLD)}>
+              <div
+                className={missionListScrollClass(
+                  filteredActiveMissions.length === 0 ? 0 : pagedActiveMissions.length,
+                  SCROLL_GOLD
+                )}
+              >
                 {filteredActiveMissions.length === 0 ? (
                   browseDate ? (
                     <DeckEmptyCta
                       message="No active missions on this day."
                       actionLabel="Show all days"
                       onAction={() => setBrowseDate(null)}
-                      accentClass="border-[rgba(255,215,0,0.28)] bg-black/35"
+                      accentClass="border-[rgba(255,215,0,0.35)] bg-black/40"
+                      ctaTone="gold"
                     />
                   ) : (
                     <DeckEmptyCta
                       message="Nothing in the active queue yet."
                       actionLabel="Create a mission"
                       onAction={focusMissionComposer}
-                      accentClass="border-[rgba(255,215,0,0.28)] bg-black/35"
+                      accentClass="border-[rgba(255,215,0,0.35)] bg-black/40"
+                      ctaTone="gold"
                     />
                   )
                 ) : (
-                  filteredActiveMissions.map((m) => {
+                  pagedActiveMissions.map((m) => {
                     const dueTs = new Date(m.targetIso).getTime();
                     const urgent = Number.isFinite(dueTs) && dueTs - Date.now() < 36e5 && dueTs > Date.now();
                     return (
@@ -1259,7 +1446,7 @@ export function MissionCommandDeckCard({
                                 type="button"
                                 className={cn(
                                   DECK_ROW_BTN_SECONDARY,
-                                  "border-[rgba(255,215,0,0.35)] bg-black/45 text-[rgba(255,248,220,0.88)] shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-[rgba(255,215,0,0.55)] hover:bg-black/55 focus-visible:ring-[rgba(255,215,0,0.45)]"
+                                  "border-rose-400/38 bg-black/45 text-rose-100/88 shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-rose-300/55 hover:bg-black/55 focus-visible:ring-rose-400/45"
                                 )}
                                 onClick={() => void patchMission(m.id, { status: "missed" })}
                               >
@@ -1273,11 +1460,17 @@ export function MissionCommandDeckCard({
                   })
                 )}
               </div>
+              <MissionBucketPagination
+                page={missionPageActive}
+                total={filteredActiveMissions.length}
+                onPageChange={setMissionPageActive}
+                accent="gold"
+              />
             </div>
-            <div className={DECK_SUBPANEL}>
-              <div className={DECK_SUBPANEL_TITLE}>Missed missions</div>
+            <div className={DECK_SUBPANEL_MISSED}>
+              <div className={DECK_TITLE_MISSED}>Missed missions</div>
               <DeckListToolbar
-                tone="gold"
+                tone="rose"
                 search={mSearchM}
                 onSearchChange={setMSearchM}
                 sortLabel="Due"
@@ -1285,28 +1478,35 @@ export function MissionCommandDeckCard({
                 onSortDirToggle={() => setMSortM((d) => (d === "desc" ? "asc" : "desc"))}
                 placeholder="Search missed…"
               />
-              <div className={cn(DECK_LIST_INNER_BASE, SCROLL_GOLD)}>
+              <div
+                className={missionListScrollClass(
+                  filteredMissedMissions.length === 0 ? 0 : pagedMissedMissions.length,
+                  SCROLL_ROSE
+                )}
+              >
                 {filteredMissedMissions.length === 0 ? (
                   browseDate ? (
                     <DeckEmptyCta
                       message="No missed missions on this day."
                       actionLabel="Show all days"
                       onAction={() => setBrowseDate(null)}
-                      accentClass="border-[rgba(255,215,0,0.28)] bg-black/35"
+                      accentClass="border-rose-400/38 bg-black/40"
+                      ctaTone="rose"
                     />
                   ) : (
                     <DeckEmptyCta
                       message="No missed missions in the deck."
                       actionLabel="Create a mission"
                       onAction={focusMissionComposer}
-                      accentClass="border-[rgba(255,215,0,0.28)] bg-black/35"
+                      accentClass="border-rose-400/38 bg-black/40"
+                      ctaTone="rose"
                     />
                   )
                 ) : (
-                  filteredMissedMissions.map((m) => (
+                  pagedMissedMissions.map((m) => (
                     <DeckListItem
                       key={m.id}
-                      tone="gold"
+                      tone="rose"
                       title={m.title}
                       badge={<MissionStatusBadge status="missed" />}
                       subtitle={
@@ -1336,7 +1536,7 @@ export function MissionCommandDeckCard({
                               type="button"
                               className={cn(
                                 DECK_ROW_BTN_PRIMARY,
-                                "border-[rgba(255,215,0,0.48)] bg-[rgba(255,215,0,0.14)] text-[color:var(--goals-milestones-gold)] shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-[rgba(255,235,160,0.72)] focus-visible:ring-[rgba(255,215,0,0.55)]"
+                                "border-rose-400/48 bg-rose-500/14 text-rose-100 shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-rose-300/72 hover:bg-rose-500/22 focus-visible:ring-rose-400/55"
                               )}
                               onClick={() => void patchMission(m.id, { status: "done" })}
                             >
@@ -1346,7 +1546,7 @@ export function MissionCommandDeckCard({
                               type="button"
                               className={cn(
                                 DECK_ROW_BTN_SECONDARY,
-                                "border-[rgba(255,215,0,0.38)] bg-black/45 text-[rgba(255,248,220,0.9)] shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-[rgba(255,215,0,0.58)] hover:bg-black/55 focus-visible:ring-[rgba(255,215,0,0.45)]"
+                                "border-[rgba(255,215,0,0.38)] bg-black/45 text-[rgba(255,248,220,0.88)] shadow-[0_2px_0_rgba(0,0,0,0.35)] hover:border-[rgba(255,215,0,0.55)] hover:bg-black/55 focus-visible:ring-[rgba(255,215,0,0.45)]"
                               )}
                               onClick={() => void patchMission(m.id, { status: "active" })}
                             >
@@ -1359,12 +1559,18 @@ export function MissionCommandDeckCard({
                   ))
                 )}
               </div>
+              <MissionBucketPagination
+                page={missionPageMissed}
+                total={filteredMissedMissions.length}
+                onPageChange={setMissionPageMissed}
+                accent="rose"
+              />
             </div>
           </div>
 
           <div className="mt-5 w-full min-w-0">
-            <div className={DECK_SUBPANEL}>
-              <div className={DECK_SUBPANEL_TITLE}>Completed missions</div>
+            <div className={DECK_SUBPANEL_DONE}>
+              <div className={DECK_TITLE_DONE}>Completed missions</div>
               <DeckListToolbar
                 tone="emerald"
                 search={mSearchC}
@@ -1374,7 +1580,12 @@ export function MissionCommandDeckCard({
                 onSortDirToggle={() => setMSortC((d) => (d === "desc" ? "asc" : "desc"))}
                 placeholder="Search completed…"
               />
-              <div className={cn(DECK_LIST_INNER_BASE, SCROLL_GOLD)}>
+              <div
+                className={missionListScrollClass(
+                  filteredCompletedMissions.length === 0 ? 0 : pagedCompletedMissions.length,
+                  SCROLL_EMERALD
+                )}
+              >
                 {filteredCompletedMissions.length === 0 ? (
                   browseDate ? (
                     <DeckEmptyCta
@@ -1382,6 +1593,7 @@ export function MissionCommandDeckCard({
                       actionLabel="Show all days"
                       onAction={() => setBrowseDate(null)}
                       accentClass="border-emerald-500/28 bg-black/35"
+                      ctaTone="emerald"
                     />
                   ) : (
                     <DeckEmptyCta
@@ -1389,10 +1601,11 @@ export function MissionCommandDeckCard({
                       actionLabel="Create a mission"
                       onAction={focusMissionComposer}
                       accentClass="border-emerald-500/28 bg-black/35"
+                      ctaTone="emerald"
                     />
                   )
                 ) : (
-                  filteredCompletedMissions.map((m) => (
+                  pagedCompletedMissions.map((m) => (
                     <DeckListItem
                       key={m.id}
                       tone="emerald"
@@ -1441,276 +1654,223 @@ export function MissionCommandDeckCard({
                   ))
                 )}
               </div>
+              <MissionBucketPagination
+                page={missionPageDone}
+                total={filteredCompletedMissions.length}
+                onPageChange={setMissionPageDone}
+                accent="emerald"
+              />
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-[rgba(255,215,0,0.22)] bg-black/45 px-3 py-2.5 text-[11px] font-medium text-[rgba(255,248,220,0.88)] shadow-[inset_0_1px_0_rgba(255,215,0,0.06)]">
-            <span className="font-black uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/95">
-              Due alarm sound
-            </span>
-            <label className="inline-flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-[rgba(255,215,0,0.45)] bg-black/60 text-[color:var(--goals-milestones-gold)] focus:ring-[rgba(255,215,0,0.45)]"
-                checked={deckAlarmMutedUi}
-                onChange={(e) => {
-                  const muted = e.target.checked;
-                  setDeckAlarmMuted(muted);
-                  setDeckAlarmMutedUi(muted);
-                }}
-              />
-              <span>Mute</span>
-            </label>
-            <input
-              ref={deckAlarmFileInputRef}
-              type="file"
-              accept="audio/*"
-              className="sr-only"
-              aria-label="Upload custom alarm sound"
-              onChange={onDeckAlarmFileChange}
-            />
-            <button
-              type="button"
-              className="rounded-md border border-[rgba(255,215,0,0.38)] bg-black/40 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,215,0,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.45)]"
-              onClick={() => deckAlarmFileInputRef.current?.click()}
-            >
-              Upload tone
-            </button>
-            {deckAlarmHasCustomUi ? (
-              <button
-                type="button"
-                className="rounded-md border border-white/18 bg-black/50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/85 hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-                onClick={() => {
-                  clearDeckAlarmCustom();
-                  setDeckAlarmHasCustomUi(false);
-                }}
-              >
-                Use default beep
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className="rounded-md border border-[rgba(255,215,0,0.35)] bg-black/45 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[rgba(255,248,220,0.9)] hover:border-[rgba(255,215,0,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.45)]"
-              onClick={() => {
-                void unlockDeckAlarmAudio();
-                playDeckAlarmSound();
-              }}
-            >
-              Test
-            </button>
-            <span className="w-full text-[10px] font-normal leading-snug text-neutral-400/95 sm:w-auto">
-              Default: HUD beep. Browsers may require a click or keypress on the page before due alarms can play.
-            </span>
           </div>
           </div>
         </div>
 
-        {/* 2 — Notes (full width, ledger gold deck) */}
-        <div className={DECK_NOTES}>
-          <DeckGlowNotes />
-          <div className="relative z-[1]">
-          <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
-            Notes
-          </div>
-          <p className="mt-2 max-w-prose text-[15px] font-normal leading-relaxed text-neutral-200/90 md:leading-[1.55]">
-            Capture intel below, then open it from the library—title stays in the list so the reader stays clean.
-          </p>
+        <div
+          className={DECK_NOTES_OUTER}
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(217,70,239,0.48), rgba(255,215,0,0.38), rgba(52,211,153,0.44))"
+          }}
+        >
+          <div className={DECK_NOTES_INNER}>
+            <DeckGlowNotes />
+            <div className="relative z-[1]">
+              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
+                Notes
+              </div>
+              <p className="mt-2 max-w-prose text-[15px] font-normal leading-relaxed text-neutral-200/90 md:leading-[1.55]">
+                Capture intel below, then open it from the library — titles stay in the list; the reader shows body
+                only. Library paginates 5 notes per page.
+              </p>
 
-          {useApiDeck && !canDeckWrite ? (
-            <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">Read-only notes for your role.</p>
-          ) : null}
+              {useApiDeck && !canDeckWrite ? (
+                <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">Read-only notes for your role.</p>
+              ) : null}
 
-          <div id="deck-note-compose" className={FORM_NOTES}>
-            <div>
-              <label className={notesLabel}>Note title</label>
-              <input
-                ref={noteTitleInputRef}
-                className={notesInput}
-                value={nTitle}
-                onChange={(e) => setNTitle(e.target.value)}
-                placeholder="Short label"
-                disabled={useApiDeck && !canDeckWrite}
-              />
-            </div>
-            <div>
-              <label className={notesLabel}>Note body</label>
-              <textarea
-                className={cn(notesInput, "min-h-[72px] resize-y")}
-                value={nBody}
-                onChange={(e) => setNBody(e.target.value)}
-                placeholder="Intel, ideas, links…"
-                disabled={useApiDeck && !canDeckWrite}
-              />
-            </div>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.98 }}
-              onClick={() => void addNote()}
-              disabled={useApiDeck && !canDeckWrite}
-              className="w-full rounded-lg border-[rgba(255,215,0,0.58)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
-            >
-              Save note
-            </motion.button>
-          </div>
-
-          <div className="mt-5 w-full min-w-0">
-            <DeckListToolbar
-              tone="gold"
-              search={nSearch}
-              onSearchChange={setNSearch}
-              sortLabel="Created"
-              sortDir={nSort}
-              onSortDirToggle={() => setNSort((d) => (d === "desc" ? "asc" : "desc"))}
-              placeholder="Search notes…"
-            />
-
-            {/* Single merged library + reader (no duplicate title in preview) */}
-            <div
-              className={cn(
-                "mt-3 grid min-h-[min(52vh,420px)] w-full min-w-0 overflow-hidden rounded-xl border-[rgba(255,215,0,0.48)] bg-gradient-to-br from-black/80 via-[#070604]/95 to-black/90 shadow-[0_0_0_1px_rgba(255,215,0,0.18),0_0_40px_rgba(255,200,0,0.14),0_0_80px_rgba(255,180,0,0.06),inset_0_1px_0_rgba(255,235,160,0.06)]",
-                "grid-cols-1 lg:grid-cols-[minmax(240px,34%)_1fr] lg:min-h-[min(44vh,480px)]"
-              )}
-              role="region"
-              aria-label="Note library and reader"
-            >
-              {/* Library column */}
-              <div className="flex min-h-0 min-w-0 flex-col border-b border-[rgba(255,215,0,0.22)] lg:border-b-0 lg:border-r">
-                <div className="shrink-0 border-b border-[rgba(255,215,0,0.18)] bg-black/35 px-3 py-2.5 md:px-4">
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--goals-milestones-gold)]/90">
-                    Note library
-                  </div>
-                  <p className="mt-0.5 text-[12px] font-normal leading-snug text-neutral-300/88">
-                    Tap a row—the reader shows body only, no repeated heading.
-                  </p>
+              <div id="deck-note-compose" className={FORM_NOTES}>
+                <div>
+                  <label className={notesFormLabel}>Note title</label>
+                  <input
+                    ref={noteTitleInputRef}
+                    className={notesFormInput}
+                    value={nTitle}
+                    onChange={(e) => setNTitle(e.target.value)}
+                    placeholder="Short label"
+                    disabled={useApiDeck && !canDeckWrite}
+                  />
                 </div>
-                <div
-                  role="listbox"
-                  aria-label="Saved notes"
-                  className={cn(
-                    "flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2.5 md:p-3",
-                    SCROLL_GOLD
-                  )}
+                <div>
+                  <label className={notesFormLabel}>Note body</label>
+                  <textarea
+                    className={cn(notesFormInput, "min-h-[72px] resize-y")}
+                    value={nBody}
+                    onChange={(e) => setNBody(e.target.value)}
+                    placeholder="Intel, ideas, links…"
+                    disabled={useApiDeck && !canDeckWrite}
+                  />
+                </div>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => void addNote()}
+                  disabled={useApiDeck && !canDeckWrite}
+                  className="w-full rounded-lg border-fuchsia-400/55 bg-fuchsia-500/12 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(217,70,239,0.28),0_8px_32px_rgba(192,132,252,0.18),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-fuchsia-300/78 hover:bg-fuchsia-500/18 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
                 >
-                  {optionNotes.length === 0 ? (
-                    browseDate ? (
-                      <DeckEmptyCta
-                        message="No notes created on this day."
-                        actionLabel="Show all days"
-                        onAction={() => setBrowseDate(null)}
-                        accentClass="border-[rgba(255,215,0,0.28)] bg-black/30"
-                      />
-                    ) : nSearch.trim() ? (
-                      <div className="rounded-lg border border-dashed border-[rgba(255,215,0,0.28)] bg-black/35 px-4 py-8 text-center text-[14px] font-medium leading-relaxed text-neutral-200/88">
-                        No notes match this search.
-                        <button
-                          type="button"
-                          onClick={() => setNSearch("")}
-                          className="mt-4 inline-flex min-h-[44px] w-full max-w-[14rem] items-center justify-center rounded-lg border border-white/18 bg-black/45 text-[11px] font-black uppercase tracking-[0.16em] text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
-                        >
-                          Clear search
-                        </button>
-                      </div>
-                    ) : (
-                      <DeckEmptyCta
-                        message="No notes saved yet."
-                        actionLabel="Write a note"
-                        onAction={focusNoteComposer}
-                        accentClass="border-[rgba(255,215,0,0.28)] bg-black/35"
-                      />
-                    )
-                  ) : (
-                    optionNotes.map((n) => {
-                      const active = selectedNote?.id === n.id;
-                      return (
-                        <button
-                          key={n.id}
-                          type="button"
-                          role="option"
-                          aria-selected={active}
-                          title={n.title}
-                          onClick={() => setSelectedNoteId(n.id)}
-                          className={cn(
-                            "min-h-[44px] w-full rounded-lg border px-3 py-2.5 text-left motion-safe:transition-[box-shadow,border-color,background-color,transform] motion-safe:duration-200 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-                            active
-                              ? "border-sky-400/55 bg-gradient-to-r from-sky-500/20 via-sky-500/12 to-transparent shadow-[inset_0_0_0_1px_rgba(56,189,248,0.35),0_0_24px_rgba(56,189,248,0.25),0_0_48px_rgba(14,165,233,0.12)]"
-                              : "border-[rgba(255,215,0,0.14)] bg-black/30 motion-safe:hover:-translate-y-px hover:border-[rgba(255,235,160,0.35)] hover:bg-black/45 hover:shadow-[0_0_18px_rgba(255,200,0,0.1)]"
-                          )}
-                        >
-                          <div className="line-clamp-2 text-[14px] font-bold leading-snug text-neutral-50">{n.title}</div>
-                          <div className="mt-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400/90">
-                            {new Date(n.createdAt).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric"
-                            })}
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
-                  {notesRemaining > 0 && !notesExpanded ? (
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => setNotesExpanded(true)}
-                      className="mt-1 min-h-[44px] w-full rounded-lg border-[rgba(255,215,0,0.42)] bg-black/5 py-2.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/92 shadow-[0_0_14px_rgba(255,200,0,0.12)] hover:border-[rgba(255,235,160,0.65)] hover:shadow-[0_0_22px_rgba(255,215,0,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
-                    >
-                      Load more ({notesRemaining})
-                    </motion.button>
-                  ) : null}
-                  {notesExpanded && filteredNotes.length > 5 ? (
-                    <button
-                      type="button"
-                      className="w-full py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[rgba(255,230,180,0.5)] underline hover:text-[color:var(--goals-milestones-gold)]/85"
-                      onClick={() => setNotesExpanded(false)}
-                    >
-                      Collapse to recent five
-                    </button>
-                  ) : null}
-                </div>
+                  Save note
+                </motion.button>
               </div>
 
-              {/* Reader column — body & meta only */}
-              <div className="flex min-h-0 min-w-0 flex-col bg-black/25 lg:bg-black/20">
-                <div className="shrink-0 border-b border-[rgba(255,215,0,0.15)] px-4 py-2.5 md:px-5">
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--goals-milestones-gold)]/75">
-                    Reader
-                  </div>
-                </div>
+              <div className="mt-6 w-full min-w-0">
+                <DeckListToolbar
+                  tone="fuchsia"
+                  search={nSearch}
+                  onSearchChange={setNSearch}
+                  sortLabel="Created"
+                  sortDir={nSort}
+                  onSortDirToggle={() => setNSort((d) => (d === "desc" ? "asc" : "desc"))}
+                  placeholder="Search notes…"
+                />
+
                 <div
-                  className={cn(
-                    "min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5",
-                    SCROLL_GOLD
-                  )}
+                  className="mt-3 grid min-h-0 w-full min-w-0 grid-cols-1 gap-3 lg:max-h-[min(58vh,640px)] lg:grid-cols-[minmax(240px,34%)_1fr]"
+                  role="region"
+                  aria-label="Note library and reader"
                 >
-                  {selectedNote ? (
-                    <div className="flex min-h-[12rem] flex-col pb-2">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[rgba(255,215,0,0.12)] pb-3 font-mono text-[12px] text-neutral-300/88">
-                        <span className="font-semibold text-[color:var(--goals-milestones-gold)]/88">
-                          {new Date(selectedNote.createdAt).toLocaleString()}
-                        </span>
-                        {selectedNote.body?.trim() ? (
-                          <span className="text-neutral-400/90">{selectedNote.body.trim().length} chars</span>
-                        ) : null}
+                  <div className={DECK_SUBPANEL_NOTES_LIB}>
+                    <div className="shrink-0 border-b border-fuchsia-500/25 bg-black/30 px-3 py-3 md:px-4">
+                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fuchsia-200/95">
+                        Note library
                       </div>
-                      <div className="mt-4 whitespace-pre-wrap text-[15px] font-normal leading-[1.65] text-neutral-100/92 md:text-[16px] md:leading-relaxed">
-                        {selectedNote.body?.trim()
-                          ? selectedNote.body
-                          : "No body on this note—titles live in the library list so this space stays for long-form intel."}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[rgba(255,215,0,0.2)] bg-black/20 px-4 py-10 text-center">
-                      <p className="text-[14px] font-medium text-neutral-200/88">Nothing selected</p>
-                      <p className="max-w-sm text-[13px] font-normal leading-relaxed text-neutral-400/88">
-                        Choose a note in the library, or create one with the form above.
+                      <p className="mt-1 text-[12px] font-normal leading-snug text-neutral-300/90">
+                        Tap a row — reader opens on the right. Prev / Next when you have more than five.
                       </p>
                     </div>
-                  )}
+                    <div
+                      role="listbox"
+                      aria-label="Saved notes"
+                      className={cn(
+                        "flex min-h-0 flex-1 flex-col gap-2 px-2.5 pb-3 pt-2 md:px-3",
+                        missionListScrollClass(pagedNotes.length === 0 ? 0 : pagedNotes.length, SCROLL_FUCHSIA)
+                      )}
+                    >
+                      {filteredNotes.length === 0 ? (
+                        browseDate ? (
+                          <DeckEmptyCta
+                            message="No notes created on this day."
+                            actionLabel="Show all days"
+                            onAction={() => setBrowseDate(null)}
+                            accentClass="border-fuchsia-400/35 bg-black/35"
+                            ctaTone="gold"
+                          />
+                        ) : nSearch.trim() ? (
+                          <div className="rounded-lg border border-dashed border-fuchsia-400/35 bg-black/35 px-4 py-8 text-center">
+                            <p className="text-[14px] font-medium leading-relaxed text-neutral-200/92">
+                              No notes match this search.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setNSearch("")}
+                              className="mt-4 inline-flex min-h-[44px] w-full max-w-[14rem] items-center justify-center rounded-lg border border-fuchsia-400/45 bg-black/50 text-[11px] font-semibold text-fuchsia-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                            >
+                              Clear search
+                            </button>
+                          </div>
+                        ) : (
+                          <DeckEmptyCta
+                            message="No notes saved yet."
+                            actionLabel="Write a note"
+                            onAction={focusNoteComposer}
+                            accentClass="border-fuchsia-400/35 bg-black/35"
+                            ctaTone="gold"
+                          />
+                        )
+                      ) : (
+                        pagedNotes.map((n) => {
+                          const active = selectedNote?.id === n.id;
+                          return (
+                            <button
+                              key={n.id}
+                              type="button"
+                              role="option"
+                              aria-selected={active}
+                              title={n.title}
+                              onClick={() => setSelectedNoteId(n.id)}
+                              className={cn(
+                                "min-h-[44px] w-full rounded-lg border px-3 py-2.5 text-left motion-safe:transition-[box-shadow,border-color,background-color,transform] motion-safe:duration-200 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+                                active
+                                  ? "border-fuchsia-400/55 bg-gradient-to-r from-fuchsia-500/22 via-fuchsia-500/12 to-transparent shadow-[inset_0_0_0_1px_rgba(217,70,239,0.35),0_0_22px_rgba(192,132,252,0.2)]"
+                                  : "border-fuchsia-500/20 bg-black/25 motion-safe:hover:-translate-y-px hover:border-fuchsia-400/40 hover:bg-black/40"
+                              )}
+                            >
+                              <div className="line-clamp-2 text-[14px] font-semibold leading-snug text-neutral-50">
+                                {n.title}
+                              </div>
+                              <div className="mt-1 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400/90">
+                                {new Date(n.createdAt).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric"
+                                })}
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                    <div className="border-t border-fuchsia-500/20 px-2.5 pb-3 pt-1 md:px-3">
+                      <MissionBucketPagination
+                        page={notePage}
+                        total={filteredNotes.length}
+                        onPageChange={setNotePage}
+                        accent="fuchsia"
+                      />
+                    </div>
+                  </div>
+
+                  <div className={DECK_SUBPANEL_NOTES_READER}>
+                    <div className="shrink-0 border-b border-emerald-500/25 bg-black/25 px-4 py-3 md:px-5">
+                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/90">
+                        Reader
+                      </div>
+                    </div>
+                    <div
+                      className={cn(
+                        "min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 md:px-6 md:py-5",
+                        "max-h-[min(52vh,560px)]",
+                        SCROLL_EMERALD
+                      )}
+                    >
+                      {selectedNote ? (
+                        <div className="flex min-h-0 flex-col pb-2">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-emerald-500/20 pb-3 font-mono text-[12px] text-neutral-300/90">
+                            <span className="font-semibold text-emerald-200/90">
+                              {new Date(selectedNote.createdAt).toLocaleString()}
+                            </span>
+                            {selectedNote.body?.trim() ? (
+                              <span className="text-neutral-400/90">{selectedNote.body.trim().length} chars</span>
+                            ) : null}
+                          </div>
+                          <div className="mt-4 whitespace-pre-wrap text-[15px] font-normal leading-[1.65] text-neutral-100/92 md:text-[16px] md:leading-relaxed">
+                            {selectedNote.body?.trim()
+                              ? selectedNote.body
+                              : "No body on this note — titles live in the library list so this space stays for long-form intel."}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex min-h-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-500/30 bg-black/20 px-4 py-10 text-center">
+                          <p className="text-[14px] font-medium text-neutral-200/88">Nothing selected</p>
+                          <p className="max-w-sm text-[13px] font-normal leading-relaxed text-neutral-400/88">
+                            Choose a note in the library, or create one with the form above.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
 

@@ -1,35 +1,34 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { LayoutGrid } from "lucide-react";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 
-/** Matches `FloatingGoalsButton` gold HUD chrome — only while Goals & Milestones overlay is open. */
+/** Matches {@link FloatingGoalsButton} gold HUD chrome. */
 const FAB_SHELL =
   "cut-frame-sm hud-hover-glow glass-dark transition border border-[rgba(255,215,0,0.48)] bg-black/55 hover:border-[rgba(255,215,0,0.72)] hover:bg-black/62";
 
-export function FloatingQuickAccessInGoalsButton() {
-  const pathname = usePathname();
-  const { isGoalsPanelOpen } = useGoalsPanel();
+export function FloatingQuickAccessFab() {
+  const { openQuickAccessPanel, isGoalsPanelOpen, isQuickAccessPanelOpen, shellSectionKey } = useGoalsPanel();
+  const allowed = shellSectionKey != null && shellSectionKey !== "support" && shellSectionKey !== "settings";
 
-  if (pathname !== "/dashboard" || !isGoalsPanelOpen) return null;
+  if (!allowed || isGoalsPanelOpen || isQuickAccessPanelOpen) return null;
 
   return (
     <button
       type="button"
-      onClick={() => requestDashboardShellNav("quickaccess")}
+      onClick={() => openQuickAccessPanel()}
       className={cn(
         "group",
         FAB_SHELL,
-        "fixed z-[206] flex items-center justify-center text-left text-[color:var(--goals-milestones-gold)]",
+        "relative z-auto flex items-center justify-center text-left text-[color:var(--goals-milestones-gold)]",
         "motion-reduce:transition-none",
-        "bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] left-3 h-10 w-10 gap-0 p-0 sm:bottom-6 sm:left-5 sm:h-auto sm:w-auto sm:justify-start sm:gap-2.5 sm:px-3 sm:py-2.5",
-        "md:bottom-6 md:left-6 md:max-w-[calc(100vw-1.5rem)]",
+        "h-10 w-10 gap-0 p-0 sm:h-auto sm:w-auto sm:justify-start sm:gap-2.5 sm:px-3 sm:py-2.5",
+        "md:max-w-[calc(100vw-1.5rem)]",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
       )}
       aria-label="Open Quick Access"
+      aria-haspopup="dialog"
     >
       <span
         className={cn(

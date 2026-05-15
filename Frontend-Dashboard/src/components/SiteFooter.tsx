@@ -82,7 +82,7 @@ export default function SiteFooter({
               <Link href="/programs" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Programs</Link>
               <Link href="/quiz" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Syn Diagnosis</Link>
               <Link href="/affiliate" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate</Link>
-              <Link href="/affiliate-login" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate login</Link>
+              <Link href="/membership" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Membership</Link>
               <Link href="/login" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Join Now</Link>
             </nav>
             <div className="mt-3 flex items-center justify-center gap-3 md:justify-end">

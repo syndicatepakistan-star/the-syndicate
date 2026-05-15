@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { GoalId } from "./goalPathData";
-import { GOAL_OPTIONS } from "./goalPathData";
+import { GOAL_OPTIONS, PATH_CARD_SKIN } from "./goalPathData";
 import { cn } from "../dashboardPrimitives";
 
 export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelect: (g: GoalId) => void }) {
@@ -17,6 +17,7 @@ export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelec
       <div className="mt-[clamp(0.85rem,2vw+0.25rem,1.25rem)] grid grid-cols-1 fluid-path-grid-gap min-[480px]:grid-cols-2 lg:grid-cols-5">
         {GOAL_OPTIONS.map((g) => {
           const on = selected === g.id;
+          const skin = PATH_CARD_SKIN[g.id];
           return (
             <motion.button
               key={g.id}
@@ -25,18 +26,17 @@ export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelec
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                "compact-card-ui cut-frame-sm cyber-frame relative min-h-[clamp(2.75rem,6vw+1rem,3.5rem)] w-full min-w-0 border px-[clamp(0.65rem,1.8vw+0.2rem,1rem)] py-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] text-left transition-[box-shadow,border-color,background-color,color] duration-300",
-                "font-mono fluid-text-ui-xs font-black uppercase leading-tight tracking-[0.12em] sm:tracking-[0.14em]",
-                on
-                  ? "z-[1] border-[rgba(250,204,21,0.55)] bg-[linear-gradient(165deg,rgba(255,215,0,0.14),rgba(20,18,8,0.92))] text-[color:var(--gold)] shadow-[0_0_0_1px_rgba(250,204,21,0.35),0_0_28px_rgba(250,204,21,0.18),0_0_56px_rgba(250,204,21,0.08),inset_0_1px_0_rgba(255,255,255,0.08)]"
-                  : "border-[rgba(197,179,88,0.2)] bg-[linear-gradient(165deg,rgba(255,255,255,0.04),rgba(0,0,0,0.5))] text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:border-[rgba(250,204,21,0.38)] hover:text-white/92 hover:shadow-[0_0_20px_rgba(250,204,21,0.08)]"
+                "compact-card-ui cut-frame-sm cyber-frame relative min-h-[clamp(3.15rem,7vw+1.1rem,4.35rem)] w-full min-w-0 border px-[clamp(0.75rem,2vw+0.25rem,1.1rem)] py-[clamp(0.55rem,1.4vw+0.2rem,0.95rem)] text-left transition-[box-shadow,border-color,background-color,color,filter] duration-300",
+                "font-mono font-black uppercase leading-tight tracking-[0.12em] sm:tracking-[0.14em]",
+                "text-[clamp(0.72rem,0.5vw+0.58rem,0.9rem)] sm:text-[clamp(0.76rem,0.45vw+0.62rem,0.95rem)]",
+                on ? skin.active : skin.idle,
               )}
             >
               <span className="block truncate uppercase">{g.label}</span>
               <span
                 className={cn(
-                  "mt-1 block font-mono fluid-text-ui-xs font-bold uppercase tracking-[0.18em]",
-                  on ? "text-[color:var(--gold)]/75" : "text-white/45"
+                  "mt-1.5 block font-mono text-[clamp(0.62rem,0.42vw+0.5rem,0.78rem)] font-bold uppercase tracking-[0.18em] sm:text-[clamp(0.66rem,0.38vw+0.52rem,0.82rem)]",
+                  on ? skin.subOn : skin.subOff,
                 )}
               >
                 {g.short}

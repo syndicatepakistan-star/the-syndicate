@@ -119,6 +119,22 @@ export type RecentReferralsResponse = {
   items: RecentReferralItem[];
 };
 
+/** One row from GET /track/withdrawal-statement — your submitted payout requests only. */
+export type WithdrawalStatementItem = {
+  id: number;
+  requested_amount: string;
+  earnings_snapshot: string;
+  status: string;
+  created_at: string;
+  account_name: string;
+  affiliate_link_id: string;
+};
+
+export type WithdrawalStatementResponse = {
+  affiliate_id: string;
+  items: WithdrawalStatementItem[];
+};
+
 export type WithdrawalRequestPayload = {
   affiliate_id: string;
   bank_name: string;

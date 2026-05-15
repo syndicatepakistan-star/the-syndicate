@@ -119,6 +119,10 @@ export function CyberChamferFrame({
   innerClassName,
   children,
   decorSize = 'default',
+  /** Outer gradient ring thickness (Tailwind padding on the ring layer). Default matches legacy frames. */
+  ringPaddingClass = 'p-[3px]',
+  /** No gradient rail / outer glow; inner panel fills the chamfer (e.g. affiliate hero). */
+  hideOuterRing = false,
 }: {
   accent: CyberFrameAccent
   chamfer?: number
@@ -126,21 +130,28 @@ export function CyberChamferFrame({
   innerClassName?: string
   children: ReactNode
   decorSize?: 'default' | 'compact'
+  ringPaddingClass?: string
+  hideOuterRing?: boolean
 }) {
   const f = CYBER_FRAME[accent]
   const outerClip = chamferPolygon(chamfer)
-  const innerClip = chamferPolygon(Math.max(6, chamfer - 2))
+  const innerClip = hideOuterRing ? outerClip : chamferPolygon(Math.max(6, chamfer - 2))
   const compact = decorSize === 'compact'
+  const outerPad = hideOuterRing ? 'p-0' : ringPaddingClass
 
   return (
     <div
-      className={cx('relative overflow-hidden p-[3px]', className)}
-      style={{
-        background: f.ring,
-        backgroundSize: accent === 'separator' ? '200% 100%' : '180% 180%',
-        boxShadow: f.outerGlow,
-        clipPath: outerClip,
-      }}
+      className={cx('relative overflow-hidden', outerPad, className)}
+      style={
+        hideOuterRing
+          ? { clipPath: outerClip, background: 'transparent', boxShadow: 'none' }
+          : {
+              background: f.ring,
+              backgroundSize: accent === 'separator' ? '200% 100%' : '180% 180%',
+              boxShadow: f.outerGlow,
+              clipPath: outerClip,
+            }
+      }
     >
       <div
         className={cx('relative overflow-hidden backdrop-blur-[2px]', innerClassName)}

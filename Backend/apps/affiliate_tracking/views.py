@@ -858,6 +858,46 @@ def recent_referrals(request):
     return JsonResponse({"affiliate_id": affiliate_id, "items": items[:limit]})
 
 
+@require_GET
+def withdrawal_statement(request):
+    """
+    Affiliate-facing list of payout withdrawal requests for this profile (all referral links).
+    Used for the portal “payout statement” table (withdraw-only, not per-sale commissions).
+    """
+    affiliate_id = (request.GET.get("affiliate_id") or "").strip()
+    limit_raw = (request.GET.get("limit") or "50").strip()
+    if not affiliate_id:
+        return _bad_request("affiliate_id is required")
+    referral = _get_referral_or_400(affiliate_id)
+    if referral is None:
+        return _bad_request("affiliate_id not found", 404)
+    try:
+        limit = int(limit_raw)
+    except ValueError:
+        limit = 50
+    limit = max(1, min(limit, 200))
+    profile = referral.profile
+    qs = (
+        WithdrawalRequest.objects.filter(profile=profile)
+        .select_related("section_referral")
+        .order_by("-created_at")[:limit]
+    )
+    items = []
+    for w in qs:
+        items.append(
+            {
+                "id": w.id,
+                "requested_amount": str(w.requested_amount.quantize(Decimal("0.01"))),
+                "earnings_snapshot": str(w.earnings_snapshot.quantize(Decimal("0.01"))),
+                "status": w.status,
+                "created_at": w.created_at.isoformat(),
+                "account_name": w.account_name,
+                "affiliate_link_id": w.section_referral.referral_id,
+            }
+        )
+    return JsonResponse({"affiliate_id": affiliate_id, "items": items})
+
+
 @csrf_exempt
 @require_POST
 def request_withdrawal(request):

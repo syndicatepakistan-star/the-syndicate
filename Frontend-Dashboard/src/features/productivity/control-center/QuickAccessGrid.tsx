@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
@@ -449,6 +449,10 @@ export type QuickAccessGridProps = {
   /** Legacy: ignored in unified layout. */
   categories?: QuickAccessCategory[];
   variant?: "default" | "fullWidth";
+  /** Floating dashboard overlay: no inner max-height scroll trap; title gets dialog id; optional row under main heading. */
+  floatingShellOverlay?: boolean;
+  /** Rendered centered below the main “Quick access” title (e.g. close control in shell overlay). */
+  headerSlot?: ReactNode;
 };
 
 function QuickAccessTile({
@@ -675,6 +679,8 @@ export function QuickAccessGrid({
   helpText,
   className,
   variant = "default",
+  floatingShellOverlay = false,
+  headerSlot,
 }: QuickAccessGridProps) {
   const resolvedViewerTitle = viewerTitle ?? `${siteName} · viewer`;
   const resolvedHelp =
@@ -698,26 +704,48 @@ export function QuickAccessGrid({
 
   return (
     <>
-      <div className={cn("flex w-full max-w-none min-w-0 flex-col", isFull && "h-full min-h-0 flex-1", className)}>
+      <div
+        className={cn(
+          "flex w-full max-w-none min-w-0 flex-col",
+          isFull && "h-full min-h-0 flex-1",
+          className,
+        )}
+      >
         <CyberChamferFrame
           accent="hero"
           chamfer={18}
-          className="w-full shadow-[0_0_48px_rgba(34,211,238,0.22),0_0_96px_rgba(168,85,247,0.16),0_0_140px_rgba(251,191,36,0.1)]"
-          innerClassName="overflow-hidden p-0"
+          className={cn(
+            "w-full shadow-[0_0_48px_rgba(34,211,238,0.22),0_0_96px_rgba(168,85,247,0.16),0_0_140px_rgba(251,191,36,0.1)]",
+            floatingShellOverlay && isFull && "flex min-h-0 flex-1 flex-col",
+          )}
+          innerClassName={cn("p-0", floatingShellOverlay ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden" : "overflow-hidden")}
         >
-          <div className="border-b border-white/[0.1] bg-[linear-gradient(180deg,rgba(10,14,24,0.55),transparent)] px-[clamp(0.85rem,2.2vw,1.25rem)] py-[clamp(0.85rem,2vw+0.25rem,1.2rem)] sm:px-5">
-            <h2 className="text-[clamp(0.95rem,2.2vw,1.2rem)] font-black uppercase italic tracking-[0.18em] text-[color:var(--gold)] drop-shadow-[0_0_22px_rgba(255,215,0,0.28)] sm:tracking-[0.22em]">
+          <div className="flex flex-col items-center border-b border-white/[0.1] bg-[linear-gradient(180deg,rgba(10,14,24,0.55),transparent)] px-[clamp(0.85rem,2.2vw,1.25rem)] py-[clamp(0.85rem,2vw+0.25rem,1.2rem)] text-center sm:px-5">
+            <h2
+              id={floatingShellOverlay ? "quick-access-panel-title" : undefined}
+              className="text-[clamp(1.2rem,2.8vw+0.2rem,2rem)] font-black uppercase italic tracking-[0.16em] text-[color:var(--gold)] drop-shadow-[0_0_22px_rgba(255,215,0,0.28)] sm:tracking-[0.2em]"
+            >
               Quick access
             </h2>
-            <p className="mt-2 max-w-4xl text-[clamp(0.68rem,0.45vw+0.55rem,0.9rem)] leading-relaxed text-zinc-200/75 md:leading-relaxed">
+            {headerSlot ? (
+              <div className="mt-3 flex w-full shrink-0 justify-center">{headerSlot}</div>
+            ) : null}
+            <p
+              className={cn(
+                "max-w-3xl text-[clamp(0.68rem,0.45vw+0.55rem,0.9rem)] leading-relaxed text-zinc-200/75 md:leading-relaxed",
+                headerSlot ? "mt-4" : "mt-3",
+              )}
+            >
               {resolvedHelp}
             </p>
           </div>
 
           <div
             className={cn(
-              "px-[clamp(0.65rem,1.8vw,1rem)] py-[clamp(0.85rem,2vw+0.35rem,1.25rem)] sm:px-4",
-              isFull && "max-h-[min(72vh,720px)] overflow-y-auto overflow-x-hidden [scrollbar-color:rgba(167,139,250,0.45)_rgba(0,0,0,0.35)]",
+              "min-h-0 flex-1 px-[clamp(0.65rem,1.8vw,1rem)] py-[clamp(0.85rem,2vw+0.35rem,1.25rem)] sm:px-4",
+              isFull &&
+                !floatingShellOverlay &&
+                "max-h-[min(72vh,720px)] overflow-y-auto overflow-x-hidden [scrollbar-color:rgba(167,139,250,0.45)_rgba(0,0,0,0.35)]",
             )}
           >
             <div className="relative m-[clamp(0.35rem,1.2vw,0.65rem)] overflow-hidden border border-cyan-400/28 bg-gradient-to-b from-black/75 to-[#070712]/96 p-[clamp(0.65rem,1.6vw,1rem)] shadow-[inset_0_0_56px_rgba(0,0,0,0.55),0_0_40px_rgba(34,211,238,0.14),0_0_80px_rgba(168,85,247,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] sm:m-3 sm:p-4 [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]">

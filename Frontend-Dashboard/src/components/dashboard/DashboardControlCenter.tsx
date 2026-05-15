@@ -15,7 +15,7 @@ import {
   useSyndicateMissionsPeek,
   type SyndicateMissionPeekRow
 } from "./useSyndicateMissionsPeek";
-import { Bell, Lock, Target } from "lucide-react";
+import { Bell, Lock, Target, Activity } from "lucide-react";
 export type { ThemeMode };
 
 function pickPrimaryMission(rows: SyndicateMissionPeekRow[]): SyndicateMissionPeekRow | null {
@@ -332,6 +332,49 @@ const ACTIVITY_CAT_LABEL: Record<ActivityCategory, string> = {
   system: "SYSTEM"
 };
 
+/** Full-log modal: per-category borders, chips, and detail panel accents. */
+const ACTIVITY_CATEGORY_CHROME: Record<
+  ActivityCategory,
+  { listRow: string; chip: string; detailShell: string; typeGlow: string }
+> = {
+  system: {
+    listRow:
+      "border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/35 via-black/78 to-black/90 shadow-[0_0_36px_rgba(251,191,36,0.18),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    chip:
+      "rounded-lg border-2 border-amber-400/55 bg-amber-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-50 shadow-[0_0_18px_rgba(251,191,36,0.35)] sm:text-[11px]",
+    detailShell:
+      "border-2 border-amber-400/35 bg-gradient-to-b from-amber-950/20 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(251,191,36,0.08)]",
+    typeGlow: "font-bold text-amber-200 [text-shadow:0_0_14px_rgba(251,191,36,0.45)]",
+  },
+  program: {
+    listRow:
+      "border-2 border-cyan-400/50 bg-gradient-to-br from-cyan-950/30 via-black/78 to-black/90 shadow-[0_0_36px_rgba(34,211,238,0.16),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    chip:
+      "rounded-lg border-2 border-cyan-400/55 bg-cyan-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(34,211,238,0.32)] sm:text-[11px]",
+    detailShell:
+      "border-2 border-cyan-400/35 bg-gradient-to-b from-cyan-950/18 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(34,211,238,0.1)]",
+    typeGlow: "font-bold text-cyan-200 [text-shadow:0_0_14px_rgba(34,211,238,0.4)]",
+  },
+  syndicate: {
+    listRow:
+      "border-2 border-violet-400/50 bg-gradient-to-br from-violet-950/35 via-black/78 to-black/90 shadow-[0_0_36px_rgba(167,139,250,0.2),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    chip:
+      "rounded-lg border-2 border-violet-400/55 bg-violet-500/18 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.35)] sm:text-[11px]",
+    detailShell:
+      "border-2 border-violet-400/38 bg-gradient-to-b from-violet-950/22 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(139,92,246,0.12)]",
+    typeGlow: "font-bold text-violet-200 [text-shadow:0_0_14px_rgba(167,139,250,0.45)]",
+  },
+  affiliate: {
+    listRow:
+      "border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-950/30 via-black/78 to-black/90 shadow-[0_0_36px_rgba(52,211,153,0.16),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    chip:
+      "rounded-lg border-2 border-emerald-400/55 bg-emerald-500/18 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-50 shadow-[0_0_18px_rgba(52,211,153,0.32)] sm:text-[11px]",
+    detailShell:
+      "border-2 border-emerald-400/35 bg-gradient-to-b from-emerald-950/18 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(16,185,129,0.1)]",
+    typeGlow: "font-bold text-emerald-200 [text-shadow:0_0_14px_rgba(52,211,153,0.4)]",
+  },
+};
+
 const ACTIVITY_RECENT_WINDOW_MS = 2 * 60 * 1000;
 
 function activityStructuredFields(a: ActivityItem) {
@@ -345,42 +388,101 @@ function activityStructuredFields(a: ActivityItem) {
 }
 
 /** Concise labeled block for one event (timeline details + full log). */
-function ActivityEventDetailBlock({ a }: { a: ActivityItem }) {
+function ActivityEventDetailBlock({ a, size = "default" }: { a: ActivityItem; size?: "default" | "prominent" }) {
   const f = activityStructuredFields(a);
+  const chrome = size === "prominent" ? ACTIVITY_CATEGORY_CHROME[a.category] : null;
+  const lg = size === "prominent";
   const detailFallback =
     !f.story && !f.headline && !f.path ? "No extra description was stored for this entry." : null;
   return (
-    <div className="rounded-md border border-[rgba(255,215,0,0.14)] bg-black/40 px-3 py-2.5">
-      <div className="text-[12px] font-semibold leading-snug text-white/90">{a.title}</div>
-      <dl className="mt-2 grid grid-cols-[minmax(0,4.5rem)_1fr] gap-x-3 gap-y-1.5 text-[11px] leading-snug">
-        <dt className="font-bold uppercase tracking-[0.08em] text-white/38">When</dt>
-        <dd className="text-white/72">
+    <div
+      className={cn(
+        lg && chrome
+          ? cn("rounded-xl px-4 py-3.5 sm:px-5 sm:py-4", chrome.detailShell)
+          : "rounded-md border border-[rgba(255,215,0,0.14)] bg-black/40 px-3 py-2.5",
+      )}
+    >
+      <div className={cn("font-semibold leading-snug text-white/90", lg ? "text-[14px] sm:text-[15px]" : "text-[12px]")}>
+        {a.title}
+      </div>
+      <dl
+        className={cn(
+          "mt-2 grid leading-snug",
+          lg ? "grid-cols-[minmax(0,6.5rem)_1fr] gap-x-4 gap-y-2.5 text-[13px] sm:text-[14px]" : "grid-cols-[minmax(0,4.5rem)_1fr] gap-x-3 gap-y-1.5 text-[11px]",
+        )}
+      >
+        <dt
+          className={cn(
+            "font-bold uppercase tracking-[0.08em]",
+            lg ? "text-cyan-300/90" : "text-white/38",
+          )}
+        >
+          When
+        </dt>
+        <dd className={cn("text-white/78", lg && "text-white/82")}>
           {f.when}
-          <span className="text-white/45"> · {f.rel}</span>
+          <span className={cn("text-white/45", lg && "text-violet-200/55")}> · {f.rel}</span>
         </dd>
-        <dt className="font-bold uppercase tracking-[0.08em] text-white/38">Type</dt>
-        <dd className="text-[color:var(--goals-milestones-gold)]/88">{f.type}</dd>
+        <dt
+          className={cn(
+            "font-bold uppercase tracking-[0.08em]",
+            lg ? "text-fuchsia-300/88" : "text-white/38",
+          )}
+        >
+          Type
+        </dt>
+        <dd className={chrome ? chrome.typeGlow : "text-[color:var(--goals-milestones-gold)]/88"}>{f.type}</dd>
         {f.headline ? (
           <>
-            <dt className="font-bold uppercase tracking-[0.08em] text-white/38">Summary</dt>
-            <dd className="text-white/65">{f.headline}</dd>
+            <dt
+              className={cn(
+                "font-bold uppercase tracking-[0.08em]",
+                lg ? "text-amber-200/85" : "text-white/38",
+              )}
+            >
+              Summary
+            </dt>
+            <dd className={cn("text-white/65", lg && "text-white/72")}>{f.headline}</dd>
           </>
         ) : null}
         {f.path ? (
           <>
-            <dt className="font-bold uppercase tracking-[0.08em] text-white/38">Path</dt>
-            <dd className="break-all font-mono text-[10px] text-cyan-200/75">{f.path}</dd>
+            <dt
+              className={cn(
+                "font-bold uppercase tracking-[0.08em]",
+                lg ? "text-emerald-300/85" : "text-white/38",
+              )}
+            >
+              Path
+            </dt>
+            <dd className={cn("break-all font-mono text-cyan-200/75", lg && "text-[13px] text-cyan-200/88 sm:text-[14px]")}>
+              {f.path}
+            </dd>
           </>
         ) : null}
         {f.story ? (
           <>
-            <dt className="font-bold uppercase tracking-[0.08em] text-white/38">Details</dt>
-            <dd className="whitespace-pre-wrap break-words text-white/62">{f.story}</dd>
+            <dt
+              className={cn(
+                "font-bold uppercase tracking-[0.08em]",
+                lg ? "text-violet-300/88" : "text-white/38",
+              )}
+            >
+              Details
+            </dt>
+            <dd className={cn("whitespace-pre-wrap break-words text-white/62", lg && "text-white/70")}>{f.story}</dd>
           </>
         ) : detailFallback ? (
           <>
-            <dt className="font-bold uppercase tracking-[0.08em] text-white/38">Details</dt>
-            <dd className="text-white/50">{detailFallback}</dd>
+            <dt
+              className={cn(
+                "font-bold uppercase tracking-[0.08em]",
+                lg ? "text-violet-300/88" : "text-white/38",
+              )}
+            >
+              Details
+            </dt>
+            <dd className={cn("text-white/50", lg && "text-white/58")}>{detailFallback}</dd>
           </>
         ) : null}
       </dl>
@@ -618,13 +720,13 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
   const [fullLogOpen, setFullLogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const gold = "rgba(255, 215, 0, 0.85)";
-  const goldSoft = "rgba(255, 215, 0, 0.42)";
 
   const recentWindowItems = useMemo(() => {
     const cutoff = nowMs - ACTIVITY_RECENT_WINDOW_MS;
     return items.filter((a) => a.ts >= cutoff).sort((a, b) => b.ts - a.ts);
   }, [items, nowMs]);
+
+  const t = themeAccent(themeMode);
 
   useEffect(() => {
     setMounted(true);
@@ -632,13 +734,13 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
 
   useEffect(() => {
     const tick = () => setNowMs(Date.now());
-    const t = window.setInterval(tick, 10_000);
+    const intervalId = window.setInterval(tick, 10_000);
     const onVis = () => {
       if (document.visibilityState === "visible") tick();
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
-      window.clearInterval(t);
+      window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
@@ -667,7 +769,7 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
           {fullLogOpen ? (
             <motion.div
               key="activity-full-log"
-              className="fixed inset-0 z-[240] flex items-center justify-center p-4"
+              className="fixed inset-0 z-[240] flex items-center justify-center p-2 sm:p-5 md:p-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -675,7 +777,7 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
             >
               <button
                 type="button"
-                className="absolute inset-0 bg-black/72 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/75 backdrop-blur-[3px]"
                 aria-label="Close activity log"
                 onClick={() => setFullLogOpen(false)}
               />
@@ -683,63 +785,76 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="activity-full-log-title"
-                className="relative z-[1] flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-[rgba(255,215,0,0.35)] bg-[#080808]/95 shadow-[0_0_48px_rgba(255,215,0,0.12)]"
+                className="relative z-[1] flex max-h-[min(92vh,940px)] min-h-0 w-[min(96vw,960px)] max-w-[960px] flex-col overflow-hidden rounded-2xl border-2 border-cyan-400/40 bg-[#050508]/96 p-[2px] shadow-[0_0_0_1px_rgba(168,85,247,0.3),0_0_72px_rgba(34,211,238,0.28),0_0_120px_rgba(217,70,239,0.18)] sm:rounded-3xl"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(145deg, rgba(34,211,238,0.4), rgba(168,85,247,0.35), rgba(251,191,36,0.32))",
+                  boxShadow:
+                    "0 0 0 1px rgba(255,255,255,0.08), 0 0 64px rgba(34,211,238,0.22), 0 0 120px rgba(168,85,247,0.18), inset 0 1px 0 rgba(255,255,255,0.07)",
+                }}
                 initial={{ opacity: 0, y: 10, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.98 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,215,0,0.2)] px-4 py-3">
+                <div className="flex max-h-[inherit] min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-white/10 bg-[#07070c]/98 sm:rounded-[22px]">
+                <div className="flex shrink-0 items-center justify-between gap-4 border-b border-cyan-400/25 bg-gradient-to-r from-black/85 via-fuchsia-950/25 to-black/85 px-4 py-4 sm:px-6 sm:py-5">
                   <div>
                     <div
                       id="activity-full-log-title"
-                      className="text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)]/95"
+                      className="text-[13px] font-black uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.5)] sm:text-[15px] sm:tracking-[0.22em]"
                     >
                       Full activity log
                     </div>
-                    <div className="mt-0.5 text-[11px] text-white/45">
+                    <div className="mt-1 text-[12px] text-fuchsia-200/65 sm:text-[13px]">
                       {items.length} entr{items.length === 1 ? "y" : "ies"} — same layout as timeline details
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFullLogOpen(false)}
-                    className="rounded-md border border-[rgba(255,215,0,0.4)] bg-black/45 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/95 transition hover:border-[rgba(255,215,0,0.65)]"
+                    className="rounded-xl border-2 border-fuchsia-400/50 bg-black/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_24px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:shadow-[0_0_36px_rgba(217,70,239,0.48)] sm:text-[11px]"
                   >
                     Close
                   </button>
                 </div>
-                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-4 [scrollbar-color:rgba(255,215,0,0.4)_transparent]">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4 sm:space-y-4 sm:p-6 [scrollbar-color:rgba(34,211,238,0.5)_rgba(0,0,0,0.45)]">
                   {items.length === 0 ? (
-                    <p className="text-center text-[13px] leading-relaxed text-white/55">
+                    <p className="px-2 text-center text-[15px] leading-relaxed text-white/65 sm:text-[16px]">
                       Nothing logged yet. Switch sections, open Goals &amp; Milestones, pick a course, or visit another app
                       route.
                     </p>
                   ) : (
-                    items.map((a) => (
+                    items.map((a) => {
+                      const cat = ACTIVITY_CATEGORY_CHROME[a.category];
+                      return (
                       <div
                         key={a.id}
-                        className="rounded-md border border-[rgba(255,215,0,0.18)] bg-black/40 px-3 py-2.5"
+                        className={cn("rounded-xl px-4 py-3.5 sm:rounded-2xl sm:px-5 sm:py-4", cat.listRow)}
                       >
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className="text-[12px] font-semibold text-white/88">{a.title}</span>
-                          <span className="rounded-md border border-[rgba(255,215,0,0.3)] bg-black/50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-[color:var(--goals-milestones-gold)]/88">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                          <span className="min-w-0 text-[14px] font-semibold leading-snug text-white/92 sm:text-[16px]">
+                            {a.title}
+                          </span>
+                          <span className={cat.chip}>
                             {ACTIVITY_CAT_LABEL[a.category]}
                           </span>
-                          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/40">
+                          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/48 sm:text-[12px]">
                             {timeAgoCaps(a.ts)} · {formatActivityWhen(a.ts)}
                           </span>
                         </div>
                         {a.detail ? (
-                          <div className="mt-1 text-[11px] leading-snug text-white/50">{a.detail}</div>
+                          <div className="mt-2 text-[13px] leading-relaxed text-white/58 sm:text-[14px]">{a.detail}</div>
                         ) : null}
-                        <div className="mt-2">
-                          <ActivityEventDetailBlock a={a} />
+                        <div className="mt-3">
+                          <ActivityEventDetailBlock a={a} size="prominent" />
                         </div>
                       </div>
-                    ))
+                    );
+                    })
                   )}
+                </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -750,116 +865,175 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
     : null;
 
   return (
-    <Card
-      themeMode={themeMode}
-      title="Activity Timeline"
-      frameVariant="shell"
-      right={
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => setFullLogOpen(true)}
-            className="rounded-md border border-[rgba(255,215,0,0.45)] bg-black/40 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/95 transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/55"
-          >
-            Full log
-          </button>
-          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/80">
-            2 min
-          </div>
-        </div>
-      }
-    >
+    <>
       {fullLogModal}
-      <div className="min-h-[min(36vh,320px)] max-h-[min(62vh,620px)] overflow-y-auto overflow-x-hidden pr-1 [scrollbar-color:rgba(255,215,0,0.4)_transparent]">
-        {items.length === 0 ? (
-          <div className="rounded-md border border-[rgba(255,215,0,0.2)] bg-black/35 px-4 py-8 text-center text-[13px] leading-relaxed text-white/55">
-            Your moves are logged automatically—open a section, a course, use quick search, or Goals &amp; Milestones. The card
-            below will show the <span className="text-[color:var(--goals-milestones-gold)]/90">last 2 minutes</span>; use{" "}
-            <span className="text-[color:var(--goals-milestones-gold)]/90">Full log</span> for everything else.
-          </div>
-        ) : recentWindowItems.length === 0 ? (
-          <div className="rounded-md border border-[rgba(255,215,0,0.2)] bg-black/35 px-4 py-7 text-center text-[13px] leading-relaxed text-white/55">
-            <p className="text-white/70">Nothing in the last 2 minutes.</p>
-            <p className="mt-2 text-[12px] text-white/48">
-              Older activity is still saved — open <span className="text-[color:var(--goals-milestones-gold)]/85">Full log</span>{" "}
-              to review it.
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-[rgba(255,215,0,0.28)] bg-black/40 px-3 py-3 md:px-4 md:py-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-2.5">
-                <span
-                  className="mt-[6px] inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{
-                    background: gold,
-                    boxShadow: `0 0 12px ${goldSoft}, 0 0 20px rgba(255,215,0,0.25)`
-                  }}
-                />
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.24, ease: "easeOut" }}
+        whileHover={{ y: -2 }}
+        className="dashboard-card cyber-corners group relative w-full max-w-none overflow-hidden rounded-2xl p-[2px] transition-[box-shadow,transform] duration-500"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(34,211,238,0.7), rgba(129,140,248,0.55), rgba(251,191,36,0.52), rgba(244,114,182,0.55))",
+          boxShadow: `0 0 0 1px rgba(255,255,255,0.07), 0 0 52px rgba(168,85,247,0.24), 0 0 100px rgba(34,211,238,0.16), 0 0 140px rgba(251,191,36,0.08), 0 0 80px ${t.glow}`,
+        }}
+      >
+        <div className="cut-frame cyber-frame relative overflow-hidden rounded-[14px] border border-white/[0.08] bg-[#050508]/96 backdrop-blur-[14px]">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.9] [background:radial-gradient(920px_440px_at_10%_0%,rgba(34,211,238,0.18),transparent_56%),radial-gradient(820px_400px_at_95%_0%,rgba(167,139,250,0.16),transparent_54%),radial-gradient(720px_380px_at_50%_100%,rgba(251,191,36,0.09),transparent_52%)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:22px_22px]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 [background:linear-gradient(105deg,transparent_38%,rgba(34,211,238,0.07)_48%,rgba(244,114,182,0.06)_58%,transparent_70%)]"
+            aria-hidden
+          />
+
+          <div className="relative border-b border-cyan-400/18 bg-gradient-to-r from-black/70 via-violet-950/15 to-black/70 px-4 py-3 sm:px-5 sm:py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border-2 border-cyan-400/55 bg-black/55 shadow-[0_0_32px_rgba(34,211,238,0.5),inset_0_1px_0_rgba(255,255,255,0.07)]">
+                  <Activity
+                    className="h-[18px] w-[18px] text-cyan-100 [filter:drop-shadow(0_0_12px_rgba(34,211,238,0.95))]"
+                    strokeWidth={2.2}
+                    aria-hidden
+                  />
+                </span>
                 <div className="min-w-0">
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)]/90">
-                    Last 2 minutes
-                  </div>
-                  <p className="mt-1 text-[12px] leading-snug text-white/58">
-                    <span className="font-semibold tabular-nums text-white/75">{recentWindowItems.length}</span>{" "}
-                    {recentWindowItems.length === 1 ? "event" : "events"} · newest{" "}
-                    <span className="text-white/55">{timeAgo(recentWindowItems[0]!.ts)}</span>
+                  <h2 className="bg-gradient-to-r from-amber-200 via-cyan-200 to-fuchsia-200 bg-clip-text text-[clamp(10px,0.85vw+7px,12px)] font-black uppercase leading-tight tracking-[0.2em] text-transparent">
+                    Activity timeline
+                  </h2>
+                  <p className="mt-1 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-fuchsia-200/50">
+                    Live stream · 2 min window
                   </p>
-                  <ul className="mt-2 list-none space-y-1.5 p-0 text-[11px] text-white/55">
-                    {recentWindowItems.slice(0, 5).map((a) => (
-                      <li key={a.id} className="flex gap-2 border-l-2 border-[rgba(255,215,0,0.25)] pl-2">
-                        <span className="shrink-0 font-mono text-[10px] text-white/40">
-                          {new Date(a.ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                        </span>
-                        <span className="min-w-0 text-white/70">
-                          <span className="font-medium text-white/82">{a.title}</span>
-                          {a.detail ? <span className="text-white/45"> — {a.detail}</span> : null}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  {recentWindowItems.length > 5 ? (
-                    <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-white/40">
-                      +{recentWindowItems.length - 5} more in details
-                    </p>
-                  ) : null}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setRecentDetailsOpen((o) => !o)}
-                className="shrink-0 rounded border border-[rgba(255,215,0,0.45)] bg-black/45 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/95 transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/60"
-              >
-                {recentDetailsOpen ? "Hide" : "Details"}
-              </button>
-            </div>
-            <AnimatePresence initial={false}>
-              {recentDetailsOpen ? (
-                <motion.div
-                  key="recent-activity-details"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="overflow-hidden"
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFullLogOpen(true)}
+                  className="rounded-lg border-2 border-fuchsia-400/50 bg-black/50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_22px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:bg-black/60 hover:shadow-[0_0_32px_rgba(217,70,239,0.5)]"
                 >
-                  <div className="mt-4 space-y-3 border-t border-[rgba(255,215,0,0.15)] pt-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-                      Everything in this window — newest first
-                    </p>
-                    <div className="space-y-3">
-                      {recentWindowItems.map((a) => (
-                        <ActivityEventDetailBlock key={a.id} a={a} />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+                  Full log
+                </button>
+                <div className="rounded-lg border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/15 to-black/60 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.35)]">
+                  2 min
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
-    </Card>
+
+          <div className="relative px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+            <div className="rounded-xl border border-violet-500/25 bg-gradient-to-b from-violet-950/10 to-transparent p-[1px] shadow-[0_0_44px_rgba(139,92,246,0.15)]">
+              <div className="rounded-[11px] border border-cyan-400/15 bg-[#06060c]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="min-h-[min(36vh,320px)] max-h-[min(62vh,620px)] overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 sm:pr-2 [scrollbar-color:rgba(34,211,238,0.42)_rgba(0,0,0,0.4)]">
+                  {items.length === 0 ? (
+                    <div className="rounded-xl border-2 border-cyan-400/30 bg-gradient-to-br from-cyan-950/30 via-black/55 to-fuchsia-950/25 px-5 py-10 text-center shadow-[0_0_48px_rgba(34,211,238,0.14),0_0_64px_rgba(168,85,247,0.1)]">
+                      <p className="text-[13px] leading-relaxed text-white/68">
+                        Your moves are logged automatically—open a section, a course, use quick search, or Goals &amp; Milestones.
+                        The panel below shows the{" "}
+                        <span className="font-semibold text-cyan-200 [text-shadow:0_0_14px_rgba(34,211,238,0.45)]">last 2 minutes</span>
+                        ; use <span className="font-semibold text-fuchsia-200 [text-shadow:0_0_14px_rgba(232,121,249,0.4)]">Full log</span> for
+                        everything else.
+                      </p>
+                    </div>
+                  ) : recentWindowItems.length === 0 ? (
+                    <div className="rounded-xl border-2 border-amber-400/35 bg-gradient-to-br from-amber-950/25 via-black/55 to-violet-950/20 px-5 py-10 text-center shadow-[0_0_48px_rgba(251,191,36,0.14),0_0_56px_rgba(139,92,246,0.1)]">
+                      <p className="text-[13px] font-medium text-white/78">Nothing in the last 2 minutes.</p>
+                      <p className="mt-3 text-[12px] leading-relaxed text-white/52">
+                        Older activity is still saved — open{" "}
+                        <span className="font-semibold text-fuchsia-200/95 [text-shadow:0_0_12px_rgba(232,121,249,0.45)]">Full log</span> to
+                        review it.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-950/15 via-black/50 to-cyan-950/20 px-3 py-3 shadow-[0_0_40px_rgba(52,211,153,0.12),0_0_48px_rgba(34,211,238,0.1)] sm:px-4 sm:py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          <span
+                            className="mt-[6px] inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{
+                              background: "rgba(34, 211, 238, 0.95)",
+                              boxShadow: "0 0 14px rgba(34,211,238,0.75), 0 0 28px rgba(6,182,212,0.4)",
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100 [text-shadow:0_0_16px_rgba(34,211,238,0.45)]">
+                              Last 2 minutes
+                            </div>
+                            <p className="mt-1 text-[12px] leading-snug text-white/62">
+                              <span className="font-semibold tabular-nums text-emerald-200/95">{recentWindowItems.length}</span>{" "}
+                              {recentWindowItems.length === 1 ? "event" : "events"} · newest{" "}
+                              <span className="text-violet-200/80">{timeAgo(recentWindowItems[0]!.ts)}</span>
+                            </p>
+                            <ul className="mt-2 list-none space-y-1.5 p-0 text-[11px] text-white/58">
+                              {recentWindowItems.slice(0, 5).map((a) => (
+                                <li key={a.id} className="flex gap-2 border-l-2 border-cyan-400/45 pl-2.5">
+                                  <span className="shrink-0 font-mono text-[10px] text-cyan-200/55">
+                                    {new Date(a.ts).toLocaleTimeString(undefined, {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      second: "2-digit",
+                                    })}
+                                  </span>
+                                  <span className="min-w-0 text-white/72">
+                                    <span className="font-medium text-white/88">{a.title}</span>
+                                    {a.detail ? <span className="text-white/48"> — {a.detail}</span> : null}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                            {recentWindowItems.length > 5 ? (
+                              <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-fuchsia-200/45">
+                                +{recentWindowItems.length - 5} more in details
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setRecentDetailsOpen((o) => !o)}
+                          className="shrink-0 rounded-lg border-2 border-violet-400/50 bg-black/50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-violet-100 shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:border-violet-300/75 hover:shadow-[0_0_26px_rgba(139,92,246,0.5)]"
+                        >
+                          {recentDetailsOpen ? "Hide" : "Details"}
+                        </button>
+                      </div>
+                      <AnimatePresence initial={false}>
+                        {recentDetailsOpen ? (
+                          <motion.div
+                            key="recent-activity-details"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="mt-4 space-y-3 border-t border-violet-400/25 pt-4">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/55">
+                                Everything in this window — newest first
+                              </p>
+                              <div className="space-y-3">
+                                {recentWindowItems.map((a) => (
+                                  <ActivityEventDetailBlock key={a.id} a={a} />
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : null}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }
 

@@ -31,6 +31,53 @@ export const GOAL_OPTIONS: { id: GoalId; label: string; short: string }[] = [
   { id: "ai_automation", label: "Make Money Online", short: "MMO" },
 ];
 
+/** Path selector tiles: each goal has its own neon channel (idle + selected). */
+export const PATH_CARD_SKIN: Record<
+  GoalId,
+  { active: string; idle: string; subOn: string; subOff: string }
+> = {
+  web_dev: {
+    active:
+      "z-[1] border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/22 to-black/92 text-amber-50 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_32px_rgba(251,191,36,0.35),0_0_72px_rgba(245,158,11,0.15),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-amber-400/30 bg-gradient-to-br from-amber-950/25 to-black/60 text-amber-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-amber-400/55 hover:shadow-[0_0_28px_rgba(251,191,36,0.2)]",
+    subOn: "text-amber-200/90 [text-shadow:0_0_12px_rgba(251,191,36,0.35)]",
+    subOff: "text-amber-200/55",
+  },
+  digital_marketing: {
+    active:
+      "z-[1] border-2 border-cyan-400/70 bg-gradient-to-br from-cyan-500/20 to-black/92 text-cyan-50 shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_32px_rgba(34,211,238,0.32),0_0_72px_rgba(6,182,212,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-cyan-400/32 bg-gradient-to-br from-cyan-950/22 to-black/60 text-cyan-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-cyan-400/55 hover:shadow-[0_0_28px_rgba(34,211,238,0.22)]",
+    subOn: "text-cyan-200/90 [text-shadow:0_0_12px_rgba(34,211,238,0.35)]",
+    subOff: "text-cyan-200/55",
+  },
+  youtube: {
+    active:
+      "z-[1] border-2 border-violet-400/70 bg-gradient-to-br from-violet-500/22 to-black/92 text-violet-50 shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_0_32px_rgba(167,139,250,0.32),0_0_72px_rgba(139,92,246,0.16),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-violet-400/32 bg-gradient-to-br from-violet-950/25 to-black/60 text-violet-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-violet-400/55 hover:shadow-[0_0_28px_rgba(167,139,250,0.22)]",
+    subOn: "text-violet-200/90 [text-shadow:0_0_12px_rgba(196,181,253,0.4)]",
+    subOff: "text-violet-200/55",
+  },
+  money_online: {
+    active:
+      "z-[1] border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-500/20 to-black/92 text-emerald-50 shadow-[0_0_0_1px_rgba(52,211,153,0.45),0_0_32px_rgba(52,211,153,0.3),0_0_72px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-emerald-400/32 bg-gradient-to-br from-emerald-950/22 to-black/60 text-emerald-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-emerald-400/55 hover:shadow-[0_0_28px_rgba(52,211,153,0.2)]",
+    subOn: "text-emerald-200/90 [text-shadow:0_0_12px_rgba(52,211,153,0.35)]",
+    subOff: "text-emerald-200/55",
+  },
+  ai_automation: {
+    active:
+      "z-[1] border-2 border-rose-400/70 bg-gradient-to-br from-rose-500/20 to-black/92 text-rose-50 shadow-[0_0_0_1px_rgba(251,113,133,0.45),0_0_32px_rgba(251,113,133,0.3),0_0_72px_rgba(244,63,94,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-rose-400/32 bg-gradient-to-br from-rose-950/22 to-black/60 text-rose-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-rose-400/55 hover:shadow-[0_0_28px_rgba(251,113,133,0.2)]",
+    subOn: "text-rose-200/90 [text-shadow:0_0_12px_rgba(251,113,133,0.35)]",
+    subOff: "text-rose-200/55",
+  },
+};
+
 /** Placeholder roadmap — length drives UI only; program cards use `opportunityTriplesForStage`. */
 export const ROADMAPS: Record<GoalId, RoadmapStep[]> = Object.fromEntries(
   (GOAL_OPTIONS.map((g) => g.id) as GoalId[]).map((gid) => [

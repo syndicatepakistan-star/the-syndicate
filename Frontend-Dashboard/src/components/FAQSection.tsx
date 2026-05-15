@@ -112,13 +112,8 @@ export default function FAQSection() {
         <div className={styles.bgOverlay} />
       </div>
       <div className={styles.container}>
-        <h2 className={`${styles.title} font-heading programs-heading-glow`}>
-          Frequently Asked Questions
-        </h2>
-        <p className={styles.subtitle}>
-          Hard intel below — the footer policies still own the fine print. Read them before you sign anything.
-        </p>
-        <div className={styles.tabs} role="tablist" aria-label="FAQ categories">
+        <h2 className={styles.title}>Frequently Asked Questions</h2>
+        <div className={`${styles.tabs} mt-4`} role="tablist" aria-label="FAQ categories">
           {FAQ_TABS.map((tab) => (
             <button
               key={tab.id}

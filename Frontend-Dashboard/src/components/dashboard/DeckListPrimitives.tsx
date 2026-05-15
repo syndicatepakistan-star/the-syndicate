@@ -85,11 +85,14 @@ export function DeckListToolbar({
 const BADGE_BASE = "inline-flex items-center rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.14em]";
 
 export function MissionStatusBadge({ status }: { status: "active" | "missed" | "done" }) {
-  const shell =
-    "border-[rgba(197,179,88,0.45)] bg-black/70 text-[color:var(--gold)] shadow-[0_0_0_1px_rgba(197,179,88,0.2),0_0_14px_rgba(197,179,88,0.18)]";
   if (status === "active")
     return (
-      <span className={cn(BADGE_BASE, "border", shell)}>
+      <span
+        className={cn(
+          BADGE_BASE,
+          "border border-[rgba(255,215,0,0.5)] bg-black/72 text-[color:var(--goals-milestones-gold)] shadow-[0_0_0_1px_rgba(255,215,0,0.22),0_0_14px_rgba(255,200,0,0.28)]"
+        )}
+      >
         Active
       </span>
     );
@@ -98,14 +101,19 @@ export function MissionStatusBadge({ status }: { status: "active" | "missed" | "
       <span
         className={cn(
           BADGE_BASE,
-          "border border-[rgba(197,179,88,0.38)] bg-black/65 text-[rgba(255,248,220,0.78)] shadow-[0_0_0_1px_rgba(197,179,88,0.15),0_0_12px_rgba(197,179,88,0.12)]"
+          "border border-rose-400/48 bg-black/72 text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.2),0_0_14px_rgba(251,113,133,0.26)]"
         )}
       >
         Missed
       </span>
     );
   return (
-    <span className={cn(BADGE_BASE, "border", shell)}>
+    <span
+      className={cn(
+        BADGE_BASE,
+        "border border-emerald-400/48 bg-black/72 text-emerald-100 shadow-[0_0_0_1px_rgba(52,211,153,0.2),0_0_14px_rgba(16,185,129,0.24)]"
+      )}
+    >
       Complete
     </span>
   );

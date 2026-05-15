@@ -14,10 +14,12 @@ import DashboardControlCenter from "@/components/dashboard/DashboardControlCente
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
+import LetterGlitch from "@/components/LetterGlitch";
 import type { DashboardNavKey } from "@/components/dashboard/types";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { GoalsPanel } from "@/components/ui/GoalsPanel";
+import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
 import { SyndicateAiChallengePanel } from "@/components/SyndicateAiChallengePanel";
 import { MembershipContentHub } from "@/components/membership/MembershipContentHub";
 import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
@@ -139,6 +141,31 @@ function IconToggle({ open }: { open: boolean }) {
         </>
       )}
     </svg>
+  );
+}
+
+function DashboardChromeLetterGlitch() {
+  return (
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 z-0 min-h-0 min-w-0 overflow-hidden",
+        /* Abs-pos children of a CSS grid default to the first cell — span the full shell. */
+        "[grid-column:1/-1] [grid-row:1/-1]"
+      )}
+      aria-hidden
+    >
+      <div className="absolute inset-0 min-h-0 min-w-0">
+        <LetterGlitch
+          glitchSpeed={70}
+          centerVignette
+          outerVignette
+          smooth
+          glitchColors={["#4a2b72", "#61dca3", "#61b3dc"]}
+          layerOpacity={0.4}
+          className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-black"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -2042,7 +2069,7 @@ export default function Page() {
   const router = useRouter();
   const pathname = usePathname();
   const { recordVisit, recordEvent } = useActivityTimeline();
-  const { setShellSectionKey, setPanelThemeMode, closeGoalsPanel, isGoalsPanelOpen, setGoalsFabLocked } =
+  const { setShellSectionKey, setPanelThemeMode, closeGoalsPanel, closeQuickAccessPanel, isGoalsPanelOpen, isQuickAccessPanelOpen, setGoalsFabLocked } =
     useGoalsPanel();
 
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -2340,7 +2367,8 @@ export default function Page() {
   /** Goals panel is per-section: close when navigating so it must be reopened from the FAB. */
   useEffect(() => {
     closeGoalsPanel();
-  }, [selectedNavKey, closeGoalsPanel]);
+    closeQuickAccessPanel();
+  }, [selectedNavKey, closeGoalsPanel, closeQuickAccessPanel]);
 
   useEffect(() => {
     setPanelThemeMode(themeMode);
@@ -2937,7 +2965,7 @@ export default function Page() {
     <div
       ref={rootRef}
       className={cn(
-        "relative min-h-screen w-screen hud-void hud-scanlines hud-noise overflow-x-hidden overflow-y-auto lg:h-screen lg:overflow-hidden",
+        "dashboard-hamburger-chrome relative min-h-screen w-screen hud-void hud-scanlines hud-noise overflow-x-hidden overflow-y-auto lg:h-screen lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
         !sidebarOpen && "focus-mode",
@@ -2977,7 +3005,8 @@ export default function Page() {
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
             )}
           >
-            <div className="pointer-events-none absolute inset-0 z-0 opacity-80 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.14),rgba(0,0,0,0)_55%)]" />
+            <DashboardChromeLetterGlitch />
+            <div className="pointer-events-none absolute inset-0 z-0 opacity-80 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.14),rgba(0,0,0,0)_55%)] [grid-column:1/-1] [grid-row:1/-1]" />
             <div
               ref={topDockRef}
               onMouseMove={(e) => {
@@ -2991,7 +3020,7 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => setSidebarOpen((v) => !v)}
-                className="navbar-chrome-btn cut-frame-sm cyber-frame gold-stroke grid h-8 w-8 shrink-0 place-items-center border bg-black/70 text-[color:var(--gold-neon)]/95 sm:h-9 sm:w-9 md:h-10 md:w-10"
+                className="hamburger-attract navbar-chrome-btn cut-frame-sm cyber-frame grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-amber-300/70 bg-black/70 text-amber-200 shadow-[0_0_16px_rgba(251,191,36,0.28)] sm:h-9 sm:w-9 md:h-10 md:w-10"
                 aria-label={sidebarOpen ? "Hide sidebar menu" : "Show sidebar menu"}
               >
                 <IconToggle open={sidebarOpen} />
@@ -3188,8 +3217,9 @@ export default function Page() {
                           ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
                           className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 bg-[#060606]/92 pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
                         >
-                          <div className="pointer-events-none absolute inset-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
-                          <div className="relative min-w-0 px-1">
+                          <DashboardChromeLetterGlitch />
+                          <div className="pointer-events-none absolute inset-0 z-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                          <div className="relative z-[1] min-w-0 px-1">
                             <SidebarNavRailList
                               nav={nav}
                               selectedNavKey={selectedNavKey}
@@ -3209,8 +3239,9 @@ export default function Page() {
                       ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
                       className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 bg-[#060606]/92 pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
                     >
-                      <div className="pointer-events-none absolute inset-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
-                      <div className="relative min-w-0 px-1">
+                      <DashboardChromeLetterGlitch />
+                      <div className="pointer-events-none absolute inset-0 z-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                      <div className="relative z-[1] min-w-0 px-1">
                         <SidebarNavRailList
                           nav={nav}
                           selectedNavKey={selectedNavKey}
@@ -3416,8 +3447,9 @@ export default function Page() {
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
-                <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
-                <div className="relative min-h-0 min-w-0 lg:min-h-0">
+                <DashboardChromeLetterGlitch />
+                <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                <div className="relative z-[1] min-h-0 min-w-0 lg:min-h-0">
                   <SidebarNavRailList
                     nav={nav}
                     selectedNavKey={selectedNavKey}
@@ -3451,11 +3483,12 @@ export default function Page() {
                 : "fluid-section-p"
             )}
           >
-            <div className="absolute inset-0 opacity-70 [background:radial-gradient(820px_520px_at_40%_0%,rgba(250,204,21,0.09),rgba(0,0,0,0)_64%)]" />
+            <DashboardChromeLetterGlitch />
+            <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background:radial-gradient(820px_520px_at_40%_0%,rgba(250,204,21,0.09),rgba(0,0,0,0)_64%)]" />
             <div
               data-main-shell-scroll
               className={cn(
-                "relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1 no-scrollbar",
+                "relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1 no-scrollbar",
                 !sidebarOccupiesGrid && "lg:pl-14",
                 selectedNavKey === "monk"
                   ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)]"
@@ -3499,6 +3532,7 @@ export default function Page() {
                   sidebarOccupiesGrid={sidebarOccupiesGrid}
                   isNarrowViewport={isNarrowViewport}
                   isGoalsPanelOpen={isGoalsPanelOpen}
+                  isQuickAccessPanelOpen={isQuickAccessPanelOpen}
                   selectedCourseWithProgress={selectedCourseWithProgress}
                   activeCoursePanel={
                     selectedCourseWithProgress ? (
@@ -3607,6 +3641,7 @@ export default function Page() {
               )}
             </div>
             <GoalsPanel />
+            <QuickAccessPanel />
           </motion.section>
 
           {/* Details now live inside the courses panel (scrollable). */}

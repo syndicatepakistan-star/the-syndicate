@@ -65,9 +65,25 @@ export default function AffiliateMarketingPage() {
 
       <NavApp />
 
+      <span className="pointer-events-none fixed right-[max(0.65rem,env(safe-area-inset-right))] top-1/2 z-[55] -translate-y-1/2 sm:right-5">
+        <Link
+          href={AFFILIATE_LOGIN_HREF}
+          prefetch
+          className="cta-nav-button pointer-events-auto whitespace-nowrap text-xs font-semibold !min-h-0 !min-w-[44px] !px-2 !py-7 [text-orientation:mixed] [writing-mode:vertical-rl] sm:text-sm"
+        >
+          Affiliate login
+        </Link>
+      </span>
+
       <section className="relative z-10 px-[clamp(1rem,3vw,2.2rem)] pb-10 pt-[88px] sm:pb-12 sm:pt-[106px]">
         <div className="mx-auto max-w-[96rem]">
-          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-[56vh]" innerClassName="p-7 sm:p-10 lg:p-12">
+          <CyberChamferFrame
+            accent="hero"
+            chamfer={24}
+            hideOuterRing
+            className="min-h-[56vh]"
+            innerClassName="p-7 sm:p-10 lg:p-12"
+          >
             <div className="mx-auto max-w-[56rem] text-center">
               <p className="font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-200/85 sm:text-xs">
                 Syndicate partner channel
@@ -80,18 +96,6 @@ export default function AffiliateMarketingPage() {
                 chain that matters: clicks → leads → checkouts → commissions. Below is exactly what the partner cockpit
                 looks like — no stock art, no alternate skins.
               </p>
-              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href={AFFILIATE_LOGIN_HREF}
-                  prefetch
-                  className="cta-nav-button text-sm font-semibold"
-                >
-                  Affiliate login
-                </Link>
-                <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
-                  Explore programmes
-                </Link>
-              </div>
             </div>
           </CyberChamferFrame>
         </div>

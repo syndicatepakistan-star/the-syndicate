@@ -4,7 +4,8 @@ import type {
   AffiliateVisitorsResponse,
   RecentReferralsResponse,
   WithdrawalRequestPayload,
-  WithdrawalRequestResponse
+  WithdrawalRequestResponse,
+  WithdrawalStatementResponse
 } from "@/lib/affiliateTypes";
 import { getSyndicateApiBase } from "@/lib/syndicateApiBase";
 
@@ -102,6 +103,14 @@ export async function getRecentReferrals(affiliateId: string, limit = 10): Promi
     { cache: "no-store", headers: authHeaders() }
   );
   return parseJson<RecentReferralsResponse>(res);
+}
+
+export async function getWithdrawalStatement(affiliateId: string, limit = 50): Promise<WithdrawalStatementResponse> {
+  const res = await fetch(
+    `${root()}/track/withdrawal-statement?affiliate_id=${encodeURIComponent(affiliateId)}&limit=${limit}`,
+    { cache: "no-store", headers: authHeaders() }
+  );
+  return parseJson<WithdrawalStatementResponse>(res);
 }
 
 export async function trackClick(affiliateId: string, visitorId: string) {

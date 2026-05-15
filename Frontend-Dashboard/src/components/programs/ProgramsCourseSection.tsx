@@ -160,6 +160,8 @@ type Props = {
   sidebarOccupiesGrid: boolean;
   isNarrowViewport: boolean;
   isGoalsPanelOpen: boolean;
+  /** When true, same interaction lock as Goals overlay (floating Quick Access). */
+  isQuickAccessPanelOpen?: boolean;
   selectedCourseWithProgress: (Course & { progress: number }) | null;
   activeCoursePanel: ReactNode | null;
 };
@@ -172,6 +174,7 @@ export function ProgramsCourseSection({
   sidebarOccupiesGrid,
   isNarrowViewport,
   isGoalsPanelOpen,
+  isQuickAccessPanelOpen = false,
   selectedCourseWithProgress,
   activeCoursePanel,
 }: Props) {
@@ -1138,7 +1141,7 @@ export function ProgramsCourseSection({
                 damping={0.45}
                 fadeOut={0.6}
                 ease="power3.out"
-                interactionDisabled={isGoalsPanelOpen}
+                interactionDisabled={isGoalsPanelOpen || isQuickAccessPanelOpen}
                 className={cn(sidebarOccupiesGrid ? "py-2" : "py-4")}
               />
             </div>

@@ -56,7 +56,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 md:min-h-[calc(60vh-6rem)] md:flex-row md:items-center md:justify-between md:gap-10 lg:gap-14">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 md:min-h-[calc(60vh-6rem)] md:flex-row md:items-center md:justify-between md:gap-16 lg:gap-24 xl:gap-28">
         <div className="min-w-0 flex-1 px-2 md:max-w-[min(100%,42rem)] md:px-0 lg:max-w-[46rem]">
           <div
             className={cn('lightning-glow-card relative w-full', AFFILIATE_NOTCH_CLIP)}

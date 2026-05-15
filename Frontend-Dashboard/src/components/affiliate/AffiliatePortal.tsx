@@ -6,11 +6,15 @@ import {
   getAffiliateFunnel,
   getAffiliateStats,
   getRecentReferrals,
+  getWithdrawalStatement,
   requestAffiliateWithdrawal
 } from "@/lib/affiliateApi";
-import type { AffiliateStats, RecentReferralItem, ReferralLeadEvent } from "@/lib/affiliateTypes";
+import type { AffiliateStats, RecentReferralItem, ReferralLeadEvent, WithdrawalStatementItem } from "@/lib/affiliateTypes";
 
 type ToastTone = "good" | "warn" | "bad" | "info";
+
+/** Withdrawal rows that no longer reserve balance (excluded from statement total). */
+const WITHDRAWAL_REFUNDED_STATUSES = new Set(["rejected", "cancelled", "denied", "refunded", "failed"]);
 
 /** Which lead milestone the referral row detail panel is showing (Syn Diagnosis vs sign-up / checkout). */
 type ReferralLeadTab = "diagnosis" | "auth";
@@ -106,23 +110,19 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const [funnelHover, setFunnelHover] = useState<{ stage: string; value: number } | null>(null);
   const funnelHoverLeaveTimer = useRef<number | null>(null);
   const [recentReferrals, setRecentReferrals] = useState<RecentReferralItem[]>([]);
+  const [withdrawalStatementItems, setWithdrawalStatementItems] = useState<WithdrawalStatementItem[]>([]);
   /** Per visitor_id: which lead chip is driving the left detail column (Syn Diagnosis vs sign-up / subscription). */
   const [referralLeadTabByVisitor, setReferralLeadTabByVisitor] = useState<Record<string, ReferralLeadTab>>({});
   const [recentPage, setRecentPage] = useState(1);
-  /** Newest/oldest by referral activity timestamp. */
-  const [referralsTimeOrder, setReferralsTimeOrder] = useState<"newest" | "oldest">("newest");
-  /** When not `none`, primary sort is by commission amount (then time as tiebreaker). */
-  const [referralsMoneyOrder, setReferralsMoneyOrder] = useState<"none" | "high" | "low">("none");
-  /** Time window filter on the referral `at` timestamp. */
-  const [referralsTimeFilter, setReferralsTimeFilter] = useState<"all" | "today" | "7d" | "30d" | "90d" | "custom">("all");
-  /** Inclusive custom date range (YYYY-MM-DD) applied when `referralsTimeFilter === "custom"`. */
-  const [customFromDate, setCustomFromDate] = useState<string>("");
-  const [customToDate, setCustomToDate] = useState<string>("");
-  /** Money filter on the affiliate's earning for each referral row. */
-  const [referralsMoneyFilter, setReferralsMoneyFilter] = useState<"all" | "upto20" | "upto50" | "upto99" | "over100">("all");
+  /** Referrals list: sort by activity time (purchased_at ?? at). */
+  const [referralsTimeSort, setReferralsTimeSort] = useState<"asc" | "desc">("desc");
+  /** Tiebreaker / secondary: commission (conversion_earning). */
+  const [referralsPriceSort, setReferralsPriceSort] = useState<"asc" | "desc">("asc");
   const [activeReferralLink, setActiveReferralLink] = useState("");
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  /** Payout-withdrawal statement panel: hidden until user opens via SYN control (like conversion formula reveal). */
+  const [payoutStatementOpen, setPayoutStatementOpen] = useState(false);
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
   const [withdrawAttemptedSubmit, setWithdrawAttemptedSubmit] = useState(false);
   const [withdrawMessage, setWithdrawMessage] = useState<{ text: string; tone: "good" | "bad" | "info" } | null>(null);
@@ -312,6 +312,15 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     window.addEventListener("keydown", handleEscapeClose);
     return () => window.removeEventListener("keydown", handleEscapeClose);
   }, [withdrawOpen]);
+
+  useEffect(() => {
+    if (!payoutStatementOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPayoutStatementOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [payoutStatementOpen]);
 
   useEffect(() => {
     if (!withdrawConfirmation) return;
@@ -573,14 +582,19 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [statsResult, funnelResult, recentResult] = await Promise.all([
+      const [statsResult, funnelResult, recentResult, withdrawalResult] = await Promise.all([
         getAffiliateStats(affiliateId.trim()),
         getAffiliateFunnel(affiliateId.trim()),
         getRecentReferrals(affiliateId.trim(), 150),
+        getWithdrawalStatement(affiliateId.trim(), 100).catch(() => ({
+          affiliate_id: affiliateId.trim(),
+          items: [] as WithdrawalStatementItem[],
+        })),
       ]);
       setStats(statsResult);
       setFunnel(funnelResult.stages);
       setRecentReferrals(recentResult.items);
+      setWithdrawalStatementItems(withdrawalResult.items);
       if (!silent) showToast("Data loaded.", "good");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Could not fetch affiliate data.";
@@ -622,63 +636,24 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   }
 
   const referralsSorted = useMemo(() => {
-    let arr = [...recentReferrals];
-
-    if (referralsTimeFilter === "custom") {
-      const fromMs = customFromDate ? new Date(`${customFromDate}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
-      const toMs = customToDate ? new Date(`${customToDate}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
-      if (Number.isFinite(fromMs) || Number.isFinite(toMs)) {
-        arr = arr.filter((r) => {
-          const t = r.at ? new Date(r.at).getTime() : 0;
-          return t >= fromMs && t <= toMs;
-        });
-      }
-    } else if (referralsTimeFilter !== "all") {
-      const windows: Record<"today" | "7d" | "30d" | "90d", number> = {
-        today: 24 * 60 * 60 * 1000,
-        "7d": 7 * 24 * 60 * 60 * 1000,
-        "30d": 30 * 24 * 60 * 60 * 1000,
-        "90d": 90 * 24 * 60 * 60 * 1000,
-      };
-      const cutoff = Date.now() - (windows[referralsTimeFilter] ?? 0);
-      arr = arr.filter((r) => {
-        const t = r.at ? new Date(r.at).getTime() : 0;
-        return t >= cutoff;
-      });
-    }
-
-    if (referralsMoneyFilter !== "all") {
-      arr = arr.filter((r) => {
-        const earning = Number(r.conversion_earning ?? 0) || 0;
-        switch (referralsMoneyFilter) {
-          case "upto20":
-            return earning <= 20;
-          case "upto50":
-            return earning <= 50;
-          case "upto99":
-            return earning <= 99.9;
-          case "over100":
-            return earning >= 100;
-          default:
-            return true;
-        }
-      });
-    }
-
+    const arr = [...recentReferrals];
+    const activityMs = (r: RecentReferralItem) => {
+      const iso = r.purchased_at ?? r.at;
+      if (!iso) return 0;
+      const t = new Date(iso).getTime();
+      return Number.isFinite(t) ? t : 0;
+    };
     arr.sort((a, b) => {
-      const ta = a.at ? new Date(a.at).getTime() : 0;
-      const tb = b.at ? new Date(b.at).getTime() : 0;
+      const ta = activityMs(a);
+      const tb = activityMs(b);
+      const timeCmp = referralsTimeSort === "desc" ? tb - ta : ta - tb;
+      if (timeCmp !== 0) return timeCmp;
       const ea = Number(a.conversion_earning ?? 0) || 0;
       const eb = Number(b.conversion_earning ?? 0) || 0;
-      if (referralsMoneyOrder !== "none") {
-        const moneyCmp = referralsMoneyOrder === "high" ? eb - ea : ea - eb;
-        if (moneyCmp !== 0) return moneyCmp;
-      }
-      const timeDesc = referralsTimeOrder === "newest";
-      return timeDesc ? tb - ta : ta - tb;
+      return referralsPriceSort === "desc" ? eb - ea : ea - eb;
     });
     return arr;
-  }, [recentReferrals, referralsTimeOrder, referralsMoneyOrder, referralsTimeFilter, referralsMoneyFilter, customFromDate, customToDate]);
+  }, [recentReferrals, referralsTimeSort, referralsPriceSort]);
 
   const totalRecentPages = Math.max(1, Math.ceil(referralsSorted.length / REFERRALS_PAGE_SIZE));
   const safeRecentPage = Math.min(recentPage, totalRecentPages);
@@ -694,14 +669,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
 
   useEffect(() => {
     setRecentPage(1);
-  }, [referralsTimeFilter, referralsMoneyFilter, referralsTimeOrder, referralsMoneyOrder, customFromDate, customToDate]);
-
-  useEffect(() => {
-    if (referralsTimeFilter !== "custom") {
-      setCustomFromDate("");
-      setCustomToDate("");
-    }
-  }, [referralsTimeFilter]);
+  }, [referralsTimeSort, referralsPriceSort]);
 
   const pendingWithdrawalReminders = useMemo(
     () => loadWithdrawalReminders(),
@@ -709,31 +677,34 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   );
 
   const syndicateStatementRows = useMemo(() => {
-    return recentReferrals
-      .filter((r) => r.status === "purchased")
-      .map((r) => ({
-        key: r.visitor_id,
-        email: (r.email && r.email.trim()) || "—",
-        product:
-          (r.subscription_name && r.subscription_name.trim()) ||
-          r.purchased_program ||
-          r.purchased_offer ||
-          "Syndicate offer",
-        paid: formatPaidDisplay(r.purchase_currency, r.purchase_amount),
-        yourCut: r.conversion_earning != null && String(r.conversion_earning).trim() !== "" ? `£${formatEarnings(r.conversion_earning)}` : "—",
-        when: formatAgo(r.purchased_at ?? r.at),
-      }));
-  }, [recentReferrals]);
+    return withdrawalStatementItems.map((w) => {
+      const st = (w.status || "").toLowerCase();
+      const link = (w.affiliate_link_id || "").trim();
+      const linkDisp = link.length > 40 ? `${link.slice(0, 22)}…` : link;
+      const product = linkDisp
+        ? `Withdrawal · ${(w.status || "pending").toUpperCase()} — ${linkDisp}`
+        : `Withdrawal · ${(w.status || "pending").toUpperCase()}`;
+      return {
+        key: String(w.id),
+        email: (w.account_name && w.account_name.trim()) || "—",
+        product,
+        paid: `Balance @ request: £${formatEarnings(w.earnings_snapshot)}`,
+        yourCut: `£${formatEarnings(w.requested_amount)}`,
+        when: formatAgo(w.created_at),
+        muted: WITHDRAWAL_REFUNDED_STATUSES.has(st),
+      };
+    });
+  }, [withdrawalStatementItems]);
 
   const syndicateStatementTotal = useMemo(() => {
     let t = 0;
-    for (const r of recentReferrals) {
-      if (r.status !== "purchased") continue;
-      const n = Number(r.conversion_earning ?? 0);
+    for (const w of withdrawalStatementItems) {
+      if (WITHDRAWAL_REFUNDED_STATUSES.has((w.status || "").toLowerCase())) continue;
+      const n = Number(w.requested_amount);
       if (Number.isFinite(n)) t += n;
     }
     return t;
-  }, [recentReferrals]);
+  }, [withdrawalStatementItems]);
 
   return (
     <div
@@ -819,17 +790,35 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   >
                     Share
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWithdrawAttemptedSubmit(false);
-                      setWithdrawMessage(null);
-                      setWithdrawOpen(true);
-                    }}
-                    className="cut-frame-sm hud-hover-glow cursor-pointer min-w-[108px] sm:min-w-[138px] border border-amber-300/85 bg-[linear-gradient(180deg,rgba(255,198,64,0.26),rgba(38,22,0,0.58))] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.78),0_0_28px_rgba(252,211,77,0.42),0_0_62px_rgba(252,211,77,0.26)] transition duration-300 hover:scale-[1.03] hover:border-amber-200/95 hover:shadow-[0_0_0_1px_rgba(255,239,176,0.95),0_0_38px_rgba(252,211,77,0.54),0_0_74px_rgba(252,211,77,0.3)]"
-                  >
-                    Withdraw
-                  </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWithdrawAttemptedSubmit(false);
+                        setWithdrawMessage(null);
+                        setWithdrawOpen(true);
+                      }}
+                      className="cut-frame-sm hud-hover-glow cursor-pointer min-w-[108px] sm:min-w-[138px] border border-amber-300/85 bg-[linear-gradient(180deg,rgba(255,198,64,0.26),rgba(38,22,0,0.58))] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.78),0_0_28px_rgba(252,211,77,0.42),0_0_62px_rgba(252,211,77,0.26)] transition duration-300 hover:scale-[1.03] hover:border-amber-200/95 hover:shadow-[0_0_0_1px_rgba(255,239,176,0.95),0_0_38px_rgba(252,211,77,0.54),0_0_74px_rgba(252,211,77,0.3)]"
+                    >
+                      Withdraw
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={payoutStatementOpen}
+                      aria-controls="affiliate-payout-statement-panel"
+                      id="affiliate-syn-payout-statement-toggle"
+                      onClick={() => setPayoutStatementOpen((o) => !o)}
+                      className={`cut-frame-sm hud-hover-glow cursor-pointer border-2 px-3 py-2.5 text-[10px] font-black uppercase leading-tight tracking-[0.12em] shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_14px_rgba(232,121,249,0.35),0_0_22px_rgba(250,204,21,0.22)] transition duration-300 sm:px-5 sm:py-3 sm:text-xs sm:tracking-[0.14em] ${
+                        payoutStatementOpen
+                          ? "border-fuchsia-300/90 bg-[linear-gradient(165deg,rgba(56,236,255,0.22),rgba(88,28,120,0.45),rgba(250,204,21,0.12))] ring-2 ring-cyan-300/50"
+                          : "border-cyan-400/55 bg-[linear-gradient(165deg,rgba(56,236,255,0.14),rgba(24,8,40,0.5),rgba(250,204,21,0.08))]"
+                      } hover:scale-[1.03] hover:border-fuchsia-200/80`}
+                    >
+                      <span className="text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.55)]">SYN</span>{" "}
+                      <span className="text-fuchsia-200 drop-shadow-[0_0_8px_rgba(232,121,249,0.45)]">Payout</span>{" "}
+                      <span className="text-amber-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">Statement</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -997,47 +986,109 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             </div>
           ) : null}
 
-          <div className="mt-5 cut-frame-sm border-2 border-cyan-400/85 bg-[linear-gradient(165deg,rgba(4,18,22,0.94),rgba(6,6,12,0.96))] p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.85),0_0_28px_rgba(34,211,238,0.4),inset_0_0_24px_rgba(34,211,238,0.1)] sm:p-6">
-            <div className="mb-3 flex flex-col gap-2 border-b border-cyan-500/35 pb-3 sm:flex-row sm:items-end sm:justify-between">
-              <h3 className="font-heading text-base font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.45)] sm:text-lg">
-                Syndicate earnings · statement
-              </h3>
-              <div className="text-right font-mono text-xs font-black uppercase tracking-[0.14em] text-amber-200/95">
-                Total credited (purchases below):{" "}
-                <span className="text-lg text-amber-100">£{formatEarnings(syndicateStatementTotal)}</span>
+          {payoutStatementOpen ? (
+          <div
+            id="affiliate-payout-statement-panel"
+            role="region"
+            aria-labelledby="affiliate-syn-payout-statement-toggle"
+            className="relative mt-5 motion-safe:animate-[affiliatePayoutPanelIn_0.38s_ease-out_both]"
+          >
+            <div
+              className="relative overflow-hidden p-[2px] sm:p-[3px]"
+              style={{
+                background: "linear-gradient(125deg, #22d3ee, #c084fc, #f472b6, #facc15, #34d399, #22d3ee)",
+                backgroundSize: "220% 220%",
+                boxShadow:
+                  "0 0 0 1px rgba(34,211,238,0.55), 0 0 18px rgba(232,121,249,0.42), 0 0 32px rgba(250,204,21,0.22), 0 0 48px rgba(52,211,153,0.18)",
+                clipPath:
+                  "polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px)",
+              }}
+            >
+              <div
+                className="bg-[#020308] p-4 sm:p-6"
+                style={{
+                  clipPath:
+                    "polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)",
+                  boxShadow:
+                    "inset 0 0 0 1px rgba(34,211,238,0.12), inset 0 0 0 1px rgba(232,121,249,0.08), inset 0 0 56px rgba(0,0,0,0.55)",
+                }}
+              >
+                <div className="mb-3 flex flex-col gap-2 border-b border-cyan-500/35 pb-3 sm:flex-row sm:items-end sm:justify-between">
+                  <h3 className="font-heading text-base font-black uppercase tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
+                    <span className="text-cyan-100 [text-shadow:0_0_12px_rgba(34,211,238,0.5)]">Syndicate</span>{" "}
+                    <span className="text-fuchsia-200 [text-shadow:0_0_12px_rgba(232,121,249,0.45)]">payout</span>{" "}
+                    <span className="text-amber-200 [text-shadow:0_0_12px_rgba(250,204,21,0.4)]">statement</span>
+                    <span className="block pt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/90 sm:inline sm:pt-0 sm:before:content-['·'] sm:before:px-2 sm:before:text-cyan-400/60">
+                      withdrawals you applied for
+                    </span>
+                  </h3>
+                  <div className="text-right font-mono text-[10px] font-black uppercase leading-snug tracking-[0.14em] text-cyan-200/90 sm:text-xs">
+                    <span className="block sm:inline">Total requested (active withdrawals below): </span>
+                    <span className="text-base text-yellow-200 [text-shadow:0_0_12px_rgba(250,250,100,0.55),0_0_28px_rgba(250,204,21,0.35)] sm:text-lg">
+                      £{formatEarnings(syndicateStatementTotal)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-4 overflow-hidden rounded-md border border-fuchsia-500/40 bg-[linear-gradient(105deg,rgba(6,40,42,0.92),rgba(40,8,48,0.88),rgba(60,20,8,0.88),rgba(8,36,24,0.9))] px-3 py-2.5 shadow-[inset_0_0_24px_rgba(0,0,0,0.45),0_0_18px_rgba(232,121,249,0.15)] sm:px-4">
+                  <p className="text-center font-mono text-[10px] font-black uppercase leading-relaxed tracking-[0.1em] text-white/80 sm:text-[11px] sm:tracking-[0.12em]">
+                    <span className="text-yellow-200 [text-shadow:0_0_8px_rgba(253,224,71,0.45)]">Payout</span>
+                    <span className="text-fuchsia-200/90"> = </span>
+                    <span className="text-cyan-200">min(requested £</span>
+                    <span className="text-white/55">, </span>
+                    <span className="text-emerald-200/95">balance @ submit</span>
+                    <span className="text-cyan-200">)</span>
+                    <span className="text-white/45"> · </span>
+                    <span className="text-amber-200/95">Snapshot</span>
+                    <span className="text-white/55"> freezes gross available the moment you hit send; </span>
+                    <span className="text-violet-200/95">status</span>
+                    <span className="text-white/55"> tracks ops → wire.</span>
+                  </p>
+                </div>
+
+                {syndicateStatementRows.length ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-cyan-500/45 font-mono text-[10px] font-black uppercase tracking-[0.16em] [text-shadow:0_0_8px_rgba(34,211,238,0.35)]">
+                          <th className="py-2 pr-3 text-cyan-200/95">User</th>
+                          <th className="py-2 pr-3 text-fuchsia-200/90">Request</th>
+                          <th className="py-2 pr-3 text-emerald-200/90">Balance snapshot</th>
+                          <th className="py-2 pr-3 text-yellow-200/95">Your payout</th>
+                          <th className="py-2 text-violet-200/90">Recorded</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {syndicateStatementRows.map((row) => (
+                          <tr
+                            key={row.key}
+                            className={`border-b border-white/10 font-mono text-xs uppercase tracking-[0.08em] text-white/88 sm:text-sm ${row.muted ? "opacity-45" : ""}`}
+                          >
+                            <td className="max-w-[180px] truncate py-2 pr-3 text-cyan-100/95 [text-shadow:0_0_6px_rgba(34,211,238,0.25)]">
+                              {row.email}
+                            </td>
+                            <td className="max-w-[240px] truncate py-2 pr-3 text-fuchsia-100/90 [text-shadow:0_0_6px_rgba(232,121,249,0.22)]">
+                              {row.product}
+                            </td>
+                            <td className="py-2 pr-3 text-emerald-100/90 [text-shadow:0_0_6px_rgba(52,211,153,0.2)]">{row.paid}</td>
+                            <td className="py-2 pr-3 font-black text-yellow-200 [text-shadow:0_0_10px_rgba(250,204,21,0.65),0_0_22px_rgba(253,224,71,0.28)]">
+                              {row.yourCut}
+                            </td>
+                            <td className="py-2 text-violet-200/80 [text-shadow:0_0_6px_rgba(167,139,250,0.2)]">{row.when}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="font-mono text-sm font-semibold uppercase tracking-[0.1em] text-cyan-200/55">
+                    No withdrawal applications yet — when you submit a payout request, each line appears here with your reserved amount and the balance snapshot from that moment.
+                  </p>
+                )}
               </div>
             </div>
-            {syndicateStatementRows.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-cyan-500/40 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200/85">
-                      <th className="py-2 pr-3">User</th>
-                      <th className="py-2 pr-3">Offer</th>
-                      <th className="py-2 pr-3">Their pay-in</th>
-                      <th className="py-2 pr-3">Your cut</th>
-                      <th className="py-2">Recorded</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {syndicateStatementRows.map((row) => (
-                      <tr key={row.key} className="border-b border-white/10 font-mono text-xs uppercase tracking-[0.08em] text-white/85 sm:text-sm">
-                        <td className="max-w-[180px] truncate py-2 pr-3 text-cyan-100/95">{row.email}</td>
-                        <td className="max-w-[220px] truncate py-2 pr-3 text-violet-100/90">{row.product}</td>
-                        <td className="py-2 pr-3 text-amber-100/90">{row.paid ?? "—"}</td>
-                        <td className="py-2 pr-3 font-black text-amber-200">{row.yourCut}</td>
-                        <td className="py-2 text-white/70">{row.when}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="font-mono text-sm font-semibold uppercase tracking-[0.1em] text-white/55">
-                No syndicate checkouts yet — when your referrals pay, every line posts here with their spend and your commission.
-              </p>
-            )}
           </div>
+          ) : null}
 
           <div className="mt-5 cut-frame-sm border-2 border-fuchsia-400/90 bg-[radial-gradient(900px_280px_at_10%_0%,rgba(232,121,249,0.22),transparent_55%),radial-gradient(800px_260px_at_90%_100%,rgba(56,236,255,0.14),transparent_50%),linear-gradient(180deg,rgba(8,4,14,0.92),rgba(0,0,0,0.88))] p-4 shadow-[0_0_0_1px_rgba(232,121,249,0.95),0_0_28px_rgba(232,121,249,0.65),0_0_64px_rgba(193,120,255,0.45),0_0_120px_rgba(56,236,255,0.22),inset_0_0_32px_rgba(232,121,249,0.12)] sm:p-6">
             <div className="mb-4 flex flex-col gap-3 border-b border-fuchsia-500/35 pb-3">
@@ -1045,128 +1096,31 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               <div className="font-heading text-base font-black uppercase tracking-[0.2em] text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.55)] sm:text-lg">Referrals</div>
               <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                 <label className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-amber-200/90 sm:text-sm">Price</span>
-                  <select
-                    value={referralsMoneyFilter}
-                    onChange={(e) => setReferralsMoneyFilter(e.target.value as typeof referralsMoneyFilter)}
-                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-amber-300/80 bg-[linear-gradient(180deg,rgba(252,211,77,0.18),rgba(28,18,4,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.65),0_0_14px_rgba(252,211,77,0.25)] sm:min-w-[200px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-amber-100"
-                    aria-label="Filter referrals by earnings"
-                  >
-                    <option value="all">All</option>
-                    <option value="upto20">Upto £20</option>
-                    <option value="upto50">Upto £50</option>
-                    <option value="upto99">Upto £99.9</option>
-                    <option value="over100">More than £100</option>
-                  </select>
-                </label>
-                <label className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-black uppercase tracking-[0.16em] text-violet-200/90 sm:text-sm">Time</span>
                   <select
-                    value={referralsTimeFilter}
-                    onChange={(e) => setReferralsTimeFilter(e.target.value as typeof referralsTimeFilter)}
-                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-violet-300/80 bg-[linear-gradient(180deg,rgba(193,120,255,0.2),rgba(20,6,38,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.65),0_0_14px_rgba(193,120,255,0.25)] sm:min-w-[180px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-violet-100"
-                    aria-label="Filter referrals by time window"
+                    value={referralsTimeSort}
+                    onChange={(e) => setReferralsTimeSort(e.target.value as "asc" | "desc")}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-violet-300/80 bg-[linear-gradient(180deg,rgba(193,120,255,0.2),rgba(20,6,38,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-violet-100 shadow-[0_0_0_1px_rgba(193,120,255,0.65),0_0_14px_rgba(193,120,255,0.25)] sm:min-w-[220px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-violet-100"
+                    aria-label="Sort referrals by activity time"
                   >
-                    <option value="all">All Time</option>
-                    <option value="today">Last 24 Hours</option>
-                    <option value="7d">Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                    <option value="custom">Custom Range</option>
+                    <option value="asc">Ascending (oldest first)</option>
+                    <option value="desc">Descending (newest first)</option>
                   </select>
                 </label>
                 <label className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-fuchsia-200/90 sm:text-sm">Time order</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-amber-200/90 sm:text-sm">Price</span>
                   <select
-                    value={referralsTimeOrder}
-                    onChange={(e) => setReferralsTimeOrder(e.target.value as "newest" | "oldest")}
-                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-cyan-300/80 bg-[linear-gradient(180deg,rgba(56,236,255,0.18),rgba(4,20,28,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-cyan-100 shadow-[0_0_0_1px_rgba(56,236,255,0.65),0_0_14px_rgba(56,236,255,0.25)] sm:min-w-[180px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-cyan-100"
-                    aria-label="Sort referrals by activity date ascending or descending"
+                    value={referralsPriceSort}
+                    onChange={(e) => setReferralsPriceSort(e.target.value as "asc" | "desc")}
+                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-amber-300/80 bg-[linear-gradient(180deg,rgba(252,211,77,0.18),rgba(28,18,4,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.65),0_0_14px_rgba(252,211,77,0.25)] sm:min-w-[220px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-amber-100"
+                    aria-label="Sort referrals by commission when activity time matches"
                   >
-                    <option value="newest">Newest first (descending)</option>
-                    <option value="oldest">Oldest first (ascending)</option>
-                  </select>
-                </label>
-                <label className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-fuchsia-200/90 sm:text-sm">Price order</span>
-                  <select
-                    value={referralsMoneyOrder}
-                    onChange={(e) => setReferralsMoneyOrder(e.target.value as "none" | "high" | "low")}
-                    className="cut-frame-sm min-h-[40px] cursor-pointer border border-emerald-300/80 bg-[linear-gradient(180deg,rgba(52,211,153,0.16),rgba(4,22,12,0.72))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-100 shadow-[0_0_0_1px_rgba(52,211,153,0.65),0_0_14px_rgba(52,211,153,0.25)] sm:min-w-[200px] sm:text-sm [&>option]:bg-[#0a0a12] [&>option]:text-emerald-100"
-                    aria-label="Sort referrals by commission ascending or descending"
-                  >
-                    <option value="none">Use time order only</option>
-                    <option value="high">Highest commission first</option>
-                    <option value="low">Lowest commission first</option>
+                    <option value="asc">Ascending (low → high)</option>
+                    <option value="desc">Descending (high → low)</option>
                   </select>
                 </label>
               </div>
               </div>
-              {referralsTimeFilter === "custom" ? (
-                <div
-                  className="cut-frame-sm relative border border-violet-300/70 bg-[radial-gradient(900px_220px_at_0%_0%,rgba(193,120,255,0.18),transparent_55%),radial-gradient(700px_200px_at_100%_100%,rgba(56,236,255,0.14),transparent_55%),linear-gradient(180deg,rgba(12,4,22,0.92),rgba(2,2,6,0.96))] px-3 py-3 shadow-[0_0_0_1px_rgba(193,120,255,0.85),0_0_18px_rgba(193,120,255,0.4),0_0_44px_rgba(56,236,255,0.22),inset_0_0_22px_rgba(193,120,255,0.16)] sm:px-4 sm:py-3.5"
-                  role="group"
-                  aria-label="Custom date range filter"
-                >
-                  <div className="pointer-events-none absolute left-3 top-0 h-px w-16 bg-gradient-to-r from-transparent via-fuchsia-300/80 to-transparent" />
-                  <div className="pointer-events-none absolute right-3 bottom-0 h-px w-16 bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent" />
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black uppercase tracking-[0.22em] text-fuchsia-200/85">Custom Window</span>
-                      <span className="text-xs font-bold text-violet-100/85 sm:text-sm">
-                        Select a start and end date — both are inclusive.
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-end gap-3">
-                      <label className="flex flex-col gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-fuchsia-200/85">From</span>
-                        <input
-                          type="date"
-                          value={customFromDate}
-                          max={customToDate || undefined}
-                          onChange={(e) => setCustomFromDate(e.target.value)}
-                          aria-label="Custom range start date"
-                          className="cut-frame-sm min-h-[40px] cursor-pointer border border-fuchsia-300/75 bg-[linear-gradient(180deg,rgba(232,121,249,0.18),rgba(20,6,30,0.85))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-fuchsia-100 outline-none shadow-[0_0_0_1px_rgba(232,121,249,0.7),0_0_14px_rgba(232,121,249,0.32),inset_0_0_18px_rgba(232,121,249,0.12)] transition-shadow focus:border-fuchsia-200 focus:shadow-[0_0_0_1px_rgba(249,168,212,0.95),0_0_22px_rgba(232,121,249,0.5),inset_0_0_22px_rgba(232,121,249,0.2)] sm:min-w-[170px] sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator:hover]:opacity-100"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200/85">To</span>
-                        <input
-                          type="date"
-                          value={customToDate}
-                          min={customFromDate || undefined}
-                          onChange={(e) => setCustomToDate(e.target.value)}
-                          aria-label="Custom range end date"
-                          className="cut-frame-sm min-h-[40px] cursor-pointer border border-cyan-300/75 bg-[linear-gradient(180deg,rgba(56,236,255,0.18),rgba(4,18,28,0.85))] px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-cyan-100 outline-none shadow-[0_0_0_1px_rgba(56,236,255,0.7),0_0_14px_rgba(56,236,255,0.32),inset_0_0_18px_rgba(56,236,255,0.12)] transition-shadow focus:border-cyan-200 focus:shadow-[0_0_0_1px_rgba(130,245,255,0.95),0_0_22px_rgba(56,236,255,0.5),inset_0_0_22px_rgba(56,236,255,0.2)] sm:min-w-[170px] sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator:hover]:opacity-100"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomFromDate("");
-                          setCustomToDate("");
-                        }}
-                        disabled={!customFromDate && !customToDate}
-                        className="cut-frame-sm min-h-[40px] cursor-pointer border border-amber-300/75 bg-[linear-gradient(180deg,rgba(255,198,64,0.2),rgba(28,18,4,0.78))] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-amber-100 shadow-[0_0_0_1px_rgba(252,211,77,0.7),0_0_14px_rgba(252,211,77,0.3)] transition-transform hover:scale-[1.03] hover:border-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                  {customFromDate || customToDate ? (
-                    <div className="mt-3 inline-flex flex-wrap items-center gap-2 border-t border-violet-400/30 pt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-100/85 sm:text-xs">
-                      <span className="text-fuchsia-200/85">Showing</span>
-                      <span className="rounded border border-fuchsia-300/70 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-100 shadow-[0_0_10px_rgba(232,121,249,0.25)]">
-                        {customFromDate || "Earliest"}
-                      </span>
-                      <span className="text-cyan-200/75">→</span>
-                      <span className="rounded border border-cyan-300/70 bg-cyan-500/15 px-2 py-0.5 text-cyan-100 shadow-[0_0_10px_rgba(56,236,255,0.25)]">
-                        {customToDate || "Latest"}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
             <div className="space-y-4 min-h-[400px]">
               {referralsSorted.length ? (
@@ -1379,22 +1333,6 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   </div>
                   );
                 })
-              ) : recentReferrals.length > 0 ? (
-                <div className="flex flex-col items-start gap-3 text-lg text-white/65">
-                  <span>No referrals match the selected filters.</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReferralsTimeFilter("all");
-                      setReferralsMoneyFilter("all");
-                      setReferralsTimeOrder("newest");
-                      setReferralsMoneyOrder("none");
-                    }}
-                    className="cut-frame-sm cursor-pointer border border-fuchsia-300/80 bg-[linear-gradient(180deg,rgba(232,121,249,0.22),rgba(28,6,42,0.6))] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.7),0_0_18px_rgba(232,121,249,0.32)]"
-                  >
-                    Reset filters
-                  </button>
-                </div>
               ) : (
                 <div className="text-lg text-white/65">No leads or sales yet. New visitors still add to Clicks until they sign up or purchase.</div>
               )}

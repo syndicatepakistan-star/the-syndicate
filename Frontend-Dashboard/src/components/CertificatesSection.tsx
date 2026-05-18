@@ -324,19 +324,17 @@ export default function CertificatesSection({
                     style={{ background: 'transparent', boxShadow: 'none' }}
                   >
                     <div className="pointer-events-none absolute h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(253,208,47,0.42)_0%,rgba(253,208,47,0.18)_42%,transparent_75%)] blur-[18px] sm:h-56 sm:w-56" />
-                    <div className="motion-safe:animate-[spin_24s_linear_infinite] motion-reduce:animate-none will-change-transform">
-                      <Image
-                        src="/assets/coin-gold.png"
-                        alt=""
-                        width={220}
-                        height={220}
-                        sizes="(max-width: 640px) 176px, 224px"
-                        className="relative z-[1] h-[78%] w-[78%] object-contain drop-shadow-[0_0_22px_rgba(251,191,36,0.75)] sm:h-[80%] sm:w-[80%]"
-                        loading="eager"
-                        fetchPriority="low"
-                        decoding="async"
-                      />
-                    </div>
+                    <Image
+                      src="/assets/coin-gold.png"
+                      alt=""
+                      width={220}
+                      height={220}
+                      sizes="(max-width: 640px) 176px, 224px"
+                      className="relative z-[1] h-[78%] w-[78%] object-contain drop-shadow-[0_0_22px_rgba(251,191,36,0.75)] sm:h-[80%] sm:w-[80%]"
+                      loading="eager"
+                      fetchPriority="low"
+                      decoding="async"
+                    />
                   </div>
                   <div className="w-full max-w-[420px]">
                     <div className="mt-1 flex w-full items-center justify-center gap-2 border-2 py-3 font-mono text-sm tracking-[0.12em] text-cyan-200 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
@@ -566,15 +564,13 @@ export default function CertificatesSection({
                     <div className="relative flex flex-1 flex-col items-center justify-center sm:flex-initial">
                       <div className="relative flex h-28 w-28 items-center justify-center sm:h-44 sm:w-44">
                         <div className="pointer-events-none absolute h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(253,208,47,0.42)_0%,rgba(253,208,47,0.18)_42%,transparent_75%)] blur-[16px] sm:h-44 sm:w-44" />
-                        <div className="motion-safe:animate-[spin_24s_linear_infinite] motion-reduce:animate-none will-change-transform">
-                          <Image
-                            src="/assets/coin-gold.png"
-                            alt="Gold key certificate icon"
-                            width={380}
-                            height={380}
-                            className="h-32 w-32 object-contain sm:h-44 sm:w-44"
-                          />
-                        </div>
+                        <Image
+                          src="/assets/coin-gold.png"
+                          alt="Gold key certificate icon"
+                          width={380}
+                          height={380}
+                          className="h-32 w-32 object-contain sm:h-44 sm:w-44"
+                        />
                       </div>
                       <p className="mt-3 text-center text-[10px] uppercase tracking-[0.2em] text-cyan-100/80 sm:tracking-[0.24em]">Syndicate Credential Token</p>
                       <div className="mt-2 h-[2px] w-40 self-center rounded-full bg-cyan-300/75 blur-[0.5px]" />

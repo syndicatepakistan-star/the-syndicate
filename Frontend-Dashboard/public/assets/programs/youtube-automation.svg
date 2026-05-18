@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#070707"/>
+      <stop offset="0.55" stop-color="#050505"/>
+      <stop offset="1" stop-color="#070707"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(420 210) rotate(18) scale(560 300)">
+      <stop stop-color="rgba(255,215,0,0.20)"/>
+      <stop offset="1" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="cyan" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(880 170) rotate(18) scale(520 260)">
+      <stop stop-color="rgba(0,255,255,0.12)"/>
+      <stop offset="1" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <linearGradient id="stroke" x1="220" y1="140" x2="980" y2="580" gradientUnits="userSpaceOnUse">
+      <stop stop-color="rgba(255,59,59,0.70)"/>
+      <stop offset="0.45" stop-color="rgba(255,165,0,0.70)"/>
+      <stop offset="1" stop-color="rgba(255,215,0,0.65)"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="260" y1="260" x2="940" y2="460" gradientUnits="userSpaceOnUse">
+      <stop stop-color="rgba(0,255,122,0.55)"/>
+      <stop offset="0.6" stop-color="rgba(0,255,255,0.35)"/>
+      <stop offset="1" stop-color="rgba(196,126,255,0.35)"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect width="1200" height="720" fill="url(#gold)"/>
+  <rect width="1200" height="720" fill="url(#cyan)"/>
+
+  <!-- subtle grid -->
+  <g opacity="0.28">
+    <path d="M80 140H1120" stroke="rgba(255,255,255,0.05)" stroke-width="2"/>
+    <path d="M80 220H1120" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+    <path d="M80 300H1120" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+    <path d="M80 380H1120" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+    <path d="M80 460H1120" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+    <path d="M80 540H1120" stroke="rgba(255,255,255,0.05)" stroke-width="2"/>
+  </g>
+
+  <!-- "faceless automation" terminal + pipeline -->
+  <g opacity="0.95">
+    <path d="M250 200h700a26 26 0 0 1 26 26v268a26 26 0 0 1-26 26H250a26 26 0 0 1-26-26V226a26 26 0 0 1 26-26Z" stroke="url(#stroke)" stroke-width="3"/>
+
+    <path d="M250 248h726" stroke="rgba(255,215,0,0.18)" stroke-width="2"/>
+    <circle cx="280" cy="224" r="6" fill="rgba(255,59,59,0.65)"/>
+    <circle cx="304" cy="224" r="6" fill="rgba(255,165,0,0.55)"/>
+    <circle cx="328" cy="224" r="6" fill="rgba(0,255,122,0.40)"/>
+
+    <!-- pipeline blocks -->
+    <rect x="310" y="290" width="240" height="90" rx="16" stroke="rgba(0,255,255,0.30)" stroke-width="3" fill="rgba(0,0,0,0.25)"/>
+    <rect x="650" y="290" width="240" height="90" rx="16" stroke="rgba(196,126,255,0.28)" stroke-width="3" fill="rgba(0,0,0,0.25)"/>
+    <rect x="480" y="410" width="240" height="90" rx="16" stroke="rgba(0,255,122,0.26)" stroke-width="3" fill="rgba(0,0,0,0.25)"/>
+
+    <path d="M550 335h100" stroke="url(#neon)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M600 380v30" stroke="rgba(255,215,0,0.22)" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- play button (no face) -->
+    <path d="M560 330l34 20-34 20v-40Z" fill="rgba(255,59,59,0.60)"/>
+    <path d="M560 330l34 20-34 20v-40Z" stroke="rgba(255,215,0,0.25)" stroke-width="2"/>
+
+    <!-- labels as lines -->
+    <path d="M340 320h180" stroke="rgba(0,255,255,0.22)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M340 350h140" stroke="rgba(255,255,255,0.14)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M680 320h170" stroke="rgba(196,126,255,0.20)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M680 350h120" stroke="rgba(255,255,255,0.14)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M510 440h180" stroke="rgba(0,255,122,0.20)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M510 470h130" stroke="rgba(255,255,255,0.14)" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- corner circuitry -->
+  <g opacity="0.55" stroke="rgba(255,215,0,0.18)" stroke-width="2" stroke-linecap="round">
+    <path d="M150 140h120m40 0h120" />
+    <path d="M150 580h220m40 0h220" />
+    <circle cx="190" cy="140" r="6" fill="rgba(255,215,0,0.18)"/>
+    <circle cx="270" cy="580" r="6" fill="rgba(255,215,0,0.16)"/>
+    <circle cx="890" cy="580" r="6" fill="rgba(255,215,0,0.14)"/>
+  </g>
+</svg>

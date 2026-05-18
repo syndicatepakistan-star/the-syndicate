@@ -330,9 +330,55 @@ const POINTS_PER_10_POUNDS = 100;
 const POUNDS_PER_100_POINTS = 10;
 
 const CTA_BTN =
-  "syndicate-hud-cta rounded-md border border-[#eab308] bg-[linear-gradient(180deg,#fef08a_0%,#fde047_46%,#eab308_100%)] text-black [box-shadow:inset_0_1px_0_rgba(255,252,220,0.88),inset_0_-2px_0_rgba(161,98,7,0.55),0_0_16px_rgba(253,224,71,0.45)] hover:brightness-110";
+  "syndicate-hud-cta rounded-md border border-[#b8942f] bg-[#d4af39] text-[#0a0a0a] [box-shadow:inset_0_1px_0_rgba(255,240,200,0.7),inset_0_-2px_0_rgba(140,110,30,0.45),0_0_14px_rgba(212,175,57,0.42)] hover:brightness-110";
+const SYNDICATE_RESPONSE_FIELD =
+  "syndicate-mission-response-field min-h-[112px] w-full resize-y rounded-lg border-2 border-[#d4af39]/60 bg-[#1e1c14] px-3 py-3 text-[16px] font-medium leading-relaxed text-white outline-none placeholder:text-white/60 focus:border-[#d4af39] focus:bg-[#262318] focus:ring-2 focus:ring-[#d4af39]/30 sm:text-[15px]";
 const HUD_LABEL = "text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)]/48";
 const HUD_VALUE = "mt-1 font-mono font-black text-[#fefce8]/94";
+const SYNDICATE_NAV_BTN =
+  "relative z-[1] flex min-h-[56px] min-w-0 items-center justify-center touch-manipulation px-2 py-2.5 text-[11px] font-black leading-snug sm:min-h-[58px] sm:px-2.5 sm:text-[12px] md:text-[13px]";
+const SYNDICATE_NAV_BTN_STACK =
+  "relative z-[1] flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-0.5 touch-manipulation px-2 py-2.5 text-[10px] font-black leading-snug sm:min-h-[58px] sm:text-[11px] md:text-[12px]";
+const STATS_SECTION_LABEL =
+  "syndicate-stats-section-label font-mono text-[10px] font-black uppercase tracking-[0.28em] sm:text-[11px]";
+const STATS_NEON_CARD = "syndicate-stats-neon-card";
+const STATS_NEON_CARD_GOLD = `${STATS_NEON_CARD} syndicate-stats-neon-card--gold`;
+const STATS_NEON_CARD_CYAN = `${STATS_NEON_CARD} syndicate-stats-neon-card--cyan`;
+const STATS_NEON_CARD_MAGENTA = `${STATS_NEON_CARD} syndicate-stats-neon-card--magenta`;
+const STATS_NEON_CARD_FUCHSIA = `${STATS_NEON_CARD} syndicate-stats-neon-card--fuchsia`;
+const STATS_NEON_CARD_EMERALD = `${STATS_NEON_CARD} syndicate-stats-neon-card--emerald`;
+const STATS_CHART_PANEL = "syndicate-stats-chart-panel";
+
+const REWARD_ACTION_BASE =
+  "syndicate-reward-action relative z-[1] mt-auto w-full shrink-0 touch-manipulation px-1 py-2 text-[10px] font-black uppercase tracking-[0.12em] sm:px-2 sm:py-2.5 sm:text-[11px] sm:tracking-[0.14em]";
+
+function rewardActionButtonClass(
+  redeemed: boolean,
+  canRedeem: boolean,
+  sequentialBlocked: boolean,
+  hasPoints: boolean,
+  prevRedeemed: boolean
+): string {
+  if (redeemed) return cn(REWARD_ACTION_BASE, "syndicate-reward-action--redeemed");
+  if (canRedeem) return cn(REWARD_ACTION_BASE, "syndicate-reward-action--redeem");
+  if (sequentialBlocked) return cn(REWARD_ACTION_BASE, "syndicate-reward-action--locked-seq");
+  if (prevRedeemed && !hasPoints) return cn(REWARD_ACTION_BASE, "syndicate-reward-action--locked-pts");
+  return cn(REWARD_ACTION_BASE, "syndicate-reward-action--locked");
+}
+
+function rewardActionButtonLabel(
+  redeemed: boolean,
+  canRedeem: boolean,
+  sequentialBlocked: boolean,
+  hasPoints: boolean,
+  unlockPoints: number
+): string {
+  if (redeemed) return "Redeemed";
+  if (canRedeem) return "Redeem";
+  if (sequentialBlocked) return "Locked";
+  if (!hasPoints) return `Need ${unlockPoints} pts`;
+  return "Locked";
+}
 
 /** Files in `public/assets/rewards/` (spaces encoded for URLs). */
 function rewardsPublicAsset(filename: string): string {
@@ -724,7 +770,7 @@ function SyndicateHelpAnchoredPopover({
         role="dialog"
         aria-modal="true"
         aria-labelledby="syndicate-help-title"
-        className="syndicate-mood-context syndicate-readable fixed z-[180] overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(255,215,0,0.35)] bg-[linear-gradient(180deg,rgba(24,18,10,0.98),rgba(8,6,4,0.99))] p-5 shadow-[0_12px_48px_rgba(0,0,0,0.65)] sm:p-6"
+        className="syndicate-mood-context syndicate-readable no-scrollbar fixed z-[180] overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(255,215,0,0.35)] bg-[linear-gradient(180deg,rgba(24,18,10,0.98),rgba(8,6,4,0.99))] p-5 shadow-[0_12px_48px_rgba(0,0,0,0.65)] sm:p-6"
         style={{
           top: pos.top,
           left: pos.left,
@@ -752,19 +798,31 @@ function SyndicateHelpAnchoredPopover({
   );
 }
 
-/** Scroll the dashboard shell and window so mission detail opens at the top (not the list bottom). */
-function scrollSyndicateShellToTop() {
-  if (typeof window === "undefined") return;
-  window.scrollTo({ top: 0, behavior: "instant" });
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  document.querySelectorAll("[data-syndicate-scroll-root], [data-main-shell-scroll]").forEach((el) => {
+/** Reset in-shell scroll only — avoid scrollIntoView / window scroll (breaks Syndicate layout). */
+function resetSyndicateMissionScroll() {
+  if (typeof document === "undefined") return;
+  const inSyndicate = document.documentElement.classList.contains("syndicate-mode-active");
+  if (!inSyndicate) {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+  document.querySelectorAll("[data-main-shell-scroll], [data-syndicate-mission-scroll]").forEach((el) => {
     const node = el as HTMLElement;
     node.scrollTop = 0;
-    if (typeof node.scrollTo === "function") {
-      node.scrollTo({ top: 0, behavior: "instant" });
-    }
   });
+}
+
+function setSyndicateMissionDetailLayoutOpen(open: boolean) {
+  if (typeof document === "undefined") return;
+  document
+    .querySelectorAll(
+      ".syndicate-mode-section, .syndicate-dystopia-enclosure, .syndicate-mission-detail-host, [data-main-shell-scroll]"
+    )
+    .forEach((el) => {
+      if (open) el.setAttribute("data-mission-detail-open", "");
+      else el.removeAttribute("data-mission-detail-open");
+    });
 }
 
 function todayLocalISO(): string {
@@ -1368,7 +1426,7 @@ function MissionReminderCard({
                       <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/75">
                         How will you complete it
                       </div>
-                      <p className="mt-1.5 max-h-[140px] overflow-y-auto whitespace-pre-wrap break-words text-[13px] leading-relaxed text-white/88 sm:text-[14px]">
+                      <p className="no-scrollbar mt-1.5 max-h-[140px] overflow-y-auto whitespace-pre-wrap break-words text-[13px] leading-relaxed text-white/88 sm:text-[14px]">
                         {item.howDraft}
                       </p>
                     </div>
@@ -1715,7 +1773,7 @@ function DetailPane({
   return (
     <div
       id="syndicate-mission-detail-top"
-      className="syndicate-readable syndicate-detail-pane flex h-full min-h-0 w-full min-w-0 max-w-none flex-1 flex-col overflow-hidden scroll-mt-[max(6.5rem,calc(env(safe-area-inset-top,0px)+4.5rem))] px-1 pb-2 pt-1 sm:px-2 sm:pb-3 sm:pt-2 md:px-3"
+      className="syndicate-readable syndicate-detail-pane flex h-0 min-h-0 w-full min-w-0 max-w-none flex-1 flex-col overflow-hidden px-1 pb-2 pt-1 sm:px-2 sm:pb-3 sm:pt-2 md:px-3"
     >
       <div className="z-20 -mx-2 mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[linear-gradient(180deg,rgba(8,8,10,0.97),rgba(6,6,8,0.92))] px-3 py-3 shadow-[0_10px_28px_rgba(0,0,0,0.55)] backdrop-blur-md sm:-mx-4 sm:px-4 md:-mx-5 md:mb-4 md:px-5">
         <button
@@ -1726,7 +1784,10 @@ function DetailPane({
           ← Back to missions
         </button>
       </div>
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-[rgba(0,255,255,0.3)] bg-[linear-gradient(165deg,rgba(5,14,24,0.94),rgba(0,0,0,0.84)_52%,rgba(46,10,58,0.64))] p-4 [box-shadow:0_0_28px_rgba(0,255,255,0.1)] sm:p-6 md:p-7">
+      <div
+        data-syndicate-mission-scroll
+        className="no-scrollbar flex min-h-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-[rgba(0,255,255,0.3)] bg-[linear-gradient(165deg,rgba(5,14,24,0.94),rgba(0,0,0,0.84)_52%,rgba(46,10,58,0.64))] p-4 [box-shadow:0_0_28px_rgba(0,255,255,0.1)] sm:p-6 md:p-7"
+      >
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           <span className="rounded border border-white/25 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-tight tracking-wide text-white/80 sm:text-[10px]">
             {row.category}
@@ -1849,7 +1910,10 @@ function DetailPane({
             )
           ) : (
             <>
-              <label className="mb-1.5 block text-[12px] font-semibold text-white/80" htmlFor="mission-how">
+              <label
+                className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.1em] text-[#d4af39]"
+                htmlFor="mission-how"
+              >
                 How will you complete it
               </label>
               <textarea
@@ -1858,7 +1922,7 @@ function DetailPane({
                 onChange={(e) => setHow(e.target.value)}
                 rows={4}
                 placeholder="Describe how you will complete this mission…"
-                className="syndicate-readable mb-4 min-h-[112px] w-full resize-y rounded-md border border-white/18 bg-black/50 px-3 py-3 text-[16px] leading-relaxed text-white/95 outline-none placeholder:text-white/35 focus:border-cyan-400/45 focus:ring-1 focus:ring-cyan-400/20 sm:text-[15px]"
+                className={cn("syndicate-readable mb-4", SYNDICATE_RESPONSE_FIELD)}
               />
               {onMissionReminderChange ? (
                 <div className="mb-6 rounded-lg border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(0,45,70,0.35),rgba(0,0,0,0.25))] p-4 [box-shadow:inset_0_0_0_1px_rgba(120,200,255,0.08)]">
@@ -1902,8 +1966,8 @@ function DetailPane({
                         !reminderLocal.trim() && !missionReminderIso
                       }
                       className={cn(
-                        "syndicate-readable min-h-[44px] touch-manipulation rounded-md border px-4 py-2 text-[13px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-40",
-                        "border-cyan-400/45 bg-cyan-500/15 text-cyan-50 hover:border-cyan-300/55 hover:bg-cyan-500/25"
+                        "syndicate-readable min-h-[44px] touch-manipulation px-4 py-2 text-[13px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-40",
+                        CTA_BTN
                       )}
                     >
                       Done
@@ -1923,7 +1987,10 @@ function DetailPane({
                   </div>
                 </div>
               ) : null}
-              <label className="mb-1.5 block text-[12px] font-semibold text-white/80" htmlFor="mission-learned">
+              <label
+                className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.1em] text-[#d4af39]"
+                htmlFor="mission-learned"
+              >
                 What you learned from it
               </label>
               <textarea
@@ -1932,7 +1999,7 @@ function DetailPane({
                 onChange={(e) => setLearned(e.target.value)}
                 rows={4}
                 placeholder="Reflect on insights, skills, or takeaways from doing this mission…"
-                className="syndicate-readable min-h-[112px] w-full resize-y rounded-md border border-white/18 bg-black/50 px-3 py-3 text-[16px] leading-relaxed text-white/95 outline-none placeholder:text-white/35 focus:border-cyan-400/45 focus:ring-1 focus:ring-cyan-400/20 sm:text-[15px]"
+                className={cn("syndicate-readable", SYNDICATE_RESPONSE_FIELD)}
               />
               <p className="mt-2 text-[11px] leading-snug text-white/50 sm:text-[12px]">
                 Both fields are required before you can submit. Scoring uses them together.
@@ -2463,7 +2530,59 @@ export function SyndicateAiChallengePanel() {
       ? REWARD_MILESTONES.findIndex((m) => m.id === nextMilestone.id) + 1
       : null;
     const nextTierTotalPoints = nextMilestone?.unlock_points ?? null;
-    return { syndicateLevel, ptsToNextLevel, nextLevelNumber, atMaxTier, nextTierTotalPoints };
+    const nextRewardTitle = nextMilestone?.title ?? null;
+
+    const ptsUntilLabel =
+      ptsToNextLevel === 1 ? "1 point" : ptsToNextLevel > 0 ? `${ptsToNextLevel} points` : "0 points";
+
+    let levelDescPrimary: string;
+    let levelDescSecondary: string | null;
+    if (atMaxTier) {
+      levelDescPrimary = "Every reward tier in Unlock & rewards is unlocked.";
+      levelDescSecondary =
+        syndicateLevel > 0
+          ? `You are Syndicate Level ${syndicateLevel} — keep earning points to climb the leaderboard.`
+          : "Keep completing missions to climb the leaderboard.";
+    } else if (nextLevelNumber != null && nextTierTotalPoints != null && nextRewardTitle) {
+      levelDescPrimary = `${ptsUntilLabel} until Level ${nextLevelNumber}.`;
+      levelDescSecondary = `Hit ${nextTierTotalPoints} lifetime points to unlock “${nextRewardTitle}” in Unlock & rewards.`;
+    } else {
+      levelDescPrimary = "Complete missions to raise your Syndicate level.";
+      levelDescSecondary = null;
+    }
+
+    let pointsDescPrimary: string;
+    let pointsDescSecondary: string | null;
+    if (safePts === 0) {
+      pointsDescPrimary = "No lifetime points yet — finish your first mission to start the climb.";
+    } else if (safePts === 1) {
+      pointsDescPrimary = "1 lifetime point banked — this total only goes up.";
+    } else {
+      pointsDescPrimary = `${safePts} lifetime points banked — this total only goes up.`;
+    }
+    if (atMaxTier) {
+      pointsDescSecondary = "Redeem unlocked perks in Unlock & rewards or push for a higher leaderboard rank.";
+    } else if (nextRewardTitle && nextTierTotalPoints != null && nextLevelNumber != null) {
+      pointsDescSecondary =
+        ptsToNextLevel > 0
+          ? `${ptsUntilLabel} until “${nextRewardTitle}” unlocks (Level ${nextLevelNumber} · ${nextTierTotalPoints} pts).`
+          : `“${nextRewardTitle}” is ready — open Unlock & rewards to claim it.`;
+    } else {
+      pointsDescSecondary = "Points come from daily missions, bonus tasks, and reward bonuses.";
+    }
+
+    return {
+      syndicateLevel,
+      ptsToNextLevel,
+      nextLevelNumber,
+      atMaxTier,
+      nextTierTotalPoints,
+      nextRewardTitle,
+      levelDescPrimary,
+      levelDescSecondary,
+      pointsDescPrimary,
+      pointsDescSecondary
+    };
   }, [pointsTotal]);
 
   const weeklyBarData = useMemo(() => {
@@ -2794,12 +2913,12 @@ export function SyndicateAiChallengePanel() {
   /** Isolated from mood filter updates so Recharts does not redraw on every mood change. */
   const statsProfileChartsLeftColumn = useMemo(
     () => (
-      <div className="min-w-0 space-y-10">
-        <div>
-          <h3 className="mb-3 text-[15px] font-bold uppercase tracking-[0.12em] text-white sm:text-[16px]">
+      <div className="min-w-0 space-y-8">
+        <div className={STATS_CHART_PANEL}>
+          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
             Today · mission points by category (pie)
           </h3>
-          <div className="h-[300px] w-full overflow-hidden rounded-lg sm:h-[420px] md:h-[480px] lg:h-[520px]">
+          <div className="h-[300px] w-full overflow-hidden sm:h-[420px] md:h-[480px] lg:h-[520px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                 <defs>
@@ -2853,11 +2972,11 @@ export function SyndicateAiChallengePanel() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div>
-          <h3 className="mb-3 text-[15px] font-bold uppercase tracking-[0.12em] text-white sm:text-[16px]">
+        <div className={STATS_CHART_PANEL}>
+          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
             Weekly · mission points (bar)
           </h3>
-          <div className="h-[220px] w-full min-h-[200px] overflow-hidden rounded-lg sm:h-[260px] md:h-[280px]">
+          <div className="h-[220px] w-full min-h-[200px] overflow-hidden sm:h-[260px] md:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyBarData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
@@ -2883,11 +3002,11 @@ export function SyndicateAiChallengePanel() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div>
-          <h3 className="mb-3 text-[15px] font-bold uppercase tracking-[0.12em] text-white sm:text-[16px]">
+        <div className={STATS_CHART_PANEL}>
+          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
             Monthly · daily mission points (line)
           </h3>
-          <div className="h-[220px] w-full min-h-[200px] overflow-hidden rounded-lg sm:h-[260px] md:h-[300px]">
+          <div className="h-[220px] w-full min-h-[200px] overflow-hidden sm:h-[260px] md:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyLineData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
@@ -3524,11 +3643,11 @@ export function SyndicateAiChallengePanel() {
   }
 
   useLayoutEffect(() => {
-    if (!selected) return;
-    scrollSyndicateShellToTop();
-    const top = document.getElementById("syndicate-mission-detail-top");
-    top?.scrollIntoView({ behavior: "instant", block: "start" });
-  }, [selected]);
+    const open = !!selected;
+    setSyndicateMissionDetailLayoutOpen(open);
+    if (!open) return;
+    requestAnimationFrame(() => resetSyndicateMissionScroll());
+  }, [selected?.id]);
 
   async function handleSubmit(draft: MissionResponseDraft) {
     if (!selected) return;
@@ -3893,7 +4012,7 @@ export function SyndicateAiChallengePanel() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="syndicate-points-to-pounds-title"
-              className="syndicate-mood-context syndicate-readable fixed left-1/2 top-1/2 z-[182] w-[min(calc(100vw-1.25rem),32rem)] max-h-[min(90vh,calc(100dvh-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-2xl border border-amber-400/25 bg-[linear-gradient(165deg,rgba(32,26,14,0.98),rgba(8,6,5,0.99))] shadow-[0_24px_80px_rgba(0,0,0,0.78)]"
+              className="syndicate-mood-context syndicate-readable no-scrollbar fixed left-1/2 top-1/2 z-[182] w-[min(calc(100vw-1.25rem),32rem)] max-h-[min(90vh,calc(100dvh-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-2xl border border-amber-400/25 bg-[linear-gradient(165deg,rgba(32,26,14,0.98),rgba(8,6,5,0.99))] shadow-[0_24px_80px_rgba(0,0,0,0.78)]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 z-10 flex justify-end border-b border-white/10 bg-[linear-gradient(180deg,rgba(32,26,14,0.98),rgba(32,26,14,0.92))] px-3 py-2.5 sm:px-4">
@@ -3983,7 +4102,10 @@ export function SyndicateAiChallengePanel() {
         {adminTaskRecordingPortal}
         {completionToast}
         {syndicateHelpModal}
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          className="syndicate-mission-detail-host flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
+          data-mission-detail-open=""
+        >
           <DetailPane
             key={selected.id}
             row={selected}
@@ -4026,37 +4148,40 @@ export function SyndicateAiChallengePanel() {
       {completionToast}
       {syndicateHelpModal}
       {pointsToPoundsModal}
-      <div className="syndicate-dash-outer relative flex h-full min-h-0 w-full min-w-0 max-w-none flex-1 flex-col space-y-2 border px-0 pt-0 sm:space-y-3 sm:pt-0 max-md:space-y-2 max-md:border-0 max-md:bg-[linear-gradient(168deg,#050508_0%,#0d0818_44%,#0a0610_100%)] max-md:px-0 max-md:pt-0 max-md:shadow-none">
+      <div className="syndicate-dash-outer no-scrollbar relative flex min-h-0 w-full min-w-0 max-w-none flex-col gap-4 overflow-x-hidden border px-0 pt-0 max-md:gap-3 max-md:border-0 max-md:bg-[linear-gradient(168deg,#050508_0%,#0d0818_44%,#0a0610_100%)] max-md:px-0 max-md:pt-0 max-md:shadow-none">
       <div className="pointer-events-none absolute inset-0 -z-10 syndicate-dash-scanlines max-md:opacity-35" />
-      <div className="syndicate-dash-header mb-1 flex w-full flex-col gap-2 rounded-2xl border px-2 py-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-2.5 sm:py-2 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.24)] max-md:px-2 max-md:py-1.5">
-        <div className="min-w-0 w-full sm:flex-1 sm:min-w-0">
+      <div className="syndicate-dash-header relative z-20 mb-3 flex w-full shrink-0 flex-col gap-3 rounded-2xl border px-2.5 py-2.5 sm:px-3 sm:py-3 max-md:mb-2 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.24)] max-md:px-2 max-md:py-2">
+        <div className="min-w-0 w-full">
           <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--gold)]/88 sm:text-[12px]">
             <span className="inline-flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[color:var(--gold)] shadow-[0_0_10px_rgba(255,215,0,0.85)] sm:h-3 sm:w-3" />
             On the board
           </div>
-          <h3 className="m-0 mt-1 w-full min-w-0 overflow-x-auto overflow-y-hidden [-webkit-overflow-scrolling:touch]">
-            <span className="syndicate-nav-headline block w-max max-w-none whitespace-nowrap text-[clamp(1rem,3.2vw+0.55rem,1.95rem)] leading-none tracking-[0.06em] sm:text-[clamp(1.15rem,2.2vw+0.55rem,2.2rem)]">
+          <h3 className="m-0 mt-1 w-full min-w-0">
+            <span className="syndicate-nav-headline block font-black text-[clamp(1rem,3.2vw+0.55rem,1.95rem)] leading-none tracking-[0.06em] sm:text-[clamp(1.15rem,2.2vw+0.55rem,2.2rem)]">
               Syndicate Mode
             </span>
-            <span className="syndicate-nav-tagline mt-1 block w-max max-w-none whitespace-nowrap text-[clamp(0.48rem,1.65vw+0.26rem,0.78rem)] font-black italic uppercase leading-none tracking-[0.08em] text-[color:var(--gold-neon)] [text-shadow:0_0_12px_rgba(250,204,21,0.26),0_0_22px_rgba(212,175,55,0.1)] sm:mt-1 sm:tracking-[0.12em]">
+            <span className="syndicate-nav-tagline mt-1 block text-[clamp(0.48rem,1.65vw+0.26rem,0.78rem)] font-black italic uppercase leading-snug tracking-[0.08em] text-[color:var(--gold-neon)] [text-shadow:0_0_12px_rgba(250,204,21,0.26),0_0_22px_rgba(212,175,55,0.1)] sm:mt-1 sm:tracking-[0.12em]">
               Money, Power, Freedom, Honour
             </span>
           </h3>
         </div>
-        <div className="syndicate-dash-nav-hud mt-2 grid w-full shrink-0 grid-rows-2 gap-1.5 sm:mt-0 sm:w-[min(100%,22rem)] sm:gap-2 md:w-[min(100%,24rem)]">
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div className="syndicate-dash-nav-strip flex w-full shrink-0 flex-col gap-2 overflow-visible border-t border-[rgba(255,215,0,0.18)] pt-3">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setPointsToPoundsModalOpen(true)}
               aria-expanded={pointsToPoundsModalOpen}
               aria-haspopup="dialog"
               className={cn(
-                "syndicate-nav-action syndicate-nav-action--exchange relative z-[1] flex min-h-[44px] min-w-0 flex-col items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
-                pointsToPoundsModalOpen && "syndicate-nav-action--exchange-open"
+                "syndicate-nav-action syndicate-nav-action--points syndicate-nav-action--exchange syndicate-nav-action--row",
+                SYNDICATE_NAV_BTN,
+                pointsToPoundsModalOpen && "syndicate-nav-action--active syndicate-nav-action--exchange-open"
               )}
             >
-              <span className="text-center">Points to pounds</span>
-              <span className="syndicate-nav-action__sub tabular-nums">£{poundsBalance.toFixed(2)} balance</span>
+              <span className="min-w-0 truncate text-center uppercase">
+                Points to pound converter
+                <span className="syndicate-nav-action__sub tabular-nums normal-case"> · £{poundsBalance.toFixed(2)}</span>
+              </span>
             </button>
             <button
               type="button"
@@ -4065,8 +4190,9 @@ export function SyndicateAiChallengePanel() {
                 setShowStatsProfile(false);
               }}
               className={cn(
-                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
-                syndicateView === "dashboard" && !showStatsProfile && "syndicate-nav-action--active-gold"
+                "syndicate-nav-action syndicate-nav-action--dashboard",
+                SYNDICATE_NAV_BTN,
+                syndicateView === "dashboard" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
               Dashboard
@@ -4078,14 +4204,15 @@ export function SyndicateAiChallengePanel() {
                 setShowStatsProfile(false);
               }}
               className={cn(
-                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
-                syndicateView === "challenges" && !showStatsProfile && "syndicate-nav-action--active-rose"
+                "syndicate-nav-action syndicate-nav-action--missions",
+                SYNDICATE_NAV_BTN,
+                syndicateView === "challenges" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
               Missions
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => {
@@ -4093,14 +4220,12 @@ export function SyndicateAiChallengePanel() {
                 setShowStatsProfile(false);
               }}
               className={cn(
-                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 touch-manipulation px-1.5 py-2 text-[7px] leading-tight sm:min-h-[46px] sm:text-[8px]",
-                syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active-cyan"
+                "syndicate-nav-action syndicate-nav-action--reminders syndicate-nav-action--row gap-1.5",
+                SYNDICATE_NAV_BTN,
+                syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
-              <span className="flex flex-col items-center gap-0 text-center">
-                <span>Syndicate mode</span>
-                <span>reminders</span>
-              </span>
+              <span className="min-w-0 truncate text-center uppercase">Syndicate mode reminders</span>
               {missionsTabReminders.length > 0 ? (
                 <span className="inline-flex min-h-[1rem] min-w-[1rem] items-center justify-center rounded-sm border border-red-400/60 bg-red-950/80 px-1 text-[9px] font-black tabular-nums leading-none text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.55)]">
                   {missionsTabReminders.length > 9 ? "9+" : missionsTabReminders.length}
@@ -4113,8 +4238,9 @@ export function SyndicateAiChallengePanel() {
               aria-controls="syndicate-stats-profile"
               onClick={() => setShowStatsProfile(true)}
               className={cn(
-                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
-                showStatsProfile && "syndicate-nav-action--active-violet"
+                "syndicate-nav-action syndicate-nav-action--stats",
+                SYNDICATE_NAV_BTN,
+                showStatsProfile && "syndicate-nav-action--active"
               )}
             >
               Stats & profile
@@ -4147,20 +4273,27 @@ export function SyndicateAiChallengePanel() {
       {showStatsProfile ? (
         <section
           id="syndicate-stats-profile"
-          className="syndicate-readable w-full min-w-0 scroll-mt-4 rounded-3xl border border-[rgba(255,215,0,0.4)] bg-[linear-gradient(165deg,rgba(255,215,0,0.1),rgba(8,28,62,0.62)_42%,rgba(96,44,156,0.34))] p-5 sm:p-7 [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.08),0_0_0_1px_rgba(0,255,255,0.18),0_0_48px_rgba(0,0,0,0.6)] max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.28)] max-md:p-4 max-md:shadow-none"
+          className="syndicate-stats-deck syndicate-readable w-full min-w-0 scroll-mt-4 p-4 sm:p-6 max-md:rounded-none max-md:p-3"
         >
-          <h2 className="mb-2 text-[20px] font-black uppercase leading-tight tracking-[0.1em] text-[color:var(--gold)] sm:text-[24px]">
-            Stats &amp; profile
-          </h2>
+          <div className="syndicate-stats-deck-inner syndicate-game-brackets px-1 py-1 sm:px-2 sm:py-2">
+          <div className="syndicate-stats-header-rail mb-6 border-l-[4px] border-cyan-400/70 pl-3 sm:pl-4">
+            <p className={cn(STATS_SECTION_LABEL, "!text-cyan-300/80")}>Operator dossier</p>
+            <h2 className="mt-1.5 text-[clamp(1.15rem,2.8vw+0.4rem,1.65rem)] font-black uppercase leading-tight tracking-[0.14em] text-[color:var(--gold)] sm:text-[1.75rem]">
+              Stats &amp; profile
+            </h2>
+            <p className="mt-2 max-w-[36rem] text-[13px] font-medium leading-snug text-cyan-100/65 sm:text-[14px]">
+              Performance telemetry, identity record, streak recovery, and mission history.
+            </p>
+          </div>
 
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="order-2 min-w-0 lg:order-1">{statsProfileChartsLeftColumn}</div>
 
-            <div className="order-1 min-w-0 space-y-7 lg:order-2 lg:border-l lg:border-white/10 lg:pl-10">
-              <div className="syndicate-day-points-card relative overflow-hidden rounded-2xl p-5 sm:p-6">
+            <div className="syndicate-stats-column-divider order-1 min-w-0 space-y-6 lg:order-2 lg:border-l lg:pl-8">
+              <div className={cn(STATS_NEON_CARD_GOLD, "syndicate-day-points-card p-5 sm:p-6")}>
                 <div className="min-w-0">
-                  <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/65 sm:text-[13px]">Total points</div>
-                  <div className="mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.22)] sm:text-[1.75rem]">
+                  <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/85")}>Total points</div>
+                  <div className="mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(255,215,0,0.35)] sm:text-[1.75rem]">
                     {pointsTotal}
                   </div>
                 </div>
@@ -4168,9 +4301,9 @@ export function SyndicateAiChallengePanel() {
 
               <div
                 id="syndicate-shell-profile-summary"
-                className="scroll-mt-6 space-y-5 rounded-2xl border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(0,0,0,0.32))] p-5 sm:p-6 [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                className={cn(STATS_NEON_CARD_CYAN, "scroll-mt-6 space-y-5 p-5 sm:p-6")}
               >
-                <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-white/55">Profile</div>
+                <div className={cn(STATS_SECTION_LABEL, "!text-cyan-200/90")}>Profile</div>
                 <div>
                   <label className="text-[12px] font-semibold text-white/55">Account email</label>
                   <div className="mt-1 break-all text-[15px] font-medium text-white/90">{getSyndicateUser()?.email ?? "—"}</div>
@@ -4179,7 +4312,7 @@ export function SyndicateAiChallengePanel() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="mx-auto shrink-0 sm:mx-0">
                     <div className="text-[12px] font-semibold text-white/55">Photo</div>
-                    <div className="mt-2 h-28 w-24 overflow-hidden rounded-md border-2 border-cyan-300/70 bg-black/40 sm:h-32 sm:w-28">
+                    <div className="mt-2 h-28 w-24 overflow-hidden border-2 border-cyan-300/80 bg-black/40 shadow-[0_0_24px_rgba(34,211,238,0.35)] sm:h-32 sm:w-28">
                       <img src={dashboardAvatarUrl} alt="" className="h-full w-full object-cover" />
                     </div>
                   </div>
@@ -4194,16 +4327,16 @@ export function SyndicateAiChallengePanel() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-[rgba(255,215,0,0.32)] bg-black/35 p-4 [box-shadow:0_0_16px_rgba(255,215,0,0.08)]">
-                  <div className="text-[12px] font-bold uppercase tracking-wide text-white/55">Best category</div>
+                <div className={cn(STATS_NEON_CARD_GOLD, "p-4")}>
+                  <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/75")}>Best category</div>
                   <div className="mt-2 text-[16px] font-semibold leading-snug text-white">
                     {CATEGORIES.reduce((s, c) => s + (bestWorst.totals[c] ?? 0), 0) > 0 && bestWorst.best
                       ? `${CAT_LABEL[bestWorst.best.cat] ?? bestWorst.best.cat} (${bestWorst.best.pts} pts)`
                       : "—"}
                   </div>
                 </div>
-                <div className="rounded-xl border border-[rgba(255,215,0,0.32)] bg-black/35 p-4 [box-shadow:0_0_16px_rgba(255,215,0,0.08)]">
-                  <div className="text-[12px] font-bold uppercase tracking-wide text-white/55">Lowest category</div>
+                <div className={cn(STATS_NEON_CARD_FUCHSIA, "p-4")}>
+                  <div className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/75")}>Lowest category</div>
                   <div className="mt-2 text-[16px] font-semibold leading-snug text-white">
                     {CATEGORIES.reduce((s, c) => s + (bestWorst.totals[c] ?? 0), 0) > 0 && bestWorst.worst
                       ? `${CAT_LABEL[bestWorst.worst.cat] ?? bestWorst.worst.cat} (${bestWorst.worst.pts} pts)`
@@ -4215,9 +4348,11 @@ export function SyndicateAiChallengePanel() {
               <div
                 ref={streakRestoreSectionRef}
                 id="syndicate-streak-restore"
-                className="scroll-mt-6 rounded-2xl border border-[rgba(120,200,255,0.4)] bg-[rgba(0,40,80,0.24)] p-5 sm:p-6 [box-shadow:inset_0_0_0_1px_rgba(180,240,255,0.08)]"
+                className={cn(STATS_NEON_CARD_MAGENTA, "scroll-mt-6 p-5 sm:p-6")}
               >
-                <div className="text-[15px] font-bold uppercase tracking-wide text-[#a8d8ff]">Restore streak (invite a friend)</div>
+                <div className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/90 text-[11px] sm:text-[12px]")}>
+                  Restore streak (invite a friend)
+                </div>
                 <p className="mt-2 text-[15px] leading-relaxed text-white/65">
                   After a streak break (7-day window), generate a code and share it. Your friend signs up and taps{" "}
                   <span className="text-white/85">Redeem</span> with that code. Then <span className="text-white/85">you</span>{" "}
@@ -4248,18 +4383,20 @@ export function SyndicateAiChallengePanel() {
                   <button
                     type="button"
                     onClick={() => void createInviteCode()}
-                    className="rounded-md border border-[rgba(120,200,255,0.55)] bg-black/40 px-4 py-2 text-[14px] font-semibold text-[#b5e8ff]"
+                    className="syndicate-stats-neon-btn syndicate-stats-neon-btn--cyan px-4 py-2 text-[14px]"
                   >
                     Generate invite code
                   </button>
                   {inviteCode ? (
-                    <code className="rounded border border-white/20 bg-black/50 px-3 py-2 font-mono text-[14px] text-[color:var(--gold)]">{inviteCode}</code>
+                    <code className="syndicate-stats-neon-btn syndicate-stats-neon-btn--ghost px-3 py-2 font-mono text-[14px] text-[color:var(--gold)]">
+                      {inviteCode}
+                    </code>
                   ) : null}
                   {canClaimRestore ? (
                     <button
                       type="button"
                       onClick={() => void claimRestore()}
-                      className="rounded-md border border-emerald-500/50 bg-emerald-500/15 px-4 py-2 text-[14px] font-semibold text-emerald-200"
+                      className="syndicate-stats-neon-btn syndicate-stats-neon-btn--emerald px-4 py-2 text-[14px]"
                     >
                       Claim streak restore
                     </button>
@@ -4272,13 +4409,13 @@ export function SyndicateAiChallengePanel() {
                       value={friendCode}
                       onChange={(e) => setFriendCode(e.target.value)}
                       placeholder="SYN-…"
-                      className="syndicate-readable mt-1.5 w-full rounded-lg border border-white/25 bg-black/50 px-3 py-2.5 font-mono text-[15px] text-white"
+                      className="syndicate-stats-field syndicate-readable mt-1.5 w-full px-3 py-2.5 font-mono text-[15px] text-white"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => void redeemFriend()}
-                    className="w-full min-h-[44px] shrink-0 rounded-md border border-white/30 px-4 py-2.5 text-[14px] font-semibold text-white/90 sm:w-auto sm:min-h-0"
+                    className="syndicate-stats-neon-btn syndicate-stats-neon-btn--ghost w-full min-h-[44px] shrink-0 px-4 py-2.5 text-[14px] sm:w-auto sm:min-h-0"
                   >
                     Redeem
                   </button>
@@ -4286,8 +4423,8 @@ export function SyndicateAiChallengePanel() {
                 {referralMsg ? <p className="mt-3 text-[14px] text-[#b5ecff]/90">{referralMsg}</p> : null}
               </div>
 
-              <div className="rounded-2xl border border-[rgba(120,200,255,0.34)] bg-[rgba(0,35,55,0.35)] p-4 [box-shadow:inset_0_0_0_1px_rgba(180,240,255,0.08)]">
-                <h3 className="text-[16px] font-black uppercase tracking-[0.12em] text-[#a8d8ff] sm:text-[17px]">
+              <div className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-history-panel p-4 sm:p-5")}>
+                <h3 className={cn(STATS_SECTION_LABEL, "!text-cyan-200/95 text-[11px] sm:text-[12px]")}>
                   History by date
                 </h3>
                 <p className="mt-1 text-[13px] text-white/65">Check your mission performance for any date.</p>
@@ -4316,27 +4453,27 @@ export function SyndicateAiChallengePanel() {
                     Today
                   </button>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 max-[360px]:grid-cols-1 sm:grid-cols-4">
-                  <div className="rounded-lg border border-white/12 bg-black/35 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-white/55">Offered</div>
-                    <div className="mt-1 text-[20px] font-black text-white">{filteredDayChallengeStats.offered ?? "—"}</div>
+                <div className="syndicate-stats-history-kpis mt-4 grid grid-cols-2 gap-3 overflow-visible max-[360px]:grid-cols-1 sm:grid-cols-4">
+                  <div className={cn(STATS_NEON_CARD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--slate p-3")}>
+                    <div className={cn(STATS_SECTION_LABEL, "!text-slate-200/80 !tracking-[0.2em]")}>Offered</div>
+                    <div className="mt-1 text-[20px] font-black text-slate-100">{filteredDayChallengeStats.offered ?? "—"}</div>
                   </div>
-                  <div className="rounded-lg border border-cyan-300/30 bg-cyan-500/10 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-cyan-100/80">Completed</div>
+                  <div className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-stat-pill syndicate-stats-stat-pill--cyan p-3")}>
+                    <div className={cn(STATS_SECTION_LABEL, "!text-cyan-200/80 !tracking-[0.2em]")}>Completed</div>
                     <div className="mt-1 text-[20px] font-black text-cyan-100">{filteredDayChallengeStats.completed}</div>
                   </div>
-                  <div className="rounded-lg border border-orange-300/30 bg-orange-500/10 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-orange-100/85">Missed</div>
+                  <div className={cn(STATS_NEON_CARD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--orange p-3")}>
+                    <div className={cn(STATS_SECTION_LABEL, "!text-orange-200/85 !tracking-[0.2em]")}>Missed</div>
                     <div className="mt-1 text-[20px] font-black text-orange-100">{filteredDayChallengeStats.missed ?? "—"}</div>
                   </div>
-                  <div className="rounded-lg border border-[rgba(255,215,0,0.35)] bg-[rgba(255,215,0,0.08)] p-3">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--gold)]/90">Achieved pts</div>
+                  <div className={cn(STATS_NEON_CARD_GOLD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--gold p-3")}>
+                    <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/90 !tracking-[0.2em]")}>Achieved pts</div>
                     <div className="mt-1 text-[20px] font-black tabular-nums text-[color:var(--gold)]">
                       {filteredDayChallengeStats.achievedPoints}
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 -mx-1 max-h-[210px] overflow-x-auto overflow-y-auto overscroll-x-contain rounded-lg border border-white/10 bg-black/25 sm:mx-0">
+                <div className="syndicate-stats-neon-table-wrap no-scrollbar mt-4 -mx-1 max-h-[210px] overflow-x-auto overflow-y-auto overscroll-x-contain sm:mx-0">
                   <table className="w-full min-w-[min(100%,480px)] text-left text-[12px] sm:min-w-[480px]">
                     <thead className="border-b border-white/10 text-[10px] uppercase tracking-[0.12em] text-white/55">
                       <tr>
@@ -4365,13 +4502,13 @@ export function SyndicateAiChallengePanel() {
                 </div>
 
                 <div className="mt-6 border-t border-white/10 pt-5">
-                  <h4 className="text-[15px] font-black uppercase tracking-[0.12em] text-[#a8d8ff] sm:text-[16px]">
+                  <h4 className={cn(STATS_SECTION_LABEL, "!text-cyan-200/90 text-[11px] sm:text-[12px]")}>
                     Completed missions · detail
                   </h4>
                   <p className="mt-1 text-[12px] leading-snug text-white/60 sm:text-[13px]">
                     Your submitted text and points for the date selected above (default: today). New completions are saved with your profile and sync across devices.
                   </p>
-                  <div className="mt-4 max-h-[min(70vh,28rem)] space-y-3 overflow-y-auto overscroll-y-contain pr-1 [-webkit-overflow-scrolling:touch]">
+                  <div className="no-scrollbar mt-4 max-h-[min(70vh,28rem)] space-y-3 overflow-y-auto overscroll-y-contain pr-1 [-webkit-overflow-scrolling:touch]">
                     {completionEntriesForHistoryDate.length === 0 ? (
                       <p className="rounded-lg border border-white/10 bg-black/30 px-4 py-6 text-center text-[14px] text-white/55">
                         No completed missions recorded for {historyFilterDate}.
@@ -4380,7 +4517,7 @@ export function SyndicateAiChallengePanel() {
                       completionEntriesForHistoryDate.map((e) => (
                         <article
                           key={e.entryId}
-                          className="rounded-xl border border-cyan-400/25 bg-[linear-gradient(180deg,rgba(0,45,70,0.35),rgba(0,0,0,0.45))] p-4 sm:p-5 [box-shadow:inset_0_0_0_1px_rgba(180,240,255,0.06)]"
+                          className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-mission-log p-4 sm:p-5")}
                         >
                           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-3">
                             <h5 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-white sm:text-[16px]">{e.title}</h5>
@@ -4472,9 +4609,9 @@ export function SyndicateAiChallengePanel() {
             </div>
           </div>
 
-          <div className="mt-10 min-w-0 border-t border-[rgba(255,215,0,0.2)] pt-8">
-            <div className="min-w-0 rounded-2xl border border-[rgba(120,200,255,0.34)] bg-[rgba(0,35,55,0.45)] p-4 sm:p-7 [box-shadow:inset_0_0_0_1px_rgba(180,240,255,0.08),0_0_24px_rgba(0,0,0,0.35)]">
-              <h3 className="text-[20px] font-black uppercase tracking-[0.12em] text-[#a8d8ff] sm:text-[24px]">
+          <div className="mt-10 min-w-0 border-t border-cyan-400/20 pt-8">
+            <div className={cn(STATS_NEON_CARD_MAGENTA, "min-w-0 p-4 sm:p-7")}>
+              <h3 className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/95 text-[11px] sm:text-[12px]")}>
                 Leaderboard · Top 10
               </h3>
               <p className="mt-2 text-[14px] text-white/70">
@@ -4493,7 +4630,7 @@ export function SyndicateAiChallengePanel() {
                     {leaderboard.slice(0, 10).map((e, i) => (
                       <li
                         key={e.user_id != null ? `u${e.user_id}` : `${e.rank}-${e.display_name}-${i}`}
-                        className="flex min-w-0 items-center gap-3 rounded-lg border border-white/12 bg-black/40 px-3 py-3"
+                        className="syndicate-stats-leader-row flex min-w-0 items-center gap-3 px-3 py-3"
                       >
                         <span className="w-7 shrink-0 text-center text-[13px] font-bold tabular-nums text-white/70">{e.rank}</span>
                         <div className="shrink-0">
@@ -4516,7 +4653,7 @@ export function SyndicateAiChallengePanel() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 -mx-2 hidden overflow-x-auto overflow-y-visible overscroll-x-contain rounded-lg border border-white/12 bg-black/35 [scrollbar-width:thin] [-webkit-overflow-scrolling:touch] sm:mx-0 md:block">
+                  <div className="syndicate-stats-neon-table-wrap no-scrollbar mt-4 -mx-2 hidden overflow-x-auto overflow-y-visible overscroll-x-contain [-webkit-overflow-scrolling:touch] sm:mx-0 md:block">
                     <table className="w-full min-w-[560px] text-left text-[15px]">
                       <thead className="border-b border-white/10 text-[12px] uppercase tracking-[0.12em] text-white/60">
                         <tr>
@@ -4555,12 +4692,13 @@ export function SyndicateAiChallengePanel() {
               )}
             </div>
           </div>
+          </div>
         </section>
       ) : null}
 
       {!showStatsProfile && syndicateView === "dashboard" ? (
-          <section className="syndicate-readable w-full min-w-0 px-2 py-2 sm:px-3 sm:py-3">
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_1fr]">
+          <section className="syndicate-dashboard-hero syndicate-readable relative z-0 mt-1 w-full min-w-0 shrink-0 rounded-2xl border border-[rgba(255,215,0,0.22)] bg-[linear-gradient(168deg,rgba(12,10,6,0.92),rgba(6,6,10,0.96))] px-2 py-3 sm:mt-0 sm:px-3 sm:py-4">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_1fr] xl:gap-5">
             <div className="border-b border-fuchsia-300/45 p-2 sm:p-3">
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex w-full min-w-0 flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:text-left">
@@ -4591,29 +4729,13 @@ export function SyndicateAiChallengePanel() {
                     </div>
                   </div>
                   <div className="space-y-1.5 px-0.5 text-center">
-                    {syndicateProgressHud.atMaxTier ? (
-                      <p className="text-[12px] font-semibold leading-snug text-sky-100/90 sm:text-[13px]">
-                        Highest syndicate level — all reward tiers reached.
+                    <p className="text-[12px] font-semibold leading-snug text-sky-100/92 sm:text-[13px]">
+                      {syndicateProgressHud.levelDescPrimary}
+                    </p>
+                    {syndicateProgressHud.levelDescSecondary ? (
+                      <p className="text-[11px] font-medium leading-snug text-sky-200/90 sm:text-[12px]">
+                        {syndicateProgressHud.levelDescSecondary}
                       </p>
-                    ) : syndicateProgressHud.nextLevelNumber != null && syndicateProgressHud.nextTierTotalPoints != null ? (
-                      <>
-                        <p className="text-[12px] font-semibold leading-snug text-sky-100/92 sm:text-[13px]">
-                          <span className="font-black tabular-nums text-sky-50">
-                            {syndicateProgressHud.ptsToNextLevel === 1
-                              ? "1 pt"
-                              : `${syndicateProgressHud.ptsToNextLevel} pts`}
-                          </span>{" "}
-                          to reach{" "}
-                          <span className="font-black text-sky-50">Level {syndicateProgressHud.nextLevelNumber}</span>
-                        </p>
-                        <p className="text-[11px] font-medium leading-snug text-sky-200/90 sm:text-[12px]">
-                          Level {syndicateProgressHud.nextLevelNumber} unlocks at{" "}
-                          <span className="font-bold tabular-nums text-sky-100">
-                            {syndicateProgressHud.nextTierTotalPoints}
-                          </span>{" "}
-                          total points (same as reward Level {syndicateProgressHud.nextLevelNumber}).
-                        </p>
-                      </>
                     ) : null}
                   </div>
                 </div>
@@ -4626,11 +4748,15 @@ export function SyndicateAiChallengePanel() {
                     <div className="mt-1 text-[22px] font-black tabular-nums text-amber-50 sm:text-[24px]">{pointsTotal}</div>
                     <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-200 sm:text-[11px]">Total earned</div>
                   </div>
-                  <div className="space-y-1 px-0.5 text-center">
-                    <p className="text-[11px] leading-snug text-amber-100/88 sm:text-[12px]">
-                      Lifetime points from missions, bonus tasks, and reward bonuses.
+                  <div className="space-y-1.5 px-0.5 text-center">
+                    <p className="text-[12px] font-semibold leading-snug text-amber-100/92 sm:text-[13px]">
+                      {syndicateProgressHud.pointsDescPrimary}
                     </p>
-                    <p className="text-[11px] leading-snug text-amber-200/75 sm:text-[12px]">Spend milestones in Unlock &amp; rewards.</p>
+                    {syndicateProgressHud.pointsDescSecondary ? (
+                      <p className="text-[11px] font-medium leading-snug text-amber-200/85 sm:text-[12px]">
+                        {syndicateProgressHud.pointsDescSecondary}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
@@ -4758,11 +4884,11 @@ export function SyndicateAiChallengePanel() {
                 <div className={HUD_LABEL}>Mission stats</div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <div className="border border-cyan-300/45 bg-cyan-500/10 p-2 [box-shadow:0_0_14px_rgba(34,211,238,0.18)]">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-cyan-100/85">Completed</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-cyan-100/85">Completed</div>
                     <div className="text-[22px] font-black text-cyan-100">{completedTotalTodayCount}</div>
                   </div>
                   <div className="border border-orange-300/45 bg-orange-500/10 p-2 [box-shadow:0_0_14px_rgba(249,115,22,0.2)]">
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-orange-100/85">Pending</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100/85">Pending</div>
                     <div className="text-[22px] font-black text-orange-100">{pendingDailyCompletionSlots}</div>
                   </div>
                 </div>
@@ -4916,14 +5042,15 @@ export function SyndicateAiChallengePanel() {
                         "syndicate-reward-tile--hot bg-[linear-gradient(165deg,rgba(255,200,80,0.16),rgba(8,12,20,0.9))]",
                       !redeemed &&
                         !readyToRedeem &&
-                        "bg-[linear-gradient(180deg,rgba(10,20,30,0.95),rgba(4,8,14,0.96))]",
-                      sequentialBlocked && "opacity-[0.82] [filter:grayscale(0.45)]"
+                        "syndicate-reward-tile--locked bg-[linear-gradient(180deg,rgba(10,20,30,0.95),rgba(4,8,14,0.96))]",
+                      sequentialBlocked && "syndicate-reward-tile--locked-seq",
+                      !redeemed && prevRedeemed && !hasPoints && "syndicate-reward-tile--locked-pts"
                     )}
                   >
                     <div className="flex flex-1 flex-col items-center">
                       <div
                         className={cn(
-                          "relative mx-auto mb-2 flex aspect-square w-full max-w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] sm:mb-2.5 sm:max-w-[7.25rem] sm:p-2.5 md:max-w-[8rem]",
+                          "syndicate-reward-tile__art relative mx-auto mb-2 flex aspect-square w-full max-w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border p-2 sm:mb-2.5 sm:max-w-[7.25rem] sm:p-2.5 md:max-w-[8rem]",
                           isBlackCoinReward
                             ? "border-white/45 ring-2 ring-white/35 bg-[radial-gradient(ellipse_at_50%_38%,rgba(255,255,255,0.88)_0%,rgba(220,215,205,0.65)_38%,rgba(90,85,80,0.75)_72%,rgba(28,26,24,0.98)_100%)]"
                             : isGoldToneReward
@@ -4980,12 +5107,21 @@ export function SyndicateAiChallengePanel() {
                       type="button"
                       disabled={!canRedeem || redeemed}
                       onClick={() => redeemRewardMilestone(rw.id)}
-                      className={cn(
-                        "mt-auto w-full shrink-0 px-1 py-2 text-[10px] font-extrabold uppercase tracking-[0.06em] disabled:cursor-not-allowed disabled:opacity-45 sm:px-2 sm:py-3 sm:text-[13px] sm:tracking-[0.08em]",
-                        CTA_BTN
+                      className={rewardActionButtonClass(
+                        redeemed,
+                        canRedeem,
+                        sequentialBlocked,
+                        hasPoints,
+                        prevRedeemed
                       )}
                     >
-                      {redeemed ? "Redeemed" : canRedeem ? "Redeem" : "Locked"}
+                      {rewardActionButtonLabel(
+                        redeemed,
+                        canRedeem,
+                        sequentialBlocked,
+                        hasPoints,
+                        rw.unlock_points
+                      )}
                     </button>
                   </div>
                 );
@@ -5004,77 +5140,75 @@ export function SyndicateAiChallengePanel() {
           <section
             id="syndicate-bonus-missions"
             ref={bonusMissionSectionRef}
-            className="syndicate-readable syndicate-hud-deck syndicate-hud-deck--mega syndicate-game-vault syndicate-game-vault--mega syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 space-y-0 max-md:mt-4 max-md:rounded-none max-md:border-0"
+            className="mega-neon-deck syndicate-readable syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
           >
-            <div className="syndicate-hud-deck-inner syndicate-game-brackets px-3 py-3 sm:px-4 sm:py-4">
-              <header className="syndicate-game-header-rail border-b border-amber-400/15 pb-3 lg:border-b-0 lg:pb-0">
-                <div className="syndicate-game-header-main min-w-0 border-l-[3px] border-cyan-400/55 pl-3 sm:pl-4">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-cyan-300/85 sm:text-[10px]">
-                    Bonus track · high-yield
-                  </p>
-                  <h2 className="mt-1.5 flex flex-wrap items-center gap-2 text-left text-[clamp(1.25rem,4vw+0.35rem,2.15rem)] font-black uppercase leading-none tracking-[0.1em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(250,204,21,0.35),0_0_40px_rgba(34,211,238,0.12)] sm:tracking-[0.12em]">
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--cyan" aria-hidden />
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--magenta" aria-hidden />
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--gold" aria-hidden />
+
+            <div className="mega-neon-deck__frame">
+              <header className="mega-neon-header">
+                <div className="mega-neon-header__hero">
+                  <div className="mega-neon-header__chips">
+                    <span className="mega-neon-chip mega-neon-chip--cyan">Bonus track</span>
+                    <span className="mega-neon-chip mega-neon-chip--magenta">High-yield</span>
+                  </div>
+                  <h2 className="mega-neon-title flex flex-wrap items-center gap-2">
                     <span>Mega mission</span>
                     <SyndicateHelpMark topic="mega-mission" label="How mega missions work" onOpen={openSyndicateHelp} />
                   </h2>
-                  <p className="mt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200/75 sm:text-[11px] sm:tracking-[0.26em]">
-                    Admin-reviewed payouts · timed visibility
-                  </p>
+                  <p className="mega-neon-subtitle">Admin-reviewed payouts · timed visibility</p>
                 </div>
-                <div className="syndicate-game-header-side syndicate-game-data-slab mt-3 border-amber-400/25 px-3 py-2.5 lg:mt-0 lg:self-stretch lg:border-cyan-400/35 lg:px-3.5 lg:py-3">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200/95">Protocol</p>
-                  <p className="mt-1 max-w-[16rem] text-[11px] font-medium leading-snug text-white/82 sm:text-[12px]">
-                    Submit text + optional file. One entry per device per task. Claim after approval.
+                <div className="mega-neon-protocol">
+                  <p className="mega-neon-protocol__label">Protocol</p>
+                  <p className="mega-neon-protocol__body">
+                    Submit text + video. One entry per device per task. Claim points after admin approval.
                   </p>
                 </div>
               </header>
 
-              <div className="syndicate-game-briefing mt-4">
-                <div className="syndicate-game-briefing__main p-3 sm:p-4 lg:p-5 lg:pr-7">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-sm bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" aria-hidden />
-                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[color:var(--gold)]/88 sm:text-[12px]">
-                      Field briefing
-                    </p>
+              <div className="mega-neon-grid">
+                <div className="mega-neon-panel mega-neon-panel--brief">
+                  <div className="mega-neon-panel__tag">
+                    <span className="mega-neon-panel__dot" aria-hidden />
+                    Field briefing
                   </div>
-                  <h3 className="mt-2 text-[1.1rem] font-black uppercase tracking-[0.08em] text-[#fde68a] [text-shadow:0_0_18px_rgba(255,215,0,0.22)] sm:text-[1.3rem]">
-                    Admin review lane
-                  </h3>
-                  <p className="mt-3 text-[14px] font-medium leading-relaxed text-white/88 sm:text-[15px]">
+                  <h3 className="mega-neon-panel__heading">Admin review lane</h3>
+                  <p className="mega-neon-panel__copy">
                     When an admin posts a bonus task, it appears below. Submit your{" "}
-                    <span className="font-semibold text-cyan-100">written response</span> and a{" "}
-                    <span className="font-semibold text-cyan-100">video</span> (record with your camera or upload a video file) — both are required and visible to staff in Django admin.
+                    <strong className="text-cyan-200">written response</strong> and a{" "}
+                    <strong className="text-fuchsia-200">video</strong> (camera record or upload) — both are required
+                    and visible to staff in Django admin.
                   </p>
-                  <ul className="mt-4 grid gap-2.5 text-left sm:gap-3">
-                    <li className="syndicate-mega-brief-line flex gap-2 border-l-[3px] border-cyan-400/50 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
-                      <span className="text-[13px] font-medium leading-snug text-white/85 sm:leading-relaxed">
-                        One submission per device per task. After approval, use Claim reviewed points.
-                      </span>
+                  <ul className="mega-neon-rules">
+                    <li className="mega-neon-rule mega-neon-rule--cyan">
+                      One submission per device per task. After approval, use Claim reviewed points.
                     </li>
-                    <li className="syndicate-mega-brief-line syndicate-mega-brief-line--amber flex gap-2 border-l-[3px] border-amber-400/55 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
-                      <span className="text-[13px] font-medium leading-snug text-amber-50/95 sm:leading-relaxed">
-                        Task visibility uses admin-set hours from post time — submit before the countdown ends.
-                      </span>
+                    <li className="mega-neon-rule mega-neon-rule--gold">
+                      Task visibility uses admin-set hours from post time — submit before the countdown ends.
                     </li>
                   </ul>
                 </div>
-                <aside className="syndicate-game-briefing__side flex flex-col justify-center gap-1.5 p-3 sm:p-4">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-amber-200/85">Post-review</p>
-                  <p className="text-[12px] leading-snug text-cyan-100/88 sm:text-[13px]">Claim buttons appear under each reviewed result.</p>
-                  {adminTaskMsg ? <p className="text-[12px] leading-snug text-amber-100/95 sm:text-[13px]">{adminTaskMsg}</p> : null}
+                <aside className="mega-neon-panel mega-neon-panel--side">
+                  <p className="mega-neon-panel__tag mega-neon-panel__tag--side">Post-review</p>
+                  <p className="mega-neon-panel__copy mega-neon-panel__copy--side">
+                    Claim buttons appear under each reviewed result.
+                  </p>
+                  {adminTaskMsg ? <p className="mega-neon-alert">{adminTaskMsg}</p> : null}
                 </aside>
               </div>
             </div>
 
-            <div className="syndicate-hud-deck-inner border-t border-cyan-400/12 px-3 pb-3 pt-2 sm:px-4 sm:pb-4">
+            <div className="mega-neon-missions">
             {visibleAdminTasks.length === 0 ? (
-              <div className="syndicate-game-data-slab syndicate-mega-empty mx-auto max-w-lg border-amber-400/20 px-4 py-6 text-center sm:px-5 sm:py-8">
-                <p className="text-[17px] font-semibold text-[#fef3c7]/95">No bonus tasks right now</p>
-                <p className="mt-2 w-full min-w-0 text-[15px] leading-relaxed text-white/70">
+              <div className="mega-neon-empty">
+                <p className="mega-neon-empty__title">No bonus tasks right now</p>
+                <p className="mega-neon-empty__body">
                   When an admin creates a task, it will show here. Complete daily missions and check back.
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="mega-neon-ops-list space-y-6">
                 {visibleAdminTasks.map((t) => {
                   const sub = t.submission ?? null;
                   const expiresMs = t.expires_at ? new Date(t.expires_at).getTime() : 0;
@@ -5098,7 +5232,7 @@ export function SyndicateAiChallengePanel() {
                   return (
                     <article
                       key={t.id}
-                      className="syndicate-game-ops-card overflow-hidden"
+                      className="syndicate-game-ops-card mega-neon-ops-card overflow-hidden"
                     >
                       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-black/30 px-4 py-3 sm:px-5 sm:py-4">
                         <div className="min-w-0 flex-1">
@@ -5138,7 +5272,7 @@ export function SyndicateAiChallengePanel() {
                       <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
                         <div className="min-w-0 border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
                           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">Task instructions</p>
-                          <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/45 p-4 text-[14px] leading-relaxed text-white/88 [scrollbar-color:rgba(255,255,255,0.25)_transparent] sm:text-[15px] sm:leading-relaxed">
+                          <div className="no-scrollbar mt-2 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/45 p-4 text-[14px] leading-relaxed text-white/88 sm:text-[15px] sm:leading-relaxed">
                             <div className="whitespace-pre-wrap break-words">{t.description || "No additional instructions."}</div>
                           </div>
                         </div>
@@ -5389,7 +5523,7 @@ export function SyndicateAiChallengePanel() {
                           role="dialog"
                           aria-modal="true"
                           aria-labelledby="syndicate-create-mission-title"
-                          className="syndicate-mood-context syndicate-readable fixed left-1/2 top-1/2 z-[182] w-[min(calc(100vw-1.25rem),40rem)] max-h-[min(90vh,calc(100dvh-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain shadow-[0_24px_80px_rgba(0,0,0,0.78)]"
+                          className="syndicate-mood-context syndicate-readable no-scrollbar fixed left-1/2 top-1/2 z-[182] w-[min(calc(100vw-1.25rem),40rem)] max-h-[min(90vh,calc(100dvh-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain shadow-[0_24px_80px_rgba(0,0,0,0.78)]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="syndicate-missions-hud__forge m-0 p-4 sm:p-5">

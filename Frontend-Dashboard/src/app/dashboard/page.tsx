@@ -681,23 +681,23 @@ function SyndicateModeSection() {
     <section
       data-anim="in"
       className={cn(
-        "mt-0 flex w-full min-w-0 flex-col",
-        "has-[#syndicate-mission-detail-top]:min-h-0 has-[#syndicate-mission-detail-top]:flex-1"
+        "syndicate-mode-section mt-0 flex min-h-0 w-full min-w-0 flex-col",
+        "data-[mission-detail-open]:min-h-0 data-[mission-detail-open]:h-full data-[mission-detail-open]:flex-1"
       )}
     >
       <div
         className={cn(
-          "syndicate-dystopia-enclosure syndicate-missions-shell cyber-frame relative flex w-full flex-col overflow-x-hidden bg-[#060606]/88 px-0 pb-0 pt-0 sm:pb-0 sm:pt-0.5",
-          "[&:not(:has(#syndicate-mission-detail-top))]:overflow-y-visible",
-          "has-[#syndicate-mission-detail-top]:min-h-0 has-[#syndicate-mission-detail-top]:flex-1 has-[#syndicate-mission-detail-top]:overflow-y-hidden"
+          "syndicate-dystopia-enclosure syndicate-missions-shell cyber-frame relative flex min-h-0 w-full flex-col overflow-x-hidden bg-[#060606]/88 px-0 pb-0 pt-0 sm:pb-0 sm:pt-0.5",
+          "data-[mission-detail-open]:h-full data-[mission-detail-open]:min-h-0 data-[mission-detail-open]:flex-1 data-[mission-detail-open]:overflow-hidden",
+          "[&:not([data-mission-detail-open])]:overflow-y-visible"
         )}
       >
         <div className="pointer-events-none absolute inset-0 opacity-62 [background:radial-gradient(760px_220px_at_20%_0%,rgba(255,215,0,0.15),rgba(0,0,0,0)_65%)] syndicate-missions-shell-wash" />
         <div className="pointer-events-none absolute inset-0 opacity-30 [background:repeating-linear-gradient(0deg,rgba(255,255,255,0.015)_0px,rgba(255,255,255,0.015)_1px,transparent_8px,transparent_14px)]" />
         <div
           className={cn(
-            "relative flex w-full flex-col pt-2 sm:pt-2.5",
-            "has-[#syndicate-mission-detail-top]:min-h-0 has-[#syndicate-mission-detail-top]:flex-1"
+            "relative flex min-h-0 w-full flex-col pt-2 sm:pt-2.5",
+            "data-[mission-detail-open]:h-full data-[mission-detail-open]:min-h-0 data-[mission-detail-open]:flex-1 data-[mission-detail-open]:overflow-hidden"
           )}
         >
           <SyndicateAiChallengePanel />
@@ -2847,11 +2847,31 @@ export default function Page() {
     gsap.fromTo(rootRef.current, { opacity: 0.9 }, { opacity: 1, duration: 0.22, ease: "power2.out" });
   }, [themeMode]);
 
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const active = selectedNavKey === "monk";
+    if (active) {
+      html.classList.add("syndicate-mode-active");
+      body.classList.add("syndicate-mode-active");
+    } else {
+      html.classList.remove("syndicate-mode-active");
+      body.classList.remove("syndicate-mode-active");
+    }
+    return () => {
+      html.classList.remove("syndicate-mode-active");
+      body.classList.remove("syndicate-mode-active");
+    };
+  }, [selectedNavKey]);
+
   return (
     <div
       ref={rootRef}
       className={cn(
-        "dashboard-hamburger-chrome relative min-h-screen w-screen hud-void hud-scanlines hud-noise overflow-x-hidden overflow-y-auto lg:h-screen lg:overflow-hidden",
+        "dashboard-hamburger-chrome relative min-h-screen hud-void hud-scanlines hud-noise overflow-x-hidden lg:h-screen",
+        selectedNavKey === "monk"
+          ? "flex w-full flex-col overflow-hidden no-scrollbar h-[100dvh] max-h-[100dvh] min-h-0 lg:h-screen lg:max-h-screen"
+          : "w-screen overflow-y-auto lg:h-screen lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
         !sidebarOpen && "focus-mode",
@@ -2871,8 +2891,10 @@ export default function Page() {
       <div className="hud-ambient-glow" aria-hidden="true" />
       <div
         className={cn(
-          "relative z-[1] flex min-h-screen w-full max-w-[100vw] flex-col fluid-page-px lg:h-full lg:min-h-0",
-          selectedNavKey === "monk" ? "pb-0" : "fluid-page-pb"
+          "relative z-[1] flex w-full max-w-[100vw] flex-col fluid-page-px",
+          selectedNavKey === "monk"
+            ? "min-h-0 flex-1 overflow-hidden pb-0 lg:h-full lg:min-h-0"
+            : "min-h-screen fluid-page-pb lg:h-full lg:min-h-0",
         )}
       >
         {/* Sticky shell has no GSAP transform; inner bar uses data-anim (transform breaks sticky on same node). */}
@@ -3364,7 +3386,7 @@ export default function Page() {
                 "max-lg:pointer-events-none max-lg:opacity-[0.42] max-lg:transition-opacity max-lg:duration-200 max-lg:ease-out",
               "lg:h-full lg:min-h-0",
               sidebarOpen ? "col-span-7 md:col-span-10 lg:col-span-10" : "col-span-12",
-              selectedNavKey === "monk" && "syndicate-main-shell",
+              selectedNavKey === "monk" && "syndicate-main-shell min-h-0 flex-1",
               selectedNavKey === "monk"
                 ? "px-0 pt-1 pb-0 sm:pt-1.5 sm:pb-0"
                 : "fluid-section-p"
@@ -3375,10 +3397,10 @@ export default function Page() {
             <div
               data-main-shell-scroll
               className={cn(
-                "relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1 no-scrollbar",
+                "relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar",
                 !sidebarOccupiesGrid && "lg:pl-14",
                 selectedNavKey === "monk"
-                  ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)]"
+                  ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)] pr-0"
                   : "pr-1",
                 !sidebarOpen && selectedNavKey !== "monk" && "md:pl-14",
                 selectedNavKey !== "monk" && "px-[var(--fluid-section-p)]"
@@ -3402,11 +3424,13 @@ export default function Page() {
                     Loading access…
                   </div>
                 ) : isNavLocked("monk") ? (
-                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
+                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto no-scrollbar">
                     <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=monk" />
                   </div>
                 ) : (
-                  <SyndicateModeSection />
+                  <div className="syndicate-monk-route flex min-h-0 w-full min-w-0 max-w-none flex-col">
+                    <SyndicateModeSection />
+                  </div>
                 )
               ) : selectedNavKey === "programs" ? (
                 <ProgramsCourseSection

@@ -11,6 +11,7 @@ import {
   type StreamVideoListItem
 } from "@/lib/streaming-api";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { formatPrice } from "@/lib/currency";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 type Props = {
@@ -653,7 +654,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               {activeVideo?.title ?? "Episode"}
             </h2>
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-black text-emerald-200">
-              {`£${playlistPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
+              {formatPrice(playlistPrice)}
             </span>
           </div>
           {(activeVideo?.description || "").trim() ? (
@@ -675,7 +676,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
           <div className="mt-2 flex items-center gap-2 text-[11px]">
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
-              {`£${playlistPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
+              {formatPrice(playlistPrice)}
             </span>
           </div>
           <div className="mt-3 space-y-3 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-3.5">

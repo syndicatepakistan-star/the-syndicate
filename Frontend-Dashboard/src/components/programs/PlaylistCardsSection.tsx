@@ -15,6 +15,7 @@ import {
   isHiddenProgramPlaylist,
 } from "@/lib/programPlaylistThumbnails";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { formatPrice } from "@/lib/currency";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
 
@@ -284,7 +285,7 @@ export function PlaylistCardsSection({
                 className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
                 style={{ fontFamily: "Inter, Arial, Helvetica, sans-serif", fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
-                {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
+                {formatPrice(price)}
               </span>
             </div>
             <div

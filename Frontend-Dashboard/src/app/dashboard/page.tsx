@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
@@ -1704,7 +1704,7 @@ function SettingsBillingSection() {
                         (row.playlist_id ? `Playlist #${row.playlist_id}` : "Purchase")}
                     </td>
                     <td className="px-3 py-2">{row.amount_paid}</td>
-                    <td className="px-3 py-2 uppercase">{row.currency || "gbp"}</td>
+                    <td className="px-3 py-2 uppercase">{row.currency || "usd"}</td>
                     <td className="px-3 py-2 uppercase">{row.status}</td>
                     <td className="px-3 py-2">{formatBillingDate(row.paid_at)}</td>
                     <td className="px-3 py-2">{formatBillingDate(row.updated_at)}</td>

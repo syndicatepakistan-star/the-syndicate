@@ -326,8 +326,8 @@ const MAX_CUSTOM_COMPLETIONS_PER_DAY = 2;
 const CREATE_MISSION_DAILY_LIMIT_MSG = `Maximum ${MAX_CUSTOM_COMPLETIONS_PER_DAY} custom missions per calendar day.`;
 /** Forge UI no longer exposes difficulty; backend still requires a value. */
 const CUSTOM_MISSION_DEFAULT_DIFFICULTY = "medium" as const;
-const POINTS_PER_10_POUNDS = 100;
-const POUNDS_PER_100_POINTS = 10;
+const POINTS_PER_10_DOLLARS = 100;
+const DOLLARS_PER_100_POINTS = 10;
 
 const CTA_BTN =
   "syndicate-hud-cta rounded-md border border-[#b8942f] bg-[#d4af39] text-[#0a0a0a] [box-shadow:inset_0_1px_0_rgba(255,240,200,0.7),inset_0_-2px_0_rgba(140,110,30,0.45),0_0_14px_rgba(212,175,57,0.42)] hover:brightness-110";
@@ -580,7 +580,7 @@ function syndicateHelpTitle(topic: SyndicateHelpTopic): string {
   if (topic === "custom-mission") return "Create your mission";
   if (topic === "hud-points") return "Points";
   if (topic === "hud-streak") return "Streak";
-  if (topic === "points-to-pounds") return "Points to pounds";
+  if (topic === "points-to-pounds") return "Points to dollars";
   if (topic === "unlock") return "Unlock & redeem rewards";
   if (topic === "mission-reminder") return "Syndicate mode reminders";
   return "Mega mission";
@@ -630,7 +630,7 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
                 <strong className="text-amber-100">Points</strong> are your <strong className="text-white">lifetime total</strong> earned from daily missions, mega-mission payouts when you claim them, and bonus points when you redeem tiers under Unlock &amp; redeem rewards.
               </p>
               <p>
-                That total drives your <strong className="text-white">syndicate level</strong> (same point thresholds as the reward cards). You can spend part of your balance by converting to pounds in the <strong className="text-white">Points to pounds</strong> section—only if you have enough points for the amount you enter.
+                That total drives your <strong className="text-white">syndicate level</strong> (same point thresholds as the reward cards). You can spend part of your balance by converting to dollars in the <strong className="text-white">Points to dollars</strong> section—only if you have enough points for the amount you enter.
               </p>
             </>
           ) : topic === "hud-streak" ? (
@@ -647,10 +647,10 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
           ) : topic === "points-to-pounds" ? (
             <>
               <p>
-                You can <strong className="text-white">convert mission points into pounds</strong> at the rate on this screen ({POINTS_PER_10_POUNDS} points = £{POUNDS_PER_100_POINTS}). Enter how many points to convert and tap Convert; that amount is <strong className="text-white">deducted from your points total</strong> and the same value in pounds is added to your <strong className="text-white">pounds balance</strong> right away.
+                You can <strong className="text-white">convert mission points into dollars</strong> at the rate on this screen ({POINTS_PER_10_DOLLARS} points = ${DOLLARS_PER_100_POINTS}). Enter how many points to convert and tap Convert; that amount is <strong className="text-white">deducted from your points total</strong> and the same value in dollars is added to your <strong className="text-white">dollar balance</strong> right away.
               </p>
               <p>
-                Use your pounds balance for real value in the product: <strong className="text-white">you can unlock courses with these pounds</strong> (and any other paid unlocks your account offers). Because conversion lowers your points, keep enough points if you are still working toward the next Unlock &amp; redeem tier.
+                Use your dollar balance for real value in the product: <strong className="text-white">you can unlock courses with these dollars</strong> (and any other paid unlocks your account offers). Because conversion lowers your points, keep enough points if you are still working toward the next Unlock &amp; redeem tier.
               </p>
             </>
           ) : topic === "unlock" ? (
@@ -3873,9 +3873,9 @@ export function SyndicateAiChallengePanel() {
       setError("Not enough points to convert.");
       return;
     }
-    const poundsToAdd = (raw / POINTS_PER_10_POUNDS) * POUNDS_PER_100_POINTS;
+    const dollarsToAdd = (raw / POINTS_PER_10_DOLLARS) * DOLLARS_PER_100_POINTS;
     const nextPoints = Math.max(0, pointsTotal - raw);
-    const nextPounds = poundsBalance + poundsToAdd;
+    const nextPounds = poundsBalance + dollarsToAdd;
     persistPoints(nextPoints);
     setPointsTotal(nextPoints);
     persistPoundsBalance(nextPounds);
@@ -3885,7 +3885,7 @@ export function SyndicateAiChallengePanel() {
 
   function renderPointsToPoundsSection() {
     const previewPounds =
-      (((Math.max(0, parseFloat(convertPointsInput || "0")) || 0) / POINTS_PER_10_POUNDS) * POUNDS_PER_100_POINTS) || 0;
+      (((Math.max(0, parseFloat(convertPointsInput || "0")) || 0) / POINTS_PER_10_DOLLARS) * DOLLARS_PER_100_POINTS) || 0;
     return (
       <div className="relative">
         <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-amber-400/[0.07] blur-3xl" aria-hidden />
@@ -3903,22 +3903,22 @@ export function SyndicateAiChallengePanel() {
                   id="syndicate-points-to-pounds-title"
                   className="text-[18px] font-black uppercase tracking-[0.06em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(255,200,80,0.12)] sm:text-[21px]"
                 >
-                  Points to pounds
+                  Points to dollars
                 </span>
                 <SyndicateHelpMark
                   topic="points-to-pounds"
-                  label="How points to pounds and course unlocks work"
+                  label="How points to dollars and course unlocks work"
                   onOpen={openSyndicateHelp}
                 />
               </h3>
               <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-white/62 sm:text-[14px]">
-                Spend points from your lifetime total; pounds credit applies immediately at the rate shown.
+                Spend points from your lifetime total; dollar credit applies immediately at the rate shown.
               </p>
             </div>
             <div className="shrink-0 rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-950/55 to-black/40 px-4 py-3 text-center shadow-[inset_0_1px_0_rgba(167,243,208,0.12)] sm:min-w-[11rem] sm:text-right">
               <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">Fixed rate</div>
               <div className="mt-1 font-mono text-[15px] font-bold tabular-nums leading-none text-emerald-50">
-                {POINTS_PER_10_POUNDS} pts → £{POUNDS_PER_100_POINTS}
+                {POINTS_PER_10_DOLLARS} pts → ${DOLLARS_PER_100_POINTS}
               </div>
             </div>
           </div>
@@ -3929,12 +3929,12 @@ export function SyndicateAiChallengePanel() {
               <div className={cn(HUD_VALUE, "mt-1 text-[21px] text-sky-50 sm:text-[24px]")}>{pointsTotal}</div>
             </div>
             <div className="rounded-xl border border-emerald-400/30 bg-gradient-to-b from-emerald-950/55 to-black/50 px-2.5 py-3 text-center shadow-[0_4px_20px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(167,243,208,0.08)] sm:px-3">
-              <div className={cn(HUD_LABEL, "!text-[9px] text-emerald-200/80")}>£ Balance</div>
-              <div className={cn(HUD_VALUE, "mt-1 text-[19px] text-emerald-50 sm:text-[22px]")}>£{poundsBalance.toFixed(2)}</div>
+              <div className={cn(HUD_LABEL, "!text-[9px] text-emerald-200/80")}>$ Balance</div>
+              <div className={cn(HUD_VALUE, "mt-1 text-[19px] text-emerald-50 sm:text-[22px]")}>${poundsBalance.toFixed(2)}</div>
             </div>
             <div className="rounded-xl border border-amber-400/35 bg-gradient-to-b from-amber-950/40 to-black/50 px-2.5 py-3 text-center shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(253,230,138,0.08)] sm:px-3">
               <div className={cn(HUD_LABEL, "!text-[9px] text-amber-200/85")}>Preview</div>
-              <div className={cn(HUD_VALUE, "mt-1 text-[19px] text-amber-50 sm:text-[22px]")}>£{previewPounds.toFixed(2)}</div>
+              <div className={cn(HUD_VALUE, "mt-1 text-[19px] text-amber-50 sm:text-[22px]")}>${previewPounds.toFixed(2)}</div>
             </div>
           </div>
 
@@ -4179,8 +4179,8 @@ export function SyndicateAiChallengePanel() {
               )}
             >
               <span className="min-w-0 truncate text-center uppercase">
-                Points to pound converter
-                <span className="syndicate-nav-action__sub tabular-nums normal-case"> · £{poundsBalance.toFixed(2)}</span>
+                Points to dollar converter
+                <span className="syndicate-nav-action__sub tabular-nums normal-case"> · ${poundsBalance.toFixed(2)}</span>
               </span>
             </button>
             <button

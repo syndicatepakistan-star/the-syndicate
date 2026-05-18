@@ -939,7 +939,7 @@ def request_withdrawal(request):
     earnings_total = Decimal(str(overall.get("earnings_total") or "0"))
     minimum_required = Decimal("50.00")
     if earnings_total < minimum_required:
-        return _bad_request("Minimum earnings of £50.00 required for withdrawal", 403)
+        return _bad_request("Minimum earnings of $50.00 required for withdrawal", 403)
     if requested_amount > earnings_total:
         return _bad_request("requested_amount cannot exceed current earnings", 400)
 

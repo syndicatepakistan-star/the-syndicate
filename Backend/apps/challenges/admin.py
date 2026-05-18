@@ -74,7 +74,7 @@ def _pounds_from_state(state: Optional[dict]) -> str:
         return "—"
     try:
         v = float(str(raw).strip())
-        return f"£{v:.2f}"
+        return f"${v:.2f}"
     except (TypeError, ValueError):
         return str(raw)
 

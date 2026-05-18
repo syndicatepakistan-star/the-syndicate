@@ -12,6 +12,8 @@ from apps.portal.king_access import king_selection_completed, king_selection_req
 from apps.portal.models import KingProgramSelection, Mission, Note, Reminder, SocialLink, UserPlanPurchase
 from apps.video_streaming.models import StreamPlaylistItem, StreamPlaylistPurchase, StreamPlaylist
 from apps.portal.permissions import DeckPermission, IsAuthenticatedStrict, SocialLinkPermission
+from django.conf import settings
+
 from apps.portal.serializers import (
     MissionSerializer,
     NoteSerializer,
@@ -76,7 +78,7 @@ class BillingPurchasesView(views.APIView):
                     "playlist_title": pl.title if pl is not None else f"Playlist #{p.playlist_id}",
                     "status": p.status,
                     "amount_paid": str(p.amount_paid),
-                    "currency": (p.currency or "gbp").lower(),
+                    "currency": (p.currency or settings.DEFAULT_CURRENCY).lower(),
                     "paid_at": p.paid_at.isoformat() if p.paid_at else None,
                     "created_at": p.created_at.isoformat() if p.created_at else None,
                     "updated_at": p.updated_at.isoformat() if p.updated_at else None,
@@ -90,7 +92,7 @@ class BillingPurchasesView(views.APIView):
                     "playlist_title": pp.product_title,
                     "status": pp.status,
                     "amount_paid": str(pp.amount_paid),
-                    "currency": (pp.currency or "gbp").lower(),
+                    "currency": (pp.currency or settings.DEFAULT_CURRENCY).lower(),
                     "paid_at": pp.paid_at.isoformat() if pp.paid_at else None,
                     "created_at": pp.created_at.isoformat() if pp.created_at else None,
                     "updated_at": pp.updated_at.isoformat() if pp.updated_at else None,

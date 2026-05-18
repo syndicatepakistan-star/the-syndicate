@@ -511,7 +511,7 @@ export function ProgramsCourseSection({
             </p>
             <div className="mt-1 flex flex-col gap-1 border-t border-white/10 pt-1.5">
               <span className="w-fit shrink-0 rounded border border-amber-300/70 bg-amber-950/70 px-1.5 py-0.5 text-[10px] font-black text-amber-100 sm:text-[11px]">
-                £333
+                $333
               </span>
               <button
                 type="button"
@@ -554,7 +554,7 @@ export function ProgramsCourseSection({
             </p>
             <div className="mt-1 flex flex-col gap-1 border-t border-white/10 pt-1.5">
               <span className="w-fit shrink-0 rounded border border-violet-300/70 bg-violet-950/60 px-1.5 py-0.5 text-[10px] font-black text-violet-100 sm:text-[11px]">
-                £19.99
+                $19.99
               </span>
               <button
                 type="button"

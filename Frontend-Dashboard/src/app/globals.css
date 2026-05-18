@@ -6678,3 +6678,90 @@ body {
   z-index: 2;
 }
 
+/* Public /membership — Unlock CTA bounce + gold glow */
+@keyframes membership-unlock-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(212, 175, 57, 0.65),
+      0 0 20px rgba(212, 175, 57, 0.45),
+      0 0 40px rgba(250, 204, 21, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(212, 175, 57, 0.95);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(255, 236, 160, 0.95),
+      0 0 32px rgba(212, 175, 57, 0.75),
+      0 0 64px rgba(250, 204, 21, 0.5),
+      0 0 96px rgba(255, 200, 80, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 230, 130, 1);
+  }
+}
+
+@keyframes membership-unlock-shell-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes membership-unlock-shell-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 14px rgba(212, 175, 57, 0.45)) drop-shadow(0 0 28px rgba(250, 204, 21, 0.22));
+  }
+  50% {
+    filter: drop-shadow(0 0 22px rgba(212, 175, 57, 0.7)) drop-shadow(0 0 48px rgba(250, 204, 21, 0.42))
+      drop-shadow(0 0 72px rgba(255, 200, 80, 0.2));
+  }
+}
+
+.membership-marketing-page .membership-unlock-cta-shell--public {
+  position: relative;
+  isolation: isolate;
+  animation:
+    membership-unlock-shell-bounce 2s ease-in-out infinite,
+    membership-unlock-shell-glow 2.2s ease-in-out infinite;
+}
+
+.membership-marketing-page .membership-unlock-cta-shell--public::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: 0;
+  border-radius: 1rem;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(250, 204, 21, 0.35) 0%, rgba(212, 175, 57, 0.12) 42%, transparent 72%);
+  opacity: 0.85;
+  animation: membership-unlock-shell-glow 2.2s ease-in-out infinite;
+}
+
+.membership-marketing-page .membership-unlock-cta-shell--public .membership-unlock-cta:not(:disabled) {
+  animation: membership-unlock-glow 2s ease-in-out infinite;
+}
+
+.membership-marketing-page .membership-unlock-cta-shell--public:hover {
+  animation:
+    membership-unlock-shell-bounce 1.4s ease-in-out infinite,
+    membership-unlock-shell-glow 1.4s ease-in-out infinite;
+}
+
+.membership-marketing-page .membership-unlock-cta-shell--public:hover .membership-unlock-cta:not(:disabled) {
+  filter: brightness(1.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .membership-marketing-page .membership-unlock-cta-shell--public {
+    animation: membership-unlock-shell-glow 2.4s ease-in-out infinite;
+  }
+
+  .membership-marketing-page .membership-unlock-cta-shell--public::before {
+    animation: membership-unlock-shell-glow 2.4s ease-in-out infinite;
+  }
+}
+

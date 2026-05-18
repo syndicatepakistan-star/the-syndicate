@@ -811,7 +811,7 @@ export default function AuthScreen({
             ) : null}
             {isSignup && !isOtp && normalizedAmount ? (
               <p className="form-hint">
-                Selected offer: {normalizedPlan || "membership"} ({normalizedBilling || "monthly"}) - £{normalizedAmount}
+                Selected offer: {normalizedPlan || "membership"} ({normalizedBilling || "monthly"}) - ${normalizedAmount}
               </p>
             ) : null}
 

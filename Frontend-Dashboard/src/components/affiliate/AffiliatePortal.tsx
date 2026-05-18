@@ -59,12 +59,12 @@ function formatPaidDisplay(currencyRaw: string | null | undefined, amountRaw: st
   if (amountRaw === undefined || amountRaw === null) return null;
   const rawStr = String(amountRaw).trim();
   if (!rawStr) return null;
-  const cur = (currencyRaw ?? "£").trim().toLowerCase();
+  const cur = (currencyRaw ?? "$").trim().toLowerCase();
   const symbol =
-    cur === "gbp" || cur === "£" || cur === "pound" || cur === "pounds"
-      ? "£"
-      : cur === "usd" || cur === "$"
-        ? "$"
+    cur === "usd" || cur === "$"
+      ? "$"
+      : cur === "gbp" || cur === "£" || cur === "pound" || cur === "pounds"
+        ? "£"
         : cur === "eur" || cur === "€"
           ? "€"
           : cur.length <= 4 && /^[a-z]{3}$/i.test(cur)
@@ -380,8 +380,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       ? "Withdrawal request received"
       : "Your withdrawal payout window";
     const body = options?.immediate
-      ? `We received your £${reminder.amount} request. Expect payout within 1-2 weeks.`
-      : `Reminder: your £${reminder.amount} payout should land in your account around now.`;
+      ? `We received your $${reminder.amount} request. Expect payout within 1-2 weeks.`
+      : `Reminder: your $${reminder.amount} payout should land in your account around now.`;
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         new Notification(title, { body, tag: `withdrawal-${reminder.requestId}` });
@@ -509,11 +509,11 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     setWithdrawAttemptedSubmit(true);
     if (!canSubmitWithdraw) {
       if (!canRequestWithdraw) {
-        setWithdrawMessage({ text: "You are not eligible yet. Minimum earnings required: £50.000.", tone: "bad" });
+        setWithdrawMessage({ text: "You are not eligible yet. Minimum earnings required: $50.000.", tone: "bad" });
       } else if (!withdrawFormValid) {
         setWithdrawMessage({ text: "Please fill all required fields before submitting.", tone: "bad" });
       } else if (!withdrawAmountValid) {
-        setWithdrawMessage({ text: `Withdrawal amount must be greater than 0 and up to £${earningsDisplay}.`, tone: "bad" });
+        setWithdrawMessage({ text: `Withdrawal amount must be greater than 0 and up to $${earningsDisplay}.`, tone: "bad" });
       }
       return;
     }
@@ -688,8 +688,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         key: String(w.id),
         email: (w.account_name && w.account_name.trim()) || "—",
         product,
-        paid: `Balance @ request: £${formatEarnings(w.earnings_snapshot)}`,
-        yourCut: `£${formatEarnings(w.requested_amount)}`,
+        paid: `Balance @ request: $${formatEarnings(w.earnings_snapshot)}`,
+        yourCut: `$${formatEarnings(w.requested_amount)}`,
         when: formatAgo(w.created_at),
         muted: WITHDRAWAL_REFUNDED_STATUSES.has(st),
       };
@@ -873,7 +873,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 className="cut-frame-sm border border-pink-300/80 bg-[linear-gradient(180deg,rgba(244,114,182,0.2),rgba(0,0,0,0.32))] px-3 py-2 shadow-[0_0_0_1px_rgba(249,168,212,0.92),0_0_24px_rgba(236,72,153,0.84),0_0_58px_rgba(236,72,153,0.64),0_0_108px_rgba(236,72,153,0.46),inset_0_0_20px_rgba(249,168,212,0.3)]"
               >
                 <div className="text-xs font-black uppercase tracking-[0.14em] text-white/68 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]">Earnings</div>
-                <div className="mt-1 text-2xl font-black text-[#f8d778] drop-shadow-[0_0_12px_rgba(248,215,120,0.5)]">£{earningsDisplay}</div>
+                <div className="mt-1 text-2xl font-black text-[#f8d778] drop-shadow-[0_0_12px_rgba(248,215,120,0.5)]">${earningsDisplay}</div>
               </div>
             </div>
 
@@ -951,7 +951,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   >
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200/80">Reserved payout</div>
-                      <div className="mt-1 text-lg font-black text-amber-50">£{row.amount}</div>
+                      <div className="mt-1 text-lg font-black text-amber-50">${row.amount}</div>
                       <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/60">
                         Target check-in: {new Date(row.notifyAt).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric" })}
                       </div>
@@ -1025,7 +1025,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   <div className="text-right font-mono text-[10px] font-black uppercase leading-snug tracking-[0.14em] text-cyan-200/90 sm:text-xs">
                     <span className="block sm:inline">Total requested (active withdrawals below): </span>
                     <span className="text-base text-yellow-200 [text-shadow:0_0_12px_rgba(250,250,100,0.55),0_0_28px_rgba(250,204,21,0.35)] sm:text-lg">
-                      £{formatEarnings(syndicateStatementTotal)}
+                      ${formatEarnings(syndicateStatementTotal)}
                     </span>
                   </div>
                 </div>
@@ -1034,7 +1034,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   <p className="text-center font-mono text-[10px] font-black uppercase leading-relaxed tracking-[0.1em] text-white/80 sm:text-[11px] sm:tracking-[0.12em]">
                     <span className="text-yellow-200 [text-shadow:0_0_8px_rgba(253,224,71,0.45)]">Payout</span>
                     <span className="text-fuchsia-200/90"> = </span>
-                    <span className="text-cyan-200">min(requested £</span>
+                    <span className="text-cyan-200">min(requested $</span>
                     <span className="text-white/55">, </span>
                     <span className="text-emerald-200/95">balance @ submit</span>
                     <span className="text-cyan-200">)</span>
@@ -1135,7 +1135,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     r.purchase_amount ??
                     (r as RecentReferralItem & { amount?: string | number | null }).amount ??
                     null;
-                  const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "gbp";
+                  const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "usd";
                   const paidLine = formatPaidDisplay(purchaseCurrency, purchaseAmountRaw);
                   const subscriptionLabel =
                     (r.subscription_name && r.subscription_name.trim()) ||
@@ -1297,7 +1297,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                           <div className="rounded-md border border-amber-400/55 bg-amber-950/35 px-3 py-2 shadow-[0_0_16px_rgba(251,191,36,0.28)]">
                             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200/90">Your earning</div>
                             <div className="mt-1 text-base font-black text-amber-100 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">
-                              {earningStr != null ? `£${formatEarnings(earningStr)}` : "—"}
+                              {earningStr != null ? `$${formatEarnings(earningStr)}` : "—"}
                             </div>
                             {typeof r.sale_count === "number" && r.sale_count > 1 ? (
                               <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/80">
@@ -1362,8 +1362,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             ) : null}
             <p className="mt-5 border-t border-fuchsia-500/30 pt-4 text-center text-xs font-semibold leading-relaxed text-fuchsia-200/85 sm:text-sm">
               Referred purchase commission: <span className="text-amber-300">15%</span> when their spend is under{" "}
-              <span className="font-black text-amber-200">£333</span>; <span className="text-green-300">30%</span> when spend is{" "}
-              <span className="font-black text-green-200">£333 or more</span>
+              <span className="font-black text-amber-200">$333</span>; <span className="text-green-300">30%</span> when spend is{" "}
+              <span className="font-black text-green-200">$333 or more</span>
             </p>
           </div>
         </div>
@@ -1496,7 +1496,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="border-2 border-amber-300/85 bg-[linear-gradient(180deg,rgba(252,211,77,0.14),rgba(8,6,2,0.94))] px-4 py-3 text-center shadow-[0_0_0_1px_rgba(254,240,138,0.85),0_0_18px_rgba(252,211,77,0.32),inset_0_0_14px_rgba(252,211,77,0.16)] [clip-path:polygon(0%_50%,14px_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,14px_100%)]">
                   <div className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/90 sm:text-xs">Amount Requested</div>
-                  <div className="mt-1 text-2xl font-black text-amber-100 drop-shadow-[0_0_10px_rgba(252,211,77,0.5)] sm:text-3xl">£{withdrawConfirmation.amount}</div>
+                  <div className="mt-1 text-2xl font-black text-amber-100 drop-shadow-[0_0_10px_rgba(252,211,77,0.5)] sm:text-3xl">${withdrawConfirmation.amount}</div>
                 </div>
                 <div className="border-2 border-cyan-300/85 bg-[linear-gradient(180deg,rgba(56,236,255,0.16),rgba(0,12,20,0.92))] px-4 py-3 text-center shadow-[0_0_0_1px_rgba(103,232,249,0.85),0_0_18px_rgba(56,236,255,0.4),inset_0_0_14px_rgba(56,236,255,0.18)] [clip-path:polygon(0%_50%,14px_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,14px_100%)]">
                   <div className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-200/95 sm:text-xs">Expected By</div>
@@ -1592,10 +1592,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               Enter Account Details To Withdraw
             </h3>
             <p className="mt-2 text-sm sm:text-base font-bold text-cyan-100">
-              Minimum earnings required for withdrawal: <span className="text-amber-200">£50.000</span>
+              Minimum earnings required for withdrawal: <span className="text-amber-200">$50.000</span>
             </p>
             <p className={`mt-1 text-sm font-black uppercase tracking-[0.12em] ${canRequestWithdraw ? "text-emerald-300" : "text-rose-300"}`}>
-              Current earnings: £{earningsDisplay} {canRequestWithdraw ? "Eligible" : "Not eligible yet"}
+              Current earnings: ${earningsDisplay} {canRequestWithdraw ? "Eligible" : "Not eligible yet"}
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1631,7 +1631,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   step="0.01"
                   value={withdrawForm.amount}
                   onChange={(e) => updateWithdrawField("amount", e.target.value)}
-                  placeholder={`Max £${earningsDisplay}`}
+                  placeholder={`Max $${earningsDisplay}`}
                   className={`cut-frame-sm border-[3px] px-4 py-3 text-base font-bold tracking-[0.03em] outline-none placeholder:text-lime-100/30 ${
                     missingAmount || invalidAmount
                       ? "border-rose-400/95 bg-[linear-gradient(180deg,rgba(52,8,8,0.92),rgba(0,0,0,0.94))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.9),0_0_20px_rgba(251,113,133,0.32)] focus:border-rose-300"
@@ -1639,7 +1639,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   }`}
                 />
                 <span className={`text-xs font-bold normal-case tracking-normal ${withdrawAmountValid || !withdrawForm.amount ? "text-lime-200/90" : "text-rose-300"}`}>
-                  Enter up to your balance (max £{earningsDisplay}).
+                  Enter up to your balance (max ${earningsDisplay}).
                 </span>
               </label>
             </div>

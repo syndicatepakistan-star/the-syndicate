@@ -38,8 +38,8 @@ const PRICING_NOTCH_CLIP =
 
 const pricingData: Record<PlanKey, PricingTier> = {
   bundle: {
-    price: { monthly: '£333', yearly: '£3,330' },
-    oldPrice: { monthly: '£555', yearly: '£5,550' },
+    price: { monthly: '$333', yearly: '$3,330' },
+    oldPrice: { monthly: '$555', yearly: '$5,550' },
     badge: 'MONEY MASTERY',
     title: 'MONEY MASTERY',
     description:
@@ -56,8 +56,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
     billingMode: 'lifetime',
   },
   pawn: {
-    price: { monthly: '£19.19', yearly: '£191.90' },
-    oldPrice: { monthly: '£29.99', yearly: '£299.90' },
+    price: { monthly: '$19.19', yearly: '$191.90' },
+    oldPrice: { monthly: '$29.99', yearly: '$299.90' },
     badge: 'THE PAWN · BASIC',
     title: 'The Pawn Basic',
     description:
@@ -76,8 +76,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
     billingMode: 'recurring',
   },
   knight: {
-    price: { monthly: '£33.33', yearly: '£333.30' },
-    oldPrice: { monthly: '£49.99', yearly: '£499.90' },
+    price: { monthly: '$33.33', yearly: '$333.30' },
+    oldPrice: { monthly: '$49.99', yearly: '$499.90' },
     badge: 'THE KNIGHT',
     title: 'The Knight',
     description:
@@ -96,8 +96,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
     billingMode: 'recurring',
   },
   king: {
-    price: { monthly: '£19.99', yearly: '£239.88' },
-    oldPrice: { monthly: '£99.99', yearly: '£999.90' },
+    price: { monthly: '$19.99', yearly: '$239.88' },
+    oldPrice: { monthly: '$99.99', yearly: '$999.90' },
     badge: 'THE KING',
     title: 'The King',
     description:

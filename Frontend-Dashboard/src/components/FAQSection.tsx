@@ -50,7 +50,7 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
     },
     {
       q: 'What do membership tiers cost?',
-      a: 'Pricing page is source of truth: The King at £19.99/month (yearly on the same card), checkout when signed in.\nFull bundle lifetime is listed there too — do not trust hearsay; trust the page.',
+      a: 'Pricing page is source of truth: The King at $19.99/month (yearly on the same card), checkout when signed in.\nFull bundle lifetime is listed there too — do not trust hearsay; trust the page.',
     },
     {
       q: 'What payment methods are accepted?',

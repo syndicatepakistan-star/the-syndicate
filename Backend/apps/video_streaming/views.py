@@ -368,7 +368,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 line_items=[
                     {
                         "price_data": {
-                            "currency": "gbp",
+                            "currency": settings.DEFAULT_CURRENCY,
                             "product_data": {"name": f"{playlist.title} playlist access"},
                             "unit_amount": amount_pence,
                         },
@@ -413,7 +413,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 "stripe_session_id": session.id,
                 "stripe_checkout_session_id": session.id,
                 "amount_paid": playlist.price,
-                "currency": "gbp",
+                "currency": settings.DEFAULT_CURRENCY,
                 "paid_at": timezone.now(),
             },
         )
@@ -422,7 +422,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
             purchase.stripe_session_id = session.id
             purchase.stripe_checkout_session_id = session.id
             purchase.amount_paid = playlist.price
-            purchase.currency = "gbp"
+            purchase.currency = settings.DEFAULT_CURRENCY
             purchase.save(update_fields=["status", "stripe_session_id", "stripe_checkout_session_id", "amount_paid", "currency", "updated_at"])
         return Response({"checkout_url": session.url, "session_id": session.id, "playlist_id": playlist.id}, status=status.HTTP_200_OK)
 
@@ -486,7 +486,7 @@ class StreamPlaylistCheckoutSuccessView(APIView):
 
         amount_total = getattr(session, "amount_total", None)
         amount_paid = Decimal(str(amount_total or 0)) / Decimal("100")
-        currency = str(getattr(session, "currency", "gbp") or "gbp").lower()
+        currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
 
         purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
             user=request.user,

@@ -6,7 +6,7 @@ const MEMBERSHIP_BG_VIDEO = "/assets/bg-video%201.mp4";
 
 export default function MembershipMarketingPage() {
   return (
-    <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] text-white">
+    <div className="membership-marketing-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] text-white">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <video
           className="absolute inset-0 h-full w-full object-cover opacity-25"

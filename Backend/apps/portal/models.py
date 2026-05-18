@@ -193,7 +193,7 @@ class UserPlanPurchase(models.Model):
     plan_slug = models.CharField(max_length=32, db_index=True)
     product_title = models.CharField(max_length=255)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=8, default="gbp")
+    currency = models.CharField(max_length=8, default="usd")
     status = models.CharField(
         max_length=16,
         choices=Status.choices,

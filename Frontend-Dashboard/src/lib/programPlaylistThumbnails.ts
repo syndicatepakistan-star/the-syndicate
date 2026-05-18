@@ -6,7 +6,7 @@ function courseThumb(fileName: string): string {
 }
 
 /** Playlists hidden from the public /programs library grid. */
-export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>([6]);
+export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>();
 
 /**
  * Stream playlist id → static cover image (used when Django has no cover_image).
@@ -18,6 +18,7 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   3: courseThumb("hustle.png"),
   4: courseThumb("thinking.png"),
   5: courseThumb("humanbehaviou.png"),
+  6: "/assets/programs/courses/mastering-consistency.png",
   7: courseThumb("13rules.png"),
   8: courseThumb("money-philosophy.jpeg"),
   9: courseThumb("secret.png"),

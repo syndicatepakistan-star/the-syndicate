@@ -10,7 +10,7 @@ import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/Cyber
 
 const BILLING = "monthly" as const;
 const CHECKOUT_AMOUNT = "19.99";
-const DISPLAY_PRICE = "£19.99";
+const DISPLAY_PRICE = "$19.99";
 
 const MEMBERSHIP_CHANNELS = [
   {
@@ -99,11 +99,9 @@ const HERO_OFFER_DETAIL =
   "Pick four to five programs from the vault. Unlock Syndicate Mode missions, the member article and video hub, weekly drops, and the complete goals stack. One tier. Full uplink. No partial access.";
 
 const CYBER_UNLOCK_CTA = cn(
-  "relative w-full overflow-hidden rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
+  "membership-unlock-cta relative z-[1] w-full rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
   "px-5 py-4 font-mono text-[clamp(11px,2.4vw,15px)] font-black uppercase tracking-[0.16em] text-[#d4af39]",
-  "[text-shadow:0_0_18px_rgba(212,175,57,0.45),0_1px_2px_rgba(0,0,0,0.85)]",
-  "shadow-[0_0_0_1px_rgba(212,175,57,0.5),0_0_28px_rgba(212,175,57,0.35),0_0_56px_rgba(212,175,57,0.18),inset_0_1px_0_rgba(255,255,255,0.1)]",
-  "transition hover:brightness-110 hover:shadow-[0_0_0_1px_rgba(212,175,57,0.65),0_0_40px_rgba(212,175,57,0.5),0_0_80px_rgba(212,175,57,0.22),inset_0_1px_0_rgba(255,255,255,0.14)]",
+  "[text-shadow:0_0_18px_rgba(212,175,57,0.55),0_0_32px_rgba(250,204,21,0.45),0_1px_2px_rgba(0,0,0,0.85)]",
   "disabled:cursor-wait disabled:opacity-65"
 );
 
@@ -112,11 +110,14 @@ function MembershipHeroOffer({
   error,
   onUnlock,
   className,
+  publicMarketing = false,
 }: {
   busy: boolean;
   error: string | null;
   onUnlock: () => void;
   className?: string;
+  /** Strong bounce + glow on /membership public page */
+  publicMarketing?: boolean;
 }) {
   return (
     <div className={cn("mt-6 w-full max-w-3xl space-y-4", className)}>
@@ -137,9 +138,16 @@ function MembershipHeroOffer({
           {DISPLAY_PRICE}
           <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 sm:text-xs">/ mo</span>
         </span>
-        <button type="button" disabled={busy} onClick={onUnlock} className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem]")}>
-          {busy ? "Opening checkout…" : "Unlock membership"}
-        </button>
+        <div
+          className={cn(
+            "membership-unlock-cta-shell min-h-[3.25rem] w-full",
+            publicMarketing && "membership-unlock-cta-shell--public"
+          )}
+        >
+          <button type="button" disabled={busy} onClick={onUnlock} className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem] w-full")}>
+            {busy ? "Opening checkout…" : "Unlock membership"}
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -256,8 +264,8 @@ export function MembershipOfferLanding({
     >
       <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
         {!embedded ? (
-          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-[min(68vh,720px)]" innerClassName="p-7 sm:p-10 lg:p-14">
-            <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="p-7 sm:p-10 lg:p-14">
+            <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-200/80">
                   Membership // Dystopian Uplink
@@ -277,6 +285,7 @@ export function MembershipOfferLanding({
                   busy={busy}
                   error={error}
                   onUnlock={() => void unlockMembership()}
+                  publicMarketing
                 />
               </div>
               <div
@@ -291,7 +300,7 @@ export function MembershipOfferLanding({
                   aria-hidden
                 />
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" className="relative z-[1]" innerClassName="p-2">
-                <div className="relative min-h-[280px] overflow-hidden sm:min-h-[360px] lg:min-h-[420px]">
+                <div className="relative h-[60vh] max-h-[60vh] min-h-[200px] overflow-hidden">
                   <span
                     className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_38%,rgba(56,189,248,0.22),rgba(168,85,247,0.14)_48%,transparent_72%)]"
                     aria-hidden

@@ -209,7 +209,7 @@ class StreamPlaylistPurchase(models.Model):
     stripe_session_id = models.CharField(max_length=255, blank=True, default="")
     stripe_checkout_session_id = models.CharField(max_length=255, blank=True, db_index=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    currency = models.CharField(max_length=12, default="gbp")
+    currency = models.CharField(max_length=12, default="usd")
     paid_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

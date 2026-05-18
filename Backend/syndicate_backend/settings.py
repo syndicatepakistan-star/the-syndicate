@@ -541,6 +541,7 @@ _pm_raw = (os.environ.get("STRIPE_CHECKOUT_PAYMENT_METHOD_TYPES") or "card,link"
 STRIPE_CHECKOUT_PAYMENT_METHOD_TYPES = tuple(
     x.strip() for x in _pm_raw.split(",") if x.strip()
 ) or ("card", "link")
+DEFAULT_CURRENCY = (_strip_optional_quotes(os.environ.get("DEFAULT_CURRENCY") or "usd")).lower()
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

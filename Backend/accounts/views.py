@@ -270,14 +270,14 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
         "stripe_session_id": f"quiz_ticket_{user.id}_{playlist.id}",
         "stripe_checkout_session_id": f"quiz_ticket_{user.id}_{playlist.id}",
         "amount_paid": 0,
-        "currency": "gbp",
+        "currency": settings.DEFAULT_CURRENCY,
         "paid_at": timezone.now(),
       },
     )
     if purchase.status != StreamPlaylistPurchase.Status.PAID:
       purchase.status = StreamPlaylistPurchase.Status.PAID
       purchase.amount_paid = 0
-      purchase.currency = "gbp"
+      purchase.currency = settings.DEFAULT_CURRENCY
       purchase.paid_at = timezone.now()
       purchase.save(update_fields=["status", "amount_paid", "currency", "paid_at", "updated_at"])
   return user
@@ -397,7 +397,7 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     amt = Decimal(str(paid_amount))
   except Exception:
     amt = Decimal("0.00")
-  cur = (paid_currency or "gbp").strip().lower()[:8] or "gbp"
+  cur = (paid_currency or settings.DEFAULT_CURRENCY).strip().lower()[:8] or settings.DEFAULT_CURRENCY
   UserPlanPurchase.objects.update_or_create(
     stripe_checkout_session_id=sid,
     defaults={
@@ -741,7 +741,7 @@ def create_checkout_session_view(request):
         line_items=[
           {
             "price_data": {
-              "currency": "gbp",
+              "currency": settings.DEFAULT_CURRENCY,
               "product_data": {"name": product_name},
               "unit_amount": unit_amount,
             },
@@ -878,7 +878,7 @@ def create_checkout_session_view(request):
       line_items=[
         {
           "price_data": {
-            "currency": "gbp",
+            "currency": settings.DEFAULT_CURRENCY,
             "product_data": {"name": product_name},
             "unit_amount": unit_amount,
           },
@@ -949,7 +949,7 @@ def checkout_success_view(request):
 
   if session.payment_status != "paid":
     return _json_error("Payment not completed.", status=400)
-  paid_currency = str(getattr(session, "currency", "gbp") or "gbp").lower()
+  paid_currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
   paid_minor_total = int(getattr(session, "amount_total", 0) or 0)
   paid_amount = round(paid_minor_total / 100, 2)
 
@@ -1026,7 +1026,7 @@ def checkout_success_view(request):
             "stripe_session_id": session.id,
             "stripe_checkout_session_id": session.id,
             "amount_paid": playlist.price,
-            "currency": "gbp",
+            "currency": settings.DEFAULT_CURRENCY,
             "paid_at": timezone.now(),
           },
         )
@@ -1034,7 +1034,7 @@ def checkout_success_view(request):
         purchase.stripe_session_id = session.id
         purchase.stripe_checkout_session_id = session.id
         purchase.amount_paid = playlist.price
-        purchase.currency = "gbp"
+        purchase.currency = settings.DEFAULT_CURRENCY
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
@@ -1076,7 +1076,7 @@ def checkout_success_view(request):
             "stripe_session_id": session.id,
             "stripe_checkout_session_id": session.id,
             "amount_paid": playlist.price,
-            "currency": "gbp",
+            "currency": settings.DEFAULT_CURRENCY,
             "paid_at": timezone.now(),
           },
         )
@@ -1084,7 +1084,7 @@ def checkout_success_view(request):
         purchase.stripe_session_id = session.id
         purchase.stripe_checkout_session_id = session.id
         purchase.amount_paid = playlist.price
-        purchase.currency = "gbp"
+        purchase.currency = settings.DEFAULT_CURRENCY
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
@@ -1125,7 +1125,7 @@ def checkout_success_view(request):
             "stripe_session_id": session.id,
             "stripe_checkout_session_id": session.id,
             "amount_paid": playlist.price,
-            "currency": "gbp",
+            "currency": settings.DEFAULT_CURRENCY,
             "paid_at": timezone.now(),
           },
         )
@@ -1133,7 +1133,7 @@ def checkout_success_view(request):
         purchase.stripe_session_id = session.id
         purchase.stripe_checkout_session_id = session.id
         purchase.amount_paid = playlist.price
-        purchase.currency = "gbp"
+        purchase.currency = settings.DEFAULT_CURRENCY
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
     plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()

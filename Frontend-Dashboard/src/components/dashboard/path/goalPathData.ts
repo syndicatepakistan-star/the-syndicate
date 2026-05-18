@@ -78,6 +78,45 @@ export const PATH_CARD_SKIN: Record<
   },
 };
 
+/**
+ * Syndicate catalog grouped for YOUR PATH — order preserved per focus.
+ * Titles are matched loosely against live playlist/course API names.
+ */
+export const PATH_PROGRAM_TITLES: Record<GoalId, readonly string[]> = {
+  web_dev: ["Crypto Trading with Technical Analysis Course", "THE 1 MINUTE SCALPEL"],
+  digital_marketing: [
+    "Faceless YouTube AI Content Creator Course",
+    "WordPress Blog",
+    "Graphics Design Using Canva",
+  ],
+  youtube: ["How To Build A.I Agents", "Prompt Engineering", "AI Automations"],
+  money_online: [
+    "Hustle Hard",
+    "Mastering Consistency",
+    "Syndicate 13 Business Rules",
+    "Syndicate Money Philosophy",
+    "The 9 to 5 Exit Strategy",
+    "The Art Of Business Persuasion",
+    "The Art of Critical Thinking",
+    "The Art of Mastering Human Behavior in Business",
+    "The Business of Empire Building",
+    "The Compound Effect",
+    "The Secret To Transformation",
+    "Zero to One Million",
+  ],
+  ai_automation: [
+    "Affiliate Marketing",
+    "App Building (using Flutter)",
+    "Block Chain and Smart Contract Building with Solidity",
+    "Book Publishing On Amazon (KINDLE)",
+    "Building Apps using React JS",
+    "Building Games Using Unreal Engine",
+    "Framer Crash Course",
+    "Print On Demand Clothing",
+    "Python Programming",
+  ],
+};
+
 /** Placeholder roadmap — length drives UI only; program cards use `opportunityTriplesForStage`. */
 export const ROADMAPS: Record<GoalId, RoadmapStep[]> = Object.fromEntries(
   (GOAL_OPTIONS.map((g) => g.id) as GoalId[]).map((gid) => [
@@ -93,168 +132,55 @@ export const ROADMAPS: Record<GoalId, RoadmapStep[]> = Object.fromEntries(
   ]),
 ) as Record<GoalId, RoadmapStep[]>;
 
-/** Match dashboard / programs library titles (substring, case-insensitive). */
-const PATH_MATCH_KEYWORDS: Record<GoalId, string[]> = {
-  web_dev: ["crypto", "trade", "trading", "technical", "forex", "stock", "chart", "market", "portfolio"],
-  digital_marketing: ["wordpress", "blog", "canva", "content", "social", "graphics", "design", "growth", "media"],
-  youtube: ["python", "react", "flutter", "app", "automation", "ai", "openai", "agent", "build"],
-  money_online: ["money", "mastery", "print", "demand", "monet", "wealth", "finance", "cashflow", "business"],
-  ai_automation: ["autom", "ai", "python", "react", "flutter", "project", "demand", "print", "crypto", "youtube"],
-};
-
-/** Syndicate-style program titles aligned with public programs / home catalog naming. */
-const PATH_FALLBACK_POOL: Record<GoalId, { title: string; outcome: string; earningHint: string }[]> = {
-  web_dev: [
-    {
-      title: "Crypto Trading with Technical Analysis",
-      outcome: "Read structure, volatility, and risk before size — build a repeatable playbook.",
-      earningHint: "Skilled: sim → funded splits · $400–$3k/mo as stats stabilize",
-    },
-    {
-      title: "Market structure & execution lab",
-      outcome: "Sessions, liquidity, journaling — professional hygiene first.",
-      earningHint: "Skilled: combine payouts · $800–$5k/mo with discipline",
-    },
-    {
-      title: "Risk & position management sprint",
-      outcome: "Fixed % risk, checklists, post-trade review loops.",
-      earningHint: "Skilled: prop-style splits · $1.2k–$8k/mo",
-    },
-    {
-      title: "Technical analysis deep track",
-      outcome: "Confluence systems, invalidation, and trade review metrics.",
-      earningHint: "Skilled: desk-level path · $3k–$18k+/mo (capital + edge)",
-    },
-  ],
-  digital_marketing: [
-    {
-      title: "WordPress Blog",
-      outcome: "Owned distribution: publish once, atomize everywhere.",
-      earningHint: "Skilled: retainers · $500–$2.5k/mo",
-    },
-    {
-      title: "Graphics Design using Canva",
-      outcome: "Template systems + brand-safe batch production.",
-      earningHint: "Skilled: productized packs · $400–$2k/mo",
-    },
-    {
-      title: "Content Automation pipeline",
-      outcome: "Scheduling, approvals, repurposing from a single pillar asset.",
-      earningHint: "Skilled: stack installs · $1k–$6k/mo",
-    },
-    {
-      title: "Social & growth systems",
-      outcome: "Measure what ships; kill vanity cadence.",
-      earningHint: "Skilled: operator engagements · $2k–$9k/mo",
-    },
-  ],
-  youtube: [
-    {
-      title: "AI Automations",
-      outcome: "Agents, APIs, guardrails — ship workflows that survive production.",
-      earningHint: "Skilled: integration retainers · $1.5k–$7k/mo",
-    },
-    {
-      title: "Python Programming",
-      outcome: "Tooling, scripts, and evaluation harnesses for reliable outputs.",
-      earningHint: "Skilled: contract builds · $900–$4.5k/mo",
-    },
-    {
-      title: "Building Apps using React JS",
-      outcome: "UI surfaces for copilots, dashboards, and member tools.",
-      earningHint: "Skilled: sprint rates · $1.2k–$6k/mo",
-    },
-    {
-      title: "App Building using Flutter",
-      outcome: "Ship cross-platform utilities clients can feel.",
-      earningHint: "Skilled: product lanes · $2k–$8k/mo",
-    },
-  ],
-  money_online: [
-    {
-      title: "Print on Demand Clothing",
-      outcome: "Offer stack + fulfillment rhythm without inventory drag.",
-      earningHint: "Skilled: brand ladders · $800–$4k/mo",
-    },
-    {
-      title: "Money Mastery — cashflow systems",
-      outcome: "Buckets, buffers, and reinvestment rules you can defend.",
-      earningHint: "Skilled: operator income · $1.5k–$8k/mo",
-    },
-    {
-      title: "Dystopian Demand — offer economics",
-      outcome: "Positioning, pricing power, and proof assets.",
-      earningHint: "Skilled: high-ticket funnels · $3k–$15k/mo",
-    },
-    {
-      title: "New Project — monetization sprint",
-      outcome: "Launch, measure, iterate with one owned channel.",
-      earningHint: "Skilled: portfolio mix · $5k–$25k+/mo blended",
-    },
-  ],
-  ai_automation: [
-    {
-      title: "AI Automations",
-      outcome: "Automate delivery, support, and ops without losing margin.",
-      earningHint: "Skilled: retainers · $1.5k–$8k/mo",
-    },
-    {
-      title: "Print on Demand Clothing",
-      outcome: "Productized SKUs + creative throughput at scale.",
-      earningHint: "Skilled: store + ads stack · $1k–$6k/mo",
-    },
-    {
-      title: "WordPress Blog",
-      outcome: "SEO + email capture as compounding equity.",
-      earningHint: "Skilled: niche authority · $600–$4k/mo",
-    },
-    {
-      title: "Building Apps using React JS",
-      outcome: "Ship tools, templates, and micro-SaaS from one codebase.",
-      earningHint: "Skilled: product + services · $2k–$12k/mo",
-    },
-    {
-      title: "Python Programming",
-      outcome: "Scripts, scrapers, and glue between your stack.",
-      earningHint: "Skilled: technical gigs · $900–$5k/mo",
-    },
-  ],
-};
-
 const TONE_CYCLE: OpportunityTone[] = ["amber", "fuchsia", "cyan"];
+
+function normTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function titleMatches(courseTitle: string, canonical: string): boolean {
+  const a = normTitle(courseTitle);
+  const b = normTitle(canonical);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  const aTokens = a.split(" ").filter((t) => t.length > 2);
+  const bTokens = b.split(" ").filter((t) => t.length > 2);
+  if (aTokens.length === 0 || bTokens.length === 0) return false;
+  const overlap = bTokens.filter((t) => aTokens.includes(t)).length;
+  return overlap / bTokens.length >= 0.72;
+}
 
 function defaultCopyForTitle(title: string): { outcome: string; earningHint: string } {
   return {
-    outcome: `Work this playlist end-to-end: ${title} — stack proof, then raise rates with receipts.`,
-    earningHint: "Skilled path: compounding retainers + launches as reputation hardens",
+    outcome: `Follow the ${title} track in Programs — build proof, then stack the next module.`,
+    earningHint: "Skilled path: compounding skills + launches as reputation hardens",
   };
 }
 
-function mergeProgramPool(goal: GoalId, courses: { id: string; title: string }[]): { id: string; title: string; outcome: string; earningHint: string }[] {
-  const kws = PATH_MATCH_KEYWORDS[goal];
+function mergeProgramPool(
+  goal: GoalId,
+  courses: { id: string; title: string }[],
+): { id: string; title: string; outcome: string; earningHint: string }[] {
   const seen = new Set<string>();
   const out: { id: string; title: string; outcome: string; earningHint: string }[] = [];
 
-  const push = (row: { id: string; title: string; outcome: string; earningHint: string }) => {
-    const key = row.title.trim().toLowerCase();
-    if (seen.has(key)) return;
+  for (const canonical of PATH_PROGRAM_TITLES[goal]) {
+    const match = courses.find((c) => titleMatches(c.title, canonical));
+    const title = match?.title ?? canonical;
+    const key = normTitle(title);
+    if (seen.has(key)) continue;
     seen.add(key);
-    out.push(row);
-  };
-
-  for (const c of courses) {
-    const t = c.title.toLowerCase();
-    if (!kws.some((kw) => t.includes(kw))) continue;
-    const d = defaultCopyForTitle(c.title);
-    push({ id: c.id, title: c.title, outcome: d.outcome, earningHint: d.earningHint });
-  }
-
-  for (const f of PATH_FALLBACK_POOL[goal]) {
-    push({
-      id: `fallback-${goal}-${f.title.slice(0, 24).replace(/\W+/g, "-").toLowerCase()}`,
-      title: f.title,
-      outcome: f.outcome,
-      earningHint: f.earningHint,
+    const copy = defaultCopyForTitle(title);
+    out.push({
+      id: match?.id ?? `path-${goal}-${key.replace(/\s+/g, "-")}`,
+      title,
+      outcome: copy.outcome,
+      earningHint: copy.earningHint,
     });
   }
 
@@ -262,8 +188,8 @@ function mergeProgramPool(goal: GoalId, courses: { id: string; title: string }[]
 }
 
 /**
- * Three program cards for a stage index — titles prefer live `/programs` library matches from `courses`,
- * padded with Syndicate catalog fallbacks. Tones cycle amber / fuchsia / cyan (Our Methods energy).
+ * Three program cards for a stage index — titles from the active path catalog,
+ * preferring live Programs API matches when available.
  */
 export function opportunityTriplesForStage(
   goal: GoalId,
@@ -294,7 +220,7 @@ export function coursesForGoalStep(goal: GoalId, stepIndex: number): CourseRec[]
   return [...opportunityTriplesForStage(goal, stepIndex, [])];
 }
 
-/** @deprecated Program titles now come from matched playlists only. */
+/** @deprecated Program titles now come from PATH_PROGRAM_TITLES. */
 export function personalizeCourses(
   goal: GoalId,
   stepIdx: number,

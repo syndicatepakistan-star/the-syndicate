@@ -70,6 +70,7 @@ urlpatterns = [
     path("api/challenges/", include("apps.challenges.urls")),
     path("api/track/", include("apps.affiliate_tracking.urls_track")),
     path("api/affiliate/auth/", include("apps.affiliate_tracking.urls_auth")),
+    path("api/support/", include("apps.support.urls")),
     path("api/", include("api.urls")),
 ]
 

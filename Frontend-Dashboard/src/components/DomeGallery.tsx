@@ -5,7 +5,7 @@ import { useGesture } from '@use-gesture/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
-type ImageItem = string | { src: string; alt?: string }
+type ImageItem = string | { src: string; alt?: string; href?: string }
 
 type DomeGalleryProps = {
   images?: ImageItem[]
@@ -27,12 +27,16 @@ type DomeGalleryProps = {
   grayscale?: boolean
   autoRotateSpeedDeg?: number
   tileInsetPx?: number
+  /** When set, every tile navigates to this URL instead of enlarging. */
   clickHref?: string
+  /** When true, tiles with per-image `href` navigate on click; others enlarge. */
+  navigateOnClick?: boolean
 }
 
 type ItemDef = {
   src: string
   alt: string
+  href?: string
   x: number
   y: number
   sizeX: number
@@ -80,8 +84,12 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
 
   const totalSlots = coords.length
   const normalizedImages = pool.length
-    ? pool.map((image) => (typeof image === 'string' ? { src: image, alt: '' } : { src: image.src || '', alt: image.alt || '' }))
-    : [{ src: '', alt: '' }]
+    ? pool.map((image) =>
+        typeof image === 'string'
+          ? { src: image, alt: '', href: undefined }
+          : { src: image.src || '', alt: image.alt || '', href: image.href }
+      )
+    : [{ src: '', alt: '', href: undefined }]
   const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[i % normalizedImages.length]!)
 
   for (let i = 1; i < usedImages.length; i += 1) {
@@ -101,6 +109,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     ...c,
     src: usedImages[i]?.src ?? '',
     alt: usedImages[i]?.alt ?? '',
+    href: usedImages[i]?.href,
   }))
 }
 
@@ -132,6 +141,7 @@ export default function DomeGallery({
   autoRotateSpeedDeg = 2,
   tileInsetPx = 14,
   clickHref,
+  navigateOnClick = false,
 }: DomeGalleryProps) {
   const router = useRouter()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -314,11 +324,16 @@ export default function DomeGallery({
       router.push(clickHref)
       return
     }
-    if (openingRef.current) return
+    const parent = el.parentElement as HTMLElement | null
+    const tileHref = parent?.dataset.href?.trim()
+    if (navigateOnClick && tileHref) {
+      router.push(tileHref)
+      return
+    }
+    if (!parent || openingRef.current) return
     openingRef.current = true
     openStartedAtRef.current = performance.now()
     lockScroll()
-    const parent = el.parentElement as HTMLElement
     focusedElRef.current = el
     el.setAttribute('data-focused', 'true')
 
@@ -409,7 +424,7 @@ export default function DomeGallery({
       }
       overlay.addEventListener('transitionend', onFirstEnd)
     }
-  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, openedImageBorderRadius, openedImageHeight, openedImageWidth, router, unlockScroll])
+  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, navigateOnClick, openedImageBorderRadius, openedImageHeight, openedImageWidth, router, unlockScroll])
 
   useGesture(
     {
@@ -689,6 +704,7 @@ export default function DomeGallery({
                   className="sphere-item absolute m-auto"
                   data-src={it.src}
                   data-alt={it.alt}
+                  data-href={it.href || undefined}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronLeft, Lock } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { CourseVideoPlaylist } from "@/components/programs/CourseVideoPlaylist";
@@ -625,7 +625,6 @@ export function ProgramsCourseSection({
     const comingSoon = !!pl.is_coming_soon;
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
-    const price = parsePrice(pl.price);
     const detailSelector = `[${PROGRAM_DETAIL_TRIGGER_ATTR}]`;
     const playlistCardPrimary = () => {
       if (comingSoon) return;
@@ -690,27 +689,8 @@ export function ProgramsCourseSection({
               )}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
             </div>
-            <div className="absolute right-3 top-3 z-[4] flex flex-col items-end gap-1 sm:right-3.5 sm:top-3.5">
-              <span
-                className={cn(
-                  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 font-sans text-[11px] font-black tracking-tight text-emerald-100 sm:px-2.5 sm:py-0.5 sm:text-[12px]",
-                  theme.priceColor,
-                  theme.priceGlow
-                )}
-              >
-                {`£${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-              </span>
-            </div>
             {locked && !comingSoon ? (
-              <>
-                <span className="pointer-events-none absolute inset-0 z-[3] bg-black/42" />
-                <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-5 text-center">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/70 bg-black/80 px-2.5 py-1 text-[13px] font-black uppercase tracking-[0.1em] text-[#f5c814] sm:px-3 sm:py-1.5 sm:text-[15px]">
-                    <Lock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-                    {checkoutBusyPlaylistId === pl.id ? "Redirecting..." : "Unlock"}
-                  </span>
-                </span>
-              </>
+              <span className="pointer-events-none absolute inset-0 z-[3] bg-black/32" aria-hidden />
             ) : null}
             {comingSoon ? (
               <>
@@ -724,7 +704,7 @@ export function ProgramsCourseSection({
             ) : null}
             <div
               className={cn(
-                "shrink-0 flex min-h-[5.75rem] flex-col overflow-hidden rounded-xl border px-2 py-1.5 sm:min-h-[6.25rem] sm:px-2.5 sm:py-2",
+                "shrink-0 flex min-h-[3.25rem] flex-col justify-center overflow-hidden rounded-xl border px-2 py-2 sm:min-h-[3.75rem] sm:px-2.5 sm:py-2.5",
                 theme.infoPanel,
                 "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
@@ -733,28 +713,12 @@ export function ProgramsCourseSection({
               <div className="flex items-start justify-between gap-2">
                 <div
                   className={cn(
-                    "line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
+                    "line-clamp-3 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
                     theme.title
                   )}
                 >
                   {pl.title}
                 </div>
-              </div>
-              <div className="mt-2 grid grid-cols-1 gap-1.5 sm:gap-2">
-                <button
-                  type="button"
-                  data-program-playlist-detail=""
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPlaylistDescriptionModal(pl);
-                  }}
-                  className="relative z-[6] w-full min-w-0 rounded-xl border border-white/40 bg-black/55 px-3 py-2 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold)] sm:px-3 sm:py-2 sm:tracking-[0.14em]"
-                >
-                  Details
-                </button>
-                <span className="relative z-[6] hidden min-h-[2.25rem] items-center justify-center rounded-xl border border-white/15 bg-black/25 px-2 text-center text-[9px] font-bold uppercase leading-tight tracking-[0.1em] text-white/50 sm:text-[10px]">
-                  {comingSoon ? "—" : ""}
-                </span>
               </div>
             </div>
           </div>
@@ -1051,15 +1015,7 @@ export function ProgramsCourseSection({
                         <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.1),transparent_50%)]" />
                       )}
                       {courseLocked ? (
-                        <>
-                          <span className="pointer-events-none absolute inset-0 z-[2] bg-black/48" />
-                          <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-4 text-center">
-                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/85 bg-black/78 px-3 py-1.5 text-[16px] font-black uppercase tracking-[0.11em] text-[#f5c814] shadow-[0_0_20px_rgba(245,200,20,0.34)] sm:px-4 sm:py-2 sm:text-[18px] sm:tracking-[0.12em]">
-                              <Lock className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-                              {bundleCheckoutBusy ? "Redirecting..." : "Unlock"}
-                            </span>
-                          </span>
-                        </>
+                        <span className="pointer-events-none absolute inset-0 z-[2] bg-black/36" aria-hidden />
                       ) : null}
                       <div className="relative z-[3] flex h-full flex-col justify-end p-3 pt-10 sm:p-3.5 sm:pt-12">
                         <div

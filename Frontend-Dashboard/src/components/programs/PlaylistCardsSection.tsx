@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
@@ -70,6 +70,8 @@ type Props = {
   title?: string;
   subtitle?: string;
   className?: string;
+  /** Scroll to and open details for this playlist when arriving from a deep link. */
+  highlightPlaylistId?: number;
 };
 
 const CATEGORY_LABELS: Record<"business_model" | "business_psychology", string> = {
@@ -81,6 +83,7 @@ export function PlaylistCardsSection({
   title = "Programs",
   subtitle = "All playlists added from admin are shown here. Open dashboard to continue learning.",
   className,
+  highlightPlaylistId,
 }: Props) {
   const readInitialPlaylistsFromSession = (): StreamPlaylistListItem[] => {
     if (typeof window === "undefined") return [];
@@ -98,6 +101,8 @@ export function PlaylistCardsSection({
   const [error, setError] = useState<string | null>(null);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
   const [pendingCheckoutPlaylistId, setPendingCheckoutPlaylistId] = useState<number | null>(null);
+  const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
+  const highlightHandledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,6 +168,27 @@ export function PlaylistCardsSection({
   }, [businessPsychologyPlaylists, businessModelPlaylists]);
 
   useEffect(() => {
+    if (!highlightPlaylistId || highlightHandledRef.current || !visiblePlaylists.length) return;
+    const target = visiblePlaylists.find((pl) => pl.id === highlightPlaylistId);
+    if (!target) return;
+    highlightHandledRef.current = true;
+    setHighlightedPlaylistId(target.id);
+    const scrollToCard = () => {
+      const el = document.getElementById(`program-playlist-${target.id}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    requestAnimationFrame(() => {
+      scrollToCard();
+      window.setTimeout(() => {
+        setDescriptionModalPlaylist(target);
+        scrollToCard();
+      }, 420);
+    });
+    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 5200);
+    return () => window.clearTimeout(clearHighlight);
+  }, [highlightPlaylistId, visiblePlaylists]);
+
+  useEffect(() => {
     // Warm first visible cover images so public route transitions feel snappier.
     const topCovers = visiblePlaylists
       .map((pl) => resolveDjangoMediaUrl(pl.cover_image_url))
@@ -184,12 +210,15 @@ export function PlaylistCardsSection({
     const locked = !unlocked;
     return (
       <article
+        id={`program-playlist-${pl.id}`}
         key={`playlist-${pl.id}`}
         className={cn(
           "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left sm:min-h-[27rem]",
-          "rounded-3xl border-2",
+          "rounded-3xl border-2 scroll-mt-28 transition-shadow duration-500",
           theme.dominantBorder,
-          theme.glow
+          theme.glow,
+          highlightedPlaylistId === pl.id &&
+            "ring-4 ring-amber-300/90 shadow-[0_0_0_2px_rgba(251,191,36,0.55),0_0_48px_rgba(251,191,36,0.45)]"
         )}
       >
         <span className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)} aria-hidden />

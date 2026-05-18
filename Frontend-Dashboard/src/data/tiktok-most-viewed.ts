@@ -37,12 +37,12 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
       "https://p16-common-sign.tiktokcdn.com/tos-no1a-p-0037-no/oMviaFAYBJi9Apg6CPlII4JTB6PJYqhZg0DZc~tplv-tiktokx-origin.image?dr=14575&x-expires=1778911200&x-signature=X%2BYQw8fPrnoHFDgQTbuNCRzO9dk%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=my2",
   },
   {
-    videoId: "7480602932111576342",
-    href: "https://www.tiktok.com/@followthesyndicate/video/7480602932111576342",
-    alt: "Ruthlessly compete in the game of money and power — THE SYNDICATE on TikTok",
+    videoId: "7510313874315545879",
+    href: "https://www.tiktok.com/@followthesyndicate/video/7510313874315545879",
+    alt: "IF YOU RISK NOTHING YOU RISK EVERYTHING — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.9M views",
     thumbnailUrl:
-      "https://p16-common-sign.tiktokcdn.com/tos-no1a-p-0037-no/oM2F8CBdEdVknBk8xff1QIHInI2cSDGs0BEgAF~tplv-tiktokx-origin.image?dr=14575&x-expires=1778911200&x-signature=pJs1URx88SLUvYM0fsUBVSkNgxg%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=my2",
+      "https://p16-common-sign.tiktokcdn.com/tos-no1a-p-0037-no/oYWJW55QpgAfohIiAyfyneNfIAIjzGGzggCWgL~tplv-tiktokx-origin.image?dr=14575&x-expires=1778994000&x-signature=poBr9ysf%2Bf3Y7%2FMABkdSR8PGbEQ%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=my2",
   },
   {
     videoId: "7512178101296794903",

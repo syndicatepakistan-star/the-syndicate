@@ -1089,7 +1089,11 @@ export default function DashboardControlCenter({
             syndicateNavLocked={syndicateLocked}
           />
 
-          <GoalPathSystem themeMode={themeMode} courses={courses} onNavigate={onNavigate} />
+          <GoalPathSystem
+            themeMode={themeMode}
+            courses={courses}
+            onContinue={() => onNavigate("programs")}
+          />
 
           <ActivityTimelineCard themeMode={themeMode} />
         </div>

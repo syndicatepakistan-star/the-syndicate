@@ -143,7 +143,7 @@ const CYBER_UNLOCK_CTA = cn(
   "disabled:cursor-wait disabled:opacity-65"
 );
 
-export function MembershipOfferLanding() {
+export function MembershipOfferLanding({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,14 +209,38 @@ export function MembershipOfferLanding() {
   }, [router]);
 
   return (
-    <main className="relative z-10 min-h-[calc(100dvh-4rem)] w-full min-w-0 overflow-x-clip px-[clamp(1rem,3.2vw,1.5rem)] pb-20 pt-24 sm:px-6 sm:pb-24 sm:pt-28">
-      <div className="relative mx-auto w-full max-w-[1400px] space-y-10 sm:space-y-12">
+    <main
+      className={cn(
+        "relative z-10 w-full min-w-0 overflow-x-clip",
+        embedded
+          ? "min-h-0 px-[var(--fluid-section-p,1rem)] pb-8 pt-2"
+          : "min-h-[calc(100dvh-4rem)] px-[clamp(1rem,3.2vw,1.5rem)] pb-20 pt-24 sm:px-6 sm:pb-24 sm:pt-28"
+      )}
+    >
+      {embedded ? (
+        <div className="pointer-events-none absolute inset-0 -z-[1] overflow-hidden rounded-xl opacity-90" aria-hidden>
+          <div className="absolute left-[-8%] top-[6%] h-[220px] w-[220px] rounded-full bg-fuchsia-500/18 blur-[90px] sm:h-[360px] sm:w-[360px]" />
+          <div className="absolute right-[-6%] top-[32%] h-[200px] w-[200px] rounded-full bg-[rgba(212,175,57,0.14)] blur-[80px] sm:h-[320px] sm:w-[320px]" />
+          <div className="absolute bottom-0 left-1/2 h-[240px] w-[240px] -translate-x-1/2 rounded-full bg-cyan-400/12 blur-[100px]" />
+        </div>
+      ) : null}
+      <div
+        className={cn(
+          "relative mx-auto w-full space-y-10 sm:space-y-12",
+          embedded ? "max-w-none" : "max-w-[1400px]"
+        )}
+      >
         <header className="space-y-6 text-center sm:space-y-8">
-          <ProgramsGoldPillHeading as="h1" title="Syndicate membership" size="compact" chrome="goldViolet" />
+          <ProgramsGoldPillHeading
+            as={embedded ? "h2" : "h1"}
+            title="Syndicate membership"
+            size="compact"
+            chrome="goldViolet"
+          />
           <p className="mx-auto max-w-[min(92ch,100%)] font-mono text-base leading-relaxed text-neutral-300 sm:text-lg sm:leading-relaxed">
-            Your curriculum, your rhythm: choose programs, unlock the full membership library, Syndicate Mode, and the
-            complete goals stack. Review what is included, then join to open Stripe checkout when you are signed in—or
-            create an account first if you are new.
+            {embedded
+              ? "You are on Money Mastery. Upgrade to The King to unlock the full membership library, Syndicate Mode, and the complete goals stack—same offer as the public membership page."
+              : "Your curriculum, your rhythm: choose programs, unlock the full membership library, Syndicate Mode, and the complete goals stack. Review what is included, then join to open Stripe checkout when you are signed in—or create an account first if you are new."}
           </p>
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-lime-300 [text-shadow:0_0_16px_rgba(190,242,100,0.65),0_0_32px_rgba(132,204,22,0.28)] sm:text-[11px]">
             // uplink_ready · member_auth

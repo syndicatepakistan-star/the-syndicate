@@ -1516,6 +1516,7 @@ figcaption {
     radial-gradient(900px 520px at 52% 82%, rgba(212, 175, 55, 0.06), rgba(0, 0, 0, 0) 66%);
 }
 
+.dashboard-hamburger-chrome .premium-navbar.shell-neon-yellow,
 .syndicate-mood-context .premium-navbar.shell-neon-yellow {
   border-bottom-color: color-mix(in srgb, var(--gold-neon-border) 78%, rgba(160, 72, 58, 0.55)) !important;
   box-shadow:
@@ -1594,11 +1595,15 @@ figcaption {
   --gold-aura: rgba(212, 175, 55, 0.38);
 }
 
+.dashboard-hamburger-chrome .cut-frame:not(.syndicate-mood-skip-frame),
+.dashboard-hamburger-chrome .cut-frame-sm:not(.syndicate-mood-skip-frame),
 .syndicate-mood-context .cut-frame:not(.syndicate-mood-skip-frame),
 .syndicate-mood-context .cut-frame-sm:not(.syndicate-mood-skip-frame) {
   position: relative;
 }
 
+.dashboard-hamburger-chrome .cut-frame:not(.syndicate-mood-skip-frame)::after,
+.dashboard-hamburger-chrome .cut-frame-sm:not(.syndicate-mood-skip-frame)::after,
 .syndicate-mood-context .cut-frame:not(.syndicate-mood-skip-frame)::after,
 .syndicate-mood-context .cut-frame-sm:not(.syndicate-mood-skip-frame)::after {
   content: "";
@@ -1612,6 +1617,7 @@ figcaption {
   filter: drop-shadow(0 0 3px var(--syndicate-mood-gold-glow));
 }
 
+.dashboard-hamburger-chrome .cut-frame:not(.syndicate-mood-skip-frame)::after,
 .syndicate-mood-context .cut-frame:not(.syndicate-mood-skip-frame)::after {
   background-image:
     linear-gradient(var(--syndicate-mood-gold-line), var(--syndicate-mood-gold-line)),
@@ -1630,6 +1636,7 @@ figcaption {
     100% 16px;
 }
 
+.dashboard-hamburger-chrome .cut-frame-sm:not(.syndicate-mood-skip-frame)::after,
 .syndicate-mood-context .cut-frame-sm:not(.syndicate-mood-skip-frame)::after {
   background-image:
     linear-gradient(var(--syndicate-mood-gold-line), var(--syndicate-mood-gold-line)),
@@ -1648,12 +1655,16 @@ figcaption {
     100% 12px;
 }
 
+.dashboard-hamburger-chrome .shell-neon-yellow.cut-frame,
+.dashboard-hamburger-chrome aside.cut-frame,
+.dashboard-hamburger-chrome section.shell-neon-yellow.cut-frame,
 .syndicate-mood-context .shell-neon-yellow.cut-frame,
 .syndicate-mood-context aside.cut-frame,
 .syndicate-mood-context section.shell-neon-yellow.cut-frame {
   border-color: transparent !important;
 }
 
+.dashboard-hamburger-chrome .cyber-frame::before,
 .syndicate-mood-context .cyber-frame::before {
   background:
     linear-gradient(135deg, rgba(212, 175, 55, 0.14), rgba(0, 0, 0, 0) 54%),
@@ -1664,6 +1675,8 @@ figcaption {
   mix-blend-mode: screen;
 }
 
+.dashboard-hamburger-chrome .gold-stroke,
+.dashboard-hamburger-chrome .gold-stroke-strong,
 .syndicate-mood-context .gold-stroke,
 .syndicate-mood-context .gold-stroke-strong {
   box-shadow:
@@ -1672,6 +1685,8 @@ figcaption {
     0 18px 56px rgba(0, 0, 0, 0.72) !important;
 }
 
+.dashboard-hamburger-chrome .shell-neon-yellow.gold-stroke-strong,
+.dashboard-hamburger-chrome .shell-neon-yellow.gold-stroke,
 .syndicate-mood-context .shell-neon-yellow.gold-stroke-strong,
 .syndicate-mood-context .shell-neon-yellow.gold-stroke {
   box-shadow:
@@ -1766,6 +1781,9 @@ figcaption {
 }
 
 /* Single seam: main column omits its left HUD stroke when flush against the dock */
+.dashboard-hamburger-chrome
+  .fluid-main-grid:has(.sidebar-nav-dock)
+  > section.shell-neon-yellow.cut-frame:not(.syndicate-mood-skip-frame)::after,
 .syndicate-mood-context
   .fluid-main-grid:has(.sidebar-nav-dock)
   > section.shell-neon-yellow.cut-frame:not(.syndicate-mood-skip-frame)::after {
@@ -1817,6 +1835,7 @@ figcaption {
   text-shadow: 0 0 10px rgba(212, 175, 55, 0.35), 0 0 22px rgba(212, 175, 55, 0.14);
 }
 
+.dashboard-hamburger-chrome .hud-hover-glow:hover,
 .syndicate-mood-context .hud-hover-glow:hover {
   box-shadow:
     0 0 0 1px rgba(212, 175, 55, 0.42),
@@ -1825,10 +1844,14 @@ figcaption {
   border-color: rgba(212, 175, 55, 0.55) !important;
 }
 
+.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item,
+.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item,
 .syndicate-mood-context aside.shell-neon-yellow .nav-item {
   border-color: rgba(212, 175, 55, 0.28) !important;
 }
 
+.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item.is-selected,
+.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item.is-selected,
 .syndicate-mood-context aside.shell-neon-yellow .nav-item.is-selected {
   border-color: rgba(212, 175, 55, 0.62) !important;
   box-shadow:
@@ -1836,6 +1859,7 @@ figcaption {
     0 0 14px rgba(212, 175, 55, 0.14) !important;
 }
 
+.dashboard-hamburger-chrome .glow-edge-strong,
 .syndicate-mood-context .glow-edge-strong {
   box-shadow:
     0 0 0 1px rgba(212, 175, 55, 0.45),
@@ -1918,12 +1942,16 @@ figcaption {
     drop-shadow(0 0 18px rgba(255, 215, 0, 0.35));
 }
 
+.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item,
+.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item,
 .syndicate-mood-context aside.shell-neon-yellow .nav-item {
   transition:
     filter 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
+.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item:hover,
+.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item:hover,
 .syndicate-mood-context aside.shell-neon-yellow .nav-item:hover {
   filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.28));
   box-shadow:
@@ -1932,6 +1960,8 @@ figcaption {
     0 0 32px rgba(255, 200, 80, 0.08) !important;
   border-color: rgba(212, 175, 55, 0.52) !important;
 }
+.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item.is-selected:hover,
+.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item.is-selected:hover,
 .syndicate-mood-context aside.shell-neon-yellow .nav-item.is-selected:hover {
   filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.35));
   box-shadow:
@@ -4120,6 +4150,20 @@ body {
   }
 }
 
+/* Syndicate-mode gold neon tokens — all /dashboard sections (navbar, sidebar, main shell) */
+.dashboard-hamburger-chrome {
+  --gold-neon: var(--syndicate-mood-gold-bright);
+  --gold-neon-border: rgba(212, 175, 55, 0.78);
+  --gold-neon-border-mid: rgba(212, 175, 55, 0.5);
+  --gold-neon-border-soft: rgba(212, 175, 55, 0.3);
+  --gold-neon-glow: rgba(212, 175, 55, 0.42);
+  --gold-neon-glow-strong: rgba(212, 175, 55, 0.55);
+  --gold-neon-haze: rgba(212, 175, 55, 0.12);
+  --gold: var(--syndicate-mood-gold-bright);
+  --gold-alt: var(--syndicate-mood-gold);
+  --gold-aura: rgba(212, 175, 55, 0.38);
+}
+
 .dashboard-hamburger-chrome .premium-navbar.shell-neon-yellow.gold-stroke-strong {
   border-color: rgba(252, 211, 77, 0.62) !important;
   border-bottom-color: rgba(253, 230, 138, 0.78) !important;
@@ -4178,29 +4222,7 @@ body {
     0 0 26px rgba(251, 191, 36, 0.38) !important;
 }
 
-.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item,
-.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item {
-  border-color: rgba(253, 230, 138, 0.4) !important;
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.16),
-    0 0 12px rgba(251, 191, 36, 0.12) !important;
-}
-
-.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item:hover,
-.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item:hover {
-  border-color: rgba(253, 230, 138, 0.58) !important;
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.26),
-    0 0 18px rgba(251, 191, 36, 0.2) !important;
-}
-
-.dashboard-hamburger-chrome aside.shell-neon-yellow .nav-item.is-selected,
-.dashboard-hamburger-chrome .sidebar-nav-dock.shell-neon-yellow .nav-item.is-selected {
-  border-color: rgba(253, 230, 138, 0.72) !important;
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.32),
-    0 0 20px rgba(251, 191, 36, 0.26) !important;
-}
+/* Sidebar nav glow — syndicate shell chrome block (earlier in this file) */
 
 .dashboard-hamburger-chrome .sidebar-nav-icon-frame {
   border-color: rgba(253, 230, 138, 0.48) !important;
@@ -4240,6 +4262,89 @@ body {
     animation: none !important;
   }
 }
+
+/* /dashboard: full-viewport cover video + lighter glass shells over the footage */
+.dashboard-hamburger-chrome.hud-void {
+  background: transparent;
+}
+
+.dashboard-hamburger-chrome .hud-ambient-glow {
+  opacity: 0.16;
+}
+
+.dashboard-hamburger-chrome .dashboard-shell-bg video {
+  opacity: 0.68;
+  filter: saturate(0.88) contrast(1.06) brightness(0.82);
+}
+
+.dashboard-hamburger-chrome .dashboard-shell-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 640px at 28% 8%, rgba(255, 215, 0, 0.035), transparent 58%),
+    radial-gradient(900px 520px at 82% 72%, rgba(255, 195, 0, 0.02), transparent 62%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(10, 9, 7, 0.28));
+}
+
+.dashboard-hamburger-chrome .dashboard-shell-surface {
+  background: linear-gradient(
+    165deg,
+    rgba(42, 36, 24, 0.2) 0%,
+    rgba(22, 18, 14, 0.16) 48%,
+    rgba(14, 12, 10, 0.18) 100%
+  ) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dashboard-hamburger-chrome .dashboard-shell-surface-strong {
+  background: linear-gradient(
+    165deg,
+    rgba(48, 40, 26, 0.24) 0%,
+    rgba(26, 22, 16, 0.2) 50%,
+    rgba(16, 14, 11, 0.22) 100%
+  ) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dashboard-hamburger-chrome .glass-dark {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 215, 0, 0.05),
+    rgba(32, 28, 20, 0.2) 42%,
+    rgba(18, 16, 12, 0.24) 100%
+  ) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dashboard-hamburger-chrome .navbar-chrome-btn,
+.dashboard-hamburger-chrome .navbar-chrome-panel {
+  background: rgba(24, 20, 14, 0.24) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dashboard-hamburger-chrome .dashboard-shell-wash {
+  opacity: 0.2;
+}
+
+.dashboard-hamburger-chrome .premium-navbar .dashboard-shell-wash,
+.dashboard-hamburger-chrome .sidebar-nav-dock .dashboard-shell-wash,
+.dashboard-hamburger-chrome section.shell-neon-yellow .dashboard-shell-wash {
+  opacity: 0.16;
+}
+
+.dashboard-hamburger-chrome .overflow-hidden.border-t.bg-black\/35 {
+  background: rgba(18, 16, 12, 0.14) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* cyber-frame::before glow — shared with .syndicate-mood-context (see syndicate shell chrome block) */
 
 @keyframes programs-heading-glow {
   0%,
@@ -4792,5 +4897,22 @@ body {
   50% {
     transform: translateY(calc(-50% - 16px));
   }
+}
+
+/* Support section — solid gold send CTA (readable on dark dashboard chrome) */
+.support-send-btn,
+.support-send-btn span,
+.support-send-btn svg {
+  color: #0c0800 !important;
+  -webkit-text-fill-color: #0c0800;
+}
+
+.dashboard-hamburger-chrome .support-send-btn.cut-frame-sm::after {
+  z-index: 1;
+}
+
+.support-send-btn > * {
+  position: relative;
+  z-index: 2;
 }
 

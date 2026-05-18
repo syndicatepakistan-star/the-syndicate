@@ -122,10 +122,10 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                 </p>
                 <div className="mt-7 flex justify-center md:justify-start">
                   <Link
-                    href="/affiliate-login"
+                    href="/affiliate"
                     className="hamburger-attract inline-flex min-h-[52px] items-center justify-center rounded-xl border border-cyan-400/60 bg-[linear-gradient(180deg,rgba(34,211,238,0.14)_0%,rgba(0,0,0,0.45)_55%,rgba(88,28,135,0.12)_100%)] px-8 py-3.5 text-sm font-black uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_0_1px_rgba(34,211,238,0.5),0_0_22px_rgba(34,211,238,0.38),0_0_40px_rgba(217,70,239,0.12),inset_0_0_16px_rgba(34,211,238,0.1)] transition hover:border-fuchsia-300/55 hover:shadow-[0_0_28px_rgba(217,70,239,0.32),0_0_36px_rgba(34,211,238,0.28)] sm:text-base sm:tracking-[0.18em]"
                   >
-                    Affiliate login
+                    Affiliate
                   </Link>
                 </div>
               </div>

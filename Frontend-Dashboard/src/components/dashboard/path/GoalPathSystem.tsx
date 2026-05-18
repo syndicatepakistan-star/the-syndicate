@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import type { DashboardNavKey } from "../types";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { themeAccent, type ThemeMode } from "../dashboardPrimitives";
 import type { GoalId } from "./goalPathData";
 import { ROADMAPS } from "./goalPathData";
 import { PathSelector } from "./PathSelector";
-import { CourseFlow } from "./CourseFlow";
+import { CourseFlow, type OpportunityCardFrame } from "./CourseFlow";
 
 const LS_KEY = "dashboarded:goal-path-v1";
 
@@ -42,11 +41,14 @@ function writePersist(p: Persisted) {
 export function GoalPathSystem({
   themeMode,
   courses,
-  onNavigate
+  opportunityCardFrame = "path",
+  onContinue,
 }: {
   themeMode: ThemeMode;
   courses: DashboardCourseLike[];
-  onNavigate: (nav: DashboardNavKey) => void;
+  /** Public /programs uses Our Methods timeline card chrome on Next opportunities. */
+  opportunityCardFrame?: OpportunityCardFrame;
+  onContinue: () => void;
 }) {
   const t = themeAccent(themeMode);
   const [persist, setPersist] = useState<Persisted>(() => readPersist());
@@ -84,7 +86,13 @@ export function GoalPathSystem({
         <div className="sm:mt-1">
           <PathSelector selected={goal} onSelect={setGoal} />
         </div>
-        <CourseFlow goal={goal} courses={courses} userStepIndex={courseStepIdx} onNavigate={onNavigate} />
+        <CourseFlow
+          goal={goal}
+          courses={courses}
+          userStepIndex={courseStepIdx}
+          cardFrame={opportunityCardFrame}
+          onContinue={onContinue}
+        />
       </div>
     </motion.div>
   );

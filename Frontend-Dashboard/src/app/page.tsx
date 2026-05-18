@@ -13,7 +13,10 @@ import PaywallSnapshotsSection from '@/components/PaywallSnapshotsSection'
 import { NavApp } from '@/components/NavApp'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
 import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/components/home/DeferredHomeBackgrounds'
+import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
+import { attachProgramLinksToGalleryImages } from '@/lib/programGalleryLinks'
+import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
 const FEATURED_LOGOS = [
   {
@@ -35,8 +38,6 @@ const FEATURED_LOGOS = [
 
 const PROGRAM_IMAGE_BASE = '/assets/programs/cources%20imnages'
 const courseImage = (fileName: string) => `${PROGRAM_IMAGE_BASE}/${encodeURIComponent(fileName)}`
-const TIKTOK_URL = 'https://www.tiktok.com/@followthesyndicate?_r=1&_t=ZG-95id6R01vZh'
-
 const FEATURED_PROGRAM_IMAGES = [
   { src: courseImage('wordpress-blog.png'), alt: 'WordPress Blog' },
   { src: courseImage('canvics-to-canva.png'), alt: 'Graphics Design using Canva' },
@@ -96,7 +97,6 @@ const SOCIAL_CARD_BORDER_THEMES = [
   },
 ] as const
 
-const FOUNDER_DIRS = ['assets/founder'] as const
 const PROGRAM_GALLERY_DIR = 'assets/programs/cources imnages'
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'])
 
@@ -106,34 +106,6 @@ const toLabel = (fileName: string) =>
     .replace(/[-_]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-
-async function readFounderImages() {
-  for (const dir of FOUNDER_DIRS) {
-    const absolute = path.join(process.cwd(), 'public', ...dir.split('/'))
-    try {
-      const entries = await readdir(absolute, { withFileTypes: true })
-      const files = entries
-        .filter((entry) => entry.isFile())
-        .map((entry) => entry.name)
-        .filter((name) => IMAGE_EXTENSIONS.has(path.extname(name).toLowerCase()))
-
-      if (files.length > 0) {
-        return files.map((file, index) => ({
-          src: `/${dir}/${encodeURIComponent(file)}`,
-          alt: toLabel(file) || `Founder image ${index + 1}`,
-        }))
-      }
-    } catch {
-      // Ignore missing folder and try the next candidate.
-    }
-  }
-
-  return []
-}
-
-const getFounderImages = unstable_cache(readFounderImages, ['home-founder-images'], {
-  revalidate: 3600,
-})
 
 async function readProgramGalleryImages() {
   const absolute = path.join(process.cwd(), 'public', ...PROGRAM_GALLERY_DIR.split('/'))
@@ -149,29 +121,45 @@ async function readProgramGalleryImages() {
       return files.map((file, index) => ({
         src: courseImage(file),
         alt: toLabel(file) || `Program image ${index + 1}`,
+        fileName: file,
       }))
     }
   } catch {
     // Use curated fallback when folder is unavailable.
   }
 
-  return FEATURED_PROGRAM_IMAGES
+  return FEATURED_PROGRAM_IMAGES.map((item, index) => ({
+    ...item,
+    fileName: `fallback-${index + 1}.png`,
+  }))
 }
 
 const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-program-gallery-images'], {
   revalidate: 3600,
 })
 
+const getLinkedProgramGalleryImages = unstable_cache(
+  async () => {
+    const images = await getProgramGalleryImages()
+    const playlists = await fetchPublicPlaylistsServer()
+    return attachProgramLinksToGalleryImages(images, playlists)
+  },
+  ['home-program-gallery-linked'],
+  { revalidate: 3600 }
+)
+
 export default async function Home() {
-  const founderImages = await getFounderImages()
-  const programGalleryImages = await getProgramGalleryImages()
-  const midpoint = Math.ceil(founderImages.length / 2)
-  const bottomRowBase = founderImages.slice(midpoint)
-  const safeBottomRow = bottomRowBase.length > 0 ? bottomRowBase : founderImages
+  const programGalleryImages = await getLinkedProgramGalleryImages()
+  const informativeMarqueeItems = TIKTOK_MOST_INFORMATIVE.map((card) => ({
+    videoId: card.videoId,
+    src: card.posterSrc,
+    alt: card.alt,
+    href: card.href,
+  }))
   // Keep enough repeated cards for infinite marquee while avoiding
   // excessive duplicated image nodes that slow first paint/decode.
-  const bottomRowGroup = Array.from({ length: 2 }, () => safeBottomRow).flat()
-  const bottomRowTrack = [...bottomRowGroup, ...bottomRowGroup]
+  const informativeRowGroup = Array.from({ length: 2 }, () => informativeMarqueeItems).flat()
+  const informativeRowTrack = [...informativeRowGroup, ...informativeRowGroup]
   const tiktokMostViewedCycle = [...TIKTOK_MOST_VIEWED, ...TIKTOK_MOST_VIEWED]
   const tiktokMostViewedTrack = [...tiktokMostViewedCycle, ...tiktokMostViewedCycle]
 
@@ -248,7 +236,7 @@ export default async function Home() {
               grayscale={false}
               autoRotateSpeedDeg={1.8}
               tileInsetPx={12}
-              clickHref="/programs"
+              navigateOnClick
             />
           </div>
         </div>
@@ -269,7 +257,7 @@ export default async function Home() {
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
               <div
                 className="animate-marquee flex w-max items-center gap-2 sm:gap-3"
-                style={{ ['--duration' as string]: '48s', ['--gap' as string]: '1rem' }}
+                style={{ ['--duration' as string]: '92s', ['--gap' as string]: '1rem' }}
               >
                 {tiktokMostViewedTrack.map((card, index) => {
                   const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
@@ -310,61 +298,58 @@ export default async function Home() {
               </div>
             </div>
 
-            {founderImages.length > 0 ? (
-              <>
-                <h3 className="mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl">
-                  MOST INFORMATIVE
-                </h3>
-                <div className="relative w-full overflow-hidden">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
-                  <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
-                  <div
-                    className="animate-marquee-reverse flex w-max items-center gap-2 sm:gap-3"
-                    style={{ ['--duration' as string]: '52s', ['--gap' as string]: '1rem' }}
-                  >
-                    {bottomRowTrack.map((image, index) => {
-                      const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
-                      return (
-                        <a
-                          key={`bottom-${image.src}-${index}`}
-                          href={TIKTOK_URL}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`Open TikTok: ${image.alt}`}
-                          className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
-                          style={
-                            {
-                              ['--lightning-color' as any]: theme.lightningColor,
-                              ['--lightning-color-soft' as any]: theme.lightningSoft,
-                            }
+            <>
+              <h3 className="mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl">
+                MOST INFORMATIVE
+              </h3>
+              <div className="relative w-full overflow-hidden">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black via-black/55 to-transparent sm:w-16" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
+                <div
+                  className="animate-marquee-reverse flex w-max items-center gap-2 sm:gap-3"
+                  style={{ ['--duration' as string]: '100s', ['--gap' as string]: '1rem' }}
+                >
+                  {informativeRowTrack.map((image, index) => {
+                    const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
+                    return (
+                      <a
+                        key={`informative-${image.videoId}-${index}`}
+                        href={image.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open TikTok video: ${image.alt}`}
+                        className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
+                        style={
+                          {
+                            ['--lightning-color' as any]: theme.lightningColor,
+                            ['--lightning-color-soft' as any]: theme.lightningSoft,
                           }
-                        >
-                          <span className={`pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`} />
-                          <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,12,22,0.2),rgba(2,4,12,0.62))]" />
-                          <span className={`pointer-events-none absolute inset-[2px] z-[3] rounded-[10px] border opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${theme.inner}`} />
-                          <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
-                          <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
+                        }
+                      >
+                        <span className={`pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`} />
+                        <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,12,22,0.2),rgba(2,4,12,0.62))]" />
+                        <span className={`pointer-events-none absolute inset-[2px] z-[3] rounded-[10px] border opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${theme.inner}`} />
+                        <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
+                        <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
+                        {/* Slight top-anchored zoom clips baked-in TikTok view/play UI at the bottom of posters */}
+                        <span className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
                           <Image
                             src={image.src}
                             alt={image.alt}
                             fill
-                            quality={62}
+                            quality={78}
                             fetchPriority="low"
                             decoding="async"
                             sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
-                            className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+                            className="origin-top scale-[1.14] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.2]"
                           />
-                        </a>
-                      )
-                    })}
-                  </div>
+                        </span>
+                      </a>
+                    )
+                  })}
                 </div>
-              </>
-            ) : (
-              <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-amber-100/80 sm:text-base">
-                Add founder images to <code>/public/assets/founder</code> to fill the “Most informative” marquee below.
-              </p>
-            )}
+              </div>
+            </>
           </div>
         </div>
       </section>

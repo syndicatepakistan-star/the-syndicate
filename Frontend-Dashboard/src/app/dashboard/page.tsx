@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
+import { DashboardShellBackground } from "@/components/dashboard/DashboardShellBackground";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
@@ -22,7 +23,9 @@ import { GoalsPanel } from "@/components/ui/GoalsPanel";
 import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
 import { SyndicateAiChallengePanel } from "@/components/SyndicateAiChallengePanel";
 import { MembershipContentHub } from "@/components/membership/MembershipContentHub";
+import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
 import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
+import { SupportSection } from "@/components/dashboard/SupportSection";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
 import { fetchBillingPurchaseHistory, type StreamPlaylistPurchaseHistoryItem } from "@/lib/streaming-api";
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
@@ -161,8 +164,8 @@ function DashboardChromeLetterGlitch() {
           outerVignette
           smooth
           glitchColors={["#4a2b72", "#61dca3", "#61b3dc"]}
-          layerOpacity={0.4}
-          className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-black"
+          layerOpacity={0.06}
+          className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-transparent"
         />
       </div>
     </div>
@@ -2972,6 +2975,7 @@ export default function Page() {
         selectedNavKey === "monk" && "syndicate-mood-context"
       )}
     >
+      <DashboardShellBackground />
       <PlaylistCheckoutSync />
       {portalUser?.king_program_selection_required ? (
         <KingProgramUnlockOverlay
@@ -2984,7 +2988,7 @@ export default function Page() {
       <div className="hud-ambient-glow" aria-hidden="true" />
       <div
         className={cn(
-          "relative flex min-h-screen w-full max-w-[100vw] flex-col fluid-page-px lg:h-full lg:min-h-0",
+          "relative z-[1] flex min-h-screen w-full max-w-[100vw] flex-col fluid-page-px lg:h-full lg:min-h-0",
           selectedNavKey === "monk" ? "pb-0" : "fluid-page-pb"
         )}
       >
@@ -2994,7 +2998,7 @@ export default function Page() {
             ref={topbarRef}
             data-anim="in"
             className={cn(
-              "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar relative overflow-visible border bg-[#070707]/80 fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
+              "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
               isMobileNavUi
                 ? isIpadProPortraitUi
@@ -3006,7 +3010,7 @@ export default function Page() {
             )}
           >
             <DashboardChromeLetterGlitch />
-            <div className="pointer-events-none absolute inset-0 z-0 opacity-80 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.14),rgba(0,0,0,0)_55%)] [grid-column:1/-1] [grid-row:1/-1]" />
+            <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.05),rgba(0,0,0,0)_55%)] [grid-column:1/-1] [grid-row:1/-1]" />
             <div
               ref={topDockRef}
               onMouseMove={(e) => {
@@ -3215,10 +3219,10 @@ export default function Page() {
                       >
                         <div
                           ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                          className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 bg-[#060606]/92 pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                          className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
                         >
                           <DashboardChromeLetterGlitch />
-                          <div className="pointer-events-none absolute inset-0 z-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                          <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
                           <div className="relative z-[1] min-w-0 px-1">
                             <SidebarNavRailList
                               nav={nav}
@@ -3237,10 +3241,10 @@ export default function Page() {
                   <div className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black/35">
                     <div
                       ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                      className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 bg-[#060606]/92 pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                      className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
                     >
                       <DashboardChromeLetterGlitch />
-                      <div className="pointer-events-none absolute inset-0 z-0 opacity-50 [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                      <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
                       <div className="relative z-[1] min-w-0 px-1">
                         <SidebarNavRailList
                           nav={nav}
@@ -3438,7 +3442,7 @@ export default function Page() {
                   dockMouseY.current = Infinity;
                 }}
                 className={cn(
-                  "sidebar-nav-dock shell-neon-yellow cut-frame cyber-frame gold-stroke overflow-y-auto border bg-[#060606]/70 no-scrollbar",
+                  "sidebar-nav-dock shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border no-scrollbar",
                   isMobileNavUi && "mobile-sidebar-rail",
                   "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
                   "max-lg:top-[calc(var(--topbarH,4.5rem)+var(--fluid-main-grid-pt))] max-lg:h-[40vh]",
@@ -3448,7 +3452,7 @@ export default function Page() {
                 )}
               >
                 <DashboardChromeLetterGlitch />
-                <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.1),rgba(0,0,0,0)_62%)]" />
+                <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
                 <div className="relative z-[1] min-h-0 min-w-0 lg:min-h-0">
                   <SidebarNavRailList
                     nav={nav}
@@ -3468,7 +3472,7 @@ export default function Page() {
             transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             data-anim="in"
             className={cn(
-              "shell-neon-yellow cut-frame cyber-frame gold-stroke relative flex min-h-0 w-full min-w-0 max-w-none flex-col self-stretch overflow-hidden border bg-[#060606]/70 fluid-section-p",
+              "shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative flex min-h-0 w-full min-w-0 max-w-none flex-col self-stretch overflow-hidden border fluid-section-p",
               "col-span-12",
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
               isOverlaySidebarBp &&
@@ -3484,7 +3488,7 @@ export default function Page() {
             )}
           >
             <DashboardChromeLetterGlitch />
-            <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background:radial-gradient(820px_520px_at_40%_0%,rgba(250,204,21,0.09),rgba(0,0,0,0)_64%)]" />
+            <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(820px_520px_at_40%_0%,rgba(250,204,21,0.035),rgba(0,0,0,0)_64%)]" />
             <div
               data-main-shell-scroll
               className={cn(
@@ -3562,15 +3566,21 @@ export default function Page() {
                     Loading access…
                   </div>
                 ) : isNavLocked("resources") ? (
-                  <ShellTierLockPanel
-                    showKingUpsell
-                    title="Membership section — locked"
-                    description="This overview is shown on Money Mastery so you know what is reserved for The King: the full membership library, Syndicate Mode, and Goals & milestones beyond your course bundle."
-                  />
+                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
+                    <MembershipOfferLanding embedded />
+                  </div>
                 ) : (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col">
                     <MembershipContentHub />
                   </div>
+                )
+              ) : selectedNavKey === "support" ? (
+                !portalUser ? (
+                  <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                    Loading access…
+                  </div>
+                ) : (
+                  <SupportSection />
                 )
               ) : selectedNavKey === "quickaccess" ? (
                 <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">

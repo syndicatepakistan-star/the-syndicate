@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { DashboardNavKey } from "../types";
 import type { CourseRec, GoalId, OpportunityTone } from "./goalPathData";
 import { GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage } from "./goalPathData";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
@@ -17,10 +16,14 @@ const TONE_SKIN: Record<
   {
     border: string;
     glow: string;
+    methodsGlow: string;
     aura: string;
+    methodsBg: string;
+    stepBorder: string;
     panel: string;
     chip: string;
     heading: string;
+    titleText: string;
     btn: string;
     btnHover: string;
   }
@@ -28,77 +31,233 @@ const TONE_SKIN: Record<
   amber: {
     border: "border-amber-400/90",
     glow: "shadow-[0_0_0_2px_rgba(251,191,36,0.82),0_0_48px_rgba(245,158,11,0.55),0_0_92px_rgba(234,88,12,0.28)]",
+    methodsGlow:
+      "shadow-[0_0_0_2px_rgba(251,191,36,0.82),0_0_48px_rgba(245,158,11,0.74),0_0_92px_rgba(180,83,9,0.58)]",
     aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(251,191,36,0.5),rgba(146,64,14,0.35)_48%,transparent_74%)]",
+    methodsBg: "bg-[linear-gradient(132deg,rgba(251,191,36,0.72),rgba(217,119,6,0.66),rgba(146,64,14,0.62))]",
+    stepBorder: "border-amber-700/90",
     panel: "bg-[linear-gradient(165deg,rgba(24,16,4,0.92),rgba(6,6,4,0.97))]",
     chip: "border-amber-300/70 bg-amber-950/55 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.45)]",
     heading: "text-amber-100 drop-shadow-[0_0_12px_rgba(251,191,36,0.45)]",
+    titleText: "text-amber-200",
     btn: "border-amber-300/75 bg-amber-950/40 text-amber-50 shadow-[0_0_22px_rgba(251,191,36,0.25)]",
     btnHover: "hover:border-amber-200 hover:shadow-[0_0_32px_rgba(251,191,36,0.4)]",
   },
   rose: {
     border: "border-rose-500/90",
     glow: "shadow-[0_0_0_2px_rgba(244,63,94,0.82),0_0_48px_rgba(225,29,72,0.55),0_0_92px_rgba(136,19,55,0.35)]",
+    methodsGlow:
+      "shadow-[0_0_0_2px_rgba(244,63,94,0.82),0_0_48px_rgba(225,29,72,0.74),0_0_92px_rgba(136,19,55,0.58)]",
     aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(244,63,94,0.55),rgba(136,19,55,0.42)_48%,transparent_74%)]",
+    methodsBg: "bg-[linear-gradient(132deg,rgba(244,63,94,0.72),rgba(190,24,93,0.66),rgba(136,19,55,0.62))]",
+    stepBorder: "border-rose-700/90",
     panel: "bg-[linear-gradient(165deg,rgba(22,6,10,0.94),rgba(8,4,6,0.98))]",
     chip: "border-rose-400/70 bg-rose-950/50 text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.4)]",
     heading: "text-rose-100 drop-shadow-[0_0_12px_rgba(251,113,133,0.45)]",
+    titleText: "text-rose-200",
     btn: "border-rose-400/70 bg-rose-950/35 text-rose-50 shadow-[0_0_22px_rgba(244,63,94,0.28)]",
     btnHover: "hover:border-rose-300 hover:shadow-[0_0_32px_rgba(244,63,94,0.38)]",
   },
   fuchsia: {
     border: "border-fuchsia-500/90",
     glow: "shadow-[0_0_0_2px_rgba(217,70,239,0.82),0_0_48px_rgba(192,38,211,0.55),0_0_92px_rgba(134,25,143,0.32)]",
+    methodsGlow:
+      "shadow-[0_0_0_2px_rgba(217,70,239,0.82),0_0_48px_rgba(192,38,211,0.74),0_0_92px_rgba(134,25,143,0.58)]",
     aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(217,70,239,0.52),rgba(126,34,206,0.38)_48%,transparent_74%)]",
+    methodsBg: "bg-[linear-gradient(132deg,rgba(217,70,239,0.74),rgba(162,28,175,0.68),rgba(126,34,206,0.64))]",
+    stepBorder: "border-fuchsia-700/90",
     panel: "bg-[linear-gradient(165deg,rgba(18,6,22,0.94),rgba(6,4,12,0.98))]",
     chip: "border-fuchsia-400/70 bg-fuchsia-950/45 text-fuchsia-100 shadow-[0_0_18px_rgba(232,121,249,0.42)]",
     heading: "text-fuchsia-100 drop-shadow-[0_0_12px_rgba(232,121,249,0.45)]",
+    titleText: "text-fuchsia-200",
     btn: "border-fuchsia-400/70 bg-fuchsia-950/35 text-fuchsia-50 shadow-[0_0_22px_rgba(217,70,239,0.28)]",
     btnHover: "hover:border-fuchsia-300 hover:shadow-[0_0_32px_rgba(217,70,239,0.38)]",
   },
   cyan: {
     border: "border-cyan-500/90",
     glow: "shadow-[0_0_0_2px_rgba(34,211,238,0.82),0_0_48px_rgba(6,182,212,0.55),0_0_92px_rgba(14,116,144,0.32)]",
+    methodsGlow:
+      "shadow-[0_0_0_2px_rgba(34,211,238,0.82),0_0_48px_rgba(6,182,212,0.74),0_0_92px_rgba(14,116,144,0.58)]",
     aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(34,211,238,0.48),rgba(14,116,144,0.35)_48%,transparent_74%)]",
+    methodsBg: "bg-[linear-gradient(132deg,rgba(34,211,238,0.74),rgba(8,145,178,0.68),rgba(14,116,144,0.64))]",
+    stepBorder: "border-cyan-700/90",
     panel: "bg-[linear-gradient(165deg,rgba(4,16,22,0.94),rgba(4,8,14,0.98))]",
     chip: "border-cyan-400/70 bg-cyan-950/45 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.4)]",
     heading: "text-cyan-100 drop-shadow-[0_0_12px_rgba(103,232,249,0.45)]",
+    titleText: "text-cyan-200",
     btn: "border-cyan-400/70 bg-cyan-950/35 text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.28)]",
     btnHover: "hover:border-cyan-300 hover:shadow-[0_0_32px_rgba(34,211,238,0.38)]",
   },
   blue: {
     border: "border-blue-500/90",
     glow: "shadow-[0_0_0_2px_rgba(59,130,246,0.82),0_0_48px_rgba(37,99,235,0.55),0_0_92px_rgba(30,64,175,0.32)]",
+    methodsGlow:
+      "shadow-[0_0_0_2px_rgba(59,130,246,0.82),0_0_48px_rgba(37,99,235,0.74),0_0_92px_rgba(30,64,175,0.58)]",
     aura: "bg-[radial-gradient(90%_80%_at_50%_40%,rgba(59,130,246,0.48),rgba(30,64,175,0.35)_48%,transparent_74%)]",
+    methodsBg: "bg-[linear-gradient(132deg,rgba(59,130,246,0.74),rgba(37,99,235,0.68),rgba(30,64,175,0.64))]",
+    stepBorder: "border-blue-700/90",
     panel: "bg-[linear-gradient(165deg,rgba(6,12,28,0.94),rgba(4,8,18,0.98))]",
     chip: "border-blue-400/70 bg-blue-950/45 text-blue-100 shadow-[0_0_18px_rgba(96,165,250,0.4)]",
     heading: "text-blue-100 drop-shadow-[0_0_12px_rgba(147,197,253,0.45)]",
+    titleText: "text-blue-200",
     btn: "border-blue-400/70 bg-blue-950/35 text-blue-50 shadow-[0_0_22px_rgba(59,130,246,0.28)]",
     btnHover: "hover:border-blue-300 hover:shadow-[0_0_32px_rgba(59,130,246,0.38)]",
   },
 };
 
-const CLIP_HUD = "[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]";
+const CLIP_HUD_A =
+  "[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]";
+const CLIP_HUD_B = "[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]";
+
+/** Equal footprint for all three opportunity cards (public + dashboard). */
+const OPPORTUNITY_CARD_SIZE =
+  "h-full w-full min-h-[clamp(13rem,26vh,16rem)] max-w-none flex flex-col";
+
+export type OpportunityCardFrame = "path" | "methods";
 
 function CourseFlowCard({
   course,
   variant,
   isAnchor,
-  onContinue
+  cardFrame,
+  onContinue,
 }: {
   course: CourseRec;
   variant: "support" | "focus" | "future";
   isAnchor: boolean;
+  cardFrame: OpportunityCardFrame;
   onContinue: () => void;
 }) {
   const skin = TONE_SKIN[course.tone];
+  const isMethods = cardFrame === "methods";
+  const clip = variant === "focus" ? CLIP_HUD_B : CLIP_HUD_A;
+
+  const label =
+    variant === "focus" ? "Recommended now" : variant === "support" ? "Supporting" : "Up next";
+
+  const body = (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <motion.div className="flex items-center justify-between gap-2">
+        <span className={cn("font-mono fluid-text-ui-xs font-black uppercase tracking-[0.2em]", skin.heading)}>
+          {label}
+        </span>
+        {isAnchor ? (
+          <span
+            className={cn(
+              "rounded-md border px-[clamp(0.35rem,1vw+0.1rem,0.5rem)] py-[clamp(0.1rem,0.4vw+0.05rem,0.35rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em]",
+              skin.chip,
+            )}
+          >
+            Flow
+          </span>
+        ) : null}
+      </motion.div>
+      <h3
+        className={cn(
+          "mt-[clamp(0.65rem,1.5vw+0.2rem,1rem)] line-clamp-3 text-[clamp(0.78rem,0.6vw+0.55rem,1rem)] font-bold leading-snug drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]",
+          isMethods ? cn("text-zinc-50", skin.titleText) : "text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.65)]",
+        )}
+      >
+        {course.title}
+      </h3>
+      <p
+        className={cn(
+          "mt-2 line-clamp-4 flex-1 text-[clamp(0.68rem,0.45vw+0.5rem,0.9rem)] leading-relaxed",
+          isMethods ? "text-zinc-100/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.68)]" : "text-white/88",
+        )}
+      >
+        {course.outcome}
+      </p>
+      <p className="mt-2 font-mono fluid-text-ui-xs font-bold uppercase tracking-[0.14em] text-emerald-200 [text-shadow:0_0_14px_rgba(52,211,153,0.35)]">
+        {course.earningHint}
+      </p>
+      <motion.div className="mt-auto pt-[clamp(0.85rem,2vw+0.2rem,1.15rem)]">
+        <motion.button
+          type="button"
+          onClick={onContinue}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={cn(
+            "w-full border px-[clamp(0.5rem,1.2vw+0.2rem,0.85rem)] py-[clamp(0.45rem,1vw+0.2rem,0.85rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em] transition",
+            isMethods ? "rounded-md" : "rounded-lg",
+            skin.btn,
+            skin.btnHover,
+          )}
+        >
+          Continue path
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+
+  if (isMethods) {
+    return (
+      <motion.article
+        layout={false}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        whileHover={{ scale: isAnchor ? 1.012 : 1.022 }}
+        className={cn(
+          "compact-card-ui group relative overflow-hidden border-2 p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] transition-transform duration-300",
+          OPPORTUNITY_CARD_SIZE,
+          clip,
+          skin.border,
+          skin.methodsGlow,
+          isAnchor && "z-[3]",
+          !isAnchor && "z-[1]",
+        )}
+      >
+        <span className={cn("pointer-events-none absolute -inset-3 rounded-[1.2rem] opacity-85 blur-2xl", skin.aura)} aria-hidden />
+        <span className={cn("pointer-events-none absolute inset-0", skin.methodsBg)} aria-hidden />
+        <span
+          className="pointer-events-none absolute inset-0 opacity-[0.17] [background-image:repeating-linear-gradient(180deg,rgba(0,0,0,0.28)_0px,rgba(0,0,0,0.28)_1px,transparent_1px,transparent_3px)]"
+          aria-hidden
+        />
+        <span
+          className="pointer-events-none absolute inset-0 opacity-[0.2] [background-image:linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] [background-size:16px_16px]"
+          aria-hidden
+        />
+        <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" aria-hidden />
+        <span
+          className={cn("pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-[3px] border-t-[3px] opacity-90", skin.stepBorder)}
+          aria-hidden
+        />
+        <span
+          className={cn(
+            "pointer-events-none absolute bottom-3 right-3 h-7 w-7 border-b-[3px] border-r-[3px] opacity-90",
+            skin.stepBorder,
+          )}
+          aria-hidden
+        />
+        <span
+          className={cn(
+            "pointer-events-none absolute right-3 top-3 h-2 w-10 rounded-full border bg-[rgba(4,4,12,0.65)]",
+            skin.stepBorder,
+          )}
+          aria-hidden
+        />
+        <span
+          className={cn(
+            "pointer-events-none absolute bottom-3 left-3 h-2 w-10 rounded-full border bg-[rgba(4,4,12,0.65)]",
+            skin.stepBorder,
+          )}
+          aria-hidden
+        />
+        <motion.div className="relative z-10 flex h-full min-h-0 flex-1 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3">
+          {body}
+        </motion.div>
+      </motion.article>
+    );
+  }
+
   return (
     <motion.div
       layout={false}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
       whileHover={isAnchor ? { scale: 1.012 } : { scale: 1.022 }}
       className={cn(
-        "compact-card-ui group relative flex min-h-[clamp(10.5rem,22vh,14rem)] min-w-0 flex-1 flex-col overflow-hidden border-2 backdrop-blur-[2px]",
-        CLIP_HUD,
+        "compact-card-ui group relative overflow-hidden border-2 backdrop-blur-[2px]",
+        OPPORTUNITY_CARD_SIZE,
+        CLIP_HUD_A,
         skin.border,
         skin.panel,
         skin.glow,
@@ -114,46 +273,7 @@ function CourseFlowCard({
         className="pointer-events-none absolute inset-x-0 top-0 h-[38%] opacity-70 [background:linear-gradient(180deg,rgba(255,255,255,0.06),transparent_72%)]"
         aria-hidden
       />
-
-      <div className="relative z-[1] flex flex-1 flex-col p-[var(--fluid-card-p)]">
-        <div className="flex items-center justify-between gap-2">
-          <span className={cn("font-mono fluid-text-ui-xs font-black uppercase tracking-[0.2em]", skin.heading)}>
-            {variant === "focus" ? "Recommended now" : variant === "support" ? "Supporting" : "Up next"}
-          </span>
-          {isAnchor ? (
-            <span
-              className={cn(
-                "rounded-md border px-[clamp(0.35rem,1vw+0.1rem,0.5rem)] py-[clamp(0.1rem,0.4vw+0.05rem,0.35rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em]",
-                skin.chip,
-              )}
-            >
-              Flow
-            </span>
-          ) : null}
-        </div>
-        <h3 className="mt-[clamp(0.65rem,1.5vw+0.2rem,1rem)] text-[clamp(0.78rem,0.6vw+0.55rem,1rem)] font-bold leading-snug text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.65)]">
-          {course.title}
-        </h3>
-        <p className="mt-2 text-[clamp(0.68rem,0.45vw+0.5rem,0.9rem)] leading-relaxed text-white/88">{course.outcome}</p>
-        <p className="mt-2 font-mono fluid-text-ui-xs font-bold uppercase tracking-[0.14em] text-emerald-200 [text-shadow:0_0_14px_rgba(52,211,153,0.35)]">
-          {course.earningHint}
-        </p>
-        <div className="mt-auto pt-[clamp(0.85rem,2vw+0.2rem,1.15rem)]">
-          <motion.button
-            type="button"
-            onClick={onContinue}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "w-full rounded-lg border px-[clamp(0.5rem,1.2vw+0.2rem,0.85rem)] py-[clamp(0.45rem,1vw+0.2rem,0.85rem)] font-mono fluid-text-ui-xs font-black uppercase tracking-[0.18em] transition",
-              skin.btn,
-              skin.btnHover,
-            )}
-          >
-            Continue path
-          </motion.button>
-        </div>
-      </div>
+      <motion.div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col p-[var(--fluid-card-p)]">{body}</motion.div>
     </motion.div>
   );
 }
@@ -162,14 +282,16 @@ export function CourseFlow({
   goal,
   courses,
   userStepIndex,
-  onNavigate
+  cardFrame = "path",
+  onContinue,
 }: {
   goal: GoalId;
   courses: DashboardCourseLike[];
   userStepIndex: number;
-  onNavigate: (nav: DashboardNavKey) => void;
+  cardFrame?: OpportunityCardFrame;
+  onContinue: () => void;
 }) {
-  const go = () => onNavigate("programs");
+  const go = onContinue;
   const roadmapLen = GOAL_PATH_STAGE_COUNT;
   const maxSlides = Math.min(5, roadmapLen);
 
@@ -201,7 +323,7 @@ export function CourseFlow({
   }, [goal, slideIndex, courses]);
 
   return (
-    <div
+    <motion.div
       className="relative mt-[clamp(1.5rem,4vw+0.5rem,2.75rem)] border-t border-[rgba(197,179,88,0.22)] pt-[clamp(1rem,2.5vw+0.35rem,2rem)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -230,7 +352,7 @@ export function CourseFlow({
                 aria-selected={i === slideIndex}
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
-                  i === slideIndex ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]" : "w-1.5 bg-white/25 hover:bg-white/40"
+                  i === slideIndex ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]" : "w-1.5 bg-white/25 hover:bg-white/40",
                 )}
                 onClick={() => setSlideIndex(i)}
               />
@@ -239,46 +361,80 @@ export function CourseFlow({
         ) : null}
       </div>
 
-      <div className="relative mt-[clamp(1rem,2.5vw+0.35rem,1.35rem)] flex min-h-[clamp(10.5rem,22vh,14rem)] min-w-0 flex-col gap-[clamp(0.65rem,1.8vw+0.2rem,1.1rem)] lg:flex-row lg:items-stretch">
-        {/* Slot 0: fixed selected course — does not participate in slide animation */}
-        <div className="min-w-0 flex-1">
-          <CourseFlowCard course={anchorCourse} variant="support" isAnchor onContinue={go} />
+      <div
+        className={cn(
+          "relative mt-[clamp(1rem,2.5vw+0.35rem,1.35rem)] grid min-w-0 gap-[clamp(0.65rem,1.8vw+0.2rem,1.1rem)]",
+          "grid-cols-1",
+          "lg:grid-cols-[minmax(0,1fr)_minmax(2rem,3.5rem)_minmax(0,1fr)_minmax(2rem,3.5rem)_minmax(0,1fr)]",
+          "lg:items-stretch",
+        )}
+      >
+        <div className="flex min-h-[clamp(13rem,26vh,16rem)] min-w-0 flex-col lg:col-start-1 lg:row-start-1">
+          <CourseFlowCard
+            course={anchorCourse}
+            variant="support"
+            isAnchor
+            cardFrame={cardFrame}
+            onContinue={go}
+          />
         </div>
 
-        <div className="flex justify-center lg:hidden">
+        <div className="flex justify-center lg:col-start-2 lg:row-start-1 lg:hidden">
           <ArrowConnectorVertical />
         </div>
-        <div className="hidden min-h-0 min-w-[2rem] max-w-[3.5rem] flex-1 items-center justify-center lg:flex">
-          <ArrowConnectorHorizontal />
+        <div className="hidden min-h-[clamp(13rem,26vh,16rem)] items-center justify-center lg:col-start-2 lg:flex lg:row-start-1">
+          <ArrowConnectorHorizontal className="w-full max-w-[3.5rem]" />
         </div>
 
-        {/* Slots 1–2: carousel — only these animate */}
-        <div className="relative min-h-[clamp(10.5rem,22vh,14rem)] min-w-0 flex-[1.85] overflow-hidden lg:flex-[2]">
+        <div className="relative min-h-[clamp(13rem,26vh,16rem)] min-w-0 lg:col-start-3 lg:row-start-1">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={`${goal}-${slideIndex}`}
-              initial={{ opacity: 0, x: 32 }}
+              key={`${goal}-${slideIndex}-b`}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -26 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="flex h-full min-h-[clamp(10.5rem,22vh,14rem)] w-full min-w-0 flex-col gap-[clamp(0.65rem,1.8vw+0.2rem,1.1rem)] lg:flex-row lg:items-stretch"
+              className="absolute inset-0 flex h-full w-full min-w-0 flex-col"
             >
-              <div className="min-w-0 flex-1 lg:min-h-0 lg:flex-[1.12]">
-                <CourseFlowCard course={movingB} variant="focus" isAnchor={false} onContinue={go} />
-              </div>
-              <div className="flex justify-center lg:hidden">
-                <ArrowConnectorVertical />
-              </div>
-              <div className="hidden min-w-[2rem] max-w-[3.5rem] flex-1 items-center justify-center lg:flex">
-                <ArrowConnectorHorizontal />
-              </div>
-              <div className="min-w-0 flex-1">
-                <CourseFlowCard course={movingC} variant="future" isAnchor={false} onContinue={go} />
-              </div>
+              <CourseFlowCard
+                course={movingB}
+                variant="focus"
+                isAnchor={false}
+                cardFrame={cardFrame}
+                onContinue={go}
+              />
             </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+        </div>
+
+        <div className="flex justify-center lg:col-start-4 lg:row-start-1 lg:hidden">
+          <ArrowConnectorVertical />
+        </div>
+        <div className="hidden min-h-[clamp(13rem,26vh,16rem)] items-center justify-center lg:col-start-4 lg:flex lg:row-start-1">
+          <ArrowConnectorHorizontal className="w-full max-w-[3.5rem]" />
+        </div>
+
+        <div className="relative min-h-[clamp(13rem,26vh,16rem)] min-w-0 lg:col-start-5 lg:row-start-1">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${goal}-${slideIndex}-c`}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 flex h-full w-full min-w-0 flex-col"
+              >
+                <CourseFlowCard
+                  course={movingC}
+                  variant="future"
+                  isAnchor={false}
+                  cardFrame={cardFrame}
+                  onContinue={go}
+                />
+              </motion.div>
+            </AnimatePresence>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

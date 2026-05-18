@@ -208,8 +208,14 @@ INSTALLED_APPS.extend(
         'apps.courses.apps.CoursesConfig',
         'apps.video_streaming.apps.VideoStreamingConfig',
         'apps.quiz_funnel.apps.QuizFunnelConfig',
+        'apps.support.apps.SupportConfig',
     ]
 )
+
+SUPPORT_EMAIL = (os.environ.get("SUPPORT_EMAIL") or "").strip()
+SUPPORT_EMAIL_NORMAL = (os.environ.get("SUPPORT_EMAIL_NORMAL") or SUPPORT_EMAIL).strip()
+SUPPORT_EMAIL_ELEVATED = (os.environ.get("SUPPORT_EMAIL_ELEVATED") or SUPPORT_EMAIL).strip()
+SUPPORT_EMAIL_CRITICAL = (os.environ.get("SUPPORT_EMAIL_CRITICAL") or SUPPORT_EMAIL_ELEVATED or SUPPORT_EMAIL).strip()
 
 # Optional: Redis for membership article search index (inverted index + short-lived result cache).
 REDIS_URL = (os.environ.get("REDIS_URL") or "").strip()

@@ -1,6 +1,8 @@
+import { Suspense } from 'react'
 import { NavApp } from '@/components/NavApp'
 import SiteFooter from '@/components/SiteFooter'
-import { PlaylistCardsSection } from '@/components/programs/PlaylistCardsSection'
+import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySection'
+import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
 import { PublicPlanOfferCards } from '@/components/programs/PublicPlanOfferCards'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 
@@ -17,13 +19,19 @@ export default function ProgramsPage() {
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
         <PublicPlanOfferCards />
       </section>
-      <section className="space-y-6 px-[clamp(1rem,3.2vw,1.5rem)] py-10 sm:space-y-8 sm:px-6 sm:py-14">
+      <PublicGoalPathSection />
+      <section
+        id="programs-library"
+        className="scroll-mt-24 space-y-6 px-[clamp(1rem,3.2vw,1.5rem)] py-10 sm:space-y-8 sm:px-6 sm:py-14"
+      >
         <ProgramsGoldPillHeading as="h2" title="Programs" />
         <div className="mx-auto w-full max-w-[1400px]">
-          <PlaylistCardsSection
-            title="Programs Library"
-            subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
-          />
+          <Suspense fallback={null}>
+            <ProgramsLibrarySection
+              title="Programs Library"
+              subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
+            />
+          </Suspense>
         </div>
       </section>
       <SiteFooter />

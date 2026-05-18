@@ -17,12 +17,8 @@ import {
   getProgramPlaylistThumbnail,
   isHiddenProgramPlaylist,
 } from "@/lib/programPlaylistThumbnails";
-import {
-  fetchPortalIdentity,
-  getAuthorizationHeader,
-  hasSimpleAuthSessionClient,
-  resolveClientApiUrl,
-} from "@/lib/portal-api";
+import { fetchPortalIdentity } from "@/lib/portal-api";
+import { startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
@@ -141,6 +137,32 @@ const PLAYLIST_CATEGORY_LABELS: Record<Exclude<PlaylistCategory, "all">, string>
 function parsePrice(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(n) ? n : 0;
+}
+
+function ProgramThumbnailAccessBadge({
+  comingSoon,
+  locked,
+}: {
+  comingSoon: boolean;
+  locked: boolean;
+}) {
+  if (comingSoon) {
+    return (
+      <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-3 text-center">
+        <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-[clamp(1rem,3.8vw,1.35rem)] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-[1.15rem]">
+          Coming Soon
+        </span>
+      </span>
+    );
+  }
+  if (!locked) return null;
+  return (
+    <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-2 text-center">
+      <span className="font-black uppercase leading-none tracking-[0.1em] text-[clamp(1.5rem,6vw,2.75rem)] text-rose-300 drop-shadow-[0_4px_28px_rgba(0,0,0,0.95)] [text-shadow:0_0_32px_rgba(244,63,94,0.9),0_2px_8px_rgba(0,0,0,0.95)] sm:text-[clamp(1.75rem,4.5vw,3rem)]">
+        Locked
+      </span>
+    </span>
+  );
 }
 
 type Course = {
@@ -348,52 +370,24 @@ export function ProgramsCourseSection({
     if (bundleCheckoutBusy) return;
     setCheckoutError(null);
     setBundleCheckoutBusy(true);
-    const billing = "monthly";
-    const amount = "333";
     try {
-      if (!hasSimpleAuthSessionClient()) {
-        const params = new URLSearchParams({
-          plan: "bundle",
-          billing,
-          amount,
-          next: "/dashboard?section=programs",
-        });
-        window.location.assign(`/login?${params.toString()}`);
-        return;
-      }
-
-      const authHeader = getAuthorizationHeader();
-      const response = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authHeader ? { Authorization: authHeader } : {}),
-        },
-        body: JSON.stringify({
-          return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-          selected_plan: "bundle",
-          selected_billing: billing,
-          selected_amount: amount,
-        }),
+      const result = await startPlanCheckout({
+        plan: "bundle",
+        billing: "monthly",
+        amount: "333",
+        postAuthNext: "/dashboard?section=programs",
       });
-
-      const payload = (await response.json().catch(() => ({}))) as {
-        checkout_url?: string;
-        is_unlocked?: boolean;
-        already_purchased?: boolean;
-        message?: string;
-      };
-      const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
-      if (response.ok && checkoutUrl) {
-        window.location.assign(checkoutUrl);
+      if (result.status === "checkout" || result.status === "auth_required") {
         return;
       }
-      if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+      if (result.status === "already_unlocked") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
-        toast.success(payload.message || "Money Mastery already active. All programs are unlocked.");
+        toast.success(result.message || "Money Mastery already active. All programs are unlocked.");
         return;
       }
-      throw new Error(payload.message || "Could not start Money Mastery checkout.");
+      if (result.status === "error") {
+        throw new Error(result.message);
+      }
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : "Could not start Money Mastery checkout.");
     } finally {
@@ -405,51 +399,24 @@ export function ProgramsCourseSection({
     if (kingCheckoutBusy) return;
     setCheckoutError(null);
     setKingCheckoutBusy(true);
-    const billing = "monthly";
-    const amount = "19.99";
     try {
-      if (!hasSimpleAuthSessionClient()) {
-        const params = new URLSearchParams({
-          plan: "king",
-          billing,
-          amount,
-        });
-        window.location.assign(`/signup?${params.toString()}`);
-        return;
-      }
-
-      const authHeader = getAuthorizationHeader();
-      const response = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authHeader ? { Authorization: authHeader } : {}),
-        },
-        body: JSON.stringify({
-          return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-          selected_plan: "king",
-          selected_billing: billing,
-          selected_amount: amount,
-        }),
+      const result = await startPlanCheckout({
+        plan: "king",
+        billing: "monthly",
+        amount: "19.99",
+        postAuthNext: "/dashboard?section=programs",
       });
-
-      const payload = (await response.json().catch(() => ({}))) as {
-        checkout_url?: string;
-        is_unlocked?: boolean;
-        already_purchased?: boolean;
-        message?: string;
-      };
-      const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
-      if (response.ok && checkoutUrl) {
-        window.location.assign(checkoutUrl);
+      if (result.status === "checkout" || result.status === "auth_required") {
         return;
       }
-      if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+      if (result.status === "already_unlocked") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
-        toast.success(payload.message || "The King plan is already active for this account.");
+        toast.success(result.message || "The King plan is already active for this account.");
         return;
       }
-      throw new Error(payload.message || "Could not start The King checkout.");
+      if (result.status === "error") {
+        throw new Error(result.message);
+      }
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : "Could not start The King checkout.");
     } finally {
@@ -695,20 +662,14 @@ export function ProgramsCourseSection({
                 <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
               )}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
+              {locked && !comingSoon ? (
+                <span className="pointer-events-none absolute inset-0 z-[4] bg-black/45" aria-hidden />
+              ) : null}
+              {comingSoon ? (
+                <span className="pointer-events-none absolute inset-0 z-[4] bg-black/35" aria-hidden />
+              ) : null}
+              <ProgramThumbnailAccessBadge comingSoon={comingSoon} locked={locked} />
             </div>
-            {locked && !comingSoon ? (
-              <span className="pointer-events-none absolute inset-0 z-[3] bg-black/32" aria-hidden />
-            ) : null}
-            {comingSoon ? (
-              <>
-                <span className="pointer-events-none absolute inset-0 z-[3] bg-black/35" />
-                <span className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center px-5 text-center">
-                  <span className="rounded-xl border border-amber-300/60 bg-black/75 px-4 py-2 text-[15px] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:px-5 sm:py-2.5 sm:text-[18px]">
-                    Coming Soon
-                  </span>
-                </span>
-              </>
-            ) : null}
             <div
               className={cn(
                 "shrink-0 flex min-h-[3.25rem] flex-col justify-center overflow-hidden rounded-xl border px-2 py-2 sm:min-h-[3.75rem] sm:px-2.5 sm:py-2.5",
@@ -717,16 +678,50 @@ export function ProgramsCourseSection({
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
               )}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div
-                  className={cn(
-                    "line-clamp-3 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
-                    theme.title
-                  )}
-                >
-                  {pl.title}
-                </div>
+              <div
+                className={cn(
+                  "line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
+                  theme.title
+                )}
+              >
+                {pl.title}
               </div>
+              {!comingSoon ? (
+                <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    {...{ [PROGRAM_DETAIL_TRIGGER_ATTR]: "" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlaylistDescriptionModal(pl);
+                    }}
+                    className="min-w-0 rounded-lg border border-white/40 bg-black/55 px-1.5 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/95 transition hover:border-cyan-300/55 hover:text-cyan-100 sm:px-2 sm:py-2 sm:text-[10px] sm:tracking-[0.12em]"
+                  >
+                    Details
+                  </button>
+                  <button
+                    type="button"
+                    disabled={checkoutBusyPlaylistId === pl.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (locked) {
+                        void startPlaylistCheckout(pl.id);
+                        return;
+                      }
+                      openStreamPlaylist(pl.id);
+                    }}
+                    className={cn(
+                      "min-w-0 rounded-lg border px-1.5 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] transition sm:px-2 sm:py-2 sm:text-[10px] sm:tracking-[0.12em]",
+                      locked
+                        ? "border-amber-300/75 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] text-amber-100 hover:brightness-110"
+                        : "border-emerald-300/70 bg-[linear-gradient(135deg,rgba(6,78,59,0.55),rgba(4,47,46,0.95))] text-emerald-100 hover:brightness-110",
+                      checkoutBusyPlaylistId === pl.id && "cursor-wait opacity-70"
+                    )}
+                  >
+                    {checkoutBusyPlaylistId === pl.id ? "Loading…" : locked ? "Unlock" : "Open"}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </span>
@@ -1022,8 +1017,9 @@ export function ProgramsCourseSection({
                         <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.1),transparent_50%)]" />
                       )}
                       {courseLocked ? (
-                        <span className="pointer-events-none absolute inset-0 z-[2] bg-black/36" aria-hidden />
+                        <span className="pointer-events-none absolute inset-0 z-[2] bg-black/45" aria-hidden />
                       ) : null}
+                      <ProgramThumbnailAccessBadge comingSoon={false} locked={courseLocked} />
                       <div className="relative z-[3] flex h-full flex-col justify-end p-3 pt-10 sm:p-3.5 sm:pt-12">
                         <div
                           className={cn(

@@ -14,9 +14,10 @@ export default async function SignupPage({ searchParams }: PageProps) {
   const selectedAmount = typeof params.amount === "string" ? params.amount : "";
   const isBuyFlow = params.buy === "1";
   const fromPlaylistUnlock = playlistId.trim().length > 0;
+  const fromPlanCheckout = selectedPlan.trim().length > 0 && selectedAmount.trim().length > 0;
   return (
     <div id="syndicate-otp-mount" className="min-h-dvh">
-      {!fromPlaylistUnlock && !isBuyFlow ? <RedirectWhenAuthed /> : null}
+      {!fromPlaylistUnlock && !isBuyFlow && !fromPlanCheckout ? <RedirectWhenAuthed /> : null}
       <AuthScreen
         mode="signup"
         prefilledEmail={email}

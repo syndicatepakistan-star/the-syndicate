@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { getAuthorizationHeader, hasSimpleAuthSessionClient, resolveClientApiUrl } from '@/lib/portal-api'
+import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
 import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
@@ -374,76 +374,54 @@ export function PricingPage({
   const [billing, setBilling] = useState<BillingKey>('monthly')
   const [checkoutError, setCheckoutError] = useState('')
   const [redirectingPlan, setRedirectingPlan] = useState<PlanKey | null>(null)
-  const goToSignupPurchase = (plan: PlanKey, selectedBilling: BillingKey, amount: string) => {
-    const params = new URLSearchParams({
-      plan,
-      billing: selectedBilling,
-      amount,
-      buy: '1',
-    })
-    if (typeof window !== 'undefined') {
-      window.location.assign(`/signup?${params.toString()}`)
-      return
-    }
-    router.push(`/signup?${params.toString()}`)
-  }
   const handleJoinPlan = async (plan: PlanKey, selectedBilling: BillingKey, rawAmount: string) => {
     if (redirectingPlan) return
-    if (plan !== 'bundle') {
-      router.push('/membership')
-      return
-    }
+    if (plan !== 'bundle' && plan !== 'king') return
     const amount = rawAmount.replace(/[^0-9.]/g, '')
     setRedirectingPlan(plan)
-    if (!hasSimpleAuthSessionClient()) {
-      goToSignupPurchase(plan, selectedBilling, amount)
-      return
-    }
     setCheckoutError('')
 
     try {
-      const authHeader = getAuthorizationHeader()
-      const ctrl = new AbortController()
-      const timeout = window.setTimeout(() => ctrl.abort(), 8000)
-      const response = await fetch(resolveClientApiUrl('/api/auth/checkout/create-session/'), {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authHeader ? { Authorization: authHeader } : {}),
-        },
-        body: JSON.stringify({
-          return_base_url: typeof window !== 'undefined' ? window.location.origin : undefined,
-          selected_plan: plan,
-          selected_billing: selectedBilling,
-          selected_amount: amount,
-        }),
+      const result = await startPlanCheckout({
+        plan,
+        billing: selectedBilling,
+        amount,
+        postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
       })
-      window.clearTimeout(timeout)
-      const payload = (await response.json().catch(() => ({}))) as {
-        checkout_url?: string;
-        is_unlocked?: boolean;
-        already_purchased?: boolean;
-        message?: string;
-      }
-      const checkoutUrl = typeof payload.checkout_url === 'string' ? payload.checkout_url.trim() : ''
-      if (response.ok && checkoutUrl) {
-        window.location.assign(checkoutUrl)
-        return
-      }
-      if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+      if (result.status === 'already_unlocked') {
+        const target = plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs'
         if (typeof window !== 'undefined') {
-          window.location.assign('/dashboard')
+          window.location.assign(target)
         } else {
-          router.push('/dashboard')
+          router.push(target)
         }
         return
       }
-      goToSignupPurchase(plan, selectedBilling, amount)
+      if (result.status === 'error') {
+        setCheckoutError(result.message)
+        if (typeof window !== 'undefined') {
+          window.location.assign(
+            buildPlanCheckoutAuthHref({
+              plan,
+              billing: selectedBilling,
+              amount,
+              postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+            })
+          )
+        }
+      }
     } catch {
-      goToSignupPurchase(plan, selectedBilling, amount)
+      if (typeof window !== 'undefined') {
+        window.location.assign(
+          buildPlanCheckoutAuthHref({
+            plan,
+            billing: selectedBilling,
+            amount,
+            postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+          })
+        )
+      }
     } finally {
-      // If browser navigation did not happen, allow retry.
       setRedirectingPlan(null)
     }
   }

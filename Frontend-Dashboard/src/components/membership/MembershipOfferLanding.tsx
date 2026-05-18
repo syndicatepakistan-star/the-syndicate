@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { getAuthorizationHeader, hasSimpleAuthSessionClient, resolveClientApiUrl } from "@/lib/portal-api";
+import { startPlanCheckout } from "@/lib/plan-checkout";
 import { OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
 
@@ -119,26 +119,32 @@ function MembershipHeroOffer({
   className?: string;
 }) {
   return (
-    <div className={cn("mt-6 max-w-2xl space-y-4", className)}>
-      <CyberInsetPanel variant="blood">
-        <p className="font-mono text-base leading-relaxed text-zinc-100/92 sm:text-lg">{HERO_OFFER_COPY}</p>
-      </CyberInsetPanel>
-      <CyberInsetPanel variant="cyan">
-        <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-base">{HERO_OFFER_DETAIL}</p>
-      </CyberInsetPanel>
-      <span
-        className="inline-flex border-[3px] border-cyan-400/90 bg-black/80 px-5 py-2.5 font-mono text-2xl font-black tabular-nums text-cyan-100 [text-shadow:0_0_16px_rgba(103,232,249,0.55)] shadow-[0_0_28px_rgba(34,211,238,0.35)]"
-        style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
-      >
-        {DISPLAY_PRICE}
-        <span className="ml-2 text-xs font-bold uppercase tracking-[0.12em] text-neutral-400">/ mo</span>
-      </span>
+    <div className={cn("mt-6 w-full max-w-3xl space-y-4", className)}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        <CyberInsetPanel variant="blood" className="h-full min-h-[7.5rem]">
+          <p className="font-mono text-sm leading-relaxed text-zinc-100/92 sm:text-base">{HERO_OFFER_COPY}</p>
+        </CyberInsetPanel>
+        <CyberInsetPanel variant="cyan" className="h-full min-h-[7.5rem]">
+          <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-base">{HERO_OFFER_DETAIL}</p>
+        </CyberInsetPanel>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(9.5rem,auto)_1fr] sm:items-stretch">
+        <span
+          className="inline-flex h-full min-h-[3.25rem] items-center justify-center border-[3px] border-cyan-400/90 bg-black/80 px-4 py-3 font-mono text-xl font-black tabular-nums text-cyan-100 [text-shadow:0_0_16px_rgba(103,232,249,0.55)] shadow-[0_0_28px_rgba(34,211,238,0.35)] sm:text-2xl"
+          style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+        >
+          {DISPLAY_PRICE}
+          <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 sm:text-xs">/ mo</span>
+        </span>
+        <button type="button" disabled={busy} onClick={onUnlock} className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem]")}>
+          {busy ? "Opening checkout…" : "Unlock membership"}
+        </button>
+      </div>
+
       {error ? (
         <p className="font-mono text-sm text-rose-300 [text-shadow:0_0_10px_rgba(244,63,94,0.5)]">{error}</p>
       ) : null}
-      <button type="button" disabled={busy} onClick={onUnlock} className={CYBER_UNLOCK_CTA}>
-        {busy ? "Opening checkout…" : "Unlock membership"}
-      </button>
     </div>
   );
 }
@@ -198,57 +204,24 @@ export function MembershipOfferLanding({ embedded = false }: { embedded?: boolea
 
   const unlockMembership = useCallback(async () => {
     setError(null);
-    if (!hasSimpleAuthSessionClient()) {
-      const params = new URLSearchParams({
+    setBusy(true);
+    try {
+      const result = await startPlanCheckout({
         plan: "king",
         billing: BILLING,
         amount: CHECKOUT_AMOUNT,
+        postAuthNext: "/dashboard?section=resources",
       });
-      router.push(`/signup?${params.toString()}`);
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const authHeader = getAuthorizationHeader();
-      const response = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authHeader ? { Authorization: authHeader } : {}),
-        },
-        body: JSON.stringify({
-          return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-          selected_plan: "king",
-          selected_billing: BILLING,
-          selected_amount: CHECKOUT_AMOUNT,
-        }),
-      });
-
-      const payload = (await response.json().catch(() => ({}))) as {
-        checkout_url?: string;
-        is_unlocked?: boolean;
-        already_purchased?: boolean;
-        message?: string;
-        error?: string;
-      };
-
-      const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
-      if (response.ok && checkoutUrl) {
-        window.location.assign(checkoutUrl);
+      if (result.status === "checkout" || result.status === "auth_required") {
         return;
       }
-      if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+      if (result.status === "already_unlocked") {
         router.push("/dashboard?section=resources");
         return;
       }
-      const msg =
-        typeof payload.message === "string"
-          ? payload.message
-          : typeof payload.error === "string"
-            ? payload.error
-            : "Could not start checkout.";
-      throw new Error(msg);
+      if (result.status === "error") {
+        throw new Error(result.message);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start checkout.");
     } finally {
@@ -348,7 +321,7 @@ export function MembershipOfferLanding({ embedded = false }: { embedded?: boolea
               busy={busy}
               error={error}
               onUnlock={() => void unlockMembership()}
-              className="mx-auto max-w-xl"
+              className="mx-auto w-full"
             />
           </CyberChamferFrame>
         )}

@@ -280,7 +280,20 @@ export function PlaylistCardsSection({
                 <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
               )}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
-              {locked ? <div className="pointer-events-none absolute inset-0 bg-black/50" /> : null}
+              {locked ? <div className="pointer-events-none absolute inset-0 z-[4] bg-black/50" /> : null}
+              <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-2 text-center">
+                <span
+                  className={cn(
+                    "font-black uppercase leading-none tracking-[0.1em] drop-shadow-[0_4px_28px_rgba(0,0,0,0.95)]",
+                    "text-[clamp(1.5rem,6vw,2.75rem)] sm:text-[clamp(1.75rem,4.5vw,3rem)]",
+                    locked
+                      ? "text-rose-300 [text-shadow:0_0_32px_rgba(244,63,94,0.9)]"
+                      : "text-emerald-300 [text-shadow:0_0_32px_rgba(52,211,153,0.9)]"
+                  )}
+                >
+                  {locked ? "Locked" : "Unlocked"}
+                </span>
+              </span>
             </div>
             <div className="absolute right-3 top-3 z-[4]">
               <span

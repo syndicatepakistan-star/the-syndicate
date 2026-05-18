@@ -2078,6 +2078,7 @@ export function SyndicateAiChallengePanel() {
   const [customTitle, setCustomTitle] = useState("");
   /** “Create your mission” form — modal on Missions tab only (not inline). */
   const [createMissionModalOpen, setCreateMissionModalOpen] = useState(false);
+  const [pointsToPoundsModalOpen, setPointsToPoundsModalOpen] = useState(false);
   /** Shown inside the create-mission modal (global `error` sits under the overlay and is easy to miss). */
   const [createMissionError, setCreateMissionError] = useState<string | null>(null);
   const [profileName, setProfileName] = useState(() =>
@@ -3195,6 +3196,15 @@ export function SyndicateAiChallengePanel() {
   }, [syndicateView, showStatsProfile]);
 
   useEffect(() => {
+    if (!pointsToPoundsModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPointsToPoundsModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pointsToPoundsModalOpen]);
+
+  useEffect(() => {
     if (!createMissionModalOpen || typeof document === "undefined") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && busy !== "custom") setCreateMissionModalOpen(false);
@@ -3770,7 +3780,10 @@ export function SyndicateAiChallengePanel() {
                 </span>
               </div>
               <h3 className="mt-2.5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                <span className="text-[18px] font-black uppercase tracking-[0.06em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(255,200,80,0.12)] sm:text-[21px]">
+                <span
+                  id="syndicate-points-to-pounds-title"
+                  className="text-[18px] font-black uppercase tracking-[0.06em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(255,200,80,0.12)] sm:text-[21px]"
+                >
                   Points to pounds
                 </span>
                 <SyndicateHelpMark
@@ -3866,6 +3879,40 @@ export function SyndicateAiChallengePanel() {
         onClose={() => setSyndicateHelpPanel(null)}
       />
     ) : null;
+
+  const pointsToPoundsModal =
+    mounted && pointsToPoundsModalOpen && typeof document !== "undefined"
+      ? createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[181] bg-black/60 backdrop-blur-[2px]"
+              onClick={() => setPointsToPoundsModalOpen(false)}
+              aria-hidden
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="syndicate-points-to-pounds-title"
+              className="syndicate-mood-context syndicate-readable fixed left-1/2 top-1/2 z-[182] w-[min(calc(100vw-1.25rem),32rem)] max-h-[min(90vh,calc(100dvh-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-2xl border border-amber-400/25 bg-[linear-gradient(165deg,rgba(32,26,14,0.98),rgba(8,6,5,0.99))] shadow-[0_24px_80px_rgba(0,0,0,0.78)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 z-10 flex justify-end border-b border-white/10 bg-[linear-gradient(180deg,rgba(32,26,14,0.98),rgba(32,26,14,0.92))] px-3 py-2.5 sm:px-4">
+                <button
+                  type="button"
+                  onClick={() => setPointsToPoundsModalOpen(false)}
+                  className="rounded-md border border-white/25 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/85 transition hover:bg-white/10"
+                >
+                  Close
+                </button>
+              </div>
+              <div id="syndicate-points-to-pounds" className="px-3 py-4 sm:px-5 sm:py-5">
+                {renderPointsToPoundsSection()}
+              </div>
+            </div>
+          </>,
+          document.body
+        )
+      : null;
 
   const adminTaskRecordingPortal =
     recordingAdminTaskId != null &&
@@ -3978,6 +4025,7 @@ export function SyndicateAiChallengePanel() {
       {adminTaskRecordingPortal}
       {completionToast}
       {syndicateHelpModal}
+      {pointsToPoundsModal}
       <div className="syndicate-dash-outer relative flex h-full min-h-0 w-full min-w-0 max-w-none flex-1 flex-col space-y-2 border px-0 pt-0 sm:space-y-3 sm:pt-0 max-md:space-y-2 max-md:border-0 max-md:bg-[linear-gradient(168deg,#050508_0%,#0d0818_44%,#0a0610_100%)] max-md:px-0 max-md:pt-0 max-md:shadow-none">
       <div className="pointer-events-none absolute inset-0 -z-10 syndicate-dash-scanlines max-md:opacity-35" />
       <div className="syndicate-dash-header mb-1 flex w-full flex-col gap-2 rounded-2xl border px-2 py-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-2.5 sm:py-2 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.24)] max-md:px-2 max-md:py-1.5">
@@ -3995,66 +4043,83 @@ export function SyndicateAiChallengePanel() {
             </span>
           </h3>
         </div>
-        <div className="grid w-full shrink-0 grid-cols-2 gap-1.5 sm:w-auto sm:grid-cols-2 sm:gap-2 sm:pt-0.5">
-          <button
-            type="button"
-            onClick={() => {
-              setSyndicateView("dashboard");
-              setShowStatsProfile(false);
-            }}
-            className={cn(
-              "syndicate-nav-action min-h-[40px] min-w-0 touch-manipulation px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.06em] sm:min-w-[128px] sm:px-3 sm:py-2.5 sm:text-[11px] sm:tracking-[0.08em] md:min-w-[136px] md:text-[12px]",
-              syndicateView === "dashboard" && !showStatsProfile && "syndicate-nav-action--active-gold"
-            )}
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSyndicateView("challenges");
-              setShowStatsProfile(false);
-            }}
-            className={cn(
-              "syndicate-nav-action min-h-[40px] min-w-0 touch-manipulation px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.06em] sm:min-w-[128px] sm:px-3 sm:py-2.5 sm:text-[11px] sm:tracking-[0.08em] md:min-w-[136px] md:text-[12px]",
-              syndicateView === "challenges" && !showStatsProfile && "syndicate-nav-action--active-rose"
-            )}
-          >
-            Missions
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSyndicateView("reminders");
-              setShowStatsProfile(false);
-            }}
-            className={cn(
-              "syndicate-nav-action flex min-h-[40px] min-w-0 flex-col items-center justify-center touch-manipulation px-2 py-2 text-[9px] font-bold uppercase leading-tight tracking-[0.05em] sm:min-w-[148px] sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-[0.06em] md:min-w-[168px] md:text-[11px]",
-              syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active-cyan"
-            )}
-          >
-            <span className="flex flex-col items-center gap-0">
-              <span>Syndicate mode</span>
-              <span>reminders</span>
-            </span>
-            {missionsTabReminders.length > 0 ? (
-              <span className="mt-0.5 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black tabular-nums leading-none text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]">
-                {missionsTabReminders.length > 9 ? "9+" : missionsTabReminders.length}
+        <div className="syndicate-dash-nav-hud mt-2 grid w-full shrink-0 grid-rows-2 gap-1.5 sm:mt-0 sm:w-[min(100%,22rem)] sm:gap-2 md:w-[min(100%,24rem)]">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setPointsToPoundsModalOpen(true)}
+              aria-expanded={pointsToPoundsModalOpen}
+              aria-haspopup="dialog"
+              className={cn(
+                "syndicate-nav-action syndicate-nav-action--exchange relative z-[1] flex min-h-[44px] min-w-0 flex-col items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
+                pointsToPoundsModalOpen && "syndicate-nav-action--exchange-open"
+              )}
+            >
+              <span className="text-center">Points to pounds</span>
+              <span className="syndicate-nav-action__sub tabular-nums">£{poundsBalance.toFixed(2)} balance</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSyndicateView("dashboard");
+                setShowStatsProfile(false);
+              }}
+              className={cn(
+                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
+                syndicateView === "dashboard" && !showStatsProfile && "syndicate-nav-action--active-gold"
+              )}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSyndicateView("challenges");
+                setShowStatsProfile(false);
+              }}
+              className={cn(
+                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
+                syndicateView === "challenges" && !showStatsProfile && "syndicate-nav-action--active-rose"
+              )}
+            >
+              Missions
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSyndicateView("reminders");
+                setShowStatsProfile(false);
+              }}
+              className={cn(
+                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 touch-manipulation px-1.5 py-2 text-[7px] leading-tight sm:min-h-[46px] sm:text-[8px]",
+                syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active-cyan"
+              )}
+            >
+              <span className="flex flex-col items-center gap-0 text-center">
+                <span>Syndicate mode</span>
+                <span>reminders</span>
               </span>
-            ) : null}
-          </button>
-          <button
-            type="button"
-            aria-expanded={showStatsProfile}
-            aria-controls="syndicate-stats-profile"
-            onClick={() => setShowStatsProfile(true)}
-            className={cn(
-              "syndicate-nav-action min-h-[40px] min-w-0 touch-manipulation px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.06em] sm:min-w-[128px] sm:px-3 sm:py-2.5 sm:text-[11px] sm:tracking-[0.08em] md:min-w-[136px] md:text-[12px]",
-              showStatsProfile && "syndicate-nav-action--active-violet"
-            )}
-          >
-            Stats & profile
-          </button>
+              {missionsTabReminders.length > 0 ? (
+                <span className="inline-flex min-h-[1rem] min-w-[1rem] items-center justify-center rounded-sm border border-red-400/60 bg-red-950/80 px-1 text-[9px] font-black tabular-nums leading-none text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.55)]">
+                  {missionsTabReminders.length > 9 ? "9+" : missionsTabReminders.length}
+                </span>
+              ) : null}
+            </button>
+            <button
+              type="button"
+              aria-expanded={showStatsProfile}
+              aria-controls="syndicate-stats-profile"
+              onClick={() => setShowStatsProfile(true)}
+              className={cn(
+                "syndicate-nav-action relative z-[1] flex min-h-[44px] min-w-0 items-center justify-center touch-manipulation px-1.5 py-2 text-[8px] leading-tight sm:min-h-[46px] sm:px-2 sm:text-[9px]",
+                showStatsProfile && "syndicate-nav-action--active-violet"
+              )}
+            >
+              Stats & profile
+            </button>
+          </div>
         </div>
       </div>
 
@@ -4624,14 +4689,6 @@ export function SyndicateAiChallengePanel() {
                   </div>
                 </div>
               </div>
-              <div className="hidden xl:block">
-                <section
-                  id="syndicate-points-to-pounds"
-                  className="syndicate-readable mt-4 w-full min-w-0 overflow-hidden rounded-2xl border border-amber-400/20 bg-[linear-gradient(165deg,rgba(32,26,14,0.95),rgba(8,6,5,0.98))] px-3 py-4 shadow-[0_16px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,200,120,0.06)] sm:px-5 sm:py-6"
-                >
-                  {renderPointsToPoundsSection()}
-                </section>
-              </div>
               <div className="mt-4">
                 <div className="mb-1 flex items-center justify-between text-[11px] text-white/70">
                   <span>Daily completion quota</span>
@@ -4807,14 +4864,6 @@ export function SyndicateAiChallengePanel() {
             </div>
           </div>
 
-          <div className="xl:hidden mt-4 w-full">
-            <section
-              className="syndicate-readable w-full min-w-0 overflow-hidden rounded-2xl border border-amber-400/20 bg-[linear-gradient(165deg,rgba(32,26,14,0.95),rgba(8,6,5,0.98))] px-3 py-4 shadow-[0_16px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,200,120,0.06)] sm:px-5 sm:py-6"
-              aria-label="Points to pounds"
-            >
-              {renderPointsToPoundsSection()}
-            </section>
-          </div>
         </section>
       ) : null}
 
@@ -4955,7 +5004,7 @@ export function SyndicateAiChallengePanel() {
           <section
             id="syndicate-bonus-missions"
             ref={bonusMissionSectionRef}
-            className="syndicate-readable syndicate-hud-deck syndicate-hud-deck--mega syndicate-game-vault syndicate-game-vault--mega mt-5 w-full min-w-0 scroll-mt-6 space-y-0 max-md:mt-4 max-md:rounded-none max-md:border-0"
+            className="syndicate-readable syndicate-hud-deck syndicate-hud-deck--mega syndicate-game-vault syndicate-game-vault--mega syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 space-y-0 max-md:mt-4 max-md:rounded-none max-md:border-0"
           >
             <div className="syndicate-hud-deck-inner syndicate-game-brackets px-3 py-3 sm:px-4 sm:py-4">
               <header className="syndicate-game-header-rail border-b border-amber-400/15 pb-3 lg:border-b-0 lg:pb-0">
@@ -4996,12 +5045,12 @@ export function SyndicateAiChallengePanel() {
                     <span className="font-semibold text-cyan-100">video</span> (record with your camera or upload a video file) — both are required and visible to staff in Django admin.
                   </p>
                   <ul className="mt-4 grid gap-2.5 text-left sm:gap-3">
-                    <li className="flex gap-2 border-l-[3px] border-cyan-400/50 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
+                    <li className="syndicate-mega-brief-line flex gap-2 border-l-[3px] border-cyan-400/50 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
                       <span className="text-[13px] font-medium leading-snug text-white/85 sm:leading-relaxed">
                         One submission per device per task. After approval, use Claim reviewed points.
                       </span>
                     </li>
-                    <li className="flex gap-2 border-l-[3px] border-amber-400/55 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
+                    <li className="syndicate-mega-brief-line syndicate-mega-brief-line--amber flex gap-2 border-l-[3px] border-amber-400/55 bg-black/25 py-2 pl-3 pr-2 [clip-path:polygon(0_0,100%_0,100%_100%,6px_100%,0_calc(100%-8px))] sm:text-[14px]">
                       <span className="text-[13px] font-medium leading-snug text-amber-50/95 sm:leading-relaxed">
                         Task visibility uses admin-set hours from post time — submit before the countdown ends.
                       </span>
@@ -5018,7 +5067,7 @@ export function SyndicateAiChallengePanel() {
 
             <div className="syndicate-hud-deck-inner border-t border-cyan-400/12 px-3 pb-3 pt-2 sm:px-4 sm:pb-4">
             {visibleAdminTasks.length === 0 ? (
-              <div className="syndicate-game-data-slab mx-auto max-w-lg border-amber-400/20 px-4 py-6 text-center sm:px-5 sm:py-8">
+              <div className="syndicate-game-data-slab syndicate-mega-empty mx-auto max-w-lg border-amber-400/20 px-4 py-6 text-center sm:px-5 sm:py-8">
                 <p className="text-[17px] font-semibold text-[#fef3c7]/95">No bonus tasks right now</p>
                 <p className="mt-2 w-full min-w-0 text-[15px] leading-relaxed text-white/70">
                   When an admin creates a task, it will show here. Complete daily missions and check back.

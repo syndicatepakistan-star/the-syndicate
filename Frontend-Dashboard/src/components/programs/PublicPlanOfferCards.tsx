@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { getAuthorizationHeader, hasSimpleAuthSessionClient, resolveClientApiUrl } from "@/lib/portal-api";
+import { startPlanCheckout } from "@/lib/plan-checkout";
 import { OFFER_PLAN_THUMB_MONEY_MASTERY, OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
 
 type PlanKey = "bundle" | "king";
@@ -57,58 +57,21 @@ export function PublicPlanOfferCards() {
   const joinOffer = useCallback(
     async (offer: OfferDef) => {
       setError(null);
-
-      if (!hasSimpleAuthSessionClient()) {
-        const params = new URLSearchParams({
+      setBusyPlan(offer.plan);
+      try {
+        const result = await startPlanCheckout({
           plan: offer.plan,
           billing: offer.billing,
           amount: offer.checkoutAmount,
+          postAuthNext: "/dashboard?section=programs",
         });
-        router.push(`/signup?${params.toString()}`);
-        return;
-      }
-
-      setBusyPlan(offer.plan);
-      try {
-        const authHeader = getAuthorizationHeader();
-        const response = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(authHeader ? { Authorization: authHeader } : {}),
-          },
-          body: JSON.stringify({
-            return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-            selected_plan: offer.plan,
-            selected_billing: offer.billing,
-            selected_amount: offer.checkoutAmount,
-          }),
-        });
-
-        const payload = (await response.json().catch(() => ({}))) as {
-          checkout_url?: string;
-          is_unlocked?: boolean;
-          already_purchased?: boolean;
-          message?: string;
-          error?: string;
-        };
-
-        const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
-        if (response.ok && checkoutUrl) {
-          window.location.assign(checkoutUrl);
-          return;
-        }
-        if (response.ok && (payload.is_unlocked || payload.already_purchased)) {
+        if (result.status === "already_unlocked") {
           router.push("/dashboard?section=programs");
           return;
         }
-        const msg =
-          typeof payload.message === "string"
-            ? payload.message
-            : typeof payload.error === "string"
-              ? payload.error
-              : "Could not start checkout.";
-        throw new Error(msg);
+        if (result.status === "error") {
+          throw new Error(result.message);
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not start checkout.");
       } finally {
@@ -173,10 +136,6 @@ export function PublicPlanOfferCards() {
                   type="button"
                   disabled={busyPlan === offer.plan}
                   onClick={() => {
-                    if (offer.plan === "king") {
-                      router.push("/membership");
-                      return;
-                    }
                     void joinOffer(offer);
                   }}
                   className={cn(

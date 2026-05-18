@@ -52,6 +52,7 @@ import {
   type KingProgramSelectionState,
   type PortalUser
 } from "@/lib/portal-api";
+import { startPlanCheckout } from "@/lib/plan-checkout";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 import toast, { Toaster } from "react-hot-toast";
 import QRCode from "qrcode";
@@ -1962,40 +1963,32 @@ function ShellTierLockPanel({
 }) {
   const router = useRouter();
   const [kingBusy, setKingBusy] = useState(false);
+  const [kingCheckoutError, setKingCheckoutError] = useState<string | null>(null);
 
   const startKingCheckout = useCallback(async () => {
+    setKingCheckoutError(null);
     setKingBusy(true);
     try {
-      const authHeader = getAuthorizationHeader();
-      if (!authHeader) {
-        router.push("/login?plan=king&billing=monthly&amount=19.99");
-        return;
-      }
-      const res = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authHeader ? { Authorization: authHeader } : {})
-        },
-        body: JSON.stringify({
-          return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-          selected_plan: "king",
-          selected_billing: "monthly",
-          selected_amount: "19.99"
-        })
+      const result = await startPlanCheckout({
+        plan: "king",
+        billing: "monthly",
+        amount: "19.99",
+        postAuthNext: "/dashboard?section=monk",
       });
-      const data = (await res.json().catch(() => ({}))) as { checkout_url?: string; error?: string };
-      const url = typeof data.checkout_url === "string" ? data.checkout_url.trim() : "";
-      if (res.ok && url) {
-        window.location.assign(url);
+      if (result.status === "checkout" || result.status === "auth_required") {
         return;
       }
-      const err = typeof data.error === "string" ? data.error : "Could not start checkout.";
-      toast.error(err);
-      router.push("/#pricing");
+      if (result.status === "already_unlocked") {
+        toast.success(result.message || "The King plan is already active for this account.");
+        router.push("/dashboard?section=monk");
+        return;
+      }
+      setKingCheckoutError(result.message);
+      toast.error(result.message);
     } catch {
-      toast.error("Could not reach checkout. Try again from the home pricing section.");
-      router.push("/#pricing");
+      const msg = "Could not reach checkout. Check that the backend is running, then try again.";
+      setKingCheckoutError(msg);
+      toast.error(msg);
     } finally {
       setKingBusy(false);
     }
@@ -2056,12 +2049,15 @@ function ShellTierLockPanel({
               {kingBusy ? "Opening checkout…" : "Unlock with The King"}
             </button>
             <a
-              href="/#pricing"
+              href="/dashboard?section=programs"
               className="text-center text-[11px] font-black uppercase tracking-[0.14em] text-amber-200/80 underline-offset-4 hover:text-amber-100 hover:underline sm:text-right"
             >
               Compare plans
             </a>
           </div>
+          {kingCheckoutError ? (
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-rose-200/95">{kingCheckoutError}</p>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { CSSProperties } from "react";
 import gsap from "gsap";
-import { Crown, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -52,7 +52,6 @@ import {
   type KingProgramSelectionState,
   type PortalUser
 } from "@/lib/portal-api";
-import { startPlanCheckout } from "@/lib/plan-checkout";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 import toast, { Toaster } from "react-hot-toast";
 import QRCode from "qrcode";
@@ -1951,118 +1950,6 @@ function SettingsCertificatesSection() {
   );
 }
 
-function ShellTierLockPanel({
-  title,
-  description,
-  showKingUpsell
-}: {
-  title: string;
-  description: string;
-  /** When set, show The King plan card + checkout (Syndicate Mode / Membership upsell). */
-  showKingUpsell?: boolean;
-}) {
-  const router = useRouter();
-  const [kingBusy, setKingBusy] = useState(false);
-  const [kingCheckoutError, setKingCheckoutError] = useState<string | null>(null);
-
-  const startKingCheckout = useCallback(async () => {
-    setKingCheckoutError(null);
-    setKingBusy(true);
-    try {
-      const result = await startPlanCheckout({
-        plan: "king",
-        billing: "monthly",
-        amount: "19.99",
-        postAuthNext: "/dashboard?section=monk",
-      });
-      if (result.status === "checkout" || result.status === "auth_required") {
-        return;
-      }
-      if (result.status === "already_unlocked") {
-        toast.success(result.message || "The King plan is already active for this account.");
-        router.push("/dashboard?section=monk");
-        return;
-      }
-      setKingCheckoutError(result.message);
-      toast.error(result.message);
-    } catch {
-      const msg = "Could not reach checkout. Check that the backend is running, then try again.";
-      setKingCheckoutError(msg);
-      toast.error(msg);
-    } finally {
-      setKingBusy(false);
-    }
-  }, [router]);
-
-  return (
-    <div className="mx-auto flex min-h-[min(48vh,420px)] w-full max-w-xl flex-col items-center justify-center gap-6 rounded-2xl border border-amber-500/35 bg-black/55 px-6 py-12 text-center shadow-[0_0_48px_rgba(251,191,36,0.08)] sm:px-8 sm:py-14">
-      <div className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-100/90">
-        Money Mastery — feature locked
-      </div>
-      <div className="grid h-16 w-16 place-items-center rounded-2xl border border-amber-400/45 bg-amber-500/10 text-amber-100">
-        <Lock className="h-8 w-8" strokeWidth={2} aria-hidden />
-      </div>
-      <h2 className="text-[clamp(1rem,2vw+0.5rem,1.25rem)] font-black uppercase tracking-[0.14em] text-amber-100/95">{title}</h2>
-      <p className="max-w-md text-[13px] leading-relaxed text-white/62">{description}</p>
-
-      {showKingUpsell ? (
-        <div className="mt-2 w-full max-w-md rounded-2xl border border-[rgba(250,204,21,0.38)] bg-[linear-gradient(165deg,rgba(250,204,21,0.08),rgba(0,0,0,0.45))] p-5 text-left shadow-[inset_0_1px_0_rgba(255,215,0,0.12)]">
-          <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-amber-400/50 bg-amber-500/15 text-amber-200">
-              <Crown className="h-5 w-5" strokeWidth={2.2} aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/90">Upgrade path</div>
-              <div className="mt-1 font-mono text-[17px] font-black uppercase tracking-[0.12em] text-[color:var(--gold)] [text-shadow:0_0_18px_rgba(255,215,0,0.35)]">
-                The King
-              </div>
-              <p className="mt-2 text-[12px] leading-snug text-white/58">
-                Full Syndicate Mode, membership library, goals deck, and weekly drops — billed monthly from{" "}
-                <span className="font-semibold text-amber-100/90">£19.99/mo</span> (or yearly on the pricing page).
-              </p>
-              <ul className="mt-3 space-y-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
-                <li className="flex gap-2">
-                  <span className="text-amber-400/90">·</span>
-                  Syndicate challenges & 24h board
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-amber-400/90">·</span>
-                  Membership articles & hub
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-amber-400/90">·</span>
-                  Goals & milestones
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              disabled={kingBusy}
-              onClick={() => void startKingCheckout()}
-              className={cn(
-                "w-full rounded-xl border border-amber-400/55 bg-[rgba(250,204,21,0.14)] px-4 py-3 text-[12px] font-black uppercase tracking-[0.16em] text-amber-50 shadow-[0_0_24px_rgba(250,204,21,0.18)] transition sm:w-auto sm:min-w-[200px]",
-                "hover:border-amber-300/75 hover:bg-[rgba(250,204,21,0.2)] disabled:cursor-wait disabled:opacity-70"
-              )}
-            >
-              {kingBusy ? "Opening checkout…" : "Unlock with The King"}
-            </button>
-            <a
-              href="/dashboard?section=programs"
-              className="text-center text-[11px] font-black uppercase tracking-[0.14em] text-amber-200/80 underline-offset-4 hover:text-amber-100 hover:underline sm:text-right"
-            >
-              Compare plans
-            </a>
-          </div>
-          {kingCheckoutError ? (
-            <p className="mt-3 text-center text-[12px] leading-relaxed text-rose-200/95">{kingCheckoutError}</p>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 export default function Page() {
   const router = useRouter();
@@ -3515,11 +3402,9 @@ export default function Page() {
                     Loading access…
                   </div>
                 ) : isNavLocked("monk") ? (
-                  <ShellTierLockPanel
-                    showKingUpsell
-                    title="Syndicate Mode — locked"
-                    description="You can open this page to see what is not included on Money Mastery. Full Syndicate missions, the 24h board, and sync unlock with The King, together with the membership hub and the complete Goals & milestones deck."
-                  />
+                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=monk" />
+                  </div>
                 ) : (
                   <SyndicateModeSection />
                 )
@@ -3563,7 +3448,7 @@ export default function Page() {
                   </div>
                 ) : isNavLocked("resources") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
-                    <MembershipOfferLanding embedded />
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=resources" />
                   </div>
                 ) : (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col">
@@ -3614,10 +3499,9 @@ export default function Page() {
                     Loading access…
                   </div>
                 ) : isNavLocked("dashboard") ? (
-                  <ShellTierLockPanel
-                    title="Dashboard — locked"
-                    description="Your purchase unlocks the stream program in Programs. The command center, Syndicate Mode, membership hub, and full goals deck unlock with Money Mastery or The King."
-                  />
+                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=dashboard" />
+                  </div>
                 ) : (
                   <>
                     <section

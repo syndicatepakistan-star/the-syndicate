@@ -197,7 +197,14 @@ function ChannelCard({
   );
 }
 
-export function MembershipOfferLanding({ embedded = false }: { embedded?: boolean }) {
+export function MembershipOfferLanding({
+  embedded = false,
+  checkoutReturnPath = "/dashboard?section=resources",
+}: {
+  embedded?: boolean;
+  /** Where to land after checkout or when plan is already active. */
+  checkoutReturnPath?: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -210,13 +217,13 @@ export function MembershipOfferLanding({ embedded = false }: { embedded?: boolea
         plan: "king",
         billing: BILLING,
         amount: CHECKOUT_AMOUNT,
-        postAuthNext: "/dashboard?section=resources",
+        postAuthNext: checkoutReturnPath,
       });
       if (result.status === "checkout" || result.status === "auth_required") {
         return;
       }
       if (result.status === "already_unlocked") {
-        router.push("/dashboard?section=resources");
+        router.push(checkoutReturnPath);
         return;
       }
       if (result.status === "error") {
@@ -227,7 +234,7 @@ export function MembershipOfferLanding({ embedded = false }: { embedded?: boolea
     } finally {
       setBusy(false);
     }
-  }, [router]);
+  }, [checkoutReturnPath, router]);
 
   const accentFrame = (accent: (typeof MEMBERSHIP_PILLARS)[number]["accent"]) =>
     accent === "cyan" ? "cyan" : accent === "violet" ? "violet" : "amber";

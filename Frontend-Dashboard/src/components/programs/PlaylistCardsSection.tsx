@@ -226,7 +226,7 @@ export function PlaylistCardsSection({
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
           !isSpotlight && theme.dominantBorder,
           !isSpotlight && theme.glow,
-          isSpotlight && "program-card-attract border-amber-300/80"
+          isSpotlight && "program-card-hamburger-glow"
         )}
       >
         {!isSpotlight ? (

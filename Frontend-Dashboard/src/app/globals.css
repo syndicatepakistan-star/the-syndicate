@@ -5839,51 +5839,34 @@ body {
   animation: hamburger-attract 2.8s ease-in-out infinite;
 }
 
-/* Globe deep-link: subtle gold pulse on the card edge only (no large outer wash) */
-@keyframes program-card-spotlight-enter {
-  0% {
-    transform: scale(0.99);
-    opacity: 0.92;
-  }
-  55% {
-    transform: scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes program-card-spotlight {
+/* Globe deep-link: hamburger-style pulse, red glow (selected card only) */
+@keyframes program-card-hamburger-glow {
   0%,
   100% {
     transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.4));
     box-shadow:
-      0 0 0 1px rgba(251, 191, 36, 0.55),
-      0 0 12px rgba(251, 191, 36, 0.28),
-      0 10px 28px rgba(0, 0, 0, 0.45);
+      0 0 0 1px rgba(239, 68, 68, 0.5),
+      0 0 10px rgba(248, 113, 113, 0.24),
+      0 10px 26px rgba(0, 0, 0, 0.45);
   }
   50% {
-    transform: scale(1.015);
+    transform: scale(1.022);
+    filter: drop-shadow(0 0 11px rgba(252, 165, 165, 0.68));
     box-shadow:
-      0 0 0 2px rgba(253, 224, 71, 0.75),
-      0 0 18px rgba(251, 191, 36, 0.42),
-      0 12px 32px rgba(0, 0, 0, 0.5);
+      0 0 0 2px rgba(252, 165, 165, 0.65),
+      0 0 16px rgba(239, 68, 68, 0.38),
+      0 12px 30px rgba(0, 0, 0, 0.5);
   }
 }
 
-.program-card-attract {
+.program-card-hamburger-glow {
   position: relative;
   z-index: 25;
   overflow: hidden;
-  animation:
-    program-card-spotlight-enter 0.55s ease-out forwards,
-    program-card-spotlight 2.6s ease-in-out 0.55s infinite;
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.5),
-    0 0 14px rgba(251, 191, 36, 0.3),
-    0 10px 28px rgba(0, 0, 0, 0.48) !important;
+  border-color: rgba(248, 113, 113, 0.75) !important;
+  animation: program-card-hamburger-glow 2.8s ease-in-out infinite;
+  will-change: transform, filter;
 }
 
 @keyframes affiliatePayoutPanelIn {
@@ -6519,7 +6502,7 @@ body {
   .reveal-base,
   .reveal-visible,
   .hamburger-attract,
-  .program-card-attract,
+  .program-card-hamburger-glow,
   .nav-card-lightning,
   .animate-pillar-from-left,
   .animate-pillar-from-right,

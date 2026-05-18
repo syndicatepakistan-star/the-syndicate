@@ -34,6 +34,18 @@ const sameHostHint =
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Legacy globe/deep links: /program/12 → public programs library card (no login).
+  const programDeepLink = pathname.match(/^\/program\/(\d+)\/?$/);
+  if (programDeepLink) {
+    const dest = request.nextUrl.clone();
+    dest.pathname = "/programs";
+    dest.search = "";
+    dest.searchParams.set("program", programDeepLink[1]);
+    dest.hash = "programs-library";
+    return NextResponse.redirect(dest);
+  }
+
   const isPublicStaticFile = /\.[a-zA-Z0-9]+$/.test(pathname);
   const authCookie = request.cookies.get("simple_auth_session")?.value;
   const hasAuthSession = authCookie === "1";

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { programPlaylistDeepLink } from '@/lib/programPlaylistThumbnails'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -10,5 +11,5 @@ export default async function ProgramDeepLinkPage({ params }: Props) {
   if (!Number.isFinite(programId) || programId <= 0) {
     redirect('/programs')
   }
-  redirect(`/programs?program=${programId}#programs-library`)
+  redirect(programPlaylistDeepLink(programId))
 }

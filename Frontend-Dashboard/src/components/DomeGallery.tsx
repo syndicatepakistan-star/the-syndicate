@@ -319,15 +319,29 @@ export default function DomeGallery({
     [dragDampening, maxVerticalRotationDeg, stopInertia]
   )
 
+  const navigateToHref = useCallback(
+    (href: string) => {
+      const target = href.trim()
+      if (!target) return
+      // Full navigation so ?program= and #programs-library run scroll/highlight on /programs.
+      if (target.includes('program=') || target.includes('#')) {
+        window.location.assign(target)
+        return
+      }
+      router.push(target)
+    },
+    [router]
+  )
+
   const openItemFromElement = useCallback((el: HTMLElement) => {
     if (clickHref) {
-      router.push(clickHref)
+      navigateToHref(clickHref)
       return
     }
     const parent = el.parentElement as HTMLElement | null
     const tileHref = parent?.dataset.href?.trim()
     if (navigateOnClick && tileHref) {
-      router.push(tileHref)
+      navigateToHref(tileHref)
       return
     }
     if (!parent || openingRef.current) return
@@ -424,7 +438,7 @@ export default function DomeGallery({
       }
       overlay.addEventListener('transitionend', onFirstEnd)
     }
-  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, navigateOnClick, openedImageBorderRadius, openedImageHeight, openedImageWidth, router, unlockScroll])
+  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, navigateOnClick, navigateToHref, openedImageBorderRadius, openedImageHeight, openedImageWidth, unlockScroll])
 
   useGesture(
     {

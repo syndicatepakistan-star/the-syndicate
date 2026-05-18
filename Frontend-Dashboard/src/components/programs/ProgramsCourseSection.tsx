@@ -14,6 +14,10 @@ import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylist
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
+  getProgramPlaylistThumbnail,
+  isHiddenProgramPlaylist,
+} from "@/lib/programPlaylistThumbnails";
+import {
   fetchPortalIdentity,
   getAuthorizationHeader,
   hasSimpleAuthSessionClient,
@@ -476,9 +480,12 @@ export function ProgramsCourseSection({
   const normalizedPlaylistTitleQuery = playlistTitleQuery.trim().toLowerCase();
   const searchablePlaylists = useMemo(
     () => {
-      const filtered = streamPlaylists.filter((playlist) =>
-        normalizedPlaylistTitleQuery.length === 0 ? true : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery)
-      );
+      const filtered = streamPlaylists.filter((playlist) => {
+        if (isHiddenProgramPlaylist(playlist.id)) return false;
+        return normalizedPlaylistTitleQuery.length === 0
+          ? true
+          : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery);
+      });
       return [...filtered].sort((a, b) => {
         const aUnlocked = !!a.is_unlocked;
         const bUnlocked = !!b.is_unlocked;
@@ -621,7 +628,7 @@ export function ProgramsCourseSection({
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;
     const grad = PROGRAM_CARD_BACKGROUNDS[i % PROGRAM_CARD_BACKGROUNDS.length];
-    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url);
+    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id);
     const comingSoon = !!pl.is_coming_soon;
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];

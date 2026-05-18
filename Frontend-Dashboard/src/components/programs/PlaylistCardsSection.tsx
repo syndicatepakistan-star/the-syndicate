@@ -9,6 +9,11 @@ import {
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { focusProgramCardWithRetries } from "@/lib/programCardScroll";
+import {
+  getProgramPlaylistThumbnail,
+  isHiddenProgramPlaylist,
+} from "@/lib/programPlaylistThumbnails";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
@@ -149,7 +154,10 @@ export function PlaylistCardsSection({
     })();
   }, []);
 
-  const visiblePlaylists = useMemo(() => playlists.filter((pl) => !pl.is_coming_soon), [playlists]);
+  const visiblePlaylists = useMemo(
+    () => playlists.filter((pl) => !pl.is_coming_soon && !isHiddenProgramPlaylist(pl.id)),
+    [playlists]
+  );
   const businessPsychologyPlaylists = useMemo(
     () => visiblePlaylists.filter((pl) => pl.category !== "business_model"),
     [visiblePlaylists]
@@ -168,30 +176,31 @@ export function PlaylistCardsSection({
   }, [businessPsychologyPlaylists, businessModelPlaylists]);
 
   useEffect(() => {
-    if (!highlightPlaylistId || highlightHandledRef.current || !visiblePlaylists.length) return;
+    highlightHandledRef.current = false;
+  }, [highlightPlaylistId]);
+
+  useEffect(() => {
+    if (!highlightPlaylistId || !visiblePlaylists.length) return;
     const target = visiblePlaylists.find((pl) => pl.id === highlightPlaylistId);
     if (!target) return;
+    if (highlightHandledRef.current) return;
+
     highlightHandledRef.current = true;
     setHighlightedPlaylistId(target.id);
-    const scrollToCard = () => {
-      const el = document.getElementById(`program-playlist-${target.id}`);
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const cancelScroll = focusProgramCardWithRetries(target.id);
+    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
+
+    return () => {
+      cancelScroll();
+      window.clearTimeout(clearHighlight);
     };
-    requestAnimationFrame(() => {
-      scrollToCard();
-      window.setTimeout(() => {
-        setDescriptionModalPlaylist(target);
-        scrollToCard();
-      }, 420);
-    });
-    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 5200);
-    return () => window.clearTimeout(clearHighlight);
   }, [highlightPlaylistId, visiblePlaylists]);
 
   useEffect(() => {
     // Warm first visible cover images so public route transitions feel snappier.
     const topCovers = visiblePlaylists
-      .map((pl) => resolveDjangoMediaUrl(pl.cover_image_url))
+      .map((pl) => resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id))
       .filter((src): src is string => Boolean(src))
       .slice(0, 8);
     topCovers.forEach((src) => {
@@ -203,47 +212,52 @@ export function PlaylistCardsSection({
 
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
-    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url);
+    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id);
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
     const price = parseNumber(pl.price);
     const unlocked = !!pl.is_unlocked;
     const locked = !unlocked;
+    const isSpotlight = highlightedPlaylistId === pl.id;
     return (
       <article
         id={`program-playlist-${pl.id}`}
+        data-program-playlist-id={pl.id}
         key={`playlist-${pl.id}`}
         className={cn(
           "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left sm:min-h-[27rem]",
-          "rounded-3xl border-2 scroll-mt-28 transition-shadow duration-500",
-          theme.dominantBorder,
-          theme.glow,
-          highlightedPlaylistId === pl.id &&
-            "ring-4 ring-amber-300/90 shadow-[0_0_0_2px_rgba(251,191,36,0.55),0_0_48px_rgba(251,191,36,0.45)]"
+          "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
+          !isSpotlight && theme.dominantBorder,
+          !isSpotlight && theme.glow,
+          isSpotlight && "program-card-attract border-amber-300/80"
         )}
       >
-        <span className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)} aria-hidden />
-        <span
-          className={cn(
-            "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
-            theme.spark
-          )}
-          aria-hidden
-        />
-        <span
-          className={cn(
-            "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px]",
-            theme.spark
-          )}
-          aria-hidden
-        />
-        <span className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen" aria-hidden />
-        <span
-          className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r",
-            theme.ring
-          )}
-          aria-hidden
-        />
+        {!isSpotlight ? (
+          <>
+            <span className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)} aria-hidden />
+            <span
+              className={cn(
+                "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
+                theme.spark
+              )}
+              aria-hidden
+            />
+            <span
+              className={cn(
+                "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px]",
+                theme.spark
+              )}
+              aria-hidden
+            />
+            <span className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen" aria-hidden />
+            <span
+              className={cn(
+                "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r",
+                theme.ring
+              )}
+              aria-hidden
+            />
+          </>
+        ) : null}
         <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
           <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-3 sm:p-3.5">
             <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[17rem] sm:flex-1">

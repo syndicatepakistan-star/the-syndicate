@@ -1,4 +1,8 @@
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+import {
+  GLOBE_FILENAME_TO_PROGRAM_ID,
+  programPlaylistDeepLink,
+} from "@/lib/programPlaylistThumbnails";
 
 export type ProgramGalleryImage = {
   src: string;
@@ -32,7 +36,7 @@ function normalizeTitle(value: string): string {
 }
 
 function programHref(programId: number): string {
-  return `/program/${programId}`;
+  return programPlaylistDeepLink(programId);
 }
 
 function scoreMatch(candidate: string, playlistTitle: string): number {
@@ -56,6 +60,9 @@ export function matchPlaylistIdForGalleryImage(
   alt: string,
   playlists: StreamPlaylistListItem[]
 ): number | undefined {
+  const mapped = GLOBE_FILENAME_TO_PROGRAM_ID[fileName];
+  if (mapped != null) return mapped;
+
   if (!playlists.length) return undefined;
 
   const baseName = fileName.replace(/\.[^/.]+$/, "");
@@ -84,7 +91,9 @@ export function attachProgramLinksToGalleryImages(
   playlists: StreamPlaylistListItem[]
 ): ProgramGalleryImage[] {
   return images.map((img) => {
-    const programId = matchPlaylistIdForGalleryImage(img.fileName, img.alt, playlists);
+    const programId =
+      GLOBE_FILENAME_TO_PROGRAM_ID[img.fileName] ??
+      matchPlaylistIdForGalleryImage(img.fileName, img.alt, playlists);
     return {
       ...img,
       programId,

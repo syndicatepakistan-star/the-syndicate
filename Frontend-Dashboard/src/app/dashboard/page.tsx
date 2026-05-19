@@ -1763,13 +1763,15 @@ async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string
   );
   const qrMarkup = `<rect x="${qrFrameX}" y="${qrFrameY}" width="${qrFrameSize}" height="${qrFrameSize}" rx="6" fill="#ffffff" stroke="#bde8ff" stroke-opacity="0.45" stroke-width="1.5"/><image href="${qrDataUrl}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}" preserveAspectRatio="xMidYMid meet"/>`;
   const issued = escapeXml(new Date(cert.issuedAt).toLocaleDateString(undefined, { dateStyle: "long" }));
-  const pageW = 1920;
-  const pageH = 1280;
+  const pageW =
+    typeof window !== "undefined" ? Math.max(320, Math.round(window.innerWidth)) : 1920;
+  const pageH =
+    typeof window !== "undefined" ? Math.max(480, Math.round(window.innerHeight)) : 1080;
   const designW = 1260;
-  const designH = 1080;
-  // Keep certificate proportions fixed by using a single uniform scale.
-  const maxCertW = pageW - 220;
-  const maxCertH = pageH - 84;
+  const designH = 980;
+  // Scale to viewport; compact layout removes dead space between sections.
+  const maxCertW = pageW - 32;
+  const maxCertH = pageH - 32;
   const scale = Math.min(maxCertW / designW, maxCertH / designH);
   const certW = Math.round(designW * scale);
   const certH = Math.round(designH * scale);
@@ -1812,17 +1814,17 @@ async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string
   <rect width="${designW}" height="${designH}" fill="url(#glowRight)"/>
   <rect width="${designW}" height="${designH}" fill="url(#dots)"/>
 
-  <rect x="28" y="28" width="1204" height="1024" rx="22" fill="none" stroke="#7dd3fc" stroke-opacity="0.9" stroke-width="4"/>
-  <rect x="42" y="42" width="1176" height="996" rx="18" fill="none" stroke="#7dd3fc" stroke-opacity="0.45" stroke-width="2"/>
-  <rect x="58" y="58" width="1144" height="964" rx="14" fill="none" stroke="#7dd3fc" stroke-opacity="0.28" stroke-width="2"/>
+  <rect x="28" y="28" width="1204" height="924" rx="22" fill="none" stroke="#7dd3fc" stroke-opacity="0.9" stroke-width="4"/>
+  <rect x="42" y="42" width="1176" height="896" rx="18" fill="none" stroke="#7dd3fc" stroke-opacity="0.45" stroke-width="2"/>
+  <rect x="58" y="58" width="1144" height="868" rx="14" fill="none" stroke="#7dd3fc" stroke-opacity="0.28" stroke-width="2"/>
 
   <path d="M74 74 h48 v4 h-44 v44 h-4 z" fill="#fb7185"/>
   <path d="M1186 74 h-48 v4 h44 v44 h4 z" fill="#fb7185"/>
-  <path d="M74 1006 h48 v-4 h-44 v-44 h-4 z" fill="#fb7185"/>
-  <path d="M1186 1006 h-48 v-4 h44 v-44 h4 z" fill="#fb7185"/>
+  <path d="M74 906 h48 v-4 h-44 v-44 h-4 z" fill="#fb7185"/>
+  <path d="M1186 906 h-48 v-4 h44 v-44 h4 z" fill="#fb7185"/>
 
-  <image href="${safeBase}/assets/logo.webp" x="84" y="82" width="250" height="98" preserveAspectRatio="xMidYMid meet"/>
-  <text x="372" y="132" fill="#fdd02f" font-size="22" class="tech" font-weight="700" letter-spacing="3">MONEY · POWER · HONOUR · FREEDOM</text>
+  <image href="${safeBase}/assets/logo.webp" x="84" y="100" width="250" height="98" preserveAspectRatio="xMidYMid meet"/>
+  <text x="372" y="150" fill="#fdd02f" font-size="22" class="tech" font-weight="700" letter-spacing="3">MONEY · POWER · HONOUR · FREEDOM</text>
 
   <text x="630" y="250" fill="#cffafe" font-size="62" class="tech" font-weight="700" text-anchor="middle">SYN TOKEN</text>
   <text x="630" y="286" fill="#dbeafe" font-size="20" class="tech" text-anchor="middle" letter-spacing="3">OF ACHIEVEMENT</text>
@@ -1835,32 +1837,32 @@ async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string
   <text x="1182" y="358" fill="#bde8ff" font-size="14" class="tech" letter-spacing="1.8" text-anchor="end">TOKEN QR</text>
   ${qrMarkup}
 
-  <rect x="74" y="450" width="1112" height="158" rx="12" fill="rgba(5,8,22,0.55)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
-  <text x="630" y="484" fill="#bde8ff" font-size="18" class="tech" letter-spacing="2" text-anchor="middle">CREDENTIAL OVERVIEW</text>
-  <text x="630" y="520" fill="#b8c6d9" font-size="18" class="body" font-weight="700" text-anchor="middle">
+  <rect x="74" y="450" width="1112" height="118" rx="12" fill="rgba(5,8,22,0.55)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
+  <text x="630" y="482" fill="#bde8ff" font-size="18" class="tech" letter-spacing="2" text-anchor="middle">CREDENTIAL OVERVIEW</text>
+  <text x="630" y="514" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
     Awarded for high-performance completion of the ${course} track with verified execution milestones.
   </text>
-  <text x="630" y="552" fill="#b8c6d9" font-size="18" class="body" font-weight="700" text-anchor="middle">
+  <text x="630" y="542" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
     Strategic delivery consistency, secure credential validation, and cross-network capability are confirmed.
   </text>
-  <text x="630" y="584" fill="#b8c6d9" font-size="18" class="body" font-weight="700" text-anchor="middle">
+  <text x="630" y="570" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
     Holder authorization is recognized across Syndicate partner ecosystems for verified performance.
   </text>
 
-  <rect x="74" y="620" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
-  <text x="100" y="643" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">ISSUED</text>
-  <text x="100" y="668" fill="#e2f4ff" font-size="14" class="tech">${issued}</text>
+  <rect x="74" y="588" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
+  <text x="100" y="611" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">ISSUED</text>
+  <text x="100" y="636" fill="#e2f4ff" font-size="14" class="tech">${issued}</text>
 
-  <rect x="640" y="620" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
-  <text x="666" y="643" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">STATUS</text>
-  <text x="666" y="668" fill="#9bf38d" font-size="14" class="tech" font-weight="700">Verified</text>
+  <rect x="640" y="588" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
+  <text x="666" y="611" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">STATUS</text>
+  <text x="666" y="636" fill="#9bf38d" font-size="14" class="tech" font-weight="700">Verified</text>
 
-  <rect x="74" y="690" width="1112" height="44" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
-  <text x="100" y="718" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">TOKEN ID</text>
-  <text x="238" y="718" fill="#dff7ff" font-size="14" class="tech">${certId}</text>
+  <rect x="74" y="658" width="1112" height="44" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
+  <text x="100" y="686" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">TOKEN ID</text>
+  <text x="238" y="686" fill="#dff7ff" font-size="14" class="tech">${certId}</text>
 
-  <image href="${safeBase}/assets/coin-gold.png" x="500" y="748" width="260" height="220" preserveAspectRatio="xMidYMid meet"/>
-  <text x="630" y="992" fill="#bde8ff" font-size="16" class="tech" text-anchor="middle" letter-spacing="2">SYNDICATE CREDENTIAL TOKEN</text>
+  <image href="${safeBase}/assets/coin-gold.png" x="500" y="712" width="260" height="200" preserveAspectRatio="xMidYMid meet"/>
+  <text x="630" y="918" fill="#bde8ff" font-size="16" class="tech" text-anchor="middle" letter-spacing="2">SYNDICATE CREDENTIAL TOKEN</text>
   </g>
 </svg>`;
 }

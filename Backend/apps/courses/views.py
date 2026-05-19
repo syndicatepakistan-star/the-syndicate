@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
@@ -115,6 +117,22 @@ class VideoProgressView(APIView):
         return Response(VideoProgressSerializer(obj).data)
 
 
+def _certificate_verify_payload(*, token_id: str, title: str, holder_name: str, issued_at, kind: str) -> dict:
+    return {
+        "verified": True,
+        "status": "certified",
+        "message": "You are Syndicate Certified",
+        "token_id": token_id,
+        "kind": kind,
+        "title": title,
+        "course_title": title,
+        "playlist_title": title,
+        "holder_name": holder_name,
+        "issued_at": issued_at,
+    }
+
+
+@method_decorator(csrf_exempt, name="dispatch")
 class CourseCertificateVerifyView(APIView):
     permission_classes = [AllowAny]
 
@@ -137,14 +155,31 @@ class CourseCertificateVerifyView(APIView):
         )
         if cert:
             return Response(
-                {
-                    "verified": True,
-                    "status": "certified",
-                    "message": "You are Syndicate Certified",
-                    "token_id": cert.token_id,
-                    "course_title": cert.course.title,
-                    "issued_at": cert.issued_at,
-                }
+                _certificate_verify_payload(
+                    token_id=cert.token_id,
+                    title=cert.course.title,
+                    holder_name="",
+                    issued_at=cert.issued_at,
+                    kind="course",
+                )
+            )
+
+        from apps.video_streaming.models import StreamPlaylistCertificate
+
+        playlist_cert = (
+            StreamPlaylistCertificate.objects.select_related("playlist")
+            .filter(token_id=raw_token, status=StreamPlaylistCertificate.Status.CERTIFIED)
+            .first()
+        )
+        if playlist_cert:
+            return Response(
+                _certificate_verify_payload(
+                    token_id=playlist_cert.token_id,
+                    title=playlist_cert.playlist.title,
+                    holder_name=playlist_cert.holder_name,
+                    issued_at=playlist_cert.issued_at,
+                    kind="playlist",
+                )
             )
 
         return Response(
@@ -154,3 +189,49 @@ class CourseCertificateVerifyView(APIView):
                 "message": "You are not Syndicate Certified",
             }
         )
+
+
+class MyCertificatesListView(APIView):
+    permission_classes = [IsAuthenticatedStrict]
+
+    def get(self, request):
+        from apps.video_streaming.models import StreamPlaylistCertificate
+
+        rows: list[dict] = []
+        for cert in (
+            StreamPlaylistCertificate.objects.filter(
+                user=request.user,
+                status=StreamPlaylistCertificate.Status.CERTIFIED,
+            )
+            .select_related("playlist")
+            .order_by("-issued_at", "-id")
+        ):
+            rows.append(
+                {
+                    "kind": "playlist",
+                    "certificate_id": cert.token_id,
+                    "token_id": cert.token_id,
+                    "title": cert.playlist.title,
+                    "name": cert.holder_name,
+                    "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+                }
+            )
+        for cert in (
+            CourseCertificate.objects.filter(
+                user=request.user,
+                status=CourseCertificate.Status.CERTIFIED,
+            )
+            .select_related("course")
+            .order_by("-issued_at", "-id")
+        ):
+            rows.append(
+                {
+                    "kind": "course",
+                    "certificate_id": cert.token_id,
+                    "token_id": cert.token_id,
+                    "title": cert.course.title,
+                    "name": "",
+                    "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+                }
+            )
+        return Response(rows)

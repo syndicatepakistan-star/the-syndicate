@@ -11,6 +11,8 @@ import {
   type StreamVideoListItem
 } from "@/lib/streaming-api";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { issuePlaylistCertificate } from "@/lib/certificates-api";
+import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
@@ -134,6 +136,21 @@ function totalRangeDuration(ranges: Array<{ start: number; end: number }>, maxDu
   return Math.max(0, total);
 }
 
+const SETTINGS_CERTIFICATES_ID = "settings-certificates";
+
+function goToSettingsCertificates() {
+  requestDashboardShellNav("settings");
+  window.setTimeout(() => {
+    const el = document.getElementById(SETTINGS_CERTIFICATES_ID);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const params = new URLSearchParams(window.location.search);
+    params.set("section", "settings");
+    const qs = params.toString();
+    const next = `${window.location.pathname}?${qs}#${SETTINGS_CERTIFICATES_ID}`;
+    window.history.replaceState(null, "", next);
+  }, 200);
+}
+
 export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const [playlist, setPlaylist] = useState<StreamPlaylistDetail | null>(null);
   const [playback, setPlayback] = useState<StreamPayload | null>(null);
@@ -158,6 +175,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [certificateName, setCertificateName] = useState("");
   const [certificateMessage, setCertificateMessage] = useState<string | null>(null);
+  const [certificateSubmitting, setCertificateSubmitting] = useState(false);
   const [progressHydrated, setProgressHydrated] = useState(false);
   /** Snapshot for HTML5 resume only; must not follow live `timeupdate` or the player reloads every tick. */
   const [resumeStartSeconds, setResumeStartSeconds] = useState(0);
@@ -486,27 +504,39 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     [activeProgress?.durationSeconds, activeVideo?.id]
   );
 
-  const handleApplyForToken = useCallback(() => {
+  const handleApplyForToken = useCallback(async () => {
     const displayName = certificateName.trim();
     if (!displayName) {
       setCertificateMessage("Please enter your name for the certificate.");
       return;
     }
-    const certificateId = `SYN-${playlistId}-${Date.now().toString(36).toUpperCase()}`;
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        `${CERTIFICATE_PREFIX}:${playlistId}`,
-        JSON.stringify({
-          certificateId,
-          playlistTitle: playlist?.title ?? "Playlist",
-          name: displayName,
-          issuedAt: new Date().toISOString(),
-        })
-      );
-      window.dispatchEvent(new Event("syn-certificates-updated"));
+    setCertificateSubmitting(true);
+    setCertificateMessage(null);
+    try {
+      const issued = await issuePlaylistCertificate(playlistId, displayName);
+      const certificateId = issued.token_id || issued.certificate_id;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          `${CERTIFICATE_PREFIX}:${playlistId}`,
+          JSON.stringify({
+            certificateId,
+            playlistTitle: issued.playlist_title || playlist?.title || "Playlist",
+            name: issued.holder_name || displayName,
+            issuedAt: issued.issued_at || new Date().toISOString(),
+          })
+        );
+        window.dispatchEvent(new Event("syn-certificates-updated"));
+      }
+      setShowApplyModal(false);
+      setCertificateName("");
+      setCertificateMessage(null);
+      goToSettingsCertificates();
+    } catch (e) {
+      setCertificateMessage(e instanceof Error ? e.message : "Could not issue certificate.");
+    } finally {
+      setCertificateSubmitting(false);
     }
-    setCertificateMessage(`Certificate issued for ${displayName}. Certificate ID: ${certificateId}`);
-  }, [certificateName, playlist?.title, playlistId]);
+  }, [certificateName, playlistId, playlist?.title]);
 
   if (loading) {
     return (
@@ -793,10 +823,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               </button>
               <button
                 type="button"
-                onClick={handleApplyForToken}
-                className="rounded-md border border-emerald-300/50 bg-emerald-500/18 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-100"
+                onClick={() => void handleApplyForToken()}
+                disabled={certificateSubmitting}
+                className="rounded-md border border-emerald-300/50 bg-emerald-500/18 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Submit
+                {certificateSubmitting ? "Issuing…" : "Submit"}
               </button>
             </div>
           </div>

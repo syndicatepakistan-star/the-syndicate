@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.courses.models import Course
+from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_selection_completed, king_selection_required
 from apps.portal.models import KingProgramSelection, Mission, Note, Reminder, SocialLink, UserPlanPurchase
 from apps.video_streaming.models import StreamPlaylistItem, StreamPlaylistPurchase, StreamPlaylist
@@ -51,6 +52,7 @@ class MeView(views.APIView):
     permission_classes = [IsAuthenticatedStrict]
 
     def get(self, request):
+        reconcile_dashboard_entitlement_from_plan_purchases(request.user)
         return Response(UserMeSerializer(request.user).data)
 
 
@@ -64,6 +66,7 @@ class BillingPurchasesView(views.APIView):
 
     def get(self, request):
         user = request.user
+        reconcile_dashboard_entitlement_from_plan_purchases(user)
         rows: list[dict] = []
         for p in (
             StreamPlaylistPurchase.objects.filter(user=user)

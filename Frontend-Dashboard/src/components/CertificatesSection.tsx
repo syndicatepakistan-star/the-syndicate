@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { Download } from 'lucide-react'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
+import { verifyCertificateToken } from '@/lib/certificates-api'
 
 type Feature = {
   title: string
@@ -197,18 +198,19 @@ export default function CertificatesSection({
     setVerifyMessage(null)
     setVerifyOk(null)
     try {
-      const res = await fetch('/api/courses/certificates/verify/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token_id: token }),
-      })
-      const payload = (await res.json().catch(() => ({}))) as {
-        verified?: boolean
-        message?: string
-      }
+      const payload = await verifyCertificateToken(token)
       const verified = Boolean(payload.verified)
       setVerifyOk(verified)
-      setVerifyMessage(payload.message || (verified ? 'You are Syndicate Certified' : 'You are not Syndicate Certified'))
+      if (verified) {
+        const title = (payload.title || payload.playlist_title || payload.course_title || '').trim()
+        const holder = (payload.holder_name || '').trim()
+        const parts = [payload.message || 'You are Syndicate Certified']
+        if (title) parts.push(title)
+        if (holder) parts.push(`Issued to ${holder}`)
+        setVerifyMessage(parts.join(' · '))
+      } else {
+        setVerifyMessage(payload.message || 'You are not Syndicate Certified')
+      }
     } catch {
       setVerifyOk(false)
       setVerifyMessage('Verification service is unavailable. Try again.')

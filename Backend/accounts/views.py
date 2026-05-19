@@ -354,29 +354,9 @@ def _affiliate_attribution_payload(session_meta: dict) -> dict:
 
 
 def _apply_purchased_plan(user: User, plan: str) -> None:
-  plan = (plan or "").strip().lower()
-  if plan not in ("bundle", "king", "pawn", "knight"):
-    return
-  ent, _ = UserDashboardEntitlement.objects.get_or_create(user=user)
-  current = ent.access_tier
-  target = current
-  if plan == "bundle":
-    # Never downgrade an existing stronger tier (e.g., King).
-    if current in (UserDashboardEntitlement.AccessTier.NONE, UserDashboardEntitlement.AccessTier.MONEY_MASTERY):
-      target = UserDashboardEntitlement.AccessTier.MONEY_MASTERY
-    for course in Course.objects.filter(is_published=True):
-      CourseEnrollment.objects.get_or_create(user=user, course=course)
-  elif plan == "king":
-    # King is stronger than Money Mastery and should stay active once bought.
-    if current != UserDashboardEntitlement.AccessTier.FULL:
-      target = UserDashboardEntitlement.AccessTier.KING
-  elif plan in ("pawn", "knight"):
-    # Lower tiers must not remove already purchased higher-tier access.
-    target = current
+  from apps.portal.entitlements import apply_purchased_plan
 
-  if target != current:
-    ent.access_tier = target
-    ent.save(update_fields=["access_tier", "updated_at"])
+  apply_purchased_plan(user, plan)
 
 
 def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
@@ -423,6 +403,12 @@ def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, pai
     _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
   except Exception:
     logger.exception("Checkout succeeded but plan purchase record write failed for user_id=%s plan=%s", user.id, plan_sel)
+  try:
+    from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
+
+    reconcile_dashboard_entitlement_from_plan_purchases(user)
+  except Exception:
+    logger.exception("Checkout succeeded but entitlement reconcile failed for user_id=%s", user.id)
 
 
 def _safe_affiliate_referral_ids(user: User) -> dict[str, str]:

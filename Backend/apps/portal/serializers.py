@@ -3,6 +3,7 @@ from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_selection_completed, king_selection_required, king_selection_total_selected
 from apps.portal.models import Mission, Note, PortalPermission, PortalRole, Reminder, SocialLink, UserDashboardEntitlement
 from apps.portal.rbac import user_permission_codenames
@@ -81,9 +82,7 @@ class UserMeSerializer(serializers.ModelSerializer):
         tier = self._stored_entitlement_tier(obj)
         unlocked = {"monk": False, "resources": False, "goals": False, "dashboard": False}
         if tier == UserDashboardEntitlement.AccessTier.KING:
-            if king_selection_required(obj):
-                # Keep dashboard open so the mandatory King selection overlay can be completed there.
-                return {"monk": True, "resources": True, "goals": True, "dashboard": False}
+            # King nav stays open; program selection gates course/stream access, not sidebar.
             return unlocked
         if tier == UserDashboardEntitlement.AccessTier.FULL:
             return unlocked
@@ -120,6 +119,7 @@ class SyndicateTokenObtainPairSerializer(TokenObtainPairSerializer):
             if match:
                 attrs[self.username_field] = match.get_username()
         data = super().validate(attrs)
+        reconcile_dashboard_entitlement_from_plan_purchases(self.user)
         data["user"] = UserMeSerializer(self.user).data
         update_last_login(None, self.user)
         return data

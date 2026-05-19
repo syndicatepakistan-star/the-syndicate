@@ -23,6 +23,7 @@ from apps.portal.models import UserDashboardEntitlement
 from apps.portal.king_access import king_allowed_playlist_ids
 from apps.video_streaming.entitlements import (
     playlist_included_by_entitlement,
+    user_can_access_stream_playlist,
     user_stream_playlists_unlocked_by_entitlement,
 )
 from apps.video_streaming.playback_access import (
@@ -39,6 +40,7 @@ from apps.video_streaming.services.playback_delivery import (
 )
 from apps.video_streaming.models import (
     StreamPlaylist,
+    StreamPlaylistCertificate,
     StreamPlaylistItem,
     StreamPlaylistPurchase,
     StreamVideo,
@@ -229,6 +231,54 @@ class StreamPlaylistListView(generics.ListAPIView):
         else:
             ctx["unlocked_playlist_ids"] = set()
         return ctx
+
+
+class StreamPlaylistCertificateIssueView(APIView):
+    """Issue (or refresh) a SYN token for a completed playlist."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, playlist_id: int):
+        playlist = get_object_or_404(StreamPlaylist, pk=playlist_id, is_published=True)
+        if not user_can_access_stream_playlist(request.user, playlist):
+            return Response({"detail": "Playlist not unlocked."}, status=status.HTTP_403_FORBIDDEN)
+
+        holder_name = str((request.data or {}).get("holder_name", "")).strip()
+        if not holder_name:
+            return Response({"detail": "holder_name is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(holder_name) > 255:
+            return Response({"detail": "holder_name is too long."}, status=status.HTTP_400_BAD_REQUEST)
+
+        cert, created = StreamPlaylistCertificate.objects.get_or_create(
+            user=request.user,
+            playlist=playlist,
+            defaults={
+                "holder_name": holder_name,
+                "status": StreamPlaylistCertificate.Status.CERTIFIED,
+            },
+        )
+        if not created:
+            update_fields = ["updated_at"]
+            if cert.holder_name != holder_name:
+                cert.holder_name = holder_name
+                update_fields.append("holder_name")
+            if cert.status != StreamPlaylistCertificate.Status.CERTIFIED:
+                cert.status = StreamPlaylistCertificate.Status.CERTIFIED
+                update_fields.append("status")
+            cert.save(update_fields=update_fields)
+
+        return Response(
+            {
+                "certificate_id": cert.token_id,
+                "token_id": cert.token_id,
+                "playlist_id": playlist.id,
+                "playlist_title": playlist.title,
+                "holder_name": cert.holder_name,
+                "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+                "created": created,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 
 class StreamPlaylistDetailView(generics.RetrieveAPIView):

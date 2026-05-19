@@ -27,6 +27,7 @@ import { MembershipOfferLanding } from "@/components/membership/MembershipOfferL
 import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
 import { SupportSection } from "@/components/dashboard/SupportSection";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
+import { fetchMyCertificates } from "@/lib/certificates-api";
 import { fetchBillingPurchaseHistory, type StreamPlaylistPurchaseHistoryItem } from "@/lib/streaming-api";
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
 import {
@@ -1883,8 +1884,9 @@ function SettingsCertificatesSection() {
   const [certs, setCerts] = useState<IssuedCertificate[]>([]);
 
   useEffect(() => {
-    const readCertificates = () => {
-      if (typeof window === "undefined") return;
+    let cancelled = false;
+    const readLocalCertificates = (): IssuedCertificate[] => {
+      if (typeof window === "undefined") return [];
       const rows: IssuedCertificate[] = [];
       for (let i = 0; i < window.localStorage.length; i += 1) {
         const key = window.localStorage.key(i);
@@ -1904,16 +1906,44 @@ function SettingsCertificatesSection() {
           // ignore bad rows
         }
       }
+      return rows;
+    };
+
+    const loadCertificates = async () => {
+      const localRows = readLocalCertificates();
+      const apiRows = await fetchMyCertificates().catch(() => []);
+      if (cancelled) return;
+      const merged = new Map<string, IssuedCertificate>();
+      for (const row of apiRows) {
+        const certificateId = String(row.certificate_id || row.token_id || "").trim();
+        if (!certificateId) continue;
+        merged.set(certificateId, {
+          key: `api:${certificateId}`,
+          certificateId,
+          playlistTitle: String(row.title || "").trim(),
+          name: String(row.name || "").trim(),
+          issuedAt: String(row.issued_at || ""),
+        });
+      }
+      for (const row of localRows) {
+        if (!merged.has(row.certificateId)) merged.set(row.certificateId, row);
+      }
+      const rows = Array.from(merged.values());
       rows.sort((a, b) => +new Date(b.issuedAt) - +new Date(a.issuedAt));
       setCerts(rows);
     };
-    readCertificates();
-    window.addEventListener("syn-certificates-updated", readCertificates);
-    return () => window.removeEventListener("syn-certificates-updated", readCertificates);
+
+    void loadCertificates();
+    const onUpdated = () => void loadCertificates();
+    window.addEventListener("syn-certificates-updated", onUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("syn-certificates-updated", onUpdated);
+    };
   }, []);
 
   return (
-    <section className="w-full">
+    <section id="settings-certificates" className="w-full scroll-mt-24">
       <div className="rounded-xl border border-sky-300/28 bg-[#040814]/85 p-[clamp(0.8rem,1.6vw,1.2rem)] shadow-[0_0_0_1px_rgba(56,189,248,0.08),0_0_18px_rgba(56,189,248,0.1)]">
         <div className="mb-3 border-b border-sky-300/20 pb-3">
           <h2 className="text-[clamp(1.1rem,1.2vw+0.75rem,1.5rem)] font-black uppercase tracking-[0.12em] text-sky-100">

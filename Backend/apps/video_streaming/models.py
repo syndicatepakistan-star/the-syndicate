@@ -222,3 +222,54 @@ class StreamPlaylistPurchase(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user_id}:{self.playlist_id}:{self.status}"
+
+
+class StreamPlaylistCertificate(models.Model):
+    """SYN token issued after a user completes a stream playlist."""
+
+    class Status(models.TextChoices):
+        CERTIFIED = "certified", "Certified"
+        REVOKED = "revoked", "Revoked"
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="stream_playlist_certificates",
+    )
+    playlist = models.ForeignKey(
+        StreamPlaylist,
+        on_delete=models.CASCADE,
+        related_name="certificates",
+    )
+    token_id = models.CharField(max_length=32, unique=True, db_index=True)
+    holder_name = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.CERTIFIED,
+        db_index=True,
+    )
+    issued_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "playlist"],
+                name="video_streaming_certificate_user_playlist",
+            ),
+        ]
+        ordering = ["-issued_at", "-id"]
+
+    def save(self, *args, **kwargs):
+        if not self.token_id:
+            from apps.courses.models import _generate_certificate_token_id
+
+            candidate = _generate_certificate_token_id()
+            while StreamPlaylistCertificate.objects.filter(token_id=candidate).exclude(pk=self.pk).exists():
+                candidate = _generate_certificate_token_id()
+            self.token_id = candidate
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.token_id}:{self.playlist_id}"

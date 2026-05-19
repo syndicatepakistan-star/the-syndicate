@@ -4,7 +4,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
+from apps.video_streaming.models import (
+    StreamPlaylist,
+    StreamPlaylistCertificate,
+    StreamPlaylistItem,
+    StreamPlaylistPurchase,
+    StreamVideo,
+)
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -141,3 +147,12 @@ class StreamVideoAdmin(admin.ModelAdmin):
             obj.last_error = ""
             obj.hls_path = ""
         super().save_model(request, obj, form, change)
+
+
+@admin.register(StreamPlaylistCertificate)
+class StreamPlaylistCertificateAdmin(admin.ModelAdmin):
+    list_display = ("token_id", "holder_name", "playlist", "user", "status", "issued_at")
+    list_filter = ("status",)
+    search_fields = ("token_id", "holder_name", "user__email", "user__username", "playlist__title")
+    readonly_fields = ("token_id", "issued_at", "updated_at")
+    autocomplete_fields = ("user", "playlist")

@@ -1,4 +1,5 @@
 import { portalFetch, resolveClientApiUrl } from "@/lib/portal-api";
+import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
 
 export type StreamVideoPlayerLayout = "auto" | "landscape" | "portrait";
 
@@ -74,7 +75,7 @@ export type StreamPlaylistPurchaseHistoryItem = {
 const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYBACK_CACHE_TTL_MS = 20 * 1000;
-const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v1";
+const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
 
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
 const playlistDetailCache = new Map<number, { at: number; data: StreamPlaylistDetail }>();
@@ -107,6 +108,14 @@ function readPlaylistsSessionCache(): StreamPlaylistListItem[] | null {
   } catch {
     return null;
   }
+}
+
+function normalizePlaylistItem<T extends StreamPlaylistListItem>(item: T): T {
+  return { ...item, title: formatProgramDisplayTitle(item.title) };
+}
+
+function normalizePlaylistList(list: StreamPlaylistListItem[]): StreamPlaylistListItem[] {
+  return list.map((item) => normalizePlaylistItem(item));
 }
 
 function writePlaylistsSessionCache(data: StreamPlaylistListItem[]): void {
@@ -150,13 +159,14 @@ export async function fetchStreamPlaylists(options?: { allowPublicFallback?: boo
   }
   const sessionCached = readPlaylistsSessionCache();
   if (sessionCached) {
-    playlistsCache = { at: Date.now(), data: sessionCached };
-    return sessionCached;
+    const normalized = normalizePlaylistList(sessionCached);
+    playlistsCache = { at: Date.now(), data: normalized };
+    return normalized;
   }
 
   const res = await portalFetch<StreamPlaylistListItem[]>("/api/streaming/playlists/");
   if (res.ok) {
-    const list = Array.isArray(res.data) ? res.data : [];
+    const list = normalizePlaylistList(Array.isArray(res.data) ? res.data : []);
     playlistsCache = { at: Date.now(), data: list };
     writePlaylistsSessionCache(list);
     return list;
@@ -187,7 +197,8 @@ export async function fetchPublicStreamPlaylists(): Promise<StreamPlaylistListIt
   if (!res.ok) {
     throw new Error(errMessage(res.status, data, "Could not load public playlists."));
   }
-  return Array.isArray(data) ? (data as StreamPlaylistListItem[]) : [];
+  const list = Array.isArray(data) ? (data as StreamPlaylistListItem[]) : [];
+  return normalizePlaylistList(list);
 }
 
 export async function createPlaylistCheckoutSession(
@@ -254,7 +265,7 @@ export async function fetchBillingPurchaseHistory(): Promise<StreamPlaylistPurch
 export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlaylistDetail> {
   const cached = playlistDetailCache.get(id);
   if (cached && isFresh(cached.at, PLAYLIST_DETAIL_CACHE_TTL_MS)) {
-    return cached.data;
+    return normalizePlaylistItem(cached.data);
   }
   const res = await portalFetch<StreamPlaylistDetail>(`/api/streaming/playlists/${id}/`);
   if (!res.ok) {
@@ -266,7 +277,11 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
       )
     );
   }
-  const detail = res.data as StreamPlaylistDetail;
+  const raw = res.data as StreamPlaylistDetail;
+  const detail: StreamPlaylistDetail = {
+    ...raw,
+    title: formatProgramDisplayTitle(raw.title),
+  };
   playlistDetailCache.set(id, { at: Date.now(), data: detail });
   return detail;
 }

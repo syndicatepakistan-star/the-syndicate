@@ -43,7 +43,7 @@ const FEATURED_PROGRAM_IMAGES = [
   { src: courseImage('canvics-to-canva.png'), alt: 'Graphics Design using Canva' },
   { src: courseImage('flutter-app-building.png'), alt: 'App Building using Flutter' },
   { src: courseImage('automaton-name-change.png'), alt: 'AI Automations' },
-  { src: courseImage('new-project.png'), alt: 'Crypto Trading with Technical Analysis' },
+  { src: courseImage('new-project.png'), alt: 'Trading with Technical Analysis' },
   { src: courseImage('dystopian-demand.png'), alt: 'Print on Demand Clothing' },
   { src: courseImage('make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0.png'), alt: 'Python Programming' },
   { src: courseImage('new-project (12).png'), alt: 'Building Apps using React JS' },

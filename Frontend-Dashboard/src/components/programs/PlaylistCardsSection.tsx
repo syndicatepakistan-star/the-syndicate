@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
@@ -30,6 +30,8 @@ const PROGRAM_CARD_BACKGROUNDS: readonly string[] = [
 
 const PLAYLIST_CARD_THEMES = [
   {
+    spotlightA: "217,70,239",
+    spotlightB: "139,92,246",
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(196,181,253,0.42),0_0_58px_rgba(139,92,246,0.5),0_0_110px_rgba(217,70,239,0.26)]",
     ring: "from-violet-300/95 via-purple-400/95 to-fuchsia-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(217,70,239,0.42)_0%,rgba(139,92,246,0.28)_35%,rgba(0,0,0,0)_75%)]",
@@ -39,6 +41,8 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-fuchsia-300/75",
   },
   {
+    spotlightA: "34,211,238",
+    spotlightB: "14,165,233",
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(103,232,249,0.42),0_0_58px_rgba(34,211,238,0.5),0_0_110px_rgba(14,165,233,0.24)]",
     ring: "from-cyan-300/95 via-sky-400/95 to-blue-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.4)_0%,rgba(14,165,233,0.28)_35%,rgba(0,0,0,0)_75%)]",
@@ -48,6 +52,8 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-cyan-300/75",
   },
   {
+    spotlightA: "52,211,153",
+    spotlightB: "16,185,129",
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(110,231,183,0.42),0_0_58px_rgba(52,211,153,0.5),0_0_110px_rgba(16,185,129,0.24)]",
     ring: "from-emerald-300/95 via-teal-400/95 to-lime-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.42)_0%,rgba(16,185,129,0.28)_35%,rgba(0,0,0,0)_75%)]",
@@ -57,6 +63,8 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-emerald-300/75",
   },
   {
+    spotlightA: "245,158,11",
+    spotlightB: "234,88,12",
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(251,191,36,0.42),0_0_58px_rgba(245,158,11,0.52),0_0_110px_rgba(245,158,11,0.26)]",
     ring: "from-amber-300/95 via-yellow-400/95 to-orange-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.45)_0%,rgba(234,88,12,0.28)_35%,rgba(0,0,0,0)_75%)]",
@@ -220,22 +228,36 @@ export function PlaylistCardsSection({
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
     const price = parseNumber(pl.price);
     const isSpotlight = highlightedPlaylistId === pl.id;
+    const spotlightStyle = isSpotlight
+      ? ({
+          ["--spotlight-a" as string]: theme.spotlightA,
+          ["--spotlight-b" as string]: theme.spotlightB,
+        } as CSSProperties)
+      : undefined;
     return (
       <article
         id={`program-playlist-${pl.id}`}
         data-program-playlist-id={pl.id}
+        data-globe-spotlight={isSpotlight ? "true" : undefined}
         key={`playlist-${pl.id}`}
+        style={spotlightStyle}
         className={cn(
-          "group/card relative flex min-h-[22rem] w-full flex-col overflow-hidden text-left sm:min-h-[27rem]",
+          "group/card relative flex min-h-[22rem] w-full flex-col text-left sm:min-h-[27rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
+          isSpotlight ? "program-card-globe-spotlight" : "overflow-hidden",
           !isSpotlight && theme.dominantBorder,
-          !isSpotlight && theme.glow,
-          isSpotlight && "program-card-hamburger-glow"
+          !isSpotlight && theme.glow
         )}
       >
         {!isSpotlight ? (
           <>
-            <span className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)} aria-hidden />
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]",
+                theme.aura
+              )}
+              aria-hidden
+            />
             <span
               className={cn(
                 "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
@@ -250,7 +272,10 @@ export function PlaylistCardsSection({
               )}
               aria-hidden
             />
-            <span className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen" aria-hidden />
+            <span
+              className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen"
+              aria-hidden
+            />
             <span
               className={cn(
                 "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r",
@@ -356,7 +381,10 @@ export function PlaylistCardsSection({
   };
 
   return (
-    <section className={cn("relative space-y-5 overflow-hidden rounded-3xl px-1 py-2 sm:px-2 sm:py-3", className)}>
+    <section
+      className={cn("relative space-y-5 overflow-hidden rounded-3xl px-1 py-2 sm:px-2 sm:py-3", className)}
+      data-globe-spotlight-active={highlightedPlaylistId != null ? "true" : undefined}
+    >
       <ProgramPlaylistDescriptionModal playlist={descriptionModalPlaylist} onClose={() => setDescriptionModalPlaylist(null)} />
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="absolute left-[-8%] top-[12%] h-[250px] w-[250px] rounded-full bg-fuchsia-500/20 blur-[90px] sm:h-[380px] sm:w-[380px] sm:blur-[125px]" />

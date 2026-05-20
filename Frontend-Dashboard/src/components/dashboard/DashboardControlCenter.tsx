@@ -341,7 +341,7 @@ const ACTIVITY_CATEGORY_CHROME: Record<
     listRow:
       "border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/35 via-black/78 to-black/90 shadow-[0_0_36px_rgba(251,191,36,0.18),inset_0_1px_0_rgba(255,255,255,0.05)]",
     chip:
-      "rounded-lg border-2 border-amber-400/55 bg-amber-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-50 shadow-[0_0_18px_rgba(251,191,36,0.35)] sm:text-[11px]",
+      "rounded-lg border-2 border-amber-400/55 bg-amber-500/20 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-amber-50 shadow-[0_0_18px_rgba(251,191,36,0.35)] sm:text-sm",
     detailShell:
       "border-2 border-amber-400/35 bg-gradient-to-b from-amber-950/20 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(251,191,36,0.08)]",
     typeGlow: "font-bold text-amber-200 [text-shadow:0_0_14px_rgba(251,191,36,0.45)]",
@@ -350,7 +350,7 @@ const ACTIVITY_CATEGORY_CHROME: Record<
     listRow:
       "border-2 border-cyan-400/50 bg-gradient-to-br from-cyan-950/30 via-black/78 to-black/90 shadow-[0_0_36px_rgba(34,211,238,0.16),inset_0_1px_0_rgba(255,255,255,0.05)]",
     chip:
-      "rounded-lg border-2 border-cyan-400/55 bg-cyan-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(34,211,238,0.32)] sm:text-[11px]",
+      "rounded-lg border-2 border-cyan-400/55 bg-cyan-500/15 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(34,211,238,0.32)] sm:text-sm",
     detailShell:
       "border-2 border-cyan-400/35 bg-gradient-to-b from-cyan-950/18 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(34,211,238,0.1)]",
     typeGlow: "font-bold text-cyan-200 [text-shadow:0_0_14px_rgba(34,211,238,0.4)]",
@@ -359,7 +359,7 @@ const ACTIVITY_CATEGORY_CHROME: Record<
     listRow:
       "border-2 border-violet-400/50 bg-gradient-to-br from-violet-950/35 via-black/78 to-black/90 shadow-[0_0_36px_rgba(167,139,250,0.2),inset_0_1px_0_rgba(255,255,255,0.05)]",
     chip:
-      "rounded-lg border-2 border-violet-400/55 bg-violet-500/18 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.35)] sm:text-[11px]",
+      "rounded-lg border-2 border-violet-400/55 bg-violet-500/18 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.35)] sm:text-sm",
     detailShell:
       "border-2 border-violet-400/38 bg-gradient-to-b from-violet-950/22 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(139,92,246,0.12)]",
     typeGlow: "font-bold text-violet-200 [text-shadow:0_0_14px_rgba(167,139,250,0.45)]",
@@ -368,7 +368,7 @@ const ACTIVITY_CATEGORY_CHROME: Record<
     listRow:
       "border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-950/30 via-black/78 to-black/90 shadow-[0_0_36px_rgba(52,211,153,0.16),inset_0_1px_0_rgba(255,255,255,0.05)]",
     chip:
-      "rounded-lg border-2 border-emerald-400/55 bg-emerald-500/18 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-50 shadow-[0_0_18px_rgba(52,211,153,0.32)] sm:text-[11px]",
+      "rounded-lg border-2 border-emerald-400/55 bg-emerald-500/18 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-emerald-50 shadow-[0_0_18px_rgba(52,211,153,0.32)] sm:text-sm",
     detailShell:
       "border-2 border-emerald-400/35 bg-gradient-to-b from-emerald-950/18 to-black/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_24px_rgba(16,185,129,0.1)]",
     typeGlow: "font-bold text-emerald-200 [text-shadow:0_0_14px_rgba(52,211,153,0.4)]",
@@ -376,6 +376,29 @@ const ACTIVITY_CATEGORY_CHROME: Record<
 };
 
 const ACTIVITY_RECENT_WINDOW_MS = 2 * 60 * 1000;
+
+const ACTIVITY_TIMELINE_DOT: Record<ActivityCategory, { bg: string; glow: string; ring: string }> = {
+  system: {
+    bg: "rgba(251, 191, 36, 0.95)",
+    glow: "0 0 16px rgba(251,191,36,0.85), 0 0 32px rgba(251,191,36,0.35)",
+    ring: "border-amber-400/70",
+  },
+  program: {
+    bg: "rgba(34, 211, 238, 0.95)",
+    glow: "0 0 16px rgba(34,211,238,0.85), 0 0 32px rgba(34,211,238,0.35)",
+    ring: "border-cyan-400/70",
+  },
+  syndicate: {
+    bg: "rgba(167, 139, 250, 0.95)",
+    glow: "0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.35)",
+    ring: "border-violet-400/70",
+  },
+  affiliate: {
+    bg: "rgba(52, 211, 153, 0.95)",
+    glow: "0 0 16px rgba(52,211,153,0.85), 0 0 32px rgba(16,185,129,0.35)",
+    ring: "border-emerald-400/70",
+  },
+};
 
 function activityStructuredFields(a: ActivityItem) {
   const when = formatActivityWhen(a.ts);
@@ -402,13 +425,13 @@ function ActivityEventDetailBlock({ a, size = "default" }: { a: ActivityItem; si
           : "rounded-md border border-[rgba(255,215,0,0.14)] bg-black/40 px-3 py-2.5",
       )}
     >
-      <div className={cn("font-semibold leading-snug text-white/90", lg ? "text-[14px] sm:text-[15px]" : "text-[12px]")}>
+      <div className={cn("font-bold leading-snug text-white/92", lg ? "text-base sm:text-lg" : "text-sm sm:text-base")}>
         {a.title}
       </div>
       <dl
         className={cn(
           "mt-2 grid leading-snug",
-          lg ? "grid-cols-[minmax(0,6.5rem)_1fr] gap-x-4 gap-y-2.5 text-[13px] sm:text-[14px]" : "grid-cols-[minmax(0,4.5rem)_1fr] gap-x-3 gap-y-1.5 text-[11px]",
+          lg ? "grid-cols-[minmax(0,7rem)_1fr] gap-x-4 gap-y-3 text-sm sm:text-base" : "grid-cols-[minmax(0,5.5rem)_1fr] gap-x-3 gap-y-2 text-xs sm:text-sm",
         )}
       >
         <dt
@@ -603,7 +626,7 @@ function HeroStatusPanel({
               )}
             >
               <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-emerald-100">
-                Completed missions
+                Syndicate Completed Missions
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-emerald-200/90" aria-hidden /> : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
@@ -628,7 +651,7 @@ function HeroStatusPanel({
               )}
             >
               <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-amber-100">
-                Pending missions
+                Syndicate Pending Missions
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
@@ -803,25 +826,25 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
                   <div>
                     <div
                       id="activity-full-log-title"
-                      className="text-[13px] font-black uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.5)] sm:text-[15px] sm:tracking-[0.22em]"
+                      className="text-base font-black uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.5)] sm:text-lg sm:tracking-[0.22em]"
                     >
                       Full activity log
                     </div>
-                    <div className="mt-1 text-[12px] text-fuchsia-200/65 sm:text-[13px]">
+                    <div className="mt-1 text-sm text-fuchsia-200/65 sm:text-base">
                       {items.length} entr{items.length === 1 ? "y" : "ies"} — same layout as timeline details
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFullLogOpen(false)}
-                    className="rounded-xl border-2 border-fuchsia-400/50 bg-black/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_24px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:shadow-[0_0_36px_rgba(217,70,239,0.48)] sm:text-[11px]"
+                    className="rounded-xl border-2 border-fuchsia-400/50 bg-black/50 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_24px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:shadow-[0_0_36px_rgba(217,70,239,0.48)] sm:text-sm"
                   >
                     Close
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4 sm:space-y-4 sm:p-6 [scrollbar-color:rgba(34,211,238,0.5)_rgba(0,0,0,0.45)]">
                   {items.length === 0 ? (
-                    <p className="px-2 text-center text-[15px] leading-relaxed text-white/65 sm:text-[16px]">
+                    <p className="px-2 text-center text-base leading-relaxed text-white/65 sm:text-lg">
                       Nothing logged yet. Switch sections, open Goals &amp; Milestones, pick a course, or visit another app
                       route.
                     </p>
@@ -834,18 +857,18 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
                         className={cn("rounded-xl px-4 py-3.5 sm:rounded-2xl sm:px-5 sm:py-4", cat.listRow)}
                       >
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                          <span className="min-w-0 text-[14px] font-semibold leading-snug text-white/92 sm:text-[16px]">
+                          <span className="min-w-0 text-base font-bold leading-snug text-white/92 sm:text-lg">
                             {a.title}
                           </span>
                           <span className={cat.chip}>
                             {ACTIVITY_CAT_LABEL[a.category]}
                           </span>
-                          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/48 sm:text-[12px]">
+                          <span className="text-xs font-bold uppercase tracking-[0.12em] text-white/48 sm:text-sm">
                             {timeAgoCaps(a.ts)} · {formatActivityWhen(a.ts)}
                           </span>
                         </div>
                         {a.detail ? (
-                          <div className="mt-2 text-[13px] leading-relaxed text-white/58 sm:text-[14px]">{a.detail}</div>
+                          <div className="mt-2 text-sm leading-relaxed text-white/58 sm:text-base">{a.detail}</div>
                         ) : null}
                         <div className="mt-3">
                           <ActivityEventDetailBlock a={a} size="prominent" />
@@ -893,34 +916,46 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
             aria-hidden
           />
 
-          <div className="relative border-b border-cyan-400/18 bg-gradient-to-r from-black/70 via-violet-950/15 to-black/70 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="relative border-b border-cyan-400/25 bg-gradient-to-r from-black/70 via-violet-950/20 to-black/70 px-4 py-4 sm:px-6 sm:py-5">
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"
+              aria-hidden
+            />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border-2 border-cyan-400/55 bg-black/55 shadow-[0_0_32px_rgba(34,211,238,0.5),inset_0_1px_0_rgba(255,255,255,0.07)]">
+              <div className="flex min-w-0 items-center gap-4">
+                <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-xl border-2 border-cyan-400/60 bg-black/55 shadow-[0_0_40px_rgba(34,211,238,0.55),inset_0_1px_0_rgba(255,255,255,0.08)] sm:h-14 sm:w-14">
+                  <span
+                    className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)] animate-pulse"
+                    aria-hidden
+                  />
                   <Activity
-                    className="h-[18px] w-[18px] text-cyan-100 [filter:drop-shadow(0_0_12px_rgba(34,211,238,0.95))]"
+                    className="h-5 w-5 text-cyan-100 [filter:drop-shadow(0_0_14px_rgba(34,211,238,0.95))] sm:h-6 sm:w-6"
                     strokeWidth={2.2}
                     aria-hidden
                   />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="bg-gradient-to-r from-amber-200 via-cyan-200 to-fuchsia-200 bg-clip-text text-[clamp(10px,0.85vw+7px,12px)] font-black uppercase leading-tight tracking-[0.2em] text-transparent">
+                  <h2 className="bg-gradient-to-r from-amber-200 via-cyan-200 to-fuchsia-200 bg-clip-text text-lg font-black uppercase leading-tight tracking-[0.18em] text-transparent sm:text-xl md:text-2xl">
                     Activity timeline
                   </h2>
-                  <p className="mt-1 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-fuchsia-200/50">
-                    Live stream · 2 min window
+                  <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs font-mono font-semibold uppercase tracking-[0.12em] text-fuchsia-200/60 sm:text-sm">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-emerald-200/90">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+                      Live
+                    </span>
+                    <span>2 min window</span>
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setFullLogOpen(true)}
-                  className="rounded-lg border-2 border-fuchsia-400/50 bg-black/50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_22px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:bg-black/60 hover:shadow-[0_0_32px_rgba(217,70,239,0.5)]"
+                  className="rounded-lg border-2 border-fuchsia-400/50 bg-black/50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-fuchsia-100 shadow-[0_0_22px_rgba(217,70,239,0.35)] transition hover:border-fuchsia-300/75 hover:bg-black/60 hover:shadow-[0_0_32px_rgba(217,70,239,0.5)] sm:text-sm"
                 >
                   Full log
                 </button>
-                <div className="rounded-lg border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/15 to-black/60 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.35)]">
+                <div className="rounded-lg border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/15 to-black/60 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:text-sm">
                   2 min
                 </div>
               </div>
@@ -930,10 +965,10 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
           <div className="relative px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
             <div className="rounded-xl border border-violet-500/25 bg-gradient-to-b from-violet-950/10 to-transparent p-[1px] shadow-[0_0_44px_rgba(139,92,246,0.15)]">
               <div className="rounded-[11px] border border-cyan-400/15 bg-[#06060c]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="min-h-[min(36vh,320px)] max-h-[min(62vh,620px)] overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 sm:pr-2 [scrollbar-color:rgba(34,211,238,0.42)_rgba(0,0,0,0.4)]">
+                <div className="min-h-[min(38vh,340px)] max-h-[min(64vh,660px)] overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-5 sm:py-5 sm:pr-3 [scrollbar-color:rgba(34,211,238,0.42)_rgba(0,0,0,0.4)]">
                   {items.length === 0 ? (
-                    <div className="rounded-xl border-2 border-cyan-400/30 bg-gradient-to-br from-cyan-950/30 via-black/55 to-fuchsia-950/25 px-5 py-10 text-center shadow-[0_0_48px_rgba(34,211,238,0.14),0_0_64px_rgba(168,85,247,0.1)]">
-                      <p className="text-[13px] leading-relaxed text-white/68">
+                    <div className="rounded-xl border-2 border-cyan-400/30 bg-gradient-to-br from-cyan-950/30 via-black/55 to-fuchsia-950/25 px-6 py-12 text-center shadow-[0_0_48px_rgba(34,211,238,0.14),0_0_64px_rgba(168,85,247,0.1)]">
+                      <p className="text-sm leading-relaxed text-white/72 sm:text-base">
                         Your moves are logged automatically—open a section, a course, use quick search, or Goals &amp; Milestones.
                         The panel below shows the{" "}
                         <span className="font-semibold text-cyan-200 [text-shadow:0_0_14px_rgba(34,211,238,0.45)]">last 2 minutes</span>
@@ -942,62 +977,87 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
                       </p>
                     </div>
                   ) : recentWindowItems.length === 0 ? (
-                    <div className="rounded-xl border-2 border-amber-400/35 bg-gradient-to-br from-amber-950/25 via-black/55 to-violet-950/20 px-5 py-10 text-center shadow-[0_0_48px_rgba(251,191,36,0.14),0_0_56px_rgba(139,92,246,0.1)]">
-                      <p className="text-[13px] font-medium text-white/78">Nothing in the last 2 minutes.</p>
-                      <p className="mt-3 text-[12px] leading-relaxed text-white/52">
+                    <div className="rounded-xl border-2 border-amber-400/35 bg-gradient-to-br from-amber-950/25 via-black/55 to-violet-950/20 px-6 py-12 text-center shadow-[0_0_48px_rgba(251,191,36,0.14),0_0_56px_rgba(139,92,246,0.1)]">
+                      <p className="text-sm font-semibold text-white/82 sm:text-base">Nothing in the last 2 minutes.</p>
+                      <p className="mt-3 text-xs leading-relaxed text-white/58 sm:text-sm">
                         Older activity is still saved — open{" "}
                         <span className="font-semibold text-fuchsia-200/95 [text-shadow:0_0_12px_rgba(232,121,249,0.45)]">Full log</span> to
                         review it.
                       </p>
                     </div>
                   ) : (
-                    <div className="rounded-xl border-2 border-emerald-400/30 bg-gradient-to-br from-emerald-950/15 via-black/50 to-cyan-950/20 px-3 py-3 shadow-[0_0_40px_rgba(52,211,153,0.12),0_0_48px_rgba(34,211,238,0.1)] sm:px-4 sm:py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-2.5">
-                          <span
-                            className="mt-[6px] inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
-                            style={{
-                              background: "rgba(34, 211, 238, 0.95)",
-                              boxShadow: "0 0 14px rgba(34,211,238,0.75), 0 0 28px rgba(6,182,212,0.4)",
-                            }}
-                          />
-                          <div className="min-w-0">
-                            <div className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100 [text-shadow:0_0_16px_rgba(34,211,238,0.45)]">
-                              Last 2 minutes
-                            </div>
-                            <p className="mt-1 text-[12px] leading-snug text-white/62">
-                              <span className="font-semibold tabular-nums text-emerald-200/95">{recentWindowItems.length}</span>{" "}
-                              {recentWindowItems.length === 1 ? "event" : "events"} · newest{" "}
-                              <span className="text-violet-200/80">{timeAgo(recentWindowItems[0]!.ts)}</span>
-                            </p>
-                            <ul className="mt-2 list-none space-y-1.5 p-0 text-[11px] text-white/58">
-                              {recentWindowItems.slice(0, 5).map((a) => (
-                                <li key={a.id} className="flex gap-2 border-l-2 border-cyan-400/45 pl-2.5">
-                                  <span className="shrink-0 font-mono text-[10px] text-cyan-200/55">
-                                    {new Date(a.ts).toLocaleTimeString(undefined, {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      second: "2-digit",
-                                    })}
-                                  </span>
-                                  <span className="min-w-0 text-white/72">
-                                    <span className="font-medium text-white/88">{a.title}</span>
-                                    {a.detail ? <span className="text-white/48"> — {a.detail}</span> : null}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                            {recentWindowItems.length > 5 ? (
-                              <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-fuchsia-200/45">
-                                +{recentWindowItems.length - 5} more in details
-                              </p>
-                            ) : null}
+                    <div className="rounded-xl border-2 border-emerald-400/35 bg-gradient-to-br from-emerald-950/18 via-black/48 to-cyan-950/22 px-4 py-4 shadow-[0_0_48px_rgba(52,211,153,0.14),0_0_56px_rgba(34,211,238,0.12)] sm:px-5 sm:py-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-black uppercase tracking-[0.16em] text-cyan-100 [text-shadow:0_0_18px_rgba(34,211,238,0.5)] sm:text-base">
+                            Last 2 minutes
                           </div>
+                          <p className="mt-1.5 text-xs leading-snug text-white/65 sm:text-sm">
+                            <span className="font-bold tabular-nums text-emerald-200">{recentWindowItems.length}</span>{" "}
+                            {recentWindowItems.length === 1 ? "event" : "events"} · newest{" "}
+                            <span className="font-semibold text-violet-200/90">{timeAgo(recentWindowItems[0]!.ts)}</span>
+                          </p>
+                          <ul className="relative mt-4 list-none space-y-0 p-0 pl-1">
+                            <div
+                              className="pointer-events-none absolute bottom-2 left-[11px] top-2 w-px bg-gradient-to-b from-cyan-400/70 via-violet-400/50 to-transparent"
+                              aria-hidden
+                            />
+                            {recentWindowItems.slice(0, 6).map((a, idx) => {
+                              const dot = ACTIVITY_TIMELINE_DOT[a.category];
+                              const cat = ACTIVITY_CATEGORY_CHROME[a.category];
+                              return (
+                                <motion.li
+                                  key={a.id}
+                                  initial={{ opacity: 0, x: -6 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.22, delay: idx * 0.04 }}
+                                  className="relative flex gap-3 pb-4 last:pb-0"
+                                >
+                                  <span
+                                    className={cn(
+                                      "relative z-[1] mt-1.5 inline-flex h-5 w-5 shrink-0 rounded-full border-2 bg-black/80",
+                                      dot.ring,
+                                    )}
+                                    style={{ background: dot.bg, boxShadow: dot.glow }}
+                                    aria-hidden
+                                  />
+                                  <div
+                                    className={cn(
+                                      "min-w-0 flex-1 rounded-lg border px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-4 sm:py-3",
+                                      cat.listRow.replace("border-2", "border"),
+                                    )}
+                                  >
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                      <span className="font-mono text-xs font-bold tabular-nums text-cyan-200/80 sm:text-sm">
+                                        {new Date(a.ts).toLocaleTimeString(undefined, {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          second: "2-digit",
+                                        })}
+                                      </span>
+                                      <span className={cat.chip}>{ACTIVITY_CAT_LABEL[a.category]}</span>
+                                    </div>
+                                    <p className="mt-1.5 text-sm font-semibold leading-snug text-white/92 sm:text-base">
+                                      {a.title}
+                                    </p>
+                                    {a.detail ? (
+                                      <p className="mt-1 text-xs leading-relaxed text-white/55 sm:text-sm">{a.detail}</p>
+                                    ) : null}
+                                  </div>
+                                </motion.li>
+                              );
+                            })}
+                          </ul>
+                          {recentWindowItems.length > 6 ? (
+                            <p className="mt-3 text-xs font-bold uppercase tracking-[0.1em] text-fuchsia-200/55 sm:text-sm">
+                              +{recentWindowItems.length - 6} more in details
+                            </p>
+                          ) : null}
                         </div>
                         <button
                           type="button"
                           onClick={() => setRecentDetailsOpen((o) => !o)}
-                          className="shrink-0 rounded-lg border-2 border-violet-400/50 bg-black/50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-violet-100 shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:border-violet-300/75 hover:shadow-[0_0_26px_rgba(139,92,246,0.5)]"
+                          className="shrink-0 rounded-lg border-2 border-violet-400/50 bg-black/50 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-violet-100 shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:border-violet-300/75 hover:shadow-[0_0_26px_rgba(139,92,246,0.5)] sm:text-sm"
                         >
                           {recentDetailsOpen ? "Hide" : "Details"}
                         </button>
@@ -1012,13 +1072,20 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
                             transition={{ duration: 0.22, ease: "easeOut" }}
                             className="overflow-hidden"
                           >
-                            <div className="mt-4 space-y-3 border-t border-violet-400/25 pt-4">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/55">
+                            <div className="mt-5 space-y-4 border-t border-violet-400/30 pt-5">
+                              <p className="text-xs font-bold uppercase tracking-[0.12em] text-cyan-200/65 sm:text-sm">
                                 Everything in this window — newest first
                               </p>
-                              <div className="space-y-3">
-                                {recentWindowItems.map((a) => (
-                                  <ActivityEventDetailBlock key={a.id} a={a} />
+                              <div className="space-y-4">
+                                {recentWindowItems.map((a, idx) => (
+                                  <motion.div
+                                    key={a.id}
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2, delay: idx * 0.03 }}
+                                  >
+                                    <ActivityEventDetailBlock a={a} />
+                                  </motion.div>
                                 ))}
                               </div>
                             </div>

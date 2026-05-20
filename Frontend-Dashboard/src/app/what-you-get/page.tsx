@@ -55,12 +55,62 @@ const ACCESS_PILLARS: {
   },
 ]
 
-const ROYAL_PATH_LINES = [
-  'Legends are not handed down as bedtime stories — they are weaponised into doctrine: judgement, timing, nerve.',
-  'From throne rooms to war rooms, the through-line is the same: read incentives, hold the line, strike with precision.',
-  'The Syndicate reframes that lineage for modern markets: capital, attention, regulation, and reputation as interconnected battlefields.',
-  'You study power to dismantle fantasy — not to cosplay a villain, but to command outcomes without losing your spine.',
-  'Greatness here is not vanity metrics. It is sovereignty: systems that work when you are not watching, and alliances that hold when pressure spikes.',
+const ROYAL_PATH_ITEMS = [
+  {
+    step: '01',
+    tag: 'Doctrine',
+    line: 'Legends are not handed down as bedtime stories — they are weaponised into doctrine: judgement, timing, nerve.',
+    border: 'border-rose-400/75',
+    glow: 'shadow-[0_0_0_1px_rgba(244,63,94,0.7),0_0_18px_rgba(244,63,94,0.45),0_0_32px_rgba(190,24,93,0.22)]',
+    panel: 'bg-[linear-gradient(128deg,rgba(136,19,55,0.55)_0%,rgba(24,8,18,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
+    stepClass: 'border-rose-400/70 bg-rose-950/60 text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.35)]',
+    tagClass: 'text-rose-300/90',
+    lineClass: 'text-rose-50/95',
+  },
+  {
+    step: '02',
+    tag: 'Through-line',
+    line: 'From throne rooms to war rooms, the through-line is the same: read incentives, hold the line, strike with precision.',
+    border: 'border-fuchsia-400/75',
+    glow: 'shadow-[0_0_0_1px_rgba(217,70,239,0.7),0_0_18px_rgba(217,70,239,0.45),0_0_32px_rgba(162,28,175,0.22)]',
+    panel: 'bg-[linear-gradient(128deg,rgba(126,34,206,0.5)_0%,rgba(18,8,28,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
+    stepClass: 'border-fuchsia-400/70 bg-fuchsia-950/60 text-fuchsia-100 shadow-[0_0_14px_rgba(217,70,239,0.35)]',
+    tagClass: 'text-fuchsia-300/90',
+    lineClass: 'text-fuchsia-50/95',
+  },
+  {
+    step: '03',
+    tag: 'Markets',
+    line: 'The Syndicate reframes that lineage for modern markets: capital, attention, regulation, and reputation as interconnected battlefields.',
+    border: 'border-cyan-400/75',
+    glow: 'shadow-[0_0_0_1px_rgba(34,211,238,0.7),0_0_18px_rgba(34,211,238,0.45),0_0_32px_rgba(14,165,233,0.22)]',
+    panel: 'bg-[linear-gradient(128deg,rgba(14,116,144,0.5)_0%,rgba(6,16,24,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
+    stepClass: 'border-cyan-400/70 bg-cyan-950/60 text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.35)]',
+    tagClass: 'text-cyan-300/90',
+    lineClass: 'text-cyan-50/95',
+  },
+  {
+    step: '04',
+    tag: 'Power study',
+    line: 'You study power to dismantle fantasy — not to cosplay a villain, but to command outcomes without losing your spine.',
+    border: 'border-amber-400/75',
+    glow: 'shadow-[0_0_0_1px_rgba(251,191,36,0.7),0_0_18px_rgba(251,191,36,0.45),0_0_32px_rgba(234,88,12,0.22)]',
+    panel: 'bg-[linear-gradient(128deg,rgba(180,83,9,0.45)_0%,rgba(20,14,6,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
+    stepClass: 'border-amber-400/70 bg-amber-950/60 text-amber-100 shadow-[0_0_14px_rgba(251,191,36,0.35)]',
+    tagClass: 'text-amber-300/90',
+    lineClass: 'text-amber-50/95',
+  },
+  {
+    step: '05',
+    tag: 'Sovereignty',
+    line: 'Greatness here is not vanity metrics. It is sovereignty: systems that work when you are not watching, and alliances that hold when pressure spikes.',
+    border: 'border-emerald-400/75',
+    glow: 'shadow-[0_0_0_1px_rgba(52,211,153,0.7),0_0_18px_rgba(52,211,153,0.45),0_0_32px_rgba(16,185,129,0.22)]',
+    panel: 'bg-[linear-gradient(128deg,rgba(6,95,70,0.5)_0%,rgba(6,18,14,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
+    stepClass: 'border-emerald-400/70 bg-emerald-950/60 text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.35)]',
+    tagClass: 'text-emerald-300/90',
+    lineClass: 'text-emerald-50/95',
+  },
 ] as const
 
 const pillarTitleClass: Record<CyberFrameAccent, string> = {
@@ -234,16 +284,52 @@ export default function WhatYouGetPage() {
                       Kings · emperors · operators
                     </p>
                   </div>
-                  <div className="mt-6 divide-y divide-white/10 rounded-xl border border-white/10 bg-black/25">
-                    {ROYAL_PATH_LINES.map((line, idx) => (
-                      <div
-                        key={line}
-                        className="what-you-get-stagger-row grid gap-3 px-5 py-5 sm:grid-cols-[100px_1fr] sm:px-7 sm:py-6"
+                  <div className="mt-6 grid gap-4 sm:gap-5">
+                    {ROYAL_PATH_ITEMS.map((item, idx) => (
+                      <article
+                        key={item.step}
+                        className={cx(
+                          'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
+                          item.border,
+                          item.glow,
+                          item.panel
+                        )}
                         style={{ animationDelay: `${idx * 0.12}s` }}
                       >
-                        <span className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-500">0{idx + 1}</span>
-                        <p className="text-base leading-relaxed text-zinc-100/92 sm:text-lg">{line}</p>
-                      </div>
+                        <span
+                          className="pointer-events-none absolute inset-[5px] rounded-[14px] border border-white/10 opacity-80"
+                          aria-hidden
+                        />
+                        <span
+                          className="pointer-events-none absolute left-3 top-3 h-6 w-6 border-l-2 border-t-2 border-white/25"
+                          aria-hidden
+                        />
+                        <span
+                          className="pointer-events-none absolute bottom-3 right-3 h-6 w-6 border-b-2 border-r-2 border-white/25"
+                          aria-hidden
+                        />
+                        <div className="relative z-[1] grid gap-4 sm:grid-cols-[minmax(5.5rem,auto)_1fr] sm:items-start sm:gap-5">
+                          <div className="flex flex-row items-center gap-3 sm:flex-col sm:items-start sm:gap-2">
+                            <span
+                              className={cx(
+                                'inline-flex min-w-[3.25rem] items-center justify-center rounded-lg border-2 px-3 py-1.5 font-mono text-sm font-black tracking-[0.2em]',
+                                item.stepClass
+                              )}
+                            >
+                              {item.step}
+                            </span>
+                            <span
+                              className={cx(
+                                'font-mono text-[10px] font-bold uppercase tracking-[0.28em] sm:text-[11px]',
+                                item.tagClass
+                              )}
+                            >
+                              {item.tag}
+                            </span>
+                          </div>
+                          <p className={cx('text-base leading-relaxed sm:text-lg', item.lineClass)}>{item.line}</p>
+                        </div>
+                      </article>
                     ))}
                   </div>
                   <div className="mx-auto mt-8 flex w-full max-w-[320px] justify-center sm:mt-10 sm:max-w-[360px]">

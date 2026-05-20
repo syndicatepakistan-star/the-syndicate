@@ -153,20 +153,20 @@ function TierCard({
     }
   > = {
     bundle: {
-      panel: 'bg-[linear-gradient(160deg,rgba(5,9,22,0.96)_0%,rgba(4,5,15,0.98)_55%,rgba(3,8,22,0.98)_100%)]',
+      panel: 'bg-[linear-gradient(160deg,rgba(5,9,22,0.99)_0%,rgba(4,5,15,1)_55%,rgba(3,8,22,0.99)_100%)]',
       panelBorder:
-        'border-cyan-400/50 shadow-[0_0_0_1px_rgba(34,211,238,0.65),0_0_28px_rgba(34,211,238,0.5),0_0_56px_rgba(139,92,246,0.35),0_0_96px_rgba(232,121,249,0.18),inset_0_0_26px_rgba(34,211,238,0.14)]',
+        'border-cyan-400/65 shadow-[0_0_0_2px_rgba(34,211,238,0.85),0_0_40px_rgba(34,211,238,0.72),0_0_80px_rgba(34,211,238,0.48),0_0_120px_rgba(139,92,246,0.42),0_0_160px_rgba(232,121,249,0.28),inset_0_0_36px_rgba(34,211,238,0.22)]',
       accentText: 'text-cyan-300',
-      frameOuter: 'border-cyan-300/60',
-      frameInner: 'border-fuchsia-400/35',
-      frameOuterGlow: 'shadow-[0_0_34px_rgba(34,211,238,0.82),0_0_68px_rgba(34,211,238,0.48)]',
-      frameInnerGlow: 'shadow-[inset_0_0_20px_rgba(192,132,252,0.45),0_0_28px_rgba(232,121,249,0.38)]',
-      underGlow: 'radial-gradient(65%_85%_at_50%_100%, rgba(34,211,238,0.5) 0%, rgba(139,92,246,0.28) 45%, transparent 78%)',
-      lightningColor: 'rgba(34,211,238,0.96)',
-      lightningSoft: 'rgba(192,132,252,0.62)',
+      frameOuter: 'border-cyan-300/75',
+      frameInner: 'border-fuchsia-400/50',
+      frameOuterGlow: 'shadow-[0_0_48px_rgba(34,211,238,0.95),0_0_96px_rgba(34,211,238,0.62),0_0_140px_rgba(139,92,246,0.35)]',
+      frameInnerGlow: 'shadow-[inset_0_0_28px_rgba(192,132,252,0.55),0_0_40px_rgba(232,121,249,0.48)]',
+      underGlow: 'radial-gradient(70%_90%_at_50%_100%, rgba(34,211,238,0.72) 0%, rgba(139,92,246,0.42) 42%, transparent 76%)',
+      lightningColor: 'rgba(34,211,238,0.98)',
+      lightningSoft: 'rgba(192,132,252,0.75)',
       frame: 'border-transparent hover:border-transparent',
-      glow: 'shadow-[0_0_0_1px_rgba(56,236,255,0.9),0_0_42px_rgba(56,236,255,0.6),0_0_104px_rgba(139,92,246,0.34)]',
-      row: 'border-cyan-300/45 bg-cyan-950/15 shadow-[0_0_12px_rgba(34,211,238,0.12)]',
+      glow: 'shadow-[0_0_0_2px_rgba(56,236,255,0.95),0_0_56px_rgba(56,236,255,0.78),0_0_120px_rgba(34,211,238,0.55),0_0_180px_rgba(139,92,246,0.38)]',
+      row: 'border-cyan-300/55 bg-cyan-950/35 shadow-[0_0_18px_rgba(34,211,238,0.22)]',
     },
     pawn: {
       panel: 'bg-[linear-gradient(160deg,rgba(11,7,18,0.96)_0%,rgba(8,5,16,0.98)_55%,rgba(4,9,22,0.98)_100%)]',
@@ -201,20 +201,20 @@ function TierCard({
       row: 'border-violet-300/35 bg-violet-950/10',
     },
     king: {
-      panel: 'bg-[linear-gradient(160deg,rgba(7,14,8,0.96)_0%,rgba(5,12,7,0.98)_55%,rgba(8,16,10,0.98)_100%)]',
+      panel: 'bg-[linear-gradient(160deg,rgba(7,14,8,0.99)_0%,rgba(5,12,7,1)_55%,rgba(8,16,10,0.99)_100%)]',
       panelBorder:
-        'border-lime-400/50 shadow-[0_0_0_1px_rgba(190,242,100,0.55),0_0_28px_rgba(132,204,22,0.52),0_0_58px_rgba(16,185,129,0.32),0_0_88px_rgba(52,211,153,0.15),inset_0_0_22px_rgba(132,204,22,0.12)]',
+        'border-lime-400/65 shadow-[0_0_0_2px_rgba(190,242,100,0.8),0_0_40px_rgba(132,204,22,0.72),0_0_80px_rgba(132,204,22,0.5),0_0_120px_rgba(16,185,129,0.38),0_0_160px_rgba(52,211,153,0.22),inset_0_0_32px_rgba(132,204,22,0.2)]',
       accentText: 'text-lime-300',
-      frameOuter: 'border-lime-300/65',
-      frameInner: 'border-emerald-400/40',
-      frameOuterGlow: 'shadow-[0_0_34px_rgba(132,204,22,0.78),0_0_68px_rgba(16,185,129,0.45)]',
-      frameInnerGlow: 'shadow-[inset_0_0_20px_rgba(16,185,129,0.42),0_0_26px_rgba(52,211,153,0.32)]',
-      underGlow: 'radial-gradient(65%_85%_at_50%_100%, rgba(132,204,22,0.52) 0%, rgba(16,185,129,0.3) 45%, transparent 78%)',
-      lightningColor: 'rgba(132,204,22,0.96)',
-      lightningSoft: 'rgba(16,185,129,0.62)',
+      frameOuter: 'border-lime-300/80',
+      frameInner: 'border-emerald-400/55',
+      frameOuterGlow: 'shadow-[0_0_48px_rgba(132,204,22,0.92),0_0_96px_rgba(16,185,129,0.58),0_0_140px_rgba(52,211,153,0.32)]',
+      frameInnerGlow: 'shadow-[inset_0_0_28px_rgba(16,185,129,0.52),0_0_40px_rgba(52,211,153,0.42)]',
+      underGlow: 'radial-gradient(70%_90%_at_50%_100%, rgba(132,204,22,0.68) 0%, rgba(16,185,129,0.42) 42%, transparent 76%)',
+      lightningColor: 'rgba(132,204,22,0.98)',
+      lightningSoft: 'rgba(16,185,129,0.75)',
       frame: 'border-transparent hover:border-transparent',
-      glow: 'shadow-[0_0_0_1px_rgba(190,242,100,0.9),0_0_40px_rgba(132,204,22,0.56),0_0_98px_rgba(16,185,129,0.32)]',
-      row: 'border-lime-300/45 bg-lime-950/15 shadow-[0_0_12px_rgba(132,204,22,0.12)]',
+      glow: 'shadow-[0_0_0_2px_rgba(190,242,100,0.95),0_0_56px_rgba(132,204,22,0.75),0_0_120px_rgba(16,185,129,0.48),0_0_180px_rgba(52,211,153,0.28)]',
+      row: 'border-lime-300/55 bg-lime-950/35 shadow-[0_0_18px_rgba(132,204,22,0.22)]',
     },
   }
   const accentText = hudThemeByPlan[planKey].accentText
@@ -222,12 +222,13 @@ function TierCard({
   return (
     <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col pt-2">
       <div
-        className="pointer-events-none absolute -bottom-12 left-1/2 h-24 w-[84%] -translate-x-1/2 blur-[22px]"
+        className="pointer-events-none absolute -bottom-14 left-1/2 h-32 w-[92%] -translate-x-1/2 blur-[32px]"
         style={{ background: hudThemeByPlan[planKey].underGlow }}
       />
       <div
         className={cn(
           'lightning-glow-card relative flex min-h-0 flex-1 flex-col rounded-3xl p-0',
+          hudThemeByPlan[planKey].glow,
           PRICING_NOTCH_CLIP,
         )}
         style={{
@@ -235,7 +236,7 @@ function TierCard({
           ['--lightning-color-soft' as any]: hudThemeByPlan[planKey].lightningSoft,
         }}
       >
-        <span className="pointer-events-none absolute inset-[-1px] bg-inherit opacity-95 blur-[16px]" />
+        <span className="pointer-events-none absolute inset-[-2px] bg-inherit opacity-100 blur-[28px]" />
         <div
           className={cn(
             'relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border transition-all duration-300 will-change-transform hover:scale-[1.02]',
@@ -276,7 +277,7 @@ function TierCard({
         <div className="flex shrink-0 items-center justify-between gap-4">
           <div
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/40 px-3.5 py-1.5 text-[0.8rem] font-bold tracking-[0.16em] shadow-[0_0_16px_rgba(34,211,238,0.25)] sm:text-[0.86rem]',
+              'inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/55 px-3.5 py-1.5 text-[0.8rem] font-bold tracking-[0.16em] shadow-[0_0_22px_rgba(34,211,238,0.42)] sm:text-[0.86rem]',
               accentText,
             )}
           >
@@ -285,7 +286,7 @@ function TierCard({
           </div>
 
           {planKey === 'bundle' && (
-            <div className="inline-flex items-center gap-1 rounded-full border border-cyan-300/35 bg-cyan-500/10 px-3 py-1 text-[0.78rem] font-semibold text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.28)] sm:text-[0.82rem]">
+            <div className="inline-flex items-center gap-1 rounded-full border border-cyan-300/50 bg-cyan-500/20 px-3 py-1 text-[0.78rem] font-semibold text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.45)] sm:text-[0.82rem]">
               <Star className="h-3.5 w-3.5 text-cyan-300" />
               Recommended
             </div>
@@ -443,8 +444,8 @@ export function PricingPage({
       )}
     >
       <div className="pointer-events-none absolute inset-0">
-        <Image src="/assets/g.gif" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-18" unoptimized />
-        <div className="absolute inset-0 bg-black/70" />
+        <Image src="/assets/g.gif" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-50" unoptimized />
+        <div className="absolute inset-0 bg-black/82" />
       </div>
       <div className="relative mx-auto flex w-full max-w-none flex-col items-center">
         <header className="mb-12 flex w-full justify-center px-[clamp(0.5rem,2vw,1rem)] md:mb-16">
@@ -466,7 +467,7 @@ export function PricingPage({
             />
             <div
               className={cn(
-                'relative overflow-hidden rounded-3xl border border-cyan-400/40 bg-[linear-gradient(165deg,rgba(8,12,28,0.94)_0%,rgba(3,4,18,0.97)_48%,rgba(5,8,22,0.98)_100%)] px-6 py-8 text-center shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_36px_rgba(34,211,238,0.38),0_0_72px_rgba(232,121,249,0.22),inset_0_0_32px_rgba(34,211,238,0.1)] md:px-10 md:py-10',
+                'relative overflow-hidden rounded-3xl border border-cyan-400/55 bg-[linear-gradient(165deg,rgba(8,12,28,0.98)_0%,rgba(3,4,18,0.99)_48%,rgba(5,8,22,0.99)_100%)] px-6 py-8 text-center shadow-[0_0_0_2px_rgba(34,211,238,0.65),0_0_48px_rgba(34,211,238,0.55),0_0_96px_rgba(232,121,249,0.32),inset_0_0_40px_rgba(34,211,238,0.16)] md:px-10 md:py-10',
                 PRICING_NOTCH_CLIP,
               )}
             >
@@ -520,7 +521,7 @@ export function PricingPage({
           </div>
         </header>
 
-        <div className="mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 px-[clamp(0.5rem,2vw,1.25rem)] sm:gap-7 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="relative mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 rounded-3xl border border-white/8 bg-black/45 px-[clamp(0.5rem,2vw,1.25rem)] py-6 shadow-[0_0_60px_rgba(0,0,0,0.55),inset_0_0_80px_rgba(34,211,238,0.06)] backdrop-blur-sm sm:gap-7 sm:py-8 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
           {tiers.map(({ key, tier }) => (
             <div
               key={key}

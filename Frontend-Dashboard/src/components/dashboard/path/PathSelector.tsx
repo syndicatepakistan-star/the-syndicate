@@ -8,10 +8,10 @@ import { cn } from "../dashboardPrimitives";
 export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelect: (g: GoalId) => void }) {
   return (
     <div className="relative">
-      <div className="font-mono fluid-text-ui-xs font-black uppercase tracking-[0.26em] text-[color:var(--gold-neon)]/88 sm:tracking-[0.28em]">
-        Your path
+      <div className="font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] text-[color:var(--gold-neon)]/92 sm:tracking-[0.24em]">
+        Your Path
       </div>
-      <p className="mt-2 max-w-2xl text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/65">
+      <p className="mt-2 max-w-2xl text-[clamp(0.72rem,0.5vw+0.58rem,0.95rem)] leading-relaxed text-white/68 sm:text-[clamp(0.78rem,0.45vw+0.62rem,1rem)]">
         Choose a focus. Your roadmap and course flow update automatically.
       </p>
       <div className="mt-[clamp(0.85rem,2vw+0.25rem,1.25rem)] grid grid-cols-1 fluid-path-grid-gap min-[480px]:grid-cols-2 lg:grid-cols-5">

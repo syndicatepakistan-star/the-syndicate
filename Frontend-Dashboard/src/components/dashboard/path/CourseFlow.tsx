@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CourseRec, GoalId, OpportunityTone } from "./goalPathData";
-import { GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage } from "./goalPathData";
+import { getPathProgramPool, GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage } from "./goalPathData";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { ArrowConnectorHorizontal, ArrowConnectorVertical } from "./ArrowConnector";
 import { cn } from "../dashboardPrimitives";
@@ -133,12 +134,12 @@ function CourseFlowCard({
   const clip = variant === "focus" ? CLIP_HUD_B : CLIP_HUD_A;
 
   const label =
-    variant === "focus" ? "Recommended now" : variant === "support" ? "Supporting" : "Up next";
+    variant === "focus" ? "Recommended" : variant === "support" ? "Supporting" : "Up next";
 
   const body = (
     <div className="flex min-h-0 flex-1 flex-col">
       <motion.div className="flex items-center justify-between gap-2">
-        <span className={cn("font-mono fluid-text-ui-xs font-black uppercase tracking-[0.2em]", skin.heading)}>
+        <span className={cn("font-mono fluid-path-card-label font-black uppercase tracking-[0.16em] sm:tracking-[0.18em]", skin.heading)}>
           {label}
         </span>
         {isAnchor ? (
@@ -293,24 +294,56 @@ export function CourseFlow({
 }) {
   const go = onContinue;
   const roadmapLen = GOAL_PATH_STAGE_COUNT;
-  const maxSlides = Math.min(5, roadmapLen);
+
+  const programPool = useMemo(() => getPathProgramPool(goal, courses), [goal, courses]);
+  const browseCount = Math.max(1, programPool.length);
 
   const [slideIndex, setSlideIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [manualBrowse, setManualBrowse] = useState(false);
 
   const stepIdx = Math.min(Math.max(0, userStepIndex), Math.max(0, roadmapLen - 1));
 
+  const goToSlide = useCallback(
+    (index: number) => {
+      setManualBrowse(true);
+      setSlideIndex(((index % browseCount) + browseCount) % browseCount);
+    },
+    [browseCount],
+  );
+
+  const goPrev = useCallback(() => goToSlide(slideIndex - 1), [goToSlide, slideIndex]);
+  const goNext = useCallback(() => goToSlide(slideIndex + 1), [goToSlide, slideIndex]);
+
   useEffect(() => {
     setSlideIndex(0);
+    setManualBrowse(false);
   }, [goal]);
 
   useEffect(() => {
-    if (paused || maxSlides <= 1) return;
+    if (paused || manualBrowse || browseCount <= 1) return;
     const id = window.setInterval(() => {
-      setSlideIndex((i) => (i + 1) % maxSlides);
+      setSlideIndex((i) => (i + 1) % browseCount);
     }, CAROUSEL_MS);
     return () => window.clearInterval(id);
-  }, [goal, maxSlides, paused]);
+  }, [goal, browseCount, paused, manualBrowse]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (browseCount <= 1) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [browseCount, goNext, goPrev]);
 
   const anchorCourse = useMemo(() => {
     const [a] = opportunityTriplesForStage(goal, stepIdx, courses);
@@ -326,40 +359,99 @@ export function CourseFlow({
     <motion.div
       className="relative mt-[clamp(1.5rem,4vw+0.5rem,2.75rem)] border-t border-[rgba(197,179,88,0.22)] pt-[clamp(1rem,2.5vw+0.35rem,2rem)]"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => {
+        setPaused(false);
+        setManualBrowse(false);
+      }}
     >
       <div className="flex flex-wrap items-end justify-between gap-[clamp(0.65rem,1.8vw+0.2rem,1rem)]">
         <div>
-          <div className="font-mono fluid-text-ui-xs font-black uppercase tracking-[0.28em] text-[color:var(--gold-neon)] sm:tracking-[0.3em]">
-            Next opportunities
+          <div className="font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] text-[color:var(--gold-neon)] sm:tracking-[0.24em]">
+            Next Opportunities
           </div>
-          <p className="mt-2 text-[clamp(0.68rem,0.5vw+0.55rem,0.9rem)] leading-relaxed text-white/88">
+          <p className="mt-2 text-[clamp(0.72rem,0.5vw+0.58rem,0.95rem)] leading-relaxed text-white/88 sm:text-[clamp(0.78rem,0.45vw+0.62rem,1rem)]">
             Natural progression — earn more and sharpen skills without noise.
           </p>
-          {maxSlides > 1 ? (
+          {browseCount > 1 ? (
             <p className="mt-1 font-mono text-[clamp(0.5rem,0.35vw+0.38rem,0.58rem)] uppercase tracking-[0.18em] text-white/55">
-              Selected path (left) stays fixed · center and right cycle{paused ? " · paused on hover" : ""}
+              Supporting (left) stays on your step · use arrows or dots to browse {browseCount} programs in this path
+              {manualBrowse ? " · manual" : paused ? " · auto paused on hover" : ""}
             </p>
           ) : null}
         </div>
-        {maxSlides > 1 ? (
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Opportunity slide (center and right cards)">
-            {Array.from({ length: maxSlides }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                role="tab"
-                aria-selected={i === slideIndex}
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  i === slideIndex ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]" : "w-1.5 bg-white/25 hover:bg-white/40",
-                )}
-                onClick={() => setSlideIndex(i)}
-              />
-            ))}
+        {browseCount > 1 ? (
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5">
+            <button
+              type="button"
+              onClick={goPrev}
+              className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
+              aria-label="Previous programs in this path"
+            >
+              <ChevronLeft className="h-5 w-5" strokeWidth={2.4} aria-hidden />
+            </button>
+            <span className="min-w-[4.5rem] text-center font-mono text-[11px] font-bold tabular-nums uppercase tracking-[0.12em] text-white/70 sm:text-xs">
+              {slideIndex + 1} / {browseCount}
+            </span>
+            <button
+              type="button"
+              onClick={goNext}
+              className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
+              aria-label="Next programs in this path"
+            >
+              <ChevronRight className="h-5 w-5" strokeWidth={2.4} aria-hidden />
+            </button>
+            <div
+              className="max-w-[min(100%,14rem)] overflow-x-auto overflow-y-hidden py-0.5 [scrollbar-color:rgba(255,215,0,0.35)_transparent] [scrollbar-width:thin] sm:max-w-[18rem]"
+              role="tablist"
+              aria-label="Browse programs in this path"
+            >
+              <div className="flex items-center gap-1.5 px-0.5">
+                {programPool.map((prog, i) => (
+                  <button
+                    key={prog.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === slideIndex}
+                    title={prog.title}
+                    className={cn(
+                      "h-1.5 shrink-0 rounded-full transition-all duration-300",
+                      i === slideIndex
+                        ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]"
+                        : "w-1.5 bg-white/25 hover:w-2 hover:bg-white/40",
+                    )}
+                    onClick={() => goToSlide(i)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : null}
       </div>
+
+      {browseCount > 1 ? (
+        <div
+          className="relative mt-3 overflow-x-auto overflow-y-hidden pb-1 [scrollbar-color:rgba(255,215,0,0.35)_rgba(0,0,0,0.2)] [scrollbar-width:thin]"
+          aria-label="Program list for this path"
+        >
+          <div className="flex w-max min-w-full gap-2 pr-1">
+            {programPool.map((prog, i) => (
+              <button
+                key={prog.id}
+                type="button"
+                onClick={() => goToSlide(i)}
+                className={cn(
+                  "shrink-0 rounded-lg border px-3 py-2 text-left font-mono text-[10px] font-bold uppercase leading-snug tracking-[0.08em] transition sm:text-[11px]",
+                  i === slideIndex
+                    ? "border-[rgba(255,215,0,0.65)] bg-[rgba(255,215,0,0.12)] text-[color:var(--gold-neon)] shadow-[0_0_18px_rgba(255,215,0,0.22)]"
+                    : "border-white/20 bg-black/40 text-white/65 hover:border-[rgba(255,215,0,0.35)] hover:text-white/88",
+                )}
+              >
+                {prog.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div
         className={cn(

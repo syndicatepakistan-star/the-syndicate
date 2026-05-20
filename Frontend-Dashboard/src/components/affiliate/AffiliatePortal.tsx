@@ -16,6 +16,34 @@ type ToastTone = "good" | "warn" | "bad" | "info";
 /** Withdrawal rows that no longer reserve balance (excluded from statement total). */
 const WITHDRAWAL_REFUNDED_STATUSES = new Set(["rejected", "cancelled", "denied", "refunded", "failed"]);
 
+/** Expected payout date = request date + this many calendar days. */
+const PAYOUT_EXPECTED_DAYS = 10;
+const PAYOUT_WINDOW_LABEL = "7–10 working days";
+
+function getExpectedPayoutDate(from = new Date()): Date {
+  const d = new Date(from);
+  d.setDate(d.getDate() + PAYOUT_EXPECTED_DAYS);
+  return d;
+}
+
+function formatPayoutExpectedDate(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function getPayoutTimingCopy(from = new Date()) {
+  const expectedDate = getExpectedPayoutDate(from);
+  return {
+    expectedDate,
+    expectedLabel: formatPayoutExpectedDate(expectedDate),
+    windowLabel: PAYOUT_WINDOW_LABEL,
+  };
+}
+
 /** Which lead milestone the referral row detail panel is showing (Syn Diagnosis vs sign-up / checkout). */
 type ReferralLeadTab = "diagnosis" | "auth";
 
@@ -248,6 +276,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
   const missingAmount = showWithdrawValidation && withdrawForm.amount.trim().length === 0;
   const invalidAmount = showWithdrawValidation && withdrawForm.amount.trim().length > 0 && !withdrawAmountValid;
   const withdrawButtonErrorState = !canRequestWithdraw || (showWithdrawValidation && (!withdrawFormValid || !withdrawAmountValid));
+  const payoutTiming = useMemo(
+    () => getPayoutTimingCopy(new Date()),
+    [withdrawOpen, withdrawConfirmation]
+  );
   const earningsCardToneClass =
     earningsValue <= 0
       ? "border-violet-300/85 bg-[linear-gradient(180deg,rgba(193,120,255,0.14),rgba(0,0,0,0.3))] shadow-[0_0_0_1px_rgba(193,120,255,0.9),0_0_22px_rgba(193,120,255,0.86),0_0_56px_rgba(193,120,255,0.72),0_0_108px_rgba(193,120,255,0.56),inset_0_0_20px_rgba(193,120,255,0.27)]"
@@ -379,9 +411,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     const title = options?.immediate
       ? "Withdrawal request received"
       : "Your withdrawal payout window";
+    const expectedLabel = formatPayoutExpectedDate(getExpectedPayoutDate());
     const body = options?.immediate
-      ? `We received your $${reminder.amount} request. Expect payout within 1-2 weeks.`
-      : `Reminder: your $${reminder.amount} payout should land in your account around now.`;
+      ? `We received your $${reminder.amount} request. Expect payout in ${PAYOUT_WINDOW_LABEL} (expected by ${expectedLabel}).`
+      : `Reminder: your $${reminder.amount} payout should land in your account around ${expectedLabel}.`;
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         new Notification(title, { body, tag: `withdrawal-${reminder.requestId}` });
@@ -404,7 +437,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         requestId: input.requestId,
         amount: input.amount,
         affiliateId: input.affiliateId,
-        notifyAt: Number.isFinite(notifyAt) ? notifyAt : Date.now() + 14 * 24 * 60 * 60 * 1000,
+        notifyAt: Number.isFinite(notifyAt) ? notifyAt : getExpectedPayoutDate().getTime(),
       };
       // Ask for permission once (no-op if previously decided).
       try {
@@ -530,14 +563,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         requested_amount: withdrawAmountValue.toFixed(2),
       });
       const submittedAmount = (response.requested_amount ?? withdrawAmountValue.toFixed(2)).toString();
-      // Schedule the user-facing payout window: 14 days from now.
-      const payoutByDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      const payoutByLabel = payoutByDate.toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      const payoutByDate = getExpectedPayoutDate(new Date());
+      const payoutByLabel = formatPayoutExpectedDate(payoutByDate);
       // Reset the form, close the bank-details modal, then open the confirmation overlay.
       setWithdrawMessage(null);
       setWithdrawOpen(false);
@@ -815,7 +842,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                       } hover:scale-[1.03] hover:border-fuchsia-200/80`}
                     >
                       <span className="text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.55)]">SYN</span>{" "}
-                      <span className="text-fuchsia-200 drop-shadow-[0_0_8px_rgba(232,121,249,0.45)]">Payout</span>{" "}
+                      <span className="text-fuchsia-200 drop-shadow-[0_0_8px_rgba(232,121,249,0.45)]">Earning</span>{" "}
                       <span className="text-amber-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">Statement</span>
                     </button>
                   </div>
@@ -1016,7 +1043,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 <div className="mb-3 flex flex-col gap-2 border-b border-cyan-500/35 pb-3 sm:flex-row sm:items-end sm:justify-between">
                   <h3 className="font-heading text-base font-black uppercase tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
                     <span className="text-cyan-100 [text-shadow:0_0_12px_rgba(34,211,238,0.5)]">Syndicate</span>{" "}
-                    <span className="text-fuchsia-200 [text-shadow:0_0_12px_rgba(232,121,249,0.45)]">payout</span>{" "}
+                    <span className="text-fuchsia-200 [text-shadow:0_0_12px_rgba(232,121,249,0.45)]">earning</span>{" "}
                     <span className="text-amber-200 [text-shadow:0_0_12px_rgba(250,204,21,0.4)]">statement</span>
                     <span className="block pt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/90 sm:inline sm:pt-0 sm:before:content-['·'] sm:before:px-2 sm:before:text-cyan-400/60">
                       withdrawals you applied for
@@ -1051,11 +1078,11 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                       <thead>
                         <tr className="border-b border-cyan-500/45 font-mono text-[10px] font-black uppercase tracking-[0.16em] [text-shadow:0_0_8px_rgba(34,211,238,0.35)]">
-                          <th className="py-2 pr-3 text-cyan-200/95">User</th>
-                          <th className="py-2 pr-3 text-fuchsia-200/90">Request</th>
-                          <th className="py-2 pr-3 text-emerald-200/90">Balance snapshot</th>
-                          <th className="py-2 pr-3 text-yellow-200/95">Your payout</th>
-                          <th className="py-2 text-violet-200/90">Recorded</th>
+                          <th className="border-r border-cyan-500/35 px-3 py-2 text-cyan-200/95">User</th>
+                          <th className="border-r border-cyan-500/35 px-3 py-2 text-fuchsia-200/90">Request</th>
+                          <th className="border-r border-cyan-500/35 px-3 py-2 text-emerald-200/90">Balance snapshot</th>
+                          <th className="border-r border-cyan-500/35 px-3 py-2 text-yellow-200/95">Your payout</th>
+                          <th className="px-3 py-2 text-violet-200/90">Applied</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1064,17 +1091,19 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                             key={row.key}
                             className={`border-b border-white/10 font-mono text-xs uppercase tracking-[0.08em] text-white/88 sm:text-sm ${row.muted ? "opacity-45" : ""}`}
                           >
-                            <td className="max-w-[180px] truncate py-2 pr-3 text-cyan-100/95 [text-shadow:0_0_6px_rgba(34,211,238,0.25)]">
+                            <td className="max-w-[180px] truncate border-r border-cyan-500/25 px-3 py-2 text-cyan-100/95 [text-shadow:0_0_6px_rgba(34,211,238,0.25)]">
                               {row.email}
                             </td>
-                            <td className="max-w-[240px] truncate py-2 pr-3 text-fuchsia-100/90 [text-shadow:0_0_6px_rgba(232,121,249,0.22)]">
+                            <td className="max-w-[240px] truncate border-r border-cyan-500/25 px-3 py-2 text-fuchsia-100/90 [text-shadow:0_0_6px_rgba(232,121,249,0.22)]">
                               {row.product}
                             </td>
-                            <td className="py-2 pr-3 text-emerald-100/90 [text-shadow:0_0_6px_rgba(52,211,153,0.2)]">{row.paid}</td>
-                            <td className="py-2 pr-3 font-black text-yellow-200 [text-shadow:0_0_10px_rgba(250,204,21,0.65),0_0_22px_rgba(253,224,71,0.28)]">
+                            <td className="border-r border-cyan-500/25 px-3 py-2 text-emerald-100/90 [text-shadow:0_0_6px_rgba(52,211,153,0.2)]">
+                              {row.paid}
+                            </td>
+                            <td className="border-r border-cyan-500/25 px-3 py-2 font-black text-yellow-200 [text-shadow:0_0_10px_rgba(250,204,21,0.65),0_0_22px_rgba(253,224,71,0.28)]">
                               {row.yourCut}
                             </td>
-                            <td className="py-2 text-violet-200/80 [text-shadow:0_0_6px_rgba(167,139,250,0.2)]">{row.when}</td>
+                            <td className="px-3 py-2 text-violet-200/80 [text-shadow:0_0_6px_rgba(167,139,250,0.2)]">{row.when}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1490,7 +1519,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
               </h3>
               <p className="mt-3 text-center text-base font-semibold leading-relaxed text-cyan-100/95 sm:text-lg">
                 You will get paid within{" "}
-                <span className="font-black text-amber-200">1-2 weeks</span>.
+                <span className="font-black text-amber-200">{PAYOUT_WINDOW_LABEL}</span>.
               </p>
 
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1658,8 +1687,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             ) : null}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-amber-100/95">
-                Payout arrives within 1-2 weeks.
+              <p className="text-sm font-semibold leading-relaxed text-amber-100/95">
+                Payout arrives in{" "}
+                <span className="font-black text-amber-200">{payoutTiming.windowLabel}</span>. Expected by{" "}
+                <span className="font-black text-cyan-200">{payoutTiming.expectedLabel}</span>.
               </p>
               <button
                 type="button"

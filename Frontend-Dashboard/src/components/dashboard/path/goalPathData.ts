@@ -1,3 +1,5 @@
+import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
+
 export type GoalId = "web_dev" | "digital_marketing" | "youtube" | "money_online" | "ai_automation";
 
 /** Visual channel for opportunity cards (Our Methods timeline family). */
@@ -83,7 +85,7 @@ export const PATH_CARD_SKIN: Record<
  * Titles are matched loosely against live playlist/course API names.
  */
 export const PATH_PROGRAM_TITLES: Record<GoalId, readonly string[]> = {
-  web_dev: ["Crypto Trading with Technical Analysis Course", "THE 1 MINUTE SCALPEL"],
+  web_dev: ["Trading with Technical Analysis Course", "THE 1 MINUTE SCALPEL"],
   digital_marketing: [
     "Faceless YouTube AI Content Creator Course",
     "WordPress Blog",
@@ -168,7 +170,7 @@ function mergeProgramPool(
 
   for (const canonical of PATH_PROGRAM_TITLES[goal]) {
     const match = courses.find((c) => titleMatches(c.title, canonical));
-    const title = match?.title ?? canonical;
+    const title = formatProgramDisplayTitle(match?.title ?? canonical);
     const key = normTitle(title);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -182,6 +184,11 @@ function mergeProgramPool(
   }
 
   return out;
+}
+
+/** All programs in the active path focus (for manual browse controls). */
+export function getPathProgramPool(goal: GoalId, courses: { id: string; title: string }[]) {
+  return mergeProgramPool(goal, courses);
 }
 
 /**

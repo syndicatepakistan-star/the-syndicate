@@ -14,9 +14,13 @@ import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylist
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
-  getProgramPlaylistThumbnail,
-  isHiddenProgramPlaylist,
-} from "@/lib/programPlaylistThumbnails";
+  resolveProgramPlaylistDescription,
+  resolveProgramPlaylistSummary,
+  resolveProgramPlaylistThumbnail,
+  resolveProgramPlaylistTitle,
+} from "@/lib/programPlaylistCatalog";
+import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
@@ -494,7 +498,8 @@ export function ProgramsCourseSection({
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;
     const grad = PROGRAM_CARD_BACKGROUNDS[i % PROGRAM_CARD_BACKGROUNDS.length];
-    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id);
+    const cardTitle = resolveProgramPlaylistTitle(pl);
+    const cardSummary = resolveProgramPlaylistSummary(pl);
     const comingSoon = !!pl.is_coming_soon;
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
@@ -542,24 +547,12 @@ export function ProgramsCourseSection({
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2 sm:p-2.5">
             <div className={cn("relative min-h-[8.25rem] flex-1 overflow-hidden rounded-xl border sm:min-h-[9.25rem]", theme.mediaBorder)}>
-              {coverSrc ? (
-                <>
-                  <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
-                  <img
-                    src={coverSrc}
-                    alt=""
-                    loading={j < 2 ? "eager" : "lazy"}
-                    decoding="async"
-                    fetchPriority={j < 1 ? "high" : undefined}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                    className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality] [backface-visibility:hidden]"
-                  />
-                </>
-              ) : (
-                <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
-              )}
+              <ProgramPlaylistCoverImage
+                playlist={pl}
+                gradClassName={grad}
+                loading={j < 2 ? "eager" : "lazy"}
+                fetchPriority={j < 1 ? "high" : undefined}
+              />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
               {locked && !comingSoon ? (
                 <span className="pointer-events-none absolute inset-0 z-[4] bg-black/45" aria-hidden />
@@ -583,8 +576,13 @@ export function ProgramsCourseSection({
                   theme.title
                 )}
               >
-                {pl.title}
+                {cardTitle}
               </div>
+              {cardSummary ? (
+                <p className="mt-1 line-clamp-2 text-left text-[10px] font-medium leading-snug text-white/70 sm:text-[11px]">
+                  {cardSummary}
+                </p>
+              ) : null}
               {!comingSoon ? (
                 <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                   <button
@@ -844,7 +842,19 @@ export function ProgramsCourseSection({
                   <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 sm:gap-5 min-[400px]:grid-cols-2 md:gap-6">
               {visibleApiCourses.map((c, i) => {
                 const grad = PROGRAM_CARD_BACKGROUNDS[(streamPlaylists.length + i) % PROGRAM_CARD_BACKGROUNDS.length];
-                const coverSrc = resolveDjangoMediaUrl(c.cover_image_url);
+                const courseMeta = {
+                  id: c.id,
+                  slug: c.slug,
+                  title: c.title,
+                  description: c.description,
+                  cover_image_url: c.cover_image_url,
+                };
+                const cardTitle = resolveProgramPlaylistTitle(courseMeta);
+                const cardSummary = resolveProgramPlaylistSummary(courseMeta);
+                const courseCoverSrc = resolveProgramPlaylistThumbnail(
+                  courseMeta,
+                  resolveDjangoMediaUrl(c.cover_image_url)
+                );
                 const theme = COURSE_CARD_THEMES[i % COURSE_CARD_THEMES.length];
                 const courseLocked = c.can_access === false;
                 return (
@@ -891,19 +901,29 @@ export function ProgramsCourseSection({
                         className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
                         aria-hidden
                       />
-                      {coverSrc ? (
+                      {courseCoverSrc ? (
                         <img
-                          src={coverSrc}
+                          src={courseCoverSrc}
                           alt=""
                           loading={i < 4 ? "eager" : "lazy"}
                           decoding="async"
                           fetchPriority={i < 2 ? "high" : undefined}
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            const fallback = resolveProgramPlaylistThumbnail(courseMeta, null);
+                            if (fallback && img.src !== fallback && !img.dataset.fallbackApplied) {
+                              img.dataset.fallbackApplied = "1";
+                              img.src = fallback;
+                              return;
+                            }
+                            img.style.display = "none";
+                          }}
                           className="absolute inset-0 z-0 h-full w-full object-cover object-center [image-rendering:high-quality] [backface-visibility:hidden]"
                         />
                       ) : (
                         <div className={cn("absolute inset-0 z-0 bg-gradient-to-t opacity-95", grad)} />
                       )}
-                      {coverSrc ? (
+                      {courseCoverSrc ? (
                         <>
                           <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/35 via-transparent to-transparent to-[45%]" />
                           <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black from-0% via-black/85 via-[32%] to-transparent to-[62%]" />
@@ -930,7 +950,7 @@ export function ProgramsCourseSection({
                               theme.title
                             )}
                           >
-                            {c.title}
+                            {cardTitle}
                           </div>
                           <div
                             className={cn(
@@ -940,9 +960,9 @@ export function ProgramsCourseSection({
                           >
                             {courseLocked ? "Course · not included" : "Course · playlist"}
                           </div>
-                          {c.description ? (
+                          {cardSummary ? (
                             <p className="mt-1.5 line-clamp-4 font-sans text-left text-[13px] font-medium leading-5 tracking-normal text-white/95 antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]">
-                              {c.description.replace(/\s+/g, " ").trim()}
+                              {cardSummary}
                             </p>
                           ) : null}
                         </div>
@@ -960,8 +980,16 @@ export function ProgramsCourseSection({
           {inCourseDetail && detailCourseId !== null ? (
             <CourseVideoPlaylist
               courseId={detailCourseId}
-              courseTitle={activeDetailCourse?.title ?? "Program"}
-              courseDescription={activeDetailCourse?.description ?? ""}
+              courseTitle={
+                activeDetailCourse
+                  ? resolveProgramPlaylistTitle(activeDetailCourse)
+                  : "Program"
+              }
+              courseDescription={
+                activeDetailCourse
+                  ? resolveProgramPlaylistDescription(activeDetailCourse)
+                  : ""
+              }
               autoAdvance
             />
           ) : null}

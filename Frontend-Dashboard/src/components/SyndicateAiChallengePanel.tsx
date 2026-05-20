@@ -671,17 +671,14 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
           ) : topic === "mission-reminder" ? (
             <>
               <p>
-                A <strong className="text-cyan-100">mission reminder</strong> is optional. It lets you pick a <strong className="text-white">date and time</strong> (your device&apos;s local clock) so you remember to finish this mission. Nothing is saved until you press{" "}
-                <strong className="text-white">Done</strong> — then it appears on the <strong className="text-white">Missions</strong> tab and in <strong className="text-white">Syndicate mode reminders</strong> with a countdown to that target time.
+                On any incomplete mission, set a date and time under <strong className="text-white">How will you complete it</strong>. That saves a reminder in{" "}
+                <strong className="text-white">Syndicate mode reminders</strong> with a countdown to your deadline. Reminders stay until you clear them, mark the work finished, or the target time passes. Nothing is saved until you press <strong className="text-white">Done</strong> on the mission detail screen.
               </p>
               <p>
-                The reminder does <strong className="text-white">not</strong> complete the mission for you. It only tracks the deadline you chose and surfaces actions (open the mission, mark done from the reminder flow, or dismiss).
+                While the mission is still on your daily board (about the first 24 hours), use <strong className="text-cyan-100">Open mission</strong> to jump back in. If it has rolled off the board, use <strong className="text-cyan-100">Done</strong> when you completed it or <strong className="text-cyan-100">Dismiss</strong> to remove the nudge. You can clear the picker with <strong className="text-white">Clear reminder</strong> before saving.
               </p>
               <p>
-                <strong className="text-amber-100">Points:</strong> if the target time passes and this mission is <strong className="text-white">still incomplete</strong>, the server may deduct <strong className="text-amber-100">1 point once</strong> from your total for that reminder. Completing the mission removes the reminder and avoids that penalty for this entry.
-              </p>
-              <p>
-                Missions can roll off the daily board after 24 hours, but the reminder can stay until the target time. Use <strong className="text-white">Open mission</strong> while the mission is still on the board; later, use the options on the reminder card. You can clear the picker with <strong className="text-white">Clear reminder</strong> before saving.
+                <strong className="text-amber-100">Points:</strong> if the deadline passes and the mission is <strong className="text-white">still incomplete</strong>, you may lose <strong className="text-amber-100">1 point once</strong> for that reminder. Completing the mission removes the reminder and avoids that penalty.
               </p>
             </>
           ) : (
@@ -5870,9 +5867,16 @@ export function SyndicateAiChallengePanel() {
           ) : !showStatsProfile && syndicateView === "reminders" ? (
           <>
             <div className="syndicate-readable mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="syndicate-readable text-[21px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)] sm:text-[24px]">
-                Syndicate mode reminders
-              </h3>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h3 className="syndicate-readable text-[21px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)] sm:text-[24px]">
+                  Syndicate mode reminders
+                </h3>
+                <SyndicateHelpMark
+                  topic="mission-reminder"
+                  label="How Syndicate mode reminders work"
+                  onOpen={openSyndicateHelp}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setSyndicateView("dashboard")}
@@ -5881,11 +5885,8 @@ export function SyndicateAiChallengePanel() {
                 Back to dashboard
               </button>
             </div>
-            <p className="syndicate-readable mb-3 max-w-3xl text-[13px] leading-relaxed text-white/70 sm:mb-4 sm:text-[14px]">
-              Set date &amp; time under <span className="text-white/85">How will you complete it</span> on an incomplete mission. Syndicate mode reminders stay until the target time or you clear them.
-              Within 24 hours of the mission appearing, use <span className="font-semibold text-cyan-200/90">Open mission</span>; after that, use{" "}
-              <span className="font-semibold text-cyan-200/90">Done</span> or <span className="font-semibold text-cyan-200/90">Dismiss</span>. If the target passes with no action, the server may deduct{" "}
-              <span className="font-semibold text-amber-200/90">1 point</span> and remove the reminder.
+            <p className="syndicate-readable mb-3 max-w-3xl text-[13px] leading-relaxed text-white/60 sm:mb-4 sm:text-[14px]">
+              Deadlines you set on incomplete missions. Tap <span className="font-semibold text-red-200/90">?</span> for how reminders, actions, and points work.
             </p>
             {missionsTabReminders.length === 0 ? (
               <p className="syndicate-readable rounded-lg border border-white/10 bg-black/30 px-4 py-8 text-center text-[14px] text-white/55">

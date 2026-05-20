@@ -8,12 +8,14 @@ import {
   fetchStreamPlaylists,
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
-import { resolveDjangoMediaUrl } from "@/lib/courses-api";
 import { focusProgramCardWithRetries } from "@/lib/programCardScroll";
 import {
-  getProgramPlaylistThumbnail,
-  isHiddenProgramPlaylist,
-} from "@/lib/programPlaylistThumbnails";
+  resolveProgramPlaylistSummary,
+  resolveProgramPlaylistThumbnail,
+  resolveProgramPlaylistTitle,
+} from "@/lib/programPlaylistCatalog";
+import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
@@ -212,7 +214,7 @@ export function PlaylistCardsSection({
   useEffect(() => {
     // Warm first visible cover images so public route transitions feel snappier.
     const topCovers = visiblePlaylists
-      .map((pl) => resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id))
+      .map((pl) => resolveProgramPlaylistThumbnail(pl, null))
       .filter((src): src is string => Boolean(src))
       .slice(0, 8);
     topCovers.forEach((src) => {
@@ -224,7 +226,8 @@ export function PlaylistCardsSection({
 
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
-    const coverSrc = resolveDjangoMediaUrl(pl.cover_image_url) ?? getProgramPlaylistThumbnail(pl.id);
+    const cardTitle = resolveProgramPlaylistTitle(pl);
+    const cardSummary = resolveProgramPlaylistSummary(pl);
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
     const price = parseNumber(pl.price);
     const isSpotlight = highlightedPlaylistId === pl.id;
@@ -288,24 +291,12 @@ export function PlaylistCardsSection({
         <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
           <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-3 sm:p-3.5">
             <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[17rem] sm:flex-1">
-              {coverSrc ? (
-                <>
-                  <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
-                  <img
-                    src={coverSrc}
-                    alt=""
-                    loading={j < 2 ? "eager" : "lazy"}
-                    fetchPriority={j < 2 ? "high" : "auto"}
-                    decoding="async"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                    className="absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality] [backface-visibility:hidden]"
-                  />
-                </>
-              ) : (
-                <div className={cn("h-full w-full bg-gradient-to-t opacity-95", grad)} />
-              )}
+              <ProgramPlaylistCoverImage
+                playlist={pl}
+                gradClassName={grad}
+                loading={j < 2 ? "eager" : "lazy"}
+                fetchPriority={j < 2 ? "high" : "auto"}
+              />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
             </div>
             <div className="absolute right-3 top-3 z-[4]">
@@ -324,8 +315,13 @@ export function PlaylistCardsSection({
               )}
             >
               <div className={cn("line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]", theme.title)}>
-                {pl.title}
+                {cardTitle}
               </div>
+              {cardSummary ? (
+                <p className="mt-1.5 line-clamp-3 text-left text-[11px] font-medium leading-snug text-white/72 sm:text-[12px]">
+                  {cardSummary}
+                </p>
+              ) : null}
               <div className="mt-2" />
               <div className="mt-2 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button

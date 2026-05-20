@@ -17,7 +17,7 @@ export default function ProgramsPage() {
       <NavApp />
       <section className="space-y-6 pt-8 sm:space-y-8 sm:pt-10">
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
-        <PublicPlanOfferCards />
+        <PublicPlanOfferCards size="large" />
       </section>
       <PublicGoalPathSection />
       <section

@@ -111,6 +111,22 @@ const METHOD_TIMELINE = [
   },
 ] as const
 
+function MethodCtaButtons({ centered = false }: { centered?: boolean }) {
+  return (
+    <div className={cx('flex flex-wrap gap-3', centered && 'justify-center')}>
+      <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
+        Join Now
+      </Link>
+      <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
+        View Programs
+      </Link>
+      <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
+        Syn Diagnosis
+      </Link>
+    </div>
+  )
+}
+
 export default function OurMethodsPage() {
   const accentStyles: Record<MethodBlock['accent'], { title: string }> = {
     cyan: {
@@ -291,9 +307,7 @@ export default function OurMethodsPage() {
                     Master yourself. Master the system.
                   </p>
                   <div className="mt-7">
-                    <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                      Enter This Track
-                    </Link>
+                    <MethodCtaButtons centered />
                   </div>
                 </CyberChamferFrame>
               ) : (
@@ -359,10 +373,8 @@ export default function OurMethodsPage() {
                         </CyberInsetPanel>
                       </div>
 
-                      <div className="mt-6">
-                        <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                          Enter This Track
-                        </Link>
+                      <div className={cx('mt-6', isMoneyPower && 'flex justify-center')}>
+                        <MethodCtaButtons centered={isMoneyPower} />
                       </div>
                     </div>
                   </CyberChamferFrame>

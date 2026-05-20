@@ -1,6 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
+import type { ReactPortal } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
@@ -55,7 +56,13 @@ import {
 } from "@/lib/portal-api";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 import toast, { Toaster } from "react-hot-toast";
-import QRCode from "qrcode";
+import { SynCertificateCard } from "@/components/SynCertificateCard";
+import { buildCertificateVerifyUrl } from "@/lib/certificate-public-url";
+import {
+  buildCertificateFilenameStem,
+  downloadSynCertificate,
+  formatCertificateIssuedOn,
+} from "@/lib/download-certificate";
 
 type NavItem = { label: string; key: string; active?: boolean };
 type Course = {
@@ -152,7 +159,7 @@ function DashboardChromeLetterGlitch() {
   return (
     <div
       className={cn(
-        "pointer-events-none absolute inset-0 z-0 min-h-0 min-w-0 overflow-hidden",
+        "dashboard-chrome-letter-glitch pointer-events-none absolute inset-0 z-0 min-h-0 min-w-0 overflow-hidden",
         /* Abs-pos children of a CSS grid default to the first cell — span the full shell. */
         "[grid-column:1/-1] [grid-row:1/-1]"
       )}
@@ -165,7 +172,7 @@ function DashboardChromeLetterGlitch() {
           outerVignette
           smooth
           glitchColors={["#4a2b72", "#61dca3", "#61b3dc"]}
-          layerOpacity={0.06}
+          layerOpacity={0.022}
           className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-transparent"
         />
       </div>
@@ -1730,160 +1737,12 @@ type IssuedCertificate = {
 
 const SETTINGS_CERTIFICATE_PREFIX = "syn_playlist_certificate_v1:";
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-async function buildCertificateSvg(cert: IssuedCertificate, assetBaseUrl: string): Promise<string> {
-  const owner = escapeXml(cert.name || "Operator");
-  const course = escapeXml(cert.playlistTitle || "Syndicate Program");
-  const certId = escapeXml(cert.certificateId);
-  const qrSize = 104;
-  const qrX = 1076;
-  const qrY = 332;
-  const qrPad = 8;
-  const qrFrameX = qrX - qrPad;
-  const qrFrameY = qrY - qrPad;
-  const qrFrameSize = qrSize + qrPad * 2;
-  const qrPayload = cert.certificateId || "SYN-TOKEN";
-  const qrDataUrl = escapeXml(
-    await QRCode.toDataURL(qrPayload, {
-      margin: 2,
-      width: qrSize,
-      color: {
-        dark: "#0a1022",
-        light: "#ffffff",
-      },
-    }),
-  );
-  const qrMarkup = `<rect x="${qrFrameX}" y="${qrFrameY}" width="${qrFrameSize}" height="${qrFrameSize}" rx="6" fill="#ffffff" stroke="#bde8ff" stroke-opacity="0.45" stroke-width="1.5"/><image href="${qrDataUrl}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}" preserveAspectRatio="xMidYMid meet"/>`;
-  const issued = escapeXml(new Date(cert.issuedAt).toLocaleDateString(undefined, { dateStyle: "long" }));
-  const pageW =
-    typeof window !== "undefined" ? Math.max(320, Math.round(window.innerWidth)) : 1920;
-  const pageH =
-    typeof window !== "undefined" ? Math.max(480, Math.round(window.innerHeight)) : 1080;
-  const designW = 1260;
-  const designH = 980;
-  // Scale to viewport; compact layout removes dead space between sections.
-  const maxCertW = pageW - 32;
-  const maxCertH = pageH - 32;
-  const scale = Math.min(maxCertW / designW, maxCertH / designH);
-  const certW = Math.round(designW * scale);
-  const certH = Math.round(designH * scale);
-  const offsetX = Math.round((pageW - certW) / 2);
-  const offsetY = Math.round((pageH - certH) / 2);
-  const safeBase = escapeXml(assetBaseUrl.replace(/\/$/, ""));
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${pageW}" height="${pageH}" viewBox="0 0 ${pageW} ${pageH}">
-  <defs>
-    <style>
-      .tech { font-family: Orbitron, "BankGothic Md BT", "Eurostile", "Arial Black", Arial, sans-serif; }
-      .body { font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif; }
-    </style>
-    <linearGradient id="bgMain" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#070a1a"/>
-      <stop offset="45%" stop-color="#0d1230"/>
-      <stop offset="100%" stop-color="#121a39"/>
-    </linearGradient>
-    <radialGradient id="glowCenter" cx="50%" cy="30%" r="58%">
-      <stop offset="0%" stop-color="rgba(56,189,248,0.35)"/>
-      <stop offset="100%" stop-color="rgba(56,189,248,0)"/>
-    </radialGradient>
-    <radialGradient id="glowLeft" cx="18%" cy="78%" r="50%">
-      <stop offset="0%" stop-color="rgba(236,72,153,0.22)"/>
-      <stop offset="100%" stop-color="rgba(236,72,153,0)"/>
-    </radialGradient>
-    <radialGradient id="glowRight" cx="82%" cy="24%" r="54%">
-      <stop offset="0%" stop-color="rgba(249,115,22,0.22)"/>
-      <stop offset="100%" stop-color="rgba(249,115,22,0)"/>
-    </radialGradient>
-    <pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse">
-      <circle cx="1.6" cy="1.6" r="1.1" fill="#c7d2fe" fill-opacity="0.24"/>
-    </pattern>
-  </defs>
-  <rect width="${pageW}" height="${pageH}" fill="#030614"/>
-  <g transform="translate(${offsetX}, ${offsetY}) scale(${scale})">
-  <rect width="${designW}" height="${designH}" fill="url(#bgMain)"/>
-  <rect width="${designW}" height="${designH}" fill="url(#glowCenter)"/>
-  <rect width="${designW}" height="${designH}" fill="url(#glowLeft)"/>
-  <rect width="${designW}" height="${designH}" fill="url(#glowRight)"/>
-  <rect width="${designW}" height="${designH}" fill="url(#dots)"/>
-
-  <rect x="28" y="28" width="1204" height="924" rx="22" fill="none" stroke="#7dd3fc" stroke-opacity="0.9" stroke-width="4"/>
-  <rect x="42" y="42" width="1176" height="896" rx="18" fill="none" stroke="#7dd3fc" stroke-opacity="0.45" stroke-width="2"/>
-  <rect x="58" y="58" width="1144" height="868" rx="14" fill="none" stroke="#7dd3fc" stroke-opacity="0.28" stroke-width="2"/>
-
-  <path d="M74 74 h48 v4 h-44 v44 h-4 z" fill="#fb7185"/>
-  <path d="M1186 74 h-48 v4 h44 v44 h4 z" fill="#fb7185"/>
-  <path d="M74 906 h48 v-4 h-44 v-44 h-4 z" fill="#fb7185"/>
-  <path d="M1186 906 h-48 v-4 h44 v-44 h4 z" fill="#fb7185"/>
-
-  <image href="${safeBase}/assets/logo.webp" x="84" y="100" width="250" height="98" preserveAspectRatio="xMidYMid meet"/>
-  <text x="372" y="150" fill="#fdd02f" font-size="22" class="tech" font-weight="700" letter-spacing="3">MONEY · POWER · HONOUR · FREEDOM</text>
-
-  <text x="630" y="250" fill="#cffafe" font-size="62" class="tech" font-weight="700" text-anchor="middle">SYN TOKEN</text>
-  <text x="630" y="286" fill="#dbeafe" font-size="20" class="tech" text-anchor="middle" letter-spacing="3">OF ACHIEVEMENT</text>
-
-  <rect x="74" y="322" width="1112" height="120" rx="12" fill="rgba(9,13,35,0.5)" stroke="#e879f9" stroke-opacity="0.5" stroke-width="2"/>
-  <text x="128" y="358" fill="#bde8ff" font-size="18" class="tech" letter-spacing="2">TOKEN OWNER :</text>
-  <text x="358" y="360" fill="#fdd02f" font-size="30" class="tech" font-weight="700">${owner}</text>
-  <text x="128" y="416" fill="#bde8ff" font-size="18" class="tech" letter-spacing="2">COURSE :</text>
-  <text x="358" y="416" fill="#fdd02f" font-size="30" class="tech" font-weight="700">${course}</text>
-  <text x="1182" y="358" fill="#bde8ff" font-size="14" class="tech" letter-spacing="1.8" text-anchor="end">TOKEN QR</text>
-  ${qrMarkup}
-
-  <rect x="74" y="450" width="1112" height="118" rx="12" fill="rgba(5,8,22,0.55)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
-  <text x="630" y="482" fill="#bde8ff" font-size="18" class="tech" letter-spacing="2" text-anchor="middle">CREDENTIAL OVERVIEW</text>
-  <text x="630" y="514" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
-    Awarded for high-performance completion of the ${course} track with verified execution milestones.
-  </text>
-  <text x="630" y="542" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
-    Strategic delivery consistency, secure credential validation, and cross-network capability are confirmed.
-  </text>
-  <text x="630" y="570" fill="#b8c6d9" font-size="17" class="body" font-weight="700" text-anchor="middle">
-    Holder authorization is recognized across Syndicate partner ecosystems for verified performance.
-  </text>
-
-  <rect x="74" y="588" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.45" stroke-width="2"/>
-  <text x="100" y="611" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">ISSUED</text>
-  <text x="100" y="636" fill="#e2f4ff" font-size="14" class="tech">${issued}</text>
-
-  <rect x="640" y="588" width="546" height="60" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
-  <text x="666" y="611" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">STATUS</text>
-  <text x="666" y="636" fill="#9bf38d" font-size="14" class="tech" font-weight="700">Verified</text>
-
-  <rect x="74" y="658" width="1112" height="44" rx="10" fill="rgba(0,0,0,0.36)" stroke="#e879f9" stroke-opacity="0.55" stroke-width="2"/>
-  <text x="100" y="686" fill="#bde8ff" font-size="11" class="tech" letter-spacing="2">TOKEN ID</text>
-  <text x="238" y="686" fill="#dff7ff" font-size="14" class="tech">${certId}</text>
-
-  <image href="${safeBase}/assets/coin-gold.png" x="500" y="712" width="260" height="200" preserveAspectRatio="xMidYMid meet"/>
-  <text x="630" y="918" fill="#bde8ff" font-size="16" class="tech" text-anchor="middle" letter-spacing="2">SYNDICATE CREDENTIAL TOKEN</text>
-  </g>
-</svg>`;
-}
-
-async function downloadCertificateSvg(cert: IssuedCertificate) {
-  const assetBaseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const svg = await buildCertificateSvg(cert, assetBaseUrl);
-  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const safeCourse = (cert.playlistTitle || "course").replace(/[^a-z0-9-_]+/gi, "-").replace(/-+/g, "-");
-  a.href = url;
-  a.download = `SYN-Certificate-${safeCourse}-${cert.certificateId}.svg`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 function SettingsCertificatesSection() {
   const [certs, setCerts] = useState<IssuedCertificate[]>([]);
+  const [downloadTarget, setDownloadTarget] = useState<IssuedCertificate | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const exportCardRef = useRef<HTMLDivElement | null>(null);
+  const downloadSessionRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -1944,8 +1803,82 @@ function SettingsCertificatesSection() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!downloadTarget) return;
+
+    const session = ++downloadSessionRef.current;
+    const target = downloadTarget;
+    const filenameStem = buildCertificateFilenameStem(target.playlistTitle, target.certificateId);
+    const cardInput = {
+      ownerName: target.name || "Member",
+      courseTitle: target.playlistTitle || "Syndicate Program",
+      certificateId: target.certificateId,
+      issuedOn: formatCertificateIssuedOn(target.issuedAt),
+      verifyUrl: buildCertificateVerifyUrl(target.certificateId),
+      filenameStem,
+    };
+
+    const runDownload = async () => {
+      let card: HTMLDivElement | null = null;
+      for (let attempt = 0; attempt < 30 && !card; attempt += 1) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        if (session !== downloadSessionRef.current) return;
+        card = exportCardRef.current;
+        if (!card) await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+      }
+
+      if (session !== downloadSessionRef.current) return;
+
+      try {
+        const format = await downloadSynCertificate(card, cardInput, window.location.origin);
+        if (format === "svg") {
+          toast.success("Certificate downloaded as SVG.");
+        }
+      } catch (err) {
+        console.error("Certificate download failed:", err);
+        toast.error("Could not download certificate. Please try again.");
+      } finally {
+        if (session === downloadSessionRef.current) {
+          setDownloadingId(null);
+          setDownloadTarget(null);
+        }
+      }
+    };
+
+    void runDownload();
+  }, [downloadTarget]);
+
+  const requestDownload = (cert: IssuedCertificate) => {
+    setDownloadingId(cert.certificateId);
+    setDownloadTarget(cert);
+  };
+
+  const exportPortal: ReactPortal | null =
+    downloadTarget && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            aria-hidden
+            className="pointer-events-none fixed left-0 top-0 z-[9999] w-[760px]"
+            style={{ transform: 'translateX(-200vw)' }}
+          >
+            <SynCertificateCard
+              ref={exportCardRef}
+              forExport
+              ownerName={downloadTarget.name || "Member"}
+              courseTitle={downloadTarget.playlistTitle || "Syndicate Program"}
+              certificateId={downloadTarget.certificateId}
+              issuedOn={formatCertificateIssuedOn(downloadTarget.issuedAt)}
+              verifyUrl={buildCertificateVerifyUrl(downloadTarget.certificateId)}
+              className="w-[760px]"
+            />
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <section id="settings-certificates" className="w-full scroll-mt-24">
+      {exportPortal}
       <div className="rounded-xl border border-sky-300/28 bg-[#040814]/85 p-[clamp(0.8rem,1.6vw,1.2rem)] shadow-[0_0_0_1px_rgba(56,189,248,0.08),0_0_18px_rgba(56,189,248,0.1)]">
         <div className="mb-3 border-b border-sky-300/20 pb-3">
           <h2 className="text-[clamp(1.1rem,1.2vw+0.75rem,1.5rem)] font-black uppercase tracking-[0.12em] text-sky-100">
@@ -1968,10 +1901,11 @@ function SettingsCertificatesSection() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void downloadCertificateSvg(cert)}
-                  className="rounded-md border border-emerald-300/45 bg-emerald-500/12 px-3 py-2 text-[12px] font-black uppercase tracking-[0.08em] text-emerald-100 transition hover:bg-emerald-500/20"
+                  disabled={downloadingId === cert.certificateId}
+                  onClick={() => requestDownload(cert)}
+                  className="rounded-md border border-emerald-300/45 bg-emerald-500/12 px-3 py-2 text-[12px] font-black uppercase tracking-[0.08em] text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Download
+                  {downloadingId === cert.certificateId ? "Downloading…" : "Download"}
                 </button>
               </div>
             ))}

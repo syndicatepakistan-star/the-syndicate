@@ -9,7 +9,7 @@ import {
   ProgramPlaylistDescriptionModal,
   PROGRAM_DETAIL_TRIGGER_ATTR,
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
-import { OFFER_PLAN_THUMB_MONEY_MASTERY, OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
+import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -217,7 +217,6 @@ export function ProgramsCourseSection({
   const [checkoutBusyPlaylistId, setCheckoutBusyPlaylistId] = useState<number | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [bundleCheckoutBusy, setBundleCheckoutBusy] = useState(false);
-  const [kingCheckoutBusy, setKingCheckoutBusy] = useState(false);
   const [playlistDescriptionModal, setPlaylistDescriptionModal] = useState<StreamPlaylistListItem | null>(null);
 
   const reloadApiCourses = useCallback(async () => {
@@ -395,35 +394,6 @@ export function ProgramsCourseSection({
     }
   }, [bundleCheckoutBusy, reloadApiCourses, reloadStreamPlaylists]);
 
-  const startKingCheckout = useCallback(async () => {
-    if (kingCheckoutBusy) return;
-    setCheckoutError(null);
-    setKingCheckoutBusy(true);
-    try {
-      const result = await startPlanCheckout({
-        plan: "king",
-        billing: "monthly",
-        amount: "19.99",
-        postAuthNext: "/dashboard?section=programs",
-      });
-      if (result.status === "checkout" || result.status === "auth_required") {
-        return;
-      }
-      if (result.status === "already_unlocked") {
-        await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
-        toast.success(result.message || "The King plan is already active for this account.");
-        return;
-      }
-      if (result.status === "error") {
-        throw new Error(result.message);
-      }
-    } catch (error) {
-      setCheckoutError(error instanceof Error ? error.message : "Could not start The King checkout.");
-    } finally {
-      setKingCheckoutBusy(false);
-    }
-  }, [kingCheckoutBusy, reloadApiCourses, reloadStreamPlaylists]);
-
   const backToProgramGrid = () => {
     setSecureView("grid");
     setDetailCourseId(null);
@@ -484,97 +454,16 @@ export function ProgramsCourseSection({
     }));
   }, [showBothPlaylistColumns, visibleBusinessPsychologyPlaylists, visibleBusinessModelPlaylists]);
 
-  const offerPlanCardsPair = (
-    <div className="flex min-h-0 min-w-0 shrink-0 justify-end self-start">
-      <div className="grid w-max max-w-full grid-cols-2 gap-3 sm:gap-4">
-        <div className="flex w-[min(48vw,208px)] shrink-0 flex-col overflow-hidden rounded-lg border border-amber-400/50 bg-[#070a12] sm:w-[232px] md:w-[260px] lg:w-[276px]">
-          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
-            <img
-              src={OFFER_PLAN_THUMB_MONEY_MASTERY}
-              alt=""
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              className="h-full w-full object-cover object-center [image-rendering:high-quality]"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-black/35 to-black/20"
-              aria-hidden
-            />
-          </div>
-          <div className="flex flex-col gap-1 p-2 sm:p-2.5">
-            <div className="text-[9px] font-black uppercase leading-tight tracking-[0.1em] text-fuchsia-100 sm:text-[10px]">
-              Money Mastery Bundle
-            </div>
-            <p className="line-clamp-2 text-[10px] leading-snug text-cyan-50/90 sm:text-[11px]">
-              Unlock all programs at once (all playlist categories and courses). One checkout, instant full program access.
-            </p>
-            <div className="mt-1 flex flex-col gap-1 border-t border-white/10 pt-1.5">
-              <span className="w-fit shrink-0 rounded border border-amber-300/70 bg-amber-950/70 px-1.5 py-0.5 text-[10px] font-black text-amber-100 sm:text-[11px]">
-                $333
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  void startBundleCheckout();
-                }}
-                disabled={bundleCheckoutBusy}
-                className={cn(
-                  "w-full rounded-md border px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] transition sm:py-2 sm:text-[10px]",
-                  "border-cyan-300/75 bg-[linear-gradient(135deg,rgba(8,51,68,0.92),rgba(6,78,71,0.9))] text-cyan-50",
-                  "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                )}
-              >
-                {bundleCheckoutBusy ? "Redirecting..." : "Unlock All Programs"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex w-[min(48vw,208px)] shrink-0 flex-col overflow-hidden rounded-lg border border-violet-400/55 bg-[#07060f] sm:w-[232px] md:w-[260px] lg:w-[276px]">
-          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
-            <img
-              src={OFFER_PLAN_THUMB_THE_KING}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover object-center [image-rendering:high-quality]"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/88 via-violet-950/35 to-black/25"
-              aria-hidden
-            />
-          </div>
-          <div className="flex flex-col gap-1 p-2 sm:p-2.5">
-            <div className="text-[9px] font-black uppercase leading-tight tracking-[0.1em] text-violet-100 sm:text-[10px]">
-              The King
-            </div>
-            <p className="line-clamp-2 text-[10px] leading-snug text-white/85 sm:text-[11px]">
-              Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.
-            </p>
-            <div className="mt-1 flex flex-col gap-1 border-t border-white/10 pt-1.5">
-              <span className="w-fit shrink-0 rounded border border-violet-300/70 bg-violet-950/60 px-1.5 py-0.5 text-[10px] font-black text-violet-100 sm:text-[11px]">
-                $19.99
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  void startKingCheckout();
-                }}
-                disabled={kingCheckoutBusy}
-                className={cn(
-                  "w-full rounded-md border px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] transition sm:py-2 sm:text-[10px]",
-                  "border-violet-300/75 bg-[linear-gradient(135deg,rgba(46,16,78,0.92),rgba(60,24,90,0.9))] text-violet-50",
-                  "hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                )}
-              >
-                {kingCheckoutBusy ? "Redirecting..." : "Unlock"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  const handleOfferAlreadyUnlocked = useCallback(
+    async (plan: "bundle" | "king") => {
+      await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
+      toast.success(
+        plan === "bundle"
+          ? "Money Mastery already active. All programs are unlocked."
+          : "The King plan is already active for this account."
+      );
+    },
+    [reloadApiCourses, reloadStreamPlaylists]
   );
 
   useEffect(() => {
@@ -734,22 +623,30 @@ export function ProgramsCourseSection({
       {showSecureBlock ? (
         <div className="mb-8 space-y-5">
           {!inProgramLessonView ? (
-            hasCatalogItems && secureView === "grid" && streamPlaylists.length > 0 ? (
-              <div className="pb-2 text-left sm:pb-3">
-                <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-5">
-                  <div className="flex min-w-0 max-w-full flex-col gap-2 max-md:order-2 md:max-w-[min(40rem,100%)]">
-                    <div className="text-[18px] font-black uppercase tracking-[0.16em] text-[color:var(--gold)]/95 [text-shadow:0_0_12px_rgba(250,204,21,0.2)] sm:text-[24px]">
-                      Programs
-                    </div>
-                    <p className="max-w-4xl text-[17px] leading-relaxed text-white/82 sm:text-[24px] sm:leading-[1.35]">
-                      {useApiProgramBrowser
-                        ? "Browse all playlists here, and open courses for lesson playlists and progress."
-                        : "When published programs are available from the API, you can open any course, watch lessons, and track your learning flow from one place."}
-                    </p>
-                    <div className="-mx-[var(--fluid-section-p)] mt-2 w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
-                      <div className="w-full space-y-3">
-                        <div className="flex min-w-0 w-full max-w-full flex-col gap-2.5 self-start md:max-w-[min(40rem,100%)]">
-                          <div className="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 md:gap-4 [&::-webkit-scrollbar]:hidden">
+            <div className="space-y-8 pb-2 sm:space-y-10 sm:pb-3">
+              <div className="w-full text-left">
+                <div className="text-[18px] font-black uppercase tracking-[0.16em] text-[color:var(--gold)]/95 [text-shadow:0_0_12px_rgba(250,204,21,0.2)] sm:text-[24px]">
+                  Programs
+                </div>
+                <p className="mt-2 max-w-4xl text-[17px] leading-relaxed text-white/82 sm:text-[24px] sm:leading-[1.35]">
+                  {useApiProgramBrowser
+                    ? "Browse all playlists here, and open courses for lesson playlists and progress."
+                    : "When published programs are available from the API, you can open any course, watch lessons, and track your learning flow from one place."}
+                </p>
+              </div>
+              {secureView === "grid" ? (
+                <div className="w-full space-y-6 sm:space-y-8">
+                  <PublicPlanOfferCards
+                    checkoutReturnPath="/dashboard?section=programs"
+                    size="large"
+                    onAlreadyUnlocked={handleOfferAlreadyUnlocked}
+                    onCheckoutError={setCheckoutError}
+                  />
+                  {hasCatalogItems && streamPlaylists.length > 0 ? (
+                    <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
+                      <div className="mx-auto w-full max-w-4xl space-y-3">
+                        <div className="flex min-w-0 w-full max-w-full flex-col gap-2.5">
+                          <div className="flex flex-nowrap items-center justify-center gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 md:gap-4 [&::-webkit-scrollbar]:hidden">
                             <button
                               type="button"
                               onClick={() => setPlaylistCategoryFilter("business_psychology")}
@@ -801,22 +698,10 @@ export function ProgramsCourseSection({
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="max-md:order-1 md:justify-self-end">{offerPlanCardsPair}</div>
+                  ) : null}
                 </div>
-              </div>
-            ) : (
-              <div className="pb-3 text-left sm:pb-4">
-                <div className="text-[18px] font-black uppercase tracking-[0.16em] text-[color:var(--gold)]/95 [text-shadow:0_0_12px_rgba(250,204,21,0.2)] sm:text-[24px]">
-                  Programs
-                </div>
-                <p className="mt-2 max-w-4xl text-[17px] leading-relaxed text-white/82 sm:text-[24px] sm:leading-[1.35]">
-                  {useApiProgramBrowser
-                    ? "Browse all playlists here, and open courses for lesson playlists and progress."
-                    : "When published programs are available from the API, you can open any course, watch lessons, and track your learning flow from one place."}
-                </p>
-              </div>
-            )
+              ) : null}
+            </div>
           ) : null}
           {coursesError ? (
             <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{coursesError}</div>

@@ -1617,6 +1617,25 @@ figcaption {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
 }
 
+/* /dashboard private shell — softer matrix glitch (scanlines, noise, text split) */
+.dashboard-hamburger-chrome.hud-scanlines::before {
+  opacity: 0.12;
+}
+
+.dashboard-hamburger-chrome.hud-noise::after {
+  opacity: 0.035;
+}
+
+.dashboard-hamburger-chrome.is-glitching .glitch-text::before,
+.dashboard-hamburger-chrome.is-glitching .glitch-text::after {
+  opacity: 0.42;
+}
+
+.dashboard-hamburger-chrome .nav-glitch {
+  color: rgba(197, 179, 88, 0.72);
+  text-shadow: 0 0 12px rgba(197, 179, 88, 0.08);
+}
+
 /* Cut-corner frame helpers (matching the screenshot’s beveled panels) */
 .cut-frame {
   clip-path: polygon(
@@ -1826,6 +1845,31 @@ figcaption {
   }
 }
 
+.dashboard-hamburger-chrome.syndicate-mood-context .syndicate-dash-scanlines,
+.syndicate-mood-context.dashboard-hamburger-chrome .syndicate-dash-scanlines {
+  opacity: 0.22;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes syndicate-crt-drift-dashboard {
+    0%,
+    100% {
+      opacity: 0.2;
+    }
+    48% {
+      opacity: 0.26;
+    }
+    52% {
+      opacity: 0.18;
+    }
+  }
+
+  .dashboard-hamburger-chrome.syndicate-mood-context .syndicate-dash-scanlines,
+  .syndicate-mood-context.dashboard-hamburger-chrome .syndicate-dash-scanlines {
+    animation: syndicate-crt-drift-dashboard 7.5s ease-in-out infinite;
+  }
+}
+
 .syndicate-mood-context .syndicate-missions-shell {
   border-color: transparent !important;
   background:
@@ -1988,37 +2032,37 @@ figcaption {
 }
 
 .syndicate-mood-context .syndicate-dash-outer
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled),
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled),
 .syndicate-mood-context .syndicate-detail-pane
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled),
-.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled),
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled),
+.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled),
 .syndicate-mood-context[role="dialog"]
-  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled),
-.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(:disabled) {
+  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled),
+.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled) {
   transition:
     filter 0.2s ease,
     transform 0.14s ease,
     box-shadow 0.2s ease;
 }
 .syndicate-mood-context .syndicate-dash-outer
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):hover,
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):hover,
 .syndicate-mood-context .syndicate-detail-pane
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):hover,
-.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):hover,
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):hover,
+.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):hover,
 .syndicate-mood-context[role="dialog"]
-  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):hover,
-.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(:disabled):hover {
+  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):hover,
+.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):hover {
   filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.42)) drop-shadow(0 0 22px rgba(56, 189, 248, 0.14));
   transform: translateY(-1px);
 }
 .syndicate-mood-context .syndicate-dash-outer
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):active,
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):active,
 .syndicate-mood-context .syndicate-detail-pane
-  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):active,
-.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):active,
+  button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):active,
+.syndicate-mood-context main button:not(.syndicate-nav-action):not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):active,
 .syndicate-mood-context[role="dialog"]
-  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(:disabled):active,
-.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(:disabled):active {
+  button:not(.syndicate-help-mark):not(.syndicate-link-skip):not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):active,
+.syndicate-mood-context.syndicate-admin-recording-shell button:not(.syndicate-hud-cta):not(.syndicate-quick-action-card):not(:disabled):active {
   transform: translateY(0) scale(0.98);
   filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.55)) drop-shadow(0 0 26px rgba(34, 211, 238, 0.18));
 }
@@ -3635,6 +3679,260 @@ figcaption {
   --snc-bg-b: rgba(2, 12, 10, 0.98);
 }
 
+/* Syndicate dashboard — dystopian neon action cards (Quick actions, etc.) */
+.syndicate-quick-action-card {
+  --qac-neon: rgba(34, 211, 238, 0.88);
+  --qac-neon-dim: rgba(34, 211, 238, 0.42);
+  --qac-neon-soft: rgba(34, 211, 238, 0.14);
+  --qac-bg-a: rgba(8, 18, 32, 0.96);
+  --qac-bg-b: rgba(2, 6, 14, 0.99);
+  --qac-text: #cffafe;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  min-height: 3.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem 0.95rem 1.15rem;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", "Segoe UI Mono", monospace;
+  background:
+    linear-gradient(125deg, var(--qac-neon-soft) 0%, transparent 38%),
+    linear-gradient(168deg, var(--qac-bg-a) 0%, var(--qac-bg-b) 52%, rgba(0, 0, 0, 0.99) 100%);
+  clip-path: polygon(
+    12px 0%,
+    calc(100% - 8px) 0%,
+    100% 10px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    8px 100%,
+    0% calc(100% - 10px),
+    0% 12px
+  );
+  box-shadow:
+    0 0 0 1px var(--qac-neon),
+    0 0 0 2px rgba(0, 0, 0, 0.92),
+    0 0 28px var(--qac-neon-dim),
+    0 0 56px var(--qac-neon-soft),
+    0 0 88px color-mix(in srgb, var(--qac-neon) 18%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -16px 32px rgba(0, 0, 0, 0.5);
+  filter:
+    drop-shadow(0 0 10px var(--qac-neon-dim))
+    drop-shadow(0 0 26px var(--qac-neon-soft))
+    drop-shadow(0 0 42px color-mix(in srgb, var(--qac-neon) 12%, transparent));
+  transition:
+    box-shadow 0.28s ease,
+    transform 0.16s ease,
+    filter 0.28s ease;
+  animation: syndicate-qac-glow-pulse 3.2s ease-in-out infinite;
+}
+
+@keyframes syndicate-qac-glow-pulse {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 10px var(--qac-neon-dim))
+      drop-shadow(0 0 24px var(--qac-neon-soft))
+      drop-shadow(0 0 38px color-mix(in srgb, var(--qac-neon) 10%, transparent));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 16px var(--qac-neon-dim))
+      drop-shadow(0 0 36px var(--qac-neon-soft))
+      drop-shadow(0 0 58px color-mix(in srgb, var(--qac-neon) 20%, transparent));
+  }
+}
+
+.syndicate-quick-action-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.14) 3px,
+    rgba(0, 0, 0, 0.14) 5px
+  );
+}
+
+.syndicate-quick-action-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--qac-neon);
+  box-shadow:
+    0 0 12px var(--qac-neon),
+    0 0 28px var(--qac-neon-dim),
+    0 0 48px var(--qac-neon-soft);
+}
+
+.syndicate-quick-action-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  animation: none;
+  filter:
+    drop-shadow(0 0 18px var(--qac-neon-dim))
+    drop-shadow(0 0 40px var(--qac-neon-soft))
+    drop-shadow(0 0 72px color-mix(in srgb, var(--qac-neon) 28%, transparent))
+    brightness(1.12);
+  box-shadow:
+    0 0 0 1px var(--qac-neon),
+    0 0 0 2px rgba(0, 0, 0, 0.92),
+    0 0 44px var(--qac-neon-dim),
+    0 0 80px var(--qac-neon-soft),
+    0 0 120px color-mix(in srgb, var(--qac-neon) 26%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.42);
+}
+
+.syndicate-quick-action-card:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+  animation: none;
+}
+
+.syndicate-quick-action-card:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  animation: none;
+  filter: grayscale(0.35) drop-shadow(0 0 8px var(--qac-neon-soft));
+}
+
+.syndicate-quick-action-card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(5, 8, 12, 0.98),
+    0 0 0 3px var(--qac-neon),
+    0 0 32px var(--qac-neon-dim),
+    0 0 56px var(--qac-neon-soft);
+}
+
+.syndicate-quick-action-card__label {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(0.75rem, 1.2vw + 0.5rem, 0.875rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--qac-text);
+  text-shadow:
+    0 0 14px var(--qac-neon-dim),
+    0 0 28px var(--qac-neon-soft),
+    0 0 42px color-mix(in srgb, var(--qac-neon) 30%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.syndicate-quick-action-card__hint {
+  position: relative;
+  z-index: 2;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--qac-text) 52%, transparent);
+}
+
+/* Hot magenta — missions */
+.syndicate-quick-action-card--fuchsia {
+  --qac-neon: rgba(244, 114, 182, 0.92);
+  --qac-neon-dim: rgba(236, 72, 153, 0.48);
+  --qac-neon-soft: rgba(219, 39, 119, 0.18);
+  --qac-bg-a: rgba(36, 8, 28, 0.96);
+  --qac-bg-b: rgba(12, 4, 14, 0.99);
+  --qac-text: #fce7f3;
+}
+
+/* Acid cyan — stats */
+.syndicate-quick-action-card--cyan {
+  --qac-neon: rgba(34, 211, 238, 0.9);
+  --qac-neon-dim: rgba(6, 182, 212, 0.45);
+  --qac-neon-soft: rgba(34, 211, 238, 0.16);
+  --qac-bg-a: rgba(6, 24, 38, 0.96);
+  --qac-bg-b: rgba(2, 8, 18, 0.99);
+  --qac-text: #cffafe;
+}
+
+/* Toxic violet — alternate accent */
+.syndicate-quick-action-card--violet {
+  --qac-neon: rgba(167, 139, 250, 0.9);
+  --qac-neon-dim: rgba(124, 58, 237, 0.44);
+  --qac-neon-soft: rgba(139, 92, 246, 0.16);
+  --qac-bg-a: rgba(22, 10, 42, 0.96);
+  --qac-bg-b: rgba(8, 4, 18, 0.99);
+  --qac-text: #ede9fe;
+}
+
+/* Acid lime — daily mission start */
+.syndicate-quick-action-card--acid {
+  --qac-neon: rgba(163, 230, 53, 0.9);
+  --qac-neon-dim: rgba(101, 163, 13, 0.45);
+  --qac-neon-soft: rgba(132, 204, 22, 0.16);
+  --qac-bg-a: rgba(14, 28, 8, 0.96);
+  --qac-bg-b: rgba(4, 12, 6, 0.99);
+  --qac-text: #ecfccb;
+}
+
+/* Amber neon — admin submit */
+.syndicate-quick-action-card--amber {
+  --qac-neon: rgba(251, 191, 36, 0.95);
+  --qac-neon-dim: rgba(245, 158, 11, 0.52);
+  --qac-neon-soft: rgba(251, 191, 36, 0.22);
+  --qac-bg-a: rgba(38, 24, 6, 0.96);
+  --qac-bg-b: rgba(10, 6, 2, 0.99);
+  --qac-text: #fef3c7;
+}
+
+.syndicate-quick-action-card--submit {
+  align-items: center;
+  justify-content: center;
+  min-height: 3.85rem;
+  padding: 1.05rem 1.25rem;
+  text-align: center;
+  animation: syndicate-qac-glow-pulse 2.4s ease-in-out infinite;
+}
+
+.syndicate-quick-action-card--submit::after {
+  left: 10px;
+  right: 10px;
+  top: auto;
+  bottom: 0;
+  width: auto;
+  height: 3px;
+  box-shadow:
+    0 0 14px var(--qac-neon),
+    0 0 32px var(--qac-neon-dim),
+    0 0 56px var(--qac-neon-soft);
+}
+
+.syndicate-quick-action-card--submit .syndicate-quick-action-card__label {
+  width: 100%;
+  text-align: center;
+  font-size: clamp(0.72rem, 1.1vw + 0.48rem, 0.9rem);
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 16px var(--qac-neon-dim),
+    0 0 32px var(--qac-neon-soft),
+    0 0 48px color-mix(in srgb, var(--qac-neon) 35%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
 .syndicate-stats-chart-panel {
   position: relative;
   isolation: isolate;
@@ -3970,6 +4268,7 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
   --sna-chamfer: clamp(6px, 1.1vw + 3px, 10px);
   --sna-neon: #5eead4;
   --sna-neon-dim: rgba(94, 234, 212, 0.35);
+  --sna-neon-inner: rgba(94, 234, 212, 0.14);
   --sna-fill: linear-gradient(168deg, rgba(8, 18, 16, 0.98), rgba(2, 6, 10, 0.99));
   --sna-text: #e8fff4;
   position: relative;
@@ -3981,10 +4280,12 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
   color: var(--sna-text) !important;
   text-shadow: 0 0 6px var(--sna-neon-dim), 0 1px 2px rgba(0, 0, 0, 0.92) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 22px var(--sna-neon-dim),
+    inset 0 0 44px var(--sna-neon-inner),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(0, 0, 0, 0.65),
-    0 0 10px var(--sna-neon-dim) !important;
+    0 0 12px var(--sna-neon-dim) !important;
   filter: none;
   clip-path: none;
   font-family: ui-monospace, "Cascadia Mono", "Consolas", "Segoe UI Mono", monospace !important;
@@ -4027,9 +4328,11 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
   text-shadow: 0 0 8px var(--sna-neon-dim), 0 1px 2px rgba(0, 0, 0, 0.92) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.45),
+    inset 0 0 26px var(--sna-neon-dim),
+    inset 0 0 52px var(--sna-neon-inner),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(0, 0, 0, 0.55),
-    0 0 14px var(--sna-neon-dim) !important;
+    0 0 16px var(--sna-neon-dim) !important;
 }
 
 .syndicate-mood-context .syndicate-nav-action:active:not(:disabled) {
@@ -4053,36 +4356,51 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
 /* Points — toxic neon green */
 .syndicate-mood-context .syndicate-nav-action--points {
   --sna-neon: #39ff14;
-  --sna-neon-dim: rgba(57, 255, 20, 0.32);
-  --sna-fill: linear-gradient(168deg, rgba(4, 32, 12, 0.97), rgba(2, 8, 6, 0.99));
+  --sna-neon-dim: rgba(57, 255, 20, 0.42);
+  --sna-neon-inner: rgba(57, 255, 20, 0.18);
+  --sna-fill:
+    radial-gradient(ellipse 88% 68% at 50% 36%, rgba(57, 255, 20, 0.22), transparent 72%),
+    linear-gradient(168deg, rgba(4, 32, 12, 0.97), rgba(2, 8, 6, 0.99));
 }
 
 /* Dashboard — dystopia gold */
 .syndicate-mood-context .syndicate-nav-action--dashboard {
   --sna-neon: #d4af39;
-  --sna-neon-dim: rgba(212, 175, 57, 0.34);
-  --sna-fill: linear-gradient(168deg, rgba(36, 28, 8, 0.97), rgba(10, 8, 4, 0.99));
+  --sna-neon-dim: rgba(212, 175, 57, 0.44);
+  --sna-neon-inner: rgba(212, 175, 57, 0.2);
+  --sna-fill:
+    radial-gradient(ellipse 88% 68% at 50% 36%, rgba(212, 175, 57, 0.24), transparent 72%),
+    linear-gradient(168deg, rgba(36, 28, 8, 0.97), rgba(10, 8, 4, 0.99));
 }
 
 /* Missions — hot magenta */
 .syndicate-mood-context .syndicate-nav-action--missions {
   --sna-neon: #ff2d95;
-  --sna-neon-dim: rgba(255, 45, 149, 0.32);
-  --sna-fill: linear-gradient(168deg, rgba(40, 6, 28, 0.97), rgba(8, 2, 8, 0.99));
+  --sna-neon-dim: rgba(255, 45, 149, 0.42);
+  --sna-neon-inner: rgba(255, 45, 149, 0.18);
+  --sna-fill:
+    radial-gradient(ellipse 88% 68% at 50% 36%, rgba(255, 45, 149, 0.22), transparent 72%),
+    linear-gradient(168deg, rgba(40, 6, 28, 0.97), rgba(8, 2, 8, 0.99));
 }
 
 /* Reminders — electric cyan */
 .syndicate-mood-context .syndicate-nav-action--reminders {
   --sna-neon: #00f0ff;
-  --sna-neon-dim: rgba(0, 240, 255, 0.3);
-  --sna-fill: linear-gradient(168deg, rgba(4, 28, 40, 0.97), rgba(2, 8, 14, 0.99));
+  --sna-neon-dim: rgba(0, 240, 255, 0.4);
+  --sna-neon-inner: rgba(0, 240, 255, 0.17);
+  --sna-fill:
+    radial-gradient(ellipse 88% 68% at 50% 36%, rgba(0, 240, 255, 0.2), transparent 72%),
+    linear-gradient(168deg, rgba(4, 28, 40, 0.97), rgba(2, 8, 14, 0.99));
 }
 
 /* Stats — ultraviolet */
 .syndicate-mood-context .syndicate-nav-action--stats {
   --sna-neon: #bf5af2;
-  --sna-neon-dim: rgba(191, 90, 242, 0.32);
-  --sna-fill: linear-gradient(168deg, rgba(28, 8, 44, 0.97), rgba(8, 4, 14, 0.99));
+  --sna-neon-dim: rgba(191, 90, 242, 0.42);
+  --sna-neon-inner: rgba(191, 90, 242, 0.18);
+  --sna-fill:
+    radial-gradient(ellipse 88% 68% at 50% 36%, rgba(191, 90, 242, 0.22), transparent 72%),
+    linear-gradient(168deg, rgba(28, 8, 44, 0.97), rgba(8, 4, 14, 0.99));
 }
 
 .syndicate-mood-context .syndicate-nav-action .syndicate-nav-action__sub {
@@ -4114,9 +4432,10 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
   transform: scale(1.015);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 24px var(--sna-neon-dim),
+    inset 0 0 28px var(--sna-neon-dim),
+    inset 0 0 56px var(--sna-neon-inner),
     0 0 0 1px rgba(0, 0, 0, 0.5),
-    0 0 14px var(--sna-neon-dim) !important;
+    0 0 16px var(--sna-neon-dim) !important;
 }
 
 .syndicate-mood-context .syndicate-nav-action--points.syndicate-nav-action--active {
@@ -4158,8 +4477,9 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
 .syndicate-mood-context .syndicate-nav-action.syndicate-nav-action--exchange-open:not(.syndicate-nav-action--active) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 18px var(--sna-neon-dim),
-    0 0 12px var(--sna-neon-dim) !important;
+    inset 0 0 24px var(--sna-neon-dim),
+    inset 0 0 48px var(--sna-neon-inner),
+    0 0 14px var(--sna-neon-dim) !important;
 }
 
 /* Primary chisel CTA (e.g. Create own mission) — same fill as reference “open mission” */
@@ -4766,7 +5086,7 @@ body:has(.syndicate-mood-context)::-webkit-scrollbar {
 }
 
 .syndicate-dash-scanlines {
-  opacity: 0.42;
+  opacity: 0.28;
   background: repeating-linear-gradient(
     0deg,
     rgba(255, 215, 0, 0.022) 0,
@@ -6034,8 +6354,8 @@ body {
 }
 
 .dashboard-hamburger-chrome .dashboard-shell-bg video {
-  opacity: 0.68;
-  filter: saturate(0.88) contrast(1.06) brightness(0.82);
+  opacity: 0.38;
+  filter: saturate(0.82) contrast(1.04) brightness(0.78);
 }
 
 .dashboard-hamburger-chrome .dashboard-shell-bg::after {
@@ -6044,9 +6364,9 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(1100px 640px at 28% 8%, rgba(255, 215, 0, 0.035), transparent 58%),
-    radial-gradient(900px 520px at 82% 72%, rgba(255, 195, 0, 0.02), transparent 62%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(10, 9, 7, 0.28));
+    radial-gradient(1100px 640px at 28% 8%, rgba(255, 215, 0, 0.02), transparent 58%),
+    radial-gradient(900px 520px at 82% 72%, rgba(255, 195, 0, 0.012), transparent 62%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(8, 7, 6, 0.48));
 }
 
 .dashboard-hamburger-chrome .dashboard-shell-surface {

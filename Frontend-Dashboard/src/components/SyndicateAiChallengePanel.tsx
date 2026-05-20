@@ -348,6 +348,12 @@ const STATS_NEON_CARD_MAGENTA = `${STATS_NEON_CARD} syndicate-stats-neon-card--m
 const STATS_NEON_CARD_FUCHSIA = `${STATS_NEON_CARD} syndicate-stats-neon-card--fuchsia`;
 const STATS_NEON_CARD_EMERALD = `${STATS_NEON_CARD} syndicate-stats-neon-card--emerald`;
 const STATS_CHART_PANEL = "syndicate-stats-chart-panel";
+const QUICK_ACTION_CARD = "syndicate-quick-action-card";
+const QUICK_ACTION_FUCHSIA = `${QUICK_ACTION_CARD} syndicate-quick-action-card--fuchsia`;
+const QUICK_ACTION_CYAN = `${QUICK_ACTION_CARD} syndicate-quick-action-card--cyan`;
+const QUICK_ACTION_VIOLET = `${QUICK_ACTION_CARD} syndicate-quick-action-card--violet`;
+const QUICK_ACTION_ACID = `${QUICK_ACTION_CARD} syndicate-quick-action-card--acid`;
+const ADMIN_SUBMIT_BTN = `${QUICK_ACTION_CARD} syndicate-quick-action-card--amber syndicate-quick-action-card--submit`;
 
 const REWARD_ACTION_BASE =
   "syndicate-reward-action relative z-[1] mt-auto w-full shrink-0 touch-manipulation px-1 py-2 text-[10px] font-black uppercase tracking-[0.12em] sm:px-2 sm:py-2.5 sm:text-[11px] sm:tracking-[0.14em]";
@@ -2523,66 +2529,17 @@ export function SyndicateAiChallengePanel() {
       if (safePts >= m.unlock_points) syndicateLevel += 1;
       else break;
     }
-    const nextMilestone = REWARD_MILESTONES.find((m) => safePts < m.unlock_points);
-    const atMaxTier = !nextMilestone;
-    const ptsToNextLevel = nextMilestone ? Math.max(0, nextMilestone.unlock_points - safePts) : 0;
-    const nextLevelNumber = nextMilestone
-      ? REWARD_MILESTONES.findIndex((m) => m.id === nextMilestone.id) + 1
-      : null;
-    const nextTierTotalPoints = nextMilestone?.unlock_points ?? null;
-    const nextRewardTitle = nextMilestone?.title ?? null;
-
-    const ptsUntilLabel =
-      ptsToNextLevel === 1 ? "1 point" : ptsToNextLevel > 0 ? `${ptsToNextLevel} points` : "0 points";
-
-    let levelDescPrimary: string;
-    let levelDescSecondary: string | null;
-    if (atMaxTier) {
-      levelDescPrimary = "Every reward tier in Unlock & rewards is unlocked.";
-      levelDescSecondary =
-        syndicateLevel > 0
-          ? `You are Syndicate Level ${syndicateLevel} — keep earning points to climb the leaderboard.`
-          : "Keep completing missions to climb the leaderboard.";
-    } else if (nextLevelNumber != null && nextTierTotalPoints != null && nextRewardTitle) {
-      levelDescPrimary = `${ptsUntilLabel} until Level ${nextLevelNumber}.`;
-      levelDescSecondary = `Hit ${nextTierTotalPoints} lifetime points to unlock “${nextRewardTitle}” in Unlock & rewards.`;
-    } else {
-      levelDescPrimary = "Complete missions to raise your Syndicate level.";
-      levelDescSecondary = null;
-    }
-
-    let pointsDescPrimary: string;
-    let pointsDescSecondary: string | null;
-    if (safePts === 0) {
-      pointsDescPrimary = "No lifetime points yet — finish your first mission to start the climb.";
-    } else if (safePts === 1) {
-      pointsDescPrimary = "1 lifetime point banked — this total only goes up.";
-    } else {
-      pointsDescPrimary = `${safePts} lifetime points banked — this total only goes up.`;
-    }
-    if (atMaxTier) {
-      pointsDescSecondary = "Redeem unlocked perks in Unlock & rewards or push for a higher leaderboard rank.";
-    } else if (nextRewardTitle && nextTierTotalPoints != null && nextLevelNumber != null) {
-      pointsDescSecondary =
-        ptsToNextLevel > 0
-          ? `${ptsUntilLabel} until “${nextRewardTitle}” unlocks (Level ${nextLevelNumber} · ${nextTierTotalPoints} pts).`
-          : `“${nextRewardTitle}” is ready — open Unlock & rewards to claim it.`;
-    } else {
-      pointsDescSecondary = "Points come from daily missions, bonus tasks, and reward bonuses.";
-    }
-
-    return {
-      syndicateLevel,
-      ptsToNextLevel,
-      nextLevelNumber,
-      atMaxTier,
-      nextTierTotalPoints,
-      nextRewardTitle,
-      levelDescPrimary,
-      levelDescSecondary,
-      pointsDescPrimary,
-      pointsDescSecondary
-    };
+    const levelHint =
+      syndicateLevel === 0
+        ? "Complete missions and earn points to raise your Syndicate level."
+        : `You are Syndicate Level ${syndicateLevel}. Keep completing missions to climb higher.`;
+    const pointsHint =
+      safePts === 0
+        ? "Finish your first mission to start earning lifetime points."
+        : safePts === 1
+          ? "1 lifetime point earned — this total only goes up."
+          : `${safePts} lifetime points earned from missions and bonuses.`;
+    return { syndicateLevel, levelHint, pointsHint };
   }, [pointsTotal]);
 
   const weeklyBarData = useMemo(() => {
@@ -4149,7 +4106,7 @@ export function SyndicateAiChallengePanel() {
       {syndicateHelpModal}
       {pointsToPoundsModal}
       <div className="syndicate-dash-outer no-scrollbar relative flex min-h-0 w-full min-w-0 max-w-none flex-col gap-4 overflow-x-hidden border px-0 pt-0 max-md:gap-3 max-md:border-0 max-md:bg-[linear-gradient(168deg,#050508_0%,#0d0818_44%,#0a0610_100%)] max-md:px-0 max-md:pt-0 max-md:shadow-none">
-      <div className="pointer-events-none absolute inset-0 -z-10 syndicate-dash-scanlines max-md:opacity-35" />
+      <div className="pointer-events-none absolute inset-0 -z-10 syndicate-dash-scanlines max-md:opacity-20" />
       <div className="syndicate-dash-header relative z-20 mb-3 flex w-full shrink-0 flex-col gap-3 rounded-2xl border px-2.5 py-2.5 sm:px-3 sm:py-3 max-md:mb-2 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.24)] max-md:px-2 max-md:py-2">
         <div className="min-w-0 w-full">
           <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--gold)]/88 sm:text-[12px]">
@@ -4179,7 +4136,7 @@ export function SyndicateAiChallengePanel() {
               )}
             >
               <span className="min-w-0 truncate text-center uppercase">
-                Points to dollar converter
+                Points converter
                 <span className="syndicate-nav-action__sub tabular-nums normal-case"> · ${poundsBalance.toFixed(2)}</span>
               </span>
             </button>
@@ -4253,18 +4210,18 @@ export function SyndicateAiChallengePanel() {
         <button
           type="button"
           onClick={goToBonusMissions}
-          className="syndicate-readable group mb-2 flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-cyan-300/55 bg-[linear-gradient(92deg,rgba(6,182,212,0.22),rgba(255,215,0,0.14),rgba(6,182,212,0.18))] px-3 py-3 text-center shadow-[0_0_24px_rgba(6,182,212,0.28),0_0_40px_rgba(250,204,21,0.12)] ring-2 ring-cyan-400/25 transition hover:border-cyan-200/70 hover:shadow-[0_0_32px_rgba(34,211,238,0.35),0_0_48px_rgba(250,204,21,0.2)] sm:gap-2 sm:px-5 sm:py-3.5"
+          className="syndicate-readable group mx-auto mb-2 flex w-auto max-w-[min(100%,20rem)] flex-col items-center justify-center gap-1 rounded-lg border-2 border-red-500/90 bg-[linear-gradient(165deg,rgba(153,27,27,0.95),rgba(69,10,10,0.98),rgba(40,8,8,0.99))] px-4 py-2.5 text-center shadow-[0_0_18px_rgba(239,68,68,0.55),0_0_36px_rgba(185,28,28,0.35),inset_0_1px_0_rgba(252,165,165,0.12)] ring-2 ring-red-600/50 transition hover:border-red-400 hover:shadow-[0_0_26px_rgba(248,113,113,0.65),0_0_44px_rgba(220,38,38,0.45)] motion-safe:animate-bounce motion-safe:[animation-duration:2s]"
         >
-          <span className="inline-flex items-center justify-center gap-2.5">
+          <span className="inline-flex items-center justify-center gap-2">
             <span
-              className="inline-flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[color:var(--gold)] shadow-[0_0_14px_rgba(254,222,0,0.95),0_0_28px_rgba(250,204,21,0.5)]"
+              className="inline-flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.95),0_0_22px_rgba(239,68,68,0.7)]"
               aria-hidden
             />
-            <span className="text-[14px] font-black uppercase leading-tight tracking-[0.16em] text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(250,204,21,0.55),0_1px_2px_rgba(0,0,0,0.9)] sm:text-[15px] sm:tracking-[0.18em]">
+            <span className="text-[16px] font-black uppercase leading-tight tracking-[0.14em] text-red-50 [text-shadow:0_0_16px_rgba(248,113,113,0.65),0_1px_2px_rgba(0,0,0,0.9)] sm:text-[17px] sm:tracking-[0.16em]">
               Bonus mission activated
             </span>
           </span>
-          <span className="text-[13px] font-black leading-snug text-white [text-shadow:0_0_18px_rgba(165,243,252,0.45),0_1px_3px_rgba(0,0,0,0.95)] sm:text-[14px]">
+          <span className="text-[14px] font-bold leading-snug text-red-100/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] sm:text-[15px]">
             Click to go to the bonus mission section
           </span>
         </button>
@@ -4728,15 +4685,8 @@ export function SyndicateAiChallengePanel() {
                       Syndicate level
                     </div>
                   </div>
-                  <div className="space-y-1.5 px-0.5 text-center">
-                    <p className="text-[12px] font-semibold leading-snug text-sky-100/92 sm:text-[13px]">
-                      {syndicateProgressHud.levelDescPrimary}
-                    </p>
-                    {syndicateProgressHud.levelDescSecondary ? (
-                      <p className="text-[11px] font-medium leading-snug text-sky-200/90 sm:text-[12px]">
-                        {syndicateProgressHud.levelDescSecondary}
-                      </p>
-                    ) : null}
+                  <div className="flex flex-col gap-2 px-0.5 text-center">
+                    <p className="text-[11px] leading-snug text-sky-100/85 sm:text-[12px]">{syndicateProgressHud.levelHint}</p>
                   </div>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
@@ -4748,15 +4698,8 @@ export function SyndicateAiChallengePanel() {
                     <div className="mt-1 text-[22px] font-black tabular-nums text-amber-50 sm:text-[24px]">{pointsTotal}</div>
                     <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-200 sm:text-[11px]">Total earned</div>
                   </div>
-                  <div className="space-y-1.5 px-0.5 text-center">
-                    <p className="text-[12px] font-semibold leading-snug text-amber-100/92 sm:text-[13px]">
-                      {syndicateProgressHud.pointsDescPrimary}
-                    </p>
-                    {syndicateProgressHud.pointsDescSecondary ? (
-                      <p className="text-[11px] font-medium leading-snug text-amber-200/85 sm:text-[12px]">
-                        {syndicateProgressHud.pointsDescSecondary}
-                      </p>
-                    ) : null}
+                  <div className="flex flex-col gap-2 px-0.5 text-center">
+                    <p className="text-[11px] leading-snug text-amber-100/85 sm:text-[12px]">{syndicateProgressHud.pointsHint}</p>
                   </div>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
@@ -4892,50 +4835,84 @@ export function SyndicateAiChallengePanel() {
                     <div className="text-[22px] font-black text-orange-100">{pendingDailyCompletionSlots}</div>
                   </div>
                 </div>
-                <p className="mt-2 text-[11px] text-white/60">
-                  Daily: {completedAgentTodayCount}/{MAX_AGENT_COMPLETIONS_PER_DAY} · Custom: {completedCustomTodayCount}/
-                  {rows.some((r) => !!r.user_created) ? MAX_CUSTOM_COMPLETIONS_PER_DAY : 0}
-                </p>
                 <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-white/12 bg-black/25 px-3 py-2">
                   <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-cyan-100/85">Best category</span>
                   <span className="text-[13px] font-black uppercase tracking-[0.06em] text-[color:var(--gold)]">
                     {dashboardBestCategoryLabel}
                   </span>
                 </div>
-                <div className="mt-3 h-[220px] w-full min-w-0 sm:h-[250px] md:h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Completed", value: Math.max(0, completedTotalTodayCount) },
-                          { name: "Pending", value: Math.max(0, pendingDailyCompletionSlots) }
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={52}
-                        outerRadius={92}
-                        paddingAngle={2}
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
-                      >
-                        <Cell fill="#22d3ee" stroke="rgba(0,0,0,0.35)" strokeWidth={1} />
-                        <Cell fill="#f97316" stroke="rgba(0,0,0,0.35)" strokeWidth={1} />
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          background: "#141414",
-                          border: "1px solid rgba(120,200,255,0.35)",
-                          borderRadius: 8,
-                          fontSize: 12,
-                          color: "#fff"
-                        }}
-                        labelStyle={{ color: "#fff", fontSize: 12 }}
-                        itemStyle={{ color: "#fff", fontSize: 12 }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="mt-3 flex w-full min-w-0 flex-col items-center gap-3">
+                  <div className="h-[180px] w-full min-w-0 sm:h-[200px] md:h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: "Syndicate completed missions",
+                              value: Math.max(0, completedTotalTodayCount)
+                            },
+                            {
+                              name: "Syndicate pending missions",
+                              value: Math.max(0, pendingDailyCompletionSlots)
+                            }
+                          ]}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={52}
+                          outerRadius={88}
+                          paddingAngle={2}
+                          labelLine={false}
+                          label={false}
+                        >
+                          <Cell fill="#22d3ee" stroke="rgba(0,0,0,0.35)" strokeWidth={1} />
+                          <Cell fill="#f97316" stroke="rgba(0,0,0,0.35)" strokeWidth={1} />
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            background: "#141414",
+                            border: "1px solid rgba(120,200,255,0.35)",
+                            borderRadius: 8,
+                            fontSize: 12,
+                            color: "#fff"
+                          }}
+                          labelStyle={{ color: "#fff", fontSize: 12 }}
+                          itemStyle={{ color: "#fff", fontSize: 12 }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="grid w-full max-w-[22rem] grid-cols-1 gap-2 sm:max-w-none">
+                    <div className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-orange-400/35 bg-orange-500/10 px-3 py-2 [box-shadow:0_0_12px_rgba(249,115,22,0.15)]">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full bg-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.65)]"
+                          aria-hidden
+                        />
+                        <span className="min-w-0 text-left font-mono text-[10px] font-bold uppercase leading-snug tracking-[0.06em] text-orange-100 sm:text-[11px]">
+                          Syndicate pending missions
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-mono text-[13px] font-black tabular-nums text-orange-50 sm:text-[14px]">
+                        {pendingDailyCompletionSlots}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 [box-shadow:0_0_12px_rgba(34,211,238,0.15)]">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.65)]"
+                          aria-hidden
+                        />
+                        <span className="min-w-0 text-left font-mono text-[10px] font-bold uppercase leading-snug tracking-[0.06em] text-cyan-100 sm:text-[11px]">
+                          Syndicate completed missions
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-mono text-[13px] font-black tabular-nums text-cyan-50 sm:text-[14px]">
+                        {completedTotalTodayCount}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -4951,40 +4928,44 @@ export function SyndicateAiChallengePanel() {
                 <span className="border border-white/15 px-2 py-0.5">{rowsOnMissionBoard[0]?.points ?? 0} XP</span>
                 <span>{doneIds.size} completed today</span>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 grid gap-3 overflow-visible sm:grid-cols-2 sm:gap-4">
                 <button
                   type="button"
                   onClick={() => setSyndicateView("challenges")}
-                  className={cn("px-5 py-2 text-[12px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                  className={cn(QUICK_ACTION_ACID, "min-h-[3rem] sm:min-h-[3.25rem]")}
                 >
-                  Start
+                  <span className="syndicate-quick-action-card__label">Start</span>
+                  <span className="syndicate-quick-action-card__hint">Begin mission</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSyndicateView("challenges")}
-                  className={cn("px-5 py-2 text-[12px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                  className={cn(QUICK_ACTION_CYAN, "min-h-[3rem] sm:min-h-[3.25rem]")}
                 >
-                  Open
+                  <span className="syndicate-quick-action-card__label">Open</span>
+                  <span className="syndicate-quick-action-card__hint">View details</span>
                 </button>
               </div>
             </div>
 
             <div className={cn("border-b border-[rgba(244,114,182,0.32)] pb-3", "bg-transparent")}>
               <div className={HUD_LABEL}>Quick actions</div>
-              <div className="mt-2 grid gap-2">
+              <div className="mt-3 grid gap-4 overflow-visible">
                 <button
                   type="button"
                   onClick={() => setSyndicateView("challenges")}
-                  className={cn("px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                  className={QUICK_ACTION_FUCHSIA}
                 >
-                  Play missions
+                  <span className="syndicate-quick-action-card__label">Play missions</span>
+                  <span className="syndicate-quick-action-card__hint">Enter mission board</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowStatsProfile(true)}
-                  className={cn("px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                  className={QUICK_ACTION_VIOLET}
                 >
-                  Open stats
+                  <span className="syndicate-quick-action-card__label">Open stats</span>
+                  <span className="syndicate-quick-action-card__hint">Profile &amp; analytics</span>
                 </button>
               </div>
             </div>
@@ -5006,15 +4987,6 @@ export function SyndicateAiChallengePanel() {
                     <span>Unlock &amp; redeem rewards</span>
                     <SyndicateHelpMark topic="unlock" label="How unlock and redeem rewards work" onOpen={openSyndicateHelp} />
                   </h3>
-                  <p className="mt-2 max-w-[42rem] text-[12px] font-medium leading-snug text-white/72 sm:text-[13px]">
-                    Redeem in order: Level 1, then 2, then 3… Meet each points threshold and redeem before the next tier opens.
-                  </p>
-                </div>
-                <div className="syndicate-game-header-side syndicate-game-data-slab mt-3 px-3 py-2.5 lg:mt-0 lg:self-stretch lg:px-3.5 lg:py-3">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-400/90">Signal</p>
-                  <p className="mt-1 text-[12px] font-semibold leading-snug text-cyan-100/92 sm:text-[13px]">
-                    Earn points to unlock tiers — each redeem adds bonus points to your total.
-                  </p>
                 </div>
               </div>
 
@@ -5439,9 +5411,11 @@ export function SyndicateAiChallengePanel() {
                                       : undefined
                                 }
                                 onClick={() => void submitAdminTask(t.id)}
-                                className={cn("w-full px-4 py-3 text-[14px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                                className={ADMIN_SUBMIT_BTN}
                               >
-                                {adminTaskBusyId === t.id ? "Submitting…" : "Submit for admin review"}
+                                <span className="syndicate-quick-action-card__label">
+                                  {adminTaskBusyId === t.id ? "Submitting…" : "Submit for admin review"}
+                                </span>
                               </button>
                               {!videoAttached && !isRecording ? (
                                 <p className="text-center text-[11px] text-amber-200/85">Video required — record or choose a video file above.</p>

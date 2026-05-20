@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 import { OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
@@ -253,17 +254,22 @@ export function MembershipOfferLanding({
     amber: "text-amber-100",
   };
 
+  if (embedded) {
+    return (
+      <main className="relative z-10 flex w-full min-w-0 flex-col items-center overflow-x-clip py-4">
+        <PublicPlanOfferCards checkoutReturnPath={checkoutReturnPath} embedded size="large" />
+      </main>
+    );
+  }
+
   return (
     <main
       className={cn(
         "relative z-10 w-full min-w-0 overflow-x-clip",
-        embedded
-          ? "min-h-0 px-[var(--fluid-section-p,1rem)] pb-8 pt-2"
-          : "pb-14 pt-[88px] sm:pb-20 sm:pt-[106px]"
+        "pb-14 pt-[88px] sm:pb-20 sm:pt-[106px]"
       )}
     >
       <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
-        {!embedded ? (
           <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
               <div>
@@ -322,25 +328,6 @@ export function MembershipOfferLanding({
               </div>
             </div>
           </CyberChamferFrame>
-        ) : (
-          <CyberChamferFrame accent="hero" chamfer={20} innerClassName="p-6 sm:p-8">
-            <header>
-              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300/90 [text-shadow:0_0_14px_rgba(34,211,238,0.5)]">
-                // membership_uplink
-              </p>
-              <h2 className="mt-3 text-[clamp(1.75rem,4vw,2.5rem)] font-black uppercase tracking-[0.08em] text-cyan-100 drop-shadow-[0_0_16px_rgba(34,211,238,0.45)]">
-                Upgrade to The King
-              </h2>
-              <p className="mt-4 font-mono text-sm leading-relaxed text-zinc-100/85 sm:text-base">{HERO_INTRO}</p>
-            </header>
-            <MembershipHeroOffer
-              busy={busy}
-              error={error}
-              onUnlock={() => void unlockMembership()}
-              className="mx-auto w-full"
-            />
-          </CyberChamferFrame>
-        )}
 
         <section>
           <div className="mb-6">

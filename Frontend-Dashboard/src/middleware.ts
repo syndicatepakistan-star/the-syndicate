@@ -87,6 +87,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/login/") ||
     pathname === "/signup" ||
     pathname.startsWith("/signup/") ||
+    pathname === "/verify" ||
+    pathname.startsWith("/verify/") ||
     pathname === "/verify-otp" ||
     pathname.startsWith("/verify-otp/") ||
     pathname === "/checkout" ||

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Crown, Lock } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import type { KingProgramSelectionState } from "@/lib/portal-api";
 
 type Choice = { program_type: "course" | "playlist"; id: number };
@@ -119,7 +120,12 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
               const choice: Choice = { program_type: row.program_type, id: row.id };
               const checked = selectedSet.has(keyOf(choice));
               const theme = ROW_THEMES[idx % ROW_THEMES.length];
-              const thumbSrc = resolveDjangoMediaUrl(row.thumbnail_url);
+              const playlistMeta = { id: row.id, title: row.title };
+              const thumbSrc = resolveProgramPlaylistThumbnail(
+                playlistMeta,
+                resolveDjangoMediaUrl(row.thumbnail_url)
+              );
+              const thumbFallback = resolveProgramPlaylistThumbnail(playlistMeta, null);
               return (
                 <label
                   key={`${row.program_type}-${row.id}`}
@@ -134,15 +140,34 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
                     onChange={() => toggle(choice)}
                     className="h-4 w-4 accent-amber-400"
                   />
-                  <span className={cn("relative h-[30px] w-[40px] shrink-0 overflow-hidden rounded border bg-black/55", theme.thumbBorder)}>
-                    {thumbSrc ? (
+                  <span
+                    className={cn(
+                      "relative h-12 w-[4.25rem] shrink-0 overflow-hidden rounded-md border bg-black/55 sm:h-14 sm:w-[5.25rem]",
+                      theme.thumbBorder
+                    )}
+                  >
+                    {thumbSrc || thumbFallback ? (
                       <img
-                        src={thumbSrc}
+                        src={thumbSrc ?? thumbFallback}
                         alt=""
-                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (thumbFallback && img.src !== thumbFallback && !img.dataset.fallbackApplied) {
+                            img.dataset.fallbackApplied = "1";
+                            img.src = thumbFallback;
+                            return;
+                          }
+                          img.style.display = "none";
+                        }}
+                        className="h-full w-full object-cover object-center [image-rendering:high-quality]"
                       />
                     ) : (
-                      <span className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40" />
+                      <span
+                        className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40"
+                        aria-hidden
+                      />
                     )}
                   </span>
                   <span className="truncate text-[16px] font-semibold leading-tight">{row.title}</span>

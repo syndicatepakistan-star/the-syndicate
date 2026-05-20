@@ -5882,10 +5882,15 @@ export function SyndicateAiChallengePanel() {
               </button>
             </div>
             <p className="syndicate-readable mb-3 max-w-3xl text-[13px] leading-relaxed text-white/70 sm:mb-4 sm:text-[14px]">
-              Set date &amp; time under <span className="text-white/85">How will you complete it</span> on an incomplete mission. Syndicate mode reminders stay until the target time or you clear them.
-              Within 24 hours of the mission appearing, use <span className="font-semibold text-cyan-200/90">Open mission</span>; after that, use{" "}
-              <span className="font-semibold text-cyan-200/90">Done</span> or <span className="font-semibold text-cyan-200/90">Dismiss</span>. If the target passes with no action, the server may deduct{" "}
-              <span className="font-semibold text-amber-200/90">1 point</span> and remove the reminder.
+              On any incomplete mission, set a date and time under{" "}
+              <span className="text-white/85">How will you complete it</span>. That saves a reminder here with a countdown to your deadline. Reminders stay until you clear them, mark the work finished, or the target time passes.
+            </p>
+            <p className="syndicate-readable mb-3 max-w-3xl text-[13px] leading-relaxed text-white/70 sm:mb-4 sm:text-[14px]">
+              While the mission is still on your daily board (about the first 24 hours), use{" "}
+              <span className="font-semibold text-cyan-200/90">Open mission</span> to jump back in. If it has rolled off the board, use{" "}
+              <span className="font-semibold text-cyan-200/90">Done</span> when you completed it or{" "}
+              <span className="font-semibold text-cyan-200/90">Dismiss</span> to remove the nudge. If the deadline passes and the mission is still incomplete, you may lose{" "}
+              <span className="font-semibold text-amber-200/90">1 point</span> once for that reminder.
             </p>
             {missionsTabReminders.length === 0 ? (
               <p className="syndicate-readable rounded-lg border border-white/10 bg-black/30 px-4 py-8 text-center text-[14px] text-white/55">

@@ -4,6 +4,7 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
@@ -454,14 +455,22 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
     };
   }, [playlist, onClose]);
 
-  const body = (playlist?.description || "").trim();
-  const structured = useMemo(() => (playlist ? pickStructuredSections(playlist) : null), [playlist]);
+  const displayPlaylist = useMemo(
+    () => (playlist ? enrichProgramPlaylist(playlist) : null),
+    [playlist]
+  );
+
+  const body = (displayPlaylist?.description || "").trim();
+  const structured = useMemo(
+    () => (displayPlaylist ? pickStructuredSections(displayPlaylist) : null),
+    [displayPlaylist]
+  );
   const blocks = useMemo(() => {
     if (structured) return null;
     return body ? parseDescriptionToBlocks(body) : null;
   }, [body, structured]);
 
-  if (!playlist || typeof document === "undefined") return null;
+  if (!displayPlaylist || typeof document === "undefined") return null;
 
   const readableShell = {
     fontFamily: READABLE_FONT_STACK,
@@ -494,7 +503,7 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
             id="program-desc-modal-title"
             className="min-w-0 flex-1 text-left text-[1.125rem] font-bold leading-snug tracking-normal text-[#f5c814] sm:text-[1.35rem] sm:leading-tight"
           >
-            {playlist.title}
+            {displayPlaylist.title}
           </h2>
           <button
             type="button"

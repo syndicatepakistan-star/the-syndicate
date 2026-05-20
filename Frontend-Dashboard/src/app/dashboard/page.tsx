@@ -96,6 +96,7 @@ const FEATURE_MENU_ENTRIES: FeatureMenuEntry[] = [
   { section: "Website features", label: "Membership section", navKey: "resources" },
   { section: "More options", label: "Support", navKey: "support" },
   { section: "More options", label: "Quick Access", navKey: "quickaccess" },
+  { section: "More options", label: "Affiliate", navKey: "affiliate" },
   { section: "More options", label: "Settings", navKey: "settings" }
 ];
 
@@ -241,6 +242,21 @@ function CheckboxSlot({ active }: { active?: boolean }) {
           "sidebar-nav-checkbox-ring absolute inset-0 opacity-0 transition",
           active && "opacity-100 [box-shadow:0_0_0_1px_rgba(255,59,59,0.52),0_0_22px_rgba(255,59,59,0.22)]"
         )}
+      />
+    </div>
+  );
+}
+
+function SidebarNavKeyDecor() {
+  return (
+    <div className="sidebar-nav-key-decor pointer-events-none select-none" aria-hidden>
+      <img
+        src="/assets/White-Key.png"
+        alt=""
+        width={96}
+        height={96}
+        className="sidebar-nav-key-spin h-auto w-[clamp(52px,12cqi,96px)] max-w-full object-contain opacity-90 drop-shadow-[0_0_22px_rgba(250,204,21,0.35)]"
+        draggable={false}
       />
     </div>
   );
@@ -1951,6 +1967,7 @@ export default function Page() {
       { key: "resources", label: "Membership section" },
       { key: "support", label: "Support" },
       { key: "quickaccess", label: "Quick Access" },
+      { key: "affiliate", label: "Affiliate" },
       { key: "settings", label: "Settings" }
     ],
     []
@@ -1977,6 +1994,10 @@ export default function Page() {
 
   const applyNavKey = useCallback(
     (key: string) => {
+      if (key === "affiliate") {
+        router.push("/affiliate");
+        return;
+      }
       const valid = new Set(nav.map((n) => n.key));
       if (!valid.has(key)) return;
       if (typeof window !== "undefined") {
@@ -2230,12 +2251,12 @@ export default function Page() {
     setGoalsFabLocked(!!portalUser?.dashboard_nav_locks?.goals);
   }, [portalUser, setGoalsFabLocked]);
 
-  /** Deep links to the affiliate dashboard now live on the public site. */
+  /** Deep links to affiliate open the public marketing page. */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const section = new URLSearchParams(window.location.search).get("section");
     if (section === "affiliate") {
-      router.replace("/affiliate-portal");
+      router.replace("/affiliate");
     }
   }, [router]);
 
@@ -3116,7 +3137,7 @@ export default function Page() {
                     >
                       <DashboardChromeLetterGlitch />
                       <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                      <div className="relative z-[1] min-w-0 px-1">
+                      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col px-1">
                         <SidebarNavRailList
                           nav={nav}
                           selectedNavKey={selectedNavKey}
@@ -3124,6 +3145,7 @@ export default function Page() {
                           onItemActivate={() => {}}
                           isNavLocked={isNavLocked}
                         />
+                        <SidebarNavKeyDecor />
                       </div>
                     </div>
                   </div>
@@ -3324,7 +3346,7 @@ export default function Page() {
               >
                 <DashboardChromeLetterGlitch />
                 <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                <div className="relative z-[1] min-h-0 min-w-0 lg:min-h-0">
+                <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col lg:min-h-full">
                   <SidebarNavRailList
                     nav={nav}
                     selectedNavKey={selectedNavKey}
@@ -3332,6 +3354,7 @@ export default function Page() {
                     onItemActivate={() => {}}
                     isNavLocked={isNavLocked}
                   />
+                  <SidebarNavKeyDecor />
                 </div>
               </motion.aside>
             ) : null}

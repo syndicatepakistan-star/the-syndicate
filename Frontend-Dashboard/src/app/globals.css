@@ -1132,6 +1132,11 @@ figcaption {
  * Left rail nav: Thryon labels + fluid checkbox / icon / padding (clamp).
  * Not `.compact-card-ui` — display font matches the rest of the shell.
  */
+.sidebar-nav-dock:has(.sidebar-nav-key-decor) {
+  display: flex;
+  flex-direction: column;
+}
+
 .sidebar-nav-dock {
   /* Slightly smaller checkbox + icon vs text so labels keep room (Thryon is wide) */
   --sidebar-nav-checkbox: clamp(12px, 0.26rem + 1.2vw, 19px);
@@ -1284,6 +1289,31 @@ figcaption {
 
 .sidebar-nav-dock .sidebar-nav-accent-line {
   width: var(--sidebar-nav-accent-w);
+}
+
+.sidebar-nav-dock .sidebar-nav-key-decor {
+  margin-top: auto;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  padding-top: clamp(0.65rem, 1.2vw + 0.2rem, 1.35rem);
+  padding-bottom: clamp(0.35rem, 0.6vw + 0.1rem, 0.85rem);
+}
+
+.sidebar-nav-key-spin {
+  animation: sidebarNavKeyAxisSpin 7.5s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes sidebarNavKeyAxisSpin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
 }
 
 /* Ops deck: alarming bell on due toasts (navbar strip) */

@@ -1245,6 +1245,7 @@ figcaption {
 .sidebar-nav-dock .sidebar-nav-list {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: var(--sidebar-nav-list-gap);
 }
 
@@ -1291,17 +1292,31 @@ figcaption {
   width: var(--sidebar-nav-accent-w);
 }
 
+/* Remaining rail height below nav — key centered with equal top/bottom breathing room */
+.sidebar-nav-dock .sidebar-nav-key-slot {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(5rem, 22cqi, 10rem);
+  padding: clamp(0.55rem, 2.2cqi, 1.1rem) var(--sidebar-nav-section-px);
+}
+
 .sidebar-nav-dock .sidebar-nav-key-decor {
-  margin-top: auto;
   display: flex;
   flex-shrink: 0;
   justify-content: center;
   align-items: center;
-  padding-top: clamp(0.65rem, 1.2vw + 0.2rem, 1.35rem);
-  padding-bottom: clamp(0.35rem, 0.6vw + 0.1rem, 0.85rem);
+  width: 100%;
 }
 
 .sidebar-nav-key-spin {
+  width: clamp(4.75rem, 22cqi, 7.5rem);
+  height: auto;
+  max-width: 92%;
+  object-fit: contain;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 22px rgba(250, 204, 21, 0.35));
   animation: sidebarNavKeyAxisSpin 7.5s linear infinite;
   transform-origin: center center;
   will-change: transform;

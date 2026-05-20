@@ -405,8 +405,17 @@ export function ProgramsCourseSection({
     }
   };
 
-  const activeDetailCourse = detailCourseId !== null ? apiCourses.find((c) => c.id === detailCourseId) : undefined;
-  const hasCatalogItems = apiCourses.length > 0 || streamPlaylists.length > 0;
+  const visibleApiCourses = useMemo(
+    () =>
+      apiCourses.filter(
+        (course) => !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title })
+      ),
+    [apiCourses]
+  );
+
+  const activeDetailCourse =
+    detailCourseId !== null ? visibleApiCourses.find((c) => c.id === detailCourseId) : undefined;
+  const hasCatalogItems = visibleApiCourses.length > 0 || streamPlaylists.length > 0;
   const hasSecureErrors = coursesError !== null || playlistsError !== null;
   const showSecureBlock = staff || hasCatalogItems || hasSecureErrors || chromaItems.length === 0;
   const useApiProgramBrowser = hasCatalogItems || staff || hasSecureErrors || chromaItems.length === 0;
@@ -414,11 +423,12 @@ export function ProgramsCourseSection({
   const inProgramLessonView = useApiProgramBrowser && secureView === "detail";
   const inPlaylistDetail = detailPlaylistId !== null;
   const inCourseDetail = detailCourseId !== null;
+
   const normalizedPlaylistTitleQuery = playlistTitleQuery.trim().toLowerCase();
   const searchablePlaylists = useMemo(
     () => {
       const filtered = streamPlaylists.filter((playlist) => {
-        if (isHiddenProgramPlaylist(playlist.id)) return false;
+        if (isHiddenProgramPlaylist(playlist.id, { slug: playlist.slug, title: playlist.title })) return false;
         return normalizedPlaylistTitleQuery.length === 0
           ? true
           : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery);
@@ -828,11 +838,11 @@ export function ProgramsCourseSection({
                   </div>
                 </div>
               ) : null}
-              {apiCourses.length > 0 ? (
+              {visibleApiCourses.length > 0 ? (
                 <div className="space-y-3">
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-cyan-100/80">Courses</div>
                   <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 sm:gap-5 min-[400px]:grid-cols-2 md:gap-6">
-              {apiCourses.map((c, i) => {
+              {visibleApiCourses.map((c, i) => {
                 const grad = PROGRAM_CARD_BACKGROUNDS[(streamPlaylists.length + i) % PROGRAM_CARD_BACKGROUNDS.length];
                 const coverSrc = resolveDjangoMediaUrl(c.cover_image_url);
                 const theme = COURSE_CARD_THEMES[i % COURSE_CARD_THEMES.length];

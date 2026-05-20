@@ -5,8 +5,23 @@ function courseThumb(fileName: string): string {
   return `${COURSE_IMAGES}/${encodeURIComponent(fileName)}`;
 }
 
-/** Playlists hidden from the public /programs library grid. */
-export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>();
+/** Playlists hidden from public and dashboard program libraries. */
+export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>([
+  5, // The Art of Mastering Human Behavior in Business
+  10, // The Business of Empire Building
+  11, // The Art Of Business Persuasion
+]);
+
+export const HIDDEN_PROGRAM_PLAYLIST_SLUGS = new Set<string>([
+  "the-art-of-mastering-human-behavior-in-business",
+  "the-business-of-empire-building",
+  "the-art-of-business-persuasion",
+]);
+
+export type ProgramPlaylistVisibilityMeta = {
+  slug?: string | null;
+  title?: string | null;
+};
 
 /**
  * Stream playlist id → static cover image (used when Django has no cover_image).
@@ -65,8 +80,28 @@ export function getProgramPlaylistThumbnail(programId: number): string | undefin
   return PROGRAM_PLAYLIST_THUMBNAILS[programId];
 }
 
-export function isHiddenProgramPlaylist(programId: number): boolean {
-  return HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId);
+function normalizeProgramTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Hide Empire Building, Business Persuasion, and Human Behavior programs. */
+export function isHiddenProgramPlaylist(
+  programId: number,
+  meta?: ProgramPlaylistVisibilityMeta
+): boolean {
+  if (HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId)) return true;
+  const slug = meta?.slug?.trim().toLowerCase();
+  if (slug && HIDDEN_PROGRAM_PLAYLIST_SLUGS.has(slug)) return true;
+  const title = meta?.title ? normalizeProgramTitle(meta.title) : "";
+  if (!title) return false;
+  if (title.includes("empire building")) return true;
+  if (title.includes("human behavior")) return true;
+  if (title.includes("persuasion") && title.includes("business")) return true;
+  return false;
 }
 
 /** Deep link from homepage globe → public programs library card. */

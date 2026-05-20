@@ -1,6 +1,7 @@
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 import {
   GLOBE_FILENAME_TO_PROGRAM_ID,
+  isHiddenProgramPlaylist,
   programPlaylistDeepLink,
 } from "@/lib/programPlaylistThumbnails";
 
@@ -61,7 +62,7 @@ export function matchPlaylistIdForGalleryImage(
   playlists: StreamPlaylistListItem[]
 ): number | undefined {
   const mapped = GLOBE_FILENAME_TO_PROGRAM_ID[fileName];
-  if (mapped != null) return mapped;
+  if (mapped != null && !isHiddenProgramPlaylist(mapped)) return mapped;
 
   if (!playlists.length) return undefined;
 
@@ -91,9 +92,11 @@ export function attachProgramLinksToGalleryImages(
   playlists: StreamPlaylistListItem[]
 ): ProgramGalleryImage[] {
   return images.map((img) => {
-    const programId =
+    const rawProgramId =
       GLOBE_FILENAME_TO_PROGRAM_ID[img.fileName] ??
       matchPlaylistIdForGalleryImage(img.fileName, img.alt, playlists);
+    const programId =
+      rawProgramId != null && !isHiddenProgramPlaylist(rawProgramId) ? rawProgramId : undefined;
     return {
       ...img,
       programId,

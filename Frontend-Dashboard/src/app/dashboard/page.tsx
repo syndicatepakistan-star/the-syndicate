@@ -249,15 +249,17 @@ function CheckboxSlot({ active }: { active?: boolean }) {
 
 function SidebarNavKeyDecor() {
   return (
-    <div className="sidebar-nav-key-decor pointer-events-none select-none" aria-hidden>
-      <img
-        src="/assets/White-Key.png"
-        alt=""
-        width={96}
-        height={96}
-        className="sidebar-nav-key-spin h-auto w-[clamp(52px,12cqi,96px)] max-w-full object-contain opacity-90 drop-shadow-[0_0_22px_rgba(250,204,21,0.35)]"
-        draggable={false}
-      />
+    <div className="sidebar-nav-key-slot" aria-hidden>
+      <div className="sidebar-nav-key-decor pointer-events-none select-none">
+        <img
+          src="/assets/Gold-Key.png"
+          alt=""
+          width={120}
+          height={120}
+          className="sidebar-nav-key-spin"
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }

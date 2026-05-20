@@ -156,7 +156,10 @@ export function PlaylistCardsSection({
   }, []);
 
   const visiblePlaylists = useMemo(
-    () => playlists.filter((pl) => !pl.is_coming_soon && !isHiddenProgramPlaylist(pl.id)),
+    () =>
+      playlists.filter(
+        (pl) => !pl.is_coming_soon && !isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title })
+      ),
     [playlists]
   );
   const businessPsychologyPlaylists = useMemo(

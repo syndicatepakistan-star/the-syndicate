@@ -74,7 +74,13 @@ function pickMediaRecorderMimeType(): string | undefined {
   return undefined;
 }
 
-/** Mega mission / admin task: a video file must be attached (camera recording or video upload). */
+/** Mega mission: recorded camera video is required; file upload alone is optional and not sufficient. */
+const MEGA_MISSION_RECORD_REQUIRED_MSG =
+  "Recording video is compulsory before you submit. Press Record video, finish your recording, then submit. File upload is optional and cannot replace a recording.";
+
+const MEGA_MISSION_UPLOAD_ONLY_MSG =
+  "File upload is optional and does not replace recording. Press Record video, complete your recording, then submit again.";
+
 function adminTaskAttachmentIsVideo(file: File | null | undefined): boolean {
   if (!file || typeof file.size !== "number" || file.size <= 0) return false;
   const ct = (file.type || "").trim().toLowerCase();
@@ -636,7 +642,7 @@ function SyndicateHelpContent({ topic }: { topic: SyndicateHelpTopic }) {
                 <strong className="text-white">Mega mission</strong> is the bonus track: tasks published by admins show up here, often with a visible time limit from when they were posted.
               </p>
               <p>
-                You submit a <strong className="text-white">written response</strong> and a <strong className="text-white">video</strong> (use <strong className="text-white">Record video</strong> or upload MP4/WebM/MOV — max 50MB). Staff review in admin; you get <strong className="text-white">one submission per device per task</strong>.
+                You submit a <strong className="text-white">written response</strong> and must <strong className="text-white">Record video</strong> (compulsory). Uploading a file is <strong className="text-white">optional</strong> and cannot replace recording. Staff review in admin; you get <strong className="text-white">one submission per device per task</strong>.
               </p>
               <p>After approval, use <strong className="text-white">Claim reviewed points</strong> on that task to receive the payout—this pipeline is separate from your daily syndicate missions.</p>
             </>
@@ -2142,6 +2148,8 @@ export function SyndicateAiChallengePanel() {
   /** Latest drafts for MediaRecorder onstop (closure-safe). */
   const adminTaskDraftsRef = useRef<Record<number, string>>({});
   const [adminTaskFiles, setAdminTaskFiles] = useState<Record<number, File | null>>({});
+  const [adminTaskVideoFromRecord, setAdminTaskVideoFromRecord] = useState<Record<number, boolean>>({});
+  const [adminTaskInlineMsg, setAdminTaskInlineMsg] = useState<Record<number, string>>({});
   const [adminTaskRecording, setAdminTaskRecording] = useState<Record<number, boolean>>({});
   const [adminTaskBusyId, setAdminTaskBusyId] = useState<number | null>(null);
   const [adminTaskMsg, setAdminTaskMsg] = useState<string | null>(null);
@@ -3116,46 +3124,58 @@ export function SyndicateAiChallengePanel() {
     }
   }
 
+  function showAdminTaskFeedback(taskId: number, message: string, scrollTargetId?: string) {
+    setAdminTaskMsg(message);
+    setAdminTaskInlineMsg((prev) => ({ ...prev, [taskId]: message }));
+    if (typeof document !== "undefined" && scrollTargetId) {
+      const el = document.getElementById(scrollTargetId);
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }
+
+  function clearAdminTaskFeedback(taskId: number) {
+    setAdminTaskInlineMsg((prev) => {
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
+  }
+
   async function submitAdminTask(taskId: number) {
     const draft = (adminTaskDrafts[taskId] || "").trim();
     const file = adminTaskFiles[taskId] ?? null;
+    const hasVideo = adminTaskAttachmentIsVideo(file);
+    const fromRecord = !!adminTaskVideoFromRecord[taskId];
+
     if (draft.length < 3) {
-      if (file) {
-        setAdminTaskMsg(
-          "Text is required: type at least 3 characters above. Your video is already attached — then press Submit again."
-        );
-      } else {
-        setAdminTaskMsg(
-          "Text is required: type at least 3 characters above, then attach a video (Record video or choose a video file) and press Submit."
-        );
-      }
+      showAdminTaskFeedback(
+        taskId,
+        fromRecord && hasVideo
+          ? "Text is required: type at least 3 characters above. Your recorded video is attached — then press Submit again."
+          : "Text is required: type at least 3 characters above, then Record video (compulsory) before you submit.",
+        `admin-task-response-${taskId}`
+      );
       if (typeof document !== "undefined") {
         const el = document.getElementById(`admin-task-response-${taskId}`);
         if (el instanceof HTMLElement) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
           window.setTimeout(() => el.focus(), 100);
         }
       }
       return;
     }
-    if (!adminTaskAttachmentIsVideo(file)) {
-      if (file) {
-        setAdminTaskMsg(
-          "Mega mission requires a video file: remove the non-video file, then use Record video or choose MP4/WebM/MOV (max 50MB)."
-        );
+
+    if (!hasVideo || !fromRecord) {
+      if (hasVideo && !fromRecord) {
+        showAdminTaskFeedback(taskId, MEGA_MISSION_UPLOAD_ONLY_MSG, `admin-task-record-zone-${taskId}`);
       } else {
-        setAdminTaskMsg(
-          "Video is required: use Record video or choose a video file below, then press Submit again with your written response."
-        );
-      }
-      if (typeof document !== "undefined") {
-        const el = document.getElementById(`admin-task-file-${taskId}`);
-        if (el instanceof HTMLElement) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+        showAdminTaskFeedback(taskId, MEGA_MISSION_RECORD_REQUIRED_MSG, `admin-task-record-zone-${taskId}`);
       }
       return;
     }
+
+    clearAdminTaskFeedback(taskId);
     setAdminTaskMsg("Submitting your written response and video for admin review…");
     setAdminTaskBusyId(taskId);
     try {
@@ -3170,7 +3190,9 @@ export function SyndicateAiChallengePanel() {
       const refreshed = await fetchAdminTasksActive(device);
       setAdminTasks(refreshed.results ?? []);
       setAdminTaskFiles((prev) => ({ ...prev, [taskId]: null }));
+      setAdminTaskVideoFromRecord((prev) => ({ ...prev, [taskId]: false }));
       setAdminTaskRecording((prev) => ({ ...prev, [taskId]: false }));
+      clearAdminTaskFeedback(taskId);
       setAdminTaskStartedAtMs((prev) => {
         const next = { ...prev };
         delete next[taskId];
@@ -3204,7 +3226,7 @@ export function SyndicateAiChallengePanel() {
       return;
     }
     if (typeof MediaRecorder === "undefined") {
-      setAdminTaskMsg("Video recording is not supported in this browser. Use Choose file to upload a video instead.");
+      setAdminTaskMsg("Video recording is not supported in this browser. Use a browser that supports Record video (camera recording is compulsory).");
       return;
     }
     if (!isBrowserSecureForCamera()) {
@@ -3243,19 +3265,22 @@ export function SyndicateAiChallengePanel() {
             type: blob.type || outType
           });
           setAdminTaskFiles((prev) => ({ ...prev, [taskId]: file }));
+          setAdminTaskVideoFromRecord((prev) => ({ ...prev, [taskId]: true }));
+          clearAdminTaskFeedback(taskId);
           const written = (adminTaskDraftsRef.current[taskId] || "").trim();
           if (written.length >= 3) {
             setAdminTaskMsg(
-              "Video saved and attached. You can press Submit for admin review — your text and video will be sent together."
+              "Recorded video saved. You can press Submit for admin review — your text and recording will be sent together."
             );
           } else {
             setAdminTaskMsg(
-              "Video saved and attached. Text is required: write at least 3 characters in the field above, then press Submit."
+              "Recorded video saved. Text is required: write at least 3 characters in the field above, then press Submit."
             );
           }
         } else {
+          setAdminTaskVideoFromRecord((prev) => ({ ...prev, [taskId]: false }));
           setAdminTaskMsg(
-            "Recording had no data — try again and record a few seconds, or upload a video file. A video is required to submit this mega mission."
+            "Recording had no data — try again and record a few seconds before you submit."
           );
         }
         stream.getTracks().forEach((tr) => tr.stop());
@@ -4858,29 +4883,36 @@ export function SyndicateAiChallengePanel() {
           <section
             id="syndicate-bonus-missions"
             ref={bonusMissionSectionRef}
-            className="mega-neon-deck syndicate-readable syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
+            className="mega-neon-deck mega-alert-deck syndicate-readable syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
           >
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--cyan" aria-hidden />
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--magenta" aria-hidden />
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--gold" aria-hidden />
+            <div className="mega-alert-deck__scan" aria-hidden />
+            <div className="mega-alert-deck__siren" aria-hidden />
+            <div className="mega-alert-deck__top-bar" aria-hidden>
+              <span className="mega-alert-deck__top-bar-text">
+                RED ALERT · MEGA MISSION CHANNEL · EMERGENCY OPS · HIGH-YIELD BONUS TRACK ·
+              </span>
+            </div>
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--red" aria-hidden />
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--crimson" aria-hidden />
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--ember" aria-hidden />
 
             <div className="mega-neon-deck__frame">
               <header className="mega-neon-header">
                 <div className="mega-neon-header__hero">
                   <div className="mega-neon-header__chips">
-                    <span className="mega-neon-chip mega-neon-chip--cyan">Bonus track</span>
-                    <span className="mega-neon-chip mega-neon-chip--magenta">High-yield</span>
+                    <span className="mega-neon-chip mega-neon-chip--alert">Red alert</span>
+                    <span className="mega-neon-chip mega-neon-chip--critical">Emergency ops</span>
                   </div>
                   <h2 className="mega-neon-title flex flex-wrap items-center gap-2">
                     <span>Mega mission</span>
                     <SyndicateHelpMark topic="mega-mission" label="How mega missions work" onOpen={openSyndicateHelp} />
                   </h2>
-                  <p className="mega-neon-subtitle">Admin-reviewed payouts · timed visibility</p>
+                  <p className="mega-neon-subtitle">Critical bonus track · timed deployment · admin clearance</p>
                 </div>
                 <div className="mega-neon-protocol">
-                  <p className="mega-neon-protocol__label">Protocol</p>
+                  <p className="mega-neon-protocol__label">Field protocol</p>
                   <p className="mega-neon-protocol__body">
-                    Submit text + video. One entry per device per task. Claim points after admin approval.
+                    Deploy text + recorded video proof (Record video required). Upload is optional. One entry per device per op.
                   </p>
                 </div>
               </header>
@@ -4889,28 +4921,28 @@ export function SyndicateAiChallengePanel() {
                 <div className="mega-neon-panel mega-neon-panel--brief">
                   <div className="mega-neon-panel__tag">
                     <span className="mega-neon-panel__dot" aria-hidden />
-                    Field briefing
+                    Threat briefing
                   </div>
-                  <h3 className="mega-neon-panel__heading">Admin review lane</h3>
+                  <h3 className="mega-neon-panel__heading">Command review lane</h3>
                   <p className="mega-neon-panel__copy">
-                    When an admin posts a bonus task, it appears below. Submit your{" "}
-                    <strong className="text-cyan-200">written response</strong> and a{" "}
-                    <strong className="text-fuchsia-200">video</strong> (camera record or upload) — both are required
-                    and visible to staff in Django admin.
+                    When command posts an emergency bonus op, it drops below.                     Transmit your{" "}
+                    <strong className="text-red-200">written report</strong> and{" "}
+                    <strong className="text-orange-200">recorded video proof</strong> (Record video is compulsory;
+                    file upload is optional only) — both are logged for admin review.
                   </p>
                   <ul className="mega-neon-rules">
-                    <li className="mega-neon-rule mega-neon-rule--cyan">
-                      One submission per device per task. After approval, use Claim reviewed points.
+                    <li className="mega-neon-rule mega-neon-rule--alert">
+                      One submission per device per op. After clearance, hit Claim reviewed points.
                     </li>
-                    <li className="mega-neon-rule mega-neon-rule--gold">
-                      Task visibility uses admin-set hours from post time — submit before the countdown ends.
+                    <li className="mega-neon-rule mega-neon-rule--urgent">
+                      Ops expire on admin timer — beat the countdown before the channel goes dark.
                     </li>
                   </ul>
                 </div>
                 <aside className="mega-neon-panel mega-neon-panel--side">
-                  <p className="mega-neon-panel__tag mega-neon-panel__tag--side">Post-review</p>
+                  <p className="mega-neon-panel__tag mega-neon-panel__tag--side">Extraction</p>
                   <p className="mega-neon-panel__copy mega-neon-panel__copy--side">
-                    Claim buttons appear under each reviewed result.
+                    Claim controls unlock under each cleared mission result.
                   </p>
                   {adminTaskMsg ? <p className="mega-neon-alert">{adminTaskMsg}</p> : null}
                 </aside>
@@ -4920,9 +4952,9 @@ export function SyndicateAiChallengePanel() {
             <div className="mega-neon-missions">
             {visibleAdminTasks.length === 0 ? (
               <div className="mega-neon-empty">
-                <p className="mega-neon-empty__title">No bonus tasks right now</p>
+                <p className="mega-neon-empty__title">Channel quiet — no active ops</p>
                 <p className="mega-neon-empty__body">
-                  When an admin creates a task, it will show here. Complete daily missions and check back.
+                  Stand by. When command deploys a mega mission, it will flash here. Run daily missions and check back.
                 </p>
               </div>
             ) : (
@@ -4947,33 +4979,35 @@ export function SyndicateAiChallengePanel() {
                   const fileName = adminTaskFiles[t.id]?.name;
                   const isRecording = !!adminTaskRecording[t.id];
                   const videoAttached = adminTaskAttachmentIsVideo(adminTaskFiles[t.id] ?? null);
+                  const videoFromRecord = !!adminTaskVideoFromRecord[t.id];
+                  const inlineMsg = adminTaskInlineMsg[t.id];
                   return (
                     <article
                       key={t.id}
-                      className="syndicate-game-ops-card mega-neon-ops-card overflow-hidden"
+                      className="syndicate-game-ops-card mega-neon-ops-card mega-alert-ops-card overflow-hidden"
                     >
-                      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-black/30 px-4 py-3 sm:px-5 sm:py-4">
+                      <header className="mega-alert-ops-card__header flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             {t.expires_at ? (
-                              <div className="flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/15 px-2.5 py-1.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200/90">Time left</span>
-                                <span className="font-mono text-[16px] font-black tabular-nums text-amber-50 sm:text-lg">
+                              <div className="mega-alert-countdown flex items-center gap-2 px-2.5 py-1.5">
+                                <span className="mega-alert-countdown__label">Time left</span>
+                                <span className="mega-alert-countdown__value font-mono tabular-nums">
                                   {formatCountdown(leftSec)}
                                 </span>
                               </div>
                             ) : null}
                             {t.admin_note ? (
-                              <div className="max-w-[100%] rounded-lg border border-fuchsia-300/50 bg-fuchsia-500/15 px-2.5 py-1.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-100/90">Admin note</span>
-                                <p className="mt-0.5 text-[12px] font-semibold leading-snug text-fuchsia-50">{t.admin_note}</p>
+                              <div className="mega-alert-admin-note max-w-[100%] px-2.5 py-1.5">
+                                <span className="mega-alert-admin-note__label">Command note</span>
+                                <p className="mt-0.5 text-[12px] font-semibold leading-snug">{t.admin_note}</p>
                               </div>
                             ) : null}
-                            <span className="rounded border border-[rgba(255,215,0,0.5)] bg-[rgba(255,215,0,0.1)] px-2 py-0.5 text-[11px] font-black text-[color:var(--gold)]">
+                            <span className="mega-alert-points-badge px-2 py-0.5 text-[11px] font-black">
                               {t.points_target} pts
                             </span>
                           </div>
-                          <h4 className="mt-2 text-[18px] font-black uppercase leading-tight tracking-[0.05em] text-white sm:text-[20px]">
+                          <h4 className="mega-alert-ops-card__title mt-2 text-[18px] font-black uppercase leading-tight tracking-[0.05em] sm:text-[20px]">
                             {t.title}
                           </h4>
                         </div>
@@ -5055,7 +5089,8 @@ export function SyndicateAiChallengePanel() {
                                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-200/85">Your response</p>
                                 <p className="mt-1 text-[12px] text-white/55">
                                   <span className="text-emerald-200/90">Text is required</span> (at least 3 characters).{" "}
-                                  <span className="text-amber-200/90">A video is required</span> — use Record video or upload MP4/WebM/MOV (max 50MB). Both are sent in one submission.
+                                  <span className="text-rose-200/95">Record video is compulsory</span> before submit.{" "}
+                                  <span className="text-amber-200/90">Upload is optional</span> and cannot replace a recording.
                                 </p>
                               </div>
                               <div>
@@ -5071,30 +5106,14 @@ export function SyndicateAiChallengePanel() {
                                   className="w-full rounded-xl border border-white/18 bg-black/55 px-3 py-3 text-[15px] leading-relaxed text-white outline-none ring-cyan-400/30 placeholder:text-white/35 focus:border-cyan-400/50 focus:ring-2"
                                 />
                               </div>
-                              <div className="rounded-xl border border-white/12 bg-black/35 p-3">
-                                <label className="block text-[12px] font-semibold text-white/80" htmlFor={`admin-task-file-${t.id}`}>
-                                  Video <span className="font-normal text-amber-200/90">(required)</span>{" "}
-                                  <span className="font-normal text-white/45">— record or upload</span>
-                                </label>
-                                <input
-                                  id={`admin-task-file-${t.id}`}
-                                  type="file"
-                                  accept="video/*,.webm,.mp4,.mov,.mkv,.m4v,.ogv,.avi"
-                                  className="mt-2 block w-full cursor-pointer text-[13px] text-white/85 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-cyan-500/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-cyan-50 hover:file:bg-cyan-500/40"
-                                  onChange={(e) => {
-                                    const f = e.target.files?.[0] ?? null;
-                                    if (isRecording) stopAdminTaskVideoRecord(t.id);
-                                    if (f && !adminTaskAttachmentIsVideo(f)) {
-                                      setAdminTaskMsg(
-                                        "Mega mission requires a video file. Choose MP4, WebM, MOV, or use Record video."
-                                      );
-                                      e.target.value = "";
-                                      setAdminTaskFiles((prev) => ({ ...prev, [t.id]: null }));
-                                      return;
-                                    }
-                                    setAdminTaskFiles((prev) => ({ ...prev, [t.id]: f }));
-                                  }}
-                                />
+                              <div
+                                id={`admin-task-record-zone-${t.id}`}
+                                className="rounded-xl border border-white/12 bg-black/35 p-3"
+                              >
+                                <p className="text-[12px] font-semibold text-white/85">
+                                  Video proof{" "}
+                                  <span className="font-normal text-rose-200/95">(Record video — compulsory)</span>
+                                </p>
                                 <div className="mt-3 flex flex-wrap items-center gap-2">
                                   {!isRecording ? (
                                     <button
@@ -5133,29 +5152,55 @@ export function SyndicateAiChallengePanel() {
                                     The live preview uses the full screen so you can see yourself clearly (especially on iPhone). Scroll is locked until you stop.
                                   </p>
                                 ) : null}
-                                {fileName ? (
-                                  <p className="mt-2 text-[12px] text-cyan-200/90">
-                                    Selected: {fileName}
-                                    {!videoAttached ? (
-                                      <span className="ml-2 text-amber-200/95"> — not detected as video; pick a video file or record.</span>
-                                    ) : null}
+                                {videoFromRecord && videoAttached ? (
+                                  <p className="mt-2 text-[12px] font-semibold text-emerald-200/95">
+                                    Recorded video attached{fileName ? `: ${fileName}` : ""}. You may submit when your text is ready.
+                                  </p>
+                                ) : videoAttached && !videoFromRecord ? (
+                                  <p className="mt-2 text-[12px] font-semibold text-amber-200/95">
+                                    File selected ({fileName}) — upload is optional. You must still Record video before submit.
                                   </p>
                                 ) : (
-                                  <p className="mt-2 text-[11px] text-white/45">
-                                    Video only (max 50MB). Shown to admin with your text.
+                                  <p className="mt-2 text-[11px] text-rose-200/85">
+                                    No recording yet. Press Record video before you submit.
                                   </p>
                                 )}
+                                <label className="mt-4 block text-[11px] font-semibold text-white/55" htmlFor={`admin-task-file-${t.id}`}>
+                                  Optional file upload <span className="font-normal text-white/40">(does not replace recording)</span>
+                                </label>
+                                <input
+                                  id={`admin-task-file-${t.id}`}
+                                  type="file"
+                                  accept="video/*,.webm,.mp4,.mov,.mkv,.m4v,.ogv,.avi"
+                                  className="mt-2 block w-full cursor-pointer text-[13px] text-white/85 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-cyan-500/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-cyan-50 hover:file:bg-cyan-500/40"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0] ?? null;
+                                    if (isRecording) stopAdminTaskVideoRecord(t.id);
+                                    if (f && !adminTaskAttachmentIsVideo(f)) {
+                                      showAdminTaskFeedback(
+                                        t.id,
+                                        "Optional upload must be a video file (MP4, WebM, MOV). Recording is still compulsory before submit.",
+                                        `admin-task-record-zone-${t.id}`
+                                      );
+                                      e.target.value = "";
+                                      setAdminTaskFiles((prev) => ({ ...prev, [t.id]: null }));
+                                      setAdminTaskVideoFromRecord((prev) => ({ ...prev, [t.id]: false }));
+                                      return;
+                                    }
+                                    setAdminTaskFiles((prev) => ({ ...prev, [t.id]: f }));
+                                    setAdminTaskVideoFromRecord((prev) => ({ ...prev, [t.id]: false }));
+                                    if (f) {
+                                      showAdminTaskFeedback(t.id, MEGA_MISSION_UPLOAD_ONLY_MSG, `admin-task-record-zone-${t.id}`);
+                                    } else {
+                                      clearAdminTaskFeedback(t.id);
+                                    }
+                                  }}
+                                />
                               </div>
                               <button
                                 type="button"
-                                disabled={adminTaskBusyId === t.id || isRecording || !videoAttached}
-                                title={
-                                  !videoAttached
-                                    ? "Attach a video (record or upload) before submitting."
-                                    : isRecording
-                                      ? "Stop recording before submitting."
-                                      : undefined
-                                }
+                                disabled={adminTaskBusyId === t.id || isRecording}
+                                title={isRecording ? "Stop recording before submitting." : undefined}
                                 onClick={() => void submitAdminTask(t.id)}
                                 className={ADMIN_SUBMIT_BTN}
                               >
@@ -5163,8 +5208,14 @@ export function SyndicateAiChallengePanel() {
                                   {adminTaskBusyId === t.id ? "Submitting…" : "Submit for admin review"}
                                 </span>
                               </button>
-                              {!videoAttached && !isRecording ? (
-                                <p className="text-center text-[11px] text-amber-200/85">Video required — record or choose a video file above.</p>
+                              {inlineMsg ? (
+                                <p className="mega-neon-alert mt-2 text-center text-[12px] leading-snug" role="alert">
+                                  {inlineMsg}
+                                </p>
+                              ) : !videoFromRecord && !isRecording ? (
+                                <p className="text-center text-[11px] text-rose-200/90">
+                                  Record video is compulsory before submit. Upload is optional only.
+                                </p>
                               ) : null}
                             </div>
                           )}

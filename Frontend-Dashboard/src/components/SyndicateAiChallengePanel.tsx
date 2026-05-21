@@ -2372,23 +2372,52 @@ export function SyndicateAiChallengePanel() {
   }, [recordingAdminTaskId]);
 
   /**
-   * Wall clock: ticking every second re-renders this entire panel (very large). Use 1s only when live
-   * countdowns are visible; otherwise 30s is enough (mission board TTL is 24h; admin expiry is coarse).
+   * Wall clock: ticking every second re-renders this entire panel (very large). Use 1s only when a
+   * live countdown must update on screen; otherwise 5–30s keeps scroll/layout smooth.
    */
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const reminderKeyCount = Object.keys(missionReminders).length;
+    const hasExpiringMegaOps = adminTasks.some((t) => {
+      if (!t.expires_at) return false;
+      const exp = new Date(t.expires_at).getTime();
+      return exp > Date.now() && exp - Date.now() < 86_400_000;
+    });
     const needsFastClock =
       syndicateView === "reminders" ||
       selected != null ||
       recordingAdminTaskId != null ||
-      (syndicateView === "dashboard" && reminderKeyCount > 0);
-    const intervalMs = needsFastClock ? 1000 : 30_000;
+      hasExpiringMegaOps;
+    const hasDashboardReminders =
+      syndicateView === "dashboard" && Object.keys(missionReminders).length > 0;
+    const intervalMs = needsFastClock ? 1000 : hasDashboardReminders ? 5000 : 30_000;
     const tick = () => setNowTick(Date.now());
     tick();
     const id = window.setInterval(tick, intervalMs);
     return () => window.clearInterval(id);
-  }, [syndicateView, selected, recordingAdminTaskId, missionReminders]);
+  }, [syndicateView, selected, recordingAdminTaskId, missionReminders, adminTasks]);
+
+  /** Pause infinite glow/scan layers while the main shell scrolls (large CSS perf win). */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const moodRoot = document.querySelector(".dashboard-hamburger-chrome.syndicate-mood-context");
+    const scrollEl = document.querySelector("[data-main-shell-scroll]");
+    if (!moodRoot || !scrollEl) return;
+    let scrollEndTimer: ReturnType<typeof window.setTimeout> | undefined;
+    const onScroll = () => {
+      moodRoot.classList.add("is-scrolling");
+      if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
+      scrollEndTimer = window.setTimeout(() => {
+        moodRoot.classList.remove("is-scrolling");
+        scrollEndTimer = undefined;
+      }, 220);
+    };
+    scrollEl.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      scrollEl.removeEventListener("scroll", onScroll);
+      if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
+      moodRoot.classList.remove("is-scrolling");
+    };
+  }, []);
 
   const goToBonusMissions = useCallback(() => {
     // Mega mission lives under dashboard and is hidden while Stats & profile is open — close it first
@@ -4858,13 +4887,15 @@ export function SyndicateAiChallengePanel() {
                         prevRedeemed
                       )}
                     >
-                      {rewardActionButtonLabel(
-                        redeemed,
-                        canRedeem,
-                        sequentialBlocked,
-                        hasPoints,
-                        rw.unlock_points
-                      )}
+                      <span className="relative z-[2] block w-full [text-shadow:inherit]">
+                        {rewardActionButtonLabel(
+                          redeemed,
+                          canRedeem,
+                          sequentialBlocked,
+                          hasPoints,
+                          rw.unlock_points
+                        )}
+                      </span>
                     </button>
                   </div>
                 );
@@ -4883,34 +4914,51 @@ export function SyndicateAiChallengePanel() {
           <section
             id="syndicate-bonus-missions"
             ref={bonusMissionSectionRef}
-            className="mega-neon-deck mega-alert-deck syndicate-readable syndicate-mega-command mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
+            className="syndicate-readable syndicate-hud-deck syndicate-game-vault syndicate-game-vault--mega syndicate-mega-command mega-neon-deck mega-alert-deck mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
           >
+            <div className="mega-game-hud-grid" aria-hidden />
+            <div className="mega-game-hud-vignette" aria-hidden />
+            <div className="mega-game-hud-noise" aria-hidden />
             <div className="mega-alert-deck__scan" aria-hidden />
             <div className="mega-alert-deck__siren" aria-hidden />
             <div className="mega-alert-deck__top-bar" aria-hidden>
               <span className="mega-alert-deck__top-bar-text">
-                RED ALERT · MEGA MISSION CHANNEL · EMERGENCY OPS · HIGH-YIELD BONUS TRACK ·
+                ◈ RED ALERT · MEGA MISSION CHANNEL · EMERGENCY OPS · HIGH-YIELD BONUS TRACK · DEPLOY NOW ◈
               </span>
             </div>
             <div className="mega-neon-deck__glow mega-neon-deck__glow--red" aria-hidden />
             <div className="mega-neon-deck__glow mega-neon-deck__glow--crimson" aria-hidden />
             <div className="mega-neon-deck__glow mega-neon-deck__glow--ember" aria-hidden />
+            <div className="mega-neon-deck__glow mega-neon-deck__glow--gold" aria-hidden />
 
-            <div className="mega-neon-deck__frame">
-              <header className="mega-neon-header">
-                <div className="mega-neon-header__hero">
-                  <div className="mega-neon-header__chips">
+            <div className="syndicate-hud-deck-inner mega-game-shell syndicate-game-brackets">
+            <div className="mega-neon-deck__frame mega-game-frame">
+              <header className="mega-neon-header mega-game-header-rail syndicate-game-header-rail">
+                <div className="mega-neon-header__hero syndicate-game-header-main min-w-0 border-l-[4px] border-amber-400/80 pl-3 sm:pl-4">
+                  <p className="mega-game-channel-id font-mono text-[9px] font-bold uppercase tracking-[0.34em] text-amber-200/90 sm:text-[10px]">
+                    // channel_Ω · bonus_ops · threat_level_max
+                  </p>
+                  <div className="mega-neon-header__chips mt-2">
                     <span className="mega-neon-chip mega-neon-chip--alert">Red alert</span>
-                    <span className="mega-neon-chip mega-neon-chip--critical">Emergency ops</span>
+                    <span className="mega-neon-chip mega-neon-chip--gold">Emergency ops</span>
+                    <span className="mega-game-rank-badge" aria-hidden>
+                      S-RANK
+                    </span>
                   </div>
-                  <h2 className="mega-neon-title flex flex-wrap items-center gap-2">
+                  <h2 className="mega-neon-title mega-game-title flex flex-wrap items-center gap-2">
+                    <span className="mega-game-title__bracket" aria-hidden>
+                      ⟨
+                    </span>
                     <span>Mega mission</span>
+                    <span className="mega-game-title__bracket" aria-hidden>
+                      ⟩
+                    </span>
                     <SyndicateHelpMark topic="mega-mission" label="How mega missions work" onOpen={openSyndicateHelp} />
                   </h2>
                   <p className="mega-neon-subtitle">Critical bonus track · timed deployment · admin clearance</p>
                 </div>
-                <div className="mega-neon-protocol">
-                  <p className="mega-neon-protocol__label">Field protocol</p>
+                <div className="mega-neon-protocol mega-game-protocol">
+                  <p className="mega-neon-protocol__label">⟨ Field protocol ⟩</p>
                   <p className="mega-neon-protocol__body">
                     Deploy text + recorded video proof (Record video required). Upload is optional. One entry per device per op.
                   </p>
@@ -4949,17 +4997,18 @@ export function SyndicateAiChallengePanel() {
               </div>
             </div>
 
-            <div className="mega-neon-missions">
+            <div className="mega-neon-missions mega-game-ops-bay">
             {visibleAdminTasks.length === 0 ? (
-              <div className="mega-neon-empty">
+              <div className="mega-neon-empty mega-game-empty">
                 <p className="mega-neon-empty__title">Channel quiet — no active ops</p>
                 <p className="mega-neon-empty__body">
                   Stand by. When command deploys a mega mission, it will flash here. Run daily missions and check back.
                 </p>
               </div>
             ) : (
-              <div className="mega-neon-ops-list space-y-6">
-                {visibleAdminTasks.map((t) => {
+              <div className="mega-neon-ops-list mega-game-ops-list space-y-6">
+                {visibleAdminTasks.map((t, opIndex) => {
+                  const opCode = `OP-${String(opIndex + 1).padStart(2, "0")}`;
                   const sub = t.submission ?? null;
                   const expiresMs = t.expires_at ? new Date(t.expires_at).getTime() : 0;
                   const leftSec = expiresMs > 0 ? Math.max(0, Math.floor((expiresMs - nowTick) / 1000)) : 0;
@@ -4984,14 +5033,15 @@ export function SyndicateAiChallengePanel() {
                   return (
                     <article
                       key={t.id}
-                      className="syndicate-game-ops-card mega-neon-ops-card mega-alert-ops-card overflow-hidden"
+                      className="syndicate-game-ops-card mega-neon-ops-card mega-alert-ops-card mega-game-ops-card overflow-hidden"
                     >
-                      <header className="mega-alert-ops-card__header flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+                      <header className="mega-alert-ops-card__header mega-game-ops-card__header flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <span className="mega-game-op-code">{opCode}</span>
                             {t.expires_at ? (
-                              <div className="mega-alert-countdown flex items-center gap-2 px-2.5 py-1.5">
-                                <span className="mega-alert-countdown__label">Time left</span>
+                              <div className="mega-alert-countdown mega-game-countdown flex items-center gap-2 px-2.5 py-1.5">
+                                <span className="mega-alert-countdown__label">T−</span>
                                 <span className="mega-alert-countdown__value font-mono tabular-nums">
                                   {formatCountdown(leftSec)}
                                 </span>
@@ -5022,16 +5072,18 @@ export function SyndicateAiChallengePanel() {
                       ) : null}
 
                       <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
-                        <div className="min-w-0 border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
-                          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">Task instructions</p>
-                          <div className="no-scrollbar mt-2 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/45 p-4 text-[14px] leading-relaxed text-white/88 sm:text-[15px] sm:leading-relaxed">
+                        <div className="mega-game-ops-pane mega-game-ops-pane--brief min-w-0 border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
+                          <p className="mega-game-pane-label text-[11px] font-bold uppercase tracking-[0.14em]">
+                            ⟨ Task briefing ⟩
+                          </p>
+                          <div className="mega-game-terminal no-scrollbar mt-2 max-h-64 overflow-y-auto p-4 text-[14px] leading-relaxed text-white/88 sm:text-[15px] sm:leading-relaxed">
                             <div className="whitespace-pre-wrap break-words">{t.description || "No additional instructions."}</div>
                           </div>
                         </div>
 
-                        <div className="min-w-0 bg-black/25 p-4 sm:p-5">
+                        <div className="mega-game-ops-pane mega-game-ops-pane--deploy min-w-0 bg-black/25 p-4 sm:p-5">
                           {sub ? (
-                            <div className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 p-4 text-[14px] leading-snug text-cyan-100/95">
+                            <div className="mega-game-terminal mega-game-terminal--status p-4 text-[14px] leading-snug text-cyan-100/95">
                               <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-200/80">Submission received</p>
                               {submittedLabel ? (
                                 <p className="mt-2 font-semibold text-white/95">
@@ -5084,9 +5136,11 @@ export function SyndicateAiChallengePanel() {
                               ) : null}
                             </div>
                           ) : (
-                            <div className="space-y-4">
+                            <div className="mega-game-deploy-form space-y-4">
                               <div>
-                                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-200/85">Your response</p>
+                                <p className="mega-game-pane-label text-[11px] font-bold uppercase tracking-[0.14em]">
+                                  ⟨ Deploy payload ⟩
+                                </p>
                                 <p className="mt-1 text-[12px] text-white/55">
                                   <span className="text-emerald-200/90">Text is required</span> (at least 3 characters).{" "}
                                   <span className="text-rose-200/95">Record video is compulsory</span> before submit.{" "}
@@ -5103,12 +5157,12 @@ export function SyndicateAiChallengePanel() {
                                   value={adminTaskDrafts[t.id] ?? ""}
                                   onChange={(e) => setAdminTaskDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))}
                                   placeholder="Describe what you did, paste links, or explain how you completed the task…"
-                                  className="w-full rounded-xl border border-white/18 bg-black/55 px-3 py-3 text-[15px] leading-relaxed text-white outline-none ring-cyan-400/30 placeholder:text-white/35 focus:border-cyan-400/50 focus:ring-2"
+                                  className="mega-game-input w-full px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35"
                                 />
                               </div>
                               <div
                                 id={`admin-task-record-zone-${t.id}`}
-                                className="rounded-xl border border-white/12 bg-black/35 p-3"
+                                className="mega-game-terminal mega-game-terminal--record p-3"
                               >
                                 <p className="text-[12px] font-semibold text-white/85">
                                   Video proof{" "}
@@ -5119,7 +5173,7 @@ export function SyndicateAiChallengePanel() {
                                     <button
                                       type="button"
                                       onClick={() => void startAdminTaskVideoRecord(t.id)}
-                                      className="rounded-lg border border-cyan-300/55 bg-cyan-500/18 px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em] text-cyan-100 hover:bg-cyan-500/28"
+                                      className="mega-game-action-btn mega-game-action-btn--record px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]"
                                     >
                                       Record video
                                     </button>
@@ -5127,7 +5181,7 @@ export function SyndicateAiChallengePanel() {
                                     <button
                                       type="button"
                                       onClick={() => stopAdminTaskVideoRecord(t.id)}
-                                      className="rounded-lg border border-rose-300/60 bg-rose-500/20 px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em] text-rose-100 hover:bg-rose-500/30"
+                                      className="mega-game-action-btn mega-game-action-btn--stop px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]"
                                     >
                                       Stop recording
                                     </button>
@@ -5226,6 +5280,7 @@ export function SyndicateAiChallengePanel() {
                 })}
               </div>
             )}
+            </div>
             </div>
           </section>
           ) : null}

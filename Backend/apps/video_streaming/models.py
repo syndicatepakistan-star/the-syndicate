@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import User
+from syndicate_backend.media_storages import get_image_storage
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -42,7 +43,12 @@ class StreamVideo(models.Model):
         default=0,
         validators=[MinValueValidator(0)],
     )
-    thumbnail = models.ImageField(upload_to=stream_video_thumbnail_upload_to, blank=True, null=True)
+    thumbnail = models.ImageField(
+        upload_to=stream_video_thumbnail_upload_to,
+        storage=get_image_storage,
+        blank=True,
+        null=True,
+    )
     original_video = models.FileField(
         upload_to=stream_video_original_upload_to,
         blank=True,
@@ -146,6 +152,7 @@ class StreamPlaylist(models.Model):
     )
     cover_image = models.ImageField(
         upload_to=stream_playlist_cover_upload_to,
+        storage=get_image_storage,
         blank=True,
         null=True,
         help_text="Optional. Shown on the Programs grid; falls back to the first video thumbnail.",

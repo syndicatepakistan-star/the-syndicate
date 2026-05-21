@@ -223,16 +223,10 @@ class KingProgramSelectionView(views.APIView):
             .order_by("title")
         )
 
+        from syndicate_backend.media_storages import public_media_url
+
         def _field_url(file_field):
-            if not file_field:
-                return None
-            try:
-                url = file_field.url
-            except Exception:
-                return None
-            if request is not None:
-                return request.build_absolute_uri(url)
-            return url
+            return public_media_url(file_field, request)
 
         def _playlist_thumb_url(pl: StreamPlaylist):
             direct = _field_url(pl.cover_image)

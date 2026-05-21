@@ -152,7 +152,11 @@ def _stream_video_delete_bucket_objects(sender, instance: StreamVideo, **kwargs)
         if client is None:
             return
         try:
-            keys = [k for k in [original_key, thumbnail_key] if k]
+            # Thumbnails live on Cloudinary when USE_CLOUDINARY; only delete video objects from S3.
+            from django.conf import settings as django_settings
+
+            thumb_keys = [] if getattr(django_settings, "USE_CLOUDINARY", False) else [thumbnail_key]
+            keys = [k for k in [original_key, *thumb_keys] if k]
             if keys:
                 client.delete_objects(
                     Bucket=bucket,

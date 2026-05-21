@@ -1,11 +1,10 @@
 from typing import Optional
-from urllib.parse import quote
 
-from django.conf import settings
 from rest_framework import serializers
 
 from apps.courses.access import user_can_access_course
 from apps.courses.models import Course, Video, VideoProgress
+from syndicate_backend.media_storages import public_media_url
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -35,13 +34,8 @@ class CourseSerializer(serializers.ModelSerializer):
         return user_can_access_course(request.user, obj)
 
     def get_cover_image_url(self, obj: Course) -> Optional[str]:
-        if not obj.cover_image:
-            return None
-        name = (getattr(obj.cover_image, "name", "") or "").strip()
-        public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
-        if name and public_base:
-            return f"{public_base}/{quote(name.lstrip('/'), safe='/')}"
-        return obj.cover_image.url
+        request = self.context.get("request")
+        return public_media_url(obj.cover_image, request)
 
 
 class CourseWriteSerializer(serializers.ModelSerializer):
@@ -72,13 +66,8 @@ class VideoSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "thumbnail_url", "created_at", "updated_at")
 
     def get_thumbnail_url(self, obj: Video) -> Optional[str]:
-        if not obj.thumbnail:
-            return None
-        name = (getattr(obj.thumbnail, "name", "") or "").strip()
-        public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
-        if name and public_base:
-            return f"{public_base}/{quote(name.lstrip('/'), safe='/')}"
-        return obj.thumbnail.url
+        request = self.context.get("request")
+        return public_media_url(obj.thumbnail, request)
 
 
 class VideoProgressSerializer(serializers.ModelSerializer):

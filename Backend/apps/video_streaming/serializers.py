@@ -1,39 +1,12 @@
-from urllib.parse import quote
-from django.conf import settings
 from rest_framework import serializers
 
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
 from apps.video_streaming.playlist_description import parse_playlist_description_sections
+from syndicate_backend.media_storages import public_media_url
 
 
 def _safe_media_url_for_field(file_field, request):
-    """Return media URL quickly without storage existence round-trips."""
-    if not file_field:
-        return None
-    name = getattr(file_field, "name", "") or ""
-    if not name:
-        return None
-    # For private S3-compatible buckets we must preserve presigned query params.
-    # Building MEDIA_PUBLIC_BASE_URL + encoded path would strip signatures and break loads.
-    if bool(getattr(settings, "AWS_QUERYSTRING_AUTH", False)):
-        try:
-            signed_url = file_field.url
-        except Exception:
-            return None
-        if request is not None and isinstance(signed_url, str) and signed_url.startswith("/"):
-            return request.build_absolute_uri(signed_url)
-        return signed_url
-    public_base = (getattr(settings, "MEDIA_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
-    if public_base:
-        encoded_name = quote(name.lstrip("/"), safe="/")
-        return f"{public_base}/{encoded_name}"
-    try:
-        url = file_field.url
-    except Exception:
-        return None
-    if request is not None:
-        return request.build_absolute_uri(url)
-    return url
+    return public_media_url(file_field, request)
 
 
 class StreamVideoListSerializer(serializers.ModelSerializer):

@@ -85,6 +85,8 @@ ALLOWED_HOSTS = ["*"] if DEBUG else _allowed
 OPENAI_API_KEY = _strip_optional_quotes(os.environ.get("OPENAI_API_KEY") or "")
 OPENAI_MODEL = _strip_optional_quotes(os.environ.get("OPENAI_MODEL") or "gpt-4o-mini")
 
+# Images (thumbnails, playlist/course covers) → Cloudinary when credentials are set.
+# Videos and other files → default storage (S3-compatible bucket or local media/).
 USE_CLOUDINARY = bool(
     (os.environ.get("CLOUDINARY_URL") or "").strip()
     or (
@@ -93,6 +95,26 @@ USE_CLOUDINARY = bool(
         and (os.environ.get("CLOUDINARY_API_SECRET") or "").strip()
     )
 )
+
+if USE_CLOUDINARY:
+    import cloudinary
+
+    _cloudinary_url = (os.environ.get("CLOUDINARY_URL") or "").strip()
+    if _cloudinary_url:
+        cloudinary.config(cloudinary_url=_cloudinary_url, secure=True)
+    else:
+        cloudinary.config(
+            cloud_name=(os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip(),
+            api_key=(os.environ.get("CLOUDINARY_API_KEY") or "").strip(),
+            api_secret=(os.environ.get("CLOUDINARY_API_SECRET") or "").strip(),
+            secure=True,
+        )
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip(),
+        "API_KEY": (os.environ.get("CLOUDINARY_API_KEY") or "").strip(),
+        "API_SECRET": (os.environ.get("CLOUDINARY_API_SECRET") or "").strip(),
+        "SECURE": True,
+    }
 
 
 def _s3_object_storage_config() -> dict | None:
@@ -391,8 +413,7 @@ if USE_S3_OBJECT_STORAGE and _s3_object_storage_cfg:
         AWS_S3_ENDPOINT_URL = _s3_object_storage_cfg["endpoint_url"]
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = True
-    # Static/public media mode: set MEDIA_SIGNED_URLS=false to emit stable URLs that cache well.
-    # Keep true for private buckets where presigned GET links are required.
+    # Private video/files on S3: keep signed URLs for FileField.url (playback uses the stream API, not raw URLs).
     _media_signed_urls_raw = (os.environ.get("MEDIA_SIGNED_URLS") or "true").strip().lower()
     AWS_QUERYSTRING_AUTH = _media_signed_urls_raw in ("1", "true", "yes")
     _presign = int((os.environ.get("PRESIGNED_URL_EXPIRE_SECONDS") or "3600").strip() or "3600")
@@ -400,8 +421,9 @@ if USE_S3_OBJECT_STORAGE and _s3_object_storage_cfg:
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3.S3Storage",
     }
-elif USE_CLOUDINARY:
-    STORAGES["default"] = {
+
+if USE_CLOUDINARY:
+    STORAGES["cloudinary_media"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     }
 

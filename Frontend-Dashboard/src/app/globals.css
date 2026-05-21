@@ -4340,9 +4340,9 @@ figcaption {
 .syndicate-reward-action--locked-pts::before,
 .syndicate-reward-action--locked::before {
   background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
+    0deg,
+    transparent,
+    transparent 2px,
       rgba(0, 0, 0, 0.1) 2px,
       rgba(0, 0, 0, 0.1) 3px
     ),
@@ -5005,9 +5005,9 @@ figcaption {
   opacity: 0.72;
   background:
     repeating-linear-gradient(
-      180deg,
-      transparent,
-      transparent 3px,
+    180deg,
+    transparent,
+    transparent 3px,
       rgba(0, 0, 0, 0.12) 3px,
       rgba(0, 0, 0, 0.12) 5px
     ),
@@ -5227,7 +5227,7 @@ figcaption {
 @keyframes syndicate-qac-submit-bar-glow {
   0%,
   100% {
-    box-shadow:
+  box-shadow:
       0 0 16px var(--qac-neon),
       0 0 36px var(--qac-neon-dim),
       0 0 60px var(--qac-neon-soft);
@@ -7524,6 +7524,102 @@ body {
   transform-origin: center center;
   animation: paywall-headline-attract 2.8s ease-in-out infinite;
   will-change: transform;
+}
+
+/* Elite plan offer cards (public /programs + dashboard programs grid) */
+.plan-offer-card {
+  --poc-border: rgba(34, 211, 238, 0.72);
+  --poc-glow: rgba(6, 182, 212, 0.38);
+  --poc-panel-border: rgba(34, 211, 238, 0.42);
+  --poc-open-border: rgba(103, 232, 249, 0.85);
+  --poc-open-text: #a5f3fc;
+}
+
+.plan-offer-card--amber {
+  --poc-border: rgba(251, 191, 36, 0.72);
+  --poc-glow: rgba(245, 158, 11, 0.34);
+  --poc-panel-border: rgba(251, 191, 36, 0.38);
+  --poc-open-border: rgba(251, 191, 36, 0.88);
+  --poc-open-text: #fde68a;
+}
+
+.plan-offer-card--cyan {
+  --poc-border: rgba(34, 211, 238, 0.72);
+  --poc-glow: rgba(6, 182, 212, 0.38);
+  --poc-panel-border: rgba(34, 211, 238, 0.42);
+  --poc-open-border: rgba(103, 232, 249, 0.85);
+  --poc-open-text: #a5f3fc;
+}
+
+.plan-offer-card__shell {
+  border: 2px solid var(--poc-border);
+  background: #04060d;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 42px var(--poc-glow);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.plan-offer-card:hover .plan-offer-card__shell,
+.plan-offer-card:focus-within .plan-offer-card__shell {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 56px var(--poc-glow);
+}
+
+.plan-offer-card__media {
+  border-color: var(--poc-panel-border);
+}
+
+.plan-offer-card__panel {
+  margin: 0.5rem;
+  margin-top: 0;
+  border: 2px solid var(--poc-panel-border);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.plan-offer-card__open {
+  border-color: var(--poc-open-border);
+  background: linear-gradient(135deg, rgba(6, 26, 42, 0.92), rgba(4, 12, 22, 0.98));
+  color: var(--poc-open-text);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--poc-open-border) 45%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--poc-open-border) 25%, transparent);
+}
+
+.plan-offer-card__open:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--poc-open-border) 55%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--poc-open-border) 35%, transparent);
+}
+
+.plan-offer-detail-modal {
+  font-family: var(--font-mono, ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace);
+}
+
+.plan-offer-detail__title {
+  font-family: "Thryon", "Thyron", var(--hud-font);
+  text-shadow:
+    0 0 22px color-mix(in srgb, currentColor 42%, transparent),
+    0 2px 12px rgba(0, 0, 0, 0.85);
+}
+
+.plan-offer-detail__feature {
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.plan-offer-detail-modal--scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 /* Globe deep-link: 10px colored glow + scale up to 1.2 (no large aura blobs) */

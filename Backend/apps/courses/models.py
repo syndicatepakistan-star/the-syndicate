@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from syndicate_backend.media_storages import get_image_storage
 from django.utils.text import slugify
 import secrets
 import string
@@ -22,6 +23,7 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     cover_image = models.ImageField(
         upload_to=course_cover_upload_to,
+        storage=get_image_storage,
         blank=True,
         null=True,
         help_text="Programs grid cover. Use a high-resolution file (e.g. JPEG/PNG at least ~1200px on the short edge, or 1600px+ wide) so it stays sharp on retina screens; small images are stretched and look soft.",
@@ -88,6 +90,7 @@ class Video(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="videos")
     thumbnail = models.ImageField(
         upload_to=video_thumbnail_upload_to,
+        storage=get_image_storage,
         blank=True,
         null=True,
         help_text="Optional. Shown in the lesson list.",

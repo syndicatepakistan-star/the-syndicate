@@ -48,7 +48,9 @@ const nextConfig = {
       { protocol: "http", hostname: "localhost", port: "8000", pathname: "/media/**" },
       // TikTok oEmbed poster URLs (home “Most viewed” marquee).
       { protocol: "https", hostname: "p16-common-sign.tiktokcdn.com", pathname: "/**" },
-      { protocol: "https", hostname: "p19-common-sign.tiktokcdn.com", pathname: "/**" }
+      { protocol: "https", hostname: "p19-common-sign.tiktokcdn.com", pathname: "/**" },
+      // Cloudinary image CDN (program thumbnails / covers from API).
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }
     ]
   },
   async rewrites() {

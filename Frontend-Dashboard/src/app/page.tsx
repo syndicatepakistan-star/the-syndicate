@@ -170,6 +170,7 @@ export default async function Home() {
         id="heroSection"
         className="relative h-[100dvh] min-h-[100dvh] w-full min-w-0 overflow-hidden"
       >
+        <div className="hero-glitch-placeholder absolute inset-0 z-0" aria-hidden />
         <HeroGlitchBackground
           glitchSpeed={70}
           centerVignette

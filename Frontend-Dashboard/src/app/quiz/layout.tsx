@@ -11,12 +11,14 @@ export default function QuizLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="quiz-funnel-root">
       <div className="global-letter-glitch">
+        <div className="quiz-glitch-placeholder" aria-hidden />
         <LetterGlitch
           glitchColors={["#24345f", "#2dc6e8", "#be992e"]}
           glitchSpeed={55}
           centerVignette
           outerVignette
           smooth
+          className="quiz-glitch-canvas"
         />
       </div>
       <div className="global-app-layer">{children}</div>

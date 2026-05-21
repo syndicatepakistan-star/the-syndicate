@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 type Rgb = { r: number; g: number; b: number };
 
@@ -178,12 +178,17 @@ export default function LetterGlitch({
     animationRef.current = requestAnimationFrame(animate);
   };
 
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    context.current = canvas.getContext("2d");
+    resizeCanvas();
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
 
-    context.current = canvas.getContext("2d");
-    resizeCanvas();
     animate();
 
     let resizeTimeout: ReturnType<typeof setTimeout>;

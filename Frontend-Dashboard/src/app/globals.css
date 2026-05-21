@@ -8792,23 +8792,24 @@ body {
 .hero-glitch-placeholder {
   background-color: #030508;
   background-image:
-    radial-gradient(ellipse 85% 75% at 50% 48%, rgba(97, 220, 163, 0.14), transparent 68%),
-    radial-gradient(ellipse 55% 45% at 18% 22%, rgba(74, 43, 114, 0.22), transparent 72%),
-    radial-gradient(ellipse 50% 40% at 82% 78%, rgba(97, 179, 220, 0.12), transparent 70%),
+    radial-gradient(ellipse 85% 75% at 50% 48%, rgba(97, 220, 163, 0.22), transparent 68%),
+    radial-gradient(ellipse 55% 45% at 18% 22%, rgba(74, 43, 114, 0.32), transparent 72%),
+    radial-gradient(ellipse 50% 40% at 82% 78%, rgba(97, 179, 220, 0.18), transparent 70%),
     repeating-linear-gradient(
       0deg,
       transparent 0,
-      transparent 18px,
-      rgba(97, 220, 163, 0.045) 18px,
-      rgba(97, 220, 163, 0.045) 19px
+      transparent 17px,
+      rgba(97, 220, 163, 0.08) 17px,
+      rgba(97, 220, 163, 0.08) 18px
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0,
       transparent 9px,
-      rgba(97, 179, 220, 0.035) 9px,
-      rgba(97, 179, 220, 0.035) 10px
+      rgba(97, 179, 220, 0.06) 9px,
+      rgba(97, 179, 220, 0.06) 10px
     );
+  opacity: 0.55;
 }
 
 .hero-glitch-shell {

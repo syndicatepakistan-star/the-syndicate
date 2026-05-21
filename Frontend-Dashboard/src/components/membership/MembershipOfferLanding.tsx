@@ -66,8 +66,8 @@ const MEMBERSHIP_PILLARS = [
     title: "Your Curriculum",
     summary: "Select programs on your terms — not a fixed funnel.",
     body: "The Knight tier opens the catalog so you choose four to five tracks that match your operator profile. Structure without surrendering control.",
-    image: "/assets/pawn2.png",
-    imageAlt: "Dystopian curriculum operator",
+    image: "/assets/pawn.png",
+    imageAlt: "The Pawn — your curriculum",
     accent: "cyan" as const,
   },
   {

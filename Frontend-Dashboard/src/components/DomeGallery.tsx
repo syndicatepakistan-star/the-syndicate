@@ -45,7 +45,7 @@ type ItemDef = {
 
 const DEFAULT_IMAGES: ImageItem[] = [
   { src: '/assets/kings.png', alt: 'Featured program one' },
-  { src: '/assets/kings2.png', alt: 'Featured program two' },
+  { src: '/assets/pawn.png', alt: 'Featured program two' },
   { src: '/assets/kings3.png', alt: 'Featured program three' },
   { src: '/assets/pawn.png', alt: 'Featured program four' },
   { src: '/assets/pawn1.png', alt: 'Featured program five' },

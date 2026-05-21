@@ -9,7 +9,7 @@ import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkou
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
 import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
-  OFFER_PLAN_THUMB_THE_KING,
+  OFFER_PLAN_THUMB_THE_KNIGHT,
 } from '@/components/programs/offerPlanThumbnails'
 
 type PlanKey = 'bundle' | 'pawn' | 'knight' | 'king'
@@ -253,7 +253,7 @@ function TierCard({
         {(planKey === 'bundle' || planKey === 'king') && (
           <div className="relative mb-4 aspect-[4/3] w-full shrink-0 overflow-hidden rounded-2xl border border-white/10">
             <Image
-              src={planKey === 'bundle' ? OFFER_PLAN_THUMB_MONEY_MASTERY : OFFER_PLAN_THUMB_THE_KING}
+              src={planKey === 'bundle' ? OFFER_PLAN_THUMB_MONEY_MASTERY : OFFER_PLAN_THUMB_THE_KNIGHT}
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, min(560px, 50vw)"

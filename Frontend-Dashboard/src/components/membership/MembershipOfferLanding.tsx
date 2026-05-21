@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
+import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
 
 const BILLING = "monthly" as const;
@@ -312,7 +312,7 @@ export function MembershipOfferLanding({
                     aria-hidden
                   />
                   <img
-                    src={OFFER_PLAN_THUMB_THE_KING}
+                    src={OFFER_PLAN_THUMB_THE_KNIGHT}
                     alt="The Knight membership tier"
                     className="relative z-[1] h-full w-full object-cover object-center"
                   />

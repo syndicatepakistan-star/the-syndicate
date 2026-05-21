@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { OFFER_PLAN_THUMB_MONEY_MASTERY, OFFER_PLAN_THUMB_THE_KING } from "@/components/programs/offerPlanThumbnails";
+import { OFFER_PLAN_THUMB_MONEY_MASTERY, OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
 
 type PlanKey = "bundle" | "king";
 
@@ -51,7 +51,7 @@ const OFFERS: readonly {
   {
     plan: "king",
     title: "The Knight",
-    imageSrc: OFFER_PLAN_THUMB_THE_KING,
+    imageSrc: OFFER_PLAN_THUMB_THE_KNIGHT,
     description:
       "Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.",
     displayPrice: "$19.99",

@@ -98,8 +98,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
   king: {
     price: { monthly: '$19.99', yearly: '$239.88' },
     oldPrice: { monthly: '$99.99', yearly: '$999.90' },
-    badge: 'THE KING',
-    title: 'The King',
+    badge: 'THE KNIGHT',
+    title: 'The Knight',
     description:
       'Your membership, your curriculum: hand-pick 4–5 courses, then stay inside weekly drops, the dashboard, articles, and Syndicate Mode challenges.',
     features: [
@@ -113,7 +113,7 @@ const pricingData: Record<PlanKey, PricingTier> = {
     ],
     accent: 'gold',
     icon: <Crown className="h-4 w-4" />,
-    cta: 'Join The King',
+    cta: 'Join The Knight',
     billingMode: 'recurring',
   },
 }
@@ -483,7 +483,7 @@ export function PricingPage({
                   <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
                     <span className="text-fuchsia-200/95">Two gates. One crown.</span> Go nuclear with{' '}
                     <strong className="text-white">Money Mastery</strong> — pay once, own the lifetime vault and every
-                    lane we run. <span className="text-zinc-400">Or</span> take <strong className="text-white">The King</strong>{' '}
+                    lane we run. <span className="text-zinc-400">Or</span> take <strong className="text-white">The Knight</strong>{' '}
                     and forge your own war-chest: <strong className="text-amber-200/95">four or five</strong> courses you
                     choose, weekly drops so you never go cold, full dashboard and field intel, then step into{' '}
                     <strong className="text-emerald-300/95">Syndicate Mode</strong> and prove it under pressure — not

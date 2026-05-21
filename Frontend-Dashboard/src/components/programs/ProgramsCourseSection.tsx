@@ -474,7 +474,7 @@ export function ProgramsCourseSection({
       toast.success(
         plan === "bundle"
           ? "Money Mastery already active. All programs are unlocked."
-          : "The King plan is already active for this account."
+          : "The Knight plan is already active for this account."
       );
     },
     [reloadApiCourses, reloadStreamPlaylists]

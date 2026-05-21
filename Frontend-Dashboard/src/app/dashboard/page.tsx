@@ -293,7 +293,7 @@ function SidebarNavRailList({
             data-dock-item="sidebar"
             title={
               locked
-                ? "The King — full access. Money Mastery: open to read what is included."
+                ? "The Knight — full access. Money Mastery: open to read what is included."
                 : undefined
             }
             className={cn(
@@ -2116,7 +2116,7 @@ export default function Page() {
         if (!cancelled) setKingSelectionState(state);
       } catch (e) {
         if (!cancelled) {
-          setKingSelectionError(e instanceof Error ? e.message : "Could not load The King program selector.");
+          setKingSelectionError(e instanceof Error ? e.message : "Could not load The Knight program selector.");
         }
       } finally {
         if (!cancelled) setKingSelectionLoading(false);
@@ -2137,7 +2137,7 @@ export default function Page() {
         const identity = await fetchPortalIdentity();
         if (identity) setPortalUser(identity);
       } catch (e) {
-        setKingSelectionError(e instanceof Error ? e.message : "Could not save The King selection.");
+        setKingSelectionError(e instanceof Error ? e.message : "Could not save The Knight selection.");
       } finally {
         setKingSelectionLoading(false);
       }

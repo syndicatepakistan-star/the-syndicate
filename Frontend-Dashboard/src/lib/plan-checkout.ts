@@ -88,7 +88,7 @@ function shouldRetryViaAuth(status: number, message: string): boolean {
   return lower.includes("signup token") || lower.includes("not authenticated") || lower.includes("authentication");
 }
 
-/** Start Stripe checkout for Money Mastery (bundle) or The King. */
+/** Start Stripe checkout for Money Mastery (bundle) or The Knight. */
 export async function startPlanCheckout(params: PlanCheckoutParams): Promise<StartPlanCheckoutResult> {
   const authHeader = getAuthorizationHeader();
   if (!authHeader) {

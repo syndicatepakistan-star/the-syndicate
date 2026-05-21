@@ -46,11 +46,11 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
     },
     {
       q: 'Do I have to pay monthly to get started?',
-      a: 'No. Buy a Level 1 course from Courses and move — no membership required.\nThe King tier on pricing is optional recurring muscle once it launches; not a toll gate on your first move.',
+      a: 'No. Buy a Level 1 course from Courses and move — no membership required.\nThe Knight tier on pricing is optional recurring muscle once it launches; not a toll gate on your first move.',
     },
     {
       q: 'What do membership tiers cost?',
-      a: 'Pricing page is source of truth: The King at $19.99/month (yearly on the same card), checkout when signed in.\nFull bundle lifetime is listed there too — do not trust hearsay; trust the page.',
+      a: 'Pricing page is source of truth: The Knight at $19.99/month (yearly on the same card), checkout when signed in.\nFull bundle lifetime is listed there too — do not trust hearsay; trust the page.',
     },
     {
       q: 'What payment methods are accepted?',

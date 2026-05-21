@@ -86,7 +86,7 @@ function SyndicateMissionsSnapshotCard({
           <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-500/38 bg-amber-500/10 px-3 py-2.5 text-[11px] font-bold leading-snug text-amber-50/95 sm:items-center sm:text-[12px]">
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-200 sm:mt-0" aria-hidden />
             <span>
-              Syndicate Mode is locked for your plan (Money Mastery includes courses only). Upgrade to The King to
+              Syndicate Mode is locked for your plan (Money Mastery includes courses only). Upgrade to The Knight to
               unlock missions and the 24h board here.
             </span>
           </div>

@@ -333,7 +333,7 @@ def _parse_pence_from_amount_payload(raw) -> int | None:
 def _checkout_plan_label(plan: str) -> str:
   p = (plan or "").strip().lower()
   if p == "king":
-    return "The King membership"
+    return "The Knight membership"
   if p == "bundle":
     return "Money Mastery — lifetime bundle"
   if p == "pawn":
@@ -369,7 +369,7 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     return
   titles = {
     "bundle": "Money Mastery (lifetime bundle)",
-    "king": "The King",
+    "king": "The Knight",
     "pawn": "Pawn",
     "knight": "Knight",
   }
@@ -715,7 +715,7 @@ def create_checkout_session_view(request):
       else (
         "Money Mastery — lifetime bundle"
         if plan_raw == "bundle"
-        else ("The King membership" if plan_raw == "king" else "The Syndicate — checkout")
+        else ("The Knight membership" if plan_raw == "king" else "The Syndicate — checkout")
       )
     )
 
@@ -850,7 +850,7 @@ def create_checkout_session_view(request):
     f"{selected_playlist.title} playlist access"
     if selected_playlist is not None
     else (
-      "The King membership"
+      "The Knight membership"
       if plan_payload == "king"
       else ("Money Mastery — lifetime bundle" if plan_payload == "bundle" else "The Syndicate Membership Checkout")
     )

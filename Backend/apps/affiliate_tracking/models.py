@@ -40,7 +40,7 @@ class SectionReferral(models.Model):
         ("complete", "Complete Programs Affiliate"),
         ("single", "Single Program"),
         ("pawn", "The Pawn"),
-        ("king", "The King"),
+        ("king", "The Knight"),
         ("exclusive", "Exclusive Content of Gussy Bahi (Legacy)"),
     ]
 

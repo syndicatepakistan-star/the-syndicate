@@ -102,7 +102,7 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
               <Crown className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-lg font-black uppercase tracking-[0.12em] text-amber-100">The King unlock step</h2>
+              <h2 className="text-lg font-black uppercase tracking-[0.12em] text-amber-100">The Knight unlock step</h2>
               <p className="mt-1 text-sm text-white/75">
                 Pick exactly {required} programs to unlock your full dashboard, membership, goals and milestones, and
                 Syndicate Mode access.

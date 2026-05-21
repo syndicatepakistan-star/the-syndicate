@@ -153,7 +153,7 @@ class UserDashboardEntitlement(models.Model):
     class AccessTier(models.TextChoices):
         NONE = "none", "None"
         MONEY_MASTERY = "money_mastery", "Money Mastery"
-        KING = "king", "The King"
+        KING = "king", "The Knight"
         FULL = "full", "Full access"
 
     user = models.OneToOneField(
@@ -213,7 +213,7 @@ class UserPlanPurchase(models.Model):
 
 class KingProgramSelection(models.Model):
     """
-    The King buyers must pick exactly 5 programs before premium sections unlock.
+    The Knight buyers must pick exactly 5 programs before premium sections unlock.
     Programs can be course rows and/or stream playlist rows.
     """
 

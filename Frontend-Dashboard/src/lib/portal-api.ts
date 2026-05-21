@@ -32,7 +32,7 @@ export type PortalUser = {
   access_tier?: string;
   /** When true, that shell section is read-only / blocked for Money Mastery buyers. */
   dashboard_nav_locks?: { monk?: boolean; resources?: boolean; goals?: boolean; dashboard?: boolean };
-  /** The King onboarding gate: must pick exactly 5 programs before full unlock. */
+  /** The Knight onboarding gate: must pick exactly 5 programs before full unlock. */
   king_program_selection_required?: boolean;
   king_program_selection_completed?: boolean;
   king_program_selection_count?: number;
@@ -472,8 +472,8 @@ export async function fetchKingProgramSelection(): Promise<KingProgramSelectionS
   if (!res.ok) {
     const detail =
       res.data && typeof res.data === "object" && "detail" in (res.data as Record<string, unknown>)
-        ? String((res.data as { detail?: string }).detail ?? "Could not load King selection.")
-        : "Could not load King selection.";
+        ? String((res.data as { detail?: string }).detail ?? "Could not load Knight selection.")
+        : "Could not load Knight selection.";
     throw new Error(detail);
   }
   return res.data;
@@ -490,8 +490,8 @@ export async function submitKingProgramSelection(payload: {
   if (!res.ok) {
     const detail =
       res.data && typeof res.data === "object" && "detail" in (res.data as Record<string, unknown>)
-        ? String((res.data as { detail?: string }).detail ?? "Could not save King selection.")
-        : "Could not save King selection.";
+        ? String((res.data as { detail?: string }).detail ?? "Could not save Knight selection.")
+        : "Could not save Knight selection.";
     throw new Error(detail);
   }
   return res.data;

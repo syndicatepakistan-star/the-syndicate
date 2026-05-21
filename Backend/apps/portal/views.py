@@ -88,11 +88,18 @@ class BillingPurchasesView(views.APIView):
                 }
             )
         for pp in UserPlanPurchase.objects.filter(user=user).order_by("-paid_at", "-id"):
+            plan_title = pp.product_title
+            if pp.plan_slug == "king":
+                plan_title = (
+                    "The Knight membership"
+                    if "membership" in (pp.product_title or "").lower()
+                    else "The Knight"
+                )
             rows.append(
                 {
                     "id": -pp.id,
                     "playlist_id": 0,
-                    "playlist_title": pp.product_title,
+                    "playlist_title": plan_title,
                     "status": pp.status,
                     "amount_paid": str(pp.amount_paid),
                     "currency": (pp.currency or settings.DEFAULT_CURRENCY).lower(),
@@ -199,7 +206,7 @@ class KingProgramSelectionView(views.APIView):
         if not king_selection_required(user) and not king_selection_completed(user):
             return Response(
                 {
-                    "detail": "King program selection is only available for King tier users.",
+                    "detail": "Knight program selection is only available for Knight tier users.",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -257,7 +264,7 @@ class KingProgramSelectionView(views.APIView):
         user = request.user
         if not king_selection_required(user) and not king_selection_completed(user):
             return Response(
-                {"detail": "King program selection is only available for King tier users."},
+                {"detail": "Knight program selection is only available for Knight tier users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if not isinstance(request.data, dict):

@@ -50,7 +50,7 @@ const OFFERS: readonly {
   },
   {
     plan: "king",
-    title: "The King",
+    title: "The Knight",
     imageSrc: OFFER_PLAN_THUMB_THE_KING,
     description:
       "Membership, Syndicate Mode, goals deck, and hand-picked courses — full dashboard experience.",

@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.serializers import UserMeSerializer
 
 User = get_user_model()
@@ -48,6 +49,7 @@ def login(request):
     user = authenticate(username=email, password=password)
     if not user:
         return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+    reconcile_dashboard_entitlement_from_plan_purchases(user)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": {"id": user.id, "email": user.email}})
 
@@ -63,4 +65,5 @@ def logout(request):
 @permission_classes([IsAuthenticated])
 def me(request):
     """Same envelope as JWT `/api/auth/me/` so dashboard locks and tier work for DRF-token sessions."""
+    reconcile_dashboard_entitlement_from_plan_purchases(request.user)
     return Response(UserMeSerializer(request.user).data)

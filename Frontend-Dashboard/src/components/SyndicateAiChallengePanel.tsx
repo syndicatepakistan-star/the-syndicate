@@ -2,21 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import {
   challengesApiUrl,
@@ -263,50 +249,6 @@ function dedupePrimaryMoodSystemRows(rows: ChallengeRow[]): ChallengeRow[] {
   });
 }
 
-/** Distinct slices — max-saturation neons; rendered via `url(#syndicate-pie-neon-n)` gradients in the stats pie. */
-const PIE_COLORS = [
-  "#00ffff",
-  "#ff00ff",
-  "#ccff00",
-  "#ff0055",
-  "#bf00ff",
-  "#ffaa00",
-  "#00ffaa",
-  "#ff0080",
-];
-
-/** One color per day in the weekly bar chart (7 bars). */
-const WEEK_BAR_COLORS = ["#ff6b9d", "#ffd54a", "#4fd1b8", "#7b9cff", "#c792ea", "#ff9f43", "#69f0ae"];
-
-/** Stats & profile pie: custom tooltip so “points” stays white; when all slices are placeholder, show 0. */
-function SyndicateStatsPieTooltip({
-  active,
-  payload,
-  pieDailyData,
-  allZero
-}: {
-  active?: boolean;
-  /** Recharts `Tooltip` payload shape varies by chart; normalize loosely at runtime. */
-  payload?: unknown;
-  pieDailyData: Array<{ name: string; value: number }>;
-  allZero: boolean;
-}) {
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!active || !rows.length) return null;
-  const row = rows[0] as { name?: string | number; payload?: { name?: string } };
-  const name = String(row?.name ?? row?.payload?.name ?? "");
-  const pts = allZero ? 0 : pieDailyData.find((d) => d.name === name)?.value ?? 0;
-  return (
-    <div
-      className="rounded-lg border border-[rgba(255,215,0,0.35)] bg-[#141414] px-3 py-2 text-[15px] leading-snug text-white shadow-lg"
-      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}
-    >
-      <div className="font-semibold text-white">{name}</div>
-      <div className="text-white">points: {pts}</div>
-    </div>
-  );
-}
-
 /** Native `<select>`: colors from globals.css (`.syndicate-select--*`) so options stay legible on Windows. */
 const SYNDICATE_SELECT_BASE =
   "syndicate-select syndicate-readable min-h-[40px] min-w-0 w-full max-w-full cursor-pointer rounded-lg px-3 py-2 text-[14px] font-medium outline-none transition focus:outline-none focus:ring-2 sm:w-auto sm:min-w-[132px] sm:max-w-none";
@@ -347,7 +289,19 @@ const STATS_NEON_CARD_CYAN = `${STATS_NEON_CARD} syndicate-stats-neon-card--cyan
 const STATS_NEON_CARD_MAGENTA = `${STATS_NEON_CARD} syndicate-stats-neon-card--magenta`;
 const STATS_NEON_CARD_FUCHSIA = `${STATS_NEON_CARD} syndicate-stats-neon-card--fuchsia`;
 const STATS_NEON_CARD_EMERALD = `${STATS_NEON_CARD} syndicate-stats-neon-card--emerald`;
-const STATS_CHART_PANEL = "syndicate-stats-chart-panel";
+/** Stats & profile — each panel uses a distinct card shell (see globals.css). */
+const STATS_CARD_VAULT = `${STATS_NEON_CARD_GOLD} syndicate-stats-card--vault syndicate-day-points-card`;
+const STATS_CARD_DOSSIER = `${STATS_NEON_CARD_CYAN} syndicate-stats-card--dossier`;
+const STATS_CARD_PEAK = `${STATS_NEON_CARD_GOLD} syndicate-stats-card--peak`;
+const STATS_CARD_VALLEY = `${STATS_NEON_CARD_FUCHSIA} syndicate-stats-card--valley`;
+const STATS_CARD_RELAY = `${STATS_NEON_CARD_MAGENTA} syndicate-stats-card--relay`;
+const STATS_CARD_ARCHIVE = `${STATS_NEON_CARD_CYAN} syndicate-stats-card--archive syndicate-stats-history-panel`;
+const STATS_CARD_RANK = `${STATS_NEON_CARD_MAGENTA} syndicate-stats-card--rank`;
+const STATS_CARD_LOG = `${STATS_NEON_CARD_CYAN} syndicate-stats-card--log syndicate-stats-mission-log`;
+const STATS_PILL_OFFERED = `${STATS_NEON_CARD} syndicate-stats-card--pill syndicate-stats-card--pill-slate syndicate-stats-stat-pill`;
+const STATS_PILL_COMPLETED = `${STATS_NEON_CARD_CYAN} syndicate-stats-card--pill syndicate-stats-card--pill-cyan syndicate-stats-stat-pill`;
+const STATS_PILL_MISSED = `${STATS_NEON_CARD} syndicate-stats-card--pill syndicate-stats-card--pill-orange syndicate-stats-stat-pill`;
+const STATS_PILL_ACHIEVED = `${STATS_NEON_CARD_GOLD} syndicate-stats-card--pill syndicate-stats-card--pill-gold syndicate-stats-stat-pill`;
 const QUICK_ACTION_CARD = "syndicate-quick-action-card";
 const QUICK_ACTION_FUCHSIA = `${QUICK_ACTION_CARD} syndicate-quick-action-card--fuchsia`;
 const QUICK_ACTION_CYAN = `${QUICK_ACTION_CARD} syndicate-quick-action-card--cyan`;
@@ -548,11 +502,6 @@ function lastNDatesFrom(todayIso: string, n: number): string[] {
     out.push(isoDateAddDays(todayIso, -i));
   }
   return out;
-}
-
-function shortWeekday(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
-  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()] ?? iso;
 }
 
 function aggregateCategoryTotals(h: HistoryV1): Record<string, number> {
@@ -2200,7 +2149,6 @@ export function SyndicateAiChallengePanel() {
   const [adminTaskStartedAtMs, setAdminTaskStartedAtMs] = useState<Record<number, number>>({});
   const [poundsBalance, setPoundsBalance] = useState(0);
   const [convertPointsInput, setConvertPointsInput] = useState("100");
-  const lineGradientUid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const lastSeenDayRef = useRef<string>(todayLocalISO());
   const bonusMissionSectionRef = useRef<HTMLElement | null>(null);
   const streakRestoreSectionRef = useRef<HTMLDivElement | null>(null);
@@ -2473,49 +2421,6 @@ export function SyndicateAiChallengePanel() {
     });
   }, [selected]);
 
-  const pieDailyData = useMemo(() => {
-    const today = todayLocalISO();
-    const h = loadHistory();
-    const day = h.days[today];
-    return CATEGORIES.map((c, i) => ({
-      name: CAT_LABEL[c] ?? c,
-      value: day?.byCategory[c] ?? 0,
-      fill: `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`
-    }));
-  }, [pointsTotal]);
-
-  const pieDailyPointsSum = useMemo(
-    () => pieDailyData.reduce((s, d) => s + (typeof d.value === "number" ? d.value : 0), 0),
-    [pieDailyData]
-  );
-
-  /** Equal placeholder slices when today has no points so the pie (and legend) always render. */
-  const pieDailyChartData = useMemo(() => {
-    if (pieDailyPointsSum <= 0) {
-      return pieDailyData.map((d) => ({ ...d, value: 1 }));
-    }
-    return pieDailyData;
-  }, [pieDailyData, pieDailyPointsSum]);
-
-  /** Lifetime points per category — used on main Syndicate dashboard pie. */
-  const pieLifetimeCategoryData = useMemo(() => {
-    const h = loadHistory();
-    const totals: Record<string, number> = {};
-    for (const c of CATEGORIES) totals[c] = 0;
-    for (const day of Object.values(h.days)) {
-      for (const [k, v] of Object.entries(day.byCategory)) {
-        if (CATEGORIES.includes(k as (typeof CATEGORIES)[number])) {
-          totals[k] = (totals[k] ?? 0) + (typeof v === "number" ? v : 0);
-        }
-      }
-    }
-    return CATEGORIES.map((c, i) => ({
-      name: CAT_LABEL[c] ?? c,
-      value: totals[c] ?? 0,
-      fill: `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`
-    }));
-  }, [pointsTotal]);
-
   /**
    * Same gates as reward cards: Level 0 until 20 pts, then Level 1; 50 → 2; 100 → 3; … (not 100 pts per level).
    */
@@ -2539,26 +2444,7 @@ export function SyndicateAiChallengePanel() {
     return { syndicateLevel, levelHint, pointsHint };
   }, [pointsTotal]);
 
-  const weeklyBarData = useMemo(() => {
-    const today = todayLocalISO();
-    const h = loadHistory();
-    return lastNDatesFrom(today, 7).map((iso, i) => ({
-      name: shortWeekday(iso),
-      points: h.days[iso]?.total ?? 0,
-      fill: WEEK_BAR_COLORS[i % WEEK_BAR_COLORS.length]
-    }));
-  }, [pointsTotal]);
-
-  const monthlyLineData = useMemo(() => {
-    const today = todayLocalISO();
-    const h = loadHistory();
-    return lastNDatesFrom(today, 30).map((iso) => ({
-      name: iso.slice(5),
-      points: h.days[iso]?.total ?? 0
-    }));
-  }, [pointsTotal]);
-
-  const bestWorst = useMemo(() => {
+  const categoryBestWorst = useMemo(() => {
     const totals = aggregateCategoryTotals(loadHistory());
     let best: { cat: string; pts: number } | null = null;
     let worst: { cat: string; pts: number } | null = null;
@@ -2570,16 +2456,15 @@ export function SyndicateAiChallengePanel() {
     return { best, worst, totals };
   }, [pointsTotal]);
 
+  const categoryPointsSum = useMemo(
+    () => CATEGORIES.reduce((s, c) => s + (categoryBestWorst.totals[c] ?? 0), 0),
+    [categoryBestWorst]
+  );
+
   const todayPointsFromHistory = useMemo(() => {
     const h = loadHistory();
     return h.days[todayLocalISO()]?.total ?? 0;
   }, [pointsTotal]);
-
-  const dashboardBestCategoryLabel = useMemo(() => {
-    const sum = CATEGORIES.reduce((s, c) => s + (bestWorst.totals[c] ?? 0), 0);
-    if (sum === 0 || !bestWorst.best) return "—";
-    return CAT_LABEL[bestWorst.best.cat] ?? bestWorst.best.cat;
-  }, [bestWorst, pointsTotal]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -2862,146 +2747,6 @@ export function SyndicateAiChallengePanel() {
       return null;
     },
     [completedAgentTodayCount, completedCustomTodayCount]
-  );
-
-  /** Isolated from mood filter updates so Recharts does not redraw on every mood change. */
-  const statsProfileChartsLeftColumn = useMemo(
-    () => (
-      <div className="min-w-0 space-y-8">
-        <div className={STATS_CHART_PANEL}>
-          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
-            Today · mission points by category (pie)
-          </h3>
-          <div className="h-[300px] w-full overflow-hidden sm:h-[420px] md:h-[480px] lg:h-[520px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <defs>
-                  {PIE_COLORS.map((base, i) => (
-                    <radialGradient key={`syndicate-pie-neon-grad-${i}`} id={`syndicate-pie-neon-${i}`} cx="32%" cy="32%" r="82%">
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
-                      <stop offset="28%" stopColor={base} stopOpacity="1" />
-                      <stop offset="100%" stopColor={base} stopOpacity="0.55" />
-                    </radialGradient>
-                  ))}
-                </defs>
-                <Pie
-                  data={pieDailyChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="48%"
-                  innerRadius="22%"
-                  outerRadius="78%"
-                  paddingAngle={5}
-                  stroke="none"
-                  labelLine={false}
-                  label={false}
-                >
-                  {pieDailyChartData.map((e, i) => (
-                    <Cell
-                      key={e.name}
-                      stroke="rgba(2,4,10,0.88)"
-                      strokeWidth={1.25}
-                      fill={e.fill ?? `url(#syndicate-pie-neon-${i % PIE_COLORS.length})`}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={(props) => (
-                    <SyndicateStatsPieTooltip
-                      active={props.active}
-                      payload={props.payload}
-                      pieDailyData={pieDailyData}
-                      allZero={pieDailyPointsSum <= 0}
-                    />
-                  )}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: 15, paddingTop: 12, color: "#ffffff" }}
-                  formatter={(value: string) => <span className="text-white">{value}</span>}
-                  iconType="circle"
-                  verticalAlign="bottom"
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className={STATS_CHART_PANEL}>
-          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
-            Weekly · mission points (bar)
-          </h3>
-          <div className="h-[220px] w-full min-h-[200px] overflow-hidden sm:h-[260px] md:h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyBarData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 14 }} />
-                <YAxis tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 14 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "#141414",
-                    border: "1px solid rgba(255,215,0,0.35)",
-                    borderRadius: 8,
-                    fontSize: 15,
-                    color: "#fff"
-                  }}
-                  labelStyle={{ color: "#fff", fontSize: 15 }}
-                  itemStyle={{ color: "#fff", fontSize: 15 }}
-                />
-                <Bar dataKey="points" radius={[6, 6, 0, 0]}>
-                  {weeklyBarData.map((entry, i) => (
-                    <Cell key={`w-${entry.name}-${i}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className={STATS_CHART_PANEL}>
-          <h3 className={cn(STATS_SECTION_LABEL, "mb-3")}>
-            Monthly · daily mission points (line)
-          </h3>
-          <div className="h-[220px] w-full min-h-[200px] overflow-hidden sm:h-[260px] md:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyLineData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id={`syndicate-line-${lineGradientUid}`} x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#ff6b9d" />
-                    <stop offset="22%" stopColor="#ffd54a" />
-                    <stop offset="44%" stopColor="#4fd1b8" />
-                    <stop offset="66%" stopColor="#7b9cff" />
-                    <stop offset="88%" stopColor="#c792ea" />
-                    <stop offset="100%" stopColor="#69f0ae" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 12 }} interval={4} />
-                <YAxis tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 14 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "#141414",
-                    border: "1px solid rgba(255,215,0,0.35)",
-                    borderRadius: 8,
-                    fontSize: 15,
-                    color: "#fff"
-                  }}
-                  labelStyle={{ color: "#fff", fontSize: 15 }}
-                  itemStyle={{ color: "#fff", fontSize: 15 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="points"
-                  stroke={`url(#syndicate-line-${lineGradientUid})`}
-                  strokeWidth={3}
-                  dot={{ r: 3, strokeWidth: 1, fill: "#ffd54a", stroke: "#1a1a1a" }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-    ),
-    [pieDailyData, pieDailyChartData, pieDailyPointsSum, weeklyBarData, monthlyLineData, lineGradientUid]
   );
 
   const loadFast = useCallback(async () => {
@@ -4240,38 +3985,39 @@ export function SyndicateAiChallengePanel() {
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-            <div className="order-2 min-w-0 lg:order-1">{statsProfileChartsLeftColumn}</div>
-
-            <div className="syndicate-stats-column-divider order-1 min-w-0 space-y-6 lg:order-2 lg:border-l lg:pl-8">
-              <div className={cn(STATS_NEON_CARD_GOLD, "syndicate-day-points-card p-5 sm:p-6")}>
-                <div className="min-w-0">
-                  <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/85")}>Total points</div>
-                  <div className="mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] [text-shadow:0_0_20px_rgba(255,215,0,0.35)] sm:text-[1.75rem]">
+          <div className="min-w-0 space-y-6">
+              <div className={cn(STATS_CARD_VAULT, "p-5 sm:p-6")}>
+                <div className="syndicate-stats-card__body min-w-0">
+                  <div className={cn(STATS_SECTION_LABEL, "syndicate-stats-card__eyebrow !text-amber-200/85")}>
+                    Total points
+                  </div>
+                  <div className="syndicate-stats-card__metric mt-2 text-[1.5rem] font-black tabular-nums leading-none text-[color:var(--gold)] sm:text-[1.85rem]">
                     {pointsTotal}
                   </div>
+                  <p className="syndicate-stats-card__hint mt-2 text-[12px] font-medium text-amber-100/55">
+                    Lifetime mission score · syncs across devices
+                  </p>
                 </div>
               </div>
 
-              <div
-                id="syndicate-shell-profile-summary"
-                className={cn(STATS_NEON_CARD_CYAN, "scroll-mt-6 space-y-5 p-5 sm:p-6")}
-              >
-                <div className={cn(STATS_SECTION_LABEL, "!text-cyan-200/90")}>Profile</div>
-                <div>
-                  <label className="text-[12px] font-semibold text-white/55">Account email</label>
-                  <div className="mt-1 break-all text-[15px] font-medium text-white/90">{getSyndicateUser()?.email ?? "—"}</div>
-                  <p className="mt-1 text-[12px] text-white/45">Sign-in address (read-only).</p>
+              <div id="syndicate-shell-profile-summary" className={cn(STATS_CARD_DOSSIER, "scroll-mt-6 p-5 sm:p-6")}>
+                <div className={cn(STATS_SECTION_LABEL, "syndicate-stats-card__eyebrow !text-cyan-200/90")}>Profile</div>
+                <div className="syndicate-stats-dossier-email mt-4">
+                  <label className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-200/70">Account email</label>
+                  <div className="syndicate-stats-dossier-email__value mt-1.5 break-all font-mono text-[14px] text-cyan-50/95">
+                    {getSyndicateUser()?.email ?? "—"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/45">Sign-in address (read-only).</p>
                 </div>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <div className="mx-auto shrink-0 sm:mx-0">
-                    <div className="text-[12px] font-semibold text-white/55">Photo</div>
-                    <div className="mt-2 h-28 w-24 overflow-hidden border-2 border-cyan-300/80 bg-black/40 shadow-[0_0_24px_rgba(34,211,238,0.35)] sm:h-32 sm:w-28">
+                <div className="syndicate-stats-dossier-identity mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="syndicate-stats-dossier-photo mx-auto shrink-0 sm:mx-0">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200/65">Photo</span>
+                    <div className="syndicate-stats-dossier-photo__frame mt-2 h-28 w-24 sm:h-32 sm:w-28">
                       <img src={dashboardAvatarUrl} alt="" className="h-full w-full object-cover" />
                     </div>
                   </div>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className="text-[12px] font-semibold text-white/55">Display name</div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/50">Display name</div>
                     <div className="break-words text-[18px] font-black leading-tight text-white sm:text-[20px]">{profileName}</div>
                     <p className="text-[12px] leading-snug text-white/45">
                       Same as the top bar profile. Open the profile button next to search to change your name or picture.
@@ -4281,28 +4027,38 @@ export function SyndicateAiChallengePanel() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className={cn(STATS_NEON_CARD_GOLD, "p-4")}>
-                  <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/75")}>Best category</div>
-                  <div className="mt-2 text-[16px] font-semibold leading-snug text-white">
-                    {CATEGORIES.reduce((s, c) => s + (bestWorst.totals[c] ?? 0), 0) > 0 && bestWorst.best
-                      ? `${CAT_LABEL[bestWorst.best.cat] ?? bestWorst.best.cat} (${bestWorst.best.pts} pts)`
+                <div className={cn(STATS_CARD_PEAK, "p-4 sm:p-5")}>
+                  <div className={cn(STATS_SECTION_LABEL, "syndicate-stats-card__eyebrow !text-amber-200/80")}>Best category</div>
+                  <div className="syndicate-stats-card__metric-value mt-3 text-[15px] font-bold leading-snug text-white sm:text-[16px]">
+                    {categoryPointsSum > 0 && categoryBestWorst.best
+                      ? CAT_LABEL[categoryBestWorst.best.cat] ?? categoryBestWorst.best.cat
                       : "—"}
                   </div>
+                  {categoryPointsSum > 0 && categoryBestWorst.best ? (
+                    <p className="syndicate-stats-card__pts mt-1 text-[13px] font-black tabular-nums text-amber-200/90">
+                      {categoryBestWorst.best.pts} pts
+                    </p>
+                  ) : null}
                 </div>
-                <div className={cn(STATS_NEON_CARD_FUCHSIA, "p-4")}>
-                  <div className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/75")}>Lowest category</div>
-                  <div className="mt-2 text-[16px] font-semibold leading-snug text-white">
-                    {CATEGORIES.reduce((s, c) => s + (bestWorst.totals[c] ?? 0), 0) > 0 && bestWorst.worst
-                      ? `${CAT_LABEL[bestWorst.worst.cat] ?? bestWorst.worst.cat} (${bestWorst.worst.pts} pts)`
+                <div className={cn(STATS_CARD_VALLEY, "p-4 sm:p-5")}>
+                  <div className={cn(STATS_SECTION_LABEL, "syndicate-stats-card__eyebrow !text-fuchsia-200/80")}>Lowest category</div>
+                  <div className="syndicate-stats-card__metric-value mt-3 text-[15px] font-bold leading-snug text-white sm:text-[16px]">
+                    {categoryPointsSum > 0 && categoryBestWorst.worst
+                      ? CAT_LABEL[categoryBestWorst.worst.cat] ?? categoryBestWorst.worst.cat
                       : "—"}
                   </div>
+                  {categoryPointsSum > 0 && categoryBestWorst.worst ? (
+                    <p className="syndicate-stats-card__pts mt-1 text-[13px] font-black tabular-nums text-fuchsia-200/90">
+                      {categoryBestWorst.worst.pts} pts
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
               <div
                 ref={streakRestoreSectionRef}
                 id="syndicate-streak-restore"
-                className={cn(STATS_NEON_CARD_MAGENTA, "scroll-mt-6 p-5 sm:p-6")}
+                className={cn(STATS_CARD_RELAY, "scroll-mt-6 p-5 sm:p-6")}
               >
                 <div className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/90 text-[11px] sm:text-[12px]")}>
                   Restore streak (invite a friend)
@@ -4377,7 +4133,7 @@ export function SyndicateAiChallengePanel() {
                 {referralMsg ? <p className="mt-3 text-[14px] text-[#b5ecff]/90">{referralMsg}</p> : null}
               </div>
 
-              <div className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-history-panel p-4 sm:p-5")}>
+              <div className={cn(STATS_CARD_ARCHIVE, "p-4 sm:p-5")}>
                 <h3 className={cn(STATS_SECTION_LABEL, "!text-cyan-200/95 text-[11px] sm:text-[12px]")}>
                   History by date
                 </h3>
@@ -4408,19 +4164,19 @@ export function SyndicateAiChallengePanel() {
                   </button>
                 </div>
                 <div className="syndicate-stats-history-kpis mt-4 grid grid-cols-2 gap-3 overflow-visible max-[360px]:grid-cols-1 sm:grid-cols-4">
-                  <div className={cn(STATS_NEON_CARD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--slate p-3")}>
+                  <div className={cn(STATS_PILL_OFFERED, "p-3")}>
                     <div className={cn(STATS_SECTION_LABEL, "!text-slate-200/80 !tracking-[0.2em]")}>Offered</div>
                     <div className="mt-1 text-[20px] font-black text-slate-100">{filteredDayChallengeStats.offered ?? "—"}</div>
                   </div>
-                  <div className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-stat-pill syndicate-stats-stat-pill--cyan p-3")}>
+                  <div className={cn(STATS_PILL_COMPLETED, "p-3")}>
                     <div className={cn(STATS_SECTION_LABEL, "!text-cyan-200/80 !tracking-[0.2em]")}>Completed</div>
                     <div className="mt-1 text-[20px] font-black text-cyan-100">{filteredDayChallengeStats.completed}</div>
                   </div>
-                  <div className={cn(STATS_NEON_CARD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--orange p-3")}>
+                  <div className={cn(STATS_PILL_MISSED, "p-3")}>
                     <div className={cn(STATS_SECTION_LABEL, "!text-orange-200/85 !tracking-[0.2em]")}>Missed</div>
                     <div className="mt-1 text-[20px] font-black text-orange-100">{filteredDayChallengeStats.missed ?? "—"}</div>
                   </div>
-                  <div className={cn(STATS_NEON_CARD_GOLD, "syndicate-stats-stat-pill syndicate-stats-stat-pill--gold p-3")}>
+                  <div className={cn(STATS_PILL_ACHIEVED, "p-3")}>
                     <div className={cn(STATS_SECTION_LABEL, "!text-amber-200/90 !tracking-[0.2em]")}>Achieved pts</div>
                     <div className="mt-1 text-[20px] font-black tabular-nums text-[color:var(--gold)]">
                       {filteredDayChallengeStats.achievedPoints}
@@ -4471,7 +4227,7 @@ export function SyndicateAiChallengePanel() {
                       completionEntriesForHistoryDate.map((e) => (
                         <article
                           key={e.entryId}
-                          className={cn(STATS_NEON_CARD_CYAN, "syndicate-stats-mission-log p-4 sm:p-5")}
+                          className={cn(STATS_CARD_LOG, "p-4 sm:p-5")}
                         >
                           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-3">
                             <h5 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-white sm:text-[16px]">{e.title}</h5>
@@ -4560,11 +4316,10 @@ export function SyndicateAiChallengePanel() {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
           <div className="mt-10 min-w-0 border-t border-cyan-400/20 pt-8">
-            <div className={cn(STATS_NEON_CARD_MAGENTA, "min-w-0 p-4 sm:p-7")}>
+            <div className={cn(STATS_CARD_RANK, "min-w-0 p-4 sm:p-7")}>
               <h3 className={cn(STATS_SECTION_LABEL, "!text-fuchsia-200/95 text-[11px] sm:text-[12px]")}>
                 Leaderboard · Top 10
               </h3>
@@ -4831,12 +4586,6 @@ export function SyndicateAiChallengePanel() {
                     <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100/85">Pending</div>
                     <div className="text-[22px] font-black text-orange-100">{pendingDailyCompletionSlots}</div>
                   </div>
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-white/12 bg-black/25 px-3 py-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-cyan-100/85">Best category</span>
-                  <span className="text-[13px] font-black uppercase tracking-[0.06em] text-[color:var(--gold)]">
-                    {dashboardBestCategoryLabel}
-                  </span>
                 </div>
                 <div className="mt-3 flex w-full min-w-0 flex-col items-center gap-3">
                   <div className="h-[180px] w-full min-w-0 sm:h-[200px] md:h-[220px]">

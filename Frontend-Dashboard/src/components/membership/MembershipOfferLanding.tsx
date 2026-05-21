@@ -49,7 +49,7 @@ const MEMBERSHIP_CHANNELS = [
   },
   {
     step: "04",
-    title: "The King Tier",
+    title: "The Knight Tier",
     tagline: "Full membership stack — one unlock.",
     border: "border-amber-400/90",
     glow: "shadow-[0_0_0_2px_rgba(251,191,36,0.82),0_0_48px_rgba(234,88,12,0.74),0_0_92px_rgba(180,83,9,0.58)]",
@@ -65,7 +65,7 @@ const MEMBERSHIP_PILLARS = [
     id: "curriculum",
     title: "Your Curriculum",
     summary: "Select programs on your terms — not a fixed funnel.",
-    body: "The King tier opens the catalog so you choose four to five tracks that match your operator profile. Structure without surrendering control.",
+    body: "The Knight tier opens the catalog so you choose four to five tracks that match your operator profile. Structure without surrendering control.",
     image: "/assets/pawn2.png",
     imageAlt: "Dystopian curriculum operator",
     accent: "cyan" as const,
@@ -83,7 +83,7 @@ const MEMBERSHIP_PILLARS = [
     id: "gate",
     title: "Break The Gate",
     summary: "One tier. Full uplink. No partial access.",
-    body: "Money Mastery is the runway. The King is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.",
+    body: "Money Mastery is the runway. The Knight is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.",
     image: "/assets/pawn1.png",
     imageAlt: "Neon gate breaker",
     accent: "amber" as const,
@@ -94,7 +94,7 @@ const HERO_INTRO =
   "Breach the paywall and run the full Syndicate rig — your curriculum, your rhythm, your command surface inside the dashboard.";
 
 const HERO_OFFER_COPY =
-  "Money Mastery is the runway. The King is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.";
+  "Money Mastery is the runway. The Knight is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.";
 
 const HERO_OFFER_DETAIL =
   "Pick four to five programs from the vault. Unlock Syndicate Mode missions, the member article and video hub, weekly drops, and the complete goals stack. One tier. Full uplink. No partial access.";
@@ -279,7 +279,7 @@ export function MembershipOfferLanding({
                 <h1 className="mt-4 text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em] text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.52)]">
                   Enter
                   <br />
-                  The King Tier
+                  The Knight Tier
                 </h1>
                 <p className="mt-5 max-w-2xl font-mono text-base leading-relaxed text-zinc-100/85 sm:text-lg">
                   {HERO_INTRO}
@@ -313,13 +313,13 @@ export function MembershipOfferLanding({
                   />
                   <img
                     src={OFFER_PLAN_THUMB_THE_KING}
-                    alt="The King membership tier"
+                    alt="The Knight membership tier"
                     className="relative z-[1] h-full w-full object-cover object-center"
                   />
                   <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/85 via-black/35 to-black/20" />
                   <div className="absolute bottom-0 left-0 right-0 z-[3] border-t border-fuchsia-500/40 bg-black/75 px-4 py-3">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-fuchsia-300 [text-shadow:0_0_12px_rgba(232,121,249,0.65)]">
-                      // the_king · full_stack
+                      // the_knight · full_stack
                     </p>
                     <p className="mt-1 font-mono text-sm text-zinc-200/90">Dashboard · library · Syndicate Mode</p>
                   </div>

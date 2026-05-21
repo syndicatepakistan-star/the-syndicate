@@ -68,7 +68,7 @@ export function FloatingGoalsButton() {
               <p className="mt-3 text-center text-[13px] leading-relaxed text-white/65">
                 Money Mastery unlocks all courses and stream programs. The full Goals &amp; milestones deck (missions,
                 reminders, and timeline) is part of{" "}
-                <span className="font-semibold text-amber-100/90">The King</span> alongside Syndicate Mode and the
+                <span className="font-semibold text-amber-100/90">The Knight</span> alongside Syndicate Mode and the
                 membership library.
               </p>
               <button

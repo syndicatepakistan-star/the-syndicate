@@ -156,6 +156,7 @@ export default function PaywallSnapshotsSection() {
               <span className="pointer-events-none absolute inset-[-1px] bg-inherit opacity-70 blur-[10px]" />
               <Link
                 href="/programs"
+                prefetch
                 className="hamburger-attract relative inline-flex min-h-[56px] min-w-[220px] items-center justify-center bg-[#05070c]/90 px-8 py-3 text-base font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.03] hover:bg-[#070b14]/94"
               >
                 EXPLORE PROGRAMS

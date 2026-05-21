@@ -1,18 +1,15 @@
 'use client'
 
-import { startTransition, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { type NavSectionId, RadialNav } from '@/components/RadialNav'
-
-const SECTION_ROUTES: Record<Exclude<NavSectionId, 'joinNow'>, string> = {
-  home: '/',
-  whatYouGet: '/what-you-get',
-  ourMethods: '/our-methods',
-  programs: '/programs',
-  membership: '/membership',
-  syndicateAnalysis: '/quiz',
-  affiliate: '/affiliate',
-}
+import { RadialNav } from '@/components/RadialNav'
+import type { NavSectionId } from '@/lib/marketing-nav-routes'
+import {
+  MARKETING_NAV_HREF,
+  MARKETING_PREFETCH_ROUTES,
+  prefetchMarketingRoutes,
+} from '@/lib/marketing-nav-routes'
 
 function getActiveNavId(pathname: string, hash: string): NavSectionId {
   if (hash === '#joinNowSection') return 'joinNow'
@@ -32,11 +29,16 @@ export function NavApp() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeId, setActiveId] = useState<NavSectionId>('home')
 
+  const warmRoutes = useCallback(() => {
+    prefetchMarketingRoutes(router)
+  }, [router])
+
   const handleToggleMenu = () => {
     if (menuOpen) {
       handleClose()
       return
     }
+    warmRoutes()
     setMenuOpen(true)
   }
 
@@ -56,60 +58,30 @@ export function NavApp() {
   }, [pathname])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    // Defer prefetch so referral + first paint are not competing with many RSC fetches.
-    const warm = () => {
-      for (const route of Object.values(SECTION_ROUTES)) {
-        router.prefetch(route)
-      }
-      router.prefetch('/login')
-      router.prefetch('/affiliate')
-      router.prefetch('/affiliate-login')
-    }
-    let idleHandle: number | undefined
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined
-    if ('requestIdleCallback' in window) {
-      idleHandle = window.requestIdleCallback(warm, { timeout: 4500 })
-    } else {
-      fallbackTimer = setTimeout(warm, 2800)
-    }
-    return () => {
-      if (idleHandle !== undefined) {
-        window.cancelIdleCallback(idleHandle)
-      }
-      if (fallbackTimer !== undefined) clearTimeout(fallbackTimer)
-    }
-  }, [router])
+    warmRoutes()
+  }, [warmRoutes])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    warmRoutes()
+  }, [menuOpen, warmRoutes])
+
+  const handlePrefetch = (id: NavSectionId) => {
+    router.prefetch(MARKETING_NAV_HREF[id])
+  }
 
   const handleSelect = (id: NavSectionId) => {
-    if (id === 'affiliate') {
-      setActiveId(id)
-      handleClose()
-      startTransition(() => {
-        router.push('/affiliate')
-      })
-      return
-    }
-    const targetRoute = id === 'joinNow' ? '/login' : SECTION_ROUTES[id]
-    if (pathname === targetRoute) {
-      setActiveId(id)
-      handleClose()
-      return
-    }
-
-    router.prefetch(targetRoute)
+    const targetRoute = MARKETING_NAV_HREF[id]
     setActiveId(id)
-    handleClose()
-
-    // Keep the click responsive while route change starts in background.
-    startTransition(() => {
+    if (pathname !== targetRoute) {
       router.push(targetRoute)
-    })
+    }
+    setMenuOpen(false)
   }
 
   return (
     <div
-      className="fixed left-0 right-0 top-0 z-50 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-200 ease-in-out pt-2"
+      className="fixed left-0 right-0 top-0 z-50 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-75 ease-out pt-2"
       style={{
         height: menuOpen ? '100dvh' : '69px',
         minHeight: menuOpen ? '100dvh' : undefined,
@@ -137,18 +109,29 @@ export function NavApp() {
             </button>
           )}
         </div>
-        {menuOpen && (
-          <div className="relative min-h-0 flex-1 overflow-visible p-2 sm:p-[10px]">
-            <RadialNav
-              open={menuOpen}
-              activeId={activeId}
-              onClose={handleClose}
-              onSelect={handleSelect}
-            />
-          </div>
-        )}
+        <div
+          className={
+            menuOpen
+              ? 'relative min-h-0 flex-1 overflow-visible p-2 sm:p-[10px]'
+              : 'pointer-events-none h-0 min-h-0 overflow-hidden opacity-0'
+          }
+        >
+          <RadialNav
+            open={menuOpen}
+            activeId={activeId}
+            onClose={handleClose}
+            onSelect={handleSelect}
+            onPrefetch={handlePrefetch}
+          />
+        </div>
+      </div>
+      <div className="sr-only" aria-hidden>
+        {MARKETING_PREFETCH_ROUTES.map((route) => (
+          <Link key={route} href={route} prefetch tabIndex={-1}>
+            {route}
+          </Link>
+        ))}
       </div>
     </div>
   )
 }
-

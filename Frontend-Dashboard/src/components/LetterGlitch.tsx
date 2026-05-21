@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 type GlitchLetter = {
   char: string
@@ -48,6 +48,8 @@ export default function LetterGlitch({
   const gridRef = useRef({ columns: 0, rows: 0 })
   const lastGlitchTimeRef = useRef(0)
   const containerSizeRef = useRef({ width: 0, height: 0 })
+  const pausedRef = useRef(false)
+  const inViewRef = useRef(true)
 
   const lettersAndSymbols = useMemo(() => Array.from(characters), [characters])
 
@@ -191,19 +193,43 @@ export default function LetterGlitch({
     if (needsRedraw) drawLetters()
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     contextRef.current = canvas.getContext('2d')
     resizeCanvas()
+  }, [resizeCanvas])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const onVisibility = () => {
+      pausedRef.current = document.hidden
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    const visibilityObserver =
+      typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            ([entry]) => {
+              inViewRef.current = entry.isIntersecting
+            },
+            { rootMargin: '80px 0px', threshold: 0.02 },
+          )
+        : null
+    visibilityObserver?.observe(canvas)
 
     const animate = (time: number) => {
-      if (time - lastGlitchTimeRef.current >= glitchSpeed) {
-        updateLetters()
-        drawLetters()
-        lastGlitchTimeRef.current = time
+      const active = !pausedRef.current && inViewRef.current
+      if (active) {
+        if (time - lastGlitchTimeRef.current >= glitchSpeed) {
+          updateLetters()
+          drawLetters()
+          lastGlitchTimeRef.current = time
+        }
+        if (smooth) handleSmoothTransitions()
       }
-      if (smooth) handleSmoothTransitions()
       animationRef.current = window.requestAnimationFrame(animate)
     }
 
@@ -214,10 +240,12 @@ export default function LetterGlitch({
     if (parent) resizeObserverRef.current.observe(parent)
 
     return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      visibilityObserver?.disconnect()
       if (animationRef.current) window.cancelAnimationFrame(animationRef.current)
       resizeObserverRef.current?.disconnect()
     }
-  }, [glitchSpeed, smooth, rgbColorPool, lettersAndSymbols, handleSmoothTransitions, resizeCanvas, updateLetters])
+  }, [glitchSpeed, smooth, handleSmoothTransitions, resizeCanvas, updateLetters, drawLetters])
 
   const safeOpacity = Math.min(1, Math.max(0, layerOpacity))
 

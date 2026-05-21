@@ -5,6 +5,7 @@ import {
   type CyberFrameAccent,
 } from "@/components/cyber/CyberChamferFrames";
 import { MethodCtaButtons } from "@/components/methods/MethodCtaButtons";
+import { ViewportDecorVideo } from "@/components/ViewportDecorVideo";
 
 export type MethodSplitAccent = "cyan" | "violet" | "amber";
 
@@ -106,10 +107,11 @@ export function MethodSplitCard({
               : "method-split-card__media relative min-h-[14rem] overflow-hidden rounded-xl border border-white/15 bg-black/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),0_0_28px_rgba(34,211,238,0.12)] lg:min-h-[100%]"
           }
         >
-          {hasVideo ? (
-            <video className="absolute inset-0 h-full w-full object-cover object-center" autoPlay muted loop playsInline>
-              <source src={videoSrc} type="video/mp4" />
-            </video>
+          {hasVideo && videoSrc ? (
+            <ViewportDecorVideo
+              src={videoSrc}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
           ) : hasImage ? (
             <Image src={image!} alt={imageAlt} fill sizes="(max-width: 1024px) 100vw, 42vw" className="object-cover object-center" />
           ) : null}
@@ -128,7 +130,7 @@ export function MethodSplitCard({
                 alt={imageAlt || "Gold key symbol"}
                 width={560}
                 height={760}
-                className="max-h-full w-auto max-w-full object-contain object-center drop-shadow-[0_0_24px_rgba(251,191,36,0.5)] motion-safe:animate-bounce motion-safe:[animation-duration:4.5s] motion-safe:[animation-timing-function:ease-in-out]"
+                className="max-h-full w-auto max-w-full object-contain object-center drop-shadow-[0_0_24px_rgba(251,191,36,0.5)]"
               />
             </div>
           ) : null}

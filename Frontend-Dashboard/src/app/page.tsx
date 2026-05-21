@@ -7,7 +7,7 @@ import CertificatesSection from '@/components/CertificatesSection'
 import DomeGallery from '@/components/DomeGallery'
 import FAQSection from '@/components/FAQSection'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
-import LetterGlitch from '@/components/LetterGlitch'
+import { HeroGlitchBackground } from '@/components/home/HeroGlitchBackground'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import PaywallSnapshotsSection from '@/components/PaywallSnapshotsSection'
 import { NavApp } from '@/components/NavApp'
@@ -170,14 +170,13 @@ export default async function Home() {
         id="heroSection"
         className="relative h-[100dvh] min-h-[100dvh] w-full min-w-0 overflow-hidden"
       >
-        <LetterGlitch
+        <HeroGlitchBackground
           glitchSpeed={70}
           centerVignette
           outerVignette
           smooth
           glitchColors={['#4a2b72', '#61dca3', '#61b3dc']}
           layerOpacity={0.3}
-          className="absolute inset-0 h-full w-full min-w-0"
         />
         <div
           className="pointer-events-none absolute left-1/2 z-20 w-full -translate-x-1/2 px-4"

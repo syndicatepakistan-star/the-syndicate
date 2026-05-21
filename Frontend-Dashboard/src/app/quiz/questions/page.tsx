@@ -300,6 +300,14 @@ export default function QuizPage() {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionLetter }));
   }
 
+  function previousQuestion() {
+    if (currentIndex <= 0) return;
+    setShowLeadGate(false);
+    setLeadStep(null);
+    setLeadError("");
+    setCurrentIndex((prev) => prev - 1);
+  }
+
   function nextQuestion() {
     if (!selectedOption) return;
     const checkpointStep = getCheckpointStep(currentIndex);
@@ -469,7 +477,7 @@ export default function QuizPage() {
                 zIndex: 50,
               }}
             >
-              <h3 style={{ margin: "0 0 8px", color: "#be992e" }}>Continue Quiz</h3>
+              <h3 style={{ margin: "0 0 8px", color: "#be992e" }}>Continue Diagnosis</h3>
               <p style={{ margin: "0 0 8px", color: "#d7e5ff" }}>
                 {leadStep === "name" && `Enter your name to continue from Question ${currentIndex + 2}.`}
                 {leadStep === "email" && `Enter your email to continue from Question ${currentIndex + 2}.`}
@@ -540,7 +548,7 @@ export default function QuizPage() {
                 <p style={{ margin: "0 0 10px", color: "#ff7f9b", fontWeight: 700 }}>{leadError}</p>
               ) : null}
               <button className="btn btn-primary" onClick={continueAfterLead}>
-                Continue Quiz
+                Continue Diagnosis
               </button>
             </div>
           </>
@@ -559,11 +567,23 @@ export default function QuizPage() {
           </button>
         ))}
 
-        {!isLast && (
-          <button className="btn btn-primary" onClick={nextQuestion} disabled={!selectedOption}>
-            Next Question
-          </button>
-        )}
+        <div className="quiz-nav-actions">
+          {currentIndex > 0 ? (
+            <button type="button" className="btn btn-quiz-nav quiz-nav-btn quiz-nav-btn--prev" onClick={previousQuestion}>
+              Previous
+            </button>
+          ) : null}
+          {!isLast ? (
+            <button
+              type="button"
+              className="btn btn-quiz-nav quiz-nav-btn quiz-nav-btn--next"
+              onClick={nextQuestion}
+              disabled={!selectedOption}
+            >
+              Next
+            </button>
+          ) : null}
+        </div>
 
         {isLast && !submitting && (
           <>

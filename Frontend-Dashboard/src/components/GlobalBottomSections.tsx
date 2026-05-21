@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import SiteFooter from '@/components/SiteFooter'
+import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
+import { prefetchMarketingRoutes } from '@/lib/marketing-nav-routes'
 import { syndicateOtpLoginHref } from '@/lib/syndicate-otp-paths'
 
 const FEATURED_LOGOS = [
@@ -46,24 +48,14 @@ export default function GlobalBottomSections() {
     : 'relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20'
 
   useEffect(() => {
-    // Warm common destinations for faster CTA/footer navigation.
-    router.prefetch('/')
-    router.prefetch('/what-you-get')
-    router.prefetch('/our-methods')
-    router.prefetch('/programs')
-    router.prefetch('/membership')
-    router.prefetch('/affiliate')
-    router.prefetch('/login')
-    router.prefetch(loginHref)
+    prefetchMarketingRoutes(router, [loginHref])
   }, [router, loginHref])
 
   return (
     <>
       <section id="joinNowSection" className={sectionLayoutClass}>
         <div className="pointer-events-none absolute inset-0">
-          <video autoPlay muted loop playsInline preload="metadata" className="h-full w-full object-cover opacity-55">
-            <source src="/assets/v.mp4" type="video/mp4" />
-          </video>
+          <ViewportDecorVideo src="/assets/v.mp4" className="h-full w-full object-cover opacity-55" />
           <div className="absolute inset-0 bg-black/72" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-[min(1700px,98vw)] px-3 text-center">

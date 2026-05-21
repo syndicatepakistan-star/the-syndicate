@@ -1,4 +1,5 @@
 import { NavApp } from "@/components/NavApp";
+import { ViewportDecorVideo } from "@/components/ViewportDecorVideo";
 import SiteFooter from "@/components/SiteFooter";
 import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
 
@@ -8,20 +9,13 @@ export default function MembershipMarketingPage() {
   return (
     <div className="membership-marketing-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] text-white">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <video
+        <ViewportDecorVideo
+          src={MEMBERSHIP_BG_VIDEO}
           className="absolute inset-0 h-full w-full object-cover opacity-25"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden
-        >
-          <source src={MEMBERSHIP_BG_VIDEO} type="video/mp4" />
-        </video>
-        <div className="absolute left-[-10%] top-[8%] h-[400px] w-[400px] rounded-full bg-cyan-400/18 blur-[140px]" />
-        <div className="absolute right-[-12%] top-[14%] h-[440px] w-[440px] rounded-full bg-violet-500/20 blur-[150px]" />
-        <div className="absolute left-[36%] top-[54%] h-[500px] w-[500px] rounded-full bg-rose-500/10 blur-[160px]" />
+        />
+        <div className="absolute left-[-10%] top-[8%] h-[280px] w-[280px] rounded-full bg-cyan-400/14 blur-3xl" />
+        <div className="absolute right-[-12%] top-[14%] h-[300px] w-[300px] rounded-full bg-violet-500/14 blur-3xl" />
+        <div className="absolute left-[36%] top-[54%] h-[320px] w-[320px] rounded-full bg-rose-500/10 blur-3xl" />
         <div
           className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(34,211,238,0.24)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.2)_1px,transparent_1px),linear-gradient(rgba(167,139,250,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(167,139,250,0.14)_1px,transparent_1px)] [background-size:74px_74px,74px_74px,18px_18px,18px_18px]"
         />

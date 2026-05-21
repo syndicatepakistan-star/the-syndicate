@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { NavApp } from '@/components/NavApp'
+import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import SiteFooter from '@/components/SiteFooter'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
@@ -130,16 +131,10 @@ export default function WhatYouGetPage() {
       <main className="relative z-10">
         {/* Hero — unchanged structure vs. prior What You Get */}
         <section className="relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
-          <video
+          <ViewportDecorVideo
+            src="/assets/bg-video.mp4"
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-          >
-            <source src="/assets/bg-video.mp4" type="video/mp4" />
-          </video>
+          />
           <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">
             <div className="mx-auto flex w-full max-w-[920px] justify-center">
               <NeonTypingBadge

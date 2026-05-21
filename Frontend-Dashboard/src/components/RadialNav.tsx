@@ -1,20 +1,15 @@
 'use client'
 
+import Link from 'next/link'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import gsap from 'gsap'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { MARKETING_NAV_HREF } from '@/lib/marketing-nav-routes'
 import { ScrambleText } from './ScrambleText'
 import NavLogo from './NavLogo'
 
-export type NavSectionId =
-  | 'home'
-  | 'whatYouGet'
-  | 'ourMethods'
-  | 'joinNow'
-  | 'programs'
-  | 'membership'
-  | 'affiliate'
-  | 'syndicateAnalysis'
+export type { NavSectionId } from '@/lib/marketing-nav-routes'
+import type { NavSectionId } from '@/lib/marketing-nav-routes'
 
 export type RadialNavItem = {
   id: NavSectionId
@@ -29,6 +24,7 @@ export type RadialNavProps = {
   activeId?: NavSectionId
   onClose: () => void
   onSelect: (id: NavSectionId) => void
+  onPrefetch?: (id: NavSectionId) => void
 }
 
 const defaultItems: RadialNavItem[] = [
@@ -152,6 +148,7 @@ export function RadialNav({
   activeId,
   onClose,
   onSelect,
+  onPrefetch,
 }: RadialNavProps) {
   const prefersReducedMotion = usePrefersReducedMotion()
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -199,11 +196,8 @@ export function RadialNav({
     if (!open) {
       tlRef.current?.kill()
       glowRef.current?.kill()
-      tlRef.current = gsap.timeline().to('[data-rnav="backdrop"]', {
-        autoAlpha: 0,
-        duration: 0.25,
-        ease: 'power2.out',
-      })
+      gsap.set('[data-rnav="backdrop"]', { autoAlpha: 0 })
+      gsap.set('[data-rnav="item"]', { autoAlpha: 0 })
       return
     }
 
@@ -284,27 +278,16 @@ export function RadialNav({
           scale: 1,
           rotate: 0,
           autoAlpha: 1,
-          duration: 0.68,
-          stagger: 0.08,
+          duration: 0.32,
+          stagger: 0.04,
           ease: 'power3.out',
           overwrite: true,
         },
         0.12,
       )
 
-    glowRef.current = gsap.to('[data-rnav="item"] button', {
-      filter: 'brightness(1.25)',
-      boxShadow: (index) => {
-        const item = placed[index]
-        const theme = item ? THEMES[item.id] : THEMES.whatYouGet
-        return `0 0 18px ${theme.glow}, inset 0 0 10px ${theme.glow}`
-      },
-      duration: 1.8,
-      yoyo: true,
-      repeat: -1,
-      stagger: { each: 0.16, from: 'random' },
-      ease: 'sine.inOut',
-    })
+    glowRef.current?.kill()
+    glowRef.current = null
 
     return
   }, [open, prefersReducedMotion, placed, items.length])
@@ -378,7 +361,7 @@ export function RadialNav({
           <button
             type="button"
             data-rnav="backdrop"
-            className="pointer-events-auto absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="pointer-events-auto absolute inset-0 bg-black/55"
             onClick={onClose}
             aria-label="Close menu"
           />
@@ -424,11 +407,17 @@ export function RadialNav({
                       className="absolute left-1/2 top-1/2 pointer-events-none overflow-visible"
                       style={{ transformOrigin: '50% 50%' }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => onSelect(it.id)}
+                      <Link
+                        href={MARKETING_NAV_HREF[it.id]}
+                        prefetch
+                        onPointerEnter={() => onPrefetch?.(it.id)}
+                        onFocus={() => onPrefetch?.(it.id)}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          onSelect(it.id)
+                        }}
                         className={[
-                          'nav-card-lightning pointer-events-auto cursor-pointer relative z-10',
+                          'nav-card-lightning pointer-events-auto cursor-pointer relative z-10 inline-flex items-center justify-center',
                           useCompactButtons
                             ? 'min-w-[104px] max-w-[min(188px,84vw)]'
                             : 'min-w-[136px] max-w-[min(220px,88vw)]',
@@ -459,7 +448,7 @@ export function RadialNav({
                           charset="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
                           runOnMount={false}
                         />
-                      </button>
+                      </Link>
                     </div>
                   )
                 })}

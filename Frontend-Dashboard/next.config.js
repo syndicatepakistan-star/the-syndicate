@@ -40,7 +40,7 @@ const nextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     /** Any `quality` passed to `<Image />` must be listed here (Next 15+). */
-    qualities: [60, 62, 70, 72, 75],
+    qualities: [60, 62, 70, 72, 75, 78],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [256, 384, 480, 640, 768],
     remotePatterns: [

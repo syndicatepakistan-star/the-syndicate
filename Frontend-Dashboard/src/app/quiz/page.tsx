@@ -44,7 +44,7 @@ export default function QuizFunnelLandingPage() {
         </p>
         <Link href="/quiz/questions">
           <button type="button" className="btn btn-primary">
-            START QUIZZ
+            START DIAGNOSIS
           </button>
         </Link>
       </section>

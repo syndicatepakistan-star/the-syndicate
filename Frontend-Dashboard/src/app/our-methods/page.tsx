@@ -1,17 +1,20 @@
-import Link from 'next/link'
-import Image from 'next/image'
 import { NavApp } from '@/components/NavApp'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
-import { cx, CyberChamferFrame, CyberInsetPanel, type CyberFrameAccent } from '@/components/cyber/CyberChamferFrames'
+import { MethodCtaButtons } from '@/components/methods/MethodCtaButtons'
+import { MethodSplitCard, type MethodSplitAccent } from '@/components/methods/MethodSplitCard'
+import { CyberChamferFrame } from '@/components/cyber/CyberChamferFrames'
 
 type MethodBlock = {
   id: string
   title: string
   summary: string
   paragraphs: [string, string]
-  image: string
+  image?: string
   imageAlt: string
-  accent: 'cyan' | 'violet' | 'amber'
+  videoSrc?: string
+  keySrc?: string
+  footerEmphasis?: string
+  accent: MethodSplitAccent
 }
 
 const METHOD_BLOCKS: MethodBlock[] = [
@@ -24,8 +27,8 @@ const METHOD_BLOCKS: MethodBlock[] = [
       'True greatness is not achieved by chance - it is deliberately built through knowledge, discipline, and action. The Syndicate equips its members with actionable, real-world strategies designed to help them master the systems of wealth and power.',
       'The Syndicate brings clarity to wealth systems with immediate implementation methods. Every lesson is built for practical execution from day one while preserving moral integrity and purpose.',
     ],
-    image: '/assets/pawn2.png',
-    imageAlt: 'Dystopian operator portrait',
+    imageAlt: 'Gold key symbol',
+    keySrc: '/assets/Gold-Key.png',
     accent: 'cyan',
   },
   {
@@ -37,8 +40,9 @@ const METHOD_BLOCKS: MethodBlock[] = [
       'The Syndicate stands as an elite and exclusive organisation of individuals committed to achieving the zenith of power, wealth, and mastery. This private network is for those who yearn for true greatness and the ability to shape their destiny.',
       'This is not a shortcut scheme. It is a disciplined alliance for people willing to master themselves, build leverage, and reshape outcomes under pressure.',
     ],
-    image: '/assets/pawn.png',
-    imageAlt: 'Syndicate resistance figure',
+    videoSrc: '/assets/bg-video.mp4',
+    imageAlt: 'Break free from the system — dystopian cathedral uplink',
+    footerEmphasis: 'Master yourself. Master the system.',
     accent: 'amber',
   },
   {
@@ -50,8 +54,8 @@ const METHOD_BLOCKS: MethodBlock[] = [
       'The Syndicate philosophy teaches that money and power go hand in hand. They are like two sides of the same coin. Money and power, if not correctly wielded, has the potential to completely corrupt you, leading you down a dark path of corrupt, degenerate and hedonistic behaviour.',
       'The mission goes beyond accumulation. Members are trained to navigate influence structures without moral collapse, turning power into disciplined, constructive force.',
     ],
-    image: '/assets/pawn1.png',
-    imageAlt: 'Neon chess warrior',
+    image: '/assets/money-power-mastery.png',
+    imageAlt: 'Money and power mastery — dystopian throne and neon doctrine',
     accent: 'violet',
   },
 ]
@@ -111,38 +115,7 @@ const METHOD_TIMELINE = [
   },
 ] as const
 
-function MethodCtaButtons({ centered = false }: { centered?: boolean }) {
-  return (
-    <div className={cx('flex flex-wrap gap-3', centered && 'justify-center')}>
-      <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-        Join Now
-      </Link>
-      <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
-        View Programs
-      </Link>
-      <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
-        Syn Diagnosis
-      </Link>
-    </div>
-  )
-}
-
 export default function OurMethodsPage() {
-  const accentStyles: Record<MethodBlock['accent'], { title: string }> = {
-    cyan: {
-      title: 'text-cyan-100',
-    },
-    violet: {
-      title: 'text-fuchsia-200/90',
-    },
-    amber: {
-      title: 'text-amber-100',
-    },
-  }
-
-  const frameAccent = (accent: MethodBlock['accent']): CyberFrameAccent =>
-    accent === 'cyan' ? 'cyan' : accent === 'violet' ? 'violet' : 'amber'
-
   return (
     <div className="relative min-h-[100dvh] w-full overflow-x-clip bg-[#04060c]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -179,17 +152,7 @@ export default function OurMethodsPage() {
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
                   In a broken world, average behavior gets average outcomes. Our methods are engineered for operators who want structure, leverage, and execution inside high-pressure systems.
                 </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                    Join Now
-                  </Link>
-                  <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
-                    View Programs
-                  </Link>
-                  <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
-                    Syn Diagnosis
-                  </Link>
-                </div>
+                <MethodCtaButtons className="mt-8" />
               </div>
               <div className="grid gap-4">
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" innerClassName="p-2">
@@ -232,7 +195,7 @@ export default function OurMethodsPage() {
         <div className="mx-auto max-w-[96rem]">
           <div className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200/85">Method Timeline</p>
-            <h2 className="mt-2 text-[clamp(2rem,4.2vw,3.4rem)] font-black uppercase tracking-[0.08em] text-amber-100">
+            <h2 className="mt-2 text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em] text-amber-100 drop-shadow-[0_0_18px_rgba(251,191,36,0.52)]">
               Operational Sequence
             </h2>
           </div>
@@ -274,126 +237,23 @@ export default function OurMethodsPage() {
         </div>
       </section>
 
-      <section className="relative z-10 px-[clamp(1rem,3vw,2.2rem)] pb-14 sm:pb-20">
-        <div className="mx-auto max-w-[96rem]">
-          <div className="space-y-7">
-            {METHOD_BLOCKS.map((block) => {
-              const isPrimary = block.id === 'greatness'
-              const isMoneyPower = block.id === 'money-power'
-              const isBreakFree = block.id === 'break-free'
-              const accentKey = frameAccent(block.accent)
-
-              return isBreakFree ? (
-                <CyberChamferFrame
-                  key={block.id}
-                  accent="amber"
-                  chamfer={20}
-                  className="mx-auto w-full max-w-[86rem]"
-                  innerClassName="px-6 py-10 text-center sm:px-10 sm:py-12"
-                >
-                  <h3 className={`mt-1 text-[clamp(2.4rem,4.6vw,4.2rem)] font-black leading-[1] ${accentStyles[block.accent].title}`}>
-                    {block.title}
-                  </h3>
-                  <p className="mx-auto mt-4 max-w-[62rem] text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">
-                    {block.summary}
-                  </p>
-                  <p className="mx-auto mt-6 max-w-[62rem] text-lg leading-relaxed text-zinc-100/90 sm:text-xl">
-                    {block.paragraphs[0]}
-                  </p>
-                  <p className="mx-auto mt-4 max-w-[62rem] text-lg leading-relaxed text-zinc-100/90 sm:text-xl">
-                    {block.paragraphs[1]}
-                  </p>
-                  <p className="mx-auto mt-6 max-w-[62rem] text-base font-semibold uppercase tracking-[0.14em] text-cyan-100/90 sm:text-lg">
-                    Master yourself. Master the system.
-                  </p>
-                  <div className="mt-7">
-                    <MethodCtaButtons centered />
-                  </div>
-                </CyberChamferFrame>
-              ) : (
-                <div
-                  key={block.id}
-                  className={isPrimary ? 'grid items-start gap-4 lg:grid-cols-[1fr_240px]' : 'grid items-start'}
-                >
-                  <CyberChamferFrame
-                    accent={accentKey}
-                    chamfer={22}
-                    className={cx(isMoneyPower && 'min-h-[430px]')}
-                    innerClassName={cx('p-6 sm:p-8', isMoneyPower && 'text-center')}
-                  >
-                    <div>
-                      {isMoneyPower ? (
-                        <div className="mb-2">
-                          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.32em] text-rose-400/85 sm:text-[11px]">
-                            Vault channel // power doctrine
-                          </p>
-                          <h3
-                            className="mx-auto mt-3 max-w-[22ch] text-balance text-[clamp(2.1rem,4vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.06em] text-zinc-50"
-                            style={{
-                              textShadow:
-                                '0 0 18px rgba(251,113,133,0.95), 0 0 36px rgba(244,114,182,0.75), 0 0 56px rgba(168,85,247,0.45), 0 0 2px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.85)',
-                            }}
-                          >
-                            {block.title}
-                          </h3>
-                        </div>
-                      ) : (
-                        <h3 className={`text-[clamp(2.4rem,4.6vw,4.2rem)] font-black leading-[1] ${accentStyles[block.accent].title}`}>
-                          {block.title}
-                        </h3>
-                      )}
-                      {isMoneyPower ? (
-                        <CyberInsetPanel variant="blood" className="mt-5 text-left">
-                          <p className="text-xl leading-relaxed text-zinc-100/90 sm:text-2xl">{block.summary}</p>
-                        </CyberInsetPanel>
-                      ) : (
-                        <p className="mt-3 text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">{block.summary}</p>
-                      )}
-
-                      <div
-                        className={cx(
-                          'mt-6',
-                          isPrimary
-                            ? 'space-y-3'
-                            : 'grid gap-4 md:grid-cols-[1.15fr_1fr] md:items-stretch',
-                        )}
-                      >
-                        <CyberInsetPanel
-                          variant={isMoneyPower ? 'toxic' : 'cyan'}
-                          className={cx(isMoneyPower && 'min-h-[170px]')}
-                        >
-                          <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{block.paragraphs[0]}</p>
-                        </CyberInsetPanel>
-                        <CyberInsetPanel
-                          variant={isMoneyPower ? 'void' : 'violet'}
-                          plasmaBar={isMoneyPower}
-                          className={cx(isMoneyPower && 'min-h-[170px]')}
-                        >
-                          <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{block.paragraphs[1]}</p>
-                        </CyberInsetPanel>
-                      </div>
-
-                      <div className={cx('mt-6', isMoneyPower && 'flex justify-center')}>
-                        <MethodCtaButtons centered={isMoneyPower} />
-                      </div>
-                    </div>
-                  </CyberChamferFrame>
-
-                  {isPrimary ? (
-                    <div className="mx-auto mt-3 w-full max-w-[150px] justify-self-center self-center sm:max-w-[185px] md:mx-0 md:mt-0 md:max-w-[220px] md:justify-self-end">
-                      <Image
-                        src="/assets/Gold-Key.png"
-                        alt="Gold key symbol"
-                        width={560}
-                        height={760}
-                        className="h-[210px] w-full object-contain object-center will-change-transform motion-safe:animate-bounce motion-safe:[animation-duration:4.5s] motion-safe:[animation-timing-function:ease-in-out] sm:h-[260px] md:h-[360px]"
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              )
-            })}
-          </div>
+      <section className="relative z-10 w-full px-[clamp(0.75rem,2.5vw,2.5rem)] pb-14 sm:pb-20">
+        <div className="mx-auto w-full max-w-[110rem] space-y-8 sm:space-y-10">
+          {METHOD_BLOCKS.map((block) => (
+            <MethodSplitCard
+              key={block.id}
+              accent={block.accent}
+              title={block.title}
+              summary={block.summary}
+              paragraphs={block.paragraphs}
+              image={block.image}
+              imageAlt={block.imageAlt}
+              videoSrc={block.videoSrc}
+              keySrc={block.keySrc}
+              footerEmphasis={block.footerEmphasis}
+              moneyPowerTitle={block.id === 'money-power'}
+            />
+          ))}
         </div>
       </section>
 

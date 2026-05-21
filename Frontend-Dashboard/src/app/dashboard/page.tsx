@@ -63,6 +63,7 @@ import {
   downloadSynCertificate,
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
+import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 
 type NavItem = { label: string; key: string; active?: boolean };
 type Course = {
@@ -1390,50 +1391,11 @@ function UserDashboardGate({
   );
 }
 
-type InstructorSlide = {
-  src: string;
-  programName: string;
-  instructorName: string;
-  description: string;
-};
-
 function InstructorSlideshow() {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [idx, setIdx] = useState(0);
   const prevIdxRef = useRef(0);
-  const slides = useMemo<InstructorSlide[]>(
-    () => [
-      {
-        src: "/assets/instructor-images/a.jpg",
-        programName: "Shadow Doctrine",
-        instructorName: "Director Kade",
-        description:
-          "Covert workflow design, operational security, and high-stakes delivery under pressure. Build the instincts to run programs like classified briefings—clear lanes, tight feedback, zero noise."
-      },
-      {
-        src: "/assets/instructor-images/b.png",
-        programName: "Signal Architecture",
-        instructorName: "Elena Voss",
-        description:
-          "Systems thinking for distributed teams: telemetry, comms cadence, and decision trees that scale. Learn to wire programs so every stakeholder sees the same truth at the same time."
-      },
-      {
-        src: "/assets/instructor-images/c.png",
-        programName: "Neural Forge Lab",
-        instructorName: "Dr. Aris Okonkwo",
-        description:
-          "Rapid prototyping with AI copilots without losing craft. From prompt discipline to review gates—ship faster while keeping quality bars that survive real users and real load."
-      },
-      {
-        src: "/assets/instructor-images/d.png",
-        programName: "Citadel Leadership",
-        instructorName: "Morgan Reyes",
-        description:
-          "Command presence for technical leads: delegation, conflict de-escalation, and narrative control in the room. Turn scattered squads into a single synchronized strike team."
-      }
-    ],
-    []
-  );
+  const slides = INSTRUCTOR_SLIDES;
 
   const active = slides[idx] ?? slides[0];
 
@@ -1493,14 +1455,10 @@ function InstructorSlideshow() {
               <div className="mt-1.5 text-[clamp(1rem,1.8vw+0.55rem,1.35rem)] font-black uppercase leading-snug tracking-[0.08em] text-[color:var(--gold)]/95">
                 {active.programName}
               </div>
+              <p className="mt-3 text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/68 line-clamp-4">
+                {active.description}
+              </p>
             </div>
-            <div>
-              <div className="fluid-text-ui-xs font-black uppercase tracking-[0.2em] text-white/45">Instructor</div>
-              <div className="mt-1.5 text-[clamp(0.78rem,0.6vw+0.55rem,1rem)] font-extrabold uppercase tracking-[0.12em] text-white/88">
-                {active.instructorName}
-              </div>
-            </div>
-            <p className="text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/68">{active.description}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1" role="tablist" aria-label="Instructor slides">
@@ -1510,7 +1468,7 @@ function InstructorSlideshow() {
                 type="button"
                 role="tab"
                 aria-selected={i === idx}
-                aria-label={`Slide ${i + 1}`}
+                aria-label={slides[i]?.programName ?? `Slide ${i + 1}`}
                 onClick={() => setIdx(i)}
                 className={cn(
                   "h-[10px] w-[10px] rounded-[3px] border transition hover:border-white/25",

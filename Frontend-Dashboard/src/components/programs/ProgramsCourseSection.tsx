@@ -162,7 +162,7 @@ function ProgramThumbnailAccessBadge({
   if (!locked) return null;
   return (
     <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-2 text-center">
-      <span className="font-black uppercase leading-none tracking-[0.1em] text-[clamp(1.5rem,6vw,2.75rem)] text-rose-300 drop-shadow-[0_4px_28px_rgba(0,0,0,0.95)] [text-shadow:0_0_32px_rgba(244,63,94,0.9),0_2px_8px_rgba(0,0,0,0.95)] sm:text-[clamp(1.75rem,4.5vw,3rem)]">
+      <span className="font-black uppercase leading-none tracking-[0.1em] text-[clamp(1.5rem,6vw,2.75rem)] text-red-600 drop-shadow-[0_4px_28px_rgba(0,0,0,0.95)] [text-shadow:0_0_32px_rgba(220,38,38,0.95),0_2px_8px_rgba(0,0,0,0.95)] sm:text-[clamp(1.75rem,4.5vw,3rem)]">
         Locked
       </span>
     </span>

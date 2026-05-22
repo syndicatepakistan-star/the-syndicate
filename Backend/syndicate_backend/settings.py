@@ -14,7 +14,7 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 from dotenv import dotenv_values, load_dotenv
 
@@ -70,17 +70,51 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-whr8w($+2y))zu
 _default_debug = "false" if (os.environ.get("RAILWAY_ENVIRONMENT") or "").strip() else "true"
 DEBUG = os.environ.get("DJANGO_DEBUG", _default_debug).strip().lower() in ("1", "true", "yes")
 
-_extra_hosts = [h.strip() for h in (os.environ.get("DJANGO_ALLOWED_HOSTS") or "").split(",") if h.strip()]
-_allowed = ["localhost", "127.0.0.1", *_extra_hosts]
-for _h in (os.environ.get("ALLOWED_HOSTS") or "").split(","):
-    _h = _h.strip()
-    if _h and _h not in _allowed:
-        _allowed.append(_h)
-_railway_host = (os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "").strip()
-if _railway_host and _railway_host not in _allowed:
-    _allowed.append(_railway_host)
+def _hostname_from_allowed_host_entry(entry: str) -> str | None:
+    """Bare hostname, host:port, or https://host/path → hostname."""
+    raw = (entry or "").strip()
+    if not raw:
+        return None
+    if "://" in raw:
+        try:
+            return urlparse(raw).hostname
+        except Exception:
+            return None
+    return raw.split("/")[0].split(":")[0].strip() or None
+
+
+def _collect_allowed_hosts() -> list[str]:
+    allowed: list[str] = ["localhost", "127.0.0.1", "testserver"]
+    for env_key in ("DJANGO_ALLOWED_HOSTS", "ALLOWED_HOSTS"):
+        for part in (os.environ.get(env_key) or "").split(","):
+            host = _hostname_from_allowed_host_entry(part)
+            if host and host not in allowed:
+                allowed.append(host)
+    railway_public = (os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "").strip()
+    if railway_public and railway_public not in allowed:
+        allowed.append(railway_public)
+    # Next.js rewrites proxy /api/* with the frontend Host header — allow frontend + CORS origins.
+    for env_key in (
+        "FRONTEND_BASE_URL",
+        "POST_LOGIN_REDIRECT_URL",
+        "CORS_ALLOWED_ORIGINS",
+        "CSRF_TRUSTED_ORIGINS",
+        "CORS_EXTRA_ORIGINS",
+        "VIDEO_CDN_PUBLIC_BASE_URL",
+    ):
+        for part in (os.environ.get(env_key) or "").split(","):
+            host = _hostname_from_allowed_host_entry(part.strip())
+            if host and host not in allowed:
+                allowed.append(host)
+    if (os.environ.get("RAILWAY_ENVIRONMENT") or "").strip():
+        for suffix in (".up.railway.app", ".railway.app"):
+            if suffix not in allowed:
+                allowed.append(suffix)
+    return allowed
+
+
 # In DEBUG, accept any Host (Next proxy, LAN IP, test client "testserver", etc.)
-ALLOWED_HOSTS = ["*"] if DEBUG else _allowed
+ALLOWED_HOSTS = ["*"] if DEBUG else _collect_allowed_hosts()
 
 OPENAI_API_KEY = _strip_optional_quotes(os.environ.get("OPENAI_API_KEY") or "")
 OPENAI_MODEL = _strip_optional_quotes(os.environ.get("OPENAI_MODEL") or "gpt-4o-mini")

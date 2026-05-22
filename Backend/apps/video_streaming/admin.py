@@ -1,8 +1,11 @@
+import logging
+
 from django.contrib import admin, messages
 from django.conf import settings
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from apps.video_streaming.models import (
     StreamPlaylist,
@@ -13,6 +16,8 @@ from apps.video_streaming.models import (
 )
 from apps.video_streaming.services.bucket_reference import normalize_bucket_object_key
 from apps.video_streaming.services.object_storage import bucket_object_exists
+
+logger = logging.getLogger(__name__)
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -201,6 +206,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
             if link_existing_key_only:
                 # Avoid FileField pre_save uploading an empty file over the R2 object.
                 pending_bucket_key = selected_key
+                obj.original_video = None
             else:
                 obj.original_video.name = selected_key
                 field = obj.original_video
@@ -210,13 +216,21 @@ class StreamVideoAdmin(admin.ModelAdmin):
         try:
             super().save_model(request, obj, form, change)
         except Exception as exc:
-            if "cloudinary" in type(exc).__module__.lower():
-                messages.error(
+            logger.exception("StreamVideo admin save failed")
+            thumb = form.cleaned_data.get("thumbnail")
+            if thumb and not getattr(request, "_streamvideo_thumb_retry", False):
+                request._streamvideo_thumb_retry = True
+                messages.warning(
                     request,
-                    f"Thumbnail upload failed ({exc}). Check CLOUDINARY_URL on Railway or save without a thumbnail.",
+                    f"Thumbnail upload failed ({exc}). Saving video without thumbnail — "
+                    "fix CLOUDINARY_URL on Railway and re-upload the thumbnail later.",
                 )
-                return
+                obj.thumbnail = None
+                return self.save_model(request, obj, form, change)
             raise
+        finally:
+            if hasattr(request, "_streamvideo_thumb_retry"):
+                del request._streamvideo_thumb_retry
 
         if pending_bucket_key:
             StreamVideo.objects.filter(pk=obj.pk).update(
@@ -231,6 +245,22 @@ class StreamVideoAdmin(admin.ModelAdmin):
 
         if selected_key and (raw_ref or uploaded_key or pending_bucket_key):
             messages.success(request, f"Video linked to bucket object: {selected_key}")
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        try:
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        except Exception as exc:
+            logger.exception("StreamVideo admin changeform_view failed")
+            self.message_user(
+                request,
+                f"Save failed: {exc}",
+                level=messages.ERROR,
+            )
+            if object_id:
+                return HttpResponseRedirect(
+                    reverse("admin:video_streaming_streamvideo_change", args=[object_id])
+                )
+            return HttpResponseRedirect(reverse("admin:video_streaming_streamvideo_add"))
 
 
 @admin.register(StreamPlaylistCertificate)

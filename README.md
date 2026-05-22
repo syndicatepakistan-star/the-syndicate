@@ -79,7 +79,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Copy `Backend/.env.example` to `Backend/.env`, set secrets as needed, then:
+Copy `Backend/env.example` to `Backend/.env`, set secrets as needed, then:
 
 ```bash
 python manage.py migrate
@@ -102,6 +102,12 @@ npm run dev
 ```
 
 Open `http://localhost:3000` for the marketing site; `/programs` for the public library; `/dashboard` after login.
+
+## Production hosting (Railway + R2)
+
+Deploy with **PostgreSQL on Railway**, **private Cloudflare R2** for videos, and optional Redis:
+
+**[Backend/docs/HOSTING_RAILWAY_R2.md](Backend/docs/HOSTING_RAILWAY_R2.md)** — full step-by-step (services, env vars, R2 setup, whether you need Redis/worker).
 
 ## License
 

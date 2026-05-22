@@ -156,7 +156,11 @@ def _s3_object_storage_config() -> dict | None:
         or (os.environ.get("REGION") or "").strip()
     )
     if not region:
-        region = "auto" if access.startswith("tid_") else "us-east-1"
+        ep_lower = (endpoint or "").lower()
+        if access.startswith("tid_") or "r2.cloudflarestorage.com" in ep_lower:
+            region = "auto"
+        else:
+            region = "us-east-1"
     return {
         "bucket_name": bucket,
         "access_key": access,
@@ -413,6 +417,12 @@ if USE_S3_OBJECT_STORAGE and _s3_object_storage_cfg:
         AWS_S3_ENDPOINT_URL = _s3_object_storage_cfg["endpoint_url"]
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = True
+    # Cloudflare R2 requires SigV4 and region "auto" (see developers.cloudflare.com/r2).
+    _s3_endpoint = (_s3_object_storage_cfg.get("endpoint_url") or "").lower()
+    if "r2.cloudflarestorage.com" in _s3_endpoint:
+        AWS_S3_SIGNATURE_VERSION = "s3v4"
+        if not AWS_S3_REGION_NAME or AWS_S3_REGION_NAME == "us-east-1":
+            AWS_S3_REGION_NAME = "auto"
     # Private video/files on S3: keep signed URLs for FileField.url (playback uses the stream API, not raw URLs).
     _media_signed_urls_raw = (os.environ.get("MEDIA_SIGNED_URLS") or "true").strip().lower()
     AWS_QUERYSTRING_AUTH = _media_signed_urls_raw in ("1", "true", "yes")

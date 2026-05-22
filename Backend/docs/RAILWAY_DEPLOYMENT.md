@@ -1,11 +1,15 @@
 # Railway Deployment Guide
 
-This guide deploys the project to Railway with:
+**Primary guide (PostgreSQL + private Cloudflare R2):** see **[HOSTING_RAILWAY_R2.md](./HOSTING_RAILWAY_R2.md)**.
+
+This file is a shorter checklist. Stack:
 
 - Django API (`Backend/`)
 - Next.js frontend (`Frontend-Dashboard/`)
-- Optional Celery worker for HLS transcoding
-- PostgreSQL + Redis
+- PostgreSQL (required)
+- Private **Cloudflare R2** for videos (recommended)
+- Redis (optional — membership search cache)
+- Celery worker (optional — no transcode tasks in repo today; MP4 plays via API + R2)
 
 ---
 
@@ -13,11 +17,11 @@ This guide deploys the project to Railway with:
 
 In one Railway project, create:
 
-1. **PostgreSQL** service
-2. **Redis** service
+1. **PostgreSQL** service (required)
+2. **Redis** service (optional)
 3. **Backend web** service (root directory: `Backend`)
 4. **Frontend web** service (root directory: `Frontend-Dashboard`)
-5. **Backend worker** service (optional but recommended for video processing)
+5. **Backend worker** service (optional — only if you add Celery background jobs)
 
 ---
 
@@ -63,14 +67,16 @@ Streaming/security (recommended):
 
 Optional (emergency / debugging only): `STREAM_SYNC_TRANSCODE_ON_PLAYBACK=true` runs HLS transcoding inside the web request when a video is still `processing` (e.g. worker was down). Prefer a healthy Celery worker; do not enable under real traffic.
 
-Object storage for HLS (if using R2/S3):
+Private **Cloudflare R2** (recommended for videos):
 
+- `USE_S3_OBJECT_STORAGE` = `true`
+- `AWS_STORAGE_BUCKET_NAME`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
-- `AWS_STORAGE_BUCKET_NAME`
-- `AWS_S3_ENDPOINT_URL`
-- `AWS_S3_REGION_NAME` = `auto` (for R2)
-- `USE_S3_OBJECT_STORAGE` = `true`
+- `AWS_S3_ENDPOINT_URL` = `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
+- `AWS_S3_REGION_NAME` = `auto`
+- `MEDIA_SIGNED_URLS` = `true`
+- `STREAM_PLAYBACK_USE_S3_PRESIGNED_GET` = `false` (Django proxies private R2; recommended)
 
 Admin bootstrap (optional):
 
@@ -87,19 +93,17 @@ After deploy, verify:
 
 ---
 
-## 3) Backend worker service (Celery)
+## 3) Backend worker service (Celery) — optional
 
-Create another service from same repo with root `Backend`.
+**Skip this** unless you add Celery tasks. Current app marks uploaded MP4s **ready** and plays them via signed API URLs + private R2 (no HLS worker required).
 
-Set Start Command:
+If you add background jobs later, create another service with root `Backend` and Start Command:
 
 ```bash
-celery -A syndicate_backend worker -l info
+sh railway_worker_start.sh
 ```
 
-Use the same env vars as backend web service (especially `DATABASE_URL`, `REDIS_URL`, storage keys).
-
-Why needed: HLS transcode jobs run in Celery; without worker, videos can stay in `processing`.
+Use the same env vars as backend web (`DATABASE_URL`, R2 keys, `REDIS_URL` if used).
 
 ---
 
@@ -169,7 +173,7 @@ This prevents simple long-term link sharing, but URLs are still visible in brows
 - **`SyntaxError: unmatched '}'` in settings**
   - Invalid manual edit in `settings.py`.
 - **Video stuck in `processing`**
-  - Celery worker not running or Redis missing.
+  - Re-save in admin or re-upload; current pipeline sets **ready** on upload. Legacy HLS docs may mention Celery — not used for MP4-only flow.
 - **Signed URL returns 404**
   - Token expired; refresh stream API call and retry.
 

@@ -1,6 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import {
   resolveProgramPlaylistThumbnail,
   type ProgramPlaylistLike,
@@ -14,6 +17,8 @@ type Props = {
   loading?: "eager" | "lazy";
   fetchPriority?: "high" | "auto";
   decoding?: "async" | "auto";
+  /** Display width hint for Next/Image + Cloudinary transforms. */
+  displayWidth?: number;
 };
 
 export function ProgramPlaylistCoverImage({
@@ -22,35 +27,45 @@ export function ProgramPlaylistCoverImage({
   imageClassName,
   loading = "lazy",
   fetchPriority,
-  decoding = "async",
+  displayWidth = 640,
 }: Props) {
   const djangoCover = resolveDjangoMediaUrl(playlist.cover_image_url ?? null);
-  const primarySrc = resolveProgramPlaylistThumbnail(playlist, djangoCover);
-  const fallbackSrc = resolveProgramPlaylistThumbnail(playlist, null);
+  const primarySrc = optimizeCoverImageSrc(
+    resolveProgramPlaylistThumbnail(playlist, djangoCover),
+    displayWidth
+  );
+  const fallbackSrc = optimizeCoverImageSrc(resolveProgramPlaylistThumbnail(playlist, null), displayWidth);
+
+  const [src, setSrc] = useState(primarySrc);
+
+  useEffect(() => {
+    setSrc(primarySrc);
+  }, [primarySrc]);
+
+  const activeSrc = src || fallbackSrc;
 
   return (
     <>
       <div className={cn("h-full w-full bg-gradient-to-t opacity-95", gradClassName)} />
-      {primarySrc ? (
-        <img
-          src={primarySrc}
+      {activeSrc ? (
+        <Image
+          src={activeSrc}
           alt=""
+          fill
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 320px"
+          quality={72}
           loading={loading}
+          priority={loading === "eager"}
           fetchPriority={fetchPriority}
-          decoding={decoding}
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (fallbackSrc && img.src !== fallbackSrc && !img.dataset.fallbackApplied) {
-              img.dataset.fallbackApplied = "1";
-              img.src = fallbackSrc;
-              img.style.display = "";
-              return;
+          decoding="async"
+          onError={() => {
+            if (fallbackSrc && src !== fallbackSrc) {
+              setSrc(fallbackSrc);
             }
-            img.style.display = "none";
           }}
           className={
             imageClassName ??
-            "absolute inset-0 h-full w-full object-cover object-center [image-rendering:high-quality] [backface-visibility:hidden]"
+            "absolute inset-0 h-full w-full object-cover object-center [backface-visibility:hidden]"
           }
         />
       ) : null}

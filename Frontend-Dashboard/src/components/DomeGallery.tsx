@@ -757,7 +757,7 @@ export default function DomeGallery({
                       draggable={false}
                       alt={it.alt}
                       fill
-                      quality={60}
+                      quality={55}
                       loading="lazy"
                       fetchPriority="low"
                       decoding="async"

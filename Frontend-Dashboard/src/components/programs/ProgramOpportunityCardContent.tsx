@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import type { CourseRec } from "@/components/dashboard/path/goalPathData";
+import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
@@ -90,12 +92,15 @@ export function ProgramOpportunityCardContent({
           ) : coverSrc ? (
             <>
               <div className={cn("absolute inset-0 bg-gradient-to-t opacity-80", grad)} aria-hidden />
-              <img
-                src={coverSrc}
+              <Image
+                src={optimizeCoverImageSrc(coverSrc, 400) ?? coverSrc}
                 alt=""
-                className="absolute inset-0 z-[1] h-full w-full object-cover object-center"
+                fill
+                sizes="(max-width: 640px) 40vw, 280px"
+                quality={72}
                 loading="lazy"
                 decoding="async"
+                className="absolute inset-0 z-[1] object-cover object-center"
               />
             </>
           ) : (

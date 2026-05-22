@@ -16,7 +16,6 @@ import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/c
 import {
   resolveProgramPlaylistDescription,
   resolveProgramPlaylistSummary,
-  resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
 import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
@@ -851,10 +850,6 @@ export function ProgramsCourseSection({
                 };
                 const cardTitle = resolveProgramPlaylistTitle(courseMeta);
                 const cardSummary = resolveProgramPlaylistSummary(courseMeta);
-                const courseCoverSrc = resolveProgramPlaylistThumbnail(
-                  courseMeta,
-                  resolveDjangoMediaUrl(c.cover_image_url)
-                );
                 const theme = COURSE_CARD_THEMES[i % COURSE_CARD_THEMES.length];
                 const courseLocked = c.can_access === false;
                 return (
@@ -901,36 +896,17 @@ export function ProgramsCourseSection({
                         className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
                         aria-hidden
                       />
-                      {courseCoverSrc ? (
-                        <img
-                          src={courseCoverSrc}
-                          alt=""
+                      <div className="absolute inset-0 z-0">
+                        <ProgramPlaylistCoverImage
+                          playlist={courseMeta}
+                          gradClassName={grad}
                           loading={i < 4 ? "eager" : "lazy"}
-                          decoding="async"
-                          fetchPriority={i < 2 ? "high" : undefined}
-                          onError={(e) => {
-                            const img = e.currentTarget;
-                            const fallback = resolveProgramPlaylistThumbnail(courseMeta, null);
-                            if (fallback && img.src !== fallback && !img.dataset.fallbackApplied) {
-                              img.dataset.fallbackApplied = "1";
-                              img.src = fallback;
-                              return;
-                            }
-                            img.style.display = "none";
-                          }}
-                          className="absolute inset-0 z-0 h-full w-full object-cover object-center [image-rendering:high-quality] [backface-visibility:hidden]"
+                          fetchPriority={i < 2 ? "high" : "auto"}
+                          displayWidth={480}
                         />
-                      ) : (
-                        <div className={cn("absolute inset-0 z-0 bg-gradient-to-t opacity-95", grad)} />
-                      )}
-                      {courseCoverSrc ? (
-                        <>
-                          <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/35 via-transparent to-transparent to-[45%]" />
-                          <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black from-0% via-black/85 via-[32%] to-transparent to-[62%]" />
-                        </>
-                      ) : (
-                        <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.1),transparent_50%)]" />
-                      )}
+                      </div>
+                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/35 via-transparent to-transparent to-[45%]" />
+                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black from-0% via-black/85 via-[32%] to-transparent to-[62%]" />
                       {courseLocked ? (
                         <span className="pointer-events-none absolute inset-0 z-[2] bg-black/45" aria-hidden />
                       ) : null}

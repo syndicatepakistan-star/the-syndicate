@@ -28,6 +28,24 @@ function normalizedBackendOrigin() {
 
 const backendOrigin = normalizedBackendOrigin();
 
+function backendMediaRemotePattern() {
+  try {
+    const u = new URL(backendOrigin);
+    if (u.hostname === "127.0.0.1" || u.hostname === "localhost") {
+      return null;
+    }
+    return {
+      protocol: u.protocol.replace(":", ""),
+      hostname: u.hostname,
+      pathname: "/media/**",
+    };
+  } catch {
+    return null;
+  }
+}
+
+const mediaRemote = backendMediaRemotePattern();
+
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
@@ -39,8 +57,9 @@ const nextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     /** Any `quality` passed to `<Image />` must be listed here (Next 15+). */
-    qualities: [60, 62, 70, 72, 75, 78],
+    qualities: [55, 60, 62, 70, 72, 75, 78],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [256, 384, 480, 640, 768],
     remotePatterns: [
@@ -50,7 +69,8 @@ const nextConfig = {
       { protocol: "https", hostname: "p16-common-sign.tiktokcdn.com", pathname: "/**" },
       { protocol: "https", hostname: "p19-common-sign.tiktokcdn.com", pathname: "/**" },
       // Cloudinary image CDN (program thumbnails / covers from API).
-      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+      ...(mediaRemote ? [mediaRemote] : [])
     ]
   },
   async rewrites() {

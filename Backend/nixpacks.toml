@@ -7,6 +7,8 @@
 
 [variables]
 NIXPACKS_PYTHON_VERSION = "3.12"
+# On each deploy (git push): releaseCommand runs migrate + collectstatic + load playlists if DB is empty.
+AUTO_LOAD_STREAM_FIXTURE = "true"
 
 [start]
 cmd = "sh railway_start.sh"

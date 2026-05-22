@@ -19,13 +19,8 @@ run_bootstrap_tasks() {
   python manage.py collectstatic --noinput --clear
 
   if [ "${AUTO_LOAD_STREAM_FIXTURE:-false}" = "true" ] && [ -f "fixtures/stream_playlist_backup.json" ]; then
-    PLAYLIST_COUNT="$(python manage.py shell -c "from apps.video_streaming.models import StreamPlaylist; print(StreamPlaylist.objects.count())" 2>/dev/null | tail -n 1 | tr -d '\r' || echo "0")"
-    if [ "${PLAYLIST_COUNT}" = "0" ]; then
-      echo "railway_start: loaddata fixtures/stream_playlist_backup.json (initial bootstrap)"
-      python manage.py loaddata fixtures/stream_playlist_backup.json || true
-    else
-      echo "railway_start: skip loaddata (playlists already exist; keeping admin-edited covers/thumbnails as-is)"
-    fi
+    echo "railway_start: load_stream_playlists (skips automatically if catalog already exists)"
+    python manage.py load_stream_playlists || true
   fi
 
   if [ "${AUTO_SYNC_BUCKET_ASSETS:-false}" = "true" ]; then

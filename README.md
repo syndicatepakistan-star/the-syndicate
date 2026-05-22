@@ -109,6 +109,8 @@ Deploy with **PostgreSQL on Railway**, **private Cloudflare R2** for videos, and
 
 **[Backend/docs/HOSTING_RAILWAY_R2.md](Backend/docs/HOSTING_RAILWAY_R2.md)** — full step-by-step (services, env vars, R2 setup, whether you need Redis/worker).
 
+**[Backend/docs/RAILWAY_GIT_AUTO_DEPLOY.md](Backend/docs/RAILWAY_GIT_AUTO_DEPLOY.md)** — git push → Railway auto runs migrate, collectstatic, and loads playlists when the DB is empty.
+
 ## License
 
 Add your license if you publish publicly.

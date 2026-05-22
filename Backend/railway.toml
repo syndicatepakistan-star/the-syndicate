@@ -1,6 +1,6 @@
-# Backend service: set Railway "Root Directory" to `Backend` (match repo folder name).
-# Add PostgreSQL to this service — Railway sets DATABASE_URL; run migrate via releaseCommand.
-# Clear any custom Start Command in Railway UI so this (or nixpacks [start]) is used.
+# Backend service: Root Directory = `Backend`. Connect GitHub → deploys on every git push.
+# releaseCommand + startCommand run automatically (leave Custom Start Command empty in Railway UI).
+# Default: migrate, collectstatic, load program playlists if DB empty (AUTO_LOAD_STREAM_FIXTURE in nixpacks.toml).
 
 [build]
 builder = "NIXPACKS"

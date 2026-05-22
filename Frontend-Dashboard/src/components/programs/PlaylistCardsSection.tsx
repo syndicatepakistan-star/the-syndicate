@@ -127,7 +127,7 @@ export function PlaylistCardsSection({
     let cancelled = false;
     void (async () => {
       try {
-        const list = await fetchStreamPlaylists();
+        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
         if (!cancelled) {
           setPlaylists(Array.isArray(list) ? list : []);
           setError(null);
@@ -153,7 +153,7 @@ export function PlaylistCardsSection({
     void (async () => {
       try {
         await confirmPlaylistCheckoutSuccess(sessionId);
-        const list = await fetchStreamPlaylists();
+        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
         setPlaylists(Array.isArray(list) ? list : []);
         setError(null);
       } catch (e) {

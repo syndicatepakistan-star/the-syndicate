@@ -153,6 +153,32 @@ sh railway_worker_start.sh
 
 ## Part 3 — Deploy and verify
 
+### Programs page shows no playlists (empty catalog)
+
+The API `GET /api/streaming/public-playlists/` must return a JSON **array** of playlists. If it returns `[]`, the database has no **Stream playlists** yet.
+
+**One-time import (29 playlists in fixture):**
+
+From `Backend/` on your machine (with `DATABASE_URL` pointing at Railway Postgres, or locally):
+
+```bash
+python manage.py load_stream_playlists
+```
+
+Or:
+
+```bash
+python manage.py loaddata fixtures/stream_playlist_backup.json
+```
+
+**On Railway without a local shell:** Backend service → **Settings** → Variables → set `AUTO_LOAD_STREAM_FIXTURE=true` → **Redeploy** (only loads when playlist count is 0). Set back to `false` after.
+
+**Or** Django admin → **Video streaming** → **Stream playlists** → add rows with **Is published** checked.
+
+Then open `https://YOUR-BACKEND.up.railway.app/api/streaming/public-playlists/` — you should see JSON objects, not `[]`.
+
+---
+
 ### Manual upload (R2 dashboard → admin URL/key)
 
 1. In **Cloudflare R2**, upload your MP4 to the private bucket (note the **object key**, e.g. `programs/lesson-1.mp4`).

@@ -1,3 +1,4 @@
+import { djangoStreamingApiUrl } from "@/lib/djangoBackendOrigin";
 import { portalFetch, resolveClientApiUrl } from "@/lib/portal-api";
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
 
@@ -185,7 +186,14 @@ export async function fetchStreamPlaylists(options?: { allowPublicFallback?: boo
 }
 
 export async function fetchPublicStreamPlaylists(): Promise<StreamPlaylistListItem[]> {
-  const url = resolveClientApiUrl("/api/streaming/public-playlists/");
+  // Browser: same-origin /api/streaming/… hits Next route handler (runtime BACKEND_INTERNAL_URL).
+  // Server / explicit NEXT_PUBLIC_*: call Django directly.
+  const direct = djangoStreamingApiUrl("public-playlists");
+  const url =
+    direct ||
+    (typeof window !== "undefined"
+      ? "/api/streaming/public-playlists/"
+      : resolveClientApiUrl("/api/streaming/public-playlists/"));
   const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
   const txt = await res.text();
   let data: unknown = [];

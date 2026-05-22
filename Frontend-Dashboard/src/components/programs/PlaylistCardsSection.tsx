@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
   createPlaylistCheckoutSession,
+  fetchPublicStreamPlaylists,
   fetchStreamPlaylists,
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
@@ -127,7 +128,7 @@ export function PlaylistCardsSection({
     let cancelled = false;
     void (async () => {
       try {
-        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
+        const list = await fetchPublicStreamPlaylists();
         if (!cancelled) {
           setPlaylists(Array.isArray(list) ? list : []);
           setError(null);
@@ -153,7 +154,7 @@ export function PlaylistCardsSection({
     void (async () => {
       try {
         await confirmPlaylistCheckoutSuccess(sessionId);
-        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
+        const list = await fetchPublicStreamPlaylists();
         setPlaylists(Array.isArray(list) ? list : []);
         setError(null);
       } catch (e) {

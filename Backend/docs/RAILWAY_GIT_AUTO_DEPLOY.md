@@ -44,7 +44,16 @@ AUTO_LOAD_STREAM_FIXTURE=false
 - Docker build (`npm run build`) using `Frontend-Dashboard/Dockerfile`
 - Start: `node server.js` from `Frontend-Dashboard/railway.toml`
 
-Set `NEXT_PUBLIC_SYNDICATE_API_URL` and `NEXT_PUBLIC_API_BASE_URL` in Railway **before** build (or redeploy after changing them).
+Set on the **frontend** service (replace with your real backend host if different):
+
+```env
+BACKEND_INTERNAL_URL=https://syndicatereal1-production-ae68.up.railway.app
+NEXT_PUBLIC_API_BASE_URL=https://syndicatereal1-production-ae68.up.railway.app
+NEXT_PUBLIC_SYNDICATE_API_URL=https://syndicatereal1-production-ae68.up.railway.app/api
+SYNDICATE_DJANGO_ORIGIN=https://syndicatereal1-production-ae68.up.railway.app
+```
+
+`BACKEND_INTERNAL_URL` is required for `/programs` playlist cards (runtime API proxy). Redeploy frontend after changing any `NEXT_PUBLIC_*` variable.
 
 ## Your workflow
 

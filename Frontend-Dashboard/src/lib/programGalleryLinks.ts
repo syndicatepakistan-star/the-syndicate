@@ -1,6 +1,8 @@
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 import {
   GLOBE_FILENAME_TO_PROGRAM_ID,
+  GLOBE_FILENAME_TO_PROGRAM_ID_OVERRIDE,
+  GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS,
   isHiddenProgramPlaylist,
   programPlaylistDeepLink,
 } from "@/lib/programPlaylistThumbnails";
@@ -56,6 +58,20 @@ function scoreMatch(candidate: string, playlistTitle: string): number {
   return Math.round((overlap / Math.max(aTokens.size, bTokens.size)) * 65);
 }
 
+function resolveGlobeProgramId(
+  fileName: string,
+  alt: string,
+  playlists: StreamPlaylistListItem[]
+): number | undefined {
+  const override = GLOBE_FILENAME_TO_PROGRAM_ID_OVERRIDE[fileName];
+  if (override != null) return override;
+
+  const mapped = GLOBE_FILENAME_TO_PROGRAM_ID[fileName];
+  if (mapped != null) return mapped;
+
+  return matchPlaylistIdForGalleryImage(fileName, alt, playlists);
+}
+
 export function matchPlaylistIdForGalleryImage(
   fileName: string,
   alt: string,
@@ -92,11 +108,12 @@ export function attachProgramLinksToGalleryImages(
   playlists: StreamPlaylistListItem[]
 ): ProgramGalleryImage[] {
   return images.map((img) => {
-    const rawProgramId =
-      GLOBE_FILENAME_TO_PROGRAM_ID[img.fileName] ??
-      matchPlaylistIdForGalleryImage(img.fileName, img.alt, playlists);
+    const rawProgramId = resolveGlobeProgramId(img.fileName, img.alt, playlists);
     const programId =
-      rawProgramId != null && !isHiddenProgramPlaylist(rawProgramId) ? rawProgramId : undefined;
+      rawProgramId != null &&
+      (!isHiddenProgramPlaylist(rawProgramId) || GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS.has(rawProgramId))
+        ? rawProgramId
+        : undefined;
     return {
       ...img,
       programId,

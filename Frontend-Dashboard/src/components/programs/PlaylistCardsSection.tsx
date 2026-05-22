@@ -14,7 +14,10 @@ import {
   resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
-import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import {
+  GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS,
+  isHiddenProgramPlaylist,
+} from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
@@ -167,10 +170,15 @@ export function PlaylistCardsSection({
 
   const visiblePlaylists = useMemo(
     () =>
-      playlists.filter(
-        (pl) => !pl.is_coming_soon && !isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title })
-      ),
-    [playlists]
+      playlists.filter((pl) => {
+        if (pl.is_coming_soon) return false;
+        const hidden = isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title });
+        if (!hidden) return true;
+        return (
+          highlightPlaylistId === pl.id && GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS.has(pl.id)
+        );
+      }),
+    [playlists, highlightPlaylistId]
   );
   const businessPsychologyPlaylists = useMemo(
     () => visiblePlaylists.filter((pl) => pl.category !== "business_model"),

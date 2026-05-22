@@ -76,6 +76,45 @@ export const GLOBE_FILENAME_TO_PROGRAM_ID: Record<string, number> = Object.fromE
   })
 );
 
+/** Course covers omitted from the homepage globe (see GLOBE_REPLACEMENT_TILES). */
+export const GLOBE_EXCLUDED_FILENAMES = new Set<string>(["humanbehaviou.png"]);
+
+export type GlobeReplacementTile = {
+  programId: number;
+  imageFileName: string;
+  alt: string;
+  globeFileName: string;
+};
+
+/** Globe-only tiles: show another course image but deep-link to the real program id. */
+export const GLOBE_REPLACEMENT_TILES: GlobeReplacementTile[] = [
+  {
+    programId: 5,
+    imageFileName: "hustle.png",
+    alt: "The Art of Mastering Human Behavior in Business",
+    globeFileName: "globe-program-5.png",
+  },
+];
+
+/** Hidden programs that still receive globe deep links. */
+export const GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS = new Set<number>([5]);
+
+export const GLOBE_FILENAME_TO_PROGRAM_ID_OVERRIDE: Record<string, number> = Object.fromEntries(
+  GLOBE_REPLACEMENT_TILES.map((tile) => [tile.globeFileName, tile.programId])
+);
+
+export function applyGlobeGalleryOverrides(
+  images: Array<{ src: string; alt: string; fileName: string }>
+): Array<{ src: string; alt: string; fileName: string }> {
+  const filtered = images.filter((img) => !GLOBE_EXCLUDED_FILENAMES.has(img.fileName));
+  const replacements = GLOBE_REPLACEMENT_TILES.map((tile) => ({
+    src: courseThumb(tile.imageFileName),
+    alt: tile.alt,
+    fileName: tile.globeFileName,
+  }));
+  return [...filtered, ...replacements];
+}
+
 export function getProgramPlaylistThumbnail(programId: number): string | undefined {
   return PROGRAM_PLAYLIST_THUMBNAILS[programId];
 }

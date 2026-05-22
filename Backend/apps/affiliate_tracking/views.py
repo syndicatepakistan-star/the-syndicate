@@ -891,6 +891,7 @@ def withdrawal_statement(request):
                 "earnings_snapshot": str(w.earnings_snapshot.quantize(Decimal("0.01"))),
                 "status": w.status,
                 "created_at": w.created_at.isoformat(),
+                "transferred_at": w.transferred_at.isoformat() if w.transferred_at else None,
                 "account_name": w.account_name,
                 "affiliate_link_id": w.section_referral.referral_id,
             }

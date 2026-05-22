@@ -89,6 +89,10 @@ export function PublicPlanOfferCards({
             busy={busyPlan === offer.plan}
             onDetails={() => setDetailOffer(offer)}
             onOpen={() => {
+              if (offer.openHref) {
+                router.push(offer.openHref);
+                return;
+              }
               void joinOffer(offer);
             }}
           />

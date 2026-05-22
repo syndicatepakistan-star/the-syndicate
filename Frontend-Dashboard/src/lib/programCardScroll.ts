@@ -1,3 +1,5 @@
+import { programPlaylistDeepLink } from "@/lib/programPlaylistThumbnails";
+
 /** Find the program card node that is visible (mobile or desktop layout). */
 export function findVisibleProgramCard(programId: number): HTMLElement | undefined {
   const nodes = document.querySelectorAll<HTMLElement>(`[data-program-playlist-id="${programId}"]`);
@@ -60,4 +62,20 @@ export function focusProgramCardWithRetries(
     timers.forEach((id) => window.clearTimeout(id));
     window.clearTimeout(doneTimer);
   };
+}
+
+/** Globe-style deep link: highlight and scroll to the program library card. */
+export function navigateToProgramLibraryCard(programId: number): void {
+  if (typeof window === "undefined") return;
+  const target = programPlaylistDeepLink(programId);
+  if (window.location.pathname === "/programs") {
+    window.history.pushState({}, "", target);
+    const library = document.getElementById("programs-library");
+    if (library) {
+      library.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    focusProgramCardWithRetries(programId);
+    return;
+  }
+  window.location.assign(target);
 }

@@ -14,6 +14,8 @@ export type PlanOfferDef = {
   checkoutAmount: string;
   billing: "monthly";
   openLabel: string;
+  /** When set, Open navigates here instead of starting Stripe checkout. */
+  openHref?: string;
   accent: "amber" | "cyan";
   /** Large display title in the Details modal. */
   detailTitle: string;
@@ -57,6 +59,7 @@ export const PLAN_OFFERS: readonly PlanOfferDef[] = [
     checkoutAmount: "19.99",
     billing: "monthly",
     openLabel: "Open",
+    openHref: "/membership",
     accent: "cyan",
     detailTitle: "The Knight",
     detailDescription:

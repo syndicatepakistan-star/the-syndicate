@@ -126,6 +126,8 @@ export type WithdrawalStatementItem = {
   earnings_snapshot: string;
   status: string;
   created_at: string;
+  /** ISO timestamp when admin marked payout complete; null while pending. */
+  transferred_at: string | null;
   account_name: string;
   affiliate_link_id: string;
 };

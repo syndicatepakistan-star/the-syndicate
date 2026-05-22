@@ -64,6 +64,10 @@ import {
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
 import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
+import {
+  getInstructorSlideNeonTheme,
+  neonAccentStyleVars,
+} from "@/data/instructorSlideNeonThemes";
 
 type NavItem = { label: string; key: string; active?: boolean };
 type Course = {
@@ -280,8 +284,10 @@ function SidebarNavRailList({
 }) {
   return (
     <div className="sidebar-nav-list">
-      {nav.map((item) => {
+      {nav.map((item, index) => {
         const locked = isNavLocked(item.key);
+        const selected = selectedNavKey === item.key;
+        const neonTheme = getInstructorSlideNeonTheme(index);
         return (
           <button
             key={item.label}
@@ -291,30 +297,31 @@ function SidebarNavRailList({
               onItemActivate?.();
             }}
             data-dock-item="sidebar"
+            data-nav-neon={item.key}
+            style={neonAccentStyleVars(neonTheme)}
             title={
               locked
                 ? "The Knight — full access. Money Mastery: open to read what is included."
                 : undefined
             }
             className={cn(
-              "sidebar-nav-item nav-item group relative flex w-full items-center text-left",
-              "cut-frame-sm hud-hover-glow glass-dark premium-gold-border gold-glow-hover transition",
+              "sidebar-nav-item sidebar-nav-neon-item syndicate-mood-skip-frame nav-item group relative flex w-full items-center text-left",
+              "cut-frame-sm hud-hover-glow glass-dark transition",
               "hover:bg-black/45",
-              locked && "ring-1 ring-amber-500/30 ring-inset opacity-[0.88]",
-              selectedNavKey === item.key &&
-                "is-selected glow-edge-strong hud-selected-glow border-[color:var(--gold-neon-border)] bg-[rgba(250,204,21,0.08)]"
+              locked && "opacity-[0.88]",
+              selected && "is-selected sidebar-nav-neon-item--selected"
             )}
           >
-            <CheckboxSlot active={selectedNavKey === item.key} />
-            <span className="sidebar-nav-icon-frame relative grid shrink-0 place-items-center border border-[color:var(--gold-neon-border-soft)] bg-black/25 text-[color:var(--gold-neon)]/90 group-hover:text-[color:var(--gold-neon)]">
+            <CheckboxSlot active={selected} />
+            <span className="sidebar-nav-icon-frame sidebar-nav-neon-icon-frame relative grid shrink-0 place-items-center border bg-black/25">
               <NavIcon k={item.key} />
               {locked ? (
-                <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded border border-amber-500/55 bg-black/90 text-amber-200">
+                <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded border border-[color:var(--neon-accent-border)] bg-black/90 text-[color:var(--neon-accent-bright)]">
                   <Lock className="h-2 w-2" strokeWidth={2.8} aria-hidden />
                 </span>
               ) : null}
             </span>
-            <span className="sidebar-nav-label nav-label flex min-w-0 flex-1 items-center gap-1.5 font-extrabold uppercase text-[color:var(--gold-neon)]/92 group-hover:text-[color:var(--gold-neon)]">
+            <span className="sidebar-nav-label sidebar-nav-neon-label nav-label flex min-w-0 flex-1 items-center gap-1.5 font-extrabold uppercase">
               <span className="min-w-0 flex-1">
                 <SidebarNavLabel text={item.label} />
                 <span className="nav-glitch" aria-hidden="true" />
@@ -323,7 +330,7 @@ function SidebarNavRailList({
                 <span className="sr-only">Tier locked — opens overview page for this section.</span>
               ) : null}
             </span>
-            <span className="sidebar-nav-accent-line ml-auto hidden h-px shrink-0 bg-[linear-gradient(90deg,rgba(250,204,21,0),rgba(250,204,21,0.45))] opacity-0 transition group-hover:opacity-100 md:block" />
+            <span className="sidebar-nav-accent-line sidebar-nav-neon-accent-line ml-auto hidden h-px shrink-0 opacity-0 transition group-hover:opacity-100 md:block" />
           </button>
         );
       })}
@@ -1398,6 +1405,7 @@ function InstructorSlideshow() {
   const slides = INSTRUCTOR_SLIDES;
 
   const active = slides[idx] ?? slides[0];
+  const neonTheme = getInstructorSlideNeonTheme(idx);
 
   useLayoutEffect(() => {
     if (!wrapRef.current) return;
@@ -1444,17 +1452,18 @@ function InstructorSlideshow() {
     <div
       ref={wrapRef}
       data-anim="in"
-      className="cut-frame cyber-frame gold-stroke glass-dark hero-gold-frame hero-pulse-soft relative overflow-hidden p-[var(--fluid-deck-p)]"
+      data-instructor-slide={idx}
+      style={neonAccentStyleVars(neonTheme)}
+      className="instructor-slideshow-panel syndicate-mood-skip-frame cut-frame cyber-frame glass-dark relative overflow-hidden p-[var(--fluid-deck-p)]"
     >
-      <div className="hero-gold-overlay absolute inset-0 opacity-70" />
-      <div className="relative grid grid-cols-1 gap-[clamp(1rem,2.5vw+0.5rem,2rem)] lg:grid-cols-2 lg:items-center">
+      <div className="relative z-[1] grid grid-cols-1 gap-[clamp(1rem,2.5vw+0.5rem,2rem)] lg:grid-cols-2 lg:items-center">
         <div className="flex min-w-0 flex-col gap-[clamp(0.85rem,2vw+0.25rem,1.35rem)]">
           <div className="space-y-[clamp(0.65rem,1.5vw+0.2rem,1rem)]" aria-live="polite" aria-atomic="true">
             <div>
               <div className="fluid-text-ui-xs font-black uppercase tracking-[0.2em] text-white/45">Program</div>
-              <div className="mt-1.5 text-[clamp(1rem,1.8vw+0.55rem,1.35rem)] font-black uppercase leading-snug tracking-[0.08em] text-[color:var(--gold)]/95">
+              <h3 className="instructor-slideshow-heading mt-1.5 text-[clamp(1rem,1.8vw+0.55rem,1.35rem)] font-black uppercase leading-snug tracking-[0.08em]">
                 {active.programName}
-              </div>
+              </h3>
               <p className="mt-3 text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/68 line-clamp-4">
                 {active.description}
               </p>
@@ -1473,7 +1482,7 @@ function InstructorSlideshow() {
                 className={cn(
                   "h-[10px] w-[10px] rounded-[3px] border transition hover:border-white/25",
                   i === idx
-                    ? "border-[rgba(197,179,88,0.55)] bg-[rgba(197,179,88,0.18)] glow-edge"
+                    ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/20 shadow-[0_0_10px_var(--instructor-neon-glow)]"
                     : "border-white/10 bg-black/30"
                 )}
               />
@@ -2876,7 +2885,7 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => setSidebarOpen((v) => !v)}
-                className="hamburger-attract navbar-chrome-btn cut-frame-sm cyber-frame grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-amber-300/70 bg-black/70 text-amber-200 shadow-[0_0_16px_rgba(251,191,36,0.28)] sm:h-9 sm:w-9 md:h-10 md:w-10"
+                className="hamburger-attract navbar-chrome-btn cut-frame-sm cyber-frame grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[color:var(--gold-neon-border-mid)] bg-black/70 text-[color:var(--gold-neon)] shadow-[0_0_16px_var(--gold-neon-glow)] sm:h-9 sm:w-9 md:h-10 md:w-10"
                 aria-label={sidebarOpen ? "Hide sidebar menu" : "Show sidebar menu"}
               >
                 <IconToggle open={sidebarOpen} />
@@ -3071,7 +3080,7 @@ export default function Page() {
                       >
                         <div
                           ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                          className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                          className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(212,175,55,0.1)]"
                         >
                           <DashboardChromeLetterGlitch />
                           <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
@@ -3342,7 +3351,7 @@ export default function Page() {
             )}
           >
             <DashboardChromeLetterGlitch />
-            <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(820px_520px_at_40%_0%,rgba(250,204,21,0.035),rgba(0,0,0,0)_64%)]" />
+            <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(820px_520px_at_40%_0%,rgba(212,175,55,0.04),rgba(0,0,0,0)_64%)]" />
             <div
               data-main-shell-scroll
               className={cn(
@@ -3439,9 +3448,9 @@ export default function Page() {
               ) : selectedNavKey === "quickaccess" ? (
                 <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
                   <section aria-label="Quick access tools" className="relative w-full min-w-0 flex-1 scroll-mt-2">
-                    <div className="relative flex w-full min-h-[min(56vh,700px)] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[rgba(255,215,0,0.26)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.08),0_0_52px_rgba(255,215,0,0.08),inset_0_1px_0_rgba(255,215,0,0.08)] sm:min-h-[min(52vh,640px)]">
+                    <div className="relative flex w-full min-h-[min(56vh,700px)] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[rgba(212,175,55,0.28)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(212,175,55,0.1),0_0_52px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(212,175,55,0.08)] sm:min-h-[min(52vh,640px)]">
                       <div
-                        className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(255,215,0,0.11),rgba(0,0,0,0)_60%)]"
+                        className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(212,175,55,0.12),rgba(0,0,0,0)_60%)]"
                         aria-hidden
                       />
                       <div className="relative z-[1] flex min-h-0 w-full flex-1 flex-col">

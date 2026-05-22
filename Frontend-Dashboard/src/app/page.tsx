@@ -16,6 +16,7 @@ import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/compon
 import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
 import { attachProgramLinksToGalleryImages } from '@/lib/programGalleryLinks'
+import { applyGlobeGalleryOverrides } from '@/lib/programPlaylistThumbnails'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
 const FEATURED_LOGOS = [
@@ -140,7 +141,7 @@ const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-
 
 const getLinkedProgramGalleryImages = unstable_cache(
   async () => {
-    const images = await getProgramGalleryImages()
+    const images = applyGlobeGalleryOverrides(await getProgramGalleryImages())
     const playlists = await fetchPublicPlaylistsServer()
     return attachProgramLinksToGalleryImages(images, playlists)
   },
@@ -156,12 +157,19 @@ export default async function Home() {
     alt: card.alt,
     href: card.href,
   }))
+  const mostViewedMarqueeItems = TIKTOK_MOST_VIEWED.map((card) => ({
+    videoId: card.videoId,
+    src: card.posterSrc,
+    alt: card.alt,
+    href: card.href,
+    approxViewsLabel: card.approxViewsLabel,
+  }))
   // Keep enough repeated cards for infinite marquee while avoiding
   // excessive duplicated image nodes that slow first paint/decode.
   const informativeRowGroup = Array.from({ length: 2 }, () => informativeMarqueeItems).flat()
   const informativeRowTrack = [...informativeRowGroup, ...informativeRowGroup]
-  const tiktokMostViewedCycle = [...TIKTOK_MOST_VIEWED, ...TIKTOK_MOST_VIEWED]
-  const tiktokMostViewedTrack = [...tiktokMostViewedCycle, ...tiktokMostViewedCycle]
+  const mostViewedRowGroup = Array.from({ length: 2 }, () => mostViewedMarqueeItems).flat()
+  const tiktokMostViewedTrack = [...mostViewedRowGroup, ...mostViewedRowGroup]
 
   return (
     <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
@@ -259,15 +267,15 @@ export default async function Home() {
                 className="animate-marquee flex w-max items-center gap-2 sm:gap-3"
                 style={{ ['--duration' as string]: '92s', ['--gap' as string]: '1rem' }}
               >
-                {tiktokMostViewedTrack.map((card, index) => {
+                {tiktokMostViewedTrack.map((image, index) => {
                   const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length]
                   return (
                     <a
-                      key={`tiktok-mv-${card.videoId}-${index}`}
-                      href={card.href}
+                      key={`tiktok-mv-${image.videoId}-${index}`}
+                      href={image.href}
                       target="_blank"
                       rel="noreferrer"
-                      aria-label={`Open TikTok video (${card.approxViewsLabel}): ${card.alt}`}
+                      aria-label={`Open TikTok video (${image.approxViewsLabel}): ${image.alt}`}
                       className={`lightning-glow-card group relative block h-[clamp(150px,43vw,240px)] w-[clamp(98px,30.5vw,180px)] overflow-hidden rounded-xl border bg-transparent [clip-path:polygon(0%_8%,8%_0%,100%_0%,100%_92%,92%_100%,0%_100%)] transition-all duration-300 hover:-translate-y-1 lg:h-[290px] lg:w-[220px] xl:h-[330px] xl:w-[250px] ${theme.frame} ${theme.glow}`}
                       style={
                         {
@@ -281,17 +289,18 @@ export default async function Home() {
                       <span className={`pointer-events-none absolute inset-[2px] z-[3] rounded-[10px] border opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${theme.inner}`} />
                       <span className={`pointer-events-none absolute left-2 top-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
                       <span className={`pointer-events-none absolute bottom-2 right-2 z-[4] h-3 w-3 rounded-sm border ${theme.chip}`} />
-                      <Image
-                        src={card.thumbnailUrl}
-                        alt={card.alt}
-                        fill
-                        unoptimized
-                        quality={72}
-                        fetchPriority="low"
-                        decoding="async"
-                        sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
-                        className="relative z-[2] object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
-                      />
+                      <span className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          quality={78}
+                          fetchPriority="low"
+                          decoding="async"
+                          sizes="(max-width: 768px) 31vw, (max-width: 1280px) 220px, 250px"
+                          className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+                        />
+                      </span>
                     </a>
                   )
                 })}

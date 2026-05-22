@@ -5,8 +5,10 @@ import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySec
 import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
 import { PublicPlanOfferCards } from '@/components/programs/PublicPlanOfferCards'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
+import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
-export default function ProgramsPage() {
+export default async function ProgramsPage() {
+  const playlists = await fetchPublicPlaylistsServer()
   return (
     <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -19,7 +21,7 @@ export default function ProgramsPage() {
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
         <PublicPlanOfferCards size="large" />
       </section>
-      <PublicGoalPathSection />
+      <PublicGoalPathSection playlists={playlists} />
       <section
         id="programs-library"
         className="scroll-mt-24 space-y-6 px-[clamp(1rem,3.2vw,1.5rem)] py-10 sm:space-y-8 sm:px-6 sm:py-14"

@@ -1,4 +1,9 @@
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
+import {
+  resolveProgramPlaylistSummary,
+  resolveProgramPlaylistThumbnail,
+} from "@/lib/programPlaylistCatalog";
+import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export type GoalId = "web_dev" | "digital_marketing" | "youtube" | "money_online" | "ai_automation";
 
@@ -20,6 +25,11 @@ export type CourseRec = {
   outcome: string;
   earningHint: string;
   tone: OpportunityTone;
+  /** Backend playlist id — used on /programs for globe-style deep links. */
+  programId?: number;
+  posterSrc?: string;
+  price?: number;
+  summary?: string;
 };
 
 /** Carousel / step count (fixed stages; content comes from program pool). */
@@ -161,25 +171,52 @@ function defaultCopyForTitle(title: string): { outcome: string; earningHint: str
   };
 }
 
+function parsePlaylistPrice(value: string | number | null | undefined): number {
+  const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function findPlaylistMatch(
+  playlists: StreamPlaylistListItem[] | undefined,
+  canonical: string,
+): StreamPlaylistListItem | undefined {
+  if (!playlists?.length) return undefined;
+  return playlists.find((pl) => titleMatches(pl.title, canonical));
+}
+
 function mergeProgramPool(
   goal: GoalId,
   courses: { id: string; title: string }[],
-): { id: string; title: string; outcome: string; earningHint: string }[] {
+  playlists?: StreamPlaylistListItem[],
+): CourseRec[] {
   const seen = new Set<string>();
-  const out: { id: string; title: string; outcome: string; earningHint: string }[] = [];
+  const out: CourseRec[] = [];
 
   for (const canonical of PATH_PROGRAM_TITLES[goal]) {
-    const match = courses.find((c) => titleMatches(c.title, canonical));
-    const title = formatProgramDisplayTitle(match?.title ?? canonical);
+    const playlistMatch = findPlaylistMatch(playlists, canonical);
+    const courseMatch = courses.find((c) => titleMatches(c.title, canonical));
+    const title = formatProgramDisplayTitle(
+      playlistMatch?.title ?? courseMatch?.title ?? canonical,
+    );
     const key = normTitle(title);
     if (seen.has(key)) continue;
     seen.add(key);
     const copy = defaultCopyForTitle(title);
+    const summary = playlistMatch ? resolveProgramPlaylistSummary(playlistMatch) : copy.outcome;
     out.push({
-      id: match?.id ?? `path-${goal}-${key.replace(/\s+/g, "-")}`,
+      id: playlistMatch
+        ? String(playlistMatch.id)
+        : (courseMatch?.id ?? `path-${goal}-${key.replace(/\s+/g, "-")}`),
       title,
-      outcome: copy.outcome,
+      outcome: summary,
       earningHint: copy.earningHint,
+      tone: "amber",
+      programId: playlistMatch?.id,
+      posterSrc: playlistMatch
+        ? resolveProgramPlaylistThumbnail(playlistMatch, playlistMatch.cover_image_url)
+        : undefined,
+      price: playlistMatch ? parsePlaylistPrice(playlistMatch.price) : undefined,
+      summary,
     });
   }
 
@@ -187,8 +224,12 @@ function mergeProgramPool(
 }
 
 /** All programs in the active path focus (for manual browse controls). */
-export function getPathProgramPool(goal: GoalId, courses: { id: string; title: string }[]) {
-  return mergeProgramPool(goal, courses);
+export function getPathProgramPool(
+  goal: GoalId,
+  courses: { id: string; title: string }[],
+  playlists?: StreamPlaylistListItem[],
+) {
+  return mergeProgramPool(goal, courses, playlists);
 }
 
 /**
@@ -199,8 +240,9 @@ export function opportunityTriplesForStage(
   goal: GoalId,
   stageIndex: number,
   courses: { id: string; title: string }[],
+  playlists?: StreamPlaylistListItem[],
 ): [CourseRec, CourseRec, CourseRec] {
-  const pool = mergeProgramPool(goal, courses);
+  const pool = mergeProgramPool(goal, courses, playlists);
   const n = pool.length;
   const base = Math.max(0, stageIndex) % Math.max(1, n);
 
@@ -208,10 +250,8 @@ export function opportunityTriplesForStage(
     const row = pool[(base + offset) % n]!;
     const tone = TONE_CYCLE[offset % TONE_CYCLE.length]!;
     return {
+      ...row,
       id: `${goal}-s${stageIndex}-o${offset}-${row.id}`,
-      title: row.title,
-      outcome: row.outcome,
-      earningHint: row.earningHint,
       tone,
     };
   };

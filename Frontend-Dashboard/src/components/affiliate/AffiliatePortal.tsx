@@ -26,6 +26,17 @@ function getExpectedPayoutDate(from = new Date()): Date {
   return d;
 }
 
+const WITHDRAWAL_COMPLETE_STATUS = "complete";
+
+function formatTransferredDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return "—";
+  }
+}
+
 function formatPayoutExpectedDate(date: Date): string {
   return date.toLocaleDateString(undefined, {
     weekday: "short",
@@ -711,6 +722,10 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       const product = linkDisp
         ? `Withdrawal · ${(w.status || "pending").toUpperCase()} — ${linkDisp}`
         : `Withdrawal · ${(w.status || "pending").toUpperCase()}`;
+      const transferred =
+        st === WITHDRAWAL_COMPLETE_STATUS && w.transferred_at
+          ? formatTransferredDate(w.transferred_at)
+          : "—";
       return {
         key: String(w.id),
         email: (w.account_name && w.account_name.trim()) || "—",
@@ -718,6 +733,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
         paid: `Balance @ request: $${formatEarnings(w.earnings_snapshot)}`,
         yourCut: `$${formatEarnings(w.requested_amount)}`,
         when: formatAgo(w.created_at),
+        transferred,
         muted: WITHDRAWAL_REFUNDED_STATUSES.has(st),
       };
     });
@@ -1069,20 +1085,23 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     <span className="text-amber-200/95">Snapshot</span>
                     <span className="text-white/55"> freezes gross available the moment you hit send; </span>
                     <span className="text-violet-200/95">status</span>
-                    <span className="text-white/55"> tracks ops → wire.</span>
+                    <span className="text-white/55"> tracks ops → wire; </span>
+                    <span className="text-emerald-200/95">transferred</span>
+                    <span className="text-white/55"> date appears when admin marks complete.</span>
                   </p>
                 </div>
 
                 {syndicateStatementRows.length ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                    <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                       <thead>
                         <tr className="border-b border-cyan-500/45 font-mono text-[10px] font-black uppercase tracking-[0.16em] [text-shadow:0_0_8px_rgba(34,211,238,0.35)]">
                           <th className="border-r border-cyan-500/35 px-3 py-2 text-cyan-200/95">User</th>
                           <th className="border-r border-cyan-500/35 px-3 py-2 text-fuchsia-200/90">Request</th>
                           <th className="border-r border-cyan-500/35 px-3 py-2 text-emerald-200/90">Balance snapshot</th>
                           <th className="border-r border-cyan-500/35 px-3 py-2 text-yellow-200/95">Your payout</th>
-                          <th className="px-3 py-2 text-violet-200/90">Applied</th>
+                          <th className="border-r border-cyan-500/35 px-3 py-2 text-violet-200/90">Applied</th>
+                          <th className="px-3 py-2 text-emerald-200/95">Transferred</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1103,7 +1122,18 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                             <td className="border-r border-cyan-500/25 px-3 py-2 font-black text-yellow-200 [text-shadow:0_0_10px_rgba(250,204,21,0.65),0_0_22px_rgba(253,224,71,0.28)]">
                               {row.yourCut}
                             </td>
-                            <td className="px-3 py-2 text-violet-200/80 [text-shadow:0_0_6px_rgba(167,139,250,0.2)]">{row.when}</td>
+                            <td className="border-r border-cyan-500/25 px-3 py-2 text-violet-200/80 [text-shadow:0_0_6px_rgba(167,139,250,0.2)]">
+                              {row.when}
+                            </td>
+                            <td
+                              className={
+                                row.transferred !== "—"
+                                  ? "px-3 py-2 font-semibold text-emerald-100/95 [text-shadow:0_0_6px_rgba(52,211,153,0.2)]"
+                                  : "px-3 py-2 text-white/35 [text-shadow:0_0_6px_rgba(52,211,153,0.2)]"
+                              }
+                            >
+                              {row.transferred}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

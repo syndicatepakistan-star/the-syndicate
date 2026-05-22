@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CourseRec, GoalId, OpportunityTone } from "./goalPathData";
@@ -8,6 +9,10 @@ import { getPathProgramPool, GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage }
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { ArrowConnectorHorizontal, ArrowConnectorVertical } from "./ArrowConnector";
 import { cn } from "../dashboardPrimitives";
+import { ProgramOpportunityCardContent } from "@/components/programs/ProgramOpportunityCardContent";
+import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
+import { createPlaylistCheckoutSession, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 
 const CAROUSEL_MS = 4200;
 
@@ -113,30 +118,61 @@ const CLIP_HUD_B = "[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%
 /** Equal footprint for all three opportunity cards (public + dashboard). */
 const OPPORTUNITY_CARD_SIZE =
   "h-full w-full min-h-[clamp(13rem,26vh,16rem)] max-w-none flex flex-col";
+/** +10px vs base program row so Details/Unlock clear the neon frame bottom. */
+const PROGRAM_OPPORTUNITY_MIN_H = "min-h-[calc(clamp(18rem,36vh,22rem)+10px)]";
+const OPPORTUNITY_CARD_SIZE_PROGRAM =
+  `h-full w-full ${PROGRAM_OPPORTUNITY_MIN_H} max-w-none flex flex-col`;
 
 export type OpportunityCardFrame = "path" | "methods";
+export type OpportunityContentMode = "text" | "program";
 
 function CourseFlowCard({
   course,
   variant,
   isAnchor,
   cardFrame,
+  contentMode,
+  playlist,
+  cardIndex,
   onContinue,
+  onDetails,
+  onUnlock,
 }: {
   course: CourseRec;
   variant: "support" | "focus" | "future";
   isAnchor: boolean;
   cardFrame: OpportunityCardFrame;
+  contentMode: OpportunityContentMode;
+  playlist: StreamPlaylistListItem | null;
+  cardIndex: number;
   onContinue: () => void;
+  onDetails: (playlist: StreamPlaylistListItem) => void;
+  onUnlock: (playlist: StreamPlaylistListItem) => void;
 }) {
   const skin = TONE_SKIN[course.tone];
   const isMethods = cardFrame === "methods";
   const clip = variant === "focus" ? CLIP_HUD_B : CLIP_HUD_A;
+  const isProgramCard = contentMode === "program" && course.programId != null;
+  const cardSizeClass = isProgramCard ? OPPORTUNITY_CARD_SIZE_PROGRAM : OPPORTUNITY_CARD_SIZE;
 
   const label =
     variant === "focus" ? "Recommended" : variant === "support" ? "Supporting" : "Up next";
 
-  const body = (
+  const body = isProgramCard ? (
+    <ProgramOpportunityCardContent
+      course={course}
+      variant={variant}
+      playlist={playlist}
+      skin={{
+        heading: skin.heading,
+        titleText: skin.titleText,
+        infoPanel: skin.chip,
+      }}
+      cardIndex={cardIndex}
+      onDetails={onDetails}
+      onUnlock={onUnlock}
+    />
+  ) : (
     <div className="flex min-h-0 flex-1 flex-col">
       <motion.div className="flex items-center justify-between gap-2">
         <span className={cn("font-mono fluid-path-card-label font-black uppercase tracking-[0.16em] sm:tracking-[0.18em]", skin.heading)}>
@@ -199,7 +235,7 @@ function CourseFlowCard({
         whileHover={{ scale: isAnchor ? 1.012 : 1.022 }}
         className={cn(
           "compact-card-ui group relative overflow-hidden border-2 p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] transition-transform duration-300",
-          OPPORTUNITY_CARD_SIZE,
+          cardSizeClass,
           clip,
           skin.border,
           skin.methodsGlow,
@@ -243,7 +279,12 @@ function CourseFlowCard({
           )}
           aria-hidden
         />
-        <motion.div className="relative z-10 flex h-full min-h-0 flex-1 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3">
+        <motion.div
+          className={cn(
+            "relative z-10 flex min-h-0 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3",
+            isProgramCard ? "h-auto w-full justify-start" : "h-full flex-1",
+          )}
+        >
           {body}
         </motion.div>
       </motion.article>
@@ -257,7 +298,7 @@ function CourseFlowCard({
       whileHover={isAnchor ? { scale: 1.012 } : { scale: 1.022 }}
       className={cn(
         "compact-card-ui group relative overflow-hidden border-2 backdrop-blur-[2px]",
-        OPPORTUNITY_CARD_SIZE,
+        cardSizeClass,
         CLIP_HUD_A,
         skin.border,
         skin.panel,
@@ -282,20 +323,36 @@ function CourseFlowCard({
 export function CourseFlow({
   goal,
   courses,
+  playlists = [],
   userStepIndex,
   cardFrame = "path",
+  contentMode = "text",
   onContinue,
 }: {
   goal: GoalId;
   courses: DashboardCourseLike[];
+  playlists?: StreamPlaylistListItem[];
   userStepIndex: number;
   cardFrame?: OpportunityCardFrame;
+  contentMode?: OpportunityContentMode;
   onContinue: () => void;
 }) {
+  const router = useRouter();
   const go = onContinue;
   const roadmapLen = GOAL_PATH_STAGE_COUNT;
+  const [descriptionModalPlaylist, setDescriptionModalPlaylist] =
+    useState<StreamPlaylistListItem | null>(null);
 
-  const programPool = useMemo(() => getPathProgramPool(goal, courses), [goal, courses]);
+  const playlistById = useMemo(() => {
+    const map = new Map<number, StreamPlaylistListItem>();
+    for (const pl of playlists) map.set(pl.id, pl);
+    return map;
+  }, [playlists]);
+
+  const programPool = useMemo(
+    () => getPathProgramPool(goal, courses, playlists),
+    [goal, courses, playlists],
+  );
   const browseCount = Math.max(1, programPool.length);
 
   const [slideIndex, setSlideIndex] = useState(0);
@@ -346,14 +403,59 @@ export function CourseFlow({
   }, [browseCount, goNext, goPrev]);
 
   const anchorCourse = useMemo(() => {
-    const [a] = opportunityTriplesForStage(goal, stepIdx, courses);
+    const [a] = opportunityTriplesForStage(goal, stepIdx, courses, playlists);
     return a;
-  }, [goal, stepIdx, courses]);
+  }, [goal, stepIdx, courses, playlists]);
 
   const { movingB, movingC } = useMemo(() => {
-    const [, b, c] = opportunityTriplesForStage(goal, slideIndex, courses);
+    const [, b, c] = opportunityTriplesForStage(goal, slideIndex, courses, playlists);
     return { movingB: b, movingC: c };
-  }, [goal, slideIndex, courses]);
+  }, [goal, slideIndex, courses, playlists]);
+
+  const handleDetails = useCallback((playlist: StreamPlaylistListItem) => {
+    setDescriptionModalPlaylist(playlist);
+  }, []);
+
+  const handleUnlock = useCallback(
+    (playlist: StreamPlaylistListItem) => {
+      void (async () => {
+        if (!hasSimpleAuthSessionClient()) {
+          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+          return;
+        }
+        try {
+          const payload = await createPlaylistCheckoutSession(playlist.id, {
+            returnBaseUrl: typeof window !== "undefined" ? window.location.origin : "",
+          });
+          const checkoutUrl =
+            typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
+          if (checkoutUrl) {
+            window.location.assign(checkoutUrl);
+            return;
+          }
+          if (payload.is_unlocked) {
+            router.push("/dashboard");
+            return;
+          }
+          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+        } catch {
+          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+        }
+      })();
+    },
+    [router],
+  );
+
+  const resolvePlaylist = useCallback(
+    (course: CourseRec) =>
+      course.programId != null ? (playlistById.get(course.programId) ?? null) : null,
+    [playlistById],
+  );
+
+  const rowMinH =
+    contentMode === "program"
+      ? PROGRAM_OPPORTUNITY_MIN_H
+      : "min-h-[clamp(13rem,26vh,16rem)]";
 
   return (
     <motion.div
@@ -364,6 +466,12 @@ export function CourseFlow({
         setManualBrowse(false);
       }}
     >
+      {contentMode === "program" ? (
+        <ProgramPlaylistDescriptionModal
+          playlist={descriptionModalPlaylist}
+          onClose={() => setDescriptionModalPlaylist(null)}
+        />
+      ) : null}
       <div className="flex flex-wrap items-end justify-between gap-[clamp(0.65rem,1.8vw+0.2rem,1rem)]">
         <div>
           <div className="font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] text-[color:var(--gold-neon)] sm:tracking-[0.24em]">
@@ -408,7 +516,7 @@ export function CourseFlow({
               <div className="flex items-center gap-1.5 px-0.5">
                 {programPool.map((prog, i) => (
                   <button
-                    key={prog.id}
+                    key={prog.programId ?? prog.id}
                     type="button"
                     role="tab"
                     aria-selected={i === slideIndex}
@@ -436,7 +544,7 @@ export function CourseFlow({
           <div className="flex w-max min-w-full gap-2 pr-1">
             {programPool.map((prog, i) => (
               <button
-                key={prog.id}
+                key={prog.programId ?? prog.id}
                 type="button"
                 onClick={() => goToSlide(i)}
                 className={cn(
@@ -461,24 +569,29 @@ export function CourseFlow({
           "lg:items-stretch",
         )}
       >
-        <div className="flex min-h-[clamp(13rem,26vh,16rem)] min-w-0 flex-col lg:col-start-1 lg:row-start-1">
+        <div className={cn("flex min-w-0 flex-col lg:col-start-1 lg:row-start-1", rowMinH)}>
           <CourseFlowCard
             course={anchorCourse}
             variant="support"
             isAnchor
             cardFrame={cardFrame}
+            contentMode={contentMode}
+            playlist={resolvePlaylist(anchorCourse)}
+            cardIndex={0}
             onContinue={go}
+            onDetails={handleDetails}
+            onUnlock={handleUnlock}
           />
         </div>
 
         <div className="flex justify-center lg:col-start-2 lg:row-start-1 lg:hidden">
           <ArrowConnectorVertical />
         </div>
-        <div className="hidden min-h-[clamp(13rem,26vh,16rem)] items-center justify-center lg:col-start-2 lg:flex lg:row-start-1">
+        <div className={cn("hidden items-center justify-center lg:col-start-2 lg:flex lg:row-start-1", rowMinH)}>
           <ArrowConnectorHorizontal className="w-full max-w-[3.5rem]" />
         </div>
 
-        <div className="relative min-h-[clamp(13rem,26vh,16rem)] min-w-0 lg:col-start-3 lg:row-start-1">
+        <div className={cn("relative min-w-0 lg:col-start-3 lg:row-start-1", rowMinH)}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${goal}-${slideIndex}-b`}
@@ -493,7 +606,12 @@ export function CourseFlow({
                 variant="focus"
                 isAnchor={false}
                 cardFrame={cardFrame}
+                contentMode={contentMode}
+                playlist={resolvePlaylist(movingB)}
+                cardIndex={1}
                 onContinue={go}
+                onDetails={handleDetails}
+                onUnlock={handleUnlock}
               />
             </motion.div>
             </AnimatePresence>
@@ -502,11 +620,11 @@ export function CourseFlow({
         <div className="flex justify-center lg:col-start-4 lg:row-start-1 lg:hidden">
           <ArrowConnectorVertical />
         </div>
-        <div className="hidden min-h-[clamp(13rem,26vh,16rem)] items-center justify-center lg:col-start-4 lg:flex lg:row-start-1">
+        <div className={cn("hidden items-center justify-center lg:col-start-4 lg:flex lg:row-start-1", rowMinH)}>
           <ArrowConnectorHorizontal className="w-full max-w-[3.5rem]" />
         </div>
 
-        <div className="relative min-h-[clamp(13rem,26vh,16rem)] min-w-0 lg:col-start-5 lg:row-start-1">
+        <div className={cn("relative min-w-0 lg:col-start-5 lg:row-start-1", rowMinH)}>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`${goal}-${slideIndex}-c`}
@@ -521,7 +639,12 @@ export function CourseFlow({
                   variant="future"
                   isAnchor={false}
                   cardFrame={cardFrame}
+                  contentMode={contentMode}
+                  playlist={resolvePlaylist(movingC)}
+                  cardIndex={2}
                   onContinue={go}
+                  onDetails={handleDetails}
+                  onUnlock={handleUnlock}
                 />
               </motion.div>
             </AnimatePresence>

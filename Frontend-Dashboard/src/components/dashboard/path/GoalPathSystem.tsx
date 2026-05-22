@@ -7,7 +7,8 @@ import { themeAccent, type ThemeMode } from "../dashboardPrimitives";
 import type { GoalId } from "./goalPathData";
 import { ROADMAPS } from "./goalPathData";
 import { PathSelector } from "./PathSelector";
-import { CourseFlow, type OpportunityCardFrame } from "./CourseFlow";
+import { CourseFlow, type OpportunityCardFrame, type OpportunityContentMode } from "./CourseFlow";
+import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 const LS_KEY = "dashboarded:goal-path-v1";
 
@@ -41,13 +42,18 @@ function writePersist(p: Persisted) {
 export function GoalPathSystem({
   themeMode,
   courses,
+  playlists = [],
   opportunityCardFrame = "path",
+  opportunityContentMode = "text",
   onContinue,
 }: {
   themeMode: ThemeMode;
   courses: DashboardCourseLike[];
+  playlists?: StreamPlaylistListItem[];
   /** Public /programs uses Our Methods timeline card chrome on Next opportunities. */
   opportunityCardFrame?: OpportunityCardFrame;
+  /** Public /programs: real program posters, prices, and deep links. */
+  opportunityContentMode?: OpportunityContentMode;
   onContinue: () => void;
 }) {
   const t = themeAccent(themeMode);
@@ -89,8 +95,10 @@ export function GoalPathSystem({
         <CourseFlow
           goal={goal}
           courses={courses}
+          playlists={playlists}
           userStepIndex={courseStepIdx}
           cardFrame={opportunityCardFrame}
+          contentMode={opportunityContentMode}
           onContinue={onContinue}
         />
       </div>

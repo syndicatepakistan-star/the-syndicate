@@ -1,10 +1,39 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { GoalPathSystem } from "@/components/dashboard/path/GoalPathSystem";
+import type { DashboardCourseLike } from "@/components/dashboard/useDashboardSnapshots";
+import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
+import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
-/** Public /programs: same YOUR PATH + Next opportunities block as the dashboard command center. */
-export function PublicGoalPathSection() {
+type Props = {
+  playlists: StreamPlaylistListItem[];
+};
+
+/** Public /programs: YOUR PATH + Next opportunities with live program cards and deep links. */
+export function PublicGoalPathSection({ playlists }: Props) {
+  const enrichedPlaylists = useMemo(
+    () =>
+      playlists
+        .filter(
+          (pl) =>
+            !pl.is_coming_soon &&
+            !isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title }),
+        )
+        .map((pl) => enrichProgramPlaylist(pl)),
+    [playlists],
+  );
+
+  const courses: DashboardCourseLike[] = useMemo(
+    () =>
+      enrichedPlaylists.map((pl) => ({
+        id: String(pl.id),
+        title: pl.title,
+      })),
+    [enrichedPlaylists],
+  );
+
   const onContinue = useCallback(() => {
     const target = document.getElementById("programs-library");
     if (target) {
@@ -21,8 +50,10 @@ export function PublicGoalPathSection() {
     >
       <GoalPathSystem
         themeMode="default"
-        courses={[]}
+        courses={courses}
+        playlists={enrichedPlaylists}
         opportunityCardFrame="methods"
+        opportunityContentMode="program"
         onContinue={onContinue}
       />
     </section>

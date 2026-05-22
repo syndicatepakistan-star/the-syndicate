@@ -122,6 +122,27 @@ class WithdrawalRequest(models.Model):
     earnings_snapshot = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=24, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
+    transferred_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Set automatically when status changes to complete (admin wire sent).",
+    )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            prev = (
+                WithdrawalRequest.objects.filter(pk=self.pk)
+                .values_list("status", "transferred_at")
+                .first()
+            )
+            if prev is not None:
+                old_status = (prev[0] or "").strip().lower()
+                new_status = (self.status or "").strip().lower()
+                if new_status == "complete" and old_status != "complete" and not self.transferred_at:
+                    from django.utils import timezone
+
+                    self.transferred_at = timezone.now()
+        super().save(*args, **kwargs)
 
     class Meta:
         indexes = [

@@ -385,8 +385,14 @@ export default function AuthScreen({
     try {
       return JSON.parse(responseText) as ApiPayload;
     } catch {
+      const snippet = responseText.slice(0, 120).replace(/\s+/g, " ");
+      const disallowed =
+        response.status === 400 &&
+        (snippet.includes("Bad Request") || snippet.toLowerCase().includes("disallowed"));
       throw new Error(
-        "Server returned non-JSON response. Make sure Django is running and API URL is correct.",
+        disallowed
+          ? "Django rejected the request host (HTTP 400). On Railway backend set DJANGO_ALLOWED_HOSTS and RAILWAY_PUBLIC_DOMAIN to your backend host (no https://), set CORS_ALLOWED_ORIGINS to your frontend https URL, then redeploy."
+          : "Server returned non-JSON response. Make sure Django is running and API URL is correct.",
       );
     }
   }
@@ -402,8 +408,15 @@ export default function AuthScreen({
       });
     } catch (caught) {
       if (caught instanceof TypeError) {
+        const hint = getApiDisplayHint();
+        const isRailway =
+          typeof url === "string" &&
+          (url.includes(".up.railway.app") || url.includes(".railway.app"));
+        const deployHint = isRailway
+          ? "Check Railway backend variables: DJANGO_ALLOWED_HOSTS and RAILWAY_PUBLIC_DOMAIN must match your backend domain; CORS_ALLOWED_ORIGINS must include your frontend URL; redeploy backend after env changes."
+          : "From the Backend folder run: .\\run_dev.ps1 — or: python manage.py runserver";
         throw new Error(
-          `Cannot reach the API (${url || path}). ${getApiDisplayHint()}. From the Backend folder run: .\\run_dev.ps1 — or: python manage.py runserver`,
+          `Cannot reach the API (${url || path}). ${hint}. ${deployHint}`,
         );
       }
       throw caught;

@@ -106,7 +106,15 @@ def _collect_allowed_hosts() -> list[str]:
             host = _hostname_from_allowed_host_entry(part.strip())
             if host and host not in allowed:
                 allowed.append(host)
-    if (os.environ.get("RAILWAY_ENVIRONMENT") or "").strip():
+    # Railway injects RAILWAY_PUBLIC_DOMAIN / RAILWAY_SERVICE_ID at runtime (not always RAILWAY_ENVIRONMENT).
+    _on_railway = bool(
+        railway_public
+        or (os.environ.get("RAILWAY_ENVIRONMENT") or "").strip()
+        or (os.environ.get("RAILWAY_SERVICE_ID") or "").strip()
+        or (os.environ.get("RAILWAY_REPLICA_ID") or "").strip()
+        or (os.environ.get("RAILWAY_PROJECT_ID") or "").strip()
+    )
+    if _on_railway:
         for suffix in (".up.railway.app", ".railway.app"):
             if suffix not in allowed:
                 allowed.append(suffix)

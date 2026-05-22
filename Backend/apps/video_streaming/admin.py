@@ -214,26 +214,14 @@ class StreamVideoAdmin(admin.ModelAdmin):
                 if hasattr(field, "_committed"):
                     field._committed = True
 
-        thumb = form.cleaned_data.get("thumbnail")
-        savepoint = transaction.savepoint()
-        try:
-            super().save_model(request, obj, form, change)
-        except Exception as exc:
-            logger.exception("StreamVideo admin save failed")
-            transaction.savepoint_rollback(savepoint)
-            if thumb:
-                messages.warning(
-                    request,
-                    f"Thumbnail upload failed ({exc}). Saving without thumbnail — "
-                    "in Cloudinary Dashboard → API Keys, enable Upload/create permission for this key, "
-                    "then edit this video and add the thumbnail again.",
-                )
-                obj.thumbnail = None
-                if not change:
-                    obj.pk = None
-                super().save_model(request, obj, form, change)
-            else:
-                raise
+        # Save video + R2 key first; upload thumbnail in a separate atomic block so a
+        # Cloudinary failure cannot poison Django admin's outer transaction.atomic().
+        thumbnail_upload = form.cleaned_data.get("thumbnail")
+        has_new_thumbnail = bool(thumbnail_upload)
+        if has_new_thumbnail:
+            obj.thumbnail = None
+
+        super().save_model(request, obj, form, change)
 
         if pending_bucket_key:
             StreamVideo.objects.filter(pk=obj.pk).update(
@@ -246,6 +234,20 @@ class StreamVideoAdmin(admin.ModelAdmin):
             )
             obj.refresh_from_db()
 
+        if has_new_thumbnail and obj.pk:
+            try:
+                with transaction.atomic():
+                    obj.thumbnail = thumbnail_upload
+                    obj.save(update_fields=["thumbnail"])
+            except Exception as exc:
+                logger.exception("StreamVideo thumbnail upload failed")
+                messages.warning(
+                    request,
+                    f"Video saved, but thumbnail upload failed ({exc}). "
+                    "In Cloudinary Dashboard → API Keys, enable Upload/create permission, "
+                    "then edit this video and add the thumbnail again.",
+                )
+
         if selected_key and (raw_ref or uploaded_key or pending_bucket_key):
             messages.success(request, f"Video linked to bucket object: {selected_key}")
 
@@ -254,6 +256,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
             return super().changeform_view(request, object_id, form_url, extra_context)
         except Exception as exc:
             logger.exception("StreamVideo admin changeform_view failed")
+            transaction.set_rollback(True)
             self.message_user(
                 request,
                 f"Save failed: {exc}",

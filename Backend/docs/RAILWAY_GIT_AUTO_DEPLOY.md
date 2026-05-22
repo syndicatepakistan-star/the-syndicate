@@ -8,7 +8,10 @@ When your Railway project is connected to GitHub, **every `git push` to `main`**
 2. **Settings** → **Source** → connect repo `Syndicate_real1` (or your fork).
 3. **Root Directory:** `Backend`
 4. **Branch:** `main` (or your production branch).
-5. **Custom Start Command:** leave **empty** (uses `railway.toml` / `nixpacks.toml`).
+5. **Custom Start Command:** leave **empty** (uses `railway.toml` / `nixpacks.toml`).  
+   If you set only `gunicorn …` without `railway_start.sh`, `/admin/` will have **no CSS** (static files never collected).
+6. After deploy, verify admin styling:  
+   `https://YOUR-BACKEND.up.railway.app/static/admin/css/base.css` → must be **200**, not 404.
 6. Link **PostgreSQL** to the backend service (Variables → `DATABASE_URL`).
 7. Repeat for **frontend** service: Root Directory `Frontend-Dashboard`, same repo/branch.
 

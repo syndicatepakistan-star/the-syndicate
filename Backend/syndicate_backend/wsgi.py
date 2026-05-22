@@ -18,6 +18,25 @@ django.setup()
 
 # Apply DB migrations at import so deploys work even when the shell start command is wrong.
 # Use gunicorn --preload so this runs once in the master before workers fork.
+def _ensure_admin_static_files() -> None:
+    """Railway release/start may skip collectstatic; admin CSS 404 breaks /admin/ styling."""
+    if (os.environ.get("SKIP_WSGI_COLLECTSTATIC") or "").strip().lower() in ("1", "true", "yes"):
+        return
+    from django.conf import settings
+    from django.core.management import call_command
+
+    admin_css = settings.STATIC_ROOT / "admin" / "css" / "base.css"
+    if admin_css.is_file():
+        return
+    print("syndicate_backend.wsgi: collectstatic (admin static missing)", flush=True)
+    call_command("collectstatic", interactive=False, verbosity=1)
+    if not admin_css.is_file():
+        raise RuntimeError(
+            f"collectstatic did not create {admin_css}. Check staticfiles config and Railway start command."
+        )
+    print("syndicate_backend.wsgi: collectstatic finished", flush=True)
+
+
 if (os.environ.get("SKIP_WSGI_MIGRATE") or "").strip().lower() not in ("1", "true", "yes"):
     from django.conf import settings
     from django.core.management import call_command
@@ -56,9 +75,10 @@ if (os.environ.get("SKIP_WSGI_MIGRATE") or "").strip().lower() not in ("1", "tru
                 "PostgreSQL has no auth_user after migrate. "
                 "Fix DATABASE_URL on this Railway service (same DB as Postgres plugin)."
             )
-
     else:
         print("syndicate_backend.wsgi: skipping migrate (SQLite default)", flush=True)
+
+    _ensure_admin_static_files()
 
 
 from django.core.wsgi import get_wsgi_application

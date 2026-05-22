@@ -15,8 +15,17 @@ run_bootstrap_tasks() {
   echo "railway_start: migrate"
   python manage.py migrate --noinput --verbosity 1
 
-  echo "railway_start: collectstatic (clear + rebuild)"
-  python manage.py collectstatic --noinput --clear
+  echo "railway_start: collectstatic"
+  if [ "${COLLECTSTATIC_CLEAR:-false}" = "true" ]; then
+    python manage.py collectstatic --noinput --clear
+  else
+    python manage.py collectstatic --noinput
+  fi
+  if [ ! -f "staticfiles/admin/css/base.css" ]; then
+    echo "railway_start: ERROR admin static missing after collectstatic"
+    exit 1
+  fi
+  echo "railway_start: staticfiles OK (admin/css/base.css present)"
 
   if [ "${AUTO_LOAD_STREAM_FIXTURE:-false}" = "true" ] && [ -f "fixtures/stream_playlist_backup.json" ]; then
     echo "railway_start: load_stream_playlists (skips automatically if catalog already exists)"

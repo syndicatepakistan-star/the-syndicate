@@ -22,3 +22,21 @@ def s3_client():
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         config=BotoConfig(retries={"max_attempts": 8, "mode": "adaptive"}),
     )
+
+
+def bucket_object_exists(object_key: str) -> bool:
+    """Return True if the object key exists in the configured private bucket."""
+    key = (object_key or "").strip().lstrip("/")
+    if not key:
+        return False
+    if not getattr(settings, "USE_S3_OBJECT_STORAGE", False):
+        return True
+    bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
+    client = s3_client()
+    if not bucket or client is None:
+        return True
+    try:
+        client.head_object(Bucket=bucket, Key=key)
+        return True
+    except Exception:
+        return False

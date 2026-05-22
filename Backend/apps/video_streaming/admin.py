@@ -12,6 +12,7 @@ from apps.video_streaming.models import (
     StreamVideo,
 )
 from apps.video_streaming.services.bucket_reference import normalize_bucket_object_key
+from apps.video_streaming.services.object_storage import bucket_object_exists
 
 
 class StreamPlaylistItemInline(admin.TabularInline):
@@ -92,6 +93,16 @@ class StreamVideoAdminForm(forms.ModelForm):
             )
         cleaned["bucket_video_url_or_key"] = raw_ref
         cleaned["_resolved_bucket_key"] = selected_key
+        if selected_key and not bucket_object_exists(selected_key):
+            raise ValidationError(
+                {
+                    "bucket_video_url_or_key": (
+                        f"Object “{selected_key}” was not found in bucket "
+                        f"“{bucket or '(not configured)'}”. "
+                        "Upload the MP4 to R2 first, then paste the exact object key (e.g. bg.mp4)."
+                    )
+                }
+            )
         uploaded_file = cleaned.get("original_video")
         if selected_key or not uploaded_file:
             return cleaned
@@ -175,20 +186,51 @@ class StreamVideoAdmin(admin.ModelAdmin):
             selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
         if not selected_key:
             selected_key = uploaded_key
+
+        uploaded_file = form.cleaned_data.get("original_video")
+        link_existing_key_only = bool(selected_key) and not uploaded_file
+
+        pending_bucket_key = ""
         if selected_key:
             obj._skip_auto_ready = True
-            obj.original_video.name = selected_key
             obj.status = StreamVideo.Status.READY
             obj.transcode_progress = 100
             obj.transcode_message = "Linked to bucket object. Ready for playback."
             obj.last_error = ""
             obj.hls_path = ""
-            if raw_ref or uploaded_key:
-                messages.success(
+            if link_existing_key_only:
+                # Avoid FileField pre_save uploading an empty file over the R2 object.
+                pending_bucket_key = selected_key
+            else:
+                obj.original_video.name = selected_key
+                field = obj.original_video
+                if hasattr(field, "_committed"):
+                    field._committed = True
+
+        try:
+            super().save_model(request, obj, form, change)
+        except Exception as exc:
+            if "cloudinary" in type(exc).__module__.lower():
+                messages.error(
                     request,
-                    f"Video linked to bucket object: {selected_key}",
+                    f"Thumbnail upload failed ({exc}). Check CLOUDINARY_URL on Railway or save without a thumbnail.",
                 )
-        super().save_model(request, obj, form, change)
+                return
+            raise
+
+        if pending_bucket_key:
+            StreamVideo.objects.filter(pk=obj.pk).update(
+                original_video=pending_bucket_key,
+                status=StreamVideo.Status.READY,
+                transcode_progress=100,
+                transcode_message="Linked to bucket object. Ready for playback.",
+                last_error="",
+                hls_path="",
+            )
+            obj.refresh_from_db()
+
+        if selected_key and (raw_ref or uploaded_key or pending_bucket_key):
+            messages.success(request, f"Video linked to bucket object: {selected_key}")
 
 
 @admin.register(StreamPlaylistCertificate)

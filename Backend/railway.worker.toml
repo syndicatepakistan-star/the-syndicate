@@ -1,0 +1,8 @@
+# Optional Celery worker service: same repo, Root Directory = Backend.
+# In Railway: duplicate backend service OR new service; set Config File Path to railway.worker.toml.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "sh railway_worker_start.sh"

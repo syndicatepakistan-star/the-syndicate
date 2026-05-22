@@ -1,6 +1,7 @@
 export type InstructorSlide = {
   src: string;
   programName: string;
+  instructorName: string;
   description: string;
 };
 

@@ -1,8 +1,11 @@
 # Root directory: `Frontend-Dashboard/`. Dockerfile avoids BuildKit .next/cache mount issues.
-# (fixes intermittent "runc ... error mounting ... .next/cache" failures).
+# Railway: leave "Custom Start Command" empty in the UI — this file sets it automatically.
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
-# Start is defined by Dockerfile CMD (node server.js) for standalone output.
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 120

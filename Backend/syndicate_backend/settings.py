@@ -141,20 +141,25 @@ USE_CLOUDINARY = bool(
 if USE_CLOUDINARY:
     import cloudinary
 
+    _cloud_name = (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip()
+    _cloud_key = (os.environ.get("CLOUDINARY_API_KEY") or "").strip()
+    _cloud_secret = (os.environ.get("CLOUDINARY_API_SECRET") or "").strip()
     _cloudinary_url = (os.environ.get("CLOUDINARY_URL") or "").strip()
+    if not _cloudinary_url and _cloud_name and _cloud_key and _cloud_secret:
+        _cloudinary_url = f"cloudinary://{_cloud_key}:{_cloud_secret}@{_cloud_name}"
     if _cloudinary_url:
         cloudinary.config(cloudinary_url=_cloudinary_url, secure=True)
     else:
         cloudinary.config(
-            cloud_name=(os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip(),
-            api_key=(os.environ.get("CLOUDINARY_API_KEY") or "").strip(),
-            api_secret=(os.environ.get("CLOUDINARY_API_SECRET") or "").strip(),
+            cloud_name=_cloud_name,
+            api_key=_cloud_key,
+            api_secret=_cloud_secret,
             secure=True,
         )
     CLOUDINARY_STORAGE = {
-        "CLOUD_NAME": (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip(),
-        "API_KEY": (os.environ.get("CLOUDINARY_API_KEY") or "").strip(),
-        "API_SECRET": (os.environ.get("CLOUDINARY_API_SECRET") or "").strip(),
+        "CLOUD_NAME": _cloud_name,
+        "API_KEY": _cloud_key,
+        "API_SECRET": _cloud_secret,
         "SECURE": True,
     }
 

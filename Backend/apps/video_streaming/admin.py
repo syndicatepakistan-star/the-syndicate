@@ -4,6 +4,7 @@ from django.contrib import admin, messages
 from django.conf import settings
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
@@ -213,24 +214,26 @@ class StreamVideoAdmin(admin.ModelAdmin):
                 if hasattr(field, "_committed"):
                     field._committed = True
 
+        thumb = form.cleaned_data.get("thumbnail")
+        savepoint = transaction.savepoint()
         try:
             super().save_model(request, obj, form, change)
         except Exception as exc:
             logger.exception("StreamVideo admin save failed")
-            thumb = form.cleaned_data.get("thumbnail")
-            if thumb and not getattr(request, "_streamvideo_thumb_retry", False):
-                request._streamvideo_thumb_retry = True
+            transaction.savepoint_rollback(savepoint)
+            if thumb:
                 messages.warning(
                     request,
-                    f"Thumbnail upload failed ({exc}). Saving video without thumbnail — "
-                    "fix CLOUDINARY_URL on Railway and re-upload the thumbnail later.",
+                    f"Thumbnail upload failed ({exc}). Saving without thumbnail — "
+                    "in Cloudinary Dashboard → API Keys, enable Upload/create permission for this key, "
+                    "then edit this video and add the thumbnail again.",
                 )
                 obj.thumbnail = None
-                return self.save_model(request, obj, form, change)
-            raise
-        finally:
-            if hasattr(request, "_streamvideo_thumb_retry"):
-                del request._streamvideo_thumb_retry
+                if not change:
+                    obj.pk = None
+                super().save_model(request, obj, form, change)
+            else:
+                raise
 
         if pending_bucket_key:
             StreamVideo.objects.filter(pk=obj.pk).update(

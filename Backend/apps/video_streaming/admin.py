@@ -62,23 +62,14 @@ class StreamVideoAdminForm(forms.ModelForm):
         label="R2 bucket URL or object key",
         help_text=(
             "Upload the MP4 in Cloudflare R2 first, then paste either the object key "
-            "(e.g. stream_videos/originals/my-video.mp4) or the full R2/S3 URL from the dashboard. "
+            "(e.g. bg.mp4 or stream_videos/originals/my-video.mp4) or the full R2/S3 URL from the dashboard. "
             "Click Save — playback uses your private bucket via signed API URLs (not this raw link in the app)."
         ),
     )
-    multipart_video = forms.FileField(
-        required=False,
-        help_text=(
-            "For very large files (9GB+), pick a file, click “Upload large file to bucket”, wait until it finishes, "
-            "then Save. The file choice is cleared after upload so Save only sends the key—otherwise Django would "
-            "receive the whole video again and Save would be very slow."
-        ),
-    )
-    multipart_uploaded_key = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = StreamVideo
-        fields = "__all__"
+        exclude = ("original_video",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,8 +82,7 @@ class StreamVideoAdminForm(forms.ModelForm):
         cleaned = super().clean()
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         raw_ref = (cleaned.get("bucket_video_url_or_key") or "").strip()
-        multipart_key = (cleaned.get("multipart_uploaded_key") or "").strip()
-        selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket) or multipart_key
+        selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
         if raw_ref and not selected_key:
             raise ValidationError(
                 {"bucket_video_url_or_key": "Could not parse a storage object key from that URL or path."}
@@ -109,19 +99,14 @@ class StreamVideoAdminForm(forms.ModelForm):
                     )
                 }
             )
-        uploaded_file = cleaned.get("original_video")
-        if selected_key or not uploaded_file:
-            return cleaned
-
-        max_gb = float(getattr(settings, "STREAM_DIRECT_UPLOAD_MAX_GB", 5))
-        max_bytes = int(max_gb * 1024 * 1024 * 1024)
-        size = int(getattr(uploaded_file, "size", 0) or 0)
-        if size > max_bytes:
+        existing_key = ""
+        if self.instance and self.instance.pk:
+            existing_key = (getattr(self.instance.original_video, "name", None) or "").strip()
+        if not selected_key and not existing_key:
             raise ValidationError(
                 {
-                    "original_video": (
-                        f"This file is {size / (1024 ** 3):.2f} GB. Direct upload is limited to {max_gb:g} GB. "
-                        "Use Multipart video upload (Upload large file to bucket) or paste an R2 URL / object key."
+                    "bucket_video_url_or_key": (
+                        "Paste the R2 object key (or URL) after uploading the MP4 to your bucket."
                     )
                 }
             )
@@ -163,13 +148,9 @@ class StreamVideoAdmin(admin.ModelAdmin):
                 "thumbnail",
                 "bucket_video_url_or_key",
                 "resolved_storage_key_display",
-                "original_video",
-                "multipart_video",
-                "multipart_uploaded_key",
             ),
             "description": (
-                "Manual R2 workflow: upload MP4 in Cloudflare R2, paste the object key or R2 URL in "
-                "R2 bucket URL or object key, then Save. Optional: use Original video to upload through Django. "
+                "Upload the MP4 in Cloudflare R2, then paste the object key or R2 URL and Save. "
                 "Fast-start MP4s seek sooner: ffmpeg -i input.mp4 -c copy -movflags +faststart output.mp4"
             ),
         }),
@@ -180,21 +161,12 @@ class StreamVideoAdmin(admin.ModelAdmin):
     def resolved_storage_key_display(self, obj: StreamVideo) -> str:
         key = (getattr(obj.original_video, "name", None) or "").strip()
         return key or "—"
-    class Media:
-        js = ("admin/streamvideo_multipart_upload.js",)
-
     def save_model(self, request, obj, form, change):
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         raw_ref = (form.cleaned_data.get("bucket_video_url_or_key") or "").strip()
-        uploaded_key = (form.cleaned_data.get("multipart_uploaded_key") or "").strip()
         selected_key = (form.cleaned_data.get("_resolved_bucket_key") or "").strip()
         if not selected_key and raw_ref:
             selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
-        if not selected_key:
-            selected_key = uploaded_key
-
-        uploaded_file = form.cleaned_data.get("original_video")
-        link_existing_key_only = bool(selected_key) and not uploaded_file
 
         pending_bucket_key = ""
         if selected_key:
@@ -204,15 +176,8 @@ class StreamVideoAdmin(admin.ModelAdmin):
             obj.transcode_message = "Linked to bucket object. Ready for playback."
             obj.last_error = ""
             obj.hls_path = ""
-            if link_existing_key_only:
-                # Avoid FileField pre_save uploading an empty file over the R2 object.
-                pending_bucket_key = selected_key
-                obj.original_video = None
-            else:
-                obj.original_video.name = selected_key
-                field = obj.original_video
-                if hasattr(field, "_committed"):
-                    field._committed = True
+            pending_bucket_key = selected_key
+            obj.original_video = None
 
         # Save video + R2 key first; upload thumbnail in a separate atomic block so a
         # Cloudinary failure cannot poison Django admin's outer transaction.atomic().
@@ -248,7 +213,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
                     "then edit this video and add the thumbnail again.",
                 )
 
-        if selected_key and (raw_ref or uploaded_key or pending_bucket_key):
+        if selected_key and (raw_ref or pending_bucket_key):
             messages.success(request, f"Video linked to bucket object: {selected_key}")
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):

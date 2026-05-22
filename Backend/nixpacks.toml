@@ -13,7 +13,7 @@ AUTO_LOAD_STREAM_FIXTURE = "true"
 
 # Bake Django admin CSS/JS into the image (fixes unstyled /admin/ if start script is skipped).
 [phases.build]
-cmds = ["python manage.py collectstatic --noinput"]
+cmds = ["python manage.py ensure_staticfiles --verbosity 1"]
 
 [start]
 cmd = "sh railway_start.sh"

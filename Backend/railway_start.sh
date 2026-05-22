@@ -9,37 +9,42 @@ GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-1800}"
 GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
 GUNICORN_THREADS="${GUNICORN_THREADS:-2}"
 
+# Nixpacks uses /opt/venv; bare `pip` vs `python` can target different installs on Railway.
+PYTHON="python"
+if [ -x /opt/venv/bin/python ]; then
+  PYTHON=/opt/venv/bin/python
+fi
+
 run_bootstrap_tasks() {
   mkdir -p staticfiles
 
   echo "railway_start: migrate"
-  python manage.py migrate --noinput --verbosity 1
+  "$PYTHON" manage.py migrate --noinput --verbosity 1
 
-  echo "railway_start: collectstatic"
+  echo "railway_start: ensure_staticfiles"
+  CLEAR_FLAG=""
   if [ "${COLLECTSTATIC_CLEAR:-false}" = "true" ]; then
-    python manage.py collectstatic --noinput --clear
-  else
-    python manage.py collectstatic --noinput
+    CLEAR_FLAG="--clear"
   fi
-  if [ ! -f "staticfiles/admin/css/base.css" ]; then
-    echo "railway_start: ERROR admin static missing after collectstatic"
-    exit 1
-  fi
+  "$PYTHON" manage.py ensure_staticfiles ${CLEAR_FLAG} --verbosity 1
   echo "railway_start: staticfiles OK (admin/css/base.css present)"
 
   if [ "${AUTO_LOAD_STREAM_FIXTURE:-false}" = "true" ] && [ -f "fixtures/stream_playlist_backup.json" ]; then
     echo "railway_start: load_stream_playlists (skips automatically if catalog already exists)"
-    python manage.py load_stream_playlists || true
+    "$PYTHON" manage.py load_stream_playlists || true
   fi
 
   if [ "${AUTO_SYNC_BUCKET_ASSETS:-false}" = "true" ]; then
     echo "railway_start: sync_bucket_assets (media + public)"
-    python manage.py sync_bucket_assets --include-media --include-public
+    "$PYTHON" manage.py sync_bucket_assets --include-media --include-public
   fi
 }
 
-echo "railway_start: installing requirements"
-pip install -r requirements.txt
+# Nixpacks build already installs requirements; use same Python for optional refresh.
+if [ "${RAILWAY_START_PIP_INSTALL:-true}" = "true" ]; then
+  echo "railway_start: installing requirements ($PYTHON)"
+  "$PYTHON" -m pip install -r requirements.txt -q
+fi
 
 if [ -z "${DATABASE_URL:-}" ] && [ -z "${DATABASE_PRIVATE_URL:-}" ] && [ -z "${DATABASE_PUBLIC_URL:-}" ] && [ -z "${PGHOST:-}" ]; then
   echo "railway_start: WARNING: no Postgres env; Django may use SQLite for migrate."
@@ -53,10 +58,10 @@ if [ "${MODE}" = "--release" ]; then
 fi
 
 echo "railway_start: ensure_superuser"
-python manage.py ensure_superuser
+"$PYTHON" manage.py ensure_superuser
 
 echo "railway_start: gunicorn"
-exec python -m gunicorn syndicate_backend.wsgi:application \
+exec "$PYTHON" -m gunicorn syndicate_backend.wsgi:application \
   --bind "0.0.0.0:${PORT}" \
   --workers "${GUNICORN_WORKERS}" \
   --threads "${GUNICORN_THREADS}" \

@@ -22,19 +22,11 @@ def _ensure_admin_static_files() -> None:
     """Railway release/start may skip collectstatic; admin CSS 404 breaks /admin/ styling."""
     if (os.environ.get("SKIP_WSGI_COLLECTSTATIC") or "").strip().lower() in ("1", "true", "yes"):
         return
-    from django.conf import settings
-    from django.core.management import call_command
+    from syndicate_backend.staticfiles_bootstrap import ensure_staticfiles
 
-    admin_css = settings.STATIC_ROOT / "admin" / "css" / "base.css"
-    if admin_css.is_file():
-        return
-    print("syndicate_backend.wsgi: collectstatic (admin static missing)", flush=True)
-    call_command("collectstatic", interactive=False, verbosity=1)
-    if not admin_css.is_file():
-        raise RuntimeError(
-            f"collectstatic did not create {admin_css}. Check staticfiles config and Railway start command."
-        )
-    print("syndicate_backend.wsgi: collectstatic finished", flush=True)
+    print("syndicate_backend.wsgi: ensure_staticfiles (admin static missing)", flush=True)
+    ensure_staticfiles(verbosity=1)
+    print("syndicate_backend.wsgi: ensure_staticfiles finished", flush=True)
 
 
 if (os.environ.get("SKIP_WSGI_MIGRATE") or "").strip().lower() not in ("1", "true", "yes"):

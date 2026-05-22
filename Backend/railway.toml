@@ -6,7 +6,9 @@
 builder = "NIXPACKS"
 
 [deploy]
-# Start command is intentionally managed in Railway UI per service
-# (web: sh railway_start.sh, worker: celery -A syndicate_backend worker -l info).
-# Run the same bootstrap pipeline in release mode (migrate + collectstatic + optional fixture/sync).
+# Auto start (clear Custom Start Command in Railway UI for this service).
+startCommand = "sh railway_start.sh"
+# Migrations + collectstatic before each deploy.
 releaseCommand = "sh railway_start.sh --release"
+healthcheckPath = "/admin/login/"
+healthcheckTimeout = 120

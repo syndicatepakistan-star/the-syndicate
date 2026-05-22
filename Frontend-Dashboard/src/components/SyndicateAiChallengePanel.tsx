@@ -2402,7 +2402,7 @@ export function SyndicateAiChallengePanel() {
     const moodRoot = document.querySelector(".dashboard-hamburger-chrome.syndicate-mood-context");
     const scrollEl = document.querySelector("[data-main-shell-scroll]");
     if (!moodRoot || !scrollEl) return;
-    let scrollEndTimer: ReturnType<typeof window.setTimeout> | undefined;
+    let scrollEndTimer: number | undefined;
     const onScroll = () => {
       moodRoot.classList.add("is-scrolling");
       if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);

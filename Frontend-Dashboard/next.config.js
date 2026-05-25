@@ -59,7 +59,7 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     /** Any `quality` passed to `<Image />` must be listed here (Next 15+). */
-    qualities: [55, 60, 62, 70, 72, 75, 78],
+    qualities: [55, 60, 62, 70, 72, 75, 78, 85, 88],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [256, 384, 480, 640, 768],
     remotePatterns: [

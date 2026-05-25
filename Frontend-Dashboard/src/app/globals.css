@@ -8197,6 +8197,24 @@ body {
     text-shadow 0.55s ease;
 }
 
+/* Instructor carousel — sharp, full-contrast photos (no blur stack) */
+.dashboard-hamburger-chrome .instructor-slide-media {
+  isolation: isolate;
+}
+
+.dashboard-hamburger-chrome .instructor-slide-photo {
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  filter: contrast(1.06) saturate(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-hamburger-chrome .instructor-slide-photo {
+    filter: contrast(1.04) saturate(1.05);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dashboard-hamburger-chrome .instructor-slideshow-panel {
     animation: none;

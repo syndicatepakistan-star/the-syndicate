@@ -63,7 +63,7 @@ import {
   downloadSynCertificate,
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
-import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
+import { InstructorSlideshow } from "@/components/dashboard/InstructorSlideshow";
 import {
   getInstructorSlideNeonTheme,
   neonAccentStyleVars,
@@ -1393,131 +1393,6 @@ function UserDashboardGate({
             </button>
           </>
         ) : null}
-      </div>
-    </div>
-  );
-}
-
-function InstructorSlideshow() {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const [idx, setIdx] = useState(0);
-  const prevIdxRef = useRef(0);
-  const slides = INSTRUCTOR_SLIDES;
-
-  const active = slides[idx] ?? slides[0];
-  const neonTheme = getInstructorSlideNeonTheme(idx);
-
-  useLayoutEffect(() => {
-    if (!wrapRef.current) return;
-    const el = wrapRef.current;
-    const slideEls = Array.from(el.querySelectorAll<HTMLElement>("[data-slide]"));
-    if (slideEls.length === 0) return;
-
-    slideEls.forEach((s, i) => {
-      gsap.set(s, {
-        opacity: i === idx ? 1 : 0,
-        x: i === idx ? 0 : 16,
-        scale: i === idx ? 1 : 1.02,
-        filter: i === idx ? "brightness(1)" : "brightness(0.9)"
-      });
-    });
-  }, [idx]);
-
-  useLayoutEffect(() => {
-    if (!wrapRef.current) return;
-    const el = wrapRef.current;
-    const slideEls = Array.from(el.querySelectorAll<HTMLElement>("[data-slide]"));
-    if (slideEls.length < 2) return;
-
-    const prev = prevIdxRef.current;
-    if (prev === idx) return;
-    prevIdxRef.current = idx;
-
-    const outEl = slideEls[prev];
-    const inEl = slideEls[idx];
-    if (!outEl || !inEl) return;
-
-    const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-    tl.set(inEl, { opacity: 0, x: 22, scale: 1.035, filter: "brightness(0.90)" }, 0)
-      .to(outEl, { opacity: 0, x: -22, scale: 1.02, duration: 1.05 }, 0)
-      .to(inEl, { opacity: 1, x: 0, scale: 1, filter: "brightness(1)", duration: 1.2 }, 0.18);
-  }, [idx]);
-
-  useLayoutEffect(() => {
-    const t = window.setInterval(() => setIdx((v) => (v + 1) % slides.length), 4200);
-    return () => window.clearInterval(t);
-  }, [slides.length]);
-
-  return (
-    <div
-      ref={wrapRef}
-      data-anim="in"
-      data-instructor-slide={idx}
-      style={neonAccentStyleVars(neonTheme)}
-      className="instructor-slideshow-panel syndicate-mood-skip-frame cut-frame cyber-frame glass-dark relative overflow-hidden p-[var(--fluid-deck-p)]"
-    >
-      <div className="relative z-[1] grid grid-cols-1 gap-[clamp(1rem,2.5vw+0.5rem,2rem)] lg:grid-cols-2 lg:items-center">
-        <div className="flex min-w-0 flex-col gap-[clamp(0.85rem,2vw+0.25rem,1.35rem)]">
-          <div className="space-y-[clamp(0.65rem,1.5vw+0.2rem,1rem)]" aria-live="polite" aria-atomic="true">
-            <div>
-              <div className="fluid-text-ui-xs font-black uppercase tracking-[0.2em] text-white/45">Program</div>
-              <h3 className="instructor-slideshow-heading mt-1.5 text-[clamp(1rem,1.8vw+0.55rem,1.35rem)] font-black uppercase leading-snug tracking-[0.08em]">
-                {active.programName}
-              </h3>
-              <p className="mt-3 text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/68 line-clamp-4">
-                {active.description}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-1" role="tablist" aria-label="Instructor slides">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                role="tab"
-                aria-selected={i === idx}
-                aria-label={slides[i]?.programName ?? `Slide ${i + 1}`}
-                onClick={() => setIdx(i)}
-                className={cn(
-                  "h-[10px] w-[10px] rounded-[3px] border transition hover:border-white/25",
-                  i === idx
-                    ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/20 shadow-[0_0_10px_var(--instructor-neon-glow)]"
-                    : "border-white/10 bg-black/30"
-                )}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="relative min-h-[var(--fluid-instructor-media-minh)] w-full overflow-hidden rounded-lg border border-white/10 bg-black/80">
-          <div className="absolute inset-0 opacity-85 [background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.55))]" />
-          {slides.map((slide, i) => (
-            <div
-              key={slide.src}
-              data-slide
-              className="absolute inset-0 will-change-transform"
-              style={{ opacity: i === idx ? 1 : 0 }}
-            >
-              <img
-                src={slide.src}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-30 blur-[10px] scale-[1.08]"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-              <img
-                src={slide.src}
-                alt={`${slide.instructorName} — ${slide.programName}`}
-                className="absolute inset-0 h-full w-full object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

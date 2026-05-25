@@ -9,7 +9,6 @@ import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardS
 import { accentByKey, Card, cn, themeAccent, type ThemeMode } from "./dashboardPrimitives";
 import { GoalPathSystem } from "./path/GoalPathSystem";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
-import { SyndicateReminderDueBanner } from "./SyndicateReminderDueBanner";
 import {
   formatSyndicateReminderCountdown,
   useSyndicateMissionsPeek,
@@ -1130,7 +1129,7 @@ export default function DashboardControlCenter({
 
   return (
     <>
-      <SyndicateReminderDueBanner onNavigate={onNavigate} syndicateNavLocked={syndicateLocked} />
+      {/* Reminders surface inside Syndicate Mode only (not on main dashboard overview). */}
       <div
         className={cn(
           "relative w-full max-w-none space-y-5 rounded-lg transition-[box-shadow] duration-700 md:space-y-6 lg:space-y-7",

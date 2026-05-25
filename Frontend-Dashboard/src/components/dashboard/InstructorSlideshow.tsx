@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useLayoutEffect, useRef, useState } from "react";
-import gsap from "gsap";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 import {
   getInstructorSlideNeonTheme,
@@ -10,126 +10,185 @@ import {
 } from "@/data/instructorSlideNeonThemes";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
+const AUTO_ADVANCE_MS = 6000;
+
 export function InstructorSlideshow() {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
   const [idx, setIdx] = useState(0);
-  const prevIdxRef = useRef(0);
+  const [autoPlay, setAutoPlay] = useState(true);
   const slides = INSTRUCTOR_SLIDES;
+  const total = slides.length;
 
   const active = slides[idx] ?? slides[0];
   const neonTheme = getInstructorSlideNeonTheme(idx);
 
-  useLayoutEffect(() => {
-    if (!wrapRef.current) return;
-    const slideEls = Array.from(wrapRef.current.querySelectorAll<HTMLElement>("[data-slide]"));
-    slideEls.forEach((s, i) => {
-      gsap.set(s, {
-        opacity: i === idx ? 1 : 0,
-        x: i === idx ? 0 : 12,
-        scale: i === idx ? 1 : 1.01,
-      });
-    });
-  }, [idx]);
+  const goTo = useCallback(
+    (next: number) => {
+      if (total < 1) return;
+      setIdx(((next % total) + total) % total);
+    },
+    [total]
+  );
 
-  useLayoutEffect(() => {
-    if (!wrapRef.current) return;
-    const slideEls = Array.from(wrapRef.current.querySelectorAll<HTMLElement>("[data-slide]"));
-    if (slideEls.length < 2) return;
+  const goPrev = useCallback(() => goTo(idx - 1), [goTo, idx]);
+  const goNext = useCallback(() => goTo(idx + 1), [goTo, idx]);
 
-    const prev = prevIdxRef.current;
-    if (prev === idx) return;
-    prevIdxRef.current = idx;
-
-    const outEl = slideEls[prev];
-    const inEl = slideEls[idx];
-    if (!outEl || !inEl) return;
-
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    tl.set(inEl, { opacity: 0, x: 16, scale: 1.02 }, 0)
-      .to(outEl, { opacity: 0, x: -16, scale: 1.01, duration: 0.65 }, 0)
-      .to(inEl, { opacity: 1, x: 0, scale: 1, duration: 0.75 }, 0.12);
-  }, [idx]);
-
-  useLayoutEffect(() => {
-    const t = window.setInterval(() => setIdx((v) => (v + 1) % slides.length), 5200);
+  useEffect(() => {
+    if (!autoPlay || total < 2) return;
+    const t = window.setInterval(() => setIdx((v) => (v + 1) % total), AUTO_ADVANCE_MS);
     return () => window.clearInterval(t);
-  }, [slides.length]);
+  }, [autoPlay, idx, total]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goPrev, goNext]);
+
+  const navBtnClass = cn(
+    "instructor-slideshow-nav-btn grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 transition",
+    "border-[color:var(--instructor-neon-border)] bg-black/55 text-[color:var(--instructor-neon-bright)]",
+    "hover:bg-[color:var(--instructor-neon)]/20 hover:shadow-[0_0_18px_var(--instructor-neon-glow)]",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--instructor-neon-bright)]",
+    "disabled:pointer-events-none disabled:opacity-40"
+  );
+
+  const isLcp = idx === 0;
 
   return (
     <div
-      ref={wrapRef}
       data-anim="in"
       data-instructor-slide={idx}
       style={neonAccentStyleVars(neonTheme)}
-      className="instructor-slideshow-panel syndicate-mood-skip-frame cut-frame cyber-frame glass-dark relative overflow-hidden p-[var(--fluid-deck-p)]"
+      className="instructor-slideshow-panel syndicate-mood-skip-frame cut-frame cyber-frame glass-dark relative overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]"
+      aria-roledescription="carousel"
+      aria-label="Featured instructor programs"
     >
-      <div className="relative z-[1] grid grid-cols-1 gap-[clamp(1rem,2.5vw+0.5rem,2rem)] lg:grid-cols-2 lg:items-center">
-        <div className="flex min-w-0 flex-col gap-[clamp(0.85rem,2vw+0.25rem,1.35rem)]">
-          <div className="space-y-[clamp(0.65rem,1.5vw+0.2rem,1rem)]" aria-live="polite" aria-atomic="true">
-            <div>
-              <div className="fluid-text-ui-xs font-black uppercase tracking-[0.2em] text-white/45">
-                Instructor
-              </div>
-              <h3 className="instructor-slideshow-heading mt-1.5 text-[clamp(1rem,1.8vw+0.55rem,1.35rem)] font-black uppercase leading-snug tracking-[0.08em]">
-                {active.programName}
-              </h3>
-              <p className="mt-1 text-[clamp(0.72rem,0.4vw+0.58rem,0.86rem)] font-semibold text-white/80">
-                {active.instructorName}
-              </p>
-              <p className="mt-2 text-[clamp(0.68rem,0.45vw+0.55rem,0.88rem)] leading-relaxed text-white/72 line-clamp-4">
-                {active.description}
-              </p>
+      <div className="relative z-[1] grid grid-cols-1 gap-[clamp(1.25rem,3vw+0.5rem,2.5rem)] lg:grid-cols-2 lg:items-stretch">
+        <div className="flex min-w-0 flex-col justify-center gap-[clamp(1rem,2vw+0.35rem,1.5rem)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--instructor-neon-border)]/40 pb-[clamp(0.65rem,1.2vw,0.9rem)]">
+            <p className="instructor-slideshow-feature-kicker m-0 font-black uppercase tracking-[0.22em] text-[color:var(--instructor-neon-bright)]">
+              Featured program
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="instructor-slideshow-counter tabular-nums font-black uppercase tracking-[0.14em] text-white/75">
+                {idx + 1}
+                <span className="text-white/35"> / </span>
+                {total}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAutoPlay((v) => !v)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] transition sm:text-[12px]",
+                  autoPlay
+                    ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/15 text-[color:var(--instructor-neon-bright)]"
+                    : "border-white/20 bg-white/5 text-white/60"
+                )}
+                aria-pressed={autoPlay}
+                aria-label={autoPlay ? "Pause auto-advance" : "Resume auto-advance"}
+              >
+                {autoPlay ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
+                {autoPlay ? "Auto" : "Paused"}
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1" role="tablist" aria-label="Instructor slides">
-            {slides.map((slide, i) => (
-              <button
-                key={slide.src}
-                type="button"
-                role="tab"
-                aria-selected={i === idx}
-                aria-label={slide.programName}
-                onClick={() => setIdx(i)}
-                className={cn(
-                  "h-[10px] w-[10px] rounded-[3px] border transition hover:border-white/35",
-                  i === idx
-                    ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/35 shadow-[0_0_12px_var(--instructor-neon-glow)]"
-                    : "border-white/15 bg-white/10"
-                )}
-              />
-            ))}
+          <div className="space-y-[clamp(0.85rem,2vw+0.3rem,1.35rem)]" aria-live="polite" aria-atomic="true">
+            <div className="instructor-slideshow-kicker font-black uppercase tracking-[0.18em] text-white/55">
+              Instructor
+            </div>
+            <h3 className="instructor-slideshow-heading instructor-slideshow-title m-0 font-black uppercase leading-[1.08] tracking-[0.05em]">
+              {active.programName}
+            </h3>
+            <p className="instructor-slideshow-instructor m-0 font-bold text-white">
+              {active.instructorName}
+            </p>
+            <p className="instructor-slideshow-description m-0 font-medium leading-[1.55] text-white/90">
+              {active.description}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="button"
+              className={navBtnClass}
+              onClick={goPrev}
+              aria-label="Previous program"
+              disabled={total < 2}
+            >
+              <ChevronLeft className="h-6 w-6" strokeWidth={2.6} aria-hidden />
+            </button>
+
+            <div
+              className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2 sm:gap-2.5"
+              role="tablist"
+              aria-label="Programs"
+            >
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.src}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === idx}
+                  aria-label={`${slide.programName} — ${i + 1} of ${total}`}
+                  onClick={() => goTo(i)}
+                  className={cn(
+                    "instructor-slideshow-dot h-3 w-3 rounded-[4px] border-2 transition hover:scale-110 hover:border-white/45 sm:h-3.5 sm:w-3.5",
+                    i === idx
+                      ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/45 shadow-[0_0_14px_var(--instructor-neon-glow)] scale-110"
+                      : "border-white/20 bg-white/12"
+                  )}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className={navBtnClass}
+              onClick={goNext}
+              aria-label="Next program"
+              disabled={total < 2}
+            >
+              <ChevronRight className="h-6 w-6" strokeWidth={2.6} aria-hidden />
+            </button>
           </div>
         </div>
 
-        <div className="instructor-slide-media relative min-h-[clamp(16rem,36vh,24rem)] w-full overflow-hidden rounded-xl border border-white/20 bg-[#060a12] shadow-[inset_0_0_40px_rgba(0,0,0,0.45)]">
+        <div
+          className="instructor-slide-media instructor-slide-media--static relative min-h-[clamp(18rem,42vh,28rem)] w-full overflow-hidden rounded-xl border-2 border-[color:var(--instructor-neon-border)]/55 bg-[#060a12] shadow-[inset_0_0_48px_rgba(0,0,0,0.5),0_0_32px_var(--instructor-neon-haze)]"
+          aria-hidden={false}
+        >
           <div
-            className="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.42)_100%)]"
+            className="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.38)_100%)]"
             aria-hidden
           />
-          {slides.map((slide, i) => (
-            <div
-              key={slide.src}
-              data-slide
-              className="absolute inset-0 z-[2] flex items-center justify-center p-3 sm:p-4 md:p-5"
-              style={{ opacity: i === idx ? 1 : 0 }}
-            >
-              <Image
-                src={slide.src}
-                alt={`${slide.instructorName} — ${slide.programName}`}
-                width={720}
-                height={540}
-                sizes="(max-width: 1024px) 92vw, 480px"
-                quality={88}
-                priority={i === 0}
-                loading={i === idx ? "eager" : "lazy"}
-                className="instructor-slide-photo max-h-full max-w-full h-auto w-auto object-contain drop-shadow-[0_12px_40px_rgba(0,0,0,0.65)]"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                }}
-              />
-            </div>
-          ))}
+          <div className="relative z-[2] flex h-full min-h-[inherit] w-full items-center justify-center p-4 sm:p-6">
+            <Image
+              key={active.src}
+              src={active.src}
+              alt={`${active.instructorName} — ${active.programName}`}
+              width={720}
+              height={540}
+              sizes="(max-width: 1024px) 92vw, 520px"
+              quality={88}
+              priority={isLcp}
+              loading={isLcp ? undefined : "eager"}
+              className="instructor-slide-photo max-h-full max-w-full h-auto w-auto object-contain drop-shadow-[0_14px_48px_rgba(0,0,0,0.7)]"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -3362,8 +3362,8 @@ export default function Page() {
                 ) : (
                   <>
                     <section
-                      aria-label="Instructor intel feed"
-                      className="mb-5 w-full shrink-0 scroll-mt-2"
+                      aria-label="Featured instructor programs"
+                      className="mb-6 w-full shrink-0 scroll-mt-2 md:mb-8"
                     >
                       <InstructorSlideshow />
                     </section>

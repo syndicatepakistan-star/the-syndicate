@@ -2885,6 +2885,92 @@ figcaption {
   animation: megaAlertTopMarquee 22s linear infinite;
 }
 
+/* Danger HUD frames (bonus / mega mission) — angular multi-layer borders like tactical alert panels */
+.syndicate-danger-hud-frame {
+  --danger-hud-red: #dc2626;
+  --danger-hud-red-bright: #ef4444;
+  --danger-hud-amber: #f59e0b;
+  position: relative;
+  isolation: isolate;
+}
+
+.syndicate-danger-hud-frame--section::before,
+.syndicate-danger-hud-frame--card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  clip-path: inherit;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) top left / 18px 3px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) top left / 3px 18px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) top right / 18px 3px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) top right / 3px 18px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) bottom left / 18px 3px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) bottom left / 3px 18px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) bottom right / 18px 3px no-repeat,
+    linear-gradient(var(--danger-hud-red-bright), var(--danger-hud-red-bright)) bottom right / 3px 18px no-repeat;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.65));
+  opacity: 0.92;
+}
+
+.syndicate-danger-hud-frame--section::after,
+.syndicate-danger-hud-frame--card::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  z-index: 7;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(220, 38, 38, 0.95) 0,
+    rgba(220, 38, 38, 0.95) 8px,
+    rgba(0, 0, 0, 0.92) 8px,
+    rgba(0, 0, 0, 0.92) 16px,
+    rgba(245, 158, 11, 0.9) 16px,
+    rgba(245, 158, 11, 0.9) 24px
+  );
+  opacity: 0.55;
+}
+
+.syndicate-danger-hud-frame--section::after {
+  top: 8px;
+}
+
+.syndicate-danger-hud-frame--card::after {
+  bottom: 8px;
+  top: auto;
+}
+
+.syndicate-danger-hud-frame--card {
+  clip-path: polygon(
+    14px 0%,
+    calc(100% - 14px) 0%,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0% calc(100% - 14px),
+    0% 14px
+  );
+}
+
+
+@import "./syndicate-bonus-hud.css";
+
+
+.syndicate-mission-stats-chart .recharts-responsive-container {
+  min-height: 180px;
+}
+
+.syndicate-mission-stats-chart svg {
+  overflow: visible;
+}
+
 .mega-neon-deck {
   position: relative;
   isolation: isolate;
@@ -2892,14 +2978,14 @@ figcaption {
   border-radius: 0.65rem;
   padding: 3px;
   clip-path: polygon(
-    16px 0%,
-    calc(100% - 16px) 0%,
-    100% 16px,
-    100% calc(100% - 16px),
-    calc(100% - 16px) 100%,
-    16px 100%,
-    0% calc(100% - 16px),
-    0% 16px
+    22px 0%,
+    calc(100% - 22px) 0%,
+    100% 22px,
+    100% calc(100% - 22px),
+    calc(100% - 22px) 100%,
+    22px 100%,
+    0% calc(100% - 22px),
+    0% 22px
   );
   background: linear-gradient(
     135deg,
@@ -3348,18 +3434,27 @@ figcaption {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
-.mega-neon-deck .mega-neon-ops-card {
-  border: 2px solid rgba(220, 38, 38, 0.5) !important;
-  background: linear-gradient(168deg, rgba(28, 8, 6, 0.96), rgba(69, 26, 8, 0.2), rgba(8, 2, 4, 0.99)) !important;
+.mega-neon-deck .mega-neon-ops-card,
+.syndicate-danger-hud-frame--card.mega-neon-ops-card {
+  border: 3px solid rgba(220, 38, 38, 0.72) !important;
+  background:
+    linear-gradient(168deg, rgba(28, 8, 6, 0.98), rgba(69, 26, 8, 0.28), rgba(8, 2, 4, 0.99)),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(127, 29, 29, 0.08) 2px,
+      rgba(69, 26, 10, 0.1) 3px
+    ) !important;
   box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.15),
-    0 0 0 2px rgba(248, 113, 113, 0.35),
-    0 0 0 3px rgba(0, 0, 0, 0.92),
-    0 0 0 4px rgba(127, 29, 29, 0.35),
-    0 0 40px rgba(220, 38, 38, 0.26),
-    0 0 28px rgba(251, 191, 36, 0.12),
-    0 0 24px rgba(239, 68, 68, 0.14),
-    inset 0 1px 0 rgba(255, 220, 170, 0.08) !important;
+    0 0 0 1px rgba(251, 191, 36, 0.22),
+    0 0 0 2px rgba(248, 113, 113, 0.45),
+    0 0 0 4px rgba(0, 0, 0, 0.94),
+    0 0 0 5px rgba(127, 29, 29, 0.42),
+    0 0 52px rgba(220, 38, 38, 0.32),
+    0 0 36px rgba(251, 191, 36, 0.14),
+    inset 0 0 0 1px rgba(254, 202, 202, 0.1),
+    inset 0 1px 0 rgba(255, 220, 170, 0.1) !important;
 }
 
 .mega-neon-deck .mega-neon-ops-card header,
@@ -5666,14 +5761,15 @@ body.syndicate-mode-active::-webkit-scrollbar {
   filter: none;
   clip-path: none;
   font-family: ui-monospace, "Cascadia Mono", "Consolas", "Segoe UI Mono", monospace !important;
-  font-size: clamp(0.6875rem, 1.5vw + 0.42rem, 0.8125rem) !important;
-  line-height: 1.25 !important;
+  font-size: clamp(0.875rem, 2.1vw + 0.58rem, 1.125rem) !important;
+  line-height: 1.3 !important;
   font-weight: 800 !important;
   font-synthesis: weight;
   -webkit-font-smoothing: antialiased;
-  letter-spacing: 0.08em !important;
+  letter-spacing: 0.07em !important;
   text-transform: uppercase !important;
-  min-height: 3.5rem !important;
+  min-height: clamp(3.75rem, 4vw + 2.5rem, 4.5rem) !important;
+  padding: 0.65rem 0.75rem !important;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -5783,7 +5879,7 @@ body.syndicate-mode-active::-webkit-scrollbar {
 .syndicate-mood-context .syndicate-nav-action .syndicate-nav-action__sub {
   display: block;
   margin-top: 0.25rem;
-  font-size: clamp(0.6rem, 1.1vw + 0.32rem, 0.72rem);
+  font-size: clamp(0.75rem, 1.4vw + 0.42rem, 0.9rem);
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--sna-text);
@@ -8195,6 +8291,48 @@ body {
   transition:
     color 0.55s ease,
     text-shadow 0.55s ease;
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-feature-kicker {
+  font-size: clamp(0.72rem, 0.35vw + 0.62rem, 0.88rem);
+  text-shadow: 0 0 12px var(--instructor-neon-glow);
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-counter {
+  font-size: clamp(0.85rem, 0.4vw + 0.72rem, 1rem);
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-kicker {
+  font-size: clamp(0.8rem, 0.45vw + 0.68rem, 0.95rem);
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-title {
+  font-size: clamp(1.65rem, 3.2vw + 0.85rem, 2.95rem);
+  line-height: 1.06;
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-instructor {
+  font-size: clamp(1.15rem, 1.35vw + 0.82rem, 1.5rem);
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-description {
+  font-size: clamp(1.08rem, 0.75vw + 0.92rem, 1.38rem);
+  max-width: 44rem;
+  line-height: 1.58;
+}
+
+.dashboard-hamburger-chrome .instructor-slide-media--static {
+  pointer-events: none;
+}
+
+.dashboard-hamburger-chrome .instructor-slide-media--static .instructor-slide-photo {
+  pointer-events: none;
+}
+
+.dashboard-hamburger-chrome .instructor-slideshow-nav-btn {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--instructor-neon-border) 70%, transparent),
+    0 0 16px var(--instructor-neon-haze);
 }
 
 /* Instructor carousel — sharp, full-contrast photos (no blur stack) */

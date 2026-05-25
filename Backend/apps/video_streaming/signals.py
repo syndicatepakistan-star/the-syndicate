@@ -3,7 +3,8 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 import logging
 
-from apps.video_streaming.models import StreamPlaylistItem, StreamVideo
+from apps.video_streaming.models import StreamPlaylistItem, StreamVideo, stream_playlist_cover_upload_to
+from apps.video_streaming.services.image_upload import copy_image_field_to_field
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +67,22 @@ def _sync_playlist_cover_from_first_thumbnail(playlist_id: int) -> None:
     playlist = item.playlist
     if playlist.cover_image and getattr(playlist.cover_image, "name", ""):
         return
-    thumbnail_name = getattr(item.stream_video.thumbnail, "name", "") or ""
-    if not thumbnail_name:
+    thumb = item.stream_video.thumbnail
+    if not thumb or not getattr(thumb, "name", ""):
         return
-    playlist.cover_image.name = thumbnail_name
-    playlist.save(update_fields=["cover_image", "updated_at"])
+    try:
+        copy_image_field_to_field(
+            source_field=thumb,
+            dest_instance=playlist,
+            dest_field_name="cover_image",
+            dest_upload_to=stream_playlist_cover_upload_to,
+        )
+    except Exception:
+        logger.exception(
+            "Could not sync playlist %s cover from video %s thumbnail",
+            playlist_id,
+            item.stream_video_id,
+        )
 
 
 @receiver(post_save, sender=StreamPlaylistItem)

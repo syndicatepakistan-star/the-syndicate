@@ -120,7 +120,26 @@ def run_ingest(doc: UploadedDocument) -> tuple[bool, dict | None, str | None]:
 
 @api_view(["GET"])
 def health(_request):
-    return Response({"ok": True, "service": "syndicate-api"})
+    from django.conf import settings
+
+    payload = {
+        "ok": True,
+        "service": "syndicate-api",
+        "storage": {
+            "use_s3_object_storage": bool(getattr(settings, "USE_S3_OBJECT_STORAGE", False)),
+            "use_cloudinary": bool(getattr(settings, "USE_CLOUDINARY", False)),
+            "bucket_configured": bool((getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()),
+        },
+    }
+    if not payload["storage"]["use_cloudinary"] and not payload["storage"]["use_s3_object_storage"]:
+        payload["storage"]["warning"] = (
+            "No Cloudinary or S3 storage configured — admin image uploads use ephemeral local disk and may fail on Railway."
+        )
+    elif not payload["storage"]["use_cloudinary"]:
+        payload["storage"]["warning"] = (
+            "Cloudinary not configured — playlist covers and thumbnails upload to private S3/R2; set CLOUDINARY_URL for public CDN URLs."
+        )
+    return Response(payload)
 
 
 @api_view(["GET"])

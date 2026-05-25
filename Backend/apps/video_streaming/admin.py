@@ -4,7 +4,8 @@ from django.contrib import admin, messages
 from django.conf import settings
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.core.files.uploadedfile import UploadedFile
+from django.db import IntegrityError, transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
@@ -16,13 +17,33 @@ from apps.video_streaming.models import (
     StreamVideo,
 )
 from apps.video_streaming.services.bucket_reference import normalize_bucket_object_key
+from apps.video_streaming.services.image_upload import save_image_field_on_instance
 from apps.video_streaming.services.object_storage import bucket_object_exists
 
 logger = logging.getLogger(__name__)
 
 
+class StreamPlaylistItemInlineFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        seen: set[int] = set()
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data") or not form.cleaned_data:
+                continue
+            if form.cleaned_data.get("DELETE"):
+                continue
+            video = form.cleaned_data.get("stream_video")
+            vid = getattr(video, "pk", None)
+            if not vid:
+                continue
+            if vid in seen:
+                raise ValidationError("Each video can only appear once in this playlist.")
+            seen.add(vid)
+
+
 class StreamPlaylistItemInline(admin.TabularInline):
     model = StreamPlaylistItem
+    formset = StreamPlaylistItemInlineFormSet
     extra = 0
     ordering = ("order", "id")
     autocomplete_fields = ("stream_video",)
@@ -54,6 +75,53 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
         ),
         ("Publishing", {"fields": ("is_published", "is_coming_soon")}),
     )
+
+    def save_model(self, request, obj, form, change):
+        cover_upload = form.cleaned_data.get("cover_image")
+        pending_cover = isinstance(cover_upload, UploadedFile)
+        if pending_cover:
+            obj.cover_image = None
+
+        super().save_model(request, obj, form, change)
+
+        if pending_cover and obj.pk:
+            try:
+                with transaction.atomic():
+                    save_image_field_on_instance(
+                        instance=obj,
+                        field_name="cover_image",
+                        uploaded_file=cover_upload,
+                    )
+            except Exception as exc:
+                logger.exception("StreamPlaylist cover_image upload failed")
+                messages.warning(
+                    request,
+                    f"Playlist saved, but cover image upload failed ({exc}). "
+                    "Set CLOUDINARY_URL (recommended) or verify R2/S3 Write permissions, then try again.",
+                )
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        try:
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        except IntegrityError:
+            messages.error(
+                request,
+                "Could not save playlist items — a video was added twice to the same playlist.",
+            )
+            if object_id:
+                return HttpResponseRedirect(
+                    reverse("admin:video_streaming_streamplaylist_change", args=[object_id])
+                )
+            return HttpResponseRedirect(reverse("admin:video_streaming_streamplaylist_add"))
+        except Exception as exc:
+            logger.exception("StreamPlaylist admin changeform_view failed")
+            transaction.set_rollback(True)
+            self.message_user(request, f"Save failed: {exc}", level=messages.ERROR)
+            if object_id:
+                return HttpResponseRedirect(
+                    reverse("admin:video_streaming_streamplaylist_change", args=[object_id])
+                )
+            return HttpResponseRedirect(reverse("admin:video_streaming_streamplaylist_add"))
 
 
 class StreamVideoAdminForm(forms.ModelForm):
@@ -202,8 +270,11 @@ class StreamVideoAdmin(admin.ModelAdmin):
         if has_new_thumbnail and obj.pk:
             try:
                 with transaction.atomic():
-                    obj.thumbnail = thumbnail_upload
-                    obj.save(update_fields=["thumbnail"])
+                    save_image_field_on_instance(
+                        instance=obj,
+                        field_name="thumbnail",
+                        uploaded_file=thumbnail_upload,
+                    )
             except Exception as exc:
                 logger.exception("StreamVideo thumbnail upload failed")
                 messages.warning(

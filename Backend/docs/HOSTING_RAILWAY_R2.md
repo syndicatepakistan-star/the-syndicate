@@ -252,6 +252,8 @@ Videos are **never** served as a permanent public R2 link. The API checks login 
 | Upload works locally, fails on Railway | Set all `AWS_*` R2 vars; `USE_S3_OBJECT_STORAGE=true`; check token permissions. |
 | Video won't play | User not entitled; token expired — refresh player; check `STREAM_SIGNING_SECRET` is set and stable across deploys. |
 | R2 403 on upload | Token needs **Write**; endpoint must include `https://` and correct account id. |
+| Django admin **500** on playlist cover / thumbnail | Set **`CLOUDINARY_URL`** (or `CLOUDINARY_CLOUD_NAME` + `API_KEY` + `API_SECRET`) on the backend service, redeploy, then retry. Check `GET /api/health/` — `storage.use_cloudinary` should be `true`. Without Cloudinary, S3/R2 must allow **PutObject** for image keys. |
+| Duplicate video in playlist inline | Add each **Stream video** only once per playlist (unique constraint). |
 | OOM on large upload | Raise Railway RAM or lower `GUNICORN_WORKERS=1`; use `FILE_UPLOAD_MAX_MEMORY_MB=8`. |
 | Membership search slow | Add Redis and `REDIS_URL`. |
 

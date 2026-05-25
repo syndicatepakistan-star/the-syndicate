@@ -110,7 +110,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     sub: "General questions & guidance",
     icon: MessageCircle,
     border: "border-cyan-400/75",
-    glow: "shadow-[0_0_0_1px_rgba(34,211,238,0.95),0_0_20px_rgba(34,211,238,0.65),0_0_44px_rgba(6,182,212,0.45),0_0_72px_rgba(14,116,144,0.28)]",
+    glow: "shadow-[0_0_0_1px_rgba(34,211,238,0.98),0_0_28px_rgba(34,211,238,0.78),0_0_56px_rgba(6,182,212,0.55),0_0_96px_rgba(14,116,144,0.38)]",
     bg: "bg-[linear-gradient(145deg,rgba(34,211,238,0.14),rgba(8,145,178,0.08),rgba(0,0,0,0.55))]",
     stepBorder: "border-cyan-500/70",
     titleText: "text-cyan-200",
@@ -119,7 +119,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     ring: "ring-cyan-400/70",
     iconColor: "text-cyan-100",
     submitBtn:
-      "border-cyan-400/80 bg-black/75 text-cyan-100 shadow-[0_6px_28px_rgba(0,0,0,0.55),0_0_24px_rgba(34,211,238,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] group-hover:border-cyan-300/90 group-hover:shadow-[0_10px_36px_rgba(0,0,0,0.6),0_0_32px_rgba(34,211,238,0.6)]"
+      "border-cyan-400/85 bg-black/80 text-cyan-100 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] group-hover:border-cyan-300/95 group-hover:shadow-[0_6px_24px_rgba(0,0,0,0.55),0_0_40px_rgba(34,211,238,0.72)]"
   },
   {
     key: "elevated",
@@ -127,7 +127,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     sub: "Need help soon — faster response",
     icon: Clock,
     border: "border-amber-400/75",
-    glow: "shadow-[0_0_0_1px_rgba(251,191,36,0.95),0_0_20px_rgba(251,191,36,0.6),0_0_44px_rgba(234,88,12,0.42),0_0_72px_rgba(180,83,9,0.26)]",
+    glow: "shadow-[0_0_0_1px_rgba(251,191,36,0.98),0_0_28px_rgba(251,191,36,0.72),0_0_56px_rgba(234,88,12,0.52),0_0_96px_rgba(180,83,9,0.34)]",
     bg: "bg-[linear-gradient(145deg,rgba(251,191,36,0.14),rgba(234,88,12,0.08),rgba(0,0,0,0.55))]",
     stepBorder: "border-amber-500/70",
     titleText: "text-amber-200",
@@ -136,7 +136,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     ring: "ring-amber-400/70",
     iconColor: "text-amber-100",
     submitBtn:
-      "border-amber-400/80 bg-black/75 text-amber-100 shadow-[0_6px_28px_rgba(0,0,0,0.55),0_0_24px_rgba(251,191,36,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] group-hover:border-amber-300/90 group-hover:shadow-[0_10px_36px_rgba(0,0,0,0.6),0_0_32px_rgba(251,191,36,0.58)]"
+      "border-amber-400/85 bg-black/80 text-amber-100 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_28px_rgba(251,191,36,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] group-hover:border-amber-300/95 group-hover:shadow-[0_6px_24px_rgba(0,0,0,0.55),0_0_40px_rgba(251,191,36,0.7)]"
   },
   {
     key: "critical",
@@ -144,7 +144,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     sub: "Account block, mental breakdown, suffering from major financial lose, suffering from major life crises, need urgent help and support",
     icon: ShieldAlert,
     border: "border-rose-400/75",
-    glow: "shadow-[0_0_0_1px_rgba(244,63,94,0.95),0_0_20px_rgba(244,63,94,0.62),0_0_44px_rgba(225,29,72,0.42),0_0_72px_rgba(136,19,55,0.28)]",
+    glow: "shadow-[0_0_0_1px_rgba(244,63,94,0.98),0_0_28px_rgba(244,63,94,0.74),0_0_56px_rgba(225,29,72,0.52),0_0_96px_rgba(136,19,55,0.36)]",
     bg: "bg-[linear-gradient(145deg,rgba(244,63,94,0.14),rgba(190,24,93,0.08),rgba(0,0,0,0.55))]",
     stepBorder: "border-rose-500/70",
     titleText: "text-rose-200",
@@ -153,7 +153,7 @@ const PRIORITY_BUTTONS: PriorityBtn[] = [
     ring: "ring-rose-400/70",
     iconColor: "text-rose-100",
     submitBtn:
-      "border-rose-400/80 bg-black/75 text-rose-100 shadow-[0_6px_28px_rgba(0,0,0,0.55),0_0_24px_rgba(244,63,94,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] group-hover:border-rose-300/90 group-hover:shadow-[0_10px_36px_rgba(0,0,0,0.6),0_0_32px_rgba(244,63,94,0.58)]"
+      "border-rose-400/85 bg-black/80 text-rose-100 shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_28px_rgba(244,63,94,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] group-hover:border-rose-300/95 group-hover:shadow-[0_6px_24px_rgba(0,0,0,0.55),0_0_40px_rgba(244,63,94,0.72)]"
   }
 ];
 
@@ -290,7 +290,7 @@ export function SupportSection() {
     >
       <section
         aria-label="Support and help"
-        className="relative w-full min-w-0 flex-1 scroll-mt-2 overflow-hidden rounded-xl border border-[rgba(255,215,0,0.28)] bg-[#050508]/90 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.12),0_0_56px_rgba(255,165,0,0.1),0_0_80px_rgba(56,189,248,0.06)]"
+        className="relative w-full min-w-0 flex-1 scroll-mt-2 overflow-hidden rounded-xl border border-[rgba(255,215,0,0.38)] bg-[#050508]/90 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.22),0_0_48px_rgba(255,165,0,0.18),0_0_88px_rgba(56,189,248,0.12),0_0_120px_rgba(167,139,250,0.08)]"
       >
         <motion.div
           className="pointer-events-none absolute inset-0 opacity-100"
@@ -311,10 +311,10 @@ export function SupportSection() {
               className="pointer-events-none absolute -left-1 top-0 h-full w-1 rounded-full bg-gradient-to-b from-amber-400 via-fuchsia-400 to-cyan-400 opacity-80"
               aria-hidden
             />
-            <h2 className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 bg-clip-text pl-3 text-xl font-black uppercase tracking-[0.18em] text-transparent md:text-2xl">
+            <h2 className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 bg-clip-text pl-3 text-2xl font-black uppercase tracking-[0.18em] text-transparent drop-shadow-[0_0_22px_rgba(251,191,36,0.35)] md:text-3xl">
               Operator Support
             </h2>
-            <p className="mt-2 max-w-2xl pl-3 text-base leading-relaxed text-white/75 md:text-lg">
+            <p className="mt-2 max-w-2xl pl-3 text-lg leading-relaxed text-white/80 md:text-xl">
               Choose a priority level, describe your issue, and we will alert the team by email. Every conversation is
               saved in your history below.
             </p>
@@ -473,12 +473,12 @@ export function SupportSection() {
                 className={cn(
                   "relative overflow-hidden rounded-2xl border-2 border-violet-500/50 p-4 sm:p-5",
                   METHODS_NOTCH_CLIP,
-                  "shadow-[0_0_0_1px_rgba(167,139,250,0.55),0_0_32px_rgba(139,92,246,0.28),inset_0_0_40px_rgba(0,0,0,0.35)]"
+                  "shadow-[0_0_0_1px_rgba(167,139,250,0.65),0_0_40px_rgba(139,92,246,0.42),0_0_72px_rgba(167,139,250,0.22),inset_0_0_40px_rgba(0,0,0,0.35)]"
                 )}
               >
                 <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" aria-hidden />
                 <label className="relative z-[1] block">
-                  <span className="mb-2 block bg-gradient-to-r from-violet-200/90 to-cyan-200/90 bg-clip-text text-sm font-bold uppercase tracking-[0.16em] text-transparent sm:text-base">
+                  <span className="mb-2 block bg-gradient-to-r from-violet-200/90 to-cyan-200/90 bg-clip-text text-base font-bold uppercase tracking-[0.16em] text-transparent drop-shadow-[0_0_14px_rgba(167,139,250,0.35)] sm:text-lg">
                     What do you need help with?
                   </span>
                   <textarea
@@ -487,7 +487,7 @@ export function SupportSection() {
                     placeholder="Describe your issue, account problem, or question…"
                     rows={5}
                     className={cn(
-                      "w-full resize-y rounded-lg border-2 bg-black/70 px-4 py-3 text-base text-white transition placeholder:text-base placeholder:text-white/40 focus:outline-none focus:ring-2 md:text-lg",
+                      "w-full resize-y rounded-lg border-2 bg-black/70 px-4 py-3 text-lg text-white shadow-[inset_0_0_24px_rgba(139,92,246,0.08)] transition placeholder:text-lg placeholder:text-white/40 focus:outline-none focus:ring-2 md:text-xl",
                       charOk
                         ? "border-emerald-400/55 focus:border-emerald-400/75 focus:ring-emerald-400/25"
                         : "border-violet-400/40 focus:border-amber-400/60 focus:ring-amber-400/20"
@@ -495,7 +495,7 @@ export function SupportSection() {
                   />
                   <p
                     className={cn(
-                      "mt-2 text-xs font-semibold uppercase tracking-[0.1em] sm:text-sm",
+                      "mt-2 text-sm font-semibold uppercase tracking-[0.1em] sm:text-base",
                       charOk ? "text-emerald-400/90" : "text-violet-300/60"
                     )}
                   >
@@ -506,16 +506,16 @@ export function SupportSection() {
 
               <div
                 className={cn(
-                  "relative overflow-visible rounded-2xl border-2 border-amber-400/45 p-4 pb-6 sm:p-5 sm:pb-7",
+                  "relative overflow-hidden rounded-2xl border-2 border-amber-400/45 p-4 sm:p-5",
                   METHODS_NOTCH_CLIP,
-                  "shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_28px_rgba(251,191,36,0.18),inset_0_0_40px_rgba(0,0,0,0.35)]"
+                  "shadow-[0_0_0_1px_rgba(251,191,36,0.55),0_0_36px_rgba(251,191,36,0.28),0_0_64px_rgba(251,191,36,0.14),inset_0_0_40px_rgba(0,0,0,0.35)]"
                 )}
               >
                 <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" aria-hidden />
-                <p className="relative z-[1] mb-4 text-sm font-bold uppercase tracking-[0.16em] text-amber-200/90 sm:text-base">
+                <p className="relative z-[1] mb-4 text-base font-bold uppercase tracking-[0.16em] text-amber-200 drop-shadow-[0_0_12px_rgba(251,191,36,0.35)] sm:text-lg">
                   Select priority &amp; submit
                 </p>
-                <motion.div className="relative z-[1] grid gap-8 pb-3 sm:grid-cols-3 sm:gap-6 sm:pb-4">
+                <motion.div className="relative z-[1] grid gap-5 sm:grid-cols-3 sm:gap-5">
                   {PRIORITY_BUTTONS.map((btn) => {
                     const Icon = btn.icon;
                     const active =
@@ -532,7 +532,7 @@ export function SupportSection() {
                         onClick={() => handlePriorityClick(btn.key)}
                         whileTap={{ scale: 0.98 }}
                         className={cn(
-                          "group relative flex min-h-[13rem] w-full flex-col overflow-visible rounded-2xl border-2 bg-black/60 pb-14 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[14rem] sm:pb-16",
+                          "group relative flex min-h-[16rem] w-full flex-col overflow-hidden rounded-2xl border-2 bg-black/60 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[17.5rem]",
                           METHODS_NOTCH_CLIP,
                           btn.border,
                           btn.glow,
@@ -548,29 +548,28 @@ export function SupportSection() {
                         <span className={cn("pointer-events-none absolute inset-[6px] rounded-[12px] border border-white/10")} aria-hidden />
                         <span className={cn("pointer-events-none absolute left-3 top-3 h-6 w-6 border-l-[3px] border-t-[3px]", btn.stepBorder)} aria-hidden />
                         <span className={cn("pointer-events-none absolute bottom-3 right-3 h-6 w-6 border-b-[3px] border-r-[3px]", btn.stepBorder)} aria-hidden />
-                        <div className="relative z-[1] flex h-full flex-col items-start gap-3 p-4 sm:p-5 sm:pb-6">
+                        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col items-stretch gap-3 p-4 sm:gap-3.5 sm:p-5">
                           <Icon
                             className={cn(
-                              "h-7 w-7 transition-transform duration-200 group-hover:scale-110 sm:h-8 sm:w-8",
+                              "h-8 w-8 shrink-0 drop-shadow-[0_0_12px_currentColor] transition-transform duration-200 group-hover:scale-110 sm:h-9 sm:w-9",
                               btn.iconColor,
                               btn.key === "critical" && urgentStep === "none" && "animate-pulse"
                             )}
                             aria-hidden
                           />
-                          <span className={cn("text-base font-black uppercase tracking-[0.14em] sm:text-lg", btn.titleText)}>
+                          <span className={cn("text-lg font-black uppercase tracking-[0.14em] drop-shadow-[0_0_10px_currentColor] sm:text-xl", btn.titleText)}>
                             {btn.label}
                           </span>
-                          <span className="text-sm leading-relaxed text-zinc-100/90 sm:text-base">{btn.sub}</span>
+                          <span className="min-h-0 flex-1 text-base leading-snug text-zinc-100/92 sm:text-lg">{btn.sub}</span>
+                          <span
+                            className={cn(
+                              "mt-auto w-full shrink-0 rounded-lg border-2 px-4 py-3 text-center text-sm font-black uppercase tracking-[0.18em] transition-all duration-300 sm:px-5 sm:py-3.5 sm:text-base",
+                              btn.submitBtn
+                            )}
+                          >
+                            Tap to submit
+                          </span>
                         </div>
-                        <span
-                          className={cn(
-                            "pointer-events-none absolute bottom-0 left-1/2 z-[2] -translate-x-1/2 translate-y-1/2 rounded-lg border-2 px-5 py-2.5 text-xs font-black uppercase tracking-[0.18em] backdrop-blur-md transition-all duration-300 sm:px-6 sm:py-3 sm:text-sm",
-                            btn.submitBtn
-                          )}
-                          aria-hidden
-                        >
-                          Tap to submit
-                        </span>
                       </motion.button>
                     );
                   })}
@@ -667,13 +666,13 @@ export function SupportSection() {
                 className={cn(
                   "relative overflow-hidden rounded-2xl border-2 border-cyan-500/45 pt-5 sm:pt-6",
                   METHODS_NOTCH_CLIP,
-                  "shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_28px_rgba(34,211,238,0.16),inset_0_0_40px_rgba(0,0,0,0.35)]"
+                  "shadow-[0_0_0_1px_rgba(34,211,238,0.55),0_0_36px_rgba(34,211,238,0.26),0_0_64px_rgba(34,211,238,0.12),inset_0_0_40px_rgba(0,0,0,0.35)]"
                 )}
               >
                 <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" aria-hidden />
-                <h3 className="relative z-[1] mb-4 flex items-center gap-2 px-4 text-sm font-black uppercase tracking-[0.16em] sm:px-5 sm:text-base">
-                  <MessageCircle className="h-5 w-5 text-cyan-400" aria-hidden />
-                  <span className="bg-gradient-to-r from-cyan-200/90 to-amber-200/90 bg-clip-text text-transparent">
+                <h3 className="relative z-[1] mb-4 flex items-center gap-2 px-4 text-base font-black uppercase tracking-[0.16em] sm:px-5 sm:text-lg">
+                  <MessageCircle className="h-6 w-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.55)]" aria-hidden />
+                  <span className="bg-gradient-to-r from-cyan-200/90 to-amber-200/90 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.28)]">
                     Your history
                   </span>
                 </h3>

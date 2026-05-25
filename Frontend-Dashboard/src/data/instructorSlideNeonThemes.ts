@@ -38,6 +38,21 @@ export function getInstructorSlideNeonTheme(slideIndex: number): InstructorSlide
   return themes[((slideIndex % themes.length) + themes.length) % themes.length]!;
 }
 
+/** Top-bar chrome slots — each control gets its own dystopian neon border hue. */
+export const DASHBOARD_NAVBAR_CHROME_NEON = {
+  menu: 0,
+  search: 4,
+  bell: 5,
+  profile: 6,
+} as const;
+
+/** Dashboard control-center panels (operator hero + goals deck). */
+export const DASHBOARD_PANEL_NEON = {
+  hero: "multicolor" as const,
+  goals: 2,
+  path: 0,
+} as const;
+
 /** Shared CSS variables for neon borders, icons, and labels (slideshow + sidebar). */
 export function neonAccentStyleVars(theme: InstructorSlideNeonTheme): CSSProperties {
   return {

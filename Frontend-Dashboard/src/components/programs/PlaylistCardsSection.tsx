@@ -233,13 +233,30 @@ export function PlaylistCardsSection({
     });
   }, [visiblePlaylists]);
 
+  const spotlightActive = highlightedPlaylistId != null;
+  const activeSpotlightTheme = useMemo(() => {
+    if (highlightedPlaylistId == null) return null;
+    const idx = visiblePlaylists.findIndex((pl) => pl.id === highlightedPlaylistId);
+    const themeIdx = idx >= 0 ? idx : 0;
+    return PLAYLIST_CARD_THEMES[themeIdx % PLAYLIST_CARD_THEMES.length];
+  }, [highlightedPlaylistId, visiblePlaylists]);
+  const sectionSpotlightStyle = activeSpotlightTheme
+    ? ({
+        ["--spotlight-a" as string]: activeSpotlightTheme.spotlightA,
+        ["--spotlight-b" as string]: activeSpotlightTheme.spotlightB,
+      } as CSSProperties)
+    : undefined;
+
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const cardTitle = resolveProgramPlaylistTitle(pl);
     const cardSummary = resolveProgramPlaylistSummary(pl);
-    const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
+    const playlistThemeIdx = visiblePlaylists.findIndex((item) => item.id === pl.id);
+    const themeIdx = playlistThemeIdx >= 0 ? playlistThemeIdx : j;
+    const theme = PLAYLIST_CARD_THEMES[themeIdx % PLAYLIST_CARD_THEMES.length];
     const price = parseNumber(pl.price);
     const isSpotlight = highlightedPlaylistId === pl.id;
+    const showIdleGlow = !spotlightActive;
     const spotlightStyle = isSpotlight
       ? ({
           ["--spotlight-a" as string]: theme.spotlightA,
@@ -256,12 +273,17 @@ export function PlaylistCardsSection({
         className={cn(
           "group/card relative flex min-h-[22rem] w-full flex-col text-left sm:min-h-[27rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
-          isSpotlight ? "program-card-globe-spotlight" : "overflow-hidden",
-          !isSpotlight && theme.dominantBorder,
-          !isSpotlight && theme.glow
+          isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
+          showIdleGlow && !isSpotlight && theme.dominantBorder,
+          showIdleGlow && !isSpotlight && theme.glow
         )}
       >
-        {!isSpotlight ? (
+        {isSpotlight ? (
+          <>
+            <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
+            <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
+          </>
+        ) : showIdleGlow ? (
           <>
             <span
               className={cn(
@@ -297,7 +319,12 @@ export function PlaylistCardsSection({
             />
           </>
         ) : null}
-        <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
+        <span
+          className={cn(
+            "relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70",
+            isSpotlight && "program-card-globe-spotlight border-2",
+          )}
+        >
           <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-3 sm:p-3.5">
             <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[17rem] sm:flex-1">
               <ProgramPlaylistCoverImage
@@ -387,8 +414,12 @@ export function PlaylistCardsSection({
 
   return (
     <section
-      className={cn("relative space-y-5 overflow-hidden rounded-3xl px-1 py-2 sm:px-2 sm:py-3", className)}
-      data-globe-spotlight-active={highlightedPlaylistId != null ? "true" : undefined}
+      className={cn(
+        "relative space-y-5 overflow-visible rounded-3xl px-[clamp(0.65rem,2.8vw,1.75rem)] py-2 sm:px-4 sm:py-3",
+        className,
+      )}
+      data-globe-spotlight-active={spotlightActive ? "true" : undefined}
+      style={sectionSpotlightStyle}
     >
       <ProgramPlaylistDescriptionModal playlist={descriptionModalPlaylist} onClose={() => setDescriptionModalPlaylist(null)} />
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
@@ -405,7 +436,7 @@ export function PlaylistCardsSection({
 
       {visiblePlaylists.length > 0 ? (
         <>
-          <div className="mx-auto w-full max-w-[1800px] xl:hidden">
+          <div className="mx-auto w-full max-w-[1800px] overflow-visible xl:hidden">
             <div className="mb-3 grid grid-cols-2 gap-3">
               <div className="text-center font-mono text-[12px] font-extrabold uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7)] sm:text-[13px]">
                 {CATEGORY_LABELS.business_psychology}
@@ -414,13 +445,13 @@ export function PlaylistCardsSection({
                 {CATEGORY_LABELS.business_model}
               </div>
             </div>
-            <div className="relative space-y-4">
+            <div className="relative space-y-4 overflow-visible">
               <div
                 className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-10 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#f5c814]/90 to-transparent shadow-[0_0_10px_rgba(245,200,20,0.55)]"
                 aria-hidden
               />
               {mobilePairedRows.map((row) => (
-                <div key={`mobile-row-${row.idx}`} className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div key={`mobile-row-${row.idx}`} className="grid grid-cols-2 gap-3 overflow-visible sm:gap-4">
                   {row.psychology ? renderPlaylistCard(row.psychology, row.idx * 2) : <div aria-hidden />}
                   {row.model ? renderPlaylistCard(row.model, row.idx * 2 + 1) : <div aria-hidden />}
                 </div>
@@ -428,13 +459,13 @@ export function PlaylistCardsSection({
             </div>
           </div>
 
-          <div className="mx-auto hidden max-w-[1800px] grid-cols-1 gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-start">
-            <div className="space-y-3">
+          <div className="mx-auto hidden max-w-[1800px] grid-cols-1 gap-6 overflow-visible xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-start">
+            <div className="space-y-3 overflow-visible">
               <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
                 {CATEGORY_LABELS.business_psychology}
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">
                 {businessPsychologyPlaylists.map((pl, j) => renderPlaylistCard(pl, j))}
               </div>
             </div>
@@ -444,12 +475,12 @@ export function PlaylistCardsSection({
               <div className="absolute left-1/2 top-0 hidden h-full w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-[#f5c814] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_40px_rgba(245,200,20,0.7)] xl:block" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-visible">
               <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
                 {CATEGORY_LABELS.business_model}
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">
                 {businessModelPlaylists.map((pl, j) => renderPlaylistCard(pl, j + businessPsychologyPlaylists.length))}
               </div>
             </div>

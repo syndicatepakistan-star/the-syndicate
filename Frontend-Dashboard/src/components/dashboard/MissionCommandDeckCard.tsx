@@ -282,7 +282,7 @@ function MissionBucketPagination({
   if (total <= MISSION_PAGE_SIZE) return null;
   const btn =
     accent === "gold"
-      ? "border-[rgba(255,215,0,0.48)] bg-black/50 text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,235,160,0.65)] hover:shadow-[0_0_16px_rgba(255,200,0,0.22)] disabled:opacity-35"
+      ? "border-[color:var(--goals-milestones-line)] bg-black/50 text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,235,160,0.65)] hover:shadow-[0_0_16px_rgba(255,200,0,0.22)] disabled:opacity-35"
       : accent === "cyan"
         ? "border-cyan-400/45 bg-black/50 text-cyan-100 hover:border-cyan-300/70 hover:shadow-[0_0_16px_rgba(34,211,238,0.25)] disabled:opacity-35"
         : accent === "rose"
@@ -331,7 +331,7 @@ const FORM_MISSIONS =
 
 /** Inner list panels — per-column neon */
 const DECK_SUBPANEL_ACTIVE =
-  "min-w-0 rounded-xl border-2 border-[rgba(255,215,0,0.48)] bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(255,200,0,0.14),inset_0_1px_0_rgba(255,215,0,0.08)] md:p-4";
+  "min-w-0 rounded-xl border-2 border-[color:var(--goals-milestones-line)] bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(255,200,0,0.14),inset_0_1px_0_rgba(255,215,0,0.08)] md:p-4";
 const DECK_SUBPANEL_MISSED =
   "min-w-0 rounded-xl border-2 border-rose-400/42 bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(251,113,133,0.12),inset_0_1px_0_rgba(251,113,133,0.05)] md:p-4";
 const DECK_SUBPANEL_DONE =
@@ -1244,7 +1244,7 @@ export function MissionCommandDeckCard({
       ) : null}
 
       <div className="mb-5">
-        <DeckBrowseDateBar browseDate={browseDate} onBrowseDateChange={setBrowseDate} tone="gold" />
+        <DeckBrowseDateBar browseDate={browseDate} onBrowseDateChange={setBrowseDate} tone="fuchsia" />
       </div>
 
       <div className="flex w-full max-w-none min-w-0 flex-col gap-6 min-[1400px]:gap-8 lg:gap-7 xl:gap-8">
@@ -1268,7 +1268,7 @@ export function MissionCommandDeckCard({
                 </div>
                 <button
                   type="button"
-                  className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-[rgba(255,215,0,0.48)] bg-black/55 text-[color:var(--goals-milestones-gold)] shadow-[0_0_16px_rgba(255,200,0,0.22),inset_0_1px_0_rgba(255,235,160,0.08)] transition hover:border-[rgba(255,235,160,0.72)] hover:text-[rgba(255,248,220,0.98)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                  className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-[color:var(--goals-milestones-line)] bg-black/55 text-[color:var(--goals-milestones-gold)] shadow-[0_0_16px_rgba(255,200,0,0.22),inset_0_1px_0_rgba(255,235,160,0.08)] transition hover:border-[rgba(255,235,160,0.72)] hover:text-[rgba(255,248,220,0.98)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
                   aria-label={missionsHelpOpen ? "Hide missions info" : "What are missions?"}
                   aria-expanded={missionsHelpOpen}
                   aria-controls="missions-help-inline"
@@ -1281,7 +1281,7 @@ export function MissionCommandDeckCard({
               {missionsHelpOpen ? (
                 <div
                   id="missions-help-inline"
-                  className="mt-3 rounded-xl border border-[rgba(255,215,0,0.35)] bg-black/55 px-4 py-4 shadow-[0_0_24px_rgba(255,200,0,0.12),inset_0_1px_0_rgba(255,215,0,0.06)] sm:px-5 sm:py-5"
+                  className="mt-3 rounded-xl border border-[color:var(--goals-milestones-line)] bg-black/55 px-4 py-4 shadow-[0_0_24px_rgba(255,200,0,0.12),inset_0_1px_0_rgba(255,215,0,0.06)] sm:px-5 sm:py-5"
                   role="region"
                   aria-labelledby="missions-help-title"
                 >
@@ -1336,7 +1336,7 @@ export function MissionCommandDeckCard({
                     value={mDate}
                     onValueChange={setMDate}
                     disabled={useApiDeck && !canDeckWrite}
-                    tone="gold"
+                    tone="fuchsia"
                   />
                   <DeckTimeField
                     id="mission-target-time"
@@ -1345,7 +1345,7 @@ export function MissionCommandDeckCard({
                     value={mTime}
                     onValueChange={setMTime}
                     disabled={useApiDeck && !canDeckWrite}
-                    tone="gold"
+                    tone="fuchsia"
                   />
                 </div>
                 <motion.button
@@ -1353,7 +1353,7 @@ export function MissionCommandDeckCard({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => void addMission()}
                   disabled={useApiDeck && !canDeckWrite}
-                  className="w-full rounded-lg border-[rgba(255,215,0,0.58)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.15em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
+                  className="w-full rounded-lg border-[color:var(--goals-milestones-line)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.15em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
                 >
                   Create mission
                 </motion.button>
@@ -1363,7 +1363,7 @@ export function MissionCommandDeckCard({
             <div className={DECK_SUBPANEL_ACTIVE}>
               <div className={DECK_TITLE_ACTIVE}>Active missions</div>
               <DeckListToolbar
-                tone="gold"
+                tone="fuchsia"
                 search={mSearchA}
                 onSearchChange={setMSearchA}
                 sortLabel="Due"
@@ -1383,7 +1383,7 @@ export function MissionCommandDeckCard({
                       message="No active missions on this day."
                       actionLabel="Show all days"
                       onAction={() => setBrowseDate(null)}
-                      accentClass="border-[rgba(255,215,0,0.35)] bg-black/40"
+                      accentClass="border-[color:var(--goals-milestones-line)] bg-black/40"
                       ctaTone="gold"
                     />
                   ) : (
@@ -1391,7 +1391,7 @@ export function MissionCommandDeckCard({
                       message="Nothing in the active queue yet."
                       actionLabel="Create a mission"
                       onAction={focusMissionComposer}
-                      accentClass="border-[rgba(255,215,0,0.35)] bg-black/40"
+                      accentClass="border-[color:var(--goals-milestones-line)] bg-black/40"
                       ctaTone="gold"
                     />
                   )
@@ -1402,7 +1402,7 @@ export function MissionCommandDeckCard({
                     return (
                       <DeckListItem
                         key={m.id}
-                        tone="gold"
+                        tone="fuchsia"
                         title={m.title}
                         badge={<MissionStatusBadge status="active" />}
                         subtitle={
@@ -1436,7 +1436,7 @@ export function MissionCommandDeckCard({
                                 type="button"
                                 className={cn(
                                   DECK_ROW_BTN_PRIMARY,
-                                  "border-[rgba(255,215,0,0.48)] bg-[rgba(255,215,0,0.14)] text-[color:var(--goals-milestones-gold)] shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,220,0.08)] hover:border-[rgba(255,235,160,0.72)] hover:bg-[rgba(255,215,0,0.2)] focus-visible:ring-[rgba(255,215,0,0.55)]"
+                                  "border-[color:var(--goals-milestones-line)] bg-[rgba(255,215,0,0.14)] text-[color:var(--goals-milestones-gold)] shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,220,0.08)] hover:border-[rgba(255,235,160,0.72)] hover:bg-[rgba(255,215,0,0.2)] focus-visible:ring-[rgba(255,215,0,0.55)]"
                                 )}
                                 onClick={() => void patchMission(m.id, { status: "done" })}
                               >
@@ -1904,7 +1904,7 @@ export function MissionCommandDeckCard({
                 value={timeEditDate}
                 onValueChange={setTimeEditDate}
                 disabled={false}
-                tone="gold"
+                tone="fuchsia"
               />
               <DeckTimeField
                 id="deck-time-edit-time"
@@ -1913,7 +1913,7 @@ export function MissionCommandDeckCard({
                 value={timeEditTime}
                 onValueChange={setTimeEditTime}
                 disabled={false}
-                tone="gold"
+                tone="fuchsia"
               />
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -1931,7 +1931,7 @@ export function MissionCommandDeckCard({
                 type="button"
                 className={cn(
                   DECK_ROW_BTN_PRIMARY,
-                  "border-[rgba(255,215,0,0.52)] bg-[rgba(255,215,0,0.14)] text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,235,160,0.78)] focus-visible:ring-[rgba(255,215,0,0.55)]"
+                  "border-[color:var(--goals-milestones-line)] bg-[rgba(255,215,0,0.14)] text-[color:var(--goals-milestones-gold)] hover:border-[rgba(255,235,160,0.78)] focus-visible:ring-[rgba(255,215,0,0.55)]"
                 )}
                 disabled={!timeEditDate?.trim() || !timeEditTime?.trim() || !localDateAndTimeToIso(timeEditDate, timeEditTime)}
                 onClick={() => void saveTimeEdit()}

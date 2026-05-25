@@ -1,4 +1,10 @@
+import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { programPlaylistDeepLink } from "@/lib/programPlaylistThumbnails";
+
+export type ProgramLibraryScrollTarget = "public" | "dashboard";
+
+const DEFAULT_FOCUS_DELAYS_MS = [0, 120, 400, 900] as const;
+const DASHBOARD_FOCUS_DELAYS_MS = [0, 120, 400, 900, 1400, 2200, 3200] as const;
 
 /** Find the program card node that is visible (mobile or desktop layout). */
 export function findVisibleProgramCard(programId: number): HTMLElement | undefined {
@@ -42,12 +48,40 @@ export function scrollProgramCardIntoView(programId: number): boolean {
   return true;
 }
 
+/** Scroll the public or dashboard program library block into view. */
+export function scrollToProgramLibrary(target: ProgramLibraryScrollTarget = "public"): void {
+  if (typeof window === "undefined") return;
+  const id = target === "dashboard" ? "dashboard-programs-library" : "programs-library";
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (target === "dashboard") {
+    requestDashboardShellNav("programs");
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 450);
+    return;
+  }
+  window.location.hash = "programs-library";
+}
+
+function isDashboardProgramsSection(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.location.pathname === "/dashboard" &&
+    new URLSearchParams(window.location.search).get("section") === "programs"
+  );
+}
+
 /** Retry scroll while layout/images load after route change. */
 export function focusProgramCardWithRetries(
   programId: number,
-  onComplete?: () => void
+  onComplete?: () => void,
+  options?: { delays?: readonly number[] },
 ): () => void {
-  const delays = [0, 100, 250, 500, 900, 1400, 2200, 3200];
+  const delays = options?.delays ?? DEFAULT_FOCUS_DELAYS_MS;
   const timers = delays.map((ms) =>
     window.setTimeout(() => {
       scrollProgramCardIntoView(programId);
@@ -64,16 +98,47 @@ export function focusProgramCardWithRetries(
   };
 }
 
-/** Globe-style deep link: highlight and scroll to the program library card. */
+/** Dashboard programs tab: switch section, set playlist query, scroll to card. */
+export function navigateToDashboardProgramCard(programId: number): void {
+  if (typeof window === "undefined") return;
+
+  const applyUrl = () => {
+    const url = new URL(window.location.href);
+    url.pathname = "/dashboard";
+    url.searchParams.set("section", "programs");
+    url.searchParams.set("playlist", String(programId));
+    window.history.replaceState({}, "", `${url.pathname}?${url.search}`);
+  };
+
+  const focus = () => {
+    focusProgramCardWithRetries(programId, undefined, {
+      delays: isDashboardProgramsSection() ? DEFAULT_FOCUS_DELAYS_MS : DASHBOARD_FOCUS_DELAYS_MS,
+    });
+  };
+
+  if (!isDashboardProgramsSection()) {
+    requestDashboardShellNav("programs");
+    window.setTimeout(() => {
+      applyUrl();
+      focus();
+    }, 80);
+    return;
+  }
+
+  applyUrl();
+  focus();
+}
+
+/** Deep link: highlight and scroll to the program library card. */
 export function navigateToProgramLibraryCard(programId: number): void {
   if (typeof window === "undefined") return;
+  if (window.location.pathname.startsWith("/dashboard")) {
+    navigateToDashboardProgramCard(programId);
+    return;
+  }
   const target = programPlaylistDeepLink(programId);
   if (window.location.pathname === "/programs") {
     window.history.pushState({}, "", target);
-    const library = document.getElementById("programs-library");
-    if (library) {
-      library.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
     focusProgramCardWithRetries(programId);
     return;
   }

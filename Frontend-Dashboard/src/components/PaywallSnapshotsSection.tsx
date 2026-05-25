@@ -126,19 +126,14 @@ export default function PaywallSnapshotsSection() {
           ))}
         </div>
 
-        <div className="mx-auto mt-10 max-w-6xl text-center sm:mt-12">
-          <h3 className="mx-auto mt-2 flex w-full max-w-5xl flex-col items-center gap-y-4 text-3xl font-black uppercase leading-[1.2] tracking-[0.06em] text-amber-100 drop-shadow-[0_0_16px_rgba(251,191,36,0.42)] sm:gap-y-5 sm:text-4xl md:text-5xl">
-            <span className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-6 md:gap-x-8">
-              <span className="whitespace-nowrap">IF YOU WANT TO</span>
-              <span className="paywall-headline-attract inline-block whitespace-nowrap px-2 text-amber-200 drop-shadow-[0_0_28px_rgba(251,191,36,0.95)] sm:px-4">
-                MASTER MONEY AND POWER
-              </span>
+        <div className="paywall-cta-block relative left-1/2 mt-10 w-screen max-w-[100vw] -translate-x-1/2 px-4 text-center sm:mt-12 sm:px-6">
+          <h3 className="paywall-cta-headline mx-auto w-full max-w-none text-3xl font-black uppercase text-amber-100 sm:text-4xl md:text-5xl">
+            <span className="paywall-cta-headline__line block">IF YOU WANT TO</span>
+            <span className="paywall-cta-headline__line paywall-cta-headline__line--glow block">
+              MASTER MONEY AND POWER
             </span>
-            <span className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-6 md:gap-x-8">
-              <span className="whitespace-nowrap">JOIN</span>
-              <span className="paywall-headline-attract inline-block whitespace-nowrap px-2 text-amber-100 drop-shadow-[0_0_26px_rgba(251,191,36,0.9)] sm:px-4">
-                THE SYNDICATE NOW
-              </span>
+            <span className="paywall-cta-headline__line paywall-cta-headline__line--glow block">
+              JOIN THE SYNDICATE NOW
             </span>
           </h3>
           <div className="mt-8 flex flex-wrap justify-center gap-x-7 gap-y-4 sm:mt-10">

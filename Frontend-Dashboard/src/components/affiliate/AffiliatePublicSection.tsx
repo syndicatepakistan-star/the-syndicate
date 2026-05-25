@@ -23,9 +23,9 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
     <section
       id="affiliate-program"
       className={cn(
-        'relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden',
-        'min-h-[60vh] shadow-[0_0_48px_rgba(251,191,36,0.08)]',
-        'px-[clamp(0.75rem,2.2vw,2rem)] py-12 md:py-16',
+        'relative left-1/2 z-[2] flex w-[100vw] min-w-[100vw] max-w-none -translate-x-1/2 flex-col overflow-hidden',
+        'min-h-[min(100vh,1080px)] shadow-[0_0_48px_rgba(251,191,36,0.08)]',
+        'px-[clamp(1.25rem,5vw,3.75rem)] pt-12 pb-[clamp(5rem,18vh,11rem)] md:pt-16 md:pb-[clamp(6.5rem,22vh,13rem)]',
         className,
       )}
       aria-labelledby="affiliate-program-heading"
@@ -49,17 +49,20 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         />
       </div>
 
-      {/* Flat read layer — no colour wash over the footage */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[#030308]/93" aria-hidden />
+      {/* Flat read layer — lighter toward bottom so footage fills the section edge */}
       <div
-        className="pointer-events-none absolute inset-0 z-[1] shadow-[inset_0_0_120px_rgba(0,0,0,0.78),inset_0_0_48px_rgba(0,0,0,0.55)]"
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[#030308]/94 via-[#030308]/90 to-[#030308]/82"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] shadow-[inset_0_0_80px_rgba(0,0,0,0.65),inset_0_-24px_64px_rgba(0,0,0,0.45)]"
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 md:min-h-[calc(60vh-6rem)] md:flex-row md:items-center md:justify-between md:gap-16 lg:gap-24 xl:gap-28">
-        <div className="min-w-0 flex-1 px-2 md:max-w-[min(100%,42rem)] md:px-0 lg:max-w-[46rem]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-1 flex-col gap-10 md:min-h-[calc(100vh-12rem)] md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
+        <div className="flex min-h-[clamp(20rem,48vh,28rem)] min-w-0 w-full flex-[1.15] flex-col md:min-h-[min(540px,62vh)] lg:flex-[1.2]">
           <div
-            className={cn('lightning-glow-card relative w-full', AFFILIATE_NOTCH_CLIP)}
+            className={cn('lightning-glow-card relative h-full min-h-[inherit] w-full max-w-none', AFFILIATE_NOTCH_CLIP)}
             style={
               {
                 ['--lightning-color' as string]: 'rgba(34, 211, 238, 0.92)',
@@ -76,7 +79,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             />
             <div
               className={cn(
-                'relative overflow-hidden rounded-3xl border border-cyan-400/38 bg-[linear-gradient(168deg,rgba(0,0,0,0.4)_0%,rgba(0,0,0,0.4)_50%,rgba(0,0,0,0.4)_100%)] px-5 py-6 text-center shadow-[0_0_0_1px_rgba(34,211,238,0.42),0_0_32px_rgba(34,211,238,0.32),0_0_64px_rgba(217,70,239,0.16),inset_0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-sm sm:px-7 sm:py-8 md:text-left',
+                'relative flex h-full min-h-[inherit] flex-col overflow-hidden rounded-3xl border border-cyan-400/38 bg-[linear-gradient(168deg,rgba(0,0,0,0.4)_0%,rgba(0,0,0,0.4)_50%,rgba(0,0,0,0.4)_100%)] px-6 py-8 text-center shadow-[0_0_0_1px_rgba(34,211,238,0.42),0_0_32px_rgba(34,211,238,0.32),0_0_64px_rgba(217,70,239,0.16),inset_0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-sm sm:px-9 sm:py-10 md:px-10 md:py-12 md:text-left lg:px-12 lg:py-14',
                 AFFILIATE_NOTCH_CLIP,
               )}
             >
@@ -87,11 +90,11 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     'polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)',
                 }}
               />
-              <div className="relative z-[1]">
+              <div className="relative z-[1] flex flex-1 flex-col">
                 <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start md:gap-4">
                   <h2
                     id="affiliate-program-heading"
-                    className="programs-heading-glow font-display text-4xl font-black uppercase tracking-[0.12em] text-white sm:text-5xl md:text-6xl md:tracking-[0.14em] lg:text-7xl"
+                    className="programs-heading-glow font-display text-[clamp(2.25rem,5vw,3.5rem)] font-black uppercase tracking-[0.12em] text-white sm:text-5xl md:text-6xl md:tracking-[0.14em] lg:text-7xl xl:text-8xl"
                   >
                     Affiliate
                   </h2>
@@ -107,13 +110,13 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     <span className="sr-only">How affiliate login works</span>
                   </button>
                 </div>
-                <p className="mx-auto mt-5 max-w-none font-mono text-[0.92rem] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-[0.98rem] md:mx-0">
+                <p className="mx-auto mt-5 max-w-none font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-base md:mx-0 md:text-lg">
                   <span className="text-fuchsia-200/95">Weaponize the link.</span> Your referral IDs sit on every click,
                   every lead, every checkout that rolls through your pipe — funnel, partner dashboard, commissions that
                   don&apos;t sugar-coat the truth. Built for{' '}
                   <strong className="text-white">operators</strong> who want leverage, not slide decks.
                 </p>
-                <p className="mx-auto mt-4 max-w-none font-mono text-[0.86rem] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.9rem] md:mx-0">
+                <p className="mx-auto mt-4 max-w-none font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.95rem] md:mx-0 md:text-base lg:text-lg">
                   <span className="text-cyan-200/90">Lock the channel.</span> Once you&apos;re cleared, hit{' '}
                   <strong className="text-white">Affiliate login</strong> with the email we already hold — we ship a{' '}
                   <strong className="text-amber-200/95">one-shot OTP</strong> (same luxury flow as members). Punch the
@@ -135,14 +138,14 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
 
         {/* Coin — wheel spin on Y axis + neon rim glow */}
         <div
-          className="hamburger-attract relative flex shrink-0 items-center justify-center self-center md:self-auto [perspective:900px]"
+          className="hamburger-attract relative flex min-h-[clamp(18rem,44vh,26rem)] w-full min-w-0 flex-1 items-center justify-center self-center md:min-h-[min(540px,62vh)] md:max-w-[44vw] md:flex-[1] lg:max-w-[42vw] [perspective:1100px]"
           aria-hidden
         >
-          <div className="absolute inset-0 blur-3xl md:scale-110">
-            <div className="mx-auto h-64 w-64 rounded-full bg-gradient-to-br from-amber-400/35 via-amber-500/20 to-amber-600/10 sm:h-72 sm:w-72 md:h-96 md:w-96 lg:h-[28rem] lg:w-[28rem]" />
+          <div className="absolute inset-0 blur-3xl md:scale-125">
+            <div className="mx-auto h-[clamp(16rem,38vw,22rem)] w-[clamp(16rem,38vw,22rem)] rounded-full bg-gradient-to-br from-amber-400/35 via-amber-500/20 to-amber-600/10 sm:h-[clamp(18rem,42vw,24rem)] sm:w-[clamp(18rem,42vw,24rem)] md:h-[clamp(20rem,36vw,26rem)] md:w-[clamp(20rem,36vw,26rem)] lg:h-[clamp(22rem,34vw,28rem)] lg:w-[clamp(22rem,34vw,28rem)]" />
           </div>
           <motion.div
-            className="relative rounded-full border border-amber-300/70 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_16px_rgba(251,191,36,0.28),0_0_40px_rgba(251,191,36,0.35),0_22px_48px_rgba(0,0,0,0.88)] ring-2 ring-amber-300/70 ring-offset-4 ring-offset-[#070510]/90"
+            className="relative rounded-full border border-amber-300/70 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_20px_rgba(251,191,36,0.32),0_0_48px_rgba(251,191,36,0.4),0_24px_56px_rgba(0,0,0,0.88)] ring-2 ring-amber-300/70 ring-offset-[6px] ring-offset-[#070510]/90 md:ring-offset-8"
             style={{ transformStyle: 'preserve-3d' }}
             animate={{ rotateY: [0, 360] }}
             transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
@@ -150,16 +153,16 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             <Image
               src="/assets/coin-gold.png"
               alt=""
-              width={512}
-              height={512}
-              className="relative h-60 w-60 object-contain drop-shadow-[0_10px_28px_rgba(0,0,0,0.92)] sm:h-64 sm:w-64 md:h-80 md:w-80 lg:h-96 lg:w-96"
-              sizes="(max-width: 640px) 240px, (max-width: 1024px) 320px, 384px"
+              width={640}
+              height={640}
+              className="relative h-[clamp(15rem,36vw,20rem)] w-[clamp(15rem,36vw,20rem)] object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.92)] sm:h-[clamp(17rem,40vw,22rem)] sm:w-[clamp(17rem,40vw,22rem)] md:h-[clamp(19rem,34vw,24rem)] md:w-[clamp(19rem,34vw,24rem)] lg:h-[clamp(21rem,32vw,26rem)] lg:w-[clamp(21rem,32vw,26rem)] xl:h-[28rem] xl:w-[28rem]"
+              sizes="(max-width: 640px) 320px, (max-width: 1024px) 420px, (max-width: 1280px) 480px, 560px"
             />
           </motion.div>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-8 w-full max-w-6xl md:mt-0">
+      <div className="relative z-10 mx-auto mt-8 w-full max-w-[min(1720px,calc(100vw-2.5rem))] md:mt-0">
         {helpOpen ? (
           <motion.div
             id="affiliate-how-panel"
@@ -180,8 +183,10 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             </p>
           </motion.div>
         ) : null}
-
       </div>
+
+      {/* Fills remaining min-height so money background covers the bottom band */}
+      <div className="relative z-0 min-h-[clamp(3.5rem,12vh,7rem)] flex-1 shrink-0" aria-hidden />
     </section>
   )
 }

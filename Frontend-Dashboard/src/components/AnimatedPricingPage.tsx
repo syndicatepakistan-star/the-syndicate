@@ -439,15 +439,26 @@ export function PricingPage({
     <section
       id="pricing"
       className={cn(
-        'relative w-full min-h-screen overflow-hidden bg-background px-[clamp(0.75rem,2.2vw,2rem)] py-20 md:py-24',
+        'relative isolate w-full min-h-[100dvh] overflow-x-clip overflow-y-visible bg-black px-[clamp(0.75rem,2.2vw,2rem)] pt-20 pb-0 md:pt-24',
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0">
-        <Image src="/assets/g.gif" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-50" unoptimized />
-        <div className="absolute inset-0 bg-black/82" />
+      <div
+        className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[100vw] max-w-none -translate-x-1/2 overflow-hidden"
+        aria-hidden
+      >
+        <video
+          className="absolute inset-0 h-full min-h-full w-full min-w-full object-cover opacity-10"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        >
+          <source src="/assets/video2.mp4" type="video/mp4" />
+        </video>
       </div>
-      <div className="relative mx-auto flex w-full max-w-none flex-col items-center">
+      <div className="relative z-[1] mx-auto flex w-full max-w-none flex-col items-center">
         <header className="mb-12 flex w-full justify-center px-[clamp(0.5rem,2vw,1rem)] md:mb-16">
           <div
             className={cn('lightning-glow-card relative w-full max-w-[min(920px,calc(100vw-1.5rem))]', PRICING_NOTCH_CLIP)}
@@ -521,7 +532,7 @@ export function PricingPage({
           </div>
         </header>
 
-        <div className="relative mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 rounded-3xl border border-white/8 bg-black/45 px-[clamp(0.5rem,2vw,1.25rem)] py-6 shadow-[0_0_60px_rgba(0,0,0,0.55),inset_0_0_80px_rgba(34,211,238,0.06)] backdrop-blur-sm sm:gap-7 sm:py-8 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="relative mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 rounded-3xl border border-white/8 bg-transparent px-[clamp(0.5rem,2vw,1.25rem)] py-6 shadow-[0_0_60px_rgba(0,0,0,0.35),inset_0_0_80px_rgba(34,211,238,0.06)] sm:gap-7 sm:py-8 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
           {tiers.map(({ key, tier }) => (
             <div
               key={key}
@@ -539,8 +550,9 @@ export function PricingPage({
           ))}
         </div>
 
-        <AffiliatePublicSection className="mt-[clamp(2.75rem,8vw,5rem)]" />
       </div>
+
+      <AffiliatePublicSection className="mt-[clamp(2.75rem,8vw,5rem)]" />
     </section>
   )
 }

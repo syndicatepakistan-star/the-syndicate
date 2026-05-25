@@ -242,13 +242,21 @@ export default function WhatYouGetPage() {
                         </p>
                       </CyberInsetPanel>
                     </div>
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <Link href="/our-methods" prefetch className="cta-nav-button text-sm font-semibold">
-                        Our Methods
-                      </Link>
-                      <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                        Membership
-                      </Link>
+                    <div className="mt-6 border-t border-white/10 pt-6">
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/80 sm:text-xs">
+                        Next move
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
+                          Enter membership
+                        </Link>
+                        <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
+                          View programs
+                        </Link>
+                        <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
+                          Syn diagnosis
+                        </Link>
+                      </div>
                     </div>
                   </CyberChamferFrame>
 
@@ -279,85 +287,81 @@ export default function WhatYouGetPage() {
                       Kings · emperors · operators
                     </p>
                   </div>
-                  <div className="mt-6 grid gap-4 sm:gap-5">
-                    {ROYAL_PATH_ITEMS.map((item, idx) => (
-                      <article
-                        key={item.step}
-                        className={cx(
-                          'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
-                          item.border,
-                          item.glow,
-                          item.panel
-                        )}
-                        style={{ animationDelay: `${idx * 0.12}s` }}
-                      >
-                        <span
-                          className="pointer-events-none absolute inset-[5px] rounded-[14px] border border-white/10 opacity-80"
-                          aria-hidden
-                        />
-                        <span
-                          className="pointer-events-none absolute left-3 top-3 h-6 w-6 border-l-2 border-t-2 border-white/25"
-                          aria-hidden
-                        />
-                        <span
-                          className="pointer-events-none absolute bottom-3 right-3 h-6 w-6 border-b-2 border-r-2 border-white/25"
-                          aria-hidden
-                        />
-                        <div className="relative z-[1] grid gap-4 sm:grid-cols-[minmax(5.5rem,auto)_1fr] sm:items-start sm:gap-5">
-                          <div className="flex flex-row items-center gap-3 sm:flex-col sm:items-start sm:gap-2">
-                            <span
-                              className={cx(
-                                'inline-flex min-w-[3.25rem] items-center justify-center rounded-lg border-2 px-3 py-1.5 font-mono text-sm font-black tracking-[0.2em]',
-                                item.stepClass
-                              )}
-                            >
-                              {item.step}
-                            </span>
-                            <span
-                              className={cx(
-                                'font-mono text-[10px] font-bold uppercase tracking-[0.28em] sm:text-[11px]',
-                                item.tagClass
-                              )}
-                            >
-                              {item.tag}
-                            </span>
+                  <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(240px,340px)] lg:items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] xl:gap-8">
+                    <div className="grid min-w-0 gap-4 sm:gap-5">
+                      {ROYAL_PATH_ITEMS.map((item, idx) => (
+                        <article
+                          key={item.step}
+                          className={cx(
+                            'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
+                            item.border,
+                            item.glow,
+                            item.panel
+                          )}
+                          style={{ animationDelay: `${idx * 0.12}s` }}
+                        >
+                          <span
+                            className="pointer-events-none absolute inset-[5px] rounded-[14px] border border-white/10 opacity-80"
+                            aria-hidden
+                          />
+                          <span
+                            className="pointer-events-none absolute left-3 top-3 h-6 w-6 border-l-2 border-t-2 border-white/25"
+                            aria-hidden
+                          />
+                          <span
+                            className="pointer-events-none absolute bottom-3 right-3 h-6 w-6 border-b-2 border-r-2 border-white/25"
+                            aria-hidden
+                          />
+                          <div className="relative z-[1] grid gap-4 sm:grid-cols-[minmax(5.5rem,auto)_1fr] sm:items-start sm:gap-5">
+                            <div className="flex flex-row items-center gap-3 sm:flex-col sm:items-start sm:gap-2">
+                              <span
+                                className={cx(
+                                  'inline-flex min-w-[3.25rem] items-center justify-center rounded-lg border-2 px-3 py-1.5 font-mono text-sm font-black tracking-[0.2em]',
+                                  item.stepClass
+                                )}
+                              >
+                                {item.step}
+                              </span>
+                              <span
+                                className={cx(
+                                  'font-mono text-[10px] font-bold uppercase tracking-[0.28em] sm:text-[11px]',
+                                  item.tagClass
+                                )}
+                              >
+                                {item.tag}
+                              </span>
+                            </div>
+                            <p className={cx('text-base leading-relaxed sm:text-lg', item.lineClass)}>{item.line}</p>
                           </div>
-                          <p className={cx('text-base leading-relaxed sm:text-lg', item.lineClass)}>{item.line}</p>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                  <div className="mx-auto mt-8 flex w-full max-w-[320px] justify-center sm:mt-10 sm:max-w-[360px]">
-                    <Image
-                      src="/assets/coin-gold.png"
-                      alt="Syndicate seal"
-                      width={360}
-                      height={360}
-                      className="coin-wheel-lr h-auto w-full object-contain"
-                    />
+                        </article>
+                      ))}
+                    </div>
+
+                    <CyberChamferFrame
+                      accent="cyan"
+                      chamfer={18}
+                      decorSize="compact"
+                      className="mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:mx-0 lg:h-full lg:max-w-none"
+                      innerClassName="flex h-full min-h-[clamp(22rem,52vw,28rem)] flex-col p-2 sm:min-h-[clamp(26rem,48vw,32rem)] lg:min-h-full"
+                      contentClassName="flex min-h-0 flex-1 flex-col"
+                    >
+                      <div className="relative min-h-[clamp(20rem,48vw,24rem)] w-full flex-1 overflow-hidden sm:min-h-[clamp(24rem,44vw,28rem)]">
+                        <Image
+                          src="/assets/lineage-re-armed.jpg"
+                          alt="Lineage re-armed — Syndicate doctrine and modern power"
+                          fill
+                          sizes="(max-width: 1024px) 360px, 420px"
+                          className="object-cover object-center"
+                          priority={false}
+                        />
+                        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black/55 via-transparent to-black/20" />
+                      </div>
+                    </CyberChamferFrame>
                   </div>
                 </CyberChamferFrame>
               </div>
             </section>
 
-            <section className="px-[clamp(1rem,3vw,2.2rem)] pb-14 sm:pb-20">
-              <div className="mx-auto max-w-[96rem]">
-                <CyberChamferFrame accent="cyan" chamfer={16} decorSize="compact" innerClassName="p-6 text-center sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80">Next move</p>
-                  <div className="mt-6 flex flex-wrap justify-center gap-4">
-                    <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                      Enter membership
-                    </Link>
-                    <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
-                      View programs
-                    </Link>
-                    <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
-                      Syn diagnosis
-                    </Link>
-                  </div>
-                </CyberChamferFrame>
-              </div>
-            </section>
           </div>
         </div>
       </main>

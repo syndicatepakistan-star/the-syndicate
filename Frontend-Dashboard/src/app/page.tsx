@@ -16,6 +16,7 @@ import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/compon
 import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
 import { attachProgramLinksToGalleryImages } from '@/lib/programGalleryLinks'
+import { GLOBE_IMAGE_ALT_OVERRIDES } from '@/lib/programPlaylistThumbnails'
 import { applyGlobeGalleryOverrides } from '@/lib/programPlaylistThumbnails'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
@@ -44,7 +45,7 @@ const FEATURED_PROGRAM_IMAGES = [
   { src: courseImage('canvics-to-canva.png'), alt: 'Graphics Design using Canva' },
   { src: courseImage('flutter-app-building.png'), alt: 'App Building using Flutter' },
   { src: courseImage('automaton-name-change.png'), alt: 'AI Automations' },
-  { src: courseImage('new-project.png'), alt: 'Trading with Technical Analysis' },
+  { src: courseImage('trading with technical analysis.png'), alt: 'Trading with Technical Analysis' },
   { src: courseImage('dystopian-demand.png'), alt: 'Print on Demand Clothing' },
   { src: courseImage('make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0.png'), alt: 'Python Programming' },
   { src: courseImage('new-project (12).png'), alt: 'Building Apps using React JS' },
@@ -121,7 +122,7 @@ async function readProgramGalleryImages() {
     if (files.length > 0) {
       return files.map((file, index) => ({
         src: courseImage(file),
-        alt: toLabel(file) || `Program image ${index + 1}`,
+        alt: GLOBE_IMAGE_ALT_OVERRIDES[file] ?? (toLabel(file) || `Program image ${index + 1}`),
         fileName: file,
       }))
     }
@@ -135,7 +136,7 @@ async function readProgramGalleryImages() {
   }))
 }
 
-const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-program-gallery-images'], {
+const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-program-gallery-images-v2'], {
   revalidate: 3600,
 })
 
@@ -145,7 +146,7 @@ const getLinkedProgramGalleryImages = unstable_cache(
     const playlists = await fetchPublicPlaylistsServer()
     return attachProgramLinksToGalleryImages(images, playlists)
   },
-  ['home-program-gallery-linked'],
+  ['home-program-gallery-linked-v2'],
   { revalidate: 3600 }
 )
 

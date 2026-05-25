@@ -117,6 +117,7 @@ export function CyberChamferFrame({
   chamfer = 24,
   className,
   innerClassName,
+  contentClassName,
   children,
   decorSize = 'default',
   /** Outer gradient ring thickness (Tailwind padding on the ring layer). Default matches legacy frames. */
@@ -128,6 +129,8 @@ export function CyberChamferFrame({
   chamfer?: number
   className?: string
   innerClassName?: string
+  /** Wrapper around children (above frame overlays). Use for `h-full` / flex fill layouts. */
+  contentClassName?: string
   children: ReactNode
   decorSize?: 'default' | 'compact'
   ringPaddingClass?: string
@@ -214,7 +217,7 @@ export function CyberChamferFrame({
           )}
           aria-hidden
         />
-        <div className="relative z-10">{children}</div>
+        <div className={cx('relative z-10', contentClassName)}>{children}</div>
       </div>
     </div>
   )

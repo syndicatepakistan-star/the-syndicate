@@ -4,6 +4,11 @@ import { createPortal } from "react-dom";
 import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { DashboardNavKey, NotificationItem } from "./types";
+import {
+  DASHBOARD_NAVBAR_CHROME_NEON,
+  getInstructorSlideNeonTheme,
+  neonAccentStyleVars
+} from "@/data/instructorSlideNeonThemes";
 import { cn, themeAccent, type ThemeMode } from "./dashboardPrimitives";
 import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardSnapshots";
 
@@ -165,10 +170,15 @@ export function NotificationBell({
     };
   }, [variant, open, overlayMount, setPanelOpen]);
 
+  const navbarChromeNeonStyle =
+    variant === "navbar"
+      ? neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.bell))
+      : undefined;
+
   const btnClass =
     variant === "navbar"
       ? cn(
-          "navbar-chrome-btn cut-frame-sm cyber-frame gold-stroke relative grid shrink-0 place-items-center border bg-black/70 text-[color:var(--gold-neon)]/95",
+          "navbar-chrome-btn navbar-chrome-neon cut-frame-sm cyber-frame gold-stroke relative grid shrink-0 place-items-center border bg-black text-[color:var(--neon-accent-bright)]/95",
           "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10",
           "origin-center transition-[transform,box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none",
           "hud-hover-glow"
@@ -188,7 +198,7 @@ export function NotificationBell({
         whileHover={variant === "navbar" ? { scale: 1 } : { scale: 1.04 }}
         whileTap={variant === "navbar" ? { scale: 1 } : { scale: 0.98 }}
         className={btnClass}
-        style={variant === "hero" ? { borderColor: t.border } : undefined}
+        style={variant === "navbar" ? navbarChromeNeonStyle : variant === "hero" ? { borderColor: t.border } : undefined}
         aria-label={unread > 0 ? `Notifications, ${unread > 9 ? "9 plus" : unread} unread` : "Notifications"}
         aria-expanded={open}
       >

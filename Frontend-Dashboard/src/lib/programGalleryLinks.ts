@@ -21,7 +21,7 @@ const FILE_HINTS: Record<string, string> = {
   "canvics-to-canva": "Graphics Design Using Canva",
   "flutter-app-building": "App Building (using Flutter)",
   "automaton-name-change": "AI Automations",
-  "new-project": "Trading with Technical Analysis Course",
+  "trading with technical analysis": "Trading with Technical Analysis Course",
   "dystopian-demand": "Print On Demand Clothing",
   "make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0":
     "Python Programming",

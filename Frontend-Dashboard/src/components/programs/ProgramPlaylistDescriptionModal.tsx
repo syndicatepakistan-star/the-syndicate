@@ -438,15 +438,21 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
   useEffect(() => {
     if (!playlist || typeof document === "undefined") return;
     const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });

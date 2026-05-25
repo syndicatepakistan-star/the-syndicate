@@ -47,7 +47,7 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   15: courseThumb("faceless youtube.jpeg"),
   16: courseThumb("automaton-name-change.png"),
   17: courseThumb("new-project (1).png"),
-  18: courseThumb("new-project.png"),
+  18: courseThumb("trading with technical analysis.png"),
   19: courseThumb("dystopian-demand.png"),
   20: courseThumb(
     "make_best_thumbnails_or_cover_image_of_program_building_games_using_unreal_engine__dn7rcqknsnsvvwiu1pvf_0.png"
@@ -77,7 +77,15 @@ export const GLOBE_FILENAME_TO_PROGRAM_ID: Record<string, number> = Object.fromE
 );
 
 /** Course covers omitted from the homepage globe (see GLOBE_REPLACEMENT_TILES). */
-export const GLOBE_EXCLUDED_FILENAMES = new Set<string>(["humanbehaviou.png"]);
+export const GLOBE_EXCLUDED_FILENAMES = new Set<string>([
+  "humanbehaviou.png",
+  "new-project.png",
+]);
+
+/** Homepage globe tile labels (filename → display alt). */
+export const GLOBE_IMAGE_ALT_OVERRIDES: Record<string, string> = {
+  "trading with technical analysis.png": "Trading with Technical Analysis",
+};
 
 export type GlobeReplacementTile = {
   programId: number;

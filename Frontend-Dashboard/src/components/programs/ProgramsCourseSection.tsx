@@ -9,6 +9,7 @@ import {
   ProgramPlaylistDescriptionModal,
   PROGRAM_DETAIL_TRIGGER_ATTR,
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
+import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -514,6 +515,8 @@ export function ProgramsCourseSection({
     return (
       <article
         key={`playlist-${pl.id}`}
+        id={`program-playlist-${pl.id}`}
+        data-program-playlist-id={pl.id}
         tabIndex={comingSoon ? -1 : 0}
         onClick={(e) => {
           if ((e.target as HTMLElement).closest(detailSelector)) return;
@@ -649,6 +652,13 @@ export function ProgramsCourseSection({
                     onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                     onCheckoutError={setCheckoutError}
                   />
+                  {streamPlaylists.length > 0 ? (
+                    <PublicGoalPathSection
+                      playlists={streamPlaylists}
+                      libraryTarget="dashboard"
+                      className="relative w-full max-w-none px-0 pb-2 pt-4 sm:pb-5 sm:pt-5"
+                    />
+                  ) : null}
                   {hasCatalogItems && streamPlaylists.length > 0 ? (
                     <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
                       <div className="mx-auto w-full max-w-4xl space-y-3">
@@ -746,7 +756,7 @@ export function ProgramsCourseSection({
           ) : null}
 
           {hasCatalogItems && secureView === "grid" ? (
-            <div className="space-y-6">
+            <div id="dashboard-programs-library" className="scroll-mt-24 space-y-6">
               {visibleStreamPlaylistCount === 0 && streamPlaylists.length > 0 ? (
                 <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">
                   No playlists found in this category yet.

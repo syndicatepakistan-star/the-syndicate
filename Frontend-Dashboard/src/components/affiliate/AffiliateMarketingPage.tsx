@@ -107,11 +107,11 @@ export default function AffiliateMarketingPage() {
 
       <NavApp />
 
-      <div className="pointer-events-none fixed left-[max(0.75rem,env(safe-area-inset-left))] top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem))] z-[55] sm:left-5">
+      <div className="affiliate-page-login-fab pointer-events-none fixed left-[max(0.75rem,env(safe-area-inset-left))] top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem))] z-[55] sm:left-5">
         <Link
           href={AFFILIATE_LOGIN_HREF}
           prefetch
-          className="cta-nav-button pointer-events-auto whitespace-nowrap text-xs font-semibold sm:text-sm"
+          className="affiliate-page-login-fab__btn cta-nav-button pointer-events-auto whitespace-nowrap text-xs font-semibold sm:text-sm"
         >
           Affiliate login
         </Link>

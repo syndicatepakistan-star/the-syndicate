@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
-import { themeAccent, type ThemeMode } from "../dashboardPrimitives";
+import { DASHBOARD_PANEL_NEON, getInstructorSlideNeonTheme, neonAccentStyleVars } from "@/data/instructorSlideNeonThemes";
+import { type ThemeMode } from "../dashboardPrimitives";
 import type { GoalId } from "./goalPathData";
 import { ROADMAPS } from "./goalPathData";
 import { PathSelector } from "./PathSelector";
@@ -40,7 +41,7 @@ function writePersist(p: Persisted) {
 }
 
 export function GoalPathSystem({
-  themeMode,
+  themeMode: _themeMode,
   courses,
   playlists = [],
   opportunityCardFrame = "path",
@@ -56,7 +57,7 @@ export function GoalPathSystem({
   opportunityContentMode?: OpportunityContentMode;
   onContinue: () => void;
 }) {
-  const t = themeAccent(themeMode);
+  const pathNeon = getInstructorSlideNeonTheme(DASHBOARD_PANEL_NEON.path);
   const [persist, setPersist] = useState<Persisted>(() => readPersist());
 
   useEffect(() => {
@@ -78,16 +79,10 @@ export function GoalPathSystem({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="cut-frame cyber-frame gold-stroke relative w-full min-w-0 max-w-none overflow-hidden border border-[rgba(197,179,88,0.32)] bg-[#050505]/90 fluid-shell-p backdrop-blur-[12px]"
-      style={{
-        borderColor: t.border,
-        boxShadow: `0 0 0 1px ${t.glow}, 0 0 48px rgba(250,204,21,0.06), 0 24px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,215,0,0.06)`
-      }}
+      className="dashboard-cyber-neon-panel syndicate-mood-skip-frame cut-frame cyber-frame relative w-full min-w-0 max-w-none overflow-hidden border bg-black fluid-shell-p backdrop-blur-[12px]"
+      style={neonAccentStyleVars(pathNeon)}
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-100 [background:radial-gradient(ellipse_120%_70%_at_50%_-15%,rgba(250,204,21,0.11),rgba(0,0,0,0)_55%),radial-gradient(900px_420px_at_85%_0%,rgba(197,179,88,0.07),rgba(0,0,0,0)_58%),linear-gradient(180deg,rgba(255,215,0,0.03),rgba(0,0,0,0)_28%)]"
-        aria-hidden
-      />
+      <div className="dashboard-cyber-neon-wash pointer-events-none absolute inset-0 opacity-90" aria-hidden />
       <div className="relative">
         <div className="sm:mt-1">
           <PathSelector selected={goal} onSelect={setGoal} />

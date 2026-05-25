@@ -547,7 +547,7 @@ export function DeckBrowseDateBar({
       )}
     >
       <div className="min-w-0">
-        <div className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--gold)]/88">
+        <div className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--goals-milestones-gold)]/88">
           Browse by day
         </div>
         <p className="mt-1 text-[12px] font-normal leading-relaxed text-neutral-300/88 sm:text-[13px] sm:leading-snug">

@@ -12,7 +12,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
-import { DashboardShellBackground } from "@/components/dashboard/DashboardShellBackground";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
@@ -65,6 +64,7 @@ import {
 } from "@/lib/download-certificate";
 import { InstructorSlideshow } from "@/components/dashboard/InstructorSlideshow";
 import {
+  DASHBOARD_NAVBAR_CHROME_NEON,
   getInstructorSlideNeonTheme,
   neonAccentStyleVars,
 } from "@/data/instructorSlideNeonThemes";
@@ -307,13 +307,13 @@ function SidebarNavRailList({
             className={cn(
               "sidebar-nav-item sidebar-nav-neon-item syndicate-mood-skip-frame nav-item group relative flex w-full items-center text-left",
               "cut-frame-sm hud-hover-glow glass-dark transition",
-              "hover:bg-black/45",
+              "hover:bg-black",
               locked && "opacity-[0.88]",
               selected && "is-selected sidebar-nav-neon-item--selected"
             )}
           >
             <CheckboxSlot active={selected} />
-            <span className="sidebar-nav-icon-frame sidebar-nav-neon-icon-frame relative grid shrink-0 place-items-center border bg-black/25">
+            <span className="sidebar-nav-icon-frame sidebar-nav-neon-icon-frame relative grid shrink-0 place-items-center border bg-black">
               <NavIcon k={item.key} />
               {locked ? (
                 <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded border border-[color:var(--neon-accent-border)] bg-black/90 text-[color:var(--neon-accent-bright)]">
@@ -2709,7 +2709,6 @@ export default function Page() {
         selectedNavKey === "monk" && "syndicate-mood-context"
       )}
     >
-      <DashboardShellBackground />
       <PlaylistCheckoutSync />
       {portalUser?.king_program_selection_required ? (
         <KingProgramUnlockOverlay
@@ -2734,7 +2733,7 @@ export default function Page() {
             ref={topbarRef}
             data-anim="in"
             className={cn(
-              "shell-neon-yellow cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
+              "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
               isMobileNavUi
                 ? isIpadProPortraitUi
@@ -2760,7 +2759,8 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => setSidebarOpen((v) => !v)}
-                className="hamburger-attract navbar-chrome-btn cut-frame-sm cyber-frame grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[color:var(--gold-neon-border-mid)] bg-black/70 text-[color:var(--gold-neon)] shadow-[0_0_16px_var(--gold-neon-glow)] sm:h-9 sm:w-9 md:h-10 md:w-10"
+                style={neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.menu))}
+                className="hamburger-attract navbar-chrome-btn navbar-chrome-neon cut-frame-sm cyber-frame grid h-8 w-8 shrink-0 place-items-center rounded-lg border bg-black text-[color:var(--neon-accent-bright)] shadow-[0_0_16px_var(--neon-accent-glow)] sm:h-9 sm:w-9 md:h-10 md:w-10"
                 aria-label={sidebarOpen ? "Hide sidebar menu" : "Show sidebar menu"}
               >
                 <IconToggle open={sidebarOpen} />
@@ -2821,15 +2821,16 @@ export default function Page() {
                 Quick navigation search
               </label>
               <div
+                style={neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.search))}
                 className={cn(
-                  "navbar-chrome-panel cut-frame-sm cyber-frame gold-stroke flex h-8 min-h-8 w-full items-center gap-1.5 border bg-black/70 px-2 sm:h-9 sm:min-h-9 sm:gap-2 sm:px-2.5 md:h-10 md:min-h-10 md:px-3",
-                  "shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                  "navbar-chrome-panel navbar-chrome-neon cut-frame-sm cyber-frame gold-stroke flex h-8 min-h-8 w-full items-center gap-1.5 border bg-black px-2 sm:h-9 sm:min-h-9 sm:gap-2 sm:px-2.5 md:h-10 md:min-h-10 md:px-3",
+                  "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-accent)_12%,transparent)]"
                 )}
               >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
-                  className="pointer-events-none h-3 w-3 shrink-0 text-[color:var(--gold-neon)]/85 sm:h-[14px] sm:w-[14px] md:h-4 md:w-4"
+                  className="pointer-events-none h-3 w-3 shrink-0 text-[color:var(--neon-accent-bright)]/85 sm:h-[14px] sm:w-[14px] md:h-4 md:w-4"
                   aria-hidden="true"
                 >
                   <path
@@ -2869,7 +2870,7 @@ export default function Page() {
                   }}
                   placeholder="SEARCH SECTIONS"
                   autoComplete="off"
-                  className="min-w-0 flex-1 bg-transparent py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--gold-neon)]/95 outline-none placeholder:text-[color:var(--gold-neon)]/38 sm:text-[9px] sm:tracking-[0.16em] md:text-[10px] md:tracking-[0.18em]"
+                  className="min-w-0 flex-1 bg-transparent py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--neon-accent-bright)]/95 outline-none placeholder:text-[color:var(--neon-accent-bright)]/38 sm:text-[9px] sm:tracking-[0.16em] md:text-[10px] md:tracking-[0.18em]"
                 />
               </div>
             </div>
@@ -2893,11 +2894,12 @@ export default function Page() {
                   ref={profileBtnRef}
                   data-dock-item="top"
                   type="button"
+                  style={neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.profile))}
                   onClick={() => {
                     setProfileOpen((v) => !v);
                   }}
                   className={cn(
-                    "navbar-chrome-panel cut-frame-sm cyber-frame gold-stroke glass-dark premium-button inline-flex max-w-[min(100%,188px)] items-center gap-[clamp(0.35rem,1vw+0.1rem,0.55rem)] rounded-md border px-[clamp(0.35rem,1vw+0.1rem,0.65rem)] py-[clamp(0.15rem,0.45vw+0.08rem,0.45rem)] sm:max-w-[200px] md:max-w-[218px]",
+                    "navbar-chrome-panel navbar-chrome-neon cut-frame-sm cyber-frame gold-stroke glass-dark premium-button inline-flex max-w-[min(100%,188px)] items-center gap-[clamp(0.35rem,1vw+0.1rem,0.55rem)] rounded-md border bg-black px-[clamp(0.35rem,1vw+0.1rem,0.65rem)] py-[clamp(0.15rem,0.45vw+0.08rem,0.45rem)] sm:max-w-[200px] md:max-w-[218px]",
                     "max-lg:h-10 max-lg:min-h-10 max-lg:max-w-none max-lg:justify-center max-lg:px-2 max-lg:py-1.5",
                     "min-h-[var(--fluid-profile-btn-h)] h-[var(--fluid-profile-btn-h)] lg:w-full",
                     "origin-right transition-[transform,box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none",
@@ -2910,15 +2912,15 @@ export default function Page() {
                     src={profileAvatar}
                     alt="Profile avatar"
                     className={cn(
-                      "h-[26px] w-[26px] shrink-0 rounded-[3px] border border-[color:var(--gold-neon-border-soft)] bg-black/30 object-cover sm:h-[34px] sm:w-[34px] md:h-[44px] md:w-[44px] lg:h-[52px] lg:w-[52px]",
-                      profileOpen && "border-[color:var(--gold-neon-border)]"
+                      "h-[26px] w-[26px] shrink-0 rounded-[3px] border border-[color:var(--neon-accent-border)] bg-black/30 object-cover sm:h-[34px] sm:w-[34px] md:h-[44px] md:w-[44px] lg:h-[52px] lg:w-[52px]",
+                      profileOpen && "border-[color:var(--neon-accent-bright)]"
                     )}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
                   />
                   <div className="min-w-0 flex-1 text-left leading-none max-lg:hidden">
-                    <div className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[color:var(--gold-neon)]/95 sm:text-[11px] sm:tracking-[0.1em] md:text-[12px] md:tracking-[0.11em] lg:text-[13px] lg:tracking-[0.12em]">
+                    <div className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[color:var(--neon-accent-bright)]/95 sm:text-[11px] sm:tracking-[0.1em] md:text-[12px] md:tracking-[0.11em] lg:text-[13px] lg:tracking-[0.12em]">
                       {profileName}
                     </div>
                     <div className="mt-0.5 text-[6px] font-extrabold uppercase tracking-[0.14em] text-white/45 sm:mt-0.5 sm:text-[7px] sm:tracking-[0.16em] md:text-[8px] md:tracking-[0.18em]">
@@ -2944,7 +2946,7 @@ export default function Page() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 1 }}
                       transition={mobileOverlaySidebarTransition}
-                      className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black/35"
+                      className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black"
                     >
                       <motion.div
                         initial={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
@@ -2955,7 +2957,7 @@ export default function Page() {
                       >
                         <div
                           ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                          className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(212,175,55,0.1)]"
+                          className="sidebar-nav-dock mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 bg-black dashboard-shell-surface pb-2 pt-1.5 no-scrollbar"
                         >
                           <DashboardChromeLetterGlitch />
                           <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
@@ -2974,10 +2976,10 @@ export default function Page() {
                   ) : null}
                 </AnimatePresence>
                 {sidebarOpen && isOverlaySidebarBp && isIpadProPortraitUi ? (
-                  <div className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black/35">
+                  <div className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black">
                     <div
                       ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                      className="sidebar-nav-dock mobile-sidebar-rail cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 dashboard-shell-surface pb-2 pt-1.5 no-scrollbar shadow-[inset_0_1px_0_rgba(197,179,88,0.08)]"
+                      className="sidebar-nav-dock mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 bg-black dashboard-shell-surface pb-2 pt-1.5 no-scrollbar"
                     >
                       <DashboardChromeLetterGlitch />
                       <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
@@ -3179,7 +3181,7 @@ export default function Page() {
                   dockMouseY.current = Infinity;
                 }}
                 className={cn(
-                  "sidebar-nav-dock shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border no-scrollbar",
+                  "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
                   isMobileNavUi && "mobile-sidebar-rail",
                   "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
                   "max-lg:top-[calc(var(--topbarH,4.5rem)+var(--fluid-main-grid-pt))] max-lg:h-[40vh]",
@@ -3190,7 +3192,7 @@ export default function Page() {
               >
                 <DashboardChromeLetterGlitch />
                 <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col lg:min-h-full">
+                <div className="sidebar-nav-dock-inner relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col bg-black lg:min-h-full">
                   <SidebarNavRailList
                     nav={nav}
                     selectedNavKey={selectedNavKey}
@@ -3209,8 +3211,10 @@ export default function Page() {
             layout={false}
             transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             data-anim="in"
+            data-dashboard-main-shell
+            style={{ backgroundColor: "#000" }}
             className={cn(
-              "shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative flex min-h-0 w-full min-w-0 max-w-none flex-col self-stretch overflow-hidden border fluid-section-p",
+              "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative isolate flex min-h-0 w-full min-w-0 max-w-none flex-col self-stretch overflow-hidden border bg-black fluid-section-p",
               "col-span-12",
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
               isOverlaySidebarBp &&
@@ -3225,12 +3229,10 @@ export default function Page() {
                 : "fluid-section-p"
             )}
           >
-            <DashboardChromeLetterGlitch />
-            <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(820px_520px_at_40%_0%,rgba(212,175,55,0.04),rgba(0,0,0,0)_64%)]" />
             <div
               data-main-shell-scroll
               className={cn(
-                "relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar",
+                "dashboard-main-scroll relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-transparent no-scrollbar",
                 !sidebarOccupiesGrid && "lg:pl-14",
                 selectedNavKey === "monk"
                   ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)] pr-0"

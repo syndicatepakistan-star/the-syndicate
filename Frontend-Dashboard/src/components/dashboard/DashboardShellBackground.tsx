@@ -1,13 +1,41 @@
 "use client";
 
-const DASHBOARD_BG_VIDEO = "/assets/dashboard/bg.mp4";
+import { useEffect, useRef } from "react";
 
-/** Full-viewport cover video behind the /dashboard shell (navbar, sidebar, main). */
-export function DashboardShellBackground() {
+const DASHBOARD_BG_VIDEO = "/assets/bg.mp4";
+
+type DashboardShellBackgroundProps = {
+  /** `contained` = main referral/content panel only; `viewport` = legacy full-screen (avoid). */
+  variant?: "contained" | "viewport";
+};
+
+/** Cover video behind dashboard main content — not navbar or sidebar. */
+export function DashboardShellBackground({ variant = "contained" }: DashboardShellBackgroundProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = true;
+    const play = () => {
+      void el.play().catch(() => {});
+    };
+    play();
+    el.addEventListener("loadeddata", play);
+    return () => el.removeEventListener("loadeddata", play);
+  }, []);
+
+  const positionClass =
+    variant === "viewport"
+      ? "pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
+      : "dashboard-main-shell-bg pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-black";
+
   return (
-    <div className="dashboard-shell-bg pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
+    <div className={positionClass} aria-hidden>
       <video
-        className="absolute inset-0 h-full w-full object-cover"
+        ref={videoRef}
+        className="dashboard-main-shell-video absolute inset-0 h-full w-full object-cover"
+        style={{ opacity: 0.1 }}
         autoPlay
         muted
         loop

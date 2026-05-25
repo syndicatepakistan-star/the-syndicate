@@ -6,8 +6,14 @@ import { createPortal } from "react-dom";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import type { ActivityCategory, ActivityItem, DashboardNavKey, DashboardSnapshots } from "./types";
 import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardSnapshots";
+import {
+  DASHBOARD_PANEL_NEON,
+  getInstructorSlideNeonTheme,
+  neonAccentStyleVars
+} from "@/data/instructorSlideNeonThemes";
 import { accentByKey, Card, cn, themeAccent, type ThemeMode } from "./dashboardPrimitives";
-import { GoalPathSystem } from "./path/GoalPathSystem";
+import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
+import { fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
 import {
   formatSyndicateReminderCountdown,
@@ -530,50 +536,52 @@ function HeroStatusPanel({
   syndicateNavLocked?: boolean;
 }) {
   const s = snapshots;
-  const t = themeAccent(themeMode);
   const ongoingPrograms = s.programs.length;
   const completedMissionCount = s.syndicate.completedMissionsCount ?? 0;
   const pendingMissionCount = s.syndicate.pendingMissionsCount ?? (s.syndicate.activeLiveMissionCount ?? (s.syndicate.activeMissionTitle ? 1 : 0));
   const totalMissionPoints = s.syndicate.missionPointsTotal ?? 0;
+  const heroNeon = getInstructorSlideNeonTheme(6);
   return (
     <div
-      className="cut-frame cyber-frame gold-stroke relative w-full max-w-none overflow-hidden border-2 border-[rgba(255,198,62,0.62)] bg-[#060400]/92 p-5 backdrop-blur-[12px] md:p-6 lg:p-7"
-      style={{ borderColor: "rgba(255,198,62,0.62)", boxShadow: `0 0 0 1px rgba(255,198,62,0.38), 0 0 95px rgba(255,198,62,0.45), 0 0 120px ${t.glow}` }}
+      style={neonAccentStyleVars(heroNeon)}
+      className="dashboard-cyber-neon-panel dashboard-hero-neon-panel syndicate-mood-skip-frame cut-frame cyber-frame relative w-full max-w-none overflow-hidden border-2 bg-black p-5 md:p-6 lg:p-7"
     >
-      <div className="absolute inset-0 opacity-[0.96] [background:radial-gradient(980px_580px_at_25%_0%,rgba(255,198,62,0.28),rgba(0,0,0,0)_64%)]" />
-      <div className="absolute inset-0 opacity-55 [background:radial-gradient(900px_380px_at_90%_0%,rgba(255,172,39,0.2),rgba(0,0,0,0)_62%)]" />
+      <div
+        className="dashboard-cyber-neon-wash pointer-events-none absolute inset-0 opacity-80 [background:radial-gradient(920px_520px_at_22%_0%,color-mix(in_srgb,var(--neon-accent)_12%,transparent),transparent_58%),radial-gradient(680px_380px_at_88%_0%,color-mix(in_srgb,var(--neon-accent-bright)_8%,transparent),transparent_56%)]"
+        aria-hidden
+      />
 
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <img
             src={profileAvatar}
             alt="Profile avatar"
-            className="h-16 w-16 rounded-lg border border-[rgba(255,215,0,0.5)] bg-black/30 object-cover p-0.5 shadow-[0_0_24px_rgba(255,215,0,0.35)]"
+            className="h-16 w-16 rounded-lg border border-[color:var(--neon-accent-border)] bg-black/30 object-cover p-0.5 shadow-[0_0_24px_var(--neon-accent-glow)]"
           />
           <div className="min-w-0">
-            <div className="font-mono text-[16px] font-black uppercase tracking-[0.15em] text-[color:var(--gold)] [text-shadow:0_0_18px_rgba(255,215,0,0.62)]">
+            <div className="dashboard-neon-title font-mono text-[16px] font-black uppercase tracking-[0.15em]">
               {userName}
             </div>
             <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/84">
               {userRole} • Level system: <span className="text-white/80">Level {s.syndicate.level}</span>
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <div className="group relative inline-flex items-center gap-2 rounded-md border border-[rgba(255,198,62,0.46)] bg-black/40 px-2 py-1 shadow-[0_0_20px_rgba(255,198,62,0.24)]">
+              <div className="group relative inline-flex items-center gap-2 rounded-md border border-[color:var(--neon-accent-border)] bg-black/40 px-2 py-1 shadow-[0_0_20px_var(--neon-accent-glow)]">
                 <svg viewBox="0 0 24 24" className="h-4 w-4 text-white/22" fill="none" aria-hidden="true">
                   <path d="M12 3.8l6.2 3.6v7.2L12 18.2l-6.2-3.6V7.4L12 3.8Z" stroke="currentColor" strokeWidth="1.6" />
                   <path d="M7.8 9.2h8.4M7.8 12h6.2M7.8 14.8h8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
                 </svg>
-                <span className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                <span className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--neon-accent-bright)]">
                   Level {s.syndicate.level}
                 </span>
-                <div className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-50 hidden w-[280px] -translate-x-1/2 rounded-md border border-white/10 bg-black/90 p-2 text-[11px] text-white/70 shadow-[0_0_28px_rgba(34,211,238,0.18)] group-hover:block">
-                  <div className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">Syndicate rewards</div>
+                <div className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-50 hidden w-[280px] -translate-x-1/2 rounded-md border border-[color:var(--neon-accent-border)] bg-black/90 p-2 text-[11px] text-white/70 shadow-[0_0_28px_var(--neon-accent-glow)] group-hover:block">
+                  <div className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--neon-accent-bright)]">Syndicate rewards</div>
                   <div className="mt-1">
                     {typeof s.syndicate.pointsToNext === "number" && s.syndicate.pointsToNext > 0 ? (
                       <>
                         Earn <span className="font-mono font-black text-white/90">{s.syndicate.pointsToNext}</span> more mission
                         {s.syndicate.pointsToNext === 1 ? " point" : " points"} to reach{" "}
-                        <span className="text-amber-200">{s.syndicate.nextRankLabel}</span> (same ladder as Unlock &amp; redeem).
+                        <span className="text-[color:var(--neon-accent-bright)]">{s.syndicate.nextRankLabel}</span> (same ladder as Unlock &amp; redeem).
                       </>
                     ) : s.syndicate.pointsToNext === 0 ? (
                       <>You have cleared every mission-points tier in the current ladder.</>
@@ -594,98 +602,98 @@ function HeroStatusPanel({
               type="button"
               onClick={() => onNavigate("programs")}
               className={cn(
-                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
                 "shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_rgba(34,211,238,0.28),0_0_52px_rgba(6,182,212,0.12)]",
                 "hover:border-cyan-200/75 hover:bg-gradient-to-br hover:from-cyan-400/[0.2] hover:to-black/72",
                 "hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_0_40px_rgba(34,211,238,0.42),0_0_88px_rgba(6,182,212,0.22)]"
               )}
             >
-              <div className="w-full text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-cyan-100">
+              <div className="w-full text-[13px] font-extrabold uppercase leading-tight tracking-[0.16em] text-cyan-100">
                 Active programs
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
                 <div
-                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(34,211,238,0.55), 0 0 40px rgba(6,182,212,0.25)" }}
                 >
                   {ongoingPrograms}
                 </div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-cyan-200/78">Ongoing</div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-cyan-200/78">Ongoing</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-emerald-400/55 bg-gradient-to-br from-emerald-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-emerald-400/55 bg-gradient-to-br from-emerald-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
                 "shadow-[0_0_0_1px_rgba(52,211,153,0.22),0_0_28px_rgba(52,211,153,0.26),0_0_52px_rgba(16,185,129,0.12)]",
                 "hover:border-emerald-200/75 hover:bg-gradient-to-br hover:from-emerald-400/[0.2] hover:to-black/72",
                 "hover:shadow-[0_0_0_1px_rgba(110,231,183,0.42),0_0_40px_rgba(52,211,153,0.4),0_0_88px_rgba(16,185,129,0.2)]",
                 syndicateNavLocked && "opacity-80 ring-1 ring-emerald-500/35"
               )}
             >
-              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-emerald-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[13px] font-extrabold uppercase leading-tight tracking-[0.16em] text-emerald-100">
                 Syndicate Completed Missions
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-emerald-200/90" aria-hidden /> : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
                 <div
-                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(52,211,153,0.5), 0 0 40px rgba(16,185,129,0.22)" }}
                 >
                   {completedMissionCount}
                 </div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/78">From challenges</div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-emerald-200/78">From challenges</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-amber-400/58 bg-gradient-to-br from-amber-400/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-amber-400/58 bg-gradient-to-br from-amber-400/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
                 "shadow-[0_0_0_1px_rgba(251,191,36,0.24),0_0_28px_rgba(251,191,36,0.28),0_0_52px_rgba(245,158,11,0.14)]",
                 "hover:border-amber-200/78 hover:bg-gradient-to-br hover:from-amber-300/[0.2] hover:to-black/72",
                 "hover:shadow-[0_0_0_1px_rgba(253,224,71,0.42),0_0_40px_rgba(251,191,36,0.42),0_0_88px_rgba(234,88,12,0.18)]",
                 syndicateNavLocked && "opacity-80 ring-1 ring-amber-500/35"
               )}
             >
-              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-amber-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[13px] font-extrabold uppercase leading-tight tracking-[0.16em] text-amber-100">
                 Syndicate Pending Missions
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
                 <div
-                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(251,191,36,0.48), 0 0 40px rgba(245,158,11,0.22)" }}
                 >
                   {pendingMissionCount}
                 </div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200/78">In challenges</div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-amber-200/78">In challenges</div>
               </div>
             </button>
             <button
               type="button"
               onClick={() => onNavigate("monk")}
               className={cn(
-                "flex min-h-[8.75rem] w-full flex-col items-center justify-between rounded-md border-2 border-fuchsia-400/55 bg-gradient-to-br from-fuchsia-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-fuchsia-400/55 bg-gradient-to-br from-fuchsia-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
                 "shadow-[0_0_0_1px_rgba(232,121,249,0.22),0_0_28px_rgba(217,70,239,0.28),0_0_52px_rgba(192,38,211,0.12)]",
                 "hover:border-fuchsia-200/75 hover:bg-gradient-to-br hover:from-fuchsia-400/[0.2] hover:to-black/72",
                 "hover:shadow-[0_0_0_1px_rgba(240,171,252,0.42),0_0_40px_rgba(217,70,239,0.4),0_0_88px_rgba(168,85,247,0.2)]",
                 syndicateNavLocked && "opacity-80 ring-1 ring-fuchsia-500/35"
               )}
             >
-              <div className="flex w-full items-center justify-center gap-1 text-[10px] font-extrabold uppercase leading-tight tracking-[0.16em] text-fuchsia-100">
+              <div className="flex w-full items-center justify-center gap-1 text-[13px] font-extrabold uppercase leading-tight tracking-[0.16em] text-fuchsia-100">
                 Total points
                 {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-fuchsia-200/90" aria-hidden /> : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
                 <div
-                  className="font-mono text-[22px] font-black leading-none tabular-nums text-white"
+                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(217,70,239,0.52), 0 0 44px rgba(168,85,247,0.22)" }}
                 >
                   {totalMissionPoints}
                 </div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/78">Mission pool</div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/78">Mission pool</div>
               </div>
             </button>
           </div>
@@ -710,7 +718,7 @@ function HeroStatusPanel({
             onClick={() => onNavigate("programs")}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-            className="rounded-md border bg-black/30 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--gold)]/95 hover:bg-black/45"
+            className="rounded-md border border-[color:var(--neon-accent-border)] bg-black/30 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--neon-accent-bright)] hover:bg-black/45 hover:shadow-[0_0_20px_var(--neon-accent-glow)]"
             style={{ borderColor: accentByKey("energy").border, boxShadow: `0 0 20px ${accentByKey("energy").glow}` }}
           >
             Continue Program
@@ -1126,6 +1134,22 @@ export default function DashboardControlCenter({
   const { snapshots } = useDashboardSnapshots({ userName, courses });
   const integrityHigh = snapshots.coreIntegrity.integrityPct > 90;
   const syndicateLocked = !!dashboardNavLocks?.monk;
+  const [streamPlaylists, setStreamPlaylists] = useState<StreamPlaylistListItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
+        if (!cancelled) setStreamPlaylists(Array.isArray(list) ? list : []);
+      } catch {
+        if (!cancelled) setStreamPlaylists([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
@@ -1155,10 +1179,10 @@ export default function DashboardControlCenter({
             syndicateNavLocked={syndicateLocked}
           />
 
-          <GoalPathSystem
-            themeMode={themeMode}
-            courses={courses}
-            onContinue={() => onNavigate("programs")}
+          <PublicGoalPathSection
+            playlists={streamPlaylists}
+            libraryTarget="dashboard"
+            className="relative w-full max-w-none px-0 pb-0 pt-0"
           />
 
           <ActivityTimelineCard themeMode={themeMode} />

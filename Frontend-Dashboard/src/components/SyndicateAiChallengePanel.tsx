@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { SyndicateCategoryHologramPie } from "@/components/SyndicateCategoryHologramPie";
 
 import {
   challengesApiUrl,
@@ -46,6 +47,9 @@ import {
 } from "@/lib/dashboardProfileStorage";
 import { syndicateUserStorageKey as ls } from "@/lib/syndicateStorageKeys";
 import { SyndicateBonusMissionAlert } from "@/components/dashboard/SyndicateBonusMissionAlert";
+import { MegaMissionCompromisedFrame } from "@/components/dashboard/MegaMissionCompromisedFrame";
+import { MegaMissionEmergencyAlert } from "@/components/dashboard/MegaMissionEmergencyAlert";
+import { MegaMissionHudCardChrome } from "@/components/dashboard/MegaMissionHudCardChrome";
 
 const API_BASE = getSyndicateApiBase();
 
@@ -280,6 +284,12 @@ const DOLLARS_PER_100_POINTS = 10;
 
 const CTA_BTN =
   "syndicate-hud-cta rounded-md border border-[#b8942f] bg-[#d4af39] text-[#0a0a0a] [box-shadow:inset_0_1px_0_rgba(255,240,200,0.7),inset_0_-2px_0_rgba(140,110,30,0.45),0_0_14px_rgba(212,175,57,0.42)] hover:brightness-110";
+/** Mission detail — reminder save (cyan neon). */
+const MISSION_BTN_DONE =
+  "syndicate-mission-btn syndicate-mission-btn--done min-h-[48px] touch-manipulation px-5 py-2.5 text-[14px] sm:text-[15px]";
+/** Mission detail — submit completion (emerald neon). */
+const MISSION_BTN_SUBMIT =
+  "syndicate-mission-btn syndicate-mission-btn--submit mt-3 min-h-[52px] w-full touch-manipulation px-6 py-3 text-[15px] sm:text-[16px]";
 const SYNDICATE_RESPONSE_FIELD =
   "syndicate-mission-response-field min-h-[112px] w-full resize-y rounded-lg border-2 border-[#d4af39]/60 bg-[#1e1c14] px-3 py-3 text-[16px] font-medium leading-relaxed text-white outline-none placeholder:text-white/60 focus:border-[#d4af39] focus:bg-[#262318] focus:ring-2 focus:ring-[#d4af39]/30 sm:text-[15px]";
 const HUD_LABEL = "text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)]/48";
@@ -423,7 +433,7 @@ function appendPointsForDay(iso: string, category: string, pts: number) {
   const h = loadHistory();
   if (!h.days[iso]) h.days[iso] = { total: 0, byCategory: {} };
   h.days[iso].total += pts;
-  const k = category.toLowerCase();
+  const k = normalizeMissionCategoryKey(category);
   h.days[iso].byCategory[k] = (h.days[iso].byCategory[k] || 0) + pts;
   saveHistory(h);
 }
@@ -515,10 +525,61 @@ function aggregateCategoryTotals(h: HistoryV1): Record<string, number> {
   const out: Record<string, number> = {};
   for (const day of Object.values(h.days)) {
     for (const [k, v] of Object.entries(day.byCategory)) {
-      out[k] = (out[k] || 0) + v;
+      const key = normalizeMissionCategoryKey(k);
+      out[key] = (out[key] || 0) + v;
     }
   }
   return out;
+}
+
+function normalizeMissionCategoryKey(raw: string): string {
+  const k = (raw || "").toLowerCase().trim();
+  if (k === "finance") return "money";
+  if ((CATEGORIES as readonly string[]).includes(k as (typeof CATEGORIES)[number])) return k;
+  return k || "business";
+}
+
+function mergeCategoryTotals(...sources: Array<Record<string, number>>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const src of sources) {
+    for (const [k, v] of Object.entries(src)) {
+      const key = normalizeMissionCategoryKey(k);
+      const n = typeof v === "number" && Number.isFinite(v) ? v : 0;
+      if (n <= 0) continue;
+      out[key] = (out[key] || 0) + n;
+    }
+  }
+  return out;
+}
+
+function aggregateCategoryTotalsFromCompletionLog(log: MissionCompletionLogEntryV1[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const e of log) {
+    const pts = e.awardedPoints ?? 0;
+    if (pts <= 0) continue;
+    const key = normalizeMissionCategoryKey(e.category);
+    out[key] = (out[key] || 0) + pts;
+  }
+  return out;
+}
+
+/** Older accounts may have completion log but empty `points_history_v1` — rebuild once for charts. */
+function backfillPointsHistoryFromCompletionLogIfEmpty() {
+  const h = loadHistory();
+  const hasCategoryRows = Object.values(h.days).some((d) => Object.keys(d.byCategory).length > 0);
+  if (hasCategoryRows) return;
+  const log = loadMissionCompletionLog();
+  if (!log.length) return;
+  for (const e of log) {
+    const iso = (e.completedIso || "").trim() || todayLocalISO();
+    const cat = normalizeMissionCategoryKey(e.category);
+    const pts = e.awardedPoints ?? 0;
+    if (pts <= 0) continue;
+    if (!h.days[iso]) h.days[iso] = { total: 0, byCategory: {} };
+    h.days[iso].byCategory[cat] = (h.days[iso].byCategory[cat] || 0) + pts;
+    h.days[iso].total += pts;
+  }
+  saveHistory(h);
 }
 
 function cn(...parts: Array<string | false | null | undefined>) {
@@ -821,6 +882,8 @@ type MissionReminderEntry = {
   missionCreatedAtIso?: string;
   /** When the user last saved this reminder (ISO). Used for sort / “added on” date filter. */
   addedAtIso?: string;
+  /** Snapshot of “How will you complete it” when the reminder was saved. */
+  howDraft?: string;
 };
 
 function loadMissionReminders(): Record<number, MissionReminderEntry> {
@@ -840,12 +903,14 @@ function loadMissionReminders(): Record<number, MissionReminderEntry> {
       const penaltyApplied = o.penaltyApplied === true;
       const missionCreatedAtIso = typeof o.missionCreatedAtIso === "string" ? o.missionCreatedAtIso : undefined;
       const addedAtIso = typeof o.addedAtIso === "string" ? o.addedAtIso : undefined;
+      const howDraft = typeof o.howDraft === "string" ? o.howDraft.trim() : "";
       out[id] = {
         atIso,
         title,
         penaltyApplied,
         ...(missionCreatedAtIso ? { missionCreatedAtIso } : {}),
-        ...(addedAtIso ? { addedAtIso } : {})
+        ...(addedAtIso ? { addedAtIso } : {}),
+        ...(howDraft ? { howDraft } : {})
       };
     }
     return out;
@@ -1380,16 +1445,14 @@ function MissionReminderCard({
                     {item.penaltyApplied ? "Deadline passed" : !item.overdue ? "Time left" : "Due now"}
                   </div>
                   <h4 className="syndicate-cyber-card__title syndicate-cyber-card__title--reminder">{item.title}</h4>
-                  {item.howDraft ? (
-                    <div className="mt-2 rounded-md border border-white/12 bg-black/40 p-2.5 sm:p-3">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/75">
-                        How will you complete it
-                      </div>
-                      <p className="no-scrollbar mt-1.5 max-h-[140px] overflow-y-auto whitespace-pre-wrap break-words text-[13px] leading-relaxed text-white/88 sm:text-[14px]">
-                        {item.howDraft}
-                      </p>
-                    </div>
-                  ) : null}
+                  <div className="syndicate-reminder-plan mt-3 p-3 sm:p-3.5">
+                    <div className="syndicate-reminder-plan__label">How will you complete it</div>
+                    <p className="syndicate-reminder-plan__body no-scrollbar mt-2 max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words">
+                      {item.howDraft || (
+                        <span className="syndicate-reminder-plan__empty">No plan saved yet — open the mission to add one.</span>
+                      )}
+                    </p>
+                  </div>
                   {item.penaltyApplied ? (
                     <>
                       <p className="mt-2 font-mono text-[13px] tabular-nums text-rose-200/95">
@@ -1667,7 +1730,7 @@ function DetailPane({
   onDraftPersist?: (draft: MissionResponseDraft) => void;
   /** Optional reminder (local time picker); stored as ISO on the parent. */
   missionReminderIso?: string | null;
-  onMissionReminderChange?: (iso: string | null) => void;
+  onMissionReminderChange?: (iso: string | null, howDraft?: string) => void;
   /** After user confirms date/time with Done: e.g. navigate to reminders list. */
   onMissionReminderDone?: () => void;
   /** Opens syndicate help popover anchored to the ? control (e.g. mission reminder explainer). */
@@ -1678,9 +1741,21 @@ function DetailPane({
   const [learned, setLearned] = useState(initialResponse.learned);
   const draftRef = useRef({ how: initialResponse.how, learned: initialResponse.learned });
   draftRef.current = { how, learned };
+  const reminderLocked = !!missionReminderIso;
   const examples = getChallengeExamples(p);
   const benefits = getChallengeBenefits(p);
   const readOnlyCompleted = !!done;
+
+  const flushMissionDraft = useCallback(() => {
+    if (readOnlyCompleted || !onDraftPersist) return;
+    onDraftPersist(draftRef.current);
+  }, [readOnlyCompleted, onDraftPersist]);
+
+  useEffect(() => {
+    setHow(initialResponse.how);
+    setLearned(initialResponse.learned);
+    draftRef.current = { how: initialResponse.how, learned: initialResponse.learned };
+  }, [row.id]);
   const missionElapsedSec =
     !done && taskTimerStartMs != null && taskTimerStartMs > 0
       ? Math.max(0, Math.floor((nowMs - taskTimerStartMs) / 1000))
@@ -1714,18 +1789,13 @@ function DetailPane({
   }, [missionReminderIso, row.id, readOnlyCompleted, onMissionReminderChange]);
 
   const handleMissionReminderDone = () => {
-    if (!onMissionReminderChange) return;
+    if (!onMissionReminderChange || reminderLocked) return;
     const v = reminderLocal.trim();
-    if (!v) {
-      if (missionReminderIso) {
-        onMissionReminderChange(null);
-        onMissionReminderDone?.();
-      }
-      return;
-    }
+    if (!v) return;
     const parsed = new Date(v);
     if (Number.isNaN(parsed.getTime())) return;
-    onMissionReminderChange(parsed.toISOString());
+    flushMissionDraft();
+    onMissionReminderChange(parsed.toISOString(), draftRef.current.how.trim());
     onMissionReminderDone?.();
   };
 
@@ -1879,19 +1949,20 @@ function DetailPane({
                 id="mission-how"
                 value={how}
                 onChange={(e) => setHow(e.target.value)}
+                onBlur={flushMissionDraft}
                 rows={4}
                 placeholder="Describe how you will complete this mission…"
                 className={cn("syndicate-readable mb-4", SYNDICATE_RESPONSE_FIELD)}
               />
               {onMissionReminderChange ? (
-                <div className="mb-6 rounded-lg border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(0,45,70,0.35),rgba(0,0,0,0.25))] p-4 [box-shadow:inset_0_0_0_1px_rgba(120,200,255,0.08)]">
+                <div
+                  className="mb-6 rounded-lg border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(0,45,70,0.35),rgba(0,0,0,0.25))] p-4 [box-shadow:inset_0_0_0_1px_rgba(120,200,255,0.08)]"
+                  onPointerDownCapture={flushMissionDraft}
+                >
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <label
-                      className="text-[12px] font-bold uppercase tracking-[0.12em] text-cyan-200/85"
-                      htmlFor="syndicate-mission-reminder"
-                    >
-                      Reminder date &amp; time (optional)
-                    </label>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-cyan-200/85">
+                      {reminderLocked ? "Reminder saved" : "Reminder date & time (optional)"}
+                    </span>
                     {onSyndicateHelpOpen ? (
                       <SyndicateHelpMark
                         topic="mission-reminder"
@@ -1900,50 +1971,48 @@ function DetailPane({
                       />
                     ) : null}
                   </div>
-                  <p className="mb-2 text-[11px] leading-snug text-white/50 sm:text-[12px]">
-                    Pick a date and time, then press <span className="font-semibold text-cyan-100/90">Done</span> to save. Tap{" "}
-                    <span className="font-semibold text-red-300/90" aria-hidden>
-                      ?
-                    </span>{" "}
-                    for what this reminder does and how points may be deducted.
-                  </p>
-                  <input
-                    id="syndicate-mission-reminder"
-                    type="datetime-local"
-                    value={reminderLocal}
-                    onChange={(e) => setReminderLocal(e.target.value)}
-                    className={cn(
-                      SYNDICATE_DATE_INPUT,
-                      "mt-1 w-full max-w-[min(100%,22rem)] text-[15px] text-white [color-scheme:dark]"
-                    )}
-                  />
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleMissionReminderDone}
-                      disabled={
-                        !reminderLocal.trim() && !missionReminderIso
-                      }
-                      className={cn(
-                        "syndicate-readable min-h-[44px] touch-manipulation px-4 py-2 text-[13px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-40",
-                        CTA_BTN
-                      )}
-                    >
-                      Done
-                    </button>
-                    {reminderLocal || missionReminderIso ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReminderLocal("");
-                          onMissionReminderChange(null);
-                        }}
-                        className="syndicate-link-skip min-h-[44px] text-[12px] font-semibold uppercase tracking-wide text-cyan-200/80 underline-offset-4 hover:text-cyan-100 hover:underline"
-                      >
-                        Clear reminder
-                      </button>
-                    ) : null}
-                  </div>
+                  {reminderLocked && missionReminderIso ? (
+                    <>
+                      <p className="text-[15px] font-semibold tabular-nums text-cyan-100/95">
+                        {new Date(missionReminderIso).toLocaleString(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short"
+                        })}
+                      </p>
+                      <p className="mt-2 text-[12px] leading-snug text-white/55">
+                        This reminder is locked. Your plan above stays saved. Manage it from{" "}
+                        <span className="font-semibold text-cyan-100/90">Syndicate mode reminders</span>.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mb-2 text-[11px] leading-snug text-white/50 sm:text-[12px]">
+                        Pick a date and time, then press <span className="font-semibold text-cyan-100/90">Done</span> to
+                        save. Tap <span className="font-semibold text-red-300/90">?</span> for how reminders and points
+                        work.
+                      </p>
+                      <input
+                        id="syndicate-mission-reminder"
+                        type="datetime-local"
+                        value={reminderLocal}
+                        onChange={(e) => setReminderLocal(e.target.value)}
+                        className={cn(
+                          SYNDICATE_DATE_INPUT,
+                          "mt-1 w-full max-w-[min(100%,22rem)] text-[15px] text-white [color-scheme:dark]"
+                        )}
+                      />
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleMissionReminderDone}
+                          disabled={!reminderLocal.trim()}
+                          className={cn("syndicate-readable", MISSION_BTN_DONE)}
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : null}
               <label
@@ -1956,6 +2025,7 @@ function DetailPane({
                 id="mission-learned"
                 value={learned}
                 onChange={(e) => setLearned(e.target.value)}
+                onBlur={flushMissionDraft}
                 rows={4}
                 placeholder="Reflect on insights, skills, or takeaways from doing this mission…"
                 className={cn("syndicate-readable", SYNDICATE_RESPONSE_FIELD)}
@@ -1967,10 +2037,7 @@ function DetailPane({
                 type="button"
                 disabled={!how.trim() || !learned.trim() || submitting || submitDisabled}
                 onClick={() => void onSubmit({ how: how.trim(), learned: learned.trim() })}
-                className={cn(
-                  "syndicate-readable mt-3 px-5 py-2.5 text-[15px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-40",
-                  CTA_BTN
-                )}
+                className={cn("syndicate-readable", MISSION_BTN_SUBMIT)}
               >
                 {submitting ? "Scoring..." : "Submit completion"}
               </button>
@@ -2076,6 +2143,8 @@ export function SyndicateAiChallengePanel() {
   /** True while today/ API reports incremental generation still running (partial rows may not match filters yet). */
   const [dailyBatchStreaming, setDailyBatchStreaming] = useState(false);
   const [selected, setSelected] = useState<ChallengeRow | null>(null);
+  /** Bumps when a mission detail is opened so drafts reload from storage. */
+  const [missionDetailKey, setMissionDetailKey] = useState(0);
   const [pointsTotal, setPointsTotal] = useState(0);
   const [doneIds, setDoneIds] = useState<Set<number>>(() => new Set());
   /** Per-challenge reminders (ISO instant + title snapshot); synced via syndicate progress when logged in. */
@@ -2227,6 +2296,7 @@ export function SyndicateAiChallengePanel() {
       setMissionScores(loadMissionScores());
       setMissionAwardedMap(loadMissionAwardedPoints());
       setMissionCompletionLog(loadMissionCompletionLog());
+      backfillPointsHistoryFromCompletionLogIfEmpty();
       setMissionMissedLog(loadMissionMissedLog());
       setRedeemedRewards(loadRedeemedRewards());
       setPoundsBalance(loadPoundsBalance());
@@ -2257,6 +2327,7 @@ export function SyndicateAiChallengePanel() {
         setMissionReminders(loadMissionReminders());
         setMissionMissedLog(loadMissionMissedLog());
         setMissionCompletionLog(loadMissionCompletionLog());
+        backfillPointsHistoryFromCompletionLogIfEmpty();
         setStreak(res.streak_count);
         setLastActivityIso(res.last_activity_date);
         setStreakBeforeBreakHint(streakBeforeBreakHintForProgress(res.streak_count, res.state));
@@ -2440,24 +2511,30 @@ export function SyndicateAiChallengePanel() {
     });
   }, []);
 
-  const setMissionReminderForSelected = useCallback((iso: string | null) => {
-    if (!selected) return;
-    setMissionReminders((prev) => {
-      const next = { ...prev };
-      if (!iso) delete next[selected.id];
-      else {
-        next[selected.id] = {
-          atIso: iso,
-          title: (selected.payload?.challenge_title ?? "Mission").trim() || "Mission",
-          penaltyApplied: false,
-          missionCreatedAtIso: selected.created_at,
-          addedAtIso: new Date().toISOString()
-        };
-      }
-      persistMissionReminders(next);
-      return next;
-    });
-  }, [selected]);
+  const setMissionReminderForSelected = useCallback(
+    (iso: string | null, howDraft?: string) => {
+      if (!selected) return;
+      const howFromStorage = (loadResponses()[selected.id]?.how ?? "").trim();
+      const howSnapshot = (howDraft ?? howFromStorage).trim();
+      setMissionReminders((prev) => {
+        const next = { ...prev };
+        if (!iso) delete next[selected.id];
+        else {
+          next[selected.id] = {
+            atIso: iso,
+            title: (selected.payload?.challenge_title ?? "Mission").trim() || "Mission",
+            penaltyApplied: false,
+            missionCreatedAtIso: selected.created_at,
+            addedAtIso: new Date().toISOString(),
+            ...(howSnapshot ? { howDraft: howSnapshot } : {})
+          };
+        }
+        persistMissionReminders(next);
+        return next;
+      });
+    },
+    [selected]
+  );
 
   /**
    * Same gates as reward cards: Level 0 until 20 pts, then Level 1; 50 → 2; 100 → 3; … (not 100 pts per level).
@@ -2483,7 +2560,10 @@ export function SyndicateAiChallengePanel() {
   }, [pointsTotal]);
 
   const categoryBestWorst = useMemo(() => {
-    const totals = aggregateCategoryTotals(loadHistory());
+    const totals = mergeCategoryTotals(
+      aggregateCategoryTotals(loadHistory()),
+      aggregateCategoryTotalsFromCompletionLog(missionCompletionLog)
+    );
     let best: { cat: string; pts: number } | null = null;
     let worst: { cat: string; pts: number } | null = null;
     for (const c of CATEGORIES) {
@@ -2492,7 +2572,7 @@ export function SyndicateAiChallengePanel() {
       if (!worst || pts < worst.pts) worst = { cat: c, pts };
     }
     return { best, worst, totals };
-  }, [pointsTotal]);
+  }, [pointsTotal, missionCompletionLog, challengeLogVersion]);
 
   const categoryPointsSum = useMemo(
     () => CATEGORIES.reduce((s, c) => s + (categoryBestWorst.totals[c] ?? 0), 0),
@@ -2647,7 +2727,7 @@ export function SyndicateAiChallengePanel() {
       if (Number.isNaN(dueAt)) continue;
       const row = rowsOnMissionBoard.find((r) => r.id === id);
       const secLeft = Math.max(0, (dueAt - nowTick) / 1000);
-      const howDraft = (responses[id]?.how ?? "").trim();
+      const howDraft = (entry.howDraft ?? responses[id]?.how ?? "").trim();
       items.push({
         id,
         title: (row?.payload?.challenge_title ?? entry.title ?? "Mission").trim() || "Mission",
@@ -3023,6 +3103,7 @@ export function SyndicateAiChallengePanel() {
         return next;
       });
     }
+    setMissionDetailKey((k) => k + 1);
     setSelected(row);
   }, [doneIds]);
 
@@ -3557,7 +3638,15 @@ export function SyndicateAiChallengePanel() {
     return () => window.clearTimeout(t);
   }, [missionCompleteToast]);
 
-  const initialResp = selected ? loadResponses()[selected.id] ?? { how: "", learned: "" } : { how: "", learned: "" };
+  const initialResp = useMemo(() => {
+    if (!selected) return { how: "", learned: "" };
+    const stored = loadResponses()[selected.id] ?? { how: "", learned: "" };
+    const reminderHow = (missionReminders[selected.id]?.howDraft ?? "").trim();
+    return {
+      how: stored.how.trim() || reminderHow,
+      learned: stored.learned ?? ""
+    };
+  }, [selected, missionReminders, responseDraftsVersion]);
 
   const persistMissionDraft = useCallback((draft: MissionResponseDraft) => {
     if (!selected) return;
@@ -3871,7 +3960,7 @@ export function SyndicateAiChallengePanel() {
           data-mission-detail-open=""
         >
           <DetailPane
-            key={selected.id}
+            key={`${selected.id}-${missionDetailKey}`}
             row={selected}
             initialResponse={initialResp}
             submitting={submitBusy}
@@ -3887,18 +3976,7 @@ export function SyndicateAiChallengePanel() {
             onDraftPersist={doneIds.has(selected.id) ? undefined : persistMissionDraft}
             missionReminderIso={missionReminders[selected.id]?.atIso ?? null}
             onMissionReminderChange={doneIds.has(selected.id) ? undefined : setMissionReminderForSelected}
-            onMissionReminderDone={
-              doneIds.has(selected.id)
-                ? undefined
-                : () => {
-                    setShowStatsProfile(false);
-                    setSyndicateView("reminders");
-                    setSelected(null);
-                    window.setTimeout(() => {
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }, 0);
-                  }
-            }
+            onMissionReminderDone={undefined}
             onSyndicateHelpOpen={openSyndicateHelp}
           />
         </div>
@@ -4102,6 +4180,13 @@ export function SyndicateAiChallengePanel() {
                   ) : null}
                 </div>
               </div>
+
+              <SyndicateCategoryHologramPie
+                categories={CATEGORIES}
+                labels={CAT_LABEL}
+                totals={categoryBestWorst.totals}
+                totalPoints={categoryPointsSum}
+              />
 
               <div
                 ref={streakRestoreSectionRef}
@@ -4841,99 +4926,148 @@ export function SyndicateAiChallengePanel() {
           <section
             id="syndicate-bonus-missions"
             ref={bonusMissionSectionRef}
-            className="syndicate-readable syndicate-hud-deck syndicate-game-vault syndicate-game-vault--mega syndicate-mega-command mega-neon-deck mega-alert-deck syndicate-danger-hud-frame syndicate-danger-hud-frame--section mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4"
+            className={cn(
+              "syndicate-readable mega-mission-section mt-5 w-full min-w-0 scroll-mt-6 max-md:mt-4",
+              visibleAdminTasks.length > 0 && "mega-mission-section--urgent"
+            )}
+            aria-label="Mega mission"
           >
-            <div className="mega-game-hud-grid" aria-hidden />
-            <div className="mega-game-hud-vignette" aria-hidden />
-            <div className="mega-game-hud-noise" aria-hidden />
-            <div className="mega-alert-deck__scan" aria-hidden />
-            <div className="mega-alert-deck__siren" aria-hidden />
-            <div className="mega-alert-deck__top-bar" aria-hidden>
-              <span className="mega-alert-deck__top-bar-text">
-                ◈ RED ALERT · MEGA MISSION CHANNEL · EMERGENCY OPS · HIGH-YIELD BONUS TRACK · DEPLOY NOW ◈
-              </span>
-            </div>
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--red" aria-hidden />
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--crimson" aria-hidden />
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--ember" aria-hidden />
-            <div className="mega-neon-deck__glow mega-neon-deck__glow--gold" aria-hidden />
-
-            <div className="syndicate-hud-deck-inner mega-game-shell syndicate-game-brackets">
-            <div className="mega-neon-deck__frame mega-game-frame">
-              <header className="mega-neon-header mega-game-header-rail syndicate-game-header-rail">
-                <div className="mega-neon-header__hero syndicate-game-header-main min-w-0 border-l-[4px] border-amber-400/80 pl-3 sm:pl-4">
-                  <p className="mega-game-channel-id font-mono text-[9px] font-bold uppercase tracking-[0.34em] text-amber-200/90 sm:text-[10px]">
-                    // channel_Ω · bonus_ops · threat_level_max
-                  </p>
-                  <div className="mega-neon-header__chips mt-2">
-                    <span className="mega-neon-chip mega-neon-chip--alert">Red alert</span>
-                    <span className="mega-neon-chip mega-neon-chip--gold">Emergency ops</span>
-                    <span className="mega-game-rank-badge" aria-hidden>
-                      S-RANK
-                    </span>
-                  </div>
-                  <h2 className="mega-neon-title mega-game-title flex flex-wrap items-center gap-2">
-                    <span className="mega-game-title__bracket" aria-hidden>
-                      ⟨
-                    </span>
-                    <span>Mega mission</span>
-                    <span className="mega-game-title__bracket" aria-hidden>
-                      ⟩
-                    </span>
-                    <SyndicateHelpMark topic="mega-mission" label="How mega missions work" onOpen={openSyndicateHelp} />
-                  </h2>
-                  <p className="mega-neon-subtitle">Critical bonus track · timed deployment · admin clearance</p>
-                </div>
-                <div className="mega-neon-protocol mega-game-protocol">
-                  <p className="mega-neon-protocol__label">⟨ Field protocol ⟩</p>
-                  <p className="mega-neon-protocol__body">
-                    Deploy text + recorded video proof (Record video required). Upload is optional. One entry per device per op.
-                  </p>
-                </div>
+            <MegaMissionCompromisedFrame />
+            <div className="mega-mission-section__inner">
+              <MegaMissionEmergencyAlert urgent={visibleAdminTasks.length > 0} />
+              <div className="mega-mission-section__atmosphere" aria-hidden>
+                <span className="mega-mission-section__grid" />
+                <span className="mega-mission-section__scan" />
+                <span className="mega-mission-section__glow mega-mission-section__glow--tl" />
+                <span className="mega-mission-section__glow mega-mission-section__glow--br" />
+              </div>
+              <header className="mega-mission-header">
+                <h2 className="mega-mission-title flex flex-wrap items-center gap-2">
+                  Mega mission
+                  <SyndicateHelpMark topic="mega-mission" label="How mega missions work" onOpen={openSyndicateHelp} />
+                </h2>
+                <p className="mega-mission-subtitle">Bonus track · timed · admin review</p>
               </header>
 
-              <div className="mega-neon-grid">
-                <div className="mega-neon-panel mega-neon-panel--brief">
-                  <div className="mega-neon-panel__tag">
-                    <span className="mega-neon-panel__dot" aria-hidden />
-                    Threat briefing
+              <div className="mega-mission-briefing">
+                <article
+                  className={cn(
+                    "mega-dystopia-brief",
+                    visibleAdminTasks.length > 0 && "mega-dystopia-brief--live"
+                  )}
+                  aria-label="Mega mission brief"
+                >
+                  <span className="mega-dystopia-brief__grime" aria-hidden />
+                  <span className="mega-dystopia-brief__scan" aria-hidden />
+                  <header className="mega-dystopia-brief__head">
+                    <div className="mega-dystopia-brief__head-main">
+                      <span className="mega-dystopia-brief__stamp">Classified</span>
+                      <h3 className="mega-dystopia-brief__title">Mission brief</h3>
+                    </div>
+                    <span className="mega-dystopia-brief__sigil" aria-hidden>
+                      ◈
+                    </span>
+                  </header>
+                  <dl className="mega-dystopia-brief__nodes">
+                    <div className="mega-dystopia-node mega-dystopia-node--blood">
+                      <dt>Active ops</dt>
+                      <dd className="tabular-nums">{visibleAdminTasks.length}</dd>
+                    </div>
+                    <div className="mega-dystopia-node mega-dystopia-node--ash">
+                      <dt>Channel</dt>
+                      <dd>Secure</dd>
+                    </div>
+                    <div className="mega-dystopia-node mega-dystopia-node--ember">
+                      <dt>Deploy</dt>
+                      <dd>{visibleAdminTasks.length > 0 ? "Live" : "Standby"}</dd>
+                    </div>
+                    <div className="mega-dystopia-node mega-dystopia-node--rust">
+                      <dt>Proof</dt>
+                      <dd>Video + text</dd>
+                    </div>
+                  </dl>
+                  <div className="mega-dystopia-brief__protocol">
+                    <p className="mega-dystopia-brief__line">
+                      Emergency ops surface in <strong>Active operations</strong>. Required:{" "}
+                      <strong>text report</strong> + <strong>recorded video</strong> (upload alone fails). One submit per
+                      device per op.
+                    </p>
+                    <ul className="mega-dystopia-brief__chain" aria-label="Operation chain">
+                      <li>
+                        <span className="mega-dystopia-brief__verb">Deploy</span>
+                        <span className="mega-dystopia-brief__desc">Command posts countdown</span>
+                      </li>
+                      <li>
+                        <span className="mega-dystopia-brief__verb">Submit</span>
+                        <span className="mega-dystopia-brief__desc">Text + video before expiry</span>
+                      </li>
+                      <li>
+                        <span className="mega-dystopia-brief__verb">Claim</span>
+                        <span className="mega-dystopia-brief__desc">Points after admin approval</span>
+                      </li>
+                    </ul>
                   </div>
-                  <h3 className="mega-neon-panel__heading">Command review lane</h3>
-                  <p className="mega-neon-panel__copy">
-                    When command posts an emergency bonus op, it drops below.                     Transmit your{" "}
-                    <strong className="text-red-200">written report</strong> and{" "}
-                    <strong className="text-orange-200">recorded video proof</strong> (Record video is compulsory;
-                    file upload is optional only) — both are logged for admin review.
-                  </p>
-                  <ul className="mega-neon-rules">
-                    <li className="mega-neon-rule mega-neon-rule--alert">
-                      One submission per device per op. After clearance, hit Claim reviewed points.
-                    </li>
-                    <li className="mega-neon-rule mega-neon-rule--urgent">
-                      Ops expire on admin timer — beat the countdown before the channel goes dark.
-                    </li>
-                  </ul>
-                </div>
-                <aside className="mega-neon-panel mega-neon-panel--side">
-                  <p className="mega-neon-panel__tag mega-neon-panel__tag--side">Extraction</p>
-                  <p className="mega-neon-panel__copy mega-neon-panel__copy--side">
-                    Claim controls unlock under each cleared mission result.
-                  </p>
-                  {adminTaskMsg ? <p className="mega-neon-alert">{adminTaskMsg}</p> : null}
-                </aside>
+                  {adminTaskMsg ? <p className="mega-dystopia-brief__alert">{adminTaskMsg}</p> : null}
+                </article>
               </div>
-            </div>
 
-            <div className="mega-neon-missions mega-game-ops-bay">
+            <div className="mega-dystopia-ops">
+              <header className="mega-dystopia-ops__head">
+                <h3 className="mega-dystopia-ops__title">Active operations</h3>
+                {visibleAdminTasks.length > 0 ? (
+                  <span className="mega-dystopia-ops__badge mega-dystopia-ops__badge--live">Live</span>
+                ) : (
+                  <span className="mega-dystopia-ops__badge">Standby</span>
+                )}
+              </header>
             {visibleAdminTasks.length === 0 ? (
-              <div className="mega-neon-empty mega-game-empty">
-                <p className="mega-neon-empty__title">Channel quiet — no active ops</p>
-                <p className="mega-neon-empty__body">
-                  Stand by. When command deploys a mega mission, it will flash here. Run daily missions and check back.
-                </p>
+              <div className="mega-mission-empty mega-mission-card mega-mission-card--empty">
+                <MegaMissionHudCardChrome />
+                <div className="mega-mission-card__body mega-mission-card__body--empty">
+                  <div className="mega-mission-empty__layout">
+                    <div className="mega-mission-empty__radar" aria-hidden>
+                      <span className="mega-mission-empty__ring mega-mission-empty__ring--1" />
+                      <span className="mega-mission-empty__ring mega-mission-empty__ring--2" />
+                      <span className="mega-mission-empty__ring mega-mission-empty__ring--3" />
+                      <span className="mega-mission-empty__sweep" />
+                      <span className="mega-mission-empty__blip" />
+                      <span className="mega-mission-empty__core">STBY</span>
+                    </div>
+                    <div className="mega-mission-empty__content">
+                      <p className="mega-mission-empty__title">No active mega missions</p>
+                      <p className="mega-mission-empty__body">
+                        Command has not deployed an emergency op on your channel. Stay on daily missions — when a mega
+                        mission goes live, it will appear here with a countdown and deploy panes.
+                      </p>
+                    </div>
+                    <div className="mega-mission-empty__steps">
+                      <div className="mega-mission-empty-step">
+                        <span className="mega-mission-empty-step__icon" aria-hidden>
+                          ◈
+                        </span>
+                        <span className="mega-mission-empty-step__label">Patrol</span>
+                        <span className="mega-mission-empty-step__text">Finish today&apos;s syndicate missions</span>
+                      </div>
+                      <div className="mega-mission-empty-step">
+                        <span className="mega-mission-empty-step__icon" aria-hidden>
+                          ◉
+                        </span>
+                        <span className="mega-mission-empty-step__label">Watch</span>
+                        <span className="mega-mission-empty-step__text">This section updates when command posts</span>
+                      </div>
+                      <div className="mega-mission-empty-step">
+                        <span className="mega-mission-empty-step__icon" aria-hidden>
+                          ◆
+                        </span>
+                        <span className="mega-mission-empty-step__label">Deploy</span>
+                        <span className="mega-mission-empty-step__text">Submit proof before the op timer expires</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="mega-neon-ops-list mega-game-ops-list space-y-6">
+              <div className="mega-dystopia-ops__list">
                 {visibleAdminTasks.map((t, opIndex) => {
                   const opCode = `OP-${String(opIndex + 1).padStart(2, "0")}`;
                   const sub = t.submission ?? null;
@@ -4958,72 +5092,72 @@ export function SyndicateAiChallengePanel() {
                   const videoFromRecord = !!adminTaskVideoFromRecord[t.id];
                   const inlineMsg = adminTaskInlineMsg[t.id];
                   return (
-                    <article
-                      key={t.id}
-                      className="syndicate-game-ops-card mega-neon-ops-card mega-alert-ops-card mega-game-ops-card syndicate-danger-hud-frame syndicate-danger-hud-frame--card overflow-hidden"
-                    >
-                      <header className="mega-alert-ops-card__header mega-game-ops-card__header flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                            <span className="mega-game-op-code">{opCode}</span>
+                    <article key={t.id} className="mega-dystopia-op">
+                      <header className="mega-dystopia-op__hero">
+                        <div className="mega-dystopia-op__meta">
+                          <span className="mega-dystopia-op__code">{opCode}</span>
+                          <div className="mega-dystopia-op__status-row">
                             {t.expires_at ? (
-                              <div className="mega-alert-countdown mega-game-countdown flex items-center gap-2 px-2.5 py-1.5">
-                                <span className="mega-alert-countdown__label">T−</span>
-                                <span className="mega-alert-countdown__value font-mono tabular-nums">
-                                  {formatCountdown(leftSec)}
-                                </span>
+                              <div className="mega-dystopia-op__countdown">
+                                <span className="mega-dystopia-op__countdown-label">Time left</span>
+                                <span className="mega-dystopia-op__countdown-value">{formatCountdown(leftSec)}</span>
                               </div>
                             ) : null}
-                            {t.admin_note ? (
-                              <div className="mega-alert-admin-note max-w-[100%] px-2.5 py-1.5">
-                                <span className="mega-alert-admin-note__label">Command note</span>
-                                <p className="mt-0.5 text-[12px] font-semibold leading-snug">{t.admin_note}</p>
-                              </div>
-                            ) : null}
-                            <span className="mega-alert-points-badge px-2 py-0.5 text-[11px] font-black">
-                              {t.points_target} pts
-                            </span>
+                            <span className="mega-dystopia-op__points">{t.points_target} pts</span>
                           </div>
-                          <h4 className="mega-alert-ops-card__title mt-2 text-[18px] font-black uppercase leading-tight tracking-[0.05em] sm:text-[20px]">
-                            {t.title}
-                          </h4>
                         </div>
+                        <h4 className="mega-dystopia-op__mission-title">{t.title}</h4>
+                        {t.admin_note ? (
+                          <div className="mega-dystopia-op__command-note">
+                            <span className="mega-dystopia-op__command-note-label">Command note</span>
+                            <p>{t.admin_note}</p>
+                          </div>
+                        ) : null}
                       </header>
 
                       {t.image_url ? (
-                        <div className="border-b border-white/10">
-                          <div className="aspect-[21/9] max-h-52 w-full overflow-hidden bg-black/50">
+                        <div className="mega-dystopia-op__image">
+                          <div className="aspect-[21/9] max-h-52 w-full overflow-hidden bg-black/60">
                             <img src={t.image_url} alt="" className="h-full w-full object-cover" />
                           </div>
                         </div>
                       ) : null}
 
-                      <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
-                        <div className="mega-game-ops-pane mega-game-ops-pane--brief min-w-0 border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
-                          <p className="mega-game-pane-label text-[11px] font-bold uppercase tracking-[0.14em]">
-                            ⟨ Task briefing ⟩
+                      <section className="mega-dystopia-op__block mega-dystopia-op__block--brief" aria-labelledby={`mega-brief-${t.id}`}>
+                        <h5 id={`mega-brief-${t.id}`} className="mega-dystopia-op__block-title">
+                          Task briefing
+                        </h5>
+                        <div className="mega-dystopia-op__brief-box no-scrollbar">
+                          <p className="whitespace-pre-wrap break-words">
+                            {t.description || "No additional instructions."}
                           </p>
-                          <div className="mega-game-terminal no-scrollbar mt-2 max-h-64 overflow-y-auto p-4 text-[14px] leading-relaxed text-white/88 sm:text-[15px] sm:leading-relaxed">
-                            <div className="whitespace-pre-wrap break-words">{t.description || "No additional instructions."}</div>
-                          </div>
                         </div>
+                      </section>
 
-                        <div className="mega-game-ops-pane mega-game-ops-pane--deploy min-w-0 bg-black/25 p-4 sm:p-5">
+                      <section
+                        className="mega-dystopia-op__block mega-dystopia-op__block--submit"
+                        aria-label={sub ? undefined : "Submit mission proof"}
+                        aria-labelledby={sub ? `mega-submit-${t.id}` : undefined}
+                      >
+                        {sub ? (
+                          <h5 id={`mega-submit-${t.id}`} className="mega-dystopia-op__block-title mega-dystopia-op__block-title--submit">
+                            Submission status
+                          </h5>
+                        ) : null}
                           {sub ? (
-                            <div className="mega-game-terminal mega-game-terminal--status p-4 text-[14px] leading-snug text-cyan-100/95">
-                              <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-200/80">Submission received</p>
+                            <div className="mega-dystopia-op__status">
                               {submittedLabel ? (
-                                <p className="mt-2 font-semibold text-white/95">
+                                <p className="mt-2 font-semibold">
                                   {submittedLabel}
-                                  {sub.has_attachment ? <span className="text-cyan-200/90"> · Video included</span> : null}
+                                  {sub.has_attachment ? <span> · Video included</span> : null}
                                 </p>
                               ) : null}
                               {typeof sub.elapsed_seconds === "number" && sub.elapsed_seconds > 0 ? (
-                                <p className="mt-1 text-[12px] text-cyan-100/82">
+                                <p className="mt-1 opacity-90">
                                   Completed in {formatDurationReadable(sub.elapsed_seconds)} ({sub.elapsed_seconds}s)
                                 </p>
                               ) : null}
-                              <p className="mt-2 text-[13px] text-cyan-100/88">
+                              <p className="mt-2">
                                 {sub.status === "pending"
                                   ? "Pending admin review."
                                   : sub.status === "reviewed"
@@ -5036,13 +5170,13 @@ export function SyndicateAiChallengePanel() {
                                 <button
                                   type="button"
                                   onClick={() => void claimReviewedAdminPoints()}
-                                  className={cn("mt-2 w-full px-3 py-2.5 text-[13px] font-bold uppercase tracking-[0.08em]", CTA_BTN)}
+                                  className={cn("mt-3 w-full px-3 py-2.5 font-bold uppercase tracking-[0.08em]", CTA_BTN)}
                                 >
                                   Claim +{sub.awarded_points} points
                                 </button>
                               ) : null}
                               {sub.status !== "pending" && sub.reviewed_at ? (
-                                <p className="mt-1 text-[12px] text-cyan-100/72">
+                                <p className="mt-2 opacity-85">
                                   Reviewed at{" "}
                                   {(() => {
                                     try {
@@ -5057,50 +5191,37 @@ export function SyndicateAiChallengePanel() {
                                 </p>
                               ) : null}
                               {sub.review_notes ? (
-                                <p className="mt-2 rounded-lg border border-white/12 bg-black/25 px-2.5 py-2 text-[12px] leading-snug text-cyan-50/90">
+                                <p className="mt-2 rounded-md border border-white/15 bg-black/30 px-2.5 py-2 leading-snug">
                                   Admin note: {sub.review_notes}
                                 </p>
                               ) : null}
                             </div>
                           ) : (
-                            <div className="mega-game-deploy-form space-y-4">
-                              <div>
-                                <p className="mega-game-pane-label text-[11px] font-bold uppercase tracking-[0.14em]">
-                                  ⟨ Deploy payload ⟩
-                                </p>
-                                <p className="mt-1 text-[12px] text-white/55">
-                                  <span className="text-emerald-200/90">Text is required</span> (at least 3 characters).{" "}
-                                  <span className="text-rose-200/95">Record video is compulsory</span> before submit.{" "}
-                                  <span className="text-amber-200/90">Upload is optional</span> and cannot replace a recording.
-                                </p>
-                              </div>
-                              <div>
+                            <div className="mega-dystopia-op__form">
+                              <div className="mega-dystopia-op__field">
                                 <label className="sr-only" htmlFor={`admin-task-response-${t.id}`}>
                                   Written response
                                 </label>
                                 <textarea
                                   id={`admin-task-response-${t.id}`}
-                                  rows={5}
+                                  rows={6}
                                   value={adminTaskDrafts[t.id] ?? ""}
                                   onChange={(e) => setAdminTaskDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))}
                                   placeholder="Describe what you did, paste links, or explain how you completed the task…"
-                                  className="mega-game-input w-full px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35"
+                                  className="mega-dystopia-op__textarea"
                                 />
                               </div>
-                              <div
-                                id={`admin-task-record-zone-${t.id}`}
-                                className="mega-game-terminal mega-game-terminal--record p-3"
-                              >
-                                <p className="text-[12px] font-semibold text-white/85">
-                                  Video proof{" "}
-                                  <span className="font-normal text-rose-200/95">(Record video — compulsory)</span>
+
+                              <div id={`admin-task-record-zone-${t.id}`} className="mega-dystopia-op__field mega-dystopia-op__video-zone">
+                                <p className="mega-dystopia-op__field-label">
+                                  Video proof <span className="mega-dystopia-op__required-tag">Required</span>
                                 </p>
                                 <div className="mt-3 flex flex-wrap items-center gap-2">
                                   {!isRecording ? (
                                     <button
                                       type="button"
                                       onClick={() => void startAdminTaskVideoRecord(t.id)}
-                                      className="mega-game-action-btn mega-game-action-btn--record px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]"
+                                      className="mega-dystopia-op__btn mega-dystopia-op__btn--record"
                                     >
                                       Record video
                                     </button>
@@ -5108,52 +5229,46 @@ export function SyndicateAiChallengePanel() {
                                     <button
                                       type="button"
                                       onClick={() => stopAdminTaskVideoRecord(t.id)}
-                                      className="mega-game-action-btn mega-game-action-btn--stop px-3 py-2 text-[12px] font-bold uppercase tracking-[0.08em]"
+                                      className="mega-dystopia-op__btn mega-dystopia-op__btn--stop"
                                     >
                                       Stop recording
                                     </button>
                                   )}
                                   {isRecording ? (
-                                    <span className="inline-flex max-w-full flex-col gap-0.5 sm:inline-flex sm:flex-row sm:items-center sm:gap-2">
-                                      <span className="inline-flex items-center gap-2 rounded-lg border border-rose-400/50 bg-rose-600/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-rose-50">
-                                        <span
-                                          className="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-rose-300 shadow-[0_0_10px_rgba(254,205,211,0.9)]"
-                                          aria-hidden
-                                        />
-                                        Recording
-                                      </span>
-                                      <span className="text-[11px] font-medium leading-snug text-cyan-100/90">
-                                        Fullscreen camera is open — use Stop below or in the bar above the form.
-                                      </span>
+                                    <span className="mega-dystopia-op__recording">
+                                      <span className="mega-dystopia-op__recording-dot" aria-hidden />
+                                      Recording
                                     </span>
                                   ) : null}
                                 </div>
                                 {isRecording ? (
-                                  <p className="mt-2 text-[12px] leading-snug text-cyan-200/85">
-                                    The live preview uses the full screen so you can see yourself clearly (especially on iPhone). Scroll is locked until you stop.
+                                  <p className="mega-dystopia-op__msg mt-2">
+                                    Fullscreen camera is open. Use Stop when finished. Scroll is locked until you stop.
                                   </p>
                                 ) : null}
                                 {videoFromRecord && videoAttached ? (
-                                  <p className="mt-2 text-[12px] font-semibold text-emerald-200/95">
-                                    Recorded video attached{fileName ? `: ${fileName}` : ""}. You may submit when your text is ready.
+                                  <p className="mega-dystopia-op__msg mega-dystopia-op__msg--ok mt-2">
+                                    Recorded video attached{fileName ? `: ${fileName}` : ""}. You may submit when your text
+                                    is ready.
                                   </p>
                                 ) : videoAttached && !videoFromRecord ? (
-                                  <p className="mt-2 text-[12px] font-semibold text-amber-200/95">
-                                    File selected ({fileName}) — upload is optional. You must still Record video before submit.
+                                  <p className="mega-dystopia-op__msg mega-dystopia-op__msg--warn mt-2">
+                                    File selected ({fileName}) — upload is optional. You must still record video before
+                                    submit.
                                   </p>
                                 ) : (
-                                  <p className="mt-2 text-[11px] text-rose-200/85">
+                                  <p className="mega-dystopia-op__msg mega-dystopia-op__msg--err mt-2">
                                     No recording yet. Press Record video before you submit.
                                   </p>
                                 )}
-                                <label className="mt-4 block text-[11px] font-semibold text-white/55" htmlFor={`admin-task-file-${t.id}`}>
-                                  Optional file upload <span className="font-normal text-white/40">(does not replace recording)</span>
+                                <label className="mega-dystopia-op__file-label" htmlFor={`admin-task-file-${t.id}`}>
+                                  Optional file upload (does not replace recording)
                                 </label>
                                 <input
                                   id={`admin-task-file-${t.id}`}
                                   type="file"
                                   accept="video/*,.webm,.mp4,.mov,.mkv,.m4v,.ogv,.avi"
-                                  className="mt-2 block w-full cursor-pointer text-[13px] text-white/85 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-cyan-500/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-cyan-50 hover:file:bg-cyan-500/40"
+                                  className="mega-dystopia-op__file-input"
                                   onChange={(e) => {
                                     const f = e.target.files?.[0] ?? null;
                                     if (isRecording) stopAdminTaskVideoRecord(t.id);
@@ -5183,25 +5298,24 @@ export function SyndicateAiChallengePanel() {
                                 disabled={adminTaskBusyId === t.id || isRecording}
                                 title={isRecording ? "Stop recording before submitting." : undefined}
                                 onClick={() => void submitAdminTask(t.id)}
-                                className={ADMIN_SUBMIT_BTN}
+                                className={cn(ADMIN_SUBMIT_BTN, "mega-dystopia-op__submit")}
                               >
                                 <span className="syndicate-quick-action-card__label">
                                   {adminTaskBusyId === t.id ? "Submitting…" : "Submit for admin review"}
                                 </span>
                               </button>
                               {inlineMsg ? (
-                                <p className="mega-neon-alert mt-2 text-center text-[12px] leading-snug" role="alert">
+                                <p className="mega-dystopia-op__inline-alert" role="alert">
                                   {inlineMsg}
                                 </p>
                               ) : !videoFromRecord && !isRecording ? (
-                                <p className="text-center text-[11px] text-rose-200/90">
-                                  Record video is compulsory before submit. Upload is optional only.
+                                <p className="mega-dystopia-op__msg mega-dystopia-op__msg--err text-center">
+                                  Record video is required before submit. Upload is optional only.
                                 </p>
                               ) : null}
                             </div>
                           )}
-                        </div>
-                      </div>
+                      </section>
                     </article>
                   );
                 })}

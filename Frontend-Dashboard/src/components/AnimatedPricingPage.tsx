@@ -11,6 +11,7 @@ import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
   OFFER_PLAN_THUMB_THE_KNIGHT,
 } from '@/components/programs/offerPlanThumbnails'
+import { cn } from '@/components/dashboard/dashboardPrimitives'
 
 type PlanKey = 'bundle' | 'pawn' | 'knight' | 'king'
 type BillingKey = 'monthly' | 'yearly'
@@ -26,10 +27,6 @@ interface PricingTier {
   icon: ReactNode
   cta: string
   billingMode?: 'lifetime' | 'recurring'
-}
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
 }
 
 /** Octagonal / tech clip shared by pricing cards (matches home social marquees). */
@@ -257,7 +254,10 @@ function TierCard({
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, min(560px, 50vw)"
-              className="object-cover object-center"
+              className={cn(
+                "object-cover",
+                planKey === "bundle" ? "object-[center_38%]" : "object-center"
+              )}
               priority={planKey === 'bundle'}
               fetchPriority={planKey === 'bundle' ? 'high' : undefined}
             />

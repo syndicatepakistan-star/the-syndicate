@@ -71,8 +71,15 @@ class MembershipGenerationState(models.Model):
     membership_articles_bootstrap_completed_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Set after the one-time deploy bootstrap (generate_membership_articles on Railway). "
-        "Prevents re-running on later deploys.",
+        help_text="Set after deploy bootstrap generated articles for membership_articles_bootstrap_dataset.",
+    )
+    membership_articles_bootstrap_dataset = models.ForeignKey(
+        "membership.ArticleKeywordDataset",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="Active keyword dataset used for the last deploy bootstrap (re-runs when you activate a different dataset).",
     )
     updated_at = models.DateTimeField(auto_now=True)
 

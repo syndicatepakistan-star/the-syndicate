@@ -9,8 +9,10 @@ from typing import Any
 from django.utils import timezone
 
 from apps.membership.generation import (
+    article_keyword_fingerprint,
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
+    keyword_fingerprint,
     merge_progression_by_rank,
     pick_keyword_row,
     progression_from_article_seeds,
@@ -22,16 +24,61 @@ from apps.membership.keyword_levels import normalize_level
 from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState
 
 
-def membership_deploy_bootstrap_completed() -> bool:
+def dataset_row_fingerprints(dataset: ArticleKeywordDataset) -> set[str]:
+    rows = dataset.rows if isinstance(dataset.rows, list) else []
+    out: set[str] = set()
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        kw = str(r.get("keyword") or "").strip()
+        if not kw:
+            continue
+        cat = normalize_category(str(r.get("category") or ""))
+        out.add(keyword_fingerprint(cat, kw))
+    return out
+
+
+def count_operator_brief_articles_for_dataset(dataset: ArticleKeywordDataset) -> int:
+    """Operator-brief articles whose seed matches a row in this dataset (exact keyword text)."""
+    fps = dataset_row_fingerprints(dataset)
+    if not fps:
+        return 0
+    n = 0
+    qs = filter_articles_with_tag(Article.objects.all(), OPERATOR_BRIEF_TAG).only(
+        "content",
+        "generation_seed_keyword",
+        "generation_seed_category",
+    )
+    for article in qs.iterator(chunk_size=200):
+        fp = article_keyword_fingerprint(article)
+        if fp and fp in fps:
+            n += 1
+    return n
+
+
+def membership_deploy_bootstrap_completed_for_dataset(dataset: ArticleKeywordDataset) -> bool:
     state = (
         MembershipGenerationState.objects.filter(pk=1)
-        .only("membership_articles_bootstrap_completed_at")
+        .only(
+            "membership_articles_bootstrap_completed_at",
+            "membership_articles_bootstrap_dataset_id",
+        )
         .first()
     )
-    return bool(state and state.membership_articles_bootstrap_completed_at)
+    if not state or not state.membership_articles_bootstrap_completed_at:
+        return False
+    return state.membership_articles_bootstrap_dataset_id == dataset.pk
 
 
-def mark_membership_deploy_bootstrap_completed() -> None:
+def membership_deploy_bootstrap_completed() -> bool:
+    """True only when the current active dataset was already bootstrapped on deploy."""
+    ds = get_active_keyword_dataset()
+    if not ds:
+        return False
+    return membership_deploy_bootstrap_completed_for_dataset(ds)
+
+
+def mark_membership_deploy_bootstrap_completed(*, dataset: ArticleKeywordDataset) -> None:
     state, _ = MembershipGenerationState.objects.get_or_create(
         pk=1,
         defaults={
@@ -40,10 +87,15 @@ def mark_membership_deploy_bootstrap_completed() -> None:
             "recent_titles": [],
         },
     )
-    if state.membership_articles_bootstrap_completed_at:
-        return
     state.membership_articles_bootstrap_completed_at = timezone.now()
-    state.save(update_fields=["membership_articles_bootstrap_completed_at", "updated_at"])
+    state.membership_articles_bootstrap_dataset = dataset
+    state.save(
+        update_fields=[
+            "membership_articles_bootstrap_completed_at",
+            "membership_articles_bootstrap_dataset",
+            "updated_at",
+        ]
+    )
 
 DEFAULT_MEMBERSHIP_ARTICLE_COUNT = 15
 OPERATOR_BRIEF_TAG = "operator-brief"

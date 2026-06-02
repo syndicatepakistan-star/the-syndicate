@@ -3,9 +3,11 @@ from django.core.management.base import BaseCommand
 
 from apps.membership.services.article_from_dataset import (
     DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
-    count_operator_brief_articles,
+    count_operator_brief_articles_for_dataset,
+    generate_membership_articles_batch,
+    get_active_keyword_dataset,
     mark_membership_deploy_bootstrap_completed,
-    membership_deploy_bootstrap_completed,
+    membership_deploy_bootstrap_completed_for_dataset,
 )
 
 
@@ -48,46 +50,77 @@ class Command(BaseCommand):
 
         if options["reset_flag"]:
             MembershipGenerationState.objects.filter(pk=1).update(
-                membership_articles_bootstrap_completed_at=None
+                membership_articles_bootstrap_completed_at=None,
+                membership_articles_bootstrap_dataset_id=None,
             )
-            self.stdout.write(self.style.WARNING("Cleared deploy bootstrap flag."))
+            self.stdout.write(self.style.WARNING("Cleared deploy bootstrap flag and dataset link."))
 
-        if membership_deploy_bootstrap_completed() and not options["force"] and not options["reset_flag"]:
+        ds = get_active_keyword_dataset()
+        if not ds:
+            call_command(
+                "load_default_membership_keyword_dataset",
+                force=bool(options["force_dataset"]),
+                verbosity=options["verbosity"],
+            )
+            ds = get_active_keyword_dataset()
+
+        if not ds:
+            self.stderr.write(
+                self.style.ERROR(
+                    "No active keyword dataset with rows. Upload your CSV in Django admin, mark Is active, then redeploy."
+                )
+            )
+            return
+
+        if (
+            membership_deploy_bootstrap_completed_for_dataset(ds)
+            and not options["force"]
+            and not options["reset_flag"]
+        ):
+            matching = count_operator_brief_articles_for_dataset(ds)
             self.stdout.write(
                 self.style.SUCCESS(
-                    "Deploy membership bootstrap already ran once; skipping (later pushes will not regenerate). "
-                    "Use --force or --reset-flag to run again."
+                    f"Deploy bootstrap already completed for dataset “{ds.name}” "
+                    f"({matching} article(s) match its seeds). Skipping."
                 )
             )
             return
 
         target = max(0, int(options["target"]))
-        existing = count_operator_brief_articles()
-        if existing >= target:
+        matching = count_operator_brief_articles_for_dataset(ds)
+        to_generate = max(0, target - matching)
+        self.stdout.write(
+            f"Active dataset: “{ds.name}” ({len(ds.rows or [])} seeds). "
+            f"Articles matching this dataset: {matching}; will generate up to {to_generate}."
+        )
+
+        if to_generate <= 0:
+            mark_membership_deploy_bootstrap_completed(dataset=ds)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Already have {existing} operator-brief article(s) (target {target}). Skipping generation."
+                    f"Already have {matching} article(s) from this dataset (target {target}). "
+                    "Marked bootstrap complete for this dataset."
                 )
             )
-            mark_membership_deploy_bootstrap_completed()
             return
 
-        call_command(
-            "load_default_membership_keyword_dataset",
-            force=bool(options["force_dataset"]),
-            verbosity=options["verbosity"],
+        stub = bool(options["stub"])
+        generated = generate_membership_articles_batch(
+            count=to_generate,
+            dataset=ds,
+            use_openai=not stub,
+            allow_stub_without_openai=stub,
+            stop_on_error=False,
         )
+        for item in generated:
+            self.stdout.write(f"  + {item.article.slug} — {item.keyword[:60]}")
 
-        stub_args = ["--stub"] if options["stub"] else []
-        call_command(
-            "generate_membership_articles",
-            *stub_args,
-            f"--fill-to={target}",
-            verbosity=options["verbosity"],
-        )
-        mark_membership_deploy_bootstrap_completed()
+        mark_membership_deploy_bootstrap_completed(dataset=ds)
+        matching_after = count_operator_brief_articles_for_dataset(ds)
         self.stdout.write(
             self.style.SUCCESS(
-                "Marked deploy bootstrap complete; future Railway deploys will skip article generation."
+                f"Generated {len(generated)} article(s) from “{ds.name}”. "
+                f"Dataset-matched articles: {matching_after}. "
+                "Future deploys skip until you activate a different keyword dataset."
             )
         )

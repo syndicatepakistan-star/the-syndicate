@@ -146,7 +146,12 @@ class KeywordUsageStatAdmin(AllFieldsListDisplayAdmin):
 
 @admin.register(MembershipGenerationState)
 class MembershipGenerationStateAdmin(AllFieldsListDisplayAdmin):
-    readonly_fields = ("id", "updated_at", "membership_articles_bootstrap_completed_at")
+    readonly_fields = (
+        "id",
+        "updated_at",
+        "membership_articles_bootstrap_completed_at",
+        "membership_articles_bootstrap_dataset",
+    )
 
 
 @admin.register(Article)

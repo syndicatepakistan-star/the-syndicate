@@ -6,6 +6,7 @@ from apps.membership.services.article_from_dataset import (
     NoActiveKeywordDatasetError,
     OpenAINotConfiguredError,
     count_operator_brief_articles,
+    count_operator_brief_articles_for_dataset,
     generate_membership_articles_batch,
     get_active_keyword_dataset,
 )
@@ -56,18 +57,26 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ds = get_active_keyword_dataset(dataset_id=options["dataset_id"])
+
         count = max(0, int(options["count"]))
         fill_to = options["fill_to"]
         if fill_to is not None:
-            existing = count_operator_brief_articles()
+            if ds:
+                existing = count_operator_brief_articles_for_dataset(ds)
+                self.stdout.write(
+                    f"Articles matching active dataset “{ds.name}”: {existing}; "
+                    f"target {fill_to}."
+                )
+            else:
+                existing = count_operator_brief_articles()
+                self.stdout.write(f"Operator-brief articles in DB: {existing}; target {fill_to}.")
             count = max(0, int(fill_to) - existing)
-            self.stdout.write(f"Operator-brief articles in DB: {existing}; will generate up to {count} more.")
 
         if count <= 0:
-            self.stdout.write(self.style.SUCCESS("Nothing to generate."))
+            self.stdout.write(self.style.SUCCESS("Nothing to generate for this dataset."))
             return
 
-        ds = get_active_keyword_dataset(dataset_id=options["dataset_id"])
         if not ds:
             raise NoActiveKeywordDatasetError(
                 "No keyword dataset with rows. Run load_default_membership_keyword_dataset or upload in admin."
@@ -106,9 +115,18 @@ class Command(BaseCommand):
         for item in generated:
             self.stdout.write(f"  + {item.article.slug} — {item.article.title[:72]}")
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Generated {len(generated)} article(s). "
-                f"Operator-brief total: {count_operator_brief_articles()}."
+        if ds:
+            matched = count_operator_brief_articles_for_dataset(ds)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Generated {len(generated)} article(s). "
+                    f"Articles matching dataset “{ds.name}”: {matched}."
+                )
             )
-        )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Generated {len(generated)} article(s). "
+                    f"Operator-brief total: {count_operator_brief_articles()}."
+                )
+            )

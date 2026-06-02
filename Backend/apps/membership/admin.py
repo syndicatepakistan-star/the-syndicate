@@ -94,10 +94,12 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
             )
 
         ds = get_object_or_404(ArticleKeywordDataset, pk=object_id)
-        if not isinstance(ds.rows, list) or not ds.rows:
+        rows = ds.rows if isinstance(ds.rows, list) else []
+        row_count = len(rows)
+        if row_count < 1:
             self.message_user(
                 request,
-                f"Dataset “{ds.name}” has no parsed rows. Upload a file and save first.",
+                f"Dataset “{ds.name}” has no parsed rows ({row_count}). Upload a CSV/DOCX/PDF and click Save first.",
                 level=messages.ERROR,
             )
             return HttpResponseRedirect(
@@ -105,7 +107,7 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
             )
 
         try:
-            generated = generate_membership_articles_batch(
+            batch = generate_membership_articles_batch(
                 count=DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
                 dataset=ds,
                 use_openai=True,
@@ -121,20 +123,30 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
         except MembershipArticleGenerationError as exc:
             self.message_user(request, str(exc), level=messages.ERROR)
         else:
+            generated = batch.generated
             if generated:
                 seeds = ", ".join(g.keyword[:40] for g in generated[:5])
                 extra = f" … (+{len(generated) - 5} more)" if len(generated) > 5 else ""
                 self.message_user(
                     request,
-                    f"Created {len(generated)} article(s) from “{ds.name}”. Seeds: {seeds}{extra}",
+                    f"Created {len(generated)} article(s) from “{ds.name}” ({row_count} seeds in file). "
+                    f"Keywords: {seeds}{extra}",
                     level=messages.SUCCESS,
                 )
-            else:
+            if batch.errors:
                 self.message_user(
                     request,
-                    "No articles were created. Check OpenAI logs and that the dataset has keywords.",
+                    f"Generation stopped: {batch.errors[0]}",
+                    level=messages.ERROR,
+                )
+            if not generated and not batch.errors:
+                self.message_user(
+                    request,
+                    "No articles were created. Check Railway logs and OPENAI_API_KEY.",
                     level=messages.WARNING,
                 )
+            elif not generated and batch.errors:
+                pass
 
         return HttpResponseRedirect(
             reverse("admin:membership_articlekeyworddataset_change", args=[object_id])

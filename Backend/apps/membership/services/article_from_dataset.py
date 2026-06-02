@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+import random
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from apps.membership.generation import (
     collect_avoid_fingerprints,
@@ -101,6 +105,30 @@ def build_article_fields_from_openai_body(
     }
 
 
+def _pick_row_fresh_batch(
+    rows: list[dict[str, Any]],
+    batch_avoid_fingerprints: set[str],
+) -> dict[str, Any]:
+    """Pick an unused dataset row; reuse rows only when the dataset is smaller than the batch size."""
+    available: list[dict[str, Any]] = []
+    for r in rows:
+        cat = normalize_category(str(r.get("category") or ""))
+        kw = str(r.get("keyword") or "").strip()
+        if not kw:
+            continue
+        fp = keyword_fingerprint(cat, kw)
+        if fp not in batch_avoid_fingerprints:
+            available.append(r)
+    pool = available if available else list(rows)
+    return random.choice(pool)
+
+
+@dataclass
+class MembershipArticleBatchResult:
+    generated: list[GeneratedMembershipArticle] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+
 def _stub_openai_body(*, keyword: str, category: str) -> dict[str, Any]:
     title = f"{keyword[:80]} — operator brief"
     return {
@@ -195,13 +223,16 @@ def generate_one_membership_article_from_dataset(
                 break
         avoid_keywords = collect_avoid_keyword_phrases(read_slugs=read_slugs)
 
-    row = pick_keyword_row(
-        rows,
-        dataset=dataset,
-        category_filter=cat_req,
-        avoid_fingerprints=avoid_fps,
-        progression_by_category=eff_prog,
-    )
+    if fresh_batch:
+        row = _pick_row_fresh_batch(rows, avoid_fps)
+    else:
+        row = pick_keyword_row(
+            rows,
+            dataset=dataset,
+            category_filter=cat_req,
+            avoid_fingerprints=avoid_fps,
+            progression_by_category=eff_prog,
+        )
     keyword = str(row.get("keyword") or "").strip()
     category = normalize_category(str(row.get("category") or cat_req))
     level_used = normalize_level(str(row.get("level") or row.get("tier") or row.get("difficulty") or ""))
@@ -267,16 +298,16 @@ def generate_membership_articles_batch(
     allow_stub_without_openai: bool = False,
     fresh_batch: bool = False,
     stop_on_error: bool = False,
-) -> list[GeneratedMembershipArticle]:
+) -> MembershipArticleBatchResult:
     ds = dataset or get_active_keyword_dataset(dataset_id=dataset_id)
     if not ds:
         raise NoActiveKeywordDatasetError(
             "No active keyword dataset with rows. Upload a file in Django admin and save."
         )
 
-    out: list[GeneratedMembershipArticle] = []
+    result = MembershipArticleBatchResult()
     batch_fps: set[str] = set()
-    for _ in range(max(0, int(count))):
+    for index in range(max(0, int(count))):
         try:
             item = generate_one_membership_article_from_dataset(
                 dataset=ds,
@@ -286,10 +317,30 @@ def generate_membership_articles_batch(
                 use_openai=use_openai,
                 allow_stub_without_openai=allow_stub_without_openai,
             )
-            out.append(item)
+            result.generated.append(item)
             batch_fps.add(keyword_fingerprint(item.category, item.keyword))
-        except MembershipArticleGenerationError:
+            logger.info(
+                "membership article %s/%s saved id=%s slug=%s seed=%r",
+                index + 1,
+                count,
+                item.article.id,
+                item.article.slug,
+                item.keyword[:80],
+            )
+        except OpenAINotConfiguredError:
+            raise
+        except MembershipArticleGenerationError as exc:
+            msg = str(exc) or "Generation failed."
+            result.errors.append(msg)
+            logger.exception("membership article batch failed at %s/%s: %s", index + 1, count, msg)
             if stop_on_error:
                 raise
             break
-    return out
+        except Exception as exc:
+            msg = str(exc) or exc.__class__.__name__
+            result.errors.append(msg)
+            logger.exception("membership article batch unexpected error at %s/%s", index + 1, count)
+            if stop_on_error:
+                raise MembershipArticleGenerationError(msg) from exc
+            break
+    return result

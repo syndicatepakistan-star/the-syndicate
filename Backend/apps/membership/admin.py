@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from apps.membership.dataset_match import (
     article_seed_keyword,
+    describe_seed_in_dataset,
     format_all_keywords_for_search,
     seed_matches_dataset,
 )
@@ -217,14 +218,14 @@ class ArticleAdmin(AllFieldsListDisplayAdmin):
         if not ds:
             return f"Seed keyword: «{kw}» — no active dataset to compare."
         if seed_matches_dataset(obj, ds):
-            return f"✓ «{kw}» matches active dataset «{ds.name}»."
+            return f"✓ «{kw}» — {describe_seed_in_dataset(obj, ds)}"
         src = getattr(obj, "generation_source_dataset", None)
         if src and seed_matches_dataset(obj, src):
-            return f"✓ «{kw}» matches its source dataset «{src.name}» (not the current active one)."
+            return f"✓ «{kw}» — {describe_seed_in_dataset(obj, src)}"
         return (
-            f"✗ «{kw}» NOT in active dataset «{ds.name}». "
-            "This article was likely created before your upload or from another dataset. "
-            "Use Generate 15 on your dataset for new matching articles."
+            f"✗ «{kw}» — {describe_seed_in_dataset(obj, ds)} "
+            "If you re-uploaded the dataset file, old articles keep old seeds. "
+            "Generate new articles from the current dataset."
         )
 
     @admin.display(boolean=True)

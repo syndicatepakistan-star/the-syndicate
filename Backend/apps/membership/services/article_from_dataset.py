@@ -10,6 +10,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+from apps.membership.dataset_match import split_row_keyword_category
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
@@ -112,8 +113,7 @@ def _pick_row_fresh_batch(
     """Pick an unused dataset row; reuse rows only when the dataset is smaller than the batch size."""
     available: list[dict[str, Any]] = []
     for r in rows:
-        cat = normalize_category(str(r.get("category") or ""))
-        kw = str(r.get("keyword") or "").strip()
+        kw, cat = split_row_keyword_category(r)
         if not kw:
             continue
         fp = keyword_fingerprint(cat, kw)
@@ -233,8 +233,11 @@ def generate_one_membership_article_from_dataset(
             avoid_fingerprints=avoid_fps,
             progression_by_category=eff_prog,
         )
-    keyword = str(row.get("keyword") or "").strip()
-    category = normalize_category(str(row.get("category") or cat_req))
+    keyword, category = split_row_keyword_category(row)
+    if not keyword:
+        raise MembershipArticleGenerationError("Dataset row has an empty keyword.")
+    if not category or category not in VALID_CATEGORIES:
+        category = normalize_category(str(row.get("category") or cat_req))
     level_used = normalize_level(str(row.get("level") or row.get("tier") or row.get("difficulty") or ""))
     creative_seed = uuid.uuid4().hex[:14]
 

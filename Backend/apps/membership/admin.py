@@ -4,6 +4,11 @@ from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
+from apps.membership.dataset_match import (
+    article_seed_keyword,
+    format_all_keywords_for_search,
+    seed_matches_dataset,
+)
 from apps.membership.keyword_dataset import KeywordDatasetParseError, parse_keyword_dataset_bytes
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
 from apps.membership.services.article_from_dataset import (
@@ -59,7 +64,7 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
     change_form_template = "admin/membership/articlekeyworddataset/change_form.html"
     list_filter = ("is_active",)
     search_fields = ("name",)
-    readonly_fields = ("created_at", "rows_preview")
+    readonly_fields = ("created_at", "rows_preview", "all_keywords_searchable")
 
     @admin.display(description="Rows")
     def row_count(self, obj: ArticleKeywordDataset) -> int:
@@ -75,6 +80,13 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
         return json.dumps(obj.rows[:8], ensure_ascii=False, indent=2) + (
             f"\n... ({len(obj.rows)} total)" if len(obj.rows) > 8 else ""
         )
+
+    @admin.display(description="All keywords (Ctrl+F here)")
+    def all_keywords_searchable(self, obj: ArticleKeywordDataset) -> str:
+        if not getattr(obj, "pk", None):
+            return "Save the dataset first."
+        rows = obj.rows if isinstance(obj.rows, list) else []
+        return format_all_keywords_for_search(rows)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -192,7 +204,28 @@ class ArticleAdmin(AllFieldsListDisplayAdmin):
     list_filter = ("is_featured",)
     search_fields = ("title", "slug", "description", "generation_seed_keyword")
     prepopulated_fields = {"slug": ("title",)}
-    readonly_fields = ("created_at",)
+    readonly_fields = ("created_at", "seed_dataset_check")
+
+    @admin.display(description="Seed vs active dataset")
+    def seed_dataset_check(self, obj: Article) -> str:
+        if not obj.pk:
+            return "-"
+        kw = article_seed_keyword(obj)
+        if not kw:
+            return "No seed (press/archive article — not from keyword dataset)."
+        ds = ArticleKeywordDataset.objects.filter(is_active=True).first()
+        if not ds:
+            return f"Seed keyword: «{kw}» — no active dataset to compare."
+        if seed_matches_dataset(obj, ds):
+            return f"✓ «{kw}» matches active dataset «{ds.name}»."
+        src = getattr(obj, "generation_source_dataset", None)
+        if src and seed_matches_dataset(obj, src):
+            return f"✓ «{kw}» matches its source dataset «{src.name}» (not the current active one)."
+        return (
+            f"✗ «{kw}» NOT in active dataset «{ds.name}». "
+            "This article was likely created before your upload or from another dataset. "
+            "Use Generate 15 on your dataset for new matching articles."
+        )
 
     @admin.display(boolean=True)
     def has_pdf(self, obj: Article) -> bool:

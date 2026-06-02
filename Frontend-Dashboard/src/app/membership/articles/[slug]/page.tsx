@@ -298,6 +298,19 @@ export default function MembershipArticleDetailPage() {
                     ))
                   : null}
               </div>
+              {article.generation_seed_keyword?.trim() ? (
+                <div className="mt-5 rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-4 py-3 text-left sm:mx-auto sm:max-w-5xl">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200/80">
+                    Dataset keyword (search this in admin → keyword dataset)
+                  </p>
+                  <p className="mt-1 font-mono text-[14px] leading-snug text-emerald-100/95 sm:text-[15px]">
+                    {article.generation_seed_keyword.trim()}
+                    {article.generation_seed_category?.trim()
+                      ? ` · ${article.generation_seed_category.trim()}`
+                      : ""}
+                  </p>
+                </div>
+              ) : null}
             </header>
 
             <section className="mt-8 rounded-xl border border-amber-300/20 bg-[linear-gradient(180deg,rgba(250,204,21,0.09),rgba(0,0,0,0.18))] p-4 shadow-[inset_0_0_0_1px_rgba(250,204,21,0.09)] sm:mt-10 sm:p-5">

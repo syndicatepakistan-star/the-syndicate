@@ -271,6 +271,7 @@ def generate_one_membership_article_from_dataset(
         level_used=level_used,
     )
     article = Article(**fields)
+    article.generation_source_dataset = dataset
     article.save()
     record_successful_generation(
         dataset=dataset,

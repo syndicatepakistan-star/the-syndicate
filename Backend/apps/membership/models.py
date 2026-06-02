@@ -98,6 +98,14 @@ class Article(models.Model):
     generation_seed_keyword = models.CharField(max_length=500, blank=True)
     generation_seed_category = models.CharField(max_length=32, blank=True)
     generation_seed_level = models.CharField(max_length=24, blank=True)
+    generation_source_dataset = models.ForeignKey(
+        "membership.ArticleKeywordDataset",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_articles",
+        help_text="Keyword dataset used when this article was generated.",
+    )
 
     class Meta:
         ordering = ["-published_at", "-id"]

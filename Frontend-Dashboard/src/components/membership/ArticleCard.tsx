@@ -39,6 +39,7 @@ type ArticleCardProps = {
 
 export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb }: ArticleCardProps) {
   const [pdfOpening, setPdfOpening] = useState(false);
+  const [articleOpening, setArticleOpening] = useState(false);
   const hasWeb = Boolean(article.source_url?.trim());
   const hasPdf = Boolean(article.pdf_url?.trim());
   const detailHref = `/membership/articles/${encodeURIComponent(article.slug)}`;
@@ -77,6 +78,7 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
       <Link
         href={detailHref}
         prefetch
+        onClick={() => setArticleOpening(true)}
         className="relative z-[1] flex min-h-0 flex-1 flex-col p-4 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/45 sm:p-6"
       >
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -112,8 +114,21 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
           {article.description}
         </p>
 
-        <span className="mt-4 inline-flex w-fit rounded-md border border-cyan-300/40 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 transition group-hover:border-cyan-200/55 group-hover:text-cyan-50">
-          Open article page →
+        <span
+          className={cx(
+            "mt-4 inline-flex w-fit items-center gap-2 rounded-md border border-cyan-300/40 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 transition group-hover:border-cyan-200/55 group-hover:text-cyan-50",
+            articleOpening && "border-cyan-200/65 text-cyan-50"
+          )}
+          aria-live="polite"
+        >
+          {articleOpening ? (
+            <>
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.65)]" />
+              Opening…
+            </>
+          ) : (
+            "Open article page →"
+          )}
         </span>
       </Link>
 

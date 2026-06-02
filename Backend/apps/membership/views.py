@@ -1,6 +1,4 @@
-﻿import uuid
-
-from django.db.models import Q
+﻿from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
@@ -11,17 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.membership.json_tags import filter_articles_with_tag
-from apps.membership.generation import (
-    collect_avoid_fingerprints,
-    collect_avoid_keyword_phrases,
-    merge_progression_by_rank,
-    pick_keyword_row,
-    progression_from_article_seeds,
-    record_successful_generation,
-)
 from apps.membership.keyword_dataset import VALID_CATEGORIES, dataset_category_counts, normalize_category
-from apps.membership.keyword_levels import normalize_level
-from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState, Video
+from apps.membership.services.article_from_dataset import (
+    MembershipArticleGenerationError,
+    OpenAINotConfiguredError,
+    generate_one_membership_article_from_dataset,
+)
+from apps.membership.models import Article, ArticleKeywordDataset, Video
 from apps.membership.permissions import MembershipPublicReadOrAuthenticated
 from apps.membership.redis_index import cache_get_merged_ids, cache_set_merged_ids, search_article_ids, tokenize
 from apps.membership.serializers import ArticleSerializer, VideoSerializer
@@ -311,121 +305,34 @@ class MembershipGeneratedArticleView(APIView):
         if isinstance(read_slugs_in, list):
             read_slugs = [str(x).strip() for x in read_slugs_in if str(x).strip()][:32]
 
-        read_articles: list[Article] = []
-        for slug in read_slugs:
-            a = Article.objects.filter(slug=slug).first()
-            if a:
-                read_articles.append(a)
-
-        state = MembershipGenerationState.objects.filter(pk=1).first()
-        state_fps = list(state.recent_keyword_fingerprints) if state and state.recent_keyword_fingerprints else []
-        avoid_fps = collect_avoid_fingerprints(state_fps=state_fps, read_slugs=read_slugs)
-
-        base_prog: dict[str, str] = {}
-        if state and isinstance(state.progression_by_category, dict):
-            base_prog = {normalize_category(str(k)): str(v) for k, v in state.progression_by_category.items() if k and v}
-        read_prog = progression_from_article_seeds(read_articles)
-        eff_prog = merge_progression_by_rank(base_prog, read_prog)
-
-        row = pick_keyword_row(
-            rows,
-            dataset=ds,
-            category_filter=cat_req,
-            avoid_fingerprints=avoid_fps,
-            progression_by_category=eff_prog,
-        )
-        keyword = str(row.get("keyword") or "").strip()
-        category = normalize_category(str(row.get("category") or cat_req))
-        level_used = normalize_level(str(row.get("level") or row.get("tier") or row.get("difficulty") or ""))
-
         avoid_in = request.data.get("avoid_titles")
         avoid: list[str] = []
         if isinstance(avoid_in, list):
             avoid = [str(x).strip() for x in avoid_in if str(x).strip()][:40]
 
-        recent_titles = list(state.recent_titles) if state and state.recent_titles else []
-        merged_titles: list[str] = []
-        seen_t = set()
-        for t in avoid + recent_titles:
-            s = (t or "").strip()
-            if not s:
-                continue
-            low = s.lower()
-            if low in seen_t:
-                continue
-            seen_t.add(low)
-            merged_titles.append(s[:500])
-            if len(merged_titles) >= 40:
-                break
-
-        avoid_keywords = collect_avoid_keyword_phrases(read_slugs=read_slugs)
-
-        seed = uuid.uuid4().hex[:14]
         try:
-            from api.services.openai_client import generate_membership_article
-
-            body = generate_membership_article(
-                keyword=keyword,
-                category=category,
-                avoid_titles=merged_titles,
-                avoid_keywords=avoid_keywords,
-                creative_seed=seed,
+            result = generate_one_membership_article_from_dataset(
+                dataset=ds,
+                category_filter=cat_req,
+                read_slugs=read_slugs,
+                avoid_titles=avoid,
+                use_openai=True,
+                allow_stub_without_openai=False,
             )
-        except RuntimeError as e:
-            msg = str(e)
-            if "OPENAI_API_KEY" in msg:
-                return Response(
-                    {"detail": "Article generation is not configured (OPENAI_API_KEY missing)."},
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
-                )
-            return Response({"detail": msg or "Generation failed."}, status=status.HTTP_502_BAD_GATEWAY)
-        except Exception as e:
+        except OpenAINotConfiguredError:
+            return Response(
+                {"detail": "Article generation is not configured (OPENAI_API_KEY missing)."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except MembershipArticleGenerationError as e:
             return Response({"detail": str(e) or "Generation failed."}, status=status.HTTP_502_BAD_GATEWAY)
 
-        body["keyword_used"] = keyword
-        body["category_used"] = category
-        body["level_used"] = level_used
-
-        key_points = [str(x).strip() for x in (body.get("key_points") or []) if str(x).strip()]
-        paragraphs = [str(x).strip() for x in (body.get("paragraphs") or []) if str(x).strip()]
-        desc_parts = key_points[:2] if key_points else paragraphs[:1]
-        description = " ".join(desc_parts)[:900] if desc_parts else ""
-
-        content_lines = [
-            f"Seed: {keyword} - {category}",
-            "",
-            "Key points",
-            "",
-        ]
-        for kp in key_points:
-            content_lines.append(f"- {kp}")
-        content_lines.extend(["", ""])
-        content_lines.extend(paragraphs)
-        content = "\n".join(content_lines).strip()
-
-        tags = ["operator-brief", category]
-        article = Article(
-            title=str(body.get("title") or "Operator brief")[:500],
-            description=description,
-            content=content,
-            tags=tags,
-            source_url="",
-            thumbnail="",
-            is_featured=False,
-            generation_seed_keyword=keyword[:500],
-            generation_seed_category=category,
-            generation_seed_level=level_used,
-        )
-        article.save()
-        record_successful_generation(
-            dataset=ds,
-            category=category,
-            keyword=keyword,
-            title=article.title,
-            level_used=level_used,
-        )
-        body["article_id"] = article.id
-        body["article_slug"] = article.slug
+        body = dict(result.openai_body)
+        body["keyword_used"] = result.keyword
+        body["category_used"] = result.category
+        body["level_used"] = result.level_used
+        body["article_id"] = result.article.id
+        body["article_slug"] = result.article.slug
         body["server_local_date"] = timezone.localdate().isoformat()
 
         return Response(body)

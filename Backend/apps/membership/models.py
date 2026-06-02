@@ -68,6 +68,12 @@ class MembershipGenerationState(models.Model):
     progression_by_category = models.JSONField(default=dict, blank=True)
     recent_keyword_fingerprints = models.JSONField(default=list, blank=True)
     recent_titles = models.JSONField(default=list, blank=True)
+    membership_articles_bootstrap_completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Set after the one-time deploy bootstrap (generate_membership_articles on Railway). "
+        "Prevents re-running on later deploys.",
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

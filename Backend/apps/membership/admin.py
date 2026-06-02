@@ -4,6 +4,12 @@ from django.core.files.uploadedfile import UploadedFile
 
 from apps.membership.keyword_dataset import KeywordDatasetParseError, parse_keyword_dataset_bytes
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
+from apps.membership.services.article_from_dataset import (
+    DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
+    MembershipArticleGenerationError,
+    OpenAINotConfiguredError,
+    generate_membership_articles_batch,
+)
 
 
 def _all_model_field_names(model) -> tuple[str, ...]:
@@ -45,12 +51,53 @@ class ArticleKeywordDatasetForm(forms.ModelForm):
         return f
 
 
+@admin.action(description=f"Generate {DEFAULT_MEMBERSHIP_ARTICLE_COUNT} membership articles from dataset")
+def generate_default_membership_articles(modeladmin, request, queryset):
+    for ds in queryset:
+        if not isinstance(ds.rows, list) or not ds.rows:
+            modeladmin.message_user(
+                request,
+                f"Dataset “{ds.name}” has no parsed rows. Re-save with a valid CSV/DOCX/PDF file.",
+                level=messages.ERROR,
+            )
+            continue
+        if not ds.is_active:
+            ArticleKeywordDataset.objects.exclude(pk=ds.pk).update(is_active=False)
+            ds.is_active = True
+            ds.save(update_fields=["is_active"])
+        try:
+            generated = generate_membership_articles_batch(
+                count=DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
+                dataset=ds,
+                use_openai=True,
+                allow_stub_without_openai=False,
+                stop_on_error=False,
+            )
+        except OpenAINotConfiguredError:
+            modeladmin.message_user(
+                request,
+                "OPENAI_API_KEY is not set. Configure it on the server or use: "
+                "python manage.py generate_membership_articles --stub",
+                level=messages.ERROR,
+            )
+            return
+        except MembershipArticleGenerationError as exc:
+            modeladmin.message_user(request, str(exc), level=messages.ERROR)
+            return
+        modeladmin.message_user(
+            request,
+            f"Generated {len(generated)} article(s) from “{ds.name}”.",
+            level=messages.SUCCESS if generated else messages.WARNING,
+        )
+
+
 @admin.register(ArticleKeywordDataset)
 class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
     form = ArticleKeywordDatasetForm
     list_filter = ("is_active",)
     search_fields = ("name",)
     readonly_fields = ("created_at", "rows_preview")
+    actions = [generate_default_membership_articles]
 
     @admin.display(description="Rows")
     def row_count(self, obj: ArticleKeywordDataset) -> int:
@@ -99,7 +146,7 @@ class KeywordUsageStatAdmin(AllFieldsListDisplayAdmin):
 
 @admin.register(MembershipGenerationState)
 class MembershipGenerationStateAdmin(AllFieldsListDisplayAdmin):
-    readonly_fields = ("id", "updated_at")
+    readonly_fields = ("id", "updated_at", "membership_articles_bootstrap_completed_at")
 
 
 @admin.register(Article)

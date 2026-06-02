@@ -59,7 +59,11 @@ def _append_row(rows: list[dict[str, str]], row: dict[str, str | Any]) -> None:
             kw = vals[0]
     if not kw:
         return
-    rows.append({"category": normalize_category(cat), "keyword": kw[:500]})
+    entry: dict[str, str] = {"category": normalize_category(cat), "keyword": kw[:500]}
+    lvl = norm.get("level") or norm.get("tier") or norm.get("difficulty") or ""
+    if lvl:
+        entry["level"] = lvl[:24]
+    rows.append(entry)
 
 
 def _normalize_newlines(text: str) -> str:

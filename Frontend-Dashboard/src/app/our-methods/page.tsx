@@ -2,64 +2,11 @@ import { NavApp } from '@/components/NavApp'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
 import { MethodCtaButtons } from '@/components/methods/MethodCtaButtons'
-import { MethodSplitCard, type MethodSplitAccent } from '@/components/methods/MethodSplitCard'
+import { MethodSplitCard } from '@/components/methods/MethodSplitCard'
 import { CyberChamferFrame } from '@/components/cyber/CyberChamferFrames'
-
-type MethodBlock = {
-  id: string
-  title: string
-  summary: string
-  paragraphs: [string, string]
-  image?: string
-  imageAlt: string
-  videoSrc?: string
-  keySrc?: string
-  footerEmphasis?: string
-  accent: MethodSplitAccent
-}
-
-const METHOD_BLOCKS: MethodBlock[] = [
-  {
-    id: 'greatness',
-    title: 'Achieving True Greatness comes with Mastery',
-    summary:
-      'Greatness is engineered through discipline and strategic education, not by chance.',
-    paragraphs: [
-      'True greatness is not achieved by chance - it is deliberately built through knowledge, discipline, and action. The Syndicate equips its members with actionable, real-world strategies designed to help them master the systems of wealth and power.',
-      'The Syndicate brings clarity to wealth systems with immediate implementation methods. Every lesson is built for practical execution from day one while preserving moral integrity and purpose.',
-    ],
-    imageAlt: 'Gold key symbol',
-    keySrc: '/assets/Gold-Key.png',
-    accent: 'cyan',
-  },
-  {
-    id: 'break-free',
-    title: 'BREAK FREE FROM THE SYSTEM',
-    summary:
-      'Reject passive compliance and build strategic autonomy through alliance and execution.',
-    paragraphs: [
-      'The Syndicate stands as an elite and exclusive organisation of individuals committed to achieving the zenith of power, wealth, and mastery. This private network is for those who yearn for true greatness and the ability to shape their destiny.',
-      'This is not a shortcut scheme. It is a disciplined alliance for people willing to master themselves, build leverage, and reshape outcomes under pressure.',
-    ],
-    videoSrc: '/assets/bg-video.mp4',
-    imageAlt: 'Break free from the system — dystopian cathedral uplink',
-    footerEmphasis: 'Master yourself. Master the system.',
-    accent: 'amber',
-  },
-  {
-    id: 'money-power',
-    title: 'Money and Power Mastery',
-    summary:
-      'Money and power are inseparable systems that demand control, ethics, and strategic awareness.',
-    paragraphs: [
-      'The Syndicate philosophy teaches that money and power go hand in hand. They are like two sides of the same coin. Money and power, if not correctly wielded, has the potential to completely corrupt you, leading you down a dark path of corrupt, degenerate and hedonistic behaviour.',
-      'The mission goes beyond accumulation. Members are trained to navigate influence structures without moral collapse, turning power into disciplined, constructive force.',
-    ],
-    image: '/assets/money-power-mastery.png',
-    imageAlt: 'Money and power mastery — dystopian throne and neon doctrine',
-    accent: 'violet',
-  },
-]
+import { OurMethodsDoctrineIntro } from '@/components/our-methods/OurMethodsDoctrineIntro'
+import { OUR_METHODS_BLOCKS } from '@/lib/ourMethodsCopy'
+import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
 const METHOD_TIMELINE = [
   {
@@ -139,8 +86,9 @@ export default function OurMethodsPage() {
           <CyberChamferFrame accent="hero" chamfer={24} className="min-h-[72vh]" innerClassName="p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-200/80">Our Methods // Dystopian Doctrine</p>
-                <h1 className="mt-4 text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em] text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.52)]">
+                <h1
+                  className={`${publicHeadingLightning('cyan')} text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
+                >
                   Control The
                   <br />
                   Operating System
@@ -148,7 +96,7 @@ export default function OurMethodsPage() {
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
                   In a broken world, average behavior gets average outcomes. Our methods are engineered for operators who want structure, leverage, and execution inside high-pressure systems.
                 </p>
-                <MethodCtaButtons className="mt-8" />
+                <MethodCtaButtons className="mt-8" size="large" showHeading />
               </div>
               <div className="grid gap-4">
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" innerClassName="p-2">
@@ -185,8 +133,9 @@ export default function OurMethodsPage() {
       <section className="relative z-10 px-[clamp(1rem,3vw,2.2rem)] pb-10 sm:pb-12">
         <div className="mx-auto max-w-[96rem]">
           <div className="mb-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200/85">Method Timeline</p>
-            <h2 className="mt-2 text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em] text-amber-100 drop-shadow-[0_0_18px_rgba(251,191,36,0.52)]">
+            <h2
+              className={`${publicHeadingLightning('amber')} text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
+            >
               Operational Sequence
             </h2>
           </div>
@@ -219,7 +168,11 @@ export default function OurMethodsPage() {
                   <p className={`inline-flex rounded-md border-2 bg-[linear-gradient(180deg,rgba(6,4,12,0.88),rgba(2,2,8,0.92))] px-3 py-1 text-[11px] font-bold tracking-[0.24em] shadow-[0_0_16px_rgba(0,0,0,0.45)] ${item.stepBorder} text-zinc-100`}>
                     STEP {item.step}
                   </p>
-                  <h3 className={`mt-3 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] ${item.titleText}`}>{item.title}</h3>
+                  <h3
+                    className={`${publicHeadingLightning('amber')} mt-3 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] ${item.titleText}`}
+                  >
+                    {item.title}
+                  </h3>
                   <p className="mt-3 text-base leading-relaxed text-zinc-100/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.68)]">{item.detail}</p>
                 </div>
               </article>
@@ -229,8 +182,9 @@ export default function OurMethodsPage() {
       </section>
 
       <section className="relative z-10 w-full px-[clamp(0.75rem,2.5vw,2.5rem)] pb-14 sm:pb-20">
-        <div className="mx-auto w-full max-w-[110rem] space-y-8 sm:space-y-10">
-          {METHOD_BLOCKS.map((block) => (
+        <div className="mx-auto w-full max-w-[min(100%,1920px)] space-y-8 sm:space-y-10 lg:space-y-12">
+          <OurMethodsDoctrineIntro />
+          {OUR_METHODS_BLOCKS.map((block) => (
             <MethodSplitCard
               key={block.id}
               accent={block.accent}

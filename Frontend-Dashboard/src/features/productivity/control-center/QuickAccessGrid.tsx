@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import { faviconUrlFromHref } from "@/lib/socialBranding";
 
@@ -723,7 +723,10 @@ export function QuickAccessGrid({
           <div className="flex flex-col items-center border-b border-white/[0.1] bg-[linear-gradient(180deg,rgba(10,14,24,0.55),transparent)] px-[clamp(0.85rem,2.2vw,1.25rem)] py-[clamp(0.85rem,2vw+0.25rem,1.2rem)] text-center sm:px-5">
             <h2
               id={floatingShellOverlay ? "quick-access-panel-title" : undefined}
-              className="text-[clamp(1.2rem,2.8vw+0.2rem,2rem)] font-black uppercase italic tracking-[0.16em] text-[color:var(--gold)] drop-shadow-[0_0_22px_rgba(255,215,0,0.28)] sm:tracking-[0.2em]"
+              className={cn(
+                DASHBOARD_HEADING_LIGHTNING,
+                "text-[clamp(1.2rem,2.8vw+0.2rem,2rem)] font-black uppercase italic tracking-[0.16em] sm:tracking-[0.2em]"
+              )}
             >
               Quick access
             </h2>

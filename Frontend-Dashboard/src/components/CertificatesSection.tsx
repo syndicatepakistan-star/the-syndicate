@@ -271,13 +271,9 @@ export default function CertificatesSection({
 
       <div className="relative z-10 mx-auto w-full max-w-7xl">
         <header className="mb-16 text-center">
-          <h2 className="font-heading programs-heading-glow text-3xl font-bold uppercase tracking-[0.12em] text-white sm:text-4xl md:text-5xl md:tracking-[0.14em] lg:text-6xl">
+          <h2 className="font-heading public-heading-lightning public-heading-lightning--gold text-3xl font-bold uppercase tracking-[0.12em] sm:text-4xl md:text-5xl md:tracking-[0.14em] lg:text-6xl">
             Become Syndicate Certified
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl font-mono text-xs font-semibold uppercase leading-relaxed tracking-[0.08em] text-cyan-100/85 sm:text-sm">
-            Proof you ran the material — cryptographically signed credentials, not a participation sticker. Stack the
-            courses, claim the seal, verify it in the open. Operators only.
-          </p>
         </header>
 
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
@@ -392,10 +388,7 @@ export default function CertificatesSection({
                   }}
                 />
                 <div className="relative">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-amber-200/90 sm:text-[10px]" style={{ textShadow: '0 0 12px rgba(251,191,36,0.55)' }}>
-                    // breach_gate · live
-                  </p>
-                  <h3 className="mt-1 text-base font-bold uppercase tracking-[0.08em] text-amber-50 sm:text-lg" style={{ textShadow: '0 0 20px rgba(251,191,36,0.45), 0 0 40px rgba(234,88,12,0.2)' }}>
+                  <h3 className="text-base font-bold uppercase tracking-[0.08em] text-amber-50 sm:text-lg" style={{ textShadow: '0 0 20px rgba(251,191,36,0.45), 0 0 40px rgba(234,88,12,0.2)' }}>
                     Verify your token ID
                   </h3>
                   <p className="mt-0.5 font-mono text-[11px] leading-snug text-amber-100/65 sm:text-xs">

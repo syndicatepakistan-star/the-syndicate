@@ -61,7 +61,7 @@ export default function GlobalBottomSections() {
         <div className="relative z-10 mx-auto w-full max-w-[min(1700px,98vw)] px-3 text-center">
           {isWhatYouGetPage && (
             <div className="relative mx-auto mb-10 w-full max-w-[min(1600px,96vw)] overflow-hidden rounded-3xl bg-transparent p-7 shadow-[0_0_45px_rgba(34,211,238,0.1)] sm:mb-12 sm:p-10">
-              <h2 className="bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 bg-clip-text text-2xl font-black tracking-[0.02em] text-transparent drop-shadow-[0_0_16px_rgba(251,191,36,0.34)] sm:text-4xl">
+              <h2 className="public-heading-lightning public-heading-lightning--amber text-2xl font-black tracking-[0.02em] sm:text-4xl">
                 You Leave With Clarity, Discipline, and Executable Systems
               </h2>
               <p className="mx-auto mt-4 max-w-4xl text-sm leading-relaxed text-zinc-100/85 sm:text-base">

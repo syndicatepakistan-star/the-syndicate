@@ -112,7 +112,9 @@ export default function FAQSection() {
         <div className={styles.bgOverlay} />
       </div>
       <div className={styles.container}>
-        <h2 className={styles.title}>Frequently Asked Questions</h2>
+        <h2 className={`${styles.title} public-heading-lightning public-heading-lightning--amber`}>
+          Frequently Asked Questions
+        </h2>
         <div className={`${styles.tabs} mt-4`} role="tablist" aria-label="FAQ categories">
           {FAQ_TABS.map((tab) => (
             <button

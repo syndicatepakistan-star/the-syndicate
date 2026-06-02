@@ -13,7 +13,7 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 const AUTO_ADVANCE_MS = 6000;
 const INSTRUCTOR_SLIDESHOW_BG_VIDEO = "/assets/bg.mp4";
 
-export function InstructorSlideshow() {
+export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showPanelBackgroundVideo?: boolean }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [idx, setIdx] = useState(0);
@@ -42,6 +42,7 @@ export function InstructorSlideshow() {
   }, [autoPlay, idx, total]);
 
   useEffect(() => {
+    if (!showPanelBackgroundVideo) return;
     const el = videoRef.current;
     if (!el) return;
     el.muted = true;
@@ -69,7 +70,7 @@ export function InstructorSlideshow() {
       el.removeEventListener("canplay", play);
       observer?.disconnect();
     };
-  }, []);
+  }, [showPanelBackgroundVideo]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -100,34 +101,38 @@ export function InstructorSlideshow() {
   return (
     <div
       ref={panelRef}
-      data-anim="in"
       data-instructor-slide={idx}
       style={{
         ...neonAccentStyleVars(neonTheme),
         ["--lightning-color" as string]: neonTheme.neonBright,
         ["--lightning-color-soft" as string]: neonTheme.glow,
       }}
-      className="instructor-slideshow-panel instructor-slideshow-lightning syndicate-mood-skip-frame cut-frame cyber-frame glass-dark relative isolate overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]"
+      className={cn(
+        "instructor-slideshow-panel instructor-slideshow-lightning syndicate-mood-skip-frame cut-frame cyber-frame relative isolate overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]",
+        showPanelBackgroundVideo ? "glass-dark" : "bg-[rgba(4,8,14,0.78)] backdrop-blur-[8px]"
+      )}
       aria-roledescription="carousel"
       aria-label="Featured instructor programs"
     >
-      <div
-        className="instructor-slideshow-bg pointer-events-none absolute inset-0 z-[0] overflow-hidden bg-black"
-        aria-hidden
-      >
-        <video
-          ref={videoRef}
-          src={INSTRUCTOR_SLIDESHOW_BG_VIDEO}
-          className="instructor-slideshow-bg-video absolute inset-0 z-[0] h-full w-full min-h-full min-w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
+      {showPanelBackgroundVideo ? (
+        <div
+          className="instructor-slideshow-bg pointer-events-none absolute inset-0 z-[0] overflow-hidden bg-black"
           aria-hidden
-        />
-        <div className="instructor-slideshow-bg-scrim absolute inset-0 z-[1]" />
-      </div>
+        >
+          <video
+            ref={videoRef}
+            src={INSTRUCTOR_SLIDESHOW_BG_VIDEO}
+            className="instructor-slideshow-bg-video absolute inset-0 z-[0] h-full w-full min-h-full min-w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden
+          />
+          <div className="instructor-slideshow-bg-scrim absolute inset-0 z-[1]" />
+        </div>
+      ) : null}
       <div className="relative z-[2] grid grid-cols-1 gap-[clamp(1.25rem,3vw+0.5rem,2.5rem)] lg:grid-cols-2 lg:items-stretch">
         <div className="flex min-w-0 flex-col justify-center gap-[clamp(1rem,2vw+0.35rem,1.5rem)]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--instructor-neon-border)]/40 pb-[clamp(0.65rem,1.2vw,0.9rem)]">

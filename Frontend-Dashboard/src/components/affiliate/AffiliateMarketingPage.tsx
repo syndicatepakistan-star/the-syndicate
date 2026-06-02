@@ -7,6 +7,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { CyberChamferFrame, CyberInsetPanel, cx } from "@/components/cyber/CyberChamferFrames";
 import type { CyberFrameAccent } from "@/components/cyber/CyberChamferFrames";
 import { AFFILIATE_LOGIN_HREF } from "@/lib/affiliateSession";
+import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 type ShowcaseAccent = Extract<CyberFrameAccent, "cyan" | "violet" | "amber">;
 
@@ -16,7 +17,6 @@ const SHOWCASE = [
     width: 1024,
     height: 335,
     accent: "cyan" as const satisfies ShowcaseAccent,
-    kicker: "Live partner HUD",
     title: "Affiliate dashboard — revenue on glass",
     body: "Referral link, copy / share / withdraw, snapshot tiles, revenue-flow bars: one frame so you see clicks, leads, sales, conversion, and earnings without tab-hopping. This is the exact UI you run in the portal.",
   },
@@ -25,7 +25,6 @@ const SHOWCASE = [
     width: 1024,
     height: 512,
     accent: "violet" as const satisfies ShowcaseAccent,
-    kicker: "Referral war-room",
     title: "Referrals board — every dossier tagged",
     body: "Money and time filters, sort newest first, Syn Diagnosis vs sign-up leads, joined vs purchased, paid lines and your earning column in gold. The board is the receipt rack: who entered, what they bought, what you cleared.",
   },
@@ -34,7 +33,6 @@ const SHOWCASE = [
     width: 1024,
     height: 388,
     accent: "amber" as const satisfies ShowcaseAccent,
-    kicker: "Lead feed + pages",
     title: "Paged lead feed — subscription + earning split",
     body: "Each row is a clipped dual-channel read: subscription activity on the violet rail, your earning on the amber rail, status chips, paid stamps, and pagination when the list deepens. Commission tiers stay visible in the footer strip.",
   },
@@ -43,7 +41,6 @@ const SHOWCASE = [
     width: 988,
     height: 735,
     accent: "cyan" as const satisfies ShowcaseAccent,
-    kicker: "Conversion vault",
     title: "Conversion formula — numbers on the table",
     body: "Open the vault modal: clicks, leads, sales, the blended formula, and the percentage result with no black-box scoring. Same neon chamfer language as the rest of the cockpit — know the math or do not touch the lever.",
   },
@@ -52,7 +49,6 @@ const SHOWCASE = [
     width: 894,
     height: 730,
     accent: "violet" as const satisfies ShowcaseAccent,
-    kicker: "Withdraw airlock",
     title: "Withdraw rails — bank fields under lock",
     body: "Threshold, current earnings state, multi-field bank capture with colour-coded chamfer inputs, amount cap to balance, submit under crimson glow. Payout window copy stays in-frame so you know when wire hits.",
   },
@@ -127,10 +123,9 @@ export default function AffiliateMarketingPage() {
             innerClassName="p-[clamp(1.25rem,4vw,3rem)]"
           >
             <div className="mx-auto max-w-[min(56rem,100%)] text-center">
-              <p className="font-mono text-[clamp(0.65rem,1.8vw,0.75rem)] font-bold uppercase tracking-[0.22em] text-cyan-200/85 sm:tracking-[0.28em]">
-                Syndicate partner channel
-              </p>
-              <h1 className="font-heading programs-heading-glow mt-[clamp(0.75rem,2.5vw,1rem)] text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.52)] sm:tracking-[0.1em]">
+              <h1
+                className={`font-heading public-heading-lightning public-heading-lightning--cyan text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
+              >
                 Turn attention into withdrawals
               </h1>
               <p className="mx-auto mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">
@@ -169,10 +164,9 @@ export default function AffiliateMarketingPage() {
                     i % 2 === 1 && "lg:[direction:ltr]",
                   )}
                 >
-                  <p className="font-mono text-[clamp(0.58rem,1.6vw,0.7rem)] font-bold uppercase tracking-[0.22em] text-fuchsia-200/85 sm:tracking-[0.28em]">
-                    {block.kicker}
-                  </p>
-                  <h2 className="text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]">
+                  <h2
+                    className={`${publicHeadingLightning("amber")} text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]`}
+                  >
                     {block.title}
                   </h2>
                   <CyberInsetPanel variant={block.accent === "amber" ? "amber" : block.accent === "violet" ? "violet" : "cyan"}>
@@ -229,7 +223,9 @@ export default function AffiliateMarketingPage() {
             chamfer={20}
             innerClassName="px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.75rem,5vw,3rem)] text-center"
           >
-            <h2 className="text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]">
+            <h2
+              className={`${publicHeadingLightning("amber")} text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]`}
+            >
               Already cleared as a partner?
             </h2>
             <p className="mx-auto mt-[clamp(0.75rem,2.5vw,1rem)] max-w-2xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">

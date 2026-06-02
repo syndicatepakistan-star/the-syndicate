@@ -6,7 +6,7 @@ export default function QuizFunnelLandingPage() {
     <main className="page-wrap">
       <section className="card card-landing">
         <BrandHeader />
-        <h2 className="section-title">
+        <h2 className="section-title public-heading-lightning public-heading-lightning--violet">
           THE SYSTEM HAS A FILE ON YOU. IT&apos;S TIME YOU HAD THE FILE ON THE SYSTEM.
         </h2>
         <p className="section-subtitle">

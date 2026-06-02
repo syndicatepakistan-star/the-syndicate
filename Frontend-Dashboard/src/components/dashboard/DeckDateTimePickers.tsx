@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { cn } from "./dashboardPrimitives";
+import { DECK_TYPO } from "./missionDeckTypography";
 import { MONTH_NAMES, WEEK, buildMonthGrid, parseYyyyMmDd, toYyyyMmDd } from "./deck-date-utils";
 
 type Tone = "cyan" | "fuchsia" | "gold";
@@ -323,7 +324,8 @@ export function DeckDateField({
           disabled={disabled}
           onClick={() => !disabled && setOpen((o) => !o)}
           className={cn(
-            "min-h-[44px] min-w-0 flex-1 px-3 py-2.5 text-left text-[15px] font-medium leading-snug outline-none md:text-[15px]",
+            "min-h-[44px] min-w-0 flex-1 px-3 py-2.5 text-left leading-snug outline-none",
+            DECK_TYPO.input,
             textTone,
             disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-offset-0",
@@ -445,7 +447,8 @@ export function DeckTimeField({
           disabled={disabled}
           onClick={() => !disabled && setOpen((o) => !o)}
           className={cn(
-            "min-h-[44px] min-w-0 flex-1 px-3 py-2.5 text-left text-[15px] font-medium leading-snug outline-none md:text-[15px]",
+            "min-h-[44px] min-w-0 flex-1 px-3 py-2.5 text-left leading-snug outline-none",
+            DECK_TYPO.input,
             textTone,
             disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-offset-0",
@@ -462,7 +465,7 @@ export function DeckTimeField({
             t.border
           )}
         >
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400/90">Hour & minute</div>
+          <div className={cn(DECK_TYPO.labelGold, "text-neutral-400/90")}>Hour & minute</div>
           <div className="mt-2 flex gap-2">
             <select
               className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/55 px-2 py-2 text-[13px] text-white/90 outline-none"
@@ -547,10 +550,8 @@ export function DeckBrowseDateBar({
       )}
     >
       <div className="min-w-0">
-        <div className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--goals-milestones-gold)]/88">
-          Browse by day
-        </div>
-        <p className="mt-1 text-[12px] font-normal leading-relaxed text-neutral-300/88 sm:text-[13px] sm:leading-snug">
+        <div className={cn(DECK_TYPO.columnTitleGold, "tracking-[0.22em]")}>Browse by day</div>
+        <p className={cn("mt-1", DECK_TYPO.bodyMuted)}>
           Pick any past or future date to filter missions, reminders, and notes that belong to that calendar day.
         </p>
       </div>
@@ -559,7 +560,8 @@ export function DeckBrowseDateBar({
           type="button"
           onClick={() => setOpen((o) => !o)}
           className={cn(
-            "inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-white/18 bg-black/55 px-3.5 py-2 text-[13px] font-semibold text-neutral-100/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-black/68 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+            "inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-white/18 bg-black/55 px-3.5 py-2 font-semibold text-neutral-100/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-black/68 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+            DECK_TYPO.body,
             t.ring
           )}
           aria-expanded={open}
@@ -572,7 +574,10 @@ export function DeckBrowseDateBar({
           <button
             type="button"
             onClick={() => onBrowseDateChange(null)}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-white/16 bg-black/45 px-3.5 text-[11px] font-black uppercase tracking-[0.14em] text-neutral-200/90 hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+            className={cn(
+              "inline-flex min-h-[44px] items-center justify-center rounded-lg border border-white/16 bg-black/45 px-3.5 text-neutral-200/90 hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+              DECK_TYPO.btn
+            )}
           >
             Show all
           </button>

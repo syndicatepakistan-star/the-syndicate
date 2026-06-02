@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { cn } from "./dashboardPrimitives";
+import { DECK_TYPO } from "./missionDeckTypography";
 
 export type DeckSortDir = "asc" | "desc";
 
@@ -14,28 +15,49 @@ const TOOLBAR_INPUT: Record<
   string
 > = {
   cyan:
-    "border-cyan-400/40 bg-[#05080a] text-[15px] font-medium leading-snug text-cyan-50 placeholder:text-cyan-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(34,211,238,0.06)] focus:border-cyan-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(34,211,238,0.45),0_0_20px_rgba(34,211,238,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  fuchsia:
-    "border-fuchsia-400/42 bg-[#0a060c] text-[15px] font-medium leading-snug text-fuchsia-50 placeholder:text-fuchsia-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(192,132,252,0.07)] focus:border-fuchsia-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(217,70,239,0.45),0_0_20px_rgba(192,132,252,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  gold:
-    "border-[rgba(255,215,0,0.48)] bg-[#0a0906] text-[15px] font-medium leading-snug text-[rgba(255,248,220,0.95)] placeholder:text-[rgba(255,230,150,0.22)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,215,0,0.06)] focus:border-[rgba(255,230,120,0.85)] focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,215,0,0.4),0_0_22px_rgba(255,200,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  rose:
-    "border-rose-400/45 bg-[#0c0608] text-[15px] font-medium leading-snug text-rose-50 placeholder:text-rose-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(251,113,133,0.07)] focus:border-rose-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(251,113,133,0.45),0_0_20px_rgba(251,113,133,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  emerald:
-    "border-emerald-400/45 bg-[#050a08] text-[15px] font-medium leading-snug text-emerald-50 placeholder:text-emerald-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(52,211,153,0.07)] focus:border-emerald-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(52,211,153,0.45),0_0_20px_rgba(16,185,129,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+    cn(
+      "border-cyan-400/40 bg-[#05080a] leading-snug text-cyan-50 placeholder:text-cyan-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(34,211,238,0.06)] focus:border-cyan-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(34,211,238,0.45),0_0_20px_rgba(34,211,238,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+      DECK_TYPO.input
+    ),
+  fuchsia: cn(
+    "border-fuchsia-400/42 bg-[#0a060c] leading-snug text-fuchsia-50 placeholder:text-fuchsia-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(192,132,252,0.07)] focus:border-fuchsia-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(217,70,239,0.45),0_0_20px_rgba(192,132,252,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.input
+  ),
+  gold: cn(
+    "border-[rgba(255,215,0,0.48)] bg-[#0a0906] leading-snug text-[rgba(255,248,220,0.95)] placeholder:text-[rgba(255,230,150,0.22)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,215,0,0.06)] focus:border-[rgba(255,230,120,0.85)] focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,215,0,0.4),0_0_22px_rgba(255,200,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.input
+  ),
+  rose: cn(
+    "border-rose-400/45 bg-[#0c0608] leading-snug text-rose-50 placeholder:text-rose-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(251,113,133,0.07)] focus:border-rose-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(251,113,133,0.45),0_0_20px_rgba(251,113,133,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.input
+  ),
+  emerald: cn(
+    "border-emerald-400/45 bg-[#050a08] leading-snug text-emerald-50 placeholder:text-emerald-200/25 shadow-[inset_0_2px_6px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(52,211,153,0.07)] focus:border-emerald-300/85 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.55),0_0_0_1px_rgba(52,211,153,0.45),0_0_20px_rgba(16,185,129,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.input
+  )
 };
 
 const TOOLBAR_BTN: Record<DeckToolbarTone, string> = {
-  cyan:
-    "border-cyan-400/40 bg-[#070d10] text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(34,211,238,0.12)] hover:border-cyan-300/75 hover:text-cyan-50 hover:shadow-[0_0_18px_rgba(34,211,238,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  fuchsia:
-    "border-fuchsia-400/42 bg-[#0c0810] text-[11px] font-black uppercase tracking-[0.14em] text-fuchsia-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(192,132,252,0.12)] hover:border-fuchsia-300/75 hover:text-fuchsia-50 hover:shadow-[0_0_18px_rgba(217,70,239,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  gold:
-    "border-[rgba(255,215,0,0.42)] bg-[#0a0906] text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)]/90 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,215,0,0.1)] hover:border-[rgba(255,230,140,0.72)] hover:text-[color:var(--gold)] hover:shadow-[0_0_20px_rgba(255,200,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  rose:
-    "border-rose-400/42 bg-[#0c0608] text-[11px] font-black uppercase tracking-[0.14em] text-rose-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(251,113,133,0.1)] hover:border-rose-300/75 hover:text-rose-50 hover:shadow-[0_0_18px_rgba(251,113,133,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-  emerald:
-    "border-emerald-400/42 bg-[#050a08] text-[11px] font-black uppercase tracking-[0.14em] text-emerald-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(52,211,153,0.1)] hover:border-emerald-300/75 hover:text-emerald-50 hover:shadow-[0_0_18px_rgba(52,211,153,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+  cyan: cn(
+    "border-cyan-400/40 bg-[#070d10] text-cyan-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(34,211,238,0.12)] hover:border-cyan-300/75 hover:text-cyan-50 hover:shadow-[0_0_18px_rgba(34,211,238,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.btn
+  ),
+  fuchsia: cn(
+    "border-fuchsia-400/42 bg-[#0c0810] text-fuchsia-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(192,132,252,0.12)] hover:border-fuchsia-300/75 hover:text-fuchsia-50 hover:shadow-[0_0_18px_rgba(217,70,239,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.btn
+  ),
+  gold: cn(
+    "border-[rgba(255,215,0,0.42)] bg-[#0a0906] text-[color:var(--gold)]/90 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,215,0,0.1)] hover:border-[rgba(255,230,140,0.72)] hover:text-[color:var(--gold)] hover:shadow-[0_0_20px_rgba(255,200,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(250,204,21,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.btn
+  ),
+  rose: cn(
+    "border-rose-400/42 bg-[#0c0608] text-rose-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(251,113,133,0.1)] hover:border-rose-300/75 hover:text-rose-50 hover:shadow-[0_0_18px_rgba(251,113,133,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.btn
+  ),
+  emerald: cn(
+    "border-emerald-400/42 bg-[#050a08] text-emerald-100/92 shadow-[0_2px_0_rgba(0,0,0,0.35),inset_0_1px_0_rgba(52,211,153,0.1)] hover:border-emerald-300/75 hover:text-emerald-50 hover:shadow-[0_0_18px_rgba(52,211,153,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+    DECK_TYPO.btn
+  )
 };
 
 export function DeckListToolbar({
@@ -170,7 +192,7 @@ export function DueDateLine({
   return (
     <div
       className={cn(
-        "text-[11px] font-medium leading-snug text-neutral-200/92",
+        DECK_TYPO.dueLine,
         urgent && "font-semibold text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.35)]"
       )}
     >
@@ -216,7 +238,7 @@ export function DeckListItem({ title, subtitle, badge, footer, dimmed, tone = "g
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-1">
-        <div className="min-w-0 flex-1 text-[14px] font-bold leading-snug tracking-tight text-neutral-50">{title}</div>
+        <div className={cn("min-w-0 flex-1", DECK_TYPO.listTitle)}>{title}</div>
         {badge ? <div className="shrink-0">{badge}</div> : null}
       </div>
       {subtitle ? <div className="mt-1">{subtitle}</div> : null}

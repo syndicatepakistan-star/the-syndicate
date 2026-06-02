@@ -63,7 +63,9 @@ function renderStyledReport(report: string, loginEmail: string) {
 
   return (
     <>
-      {reportTitle ? <h2 className="result-heading">{reportTitle}</h2> : null}
+      {reportTitle ? (
+        <h2 className="result-heading public-heading-lightning public-heading-lightning--violet">{reportTitle}</h2>
+      ) : null}
       <div className="section-cards-grid">
         {sections.map((section) => (
           <article key={section.title} className="section-card">
@@ -519,7 +521,7 @@ export default function ResultPage() {
             <span className="hud-chip">MISSION REPORT</span>
             <span className="hud-chip hud-chip-accent">PROJECT OBSIDIAN</span>
           </div>
-          <h2 className="section-title">TACTICAL DIAGNOSIS BOARD</h2>
+          <h2 className="section-title public-heading-lightning public-heading-lightning--violet">TACTICAL DIAGNOSIS BOARD</h2>
           <div className="result-summary-grid">
             <div className="summary-item">
               <p className="summary-label">Combat Score</p>

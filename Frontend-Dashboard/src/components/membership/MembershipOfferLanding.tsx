@@ -8,6 +8,7 @@ import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards
 import { startPlanCheckout } from "@/lib/plan-checkout";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
+import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 const BILLING = "monthly" as const;
 const CHECKOUT_AMOUNT = "19.99";
@@ -194,6 +195,7 @@ function ChannelCard({
         </p>
         <h3
           className={cx(
+            publicHeadingLightning("amber"),
             "mt-3 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]",
             item.titleText
           )}
@@ -273,19 +275,13 @@ export function MembershipOfferLanding({
           <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-200/80">
-                  Membership // Dystopian Uplink
-                </p>
-                <h1 className="mt-4 text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em] text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.52)]">
+                <h1 className={`${publicHeadingLightning("amber")} text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
                   Enter
                   <br />
                   The Knight Tier
                 </h1>
                 <p className="mt-5 max-w-2xl font-mono text-base leading-relaxed text-zinc-100/85 sm:text-lg">
                   {HERO_INTRO}
-                </p>
-                <p className="mt-3 max-w-2xl font-mono text-sm leading-relaxed text-cyan-200/70 sm:text-[15px]">
-                  // course_command · syndicate_mode · member_library · full_deck
                 </p>
                 <MembershipHeroOffer
                   busy={busy}
@@ -318,10 +314,7 @@ export function MembershipOfferLanding({
                   />
                   <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/85 via-black/35 to-black/20" />
                   <div className="absolute bottom-0 left-0 right-0 z-[3] border-t border-fuchsia-500/40 bg-black/75 px-4 py-3">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-fuchsia-300 [text-shadow:0_0_12px_rgba(232,121,249,0.65)]">
-                      // the_knight · full_stack
-                    </p>
-                    <p className="mt-1 font-mono text-sm text-zinc-200/90">Dashboard · library · Syndicate Mode</p>
+                    <p className="font-mono text-sm text-zinc-200/90">Dashboard · library · Syndicate Mode</p>
                   </div>
                 </div>
               </CyberChamferFrame>
@@ -331,8 +324,7 @@ export function MembershipOfferLanding({
 
         <section>
           <div className="mb-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-fuchsia-200/85">Access Channels</p>
-            <h2 className="mt-2 text-[clamp(1.75rem,4vw,3.2rem)] font-black uppercase tracking-[0.08em] text-cyan-100">
+            <h2 className="public-heading-lightning public-heading-lightning--gold text-[clamp(1.75rem,4vw,3.2rem)] font-black uppercase tracking-[0.08em]">
               Membership Rig
             </h2>
           </div>
@@ -352,7 +344,13 @@ export function MembershipOfferLanding({
                 className={isPrimary ? "grid items-start gap-4 lg:grid-cols-[1fr_200px]" : "grid items-start"}
               >
                 <CyberChamferFrame accent={accentFrame(block.accent)} chamfer={22} innerClassName="p-6 sm:p-8">
-                  <h3 className={cx("text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]", titleColor[block.accent])}>
+                  <h3
+                    className={cx(
+                      publicHeadingLightning("amber"),
+                      "text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]",
+                      titleColor[block.accent]
+                    )}
+                  >
                     {block.title}
                   </h3>
                   <p className="mt-3 text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">{block.summary}</p>

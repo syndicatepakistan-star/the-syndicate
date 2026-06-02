@@ -12,7 +12,7 @@ import {
   type SupportPriority,
   type SupportThread
 } from "@/lib/supportApi";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 
 const MIN_LEN = 12;
 
@@ -311,7 +311,12 @@ export function SupportSection() {
               className="pointer-events-none absolute -left-1 top-0 h-full w-1 rounded-full bg-gradient-to-b from-amber-400 via-fuchsia-400 to-cyan-400 opacity-80"
               aria-hidden
             />
-            <h2 className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 bg-clip-text pl-3 text-2xl font-black uppercase tracking-[0.18em] text-transparent drop-shadow-[0_0_22px_rgba(251,191,36,0.35)] md:text-3xl">
+            <h2
+              className={cn(
+                DASHBOARD_HEADING_LIGHTNING,
+                "pl-3 text-[clamp(2.25rem,5vw,3.75rem)] font-black uppercase leading-[1.05] tracking-[0.14em]"
+              )}
+            >
               Operator Support
             </h2>
             <p className="mt-2 max-w-2xl pl-3 text-lg leading-relaxed text-white/80 md:text-xl">

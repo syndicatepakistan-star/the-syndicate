@@ -6,6 +6,7 @@ import {
 } from "@/components/cyber/CyberChamferFrames";
 import { MethodCtaButtons } from "@/components/methods/MethodCtaButtons";
 import { ViewportDecorVideo } from "@/components/ViewportDecorVideo";
+import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 export type MethodSplitAccent = "cyan" | "violet" | "amber";
 
@@ -61,16 +62,7 @@ export function MethodSplitCard({
     >
       <div className="grid gap-6 text-left lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)] lg:items-stretch xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] xl:gap-10">
         <div className="flex min-w-0 flex-col justify-center">
-          {moneyPowerTitle ? (
-            <div className="mb-1">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.32em] text-rose-400/85 sm:text-[11px]">
-                Vault channel // power doctrine
-              </p>
-              <h2 className={`mt-3 ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
-            </div>
-          ) : (
-            <h2 className={`${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
-          )}
+          <h2 className={`${publicHeadingLightning("amber")} ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
 
           {moneyPowerTitle ? (
             <CyberInsetPanel variant="blood" className="mt-4">
@@ -95,9 +87,7 @@ export function MethodSplitCard({
             </p>
           ) : null}
 
-          <div className="mt-6">
-            <MethodCtaButtons />
-          </div>
+          <MethodCtaButtons className="mt-8" size="large" showHeading />
         </div>
 
         <div

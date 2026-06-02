@@ -112,6 +112,10 @@ const CYBER_FRAME: Record<
   },
 }
 
+/** Uniform dark fill — no accent blobs at the bottom of the panel. */
+const FLAT_PANEL_FILL =
+  'linear-gradient(180deg, rgba(8,12,20,0.97) 0%, rgba(4,6,12,0.99) 100%)'
+
 export function CyberChamferFrame({
   accent,
   chamfer = 24,
@@ -124,6 +128,8 @@ export function CyberChamferFrame({
   ringPaddingClass = 'p-[3px]',
   /** No gradient rail / outer glow; inner panel fills the chamfer (e.g. affiliate hero). */
   hideOuterRing = false,
+  /** Solid inner panel without bottom/side accent washes (e.g. equal-height card grids). */
+  flatPanel = false,
 }: {
   accent: CyberFrameAccent
   chamfer?: number
@@ -135,6 +141,7 @@ export function CyberChamferFrame({
   decorSize?: 'default' | 'compact'
   ringPaddingClass?: string
   hideOuterRing?: boolean
+  flatPanel?: boolean
 }) {
   const f = CYBER_FRAME[accent]
   const outerClip = chamferPolygon(chamfer)
@@ -160,15 +167,19 @@ export function CyberChamferFrame({
         className={cx('relative overflow-hidden backdrop-blur-[2px]', innerClassName)}
         style={{
           clipPath: innerClip,
-          background: f.panelFill,
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 80px rgba(0,0,0,0.35)',
+          background: flatPanel ? FLAT_PANEL_FILL : f.panelFill,
+          boxShadow: flatPanel
+            ? 'inset 0 0 0 1px rgba(255,255,255,0.06)'
+            : 'inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 80px rgba(0,0,0,0.35)',
         }}
       >
         <span
           className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:repeating-linear-gradient(0deg,transparent_0px,transparent_2px,rgba(255,255,255,0.14)_2px,rgba(255,255,255,0.14)_3px)]"
           aria-hidden
         />
-        <span className="pointer-events-none absolute inset-0" style={{ background: f.innerVeil }} aria-hidden />
+        {!flatPanel ? (
+          <span className="pointer-events-none absolute inset-0" style={{ background: f.innerVeil }} aria-hidden />
+        ) : null}
         <span
           className={cx(
             'pointer-events-none absolute border',

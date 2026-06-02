@@ -12,7 +12,7 @@ import {
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
   resolveProgramPlaylistDescription,
@@ -635,7 +635,12 @@ export function ProgramsCourseSection({
           {!inProgramLessonView ? (
             <div className="space-y-8 pb-2 sm:space-y-10 sm:pb-3">
               <div className="w-full text-left">
-                <div className="text-[18px] font-black uppercase tracking-[0.16em] text-[color:var(--gold)]/95 [text-shadow:0_0_12px_rgba(250,204,21,0.2)] sm:text-[24px]">
+                <div
+                  className={cn(
+                    DASHBOARD_HEADING_LIGHTNING,
+                    "text-[18px] font-black uppercase tracking-[0.16em] sm:text-[24px]"
+                  )}
+                >
                   Programs
                 </div>
                 <p className="mt-2 max-w-4xl text-[17px] leading-relaxed text-white/82 sm:text-[24px] sm:leading-[1.35]">
@@ -668,7 +673,7 @@ export function ProgramsCourseSection({
                               type="button"
                               onClick={() => setPlaylistCategoryFilter("business_psychology")}
                               className={cn(
-                                "shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
+                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
                                 playlistCategoryFilter === "business_psychology"
                                   ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
                                   : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
@@ -680,7 +685,7 @@ export function ProgramsCourseSection({
                               type="button"
                               onClick={() => setPlaylistCategoryFilter("business_model")}
                               className={cn(
-                                "shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
+                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
                                 playlistCategoryFilter === "business_model"
                                   ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
                                   : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
@@ -802,7 +807,7 @@ export function ProgramsCourseSection({
                   >
                     {visibleBusinessPsychologyPlaylists.length > 0 ? (
                       <div className="space-y-3">
-                        <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
+                        <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
                           {PLAYLIST_CATEGORY_LABELS.business_psychology}
                         </div>
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
@@ -826,7 +831,7 @@ export function ProgramsCourseSection({
 
                     {visibleBusinessModelPlaylists.length > 0 ? (
                       <div className="space-y-3">
-                        <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
+                        <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
                           {PLAYLIST_CATEGORY_LABELS.business_model}
                         </div>
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cx } from "@/components/cyber/CyberChamferFrames";
+import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 const METHOD_CTA_LINKS = [
   { href: "/membership", label: "Join Now", variant: "join" },
@@ -10,11 +11,43 @@ const METHOD_CTA_LINKS = [
   { href: "/quiz", label: "Syn Diagnosis", variant: "quiz" },
 ] as const;
 
-export function MethodCtaButtons({ className }: { className?: string }) {
+export function MethodCtaButtons({
+  className,
+  size = "default",
+  showHeading = false,
+}: {
+  className?: string;
+  size?: "default" | "large";
+  showHeading?: boolean;
+}) {
   const router = useRouter();
+  const large = size === "large";
 
   return (
-    <div className={cx("method-cta-row flex flex-wrap gap-3 sm:gap-4", className)}>
+    <div
+      className={cx(
+        "method-cta-block",
+        large && "method-cta-block--large",
+        className
+      )}
+    >
+      {showHeading ? (
+        <p
+          className={cx(
+            publicHeadingLightning("amber"),
+            "method-cta-heading font-mono font-bold uppercase tracking-[0.32em]",
+            large ? "text-base sm:text-lg" : "text-sm sm:text-base"
+          )}
+        >
+          Next move
+        </p>
+      ) : null}
+      <div
+        className={cx(
+          "method-cta-row flex flex-wrap gap-3 sm:gap-4",
+          large && "method-cta-row--large"
+        )}
+      >
       {METHOD_CTA_LINKS.map((item, index) => (
         <Link
           key={item.href}
@@ -28,6 +61,7 @@ export function MethodCtaButtons({ className }: { className?: string }) {
           {item.label}
         </Link>
       ))}
+      </div>
     </div>
   );
 }

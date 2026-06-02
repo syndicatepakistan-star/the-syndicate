@@ -8,6 +8,15 @@ import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import SiteFooter from '@/components/SiteFooter'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { cx, CyberChamferFrame, CyberInsetPanel, type CyberFrameAccent } from '@/components/cyber/CyberChamferFrames'
+import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
+import { WhatYouGetDoctrineSections } from '@/components/what-you-get/WhatYouGetDoctrineSections'
+import {
+  ACCESS_PILLARS,
+  ALLIANCE_HERO_LEDE,
+  ALLIANCE_SECTION_HEADLINE,
+  ROYAL_PATH_ITEMS,
+  ROYAL_PATH_TITLE,
+} from '@/lib/whatYouGetCopy'
 
 const FEATURED_LOGOS = [
   {
@@ -27,93 +36,6 @@ const FEATURED_LOGOS = [
   },
 ]
 
-const ACCESS_PILLARS: {
-  accent: CyberFrameAccent
-  kicker: string
-  title: string
-  body: string
-}[] = [
-  {
-    accent: 'cyan',
-    kicker: 'Alliance channel',
-    title: 'Power beside power',
-    body:
-      'You do not enter a crowd — you enter a sealed alliance of operators who move under honour, leverage, and execution. The Syndicate is built for those who refuse noise, nostalgia, and public performance as a substitute for results.',
-  },
-  {
-    accent: 'violet',
-    kicker: 'Crucible',
-    title: 'Pressure-forged clarity',
-    body:
-      'Inside the network, friction is a feature: your blind spots get named, your standards get raised, and your strategy is stress-tested by people who have already paid tuition in the real economy. Growth here is not comfort — it is calibration.',
-  },
-  {
-    accent: 'amber',
-    kicker: 'Code',
-    title: 'Non-negotiable integrity',
-    body:
-      'The Syndicate runs on a moral spine, not slogans. Mutual respect, discretion, and alliance-first conduct are not “culture slides” — they are the perimeter that keeps the vault rare, dangerous in the right hands, and useless to tourists.',
-  },
-]
-
-const ROYAL_PATH_ITEMS = [
-  {
-    step: '01',
-    tag: 'Doctrine',
-    line: 'Legends are not handed down as bedtime stories — they are weaponised into doctrine: judgement, timing, nerve.',
-    border: 'border-rose-400/75',
-    glow: 'shadow-[0_0_0_1px_rgba(244,63,94,0.7),0_0_18px_rgba(244,63,94,0.45),0_0_32px_rgba(190,24,93,0.22)]',
-    panel: 'bg-[linear-gradient(128deg,rgba(136,19,55,0.55)_0%,rgba(24,8,18,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
-    stepClass: 'border-rose-400/70 bg-rose-950/60 text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.35)]',
-    tagClass: 'text-rose-300/90',
-    lineClass: 'text-rose-50/95',
-  },
-  {
-    step: '02',
-    tag: 'Through-line',
-    line: 'From throne rooms to war rooms, the through-line is the same: read incentives, hold the line, strike with precision.',
-    border: 'border-fuchsia-400/75',
-    glow: 'shadow-[0_0_0_1px_rgba(217,70,239,0.7),0_0_18px_rgba(217,70,239,0.45),0_0_32px_rgba(162,28,175,0.22)]',
-    panel: 'bg-[linear-gradient(128deg,rgba(126,34,206,0.5)_0%,rgba(18,8,28,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
-    stepClass: 'border-fuchsia-400/70 bg-fuchsia-950/60 text-fuchsia-100 shadow-[0_0_14px_rgba(217,70,239,0.35)]',
-    tagClass: 'text-fuchsia-300/90',
-    lineClass: 'text-fuchsia-50/95',
-  },
-  {
-    step: '03',
-    tag: 'Markets',
-    line: 'The Syndicate reframes that lineage for modern markets: capital, attention, regulation, and reputation as interconnected battlefields.',
-    border: 'border-cyan-400/75',
-    glow: 'shadow-[0_0_0_1px_rgba(34,211,238,0.7),0_0_18px_rgba(34,211,238,0.45),0_0_32px_rgba(14,165,233,0.22)]',
-    panel: 'bg-[linear-gradient(128deg,rgba(14,116,144,0.5)_0%,rgba(6,16,24,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
-    stepClass: 'border-cyan-400/70 bg-cyan-950/60 text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.35)]',
-    tagClass: 'text-cyan-300/90',
-    lineClass: 'text-cyan-50/95',
-  },
-  {
-    step: '04',
-    tag: 'Power study',
-    line: 'You study power to dismantle fantasy — not to cosplay a villain, but to command outcomes without losing your spine.',
-    border: 'border-amber-400/75',
-    glow: 'shadow-[0_0_0_1px_rgba(251,191,36,0.7),0_0_18px_rgba(251,191,36,0.45),0_0_32px_rgba(234,88,12,0.22)]',
-    panel: 'bg-[linear-gradient(128deg,rgba(180,83,9,0.45)_0%,rgba(20,14,6,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
-    stepClass: 'border-amber-400/70 bg-amber-950/60 text-amber-100 shadow-[0_0_14px_rgba(251,191,36,0.35)]',
-    tagClass: 'text-amber-300/90',
-    lineClass: 'text-amber-50/95',
-  },
-  {
-    step: '05',
-    tag: 'Sovereignty',
-    line: 'Greatness here is not vanity metrics. It is sovereignty: systems that work when you are not watching, and alliances that hold when pressure spikes.',
-    border: 'border-emerald-400/75',
-    glow: 'shadow-[0_0_0_1px_rgba(52,211,153,0.7),0_0_18px_rgba(52,211,153,0.45),0_0_32px_rgba(16,185,129,0.22)]',
-    panel: 'bg-[linear-gradient(128deg,rgba(6,95,70,0.5)_0%,rgba(6,18,14,0.94)_48%,rgba(8,6,14,0.98)_100%)]',
-    stepClass: 'border-emerald-400/70 bg-emerald-950/60 text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.35)]',
-    tagClass: 'text-emerald-300/90',
-    lineClass: 'text-emerald-50/95',
-  },
-] as const
-
 const pillarTitleClass: Record<CyberFrameAccent, string> = {
   cyan: 'text-cyan-100 drop-shadow-[0_0_14px_rgba(34,211,238,0.35)]',
   violet: 'text-fuchsia-100/95 drop-shadow-[0_0_14px_rgba(232,121,249,0.32)]',
@@ -121,6 +43,130 @@ const pillarTitleClass: Record<CyberFrameAccent, string> = {
   hero: 'text-cyan-100',
   video: 'text-sky-100',
   separator: 'text-amber-100',
+}
+
+const NEXT_MOVE_CHAMFER =
+  '[clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]'
+
+const NEXT_MOVE_LINKS = [
+  {
+    label: 'Enter membership',
+    href: '/membership',
+    border: 'border-cyan-400/55',
+    inset: 'border-cyan-300/22',
+    corner: 'border-cyan-300/80',
+    accent: 'bg-cyan-300/75 shadow-[0_0_8px_rgba(34,211,238,0.7)]',
+    lightning: 'cyan' as const,
+    glow: 'shadow-[0_0_24px_rgba(34,211,238,0.22)]',
+    hoverBorder: 'hover:border-cyan-300/80',
+    hoverGlow: 'hover:shadow-[0_0_36px_rgba(34,211,238,0.42)]',
+    bg: 'bg-[linear-gradient(145deg,rgba(6,78,99,0.35)_0%,rgba(4,8,18,0.92)_100%)]',
+  },
+  {
+    label: 'View programs',
+    href: '/programs',
+    border: 'border-fuchsia-400/55',
+    inset: 'border-fuchsia-300/22',
+    corner: 'border-fuchsia-300/80',
+    accent: 'bg-fuchsia-300/75 shadow-[0_0_8px_rgba(217,70,239,0.7)]',
+    lightning: 'fuchsia' as const,
+    glow: 'shadow-[0_0_24px_rgba(217,70,239,0.22)]',
+    hoverBorder: 'hover:border-fuchsia-300/80',
+    hoverGlow: 'hover:shadow-[0_0_36px_rgba(217,70,239,0.42)]',
+    bg: 'bg-[linear-gradient(145deg,rgba(112,26,117,0.35)_0%,rgba(8,4,16,0.92)_100%)]',
+  },
+  {
+    label: 'Syn diagnosis',
+    href: '/quiz',
+    border: 'border-emerald-400/55',
+    inset: 'border-emerald-300/22',
+    corner: 'border-emerald-300/80',
+    accent: 'bg-emerald-300/75 shadow-[0_0_8px_rgba(52,211,153,0.7)]',
+    lightning: 'emerald' as const,
+    glow: 'shadow-[0_0_24px_rgba(52,211,153,0.22)]',
+    hoverBorder: 'hover:border-emerald-300/80',
+    hoverGlow: 'hover:shadow-[0_0_36px_rgba(52,211,153,0.42)]',
+    bg: 'bg-[linear-gradient(145deg,rgba(6,95,70,0.35)_0%,rgba(4,12,10,0.92)_100%)]',
+  },
+] as const
+
+function WhatYouGetNextMovePanel({
+  headingId,
+  className,
+}: {
+  headingId: string
+  className?: string
+}) {
+  return (
+    <div className={cx('relative', className)}>
+      <CyberChamferFrame accent="amber" chamfer={20} innerClassName="p-5 sm:p-6">
+        <p
+          id={headingId}
+          className={`${publicHeadingLightning('amber')} font-mono text-xs font-bold uppercase tracking-[0.32em] sm:text-sm`}
+        >
+          Next move
+        </p>
+        <nav
+          className="mx-auto mt-5 grid max-w-[34rem] gap-2.5 sm:max-w-[38rem] sm:grid-cols-3 sm:gap-3"
+          aria-label="Next steps"
+        >
+          {NEXT_MOVE_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch
+              className={cx(
+                'group relative flex min-h-[3.1rem] w-full items-center justify-center border-2 px-2.5 py-3 text-center font-black uppercase tracking-[0.08em] transition hover:-translate-y-0.5 hover:bg-black/70 sm:min-h-[3.35rem] sm:px-3 sm:py-3.5',
+                NEXT_MOVE_CHAMFER,
+                'text-[clamp(0.62rem,1.6vw,0.82rem)] sm:text-[clamp(0.68rem,1.1vw,0.88rem)]',
+                item.border,
+                item.glow,
+                item.hoverBorder,
+                item.hoverGlow,
+                item.bg
+              )}
+            >
+              <span
+                aria-hidden
+                className={cx(
+                  'pointer-events-none absolute inset-[6px] border',
+                  NEXT_MOVE_CHAMFER,
+                  item.inset
+                )}
+              />
+              <span
+                aria-hidden
+                className={cx('pointer-events-none absolute left-2.5 top-2.5 h-5 w-5 border-l-2 border-t-2', item.corner)}
+              />
+              <span
+                aria-hidden
+                className={cx(
+                  'pointer-events-none absolute bottom-2.5 right-2.5 h-5 w-5 border-b-2 border-r-2',
+                  item.corner
+                )}
+              />
+              <span
+                aria-hidden
+                className={cx('pointer-events-none absolute left-3 top-2 h-[2px] w-5', item.accent)}
+              />
+              <span
+                aria-hidden
+                className={cx('pointer-events-none absolute bottom-2 right-3 h-4 w-[2px]', item.accent)}
+              />
+              <span
+                className={cx(
+                  publicHeadingLightning(item.lightning),
+                  'relative z-[1] text-[clamp(0.62rem,1.6vw,0.82rem)] sm:text-[clamp(0.68rem,1.1vw,0.88rem)]'
+                )}
+              >
+                {item.label}
+              </span>
+            </Link>
+          ))}
+        </nav>
+      </CyberChamferFrame>
+    </div>
+  )
 }
 
 export default function WhatYouGetPage() {
@@ -156,6 +202,9 @@ export default function WhatYouGetPage() {
                 <br />
                 and alliance.
               </h1>
+              <p className="mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
+                {ALLIANCE_HERO_LEDE}
+              </p>
             </div>
           </div>
         </section>
@@ -181,27 +230,33 @@ export default function WhatYouGetPage() {
           <div className="relative z-[1]">
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-10 pt-8 sm:pb-14 sm:pt-10">
               <div className="mx-auto max-w-[96rem]">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-200/85">What you access //</p>
-                <h2 className="mt-2 text-[clamp(1.75rem,4vw,3rem)] font-black uppercase tracking-[0.08em] text-zinc-50 drop-shadow-[0_0_24px_rgba(34,211,238,0.2)]">
-                  The perimeter is sealed. The inside is lethal on purpose.
+                <h2
+                  className={`${publicHeadingLightning('cyan')} text-[clamp(1.75rem,4vw,3rem)] font-black uppercase tracking-[0.08em]`}
+                >
+                  {ALLIANCE_SECTION_HEADLINE}
                 </h2>
-                <div className="mt-8 grid gap-5 md:grid-cols-3">
+                <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:items-stretch">
                   {ACCESS_PILLARS.map((p) => (
                     <CyberChamferFrame
                       key={p.title}
                       accent={p.accent}
                       chamfer={18}
                       decorSize="compact"
-                      className="h-full"
-                      innerClassName="p-5 sm:p-6"
+                      flatPanel
+                      className="h-full min-h-0 w-full min-w-0"
+                      innerClassName="flex h-full min-h-0 flex-col p-5 sm:p-6"
+                      contentClassName="flex min-h-0 flex-1 flex-col"
                     >
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-400 sm:text-[11px]">
-                        {p.kicker}
-                      </p>
-                      <h3 className={cx('mt-3 text-xl font-black uppercase tracking-[0.06em] sm:text-2xl', pillarTitleClass[p.accent])}>
+                      <h3
+                        className={cx(
+                          publicHeadingLightning('amber'),
+                          'text-xl font-black uppercase tracking-[0.06em] sm:text-2xl',
+                          pillarTitleClass[p.accent]
+                        )}
+                      >
                         {p.title}
                       </h3>
-                      <p className="mt-4 text-sm leading-relaxed text-zinc-100/88 sm:text-base">{p.body}</p>
+                      <p className="mt-4 flex-1 text-sm leading-relaxed text-zinc-100/88 sm:text-base">{p.body}</p>
                     </CyberChamferFrame>
                   ))}
                 </div>
@@ -210,21 +265,14 @@ export default function WhatYouGetPage() {
 
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-10 sm:pb-14">
               <div className="mx-auto max-w-[96rem]">
-                <div className="mb-6">
-                  <CyberChamferFrame accent="separator" chamfer={14} decorSize="compact" innerClassName="py-2.5 px-3">
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.26em] text-amber-200/90">Vault doctrine //</p>
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/75">Money · Power · Signal</span>
-                    </div>
-                  </CyberChamferFrame>
-                </div>
-
                 <div className="grid items-start gap-6 lg:grid-cols-[1fr_220px] xl:grid-cols-[1fr_260px]">
                   <CyberChamferFrame accent="violet" chamfer={22} className="min-h-0" innerClassName="p-6 sm:p-8">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-rose-300/85 sm:text-[11px]">
-                      Sovereign systems
-                    </p>
-                    <h2 className="mt-3 max-w-[22ch] text-balance text-[clamp(1.85rem,3.6vw,3.1rem)] font-black uppercase leading-[0.98] tracking-[0.05em] text-zinc-50 [text-shadow:0_0_18px_rgba(251,113,133,0.55),0_0_42px_rgba(168,85,247,0.28)]">
+                    <h2
+                      className={cx(
+                        publicHeadingLightning('amber'),
+                        'max-w-[22ch] text-balance text-[clamp(1.85rem,3.6vw,3.1rem)] font-black uppercase leading-[0.98] tracking-[0.05em] text-zinc-50 [text-shadow:0_0_18px_rgba(251,113,133,0.55),0_0_42px_rgba(168,85,247,0.28)]'
+                      )}
+                    >
                       Influence without rot
                     </h2>
                     <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
@@ -242,22 +290,10 @@ export default function WhatYouGetPage() {
                         </p>
                       </CyberInsetPanel>
                     </div>
-                    <div className="mt-6 border-t border-white/10 pt-6">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/80 sm:text-xs">
-                        Next move
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        <Link href="/membership" prefetch className="cta-nav-button text-sm font-semibold">
-                          Enter membership
-                        </Link>
-                        <Link href="/programs" prefetch className="cta-nav-button text-sm font-semibold">
-                          View programs
-                        </Link>
-                        <Link href="/quiz" prefetch className="cta-nav-button text-sm font-semibold">
-                          Syn diagnosis
-                        </Link>
-                      </div>
-                    </div>
+                    <WhatYouGetNextMovePanel
+                      headingId="what-you-get-next-move-influence-heading"
+                      className="mt-8"
+                    />
                   </CyberChamferFrame>
 
                   <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" className="mx-auto w-full max-w-[240px] lg:mx-0 lg:max-w-none" innerClassName="p-2">
@@ -276,17 +312,16 @@ export default function WhatYouGetPage() {
               </div>
             </section>
 
+            <WhatYouGetDoctrineSections />
+
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-12 sm:pb-16">
               <div className="mx-auto max-w-[96rem]">
                 <CyberChamferFrame accent="hero" chamfer={20} innerClassName="p-6 sm:p-10">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <h2 className="text-[clamp(1.65rem,3.8vw,2.75rem)] font-black uppercase tracking-[0.06em] text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
-                      Lineage, re-armed
-                    </h2>
-                    <p className="max-w-md text-right text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75 sm:text-sm">
-                      Kings · emperors · operators
-                    </p>
-                  </div>
+                  <h2
+                    className={`${publicHeadingLightning('cyan')} text-[clamp(1.65rem,3.8vw,2.75rem)] font-black uppercase tracking-[0.06em]`}
+                  >
+                    {ROYAL_PATH_TITLE}
+                  </h2>
                   <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(240px,340px)] lg:items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] xl:gap-8">
                     <div className="grid min-w-0 gap-4 sm:gap-5">
                       {ROYAL_PATH_ITEMS.map((item, idx) => (
@@ -366,6 +401,48 @@ export default function WhatYouGetPage() {
         </div>
       </main>
 
+      <section
+        aria-labelledby="what-you-get-next-move-heading"
+        className="relative z-10 border-t border-amber-500/15 bg-[#04060c] px-[clamp(1rem,3vw,2.2rem)] py-10 sm:py-14"
+      >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-1/2 h-[280px] w-[min(100%,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/10 blur-[100px]" />
+        </div>
+        <div className="relative mx-auto flex w-full max-w-[min(100%,80rem)] items-center justify-center gap-2 px-1 sm:gap-4 lg:gap-6">
+          <div
+            className="relative mx-3 h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:h-48 lg:w-48 xl:h-52 xl:w-52"
+            aria-hidden
+          >
+            <div className="absolute inset-0">
+              <Image
+                src="/assets/coin-gold.png"
+                alt=""
+                fill
+                sizes="(max-width: 640px) 116px, (max-width: 1024px) 176px, 208px"
+                className="object-contain object-center coin-wheel-lr drop-shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+              />
+            </div>
+          </div>
+          <div className="min-w-0 w-full max-w-[46rem] flex-1">
+            <WhatYouGetNextMovePanel headingId="what-you-get-next-move-heading" />
+          </div>
+          <div
+            className="relative mx-3 h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:h-48 lg:w-48 xl:h-52 xl:w-52"
+            aria-hidden
+          >
+            <div className="absolute inset-0">
+              <Image
+                src="/assets/Gold-Key.png"
+                alt=""
+                fill
+                sizes="(max-width: 640px) 116px, (max-width: 1024px) 176px, 208px"
+                className="object-contain object-center what-you-get-key-float drop-shadow-[0_0_18px_rgba(251,191,36,0.35)]"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <FeaturedLogosStrip logos={FEATURED_LOGOS} speedSeconds={40} />
       <SiteFooter sloganTypingSpeed={42} sloganDeletingSpeed={32} sloganPauseMs={900} />
       <style jsx>{`
@@ -383,38 +460,29 @@ export default function WhatYouGetPage() {
             transform: translateY(0);
           }
         }
-        .coin-wheel-lr {
+        :global(.coin-wheel-lr) {
           animation: coinWheelSpin 5.2s linear infinite;
           transform-origin: center;
         }
         @keyframes coinWheelSpin {
           0% {
-            transform: rotate(0deg) translateY(0px);
-          }
-          50% {
-            transform: rotate(180deg) translateY(-6px);
+            transform: rotate(0deg);
           }
           100% {
-            transform: rotate(360deg) translateY(0px);
+            transform: rotate(360deg);
           }
         }
-        .what-you-get-key-float {
-          animation: whatYouGetKeyOrbitLocal 6.8s linear infinite;
+        :global(.what-you-get-key-float) {
+          animation: whatYouGetKeyFloatLocal 3.8s ease-in-out infinite;
           transform-origin: center;
         }
-        @keyframes whatYouGetKeyOrbitLocal {
+        @keyframes whatYouGetKeyFloatLocal {
           0%,
           100% {
-            transform: translate(0px, 0px) rotate(0deg);
-          }
-          25% {
-            transform: translate(8px, -6px) rotate(90deg);
+            transform: translateY(0);
           }
           50% {
-            transform: translate(0px, -10px) rotate(180deg);
-          }
-          75% {
-            transform: translate(-8px, -6px) rotate(270deg);
+            transform: translateY(-10px);
           }
         }
       `}</style>

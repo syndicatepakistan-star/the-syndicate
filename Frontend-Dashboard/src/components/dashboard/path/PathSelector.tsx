@@ -8,7 +8,7 @@ import { cn } from "../dashboardPrimitives";
 export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelect: (g: GoalId) => void }) {
   return (
     <div className="relative">
-      <div className="font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] text-[color:var(--gold-neon)]/92 sm:tracking-[0.24em]">
+      <div className="public-heading-lightning public-heading-lightning--amber font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] sm:tracking-[0.24em]">
         Your Path
       </div>
       <p className="mt-2 max-w-2xl text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/68 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">

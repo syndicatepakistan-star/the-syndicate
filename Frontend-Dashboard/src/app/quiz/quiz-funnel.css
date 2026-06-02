@@ -580,13 +580,11 @@
 
 .section-title {
   margin: 18px 0 6px;
-  color: #be992e;
   font-size: 28px;
   font-weight: 400;
   font-family: var(--font-display);
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(190, 153, 46, 0.2);
 }
 
 .section-subtitle {
@@ -598,7 +596,6 @@
 .result-heading {
   margin: 16px auto 12px;
   font-size: 28px;
-  color: #be992e;
   font-weight: 900;
   font-family: var(--font-display);
   letter-spacing: 0.06em;

@@ -487,7 +487,7 @@ export function PricingPage({
                 style={{ clipPath: 'polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)' }}
               />
               <div className="relative z-[1]">
-                <h2 className="programs-heading-glow font-display text-4xl font-black uppercase tracking-[0.14em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                <h2 className="public-heading-lightning public-heading-lightning--gold font-display text-4xl font-black uppercase tracking-[0.14em] sm:text-5xl md:text-6xl lg:text-7xl">
                   SYNDICATE ELITE OFFERS
                 </h2>
                 <div className="mx-auto mt-5 max-w-[52rem] space-y-4 text-left sm:mt-6">

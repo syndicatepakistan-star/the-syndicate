@@ -751,7 +751,7 @@ export default function AuthScreen({
 
           <div className="login-header">
             <span className="status-dot" />
-            <h1 className="glitch" data-text={heading}>
+            <h1 className="glitch public-heading-lightning public-heading-lightning--gold" data-text={heading}>
               {heading}
             </h1>
             <span className="status-dot" />

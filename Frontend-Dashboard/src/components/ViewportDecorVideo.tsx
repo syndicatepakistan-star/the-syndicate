@@ -5,12 +5,13 @@ import { useEffect, useRef } from "react";
 type ViewportDecorVideoProps = {
   src: string;
   className?: string;
+  style?: React.CSSProperties;
   /** 0–1 opacity when playing */
   opacityClassName?: string;
 };
 
 /** Decorative MP4: no decode until near viewport; pauses when off-screen to keep scroll smooth. */
-export function ViewportDecorVideo({ src, className, opacityClassName }: ViewportDecorVideoProps) {
+export function ViewportDecorVideo({ src, className, style, opacityClassName }: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ViewportDecorVideo({ src, className, opacityClassName }: Viewpor
     <video
       ref={ref}
       className={[className, opacityClassName].filter(Boolean).join(" ")}
+      style={style}
       muted
       loop
       playsInline

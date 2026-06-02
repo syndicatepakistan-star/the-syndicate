@@ -19,6 +19,7 @@ import { attachProgramLinksToGalleryImages } from '@/lib/programGalleryLinks'
 import { GLOBE_IMAGE_ALT_OVERRIDES } from '@/lib/programPlaylistThumbnails'
 import { applyGlobeGalleryOverrides } from '@/lib/programPlaylistThumbnails'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
+import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
 const FEATURED_LOGOS = [
   {
@@ -231,7 +232,7 @@ export default async function Home() {
 
         <div className="relative z-10 h-full w-full px-0">
           <h2 className="mb-3 text-center text-2xl font-black uppercase sm:mb-12 sm:text-3xl md:text-4xl lg:text-5xl">
-            <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(251,191,36,0.35)]">
+            <span className={publicHeadingLightning('amber')}>
               SYNDICATE ELITE PROGRAMS
             </span>
           </h2>
@@ -258,7 +259,9 @@ export default async function Home() {
         <div className="pointer-events-none absolute inset-0 bg-black/68" />
         <div className="relative z-10 mx-auto flex h-auto w-full max-w-[1700px] flex-col justify-start px-4 py-0 sm:h-full sm:justify-center sm:px-6 sm:py-12 md:px-8">
           <div className="space-y-4 sm:space-y-5">
-            <h3 className="mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:text-3xl md:text-4xl">
+            <h3
+              className={`${publicHeadingLightning('amber')} mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-4 sm:text-3xl md:text-4xl`}
+            >
               MOST VIEWED
             </h3>
             <div className="relative w-full overflow-hidden">
@@ -309,7 +312,9 @@ export default async function Home() {
             </div>
 
             <>
-              <h3 className="mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.35)] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl">
+              <h3
+                className={`${publicHeadingLightning('amber')} mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl`}
+              >
                 MOST INFORMATIVE
               </h3>
               <div className="relative w-full overflow-hidden">

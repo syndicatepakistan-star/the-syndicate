@@ -94,7 +94,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                 <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start md:gap-4">
                   <h2
                     id="affiliate-program-heading"
-                    className="programs-heading-glow font-display text-[clamp(2.25rem,5vw,3.5rem)] font-black uppercase tracking-[0.12em] text-white sm:text-5xl md:text-6xl md:tracking-[0.14em] lg:text-7xl xl:text-8xl"
+                    className="public-heading-lightning public-heading-lightning--gold font-display text-[clamp(2.25rem,5vw,3.5rem)] font-black uppercase tracking-[0.12em] sm:text-5xl md:text-6xl md:tracking-[0.14em] lg:text-7xl xl:text-8xl"
                   >
                     Affiliate
                   </h2>

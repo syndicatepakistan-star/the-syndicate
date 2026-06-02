@@ -1,6 +1,16 @@
 "use client";
 
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { publicHeadingLightning, type PublicHeadingLightningVariant } from "@/lib/publicHeadingLightning";
+
+const PILL_LIGHTNING: Record<ProgramsGoldPillHeadingChrome, PublicHeadingLightningVariant> = {
+  gold: "gold",
+  goldViolet: "violet",
+  violet: "violet",
+  lime: "lime",
+  fuchsia: "fuchsia",
+  cyan: "cyan",
+};
 
 export type ProgramsGoldPillHeadingChrome = "gold" | "goldViolet" | "violet" | "lime" | "fuchsia" | "cyan";
 
@@ -28,8 +38,7 @@ const CHROME: Record<
     innerRing: "border-[#d4af39]/35",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(212,175,57,0.82),transparent)]",
     radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(212,175,57,0.22),transparent_55%)]",
-    title:
-      "text-[#d4af39] drop-shadow-[0_0_10px_rgba(212,175,57,0.55)] [text-shadow:0_0_28px_rgba(212,175,57,0.38)]",
+    title: "",
   },
   /** Gold HUD title + violet/purple pill rim and outer bloom (membership hero). */
   goldViolet: {
@@ -39,8 +48,7 @@ const CHROME: Record<
     bar: "bg-[linear-gradient(180deg,transparent,rgba(212,175,57,0.8),transparent)]",
     radial:
       "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(167,139,250,0.22),transparent_42%),radial-gradient(90%_80%_at_50%_120%,rgba(212,175,57,0.1),transparent_55%)]",
-    title:
-      "text-[#d4af39] drop-shadow-[0_0_8px_rgba(212,175,57,0.78),0_0_22px_rgba(212,175,57,0.48),0_0_42px_rgba(212,175,57,0.2)] [text-shadow:0_0_1px_rgba(240,220,175,0.65),0_0_26px_rgba(212,175,57,0.42)]",
+    title: "",
   },
   violet: {
     shell:
@@ -48,8 +56,7 @@ const CHROME: Record<
     innerRing: "border-violet-400/40",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(167,139,250,0.85),transparent)]",
     radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(167,139,250,0.28),transparent_55%)]",
-    title:
-      "text-violet-200 drop-shadow-[0_0_12px_rgba(167,139,250,0.75)] [text-shadow:0_0_32px_rgba(139,92,246,0.45)]",
+    title: "",
   },
   lime: {
     shell:
@@ -57,8 +64,7 @@ const CHROME: Record<
     innerRing: "border-lime-300/38",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(190,242,100,0.85),transparent)]",
     radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(217,249,157,0.22),transparent_55%)]",
-    title:
-      "text-lime-200 drop-shadow-[0_0_12px_rgba(190,242,100,0.65)] [text-shadow:0_0_30px_rgba(132,204,22,0.4)]",
+    title: "",
   },
   fuchsia: {
     shell:
@@ -66,8 +72,7 @@ const CHROME: Record<
     innerRing: "border-fuchsia-400/38",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(244,114,182,0.85),transparent)]",
     radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(244,114,182,0.22),transparent_55%)]",
-    title:
-      "text-fuchsia-200 drop-shadow-[0_0_12px_rgba(232,121,249,0.7)] [text-shadow:0_0_32px_rgba(217,70,239,0.42)]",
+    title: "",
   },
   cyan: {
     shell:
@@ -75,8 +80,7 @@ const CHROME: Record<
     innerRing: "border-cyan-400/38",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(103,232,249,0.85),transparent)]",
     radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(165,243,252,0.22),transparent_55%)]",
-    title:
-      "text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] [text-shadow:0_0_30px_rgba(56,189,248,0.38)]",
+    title: "",
   },
 };
 
@@ -116,7 +120,14 @@ export function ProgramsGoldPillHeading({
           className="programs-heading-shine pointer-events-none absolute inset-y-[-20%] left-[-35%] w-[20%] bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.65)_50%,transparent_100%)] opacity-70 blur-[2px]"
           aria-hidden
         />
-        <Tag className={cn("programs-heading-glow relative text-center font-black uppercase tracking-[0.14em]", c.title, titleSize)}>
+        <Tag
+          className={cn(
+            publicHeadingLightning(PILL_LIGHTNING[chrome]),
+            "relative text-center font-black uppercase tracking-[0.14em]",
+            c.title,
+            titleSize
+          )}
+        >
           {title}
         </Tag>
       </div>

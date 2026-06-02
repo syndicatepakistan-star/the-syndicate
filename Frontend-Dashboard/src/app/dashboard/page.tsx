@@ -12,11 +12,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
+import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
 import LetterGlitch from "@/components/LetterGlitch";
 import type { DashboardNavKey } from "@/components/dashboard/types";
+import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { GoalsPanel } from "@/components/ui/GoalsPanel";
@@ -1428,7 +1430,9 @@ function SettingsProfileSection({
         <div className="pointer-events-none absolute inset-0 opacity-50 [background:radial-gradient(500px_220px_at_8%_0%,rgba(34,211,238,0.12),transparent_65%),radial-gradient(560px_260px_at_100%_100%,rgba(244,63,94,0.08),transparent_70%)]" />
         <div className="relative z-[1]">
           <div className="mb-4 border-b border-cyan-300/20 pb-3">
-            <h2 className="text-[clamp(1.2rem,1.35vw+0.8rem,1.6rem)] font-black uppercase tracking-[0.12em] text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.35)]">
+            <h2
+              className={`${DASHBOARD_HEADING_LIGHTNING} text-[clamp(1.2rem,1.35vw+0.8rem,1.6rem)] font-black uppercase tracking-[0.12em]`}
+            >
               Profile Settings
             </h2>
             <p className="mt-1 text-[14px] text-slate-200/80 sm:text-[15px]">
@@ -1537,7 +1541,9 @@ function SettingsBillingSection() {
       <div className="relative overflow-hidden rounded-xl border border-lime-300/40 bg-[#04100a]/82 p-[clamp(0.8rem,1.6vw,1.25rem)] shadow-[0_0_0_1px_rgba(163,230,53,0.16),0_0_22px_rgba(163,230,53,0.12),inset_0_0_18px_rgba(20,184,166,0.08)] [clip-path:polygon(0_0,98%_0,100%_10%,100%_100%,2%_100%,0_90%)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(620px_220px_at_0%_0%,rgba(163,230,53,0.14),transparent_65%),radial-gradient(420px_200px_at_100%_100%,rgba(20,184,166,0.1),transparent_70%)]" />
         <div className="mb-3 border-b border-[color:var(--gold-neon-border-mid)]/35 pb-3">
-          <h2 className="text-[clamp(1.2rem,1.35vw+0.8rem,1.6rem)] font-black uppercase tracking-[0.12em] text-lime-200 drop-shadow-[0_0_8px_rgba(163,230,53,0.28)]">
+          <h2
+            className={`${DASHBOARD_HEADING_LIGHTNING} text-[clamp(1.2rem,1.35vw+0.8rem,1.6rem)] font-black uppercase tracking-[0.12em]`}
+          >
             Billing History
           </h2>
           <p className="mt-1 text-[14px] text-white/72 sm:text-[15px]">
@@ -1741,7 +1747,9 @@ function SettingsCertificatesSection() {
       {exportPortal}
       <div className="rounded-xl border border-sky-300/28 bg-[#040814]/85 p-[clamp(0.8rem,1.6vw,1.2rem)] shadow-[0_0_0_1px_rgba(56,189,248,0.08),0_0_18px_rgba(56,189,248,0.1)]">
         <div className="mb-3 border-b border-sky-300/20 pb-3">
-          <h2 className="text-[clamp(1.1rem,1.2vw+0.75rem,1.5rem)] font-black uppercase tracking-[0.12em] text-sky-100">
+          <h2
+            className={`${DASHBOARD_HEADING_LIGHTNING} text-[clamp(1.1rem,1.2vw+0.75rem,1.5rem)] font-black uppercase tracking-[0.12em]`}
+          >
             Certificates
           </h2>
           <p className="mt-1 text-[13px] text-slate-200/78">Download issued course certificates from completed playlists.</p>
@@ -2368,6 +2376,13 @@ export default function Page() {
       gsap.set("[data-anim='in']", { opacity: 0, y: 10 });
       gsap.set("[data-anim='left']", { opacity: 0, x: -18 });
       gsap.set("[data-anim='right']", { opacity: 0, x: 18 });
+      /* Main column content must never be hidden by intro tweens (video has no data-anim). */
+      gsap.set("[data-dashboard-video-scroll], [data-dashboard-video-scroll] *", {
+        opacity: 1,
+        y: 0,
+        x: 0,
+        clearProps: "opacity,transform"
+      });
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
       tl.to("[data-anim='in']", { opacity: 1, y: 0, stagger: 0.06 }, 0)
@@ -3210,11 +3225,10 @@ export default function Page() {
           <motion.section
             layout={false}
             transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-            data-anim="in"
             data-dashboard-main-shell
-            style={{ backgroundColor: "#000" }}
+            data-dashboard-video-shell
             className={cn(
-              "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative isolate flex min-h-0 w-full min-w-0 max-w-none flex-col self-stretch overflow-hidden border bg-black fluid-section-p",
+              "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative grid min-h-0 w-full min-w-0 max-w-none grid-cols-1 grid-rows-1 self-stretch overflow-hidden border border-[color:var(--gold-neon-border-mid)] bg-transparent fluid-section-p",
               "col-span-12",
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
               isOverlaySidebarBp &&
@@ -3229,10 +3243,12 @@ export default function Page() {
                 : "fluid-section-p"
             )}
           >
+            <DashboardMainVideoBackground opacity={0.9} />
             <div
               data-main-shell-scroll
+              data-dashboard-video-scroll
               className={cn(
-                "dashboard-main-scroll relative z-[1] flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-transparent no-scrollbar",
+                "dashboard-main-scroll dashboard-main-with-video col-start-1 row-start-1 z-[1] flex min-h-0 min-h-full w-full flex-col overflow-y-auto overflow-x-hidden bg-transparent no-scrollbar",
                 !sidebarOccupiesGrid && "lg:pl-14",
                 selectedNavKey === "monk"
                   ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)] pr-0"
@@ -3269,7 +3285,7 @@ export default function Page() {
                 )
               ) : selectedNavKey === "programs" ? (
                 <ProgramsCourseSection
-                  instructorHero={<InstructorSlideshow />}
+                  instructorHero={<InstructorSlideshow showPanelBackgroundVideo={false} />}
                   chromaItems={chromaItems}
                   selectedCourseId={selectedCourseId}
                   onSelectCourse={handleChromaCourseSelect}
@@ -3367,7 +3383,7 @@ export default function Page() {
                       aria-label="Featured instructor programs"
                       className="mb-6 w-full shrink-0 scroll-mt-2 md:mb-8"
                     >
-                      <InstructorSlideshow />
+                      <InstructorSlideshow showPanelBackgroundVideo={false} />
                     </section>
                     <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
                       <DashboardControlCenter

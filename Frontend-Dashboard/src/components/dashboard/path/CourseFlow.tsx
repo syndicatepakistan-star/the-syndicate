@@ -474,7 +474,7 @@ export function CourseFlow({
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-[clamp(0.65rem,1.8vw+0.2rem,1rem)]">
         <div>
-          <div className="font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] text-[color:var(--gold-neon)] sm:tracking-[0.24em]">
+          <div className="public-heading-lightning public-heading-lightning--amber font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] sm:tracking-[0.24em]">
             Next Opportunities
           </div>
           <p className="mt-2 text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/88 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">

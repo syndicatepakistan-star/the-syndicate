@@ -1,3 +1,5 @@
+import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
+
 export type BrandHeaderProps = {
   subtitle?: string;
   subtitleClassName?: string;
@@ -16,9 +18,11 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
         />
       </div>
       <div>
-        <p className="brand-kicker">THE SYNDICATE</p>
-        <h1 className="brand-title">THE SOVEREIGN ENTITY AUDIT</h1>
-        {subtitle ? <p className={`brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p> : null}
+        <p className={`${publicHeadingLightning("amber")} brand-kicker`}>THE SYNDICATE</p>
+        <h1 className={`${publicHeadingLightning("amber")} brand-title`}>THE SOVEREIGN ENTITY AUDIT</h1>
+        {subtitle ? (
+          <p className={`${publicHeadingLightning("amber")} brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p>
+        ) : null}
       </div>
     </header>
   );

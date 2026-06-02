@@ -297,7 +297,6 @@
   font-size: clamp(1.35rem, 2.8vw + 0.6rem, 3rem);
   font-weight: 900;
   letter-spacing: clamp(0.12em, 0.08em + 1vw, 0.35em);
-  color: var(--gold-pale);
 }
 
 .login-form {

@@ -15,6 +15,14 @@ export function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
+/** Instructor-style pulsing neon lightning — dashboard section titles & sticky FAB labels only. */
+export const DASHBOARD_HEADING_LIGHTNING = "dashboard-heading-lightning";
+
+export const DASHBOARD_FAB_LABEL_LIGHTNING = "dashboard-fab-label-lightning";
+
+/** Goals / milestones panels & FAB — purple-gold lightning */
+export const DASHBOARD_HEADING_LIGHTNING_GOALS = "dashboard-heading-lightning dashboard-heading-lightning--goals";
+
 export function themeAccent(themeMode: ThemeMode) {
   return themeMode === "danger"
     ? { border: "rgba(255,72,72,0.72)", glow: "rgba(255,72,72,0.28)", text: "#ffd2d2" }
@@ -159,7 +167,7 @@ export function Card({
               <span className="dashboard-neon-icon-frame grid h-8 w-8 shrink-0 place-items-center rounded-md border bg-black/35 sm:h-9 sm:w-9">
                 <Target className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} aria-hidden />
               </span>
-              <span className="dashboard-neon-title font-extrabold uppercase tracking-[0.2em]">
+              <span className="dashboard-neon-title font-mono text-[clamp(1.05rem,2vw+0.55rem,1.45rem)] font-black uppercase italic tracking-[0.07em]">
                 {title}
               </span>
             </>

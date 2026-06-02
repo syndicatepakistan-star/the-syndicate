@@ -8,4 +8,4 @@ export const DASHBOARD_FAB_ICON =
 export const DASHBOARD_FAB_ICON_GLYPH = "h-[17px] w-[17px] opacity-75 sm:h-[18px] sm:w-[18px]";
 
 export const DASHBOARD_FAB_LABEL =
-  "hidden text-[12px] font-extrabold uppercase leading-tight tracking-[0.12em] text-[color:var(--goals-milestones-gold)]/72 [text-shadow:0_0_8px_rgba(255,215,0,0.2)] sm:inline md:text-[13px] md:tracking-[0.14em]";
+  "dashboard-fab-label-lightning hidden text-[12px] font-extrabold uppercase leading-tight tracking-[0.12em] sm:inline md:text-[13px] md:tracking-[0.14em]";

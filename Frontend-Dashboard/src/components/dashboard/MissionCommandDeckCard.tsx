@@ -18,6 +18,7 @@ import { missionLocalDay, noteLocalDay, toYyyyMmDd } from "./deck-date-utils";
 import { playDeckAlarmSound, unlockDeckAlarmAudio } from "@/lib/deck-alarm-sound";
 import toast from "react-hot-toast";
 import { Card, cn, type ThemeMode } from "./dashboardPrimitives";
+import { DECK_TYPO } from "./missionDeckTypography";
 
 function localDateAndTimeToIso(dateStr: string, timeStr: string): string | null {
   if (!dateStr?.trim() || !timeStr?.trim()) return null;
@@ -291,7 +292,7 @@ function MissionBucketPagination({
             ? "border-fuchsia-400/45 bg-black/50 text-fuchsia-100 hover:border-fuchsia-300/70 hover:shadow-[0_0_16px_rgba(217,70,239,0.22)] disabled:opacity-35"
             : "border-emerald-400/45 bg-black/50 text-emerald-100 hover:border-emerald-300/70 hover:shadow-[0_0_16px_rgba(52,211,153,0.22)] disabled:opacity-35";
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[11px] font-semibold normal-case tracking-normal text-neutral-300/95">
+    <div className={cn("mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 normal-case tracking-normal text-neutral-300/95", DECK_TYPO.meta)}>
       <span className="tabular-nums">
         {total} total · page {page + 1} / {pages}
       </span>
@@ -301,7 +302,8 @@ function MissionBucketPagination({
           disabled={page <= 0}
           onClick={() => onPageChange(page - 1)}
           className={cn(
-            "rounded-lg px-3 py-2 text-[11px] font-semibold tracking-normal transition motion-safe:duration-200",
+            "rounded-lg px-3 py-2 font-semibold tracking-normal transition motion-safe:duration-200",
+            DECK_TYPO.meta,
             btn,
           )}
         >
@@ -312,7 +314,8 @@ function MissionBucketPagination({
           disabled={page >= pages - 1}
           onClick={() => onPageChange(page + 1)}
           className={cn(
-            "rounded-lg px-3 py-2 text-[11px] font-semibold tracking-normal transition motion-safe:duration-200",
+            "rounded-lg px-3 py-2 font-semibold tracking-normal transition motion-safe:duration-200",
+            DECK_TYPO.meta,
             btn,
           )}
         >
@@ -337,12 +340,9 @@ const DECK_SUBPANEL_MISSED =
 const DECK_SUBPANEL_DONE =
   "min-w-0 rounded-xl border-2 border-emerald-400/42 bg-[#060606]/75 p-3 shadow-[0_0_36px_rgba(52,211,153,0.12),inset_0_1px_0_rgba(52,211,153,0.05)] md:p-4";
 
-const DECK_TITLE_ACTIVE =
-  "text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.35)] md:text-[11px]";
-const DECK_TITLE_MISSED =
-  "text-[10px] font-black uppercase tracking-[0.16em] text-rose-200/95 [text-shadow:0_0_14px_rgba(251,113,133,0.32)] md:text-[11px]";
-const DECK_TITLE_DONE =
-  "text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200/95 [text-shadow:0_0_14px_rgba(52,211,153,0.32)] md:text-[11px]";
+const DECK_TITLE_ACTIVE = DECK_TYPO.columnTitleGold;
+const DECK_TITLE_MISSED = DECK_TYPO.columnTitleRose;
+const DECK_TITLE_DONE = DECK_TYPO.columnTitleEmerald;
 
 const FORM_NOTES =
   "mt-[clamp(0.65rem,1.5vw+0.2rem,1.35rem)] space-y-[clamp(0.4rem,1vw+0.15rem,0.75rem)] rounded-xl border-2 border-fuchsia-400/38 bg-gradient-to-br from-fuchsia-950/15 to-black/55 p-[var(--fluid-deck-form-p)] shadow-[0_0_24px_rgba(217,70,239,0.12),inset_0_1px_0_rgba(255,255,255,0.05)]";
@@ -353,11 +353,12 @@ const DECK_SUBPANEL_NOTES_READER =
   "flex min-h-0 min-w-0 flex-col rounded-xl border-2 border-emerald-400/36 bg-[#050a08]/80 shadow-[0_0_28px_rgba(52,211,153,0.1),inset_0_1px_0_rgba(52,211,153,0.06)] lg:min-h-0 lg:flex-1";
 
 /** Primary row actions: 40px+ hit area, neon focus ring (keyboard). */
-const DECK_ROW_BTN_PRIMARY =
-  "inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]";
+const DECK_ROW_BTN_PRIMARY = cn(
+  "inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+  DECK_TYPO.btn
+);
 
-const DECK_ROW_BTN_SECONDARY =
-  "inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]";
+const DECK_ROW_BTN_SECONDARY = DECK_ROW_BTN_PRIMARY;
 
 /** Compact actions for top-bar due toasts (navbar strip). */
 const DECK_TOAST_BTN =
@@ -438,12 +439,13 @@ function DeckEmptyCta({
         accentClass
       )}
     >
-      <p className={cn("text-[14px] font-medium leading-relaxed", DECK_EMPTY_CTA_MSG[ctaTone])}>{message}</p>
+      <p className={cn(DECK_TYPO.emptyPrimary, DECK_EMPTY_CTA_MSG[ctaTone])}>{message}</p>
       <button
         type="button"
         onClick={onAction}
         className={cn(
-          "mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg px-4 text-[11px] font-black uppercase tracking-[0.18em] transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+          "mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg px-4 transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+          DECK_TYPO.btn,
           DECK_EMPTY_CTA_BTN[ctaTone]
         )}
       >
@@ -1200,15 +1202,17 @@ export function MissionCommandDeckCard({
     setNBody("");
   };
 
-  const missionsFormLabel =
-    "text-[11px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--goals-milestones-gold)] md:text-[12px]";
-  const missionsFormInput =
-    "mt-1.5 w-full rounded-lg border-[rgba(255,215,0,0.46)] bg-[#0a0906] px-3 py-2.5 text-[15px] font-medium leading-relaxed text-[rgba(255,248,220,0.96)] outline-none placeholder:text-[rgba(255,230,150,0.22)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,215,0,0.07)] focus:border-[rgba(255,230,120,0.78)] focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,215,0,0.28),0_0_24px_rgba(255,200,0,0.2)] focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3";
+  const missionsFormLabel = DECK_TYPO.labelGold;
+  const missionsFormInput = cn(
+    "mt-1.5 w-full rounded-lg border-[rgba(255,215,0,0.46)] bg-[#0a0906] px-3 py-2.5 text-[rgba(255,248,220,0.96)] outline-none placeholder:text-[rgba(255,230,150,0.22)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,215,0,0.07)] focus:border-[rgba(255,230,120,0.78)] focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,215,0,0.28),0_0_24px_rgba(255,200,0,0.2)] focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3",
+    DECK_TYPO.input
+  );
 
-  const notesFormLabel =
-    "text-[11px] font-extrabold uppercase tracking-[0.16em] text-fuchsia-200/95 md:text-[12px]";
-  const notesFormInput =
-    "mt-1.5 w-full rounded-lg border-fuchsia-400/42 bg-[#0c0610] px-3 py-2.5 text-[15px] font-medium leading-relaxed text-fuchsia-50/95 outline-none placeholder:text-fuchsia-200/25 shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(217,70,239,0.08)] focus:border-fuchsia-300/78 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(217,70,239,0.28),0_0_24px_rgba(192,132,252,0.18)] focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3";
+  const notesFormLabel = DECK_TYPO.labelFuchsia;
+  const notesFormInput = cn(
+    "mt-1.5 w-full rounded-lg border-fuchsia-400/42 bg-[#0c0610] px-3 py-2.5 text-fuchsia-50/95 outline-none placeholder:text-fuchsia-200/25 shadow-[inset_0_2px_8px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(217,70,239,0.08)] focus:border-fuchsia-300/78 focus:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(217,70,239,0.28),0_0_24px_rgba(192,132,252,0.18)] focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:py-3",
+    DECK_TYPO.input
+  );
 
   return (
     <Card
@@ -1224,14 +1228,14 @@ export function MissionCommandDeckCard({
       title="Goals & Milestones"
       right={
         portalBusy ? (
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/80">
+          <span className={cn(DECK_TYPO.meta, "uppercase tracking-[0.14em] text-[color:var(--goals-milestones-gold)]/80")}>
             Syncing…
           </span>
         ) : undefined
       }
     >
       {portalError ? (
-        <div className="mb-3 rounded-md border border-red-500/35 bg-red-950/40 px-3 py-2 text-[13px] font-medium leading-snug text-red-100/95">
+        <div className={cn("mb-3 rounded-md border border-red-500/35 bg-red-950/40 px-3 py-2 leading-snug text-red-100/95", DECK_TYPO.body)}>
           {portalError}{" "}
           <button
             type="button"
@@ -1263,9 +1267,7 @@ export function MissionCommandDeckCard({
             />
             <div className="relative z-[1]">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
-                  Missions
-                </div>
+                <div className={DECK_TYPO.sectionTitleGold}>Missions</div>
                 <button
                   type="button"
                   className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-[color:var(--goals-milestones-line)] bg-black/55 text-[color:var(--goals-milestones-gold)] shadow-[0_0_16px_rgba(255,200,0,0.22),inset_0_1px_0_rgba(255,235,160,0.08)] transition hover:border-[rgba(255,235,160,0.72)] hover:text-[rgba(255,248,220,0.98)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
@@ -1287,11 +1289,11 @@ export function MissionCommandDeckCard({
                 >
                   <h3
                     id="missions-help-title"
-                    className="text-[11px] font-black uppercase tracking-[0.18em] text-[color:var(--goals-milestones-gold)] [text-shadow:0_0_14px_rgba(255,215,0,0.28)] md:text-xs"
+                    className={cn(DECK_TYPO.columnTitleGold, "normal-case tracking-[0.12em]")}
                   >
                     Missions — straight talk
                   </h3>
-                  <div className="mt-3 space-y-3 text-[14px] font-medium leading-relaxed text-neutral-200/92 md:text-[15px] md:leading-relaxed">
+                  <div className={cn("mt-3 space-y-3", DECK_TYPO.body)}>
                     <p>
                       These are <span className="text-[color:var(--goals-milestones-gold)]/95">your</span> custom
                       missions — not a points farm, not a fake leaderboard, not corporate &quot;wellness&quot; theater.
@@ -1311,7 +1313,7 @@ export function MissionCommandDeckCard({
               ) : null}
 
               {useApiDeck && !canDeckWrite ? (
-                <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">
+                <p className={cn("mt-2 text-amber-100/92", DECK_TYPO.bodyMuted)}>
                   Read-only: your role can view missions but not edit.
                 </p>
               ) : null}
@@ -1353,7 +1355,10 @@ export function MissionCommandDeckCard({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => void addMission()}
                   disabled={useApiDeck && !canDeckWrite}
-                  className="w-full rounded-lg border-[color:var(--goals-milestones-line)] bg-[rgba(255,215,0,0.12)] py-3 text-[11px] font-black uppercase tracking-[0.15em] text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
+                  className={cn(
+                    "w-full rounded-lg border-[color:var(--goals-milestones-line)] bg-[rgba(255,215,0,0.12)] py-3 text-[color:var(--goals-milestones-gold)] shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(255,215,0,0.26),0_8px_32px_rgba(255,200,0,0.2),inset_0_1px_0_rgba(255,248,220,0.1)] hover:border-[rgba(255,235,160,0.78)] hover:bg-[rgba(255,215,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,215,0,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px]",
+                    DECK_TYPO.btn
+                  )}
                 >
                   Create mission
                 </motion.button>
@@ -1677,16 +1682,14 @@ export function MissionCommandDeckCard({
           <div className={DECK_NOTES_INNER}>
             <DeckGlowNotes />
             <div className="relative z-[1]">
-              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)] md:text-[13px] lg:text-[14px]">
-                Notes
-              </div>
-              <p className="mt-2 max-w-prose text-[15px] font-normal leading-relaxed text-neutral-200/90 md:leading-[1.55]">
+              <div className={DECK_TYPO.sectionTitleGold}>Notes</div>
+              <p className={cn("mt-2 max-w-prose", DECK_TYPO.body)}>
                 Capture intel below, then open it from the library — titles stay in the list; the reader shows body
                 only. Library paginates 5 notes per page.
               </p>
 
               {useApiDeck && !canDeckWrite ? (
-                <p className="mt-2 text-[12px] font-medium leading-snug text-amber-100/92">Read-only notes for your role.</p>
+                <p className={cn("mt-2 text-amber-100/92", DECK_TYPO.bodyMuted)}>Read-only notes for your role.</p>
               ) : null}
 
               <div id="deck-note-compose" className={FORM_NOTES}>
@@ -1716,7 +1719,10 @@ export function MissionCommandDeckCard({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => void addNote()}
                   disabled={useApiDeck && !canDeckWrite}
-                  className="w-full rounded-lg border-fuchsia-400/55 bg-fuchsia-500/12 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(217,70,239,0.28),0_8px_32px_rgba(192,132,252,0.18),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-fuchsia-300/78 hover:bg-fuchsia-500/18 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px] md:text-[12px]"
+                  className={cn(
+                    "w-full rounded-lg border-fuchsia-400/55 bg-fuchsia-500/12 py-3 text-fuchsia-100 shadow-[0_4px_0_rgba(0,0,0,0.42),0_0_0_1px_rgba(217,70,239,0.28),0_8px_32px_rgba(192,132,252,0.18),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-fuchsia-300/78 hover:bg-fuchsia-500/18 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40 md:min-h-[48px]",
+                    DECK_TYPO.btn
+                  )}
                 >
                   Save note
                 </motion.button>
@@ -1740,10 +1746,8 @@ export function MissionCommandDeckCard({
                 >
                   <div className={DECK_SUBPANEL_NOTES_LIB}>
                     <div className="shrink-0 border-b border-fuchsia-500/25 bg-black/30 px-3 py-3 md:px-4">
-                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fuchsia-200/95">
-                        Note library
-                      </div>
-                      <p className="mt-1 text-[12px] font-normal leading-snug text-neutral-300/90">
+                      <div className={DECK_TYPO.columnTitleFuchsia}>Note library</div>
+                      <p className={cn("mt-1", DECK_TYPO.bodyMuted)}>
                         Tap a row — reader opens on the right. Prev / Next when you have more than five.
                       </p>
                     </div>
@@ -1766,13 +1770,14 @@ export function MissionCommandDeckCard({
                           />
                         ) : nSearch.trim() ? (
                           <div className="rounded-lg border border-dashed border-fuchsia-400/35 bg-black/35 px-4 py-8 text-center">
-                            <p className="text-[14px] font-medium leading-relaxed text-neutral-200/92">
-                              No notes match this search.
-                            </p>
+                            <p className={DECK_TYPO.emptyPrimary}>No notes match this search.</p>
                             <button
                               type="button"
                               onClick={() => setNSearch("")}
-                              className="mt-4 inline-flex min-h-[44px] w-full max-w-[14rem] items-center justify-center rounded-lg border border-fuchsia-400/45 bg-black/50 text-[11px] font-semibold text-fuchsia-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                              className={cn(
+                                "mt-4 inline-flex min-h-[44px] w-full max-w-[14rem] items-center justify-center rounded-lg border border-fuchsia-400/45 bg-black/50 text-fuchsia-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+                                DECK_TYPO.btn
+                              )}
                             >
                               Clear search
                             </button>
@@ -1804,10 +1809,8 @@ export function MissionCommandDeckCard({
                                   : "border-fuchsia-500/20 bg-black/25 motion-safe:hover:-translate-y-px hover:border-fuchsia-400/40 hover:bg-black/40"
                               )}
                             >
-                              <div className="line-clamp-2 text-[14px] font-semibold leading-snug text-neutral-50">
-                                {n.title}
-                              </div>
-                              <div className="mt-1 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400/90">
+                              <div className={cn("line-clamp-2", DECK_TYPO.listTitle)}>{n.title}</div>
+                              <div className={cn("mt-1 font-mono uppercase tracking-[0.1em] text-neutral-400/90", DECK_TYPO.meta)}>
                                 {new Date(n.createdAt).toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
@@ -1831,9 +1834,7 @@ export function MissionCommandDeckCard({
 
                   <div className={DECK_SUBPANEL_NOTES_READER}>
                     <div className="shrink-0 border-b border-emerald-500/25 bg-black/25 px-4 py-3 md:px-5">
-                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/90">
-                        Reader
-                      </div>
+                      <div className={DECK_TYPO.columnTitleEmerald}>Reader</div>
                     </div>
                     <div
                       className={cn(
@@ -1844,7 +1845,7 @@ export function MissionCommandDeckCard({
                     >
                       {selectedNote ? (
                         <div className="flex min-h-0 flex-col pb-2">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-emerald-500/20 pb-3 font-mono text-[12px] text-neutral-300/90">
+                          <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-emerald-500/20 pb-3 font-mono text-neutral-300/90", DECK_TYPO.meta)}>
                             <span className="font-semibold text-emerald-200/90">
                               {new Date(selectedNote.createdAt).toLocaleString()}
                             </span>
@@ -1852,7 +1853,7 @@ export function MissionCommandDeckCard({
                               <span className="text-neutral-400/90">{selectedNote.body.trim().length} chars</span>
                             ) : null}
                           </div>
-                          <div className="mt-4 whitespace-pre-wrap text-[15px] font-normal leading-[1.65] text-neutral-100/92 md:text-[16px] md:leading-relaxed">
+                          <div className={cn("mt-4 whitespace-pre-wrap", DECK_TYPO.readerBody)}>
                             {selectedNote.body?.trim()
                               ? selectedNote.body
                               : "No body on this note — titles live in the library list so this space stays for long-form intel."}
@@ -1860,8 +1861,8 @@ export function MissionCommandDeckCard({
                         </div>
                       ) : (
                         <div className="flex min-h-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-500/30 bg-black/20 px-4 py-10 text-center">
-                          <p className="text-[14px] font-medium text-neutral-200/88">Nothing selected</p>
-                          <p className="max-w-sm text-[13px] font-normal leading-relaxed text-neutral-400/88">
+                          <p className={cn(DECK_TYPO.emptyPrimary, "text-neutral-200/88")}>Nothing selected</p>
+                          <p className={cn("max-w-sm text-neutral-400/88", DECK_TYPO.emptySecondary)}>
                             Choose a note in the library, or create one with the form above.
                           </p>
                         </div>
@@ -1890,17 +1891,17 @@ export function MissionCommandDeckCard({
             onClick={() => setTimeEdit(null)}
           />
           <div className="relative z-[1] w-full max-w-md rounded-xl border border-[rgba(255,215,0,0.28)] bg-[#060606]/95 p-4 shadow-[0_0_0_1px_rgba(255,215,0,0.12),0_24px_64px_rgba(0,0,0,0.65)] backdrop-blur-md">
-            <h2 id="deck-time-edit-title" className="text-[12px] font-black uppercase tracking-[0.2em] text-[color:var(--goals-milestones-gold)]/95">
+            <h2 id="deck-time-edit-title" className={cn(DECK_TYPO.columnTitleGold, "tracking-[0.2em]")}>
               Edit time
             </h2>
-            <p className="mt-1 truncate text-[14px] font-semibold text-white/92" title={timeEdit.title}>
+            <p className={cn("mt-1 truncate text-white/92", DECK_TYPO.listTitle)} title={timeEdit.title}>
               {timeEdit.title}
             </p>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <DeckDateField
                 id="deck-time-edit-date"
                 label="Date"
-                labelClassName="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-300"
+                labelClassName={cn(DECK_TYPO.labelGold, "text-neutral-300")}
                 value={timeEditDate}
                 onValueChange={setTimeEditDate}
                 disabled={false}
@@ -1909,7 +1910,7 @@ export function MissionCommandDeckCard({
               <DeckTimeField
                 id="deck-time-edit-time"
                 label="Time"
-                labelClassName="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-300"
+                labelClassName={cn(DECK_TYPO.labelGold, "text-neutral-300")}
                 value={timeEditTime}
                 onValueChange={setTimeEditTime}
                 disabled={false}

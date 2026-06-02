@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { MissionCommandDeckCard } from "@/components/dashboard/MissionCommandDeckCard";
-import { cn, type ThemeMode } from "@/components/dashboard/dashboardPrimitives";
+import { cn, DASHBOARD_HEADING_LIGHTNING_GOALS, type ThemeMode } from "@/components/dashboard/dashboardPrimitives";
+import { DECK_TYPO } from "@/components/dashboard/missionDeckTypography";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 
 /** Snappy motion — transform + opacity only, short durations */
@@ -74,7 +75,11 @@ function GoalsPanelOverlay({
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,215,0,0.22)] bg-black/50 px-3 py-2.5 sm:px-4 sm:py-3 md:px-5">
           <h2
             id="goals-panel-title"
-            className="min-w-0 flex-1 text-[11px] font-black uppercase leading-snug tracking-[0.14em] text-[color:var(--goals-milestones-gold)] [text-shadow:0_0_12px_rgba(255,215,0,0.28)] sm:text-[12px] sm:tracking-[0.18em] md:tracking-[0.2em]"
+            className={cn(
+              DASHBOARD_HEADING_LIGHTNING_GOALS,
+              DECK_TYPO.sectionTitleGold,
+              "min-w-0 flex-1 leading-snug italic"
+            )}
           >
             Goals & Milestones
           </h2>

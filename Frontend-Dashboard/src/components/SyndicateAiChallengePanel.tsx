@@ -294,8 +294,10 @@ const SYNDICATE_RESPONSE_FIELD =
   "syndicate-mission-response-field min-h-[112px] w-full resize-y rounded-lg border-2 border-[#d4af39]/60 bg-[#1e1c14] px-3 py-3 text-[16px] font-medium leading-relaxed text-white outline-none placeholder:text-white/60 focus:border-[#d4af39] focus:bg-[#262318] focus:ring-2 focus:ring-[#d4af39]/30 sm:text-[15px]";
 const HUD_LABEL = "text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--gold)]/48";
 const HUD_VALUE = "mt-1 font-mono font-black text-[#fefce8]/94";
-const SYNDICATE_NAV_BTN =
-  "relative z-[1] flex min-h-[60px] min-w-0 items-center justify-center touch-manipulation px-2.5 py-3 text-[13px] font-black leading-snug sm:min-h-[64px] sm:px-3 sm:text-[14px] md:min-h-[68px] md:text-[15px] lg:text-[16px]";
+const SYNDICATE_NAV_BTN_SMALL =
+  "relative z-[1] inline-flex w-fit min-h-[46px] min-w-0 items-center justify-center touch-manipulation px-0 py-2 text-[12px] font-black leading-snug sm:min-h-[50px] sm:text-[13px] md:text-[14px]";
+const SYNDICATE_NAV_BTN_LARGE =
+  "relative z-[1] inline-flex w-fit min-h-[56px] min-w-0 items-center justify-center touch-manipulation px-0 py-3.5 text-[13px] font-black leading-snug sm:min-h-[60px] sm:text-[14px] md:text-[15px]";
 const SYNDICATE_NAV_BTN_STACK =
   "relative z-[1] flex min-h-[60px] min-w-0 flex-col items-center justify-center gap-0.5 touch-manipulation px-2.5 py-3 text-[12px] font-black leading-snug sm:min-h-[64px] sm:text-[13px] md:min-h-[68px] md:text-[14px] lg:text-[15px]";
 const STATS_SECTION_LABEL =
@@ -2163,6 +2165,7 @@ export function SyndicateAiChallengePanel() {
   const [mounted, setMounted] = useState(false);
   /** Inline stats + profile panel (not a modal). */
   const [showStatsProfile, setShowStatsProfile] = useState(false);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
   const [syndicateView, setSyndicateView] = useState<"dashboard" | "challenges" | "reminders">("dashboard");
   /** Reminders full-page list: sort by when the reminder was saved (newest / oldest). */
   const [reminderPageSort, setReminderPageSort] = useState<"newest" | "oldest">("newest");
@@ -3993,22 +3996,23 @@ export function SyndicateAiChallengePanel() {
       <div className="syndicate-dash-outer no-scrollbar relative flex min-h-0 w-full min-w-0 max-w-none flex-col gap-4 overflow-x-hidden border px-0 pt-0 max-md:gap-3 max-md:border-0 max-md:bg-[linear-gradient(168deg,#050508_0%,#0d0818_44%,#0a0610_100%)] max-md:px-0 max-md:pt-0 max-md:shadow-none">
       <div className="pointer-events-none absolute inset-0 -z-10 syndicate-dash-scanlines max-md:opacity-20" />
       <div className="syndicate-dash-header relative z-20 mb-3 flex w-full shrink-0 flex-col gap-3 rounded-2xl border px-2.5 py-2.5 sm:px-3 sm:py-3 max-md:mb-2 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:border-b-[rgba(255,215,0,0.24)] max-md:px-2 max-md:py-2">
-        <div className="min-w-0 w-full">
-          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--gold)]/88 sm:text-[12px]">
-            <span className="inline-flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[color:var(--gold)] shadow-[0_0_10px_rgba(255,215,0,0.85)] sm:h-3 sm:w-3" />
-            On the board
-          </div>
-          <h3 className="m-0 mt-1 w-full min-w-0">
-            <span className="syndicate-nav-headline block font-black text-[clamp(1rem,3.2vw+0.55rem,1.95rem)] leading-none tracking-[0.06em] sm:text-[clamp(1.15rem,2.2vw+0.55rem,2.2rem)]">
-              Syndicate Mode
+        <div className="syndicate-dash-nav-strip flex w-full shrink-0 flex-col items-start gap-2 overflow-visible pt-1">
+          <button
+            type="button"
+            onClick={() => setNavMenuOpen((v) => !v)}
+            aria-expanded={navMenuOpen}
+            aria-controls="syndicate-nav-menu-panel"
+            aria-label={navMenuOpen ? "Close menu" : "Open menu"}
+            className="syndicate-menu-icon-btn"
+          >
+            <span aria-hidden className="syndicate-menu-icon-btn__glyph">
+              {navMenuOpen ? "✕" : "☰"}
             </span>
-            <span className="syndicate-nav-tagline mt-1 block text-[clamp(0.48rem,1.65vw+0.26rem,0.78rem)] font-black italic uppercase leading-snug tracking-[0.08em] text-[color:var(--gold-neon)] [text-shadow:0_0_12px_rgba(250,204,21,0.26),0_0_22px_rgba(212,175,55,0.1)] sm:mt-1 sm:tracking-[0.12em]">
-              Money, Power, Freedom, Honour
-            </span>
-          </h3>
-        </div>
-        <div className="syndicate-dash-nav-strip flex w-full shrink-0 flex-col gap-2 overflow-visible border-t border-[rgba(255,215,0,0.18)] pt-3">
-          <div className="grid grid-cols-3 gap-2">
+            <span className="sr-only">{navMenuOpen ? "Close menu" : "Menu"}</span>
+          </button>
+          {navMenuOpen ? (
+          <div id="syndicate-nav-menu-panel" className="flex w-full flex-col items-center gap-2 border-t border-[rgba(255,215,0,0.18)] pt-3">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={() => setPointsToPoundsModalOpen(true)}
@@ -4016,11 +4020,11 @@ export function SyndicateAiChallengePanel() {
               aria-haspopup="dialog"
               className={cn(
                 "syndicate-nav-action syndicate-nav-action--points syndicate-nav-action--exchange syndicate-nav-action--row",
-                SYNDICATE_NAV_BTN,
+                SYNDICATE_NAV_BTN_SMALL,
                 pointsToPoundsModalOpen && "syndicate-nav-action--active syndicate-nav-action--exchange-open"
               )}
             >
-              <span className="min-w-0 truncate text-center uppercase">
+              <span className="min-w-0 text-center uppercase whitespace-nowrap">
                 Points converter
                 <span className="syndicate-nav-action__sub tabular-nums normal-case"> · ${poundsBalance.toFixed(2)}</span>
               </span>
@@ -4033,7 +4037,7 @@ export function SyndicateAiChallengePanel() {
               }}
               className={cn(
                 "syndicate-nav-action syndicate-nav-action--dashboard",
-                SYNDICATE_NAV_BTN,
+                SYNDICATE_NAV_BTN_SMALL,
                 syndicateView === "dashboard" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
@@ -4047,14 +4051,14 @@ export function SyndicateAiChallengePanel() {
               }}
               className={cn(
                 "syndicate-nav-action syndicate-nav-action--missions",
-                SYNDICATE_NAV_BTN,
+                SYNDICATE_NAV_BTN_SMALL,
                 syndicateView === "challenges" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
               Missions
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={() => {
@@ -4063,11 +4067,11 @@ export function SyndicateAiChallengePanel() {
               }}
               className={cn(
                 "syndicate-nav-action syndicate-nav-action--reminders syndicate-nav-action--row gap-1.5",
-                SYNDICATE_NAV_BTN,
+                SYNDICATE_NAV_BTN_LARGE,
                 syndicateView === "reminders" && !showStatsProfile && "syndicate-nav-action--active"
               )}
             >
-              <span className="min-w-0 truncate text-center uppercase">Syndicate mode reminders</span>
+              <span className="min-w-0 text-center uppercase whitespace-nowrap">Syndicate mode reminders</span>
               {missionsTabReminders.length > 0 ? (
                 <span className="inline-flex min-h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-sm border border-red-400/60 bg-red-950/80 px-1 text-[10px] font-black tabular-nums leading-none text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.55)] sm:text-[11px]">
                   {missionsTabReminders.length > 9 ? "9+" : missionsTabReminders.length}
@@ -4081,13 +4085,15 @@ export function SyndicateAiChallengePanel() {
               onClick={() => setShowStatsProfile(true)}
               className={cn(
                 "syndicate-nav-action syndicate-nav-action--stats",
-                SYNDICATE_NAV_BTN,
+                SYNDICATE_NAV_BTN_LARGE,
                 showStatsProfile && "syndicate-nav-action--active"
               )}
             >
               Stats & profile
             </button>
           </div>
+          </div>
+          ) : null}
         </div>
       </div>
 

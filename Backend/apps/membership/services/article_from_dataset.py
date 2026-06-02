@@ -6,10 +6,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from django.utils import timezone
-
 from apps.membership.generation import (
-    article_keyword_fingerprint,
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
     keyword_fingerprint,
@@ -22,80 +19,6 @@ from apps.membership.json_tags import filter_articles_with_tag
 from apps.membership.keyword_dataset import VALID_CATEGORIES, normalize_category
 from apps.membership.keyword_levels import normalize_level
 from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState
-
-
-def dataset_row_fingerprints(dataset: ArticleKeywordDataset) -> set[str]:
-    rows = dataset.rows if isinstance(dataset.rows, list) else []
-    out: set[str] = set()
-    for r in rows:
-        if not isinstance(r, dict):
-            continue
-        kw = str(r.get("keyword") or "").strip()
-        if not kw:
-            continue
-        cat = normalize_category(str(r.get("category") or ""))
-        out.add(keyword_fingerprint(cat, kw))
-    return out
-
-
-def count_operator_brief_articles_for_dataset(dataset: ArticleKeywordDataset) -> int:
-    """Operator-brief articles whose seed matches a row in this dataset (exact keyword text)."""
-    fps = dataset_row_fingerprints(dataset)
-    if not fps:
-        return 0
-    n = 0
-    qs = filter_articles_with_tag(Article.objects.all(), OPERATOR_BRIEF_TAG).only(
-        "content",
-        "generation_seed_keyword",
-        "generation_seed_category",
-    )
-    for article in qs.iterator(chunk_size=200):
-        fp = article_keyword_fingerprint(article)
-        if fp and fp in fps:
-            n += 1
-    return n
-
-
-def membership_deploy_bootstrap_completed_for_dataset(dataset: ArticleKeywordDataset) -> bool:
-    state = (
-        MembershipGenerationState.objects.filter(pk=1)
-        .only(
-            "membership_articles_bootstrap_completed_at",
-            "membership_articles_bootstrap_dataset_id",
-        )
-        .first()
-    )
-    if not state or not state.membership_articles_bootstrap_completed_at:
-        return False
-    return state.membership_articles_bootstrap_dataset_id == dataset.pk
-
-
-def membership_deploy_bootstrap_completed() -> bool:
-    """True only when the current active dataset was already bootstrapped on deploy."""
-    ds = get_active_keyword_dataset()
-    if not ds:
-        return False
-    return membership_deploy_bootstrap_completed_for_dataset(ds)
-
-
-def mark_membership_deploy_bootstrap_completed(*, dataset: ArticleKeywordDataset) -> None:
-    state, _ = MembershipGenerationState.objects.get_or_create(
-        pk=1,
-        defaults={
-            "progression_by_category": {},
-            "recent_keyword_fingerprints": [],
-            "recent_titles": [],
-        },
-    )
-    state.membership_articles_bootstrap_completed_at = timezone.now()
-    state.membership_articles_bootstrap_dataset = dataset
-    state.save(
-        update_fields=[
-            "membership_articles_bootstrap_completed_at",
-            "membership_articles_bootstrap_dataset",
-            "updated_at",
-        ]
-    )
 
 DEFAULT_MEMBERSHIP_ARTICLE_COUNT = 15
 OPERATOR_BRIEF_TAG = "operator-brief"
@@ -215,6 +138,8 @@ def generate_one_membership_article_from_dataset(
     category_filter: str = "all",
     read_slugs: list[str] | None = None,
     avoid_titles: list[str] | None = None,
+    batch_avoid_fingerprints: set[str] | None = None,
+    fresh_batch: bool = False,
     use_openai: bool = True,
     allow_stub_without_openai: bool = False,
 ) -> GeneratedMembershipArticle:
@@ -239,14 +164,36 @@ def generate_one_membership_article_from_dataset(
             read_articles.append(a)
 
     state = MembershipGenerationState.objects.filter(pk=1).first()
-    state_fps = list(state.recent_keyword_fingerprints) if state and state.recent_keyword_fingerprints else []
-    avoid_fps = collect_avoid_fingerprints(state_fps=state_fps, read_slugs=read_slugs)
 
-    base_prog: dict[str, str] = {}
-    if state and isinstance(state.progression_by_category, dict):
-        base_prog = {normalize_category(str(k)): str(v) for k, v in state.progression_by_category.items() if k and v}
-    read_prog = progression_from_article_seeds(read_articles)
-    eff_prog = merge_progression_by_rank(base_prog, read_prog)
+    if fresh_batch:
+        avoid_fps = set(batch_avoid_fingerprints or [])
+        eff_prog: dict[str, str] = {}
+        merged_titles = [str(t).strip()[:500] for t in (avoid_titles or []) if str(t).strip()][:40]
+        avoid_keywords: list[str] = []
+    else:
+        state_fps = list(state.recent_keyword_fingerprints) if state and state.recent_keyword_fingerprints else []
+        avoid_fps = collect_avoid_fingerprints(state_fps=state_fps, read_slugs=read_slugs)
+        avoid_fps |= set(batch_avoid_fingerprints or [])
+        base_prog: dict[str, str] = {}
+        if state and isinstance(state.progression_by_category, dict):
+            base_prog = {normalize_category(str(k)): str(v) for k, v in state.progression_by_category.items() if k and v}
+        read_prog = progression_from_article_seeds(read_articles)
+        eff_prog = merge_progression_by_rank(base_prog, read_prog)
+        recent_titles = list(state.recent_titles) if state and state.recent_titles else []
+        merged_titles = []
+        seen_t: set[str] = set()
+        for t in (avoid_titles or []) + recent_titles:
+            s = (t or "").strip()
+            if not s:
+                continue
+            low = s.lower()
+            if low in seen_t:
+                continue
+            seen_t.add(low)
+            merged_titles.append(s[:500])
+            if len(merged_titles) >= 40:
+                break
+        avoid_keywords = collect_avoid_keyword_phrases(read_slugs=read_slugs)
 
     row = pick_keyword_row(
         rows,
@@ -258,23 +205,6 @@ def generate_one_membership_article_from_dataset(
     keyword = str(row.get("keyword") or "").strip()
     category = normalize_category(str(row.get("category") or cat_req))
     level_used = normalize_level(str(row.get("level") or row.get("tier") or row.get("difficulty") or ""))
-
-    recent_titles = list(state.recent_titles) if state and state.recent_titles else []
-    merged_titles: list[str] = []
-    seen_t: set[str] = set()
-    for t in (avoid_titles or []) + recent_titles:
-        s = (t or "").strip()
-        if not s:
-            continue
-        low = s.lower()
-        if low in seen_t:
-            continue
-        seen_t.add(low)
-        merged_titles.append(s[:500])
-        if len(merged_titles) >= 40:
-            break
-
-    avoid_keywords = collect_avoid_keyword_phrases(read_slugs=read_slugs)
     creative_seed = uuid.uuid4().hex[:14]
 
     body: dict[str, Any]
@@ -335,25 +265,29 @@ def generate_membership_articles_batch(
     category_filter: str = "all",
     use_openai: bool = True,
     allow_stub_without_openai: bool = False,
+    fresh_batch: bool = False,
     stop_on_error: bool = False,
 ) -> list[GeneratedMembershipArticle]:
     ds = dataset or get_active_keyword_dataset(dataset_id=dataset_id)
     if not ds:
         raise NoActiveKeywordDatasetError(
-            "No active keyword dataset with rows. Upload a file in Django admin and mark it active."
+            "No active keyword dataset with rows. Upload a file in Django admin and save."
         )
 
     out: list[GeneratedMembershipArticle] = []
+    batch_fps: set[str] = set()
     for _ in range(max(0, int(count))):
         try:
-            out.append(
-                generate_one_membership_article_from_dataset(
-                    dataset=ds,
-                    category_filter=category_filter,
-                    use_openai=use_openai,
-                    allow_stub_without_openai=allow_stub_without_openai,
-                )
+            item = generate_one_membership_article_from_dataset(
+                dataset=ds,
+                category_filter=category_filter,
+                batch_avoid_fingerprints=batch_fps,
+                fresh_batch=fresh_batch,
+                use_openai=use_openai,
+                allow_stub_without_openai=allow_stub_without_openai,
             )
+            out.append(item)
+            batch_fps.add(keyword_fingerprint(item.category, item.keyword))
         except MembershipArticleGenerationError:
             if stop_on_error:
                 raise

@@ -38,12 +38,6 @@ run_bootstrap_tasks() {
     echo "railway_start: sync_bucket_assets (media + public)"
     "$PYTHON" manage.py sync_bucket_assets --include-media --include-public
   fi
-
-  # Runs on every deploy but exits immediately after the first successful bootstrap (DB flag).
-  if [ "${AUTO_BOOTSTRAP_MEMBERSHIP_ARTICLES:-true}" != "false" ]; then
-    echo "railway_start: bootstrap_membership_articles (one-time, 15 operator briefs)"
-    "$PYTHON" manage.py bootstrap_membership_articles || true
-  fi
 }
 
 # Nixpacks build already installs requirements; use same Python for optional refresh.

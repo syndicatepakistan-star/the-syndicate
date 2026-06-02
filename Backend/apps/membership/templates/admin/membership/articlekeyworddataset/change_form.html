@@ -1,0 +1,24 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block submit_buttons_bottom %}
+{{ block.super }}
+{% if original.pk %}
+<div class="submit-row" style="margin-top: 12px; padding-left: 0;">
+  <form method="post" action="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}">
+    {% csrf_token %}
+    <input
+      type="submit"
+      value="{% trans 'Generate 15 articles from this dataset' %}"
+      class="default"
+      style="background: #417690; padding: 10px 16px; font-weight: 600;"
+      onclick="return confirm('Create 15 membership articles from this keyword dataset using OpenAI? This may take several minutes.');"
+    />
+  </form>
+  <p class="help" style="margin: 8px 0 0; max-width: 42rem; color: #666;">
+    Uses the parsed rows on this dataset only. Requires <code>OPENAI_API_KEY</code> on the server.
+    Save the dataset with a valid file before generating.
+  </p>
+</div>
+{% endif %}
+{% endblock %}

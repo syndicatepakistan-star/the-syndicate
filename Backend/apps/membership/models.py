@@ -68,19 +68,6 @@ class MembershipGenerationState(models.Model):
     progression_by_category = models.JSONField(default=dict, blank=True)
     recent_keyword_fingerprints = models.JSONField(default=list, blank=True)
     recent_titles = models.JSONField(default=list, blank=True)
-    membership_articles_bootstrap_completed_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Set after deploy bootstrap generated articles for membership_articles_bootstrap_dataset.",
-    )
-    membership_articles_bootstrap_dataset = models.ForeignKey(
-        "membership.ArticleKeywordDataset",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="+",
-        help_text="Active keyword dataset used for the last deploy bootstrap (re-runs when you activate a different dataset).",
-    )
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

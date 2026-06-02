@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib import admin, messages
 from django.core.files.uploadedfile import UploadedFile
-
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
 from apps.membership.keyword_dataset import KeywordDatasetParseError, parse_keyword_dataset_bytes
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
 from apps.membership.services.article_from_dataset import (
@@ -51,53 +53,13 @@ class ArticleKeywordDatasetForm(forms.ModelForm):
         return f
 
 
-@admin.action(description=f"Generate {DEFAULT_MEMBERSHIP_ARTICLE_COUNT} membership articles from dataset")
-def generate_default_membership_articles(modeladmin, request, queryset):
-    for ds in queryset:
-        if not isinstance(ds.rows, list) or not ds.rows:
-            modeladmin.message_user(
-                request,
-                f"Dataset “{ds.name}” has no parsed rows. Re-save with a valid CSV/DOCX/PDF file.",
-                level=messages.ERROR,
-            )
-            continue
-        if not ds.is_active:
-            ArticleKeywordDataset.objects.exclude(pk=ds.pk).update(is_active=False)
-            ds.is_active = True
-            ds.save(update_fields=["is_active"])
-        try:
-            generated = generate_membership_articles_batch(
-                count=DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
-                dataset=ds,
-                use_openai=True,
-                allow_stub_without_openai=False,
-                stop_on_error=False,
-            )
-        except OpenAINotConfiguredError:
-            modeladmin.message_user(
-                request,
-                "OPENAI_API_KEY is not set. Configure it on the server or use: "
-                "python manage.py generate_membership_articles --stub",
-                level=messages.ERROR,
-            )
-            return
-        except MembershipArticleGenerationError as exc:
-            modeladmin.message_user(request, str(exc), level=messages.ERROR)
-            return
-        modeladmin.message_user(
-            request,
-            f"Generated {len(generated)} article(s) from “{ds.name}”.",
-            level=messages.SUCCESS if generated else messages.WARNING,
-        )
-
-
 @admin.register(ArticleKeywordDataset)
 class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
     form = ArticleKeywordDatasetForm
+    change_form_template = "admin/membership/articlekeyworddataset/change_form.html"
     list_filter = ("is_active",)
     search_fields = ("name",)
     readonly_fields = ("created_at", "rows_preview")
-    actions = [generate_default_membership_articles]
 
     @admin.display(description="Rows")
     def row_count(self, obj: ArticleKeywordDataset) -> int:
@@ -112,6 +74,70 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
 
         return json.dumps(obj.rows[:8], ensure_ascii=False, indent=2) + (
             f"\n... ({len(obj.rows)} total)" if len(obj.rows) > 8 else ""
+        )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "<path:object_id>/generate-articles/",
+                self.admin_site.admin_view(self.generate_articles_view),
+                name="membership_articlekeyworddataset_generate_articles",
+            ),
+        ]
+        return custom + urls
+
+    def generate_articles_view(self, request, object_id):
+        if request.method != "POST":
+            return HttpResponseRedirect(
+                reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
+            )
+
+        ds = get_object_or_404(ArticleKeywordDataset, pk=object_id)
+        if not isinstance(ds.rows, list) or not ds.rows:
+            self.message_user(
+                request,
+                f"Dataset “{ds.name}” has no parsed rows. Upload a file and save first.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(
+                reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
+            )
+
+        try:
+            generated = generate_membership_articles_batch(
+                count=DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
+                dataset=ds,
+                use_openai=True,
+                fresh_batch=True,
+                stop_on_error=False,
+            )
+        except OpenAINotConfiguredError:
+            self.message_user(
+                request,
+                "OPENAI_API_KEY is not set on the server.",
+                level=messages.ERROR,
+            )
+        except MembershipArticleGenerationError as exc:
+            self.message_user(request, str(exc), level=messages.ERROR)
+        else:
+            if generated:
+                seeds = ", ".join(g.keyword[:40] for g in generated[:5])
+                extra = f" … (+{len(generated) - 5} more)" if len(generated) > 5 else ""
+                self.message_user(
+                    request,
+                    f"Created {len(generated)} article(s) from “{ds.name}”. Seeds: {seeds}{extra}",
+                    level=messages.SUCCESS,
+                )
+            else:
+                self.message_user(
+                    request,
+                    "No articles were created. Check OpenAI logs and that the dataset has keywords.",
+                    level=messages.WARNING,
+                )
+
+        return HttpResponseRedirect(
+            reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
         )
 
     def save_model(self, request, obj: ArticleKeywordDataset, form, change) -> None:
@@ -146,18 +172,13 @@ class KeywordUsageStatAdmin(AllFieldsListDisplayAdmin):
 
 @admin.register(MembershipGenerationState)
 class MembershipGenerationStateAdmin(AllFieldsListDisplayAdmin):
-    readonly_fields = (
-        "id",
-        "updated_at",
-        "membership_articles_bootstrap_completed_at",
-        "membership_articles_bootstrap_dataset",
-    )
+    readonly_fields = ("id", "updated_at")
 
 
 @admin.register(Article)
 class ArticleAdmin(AllFieldsListDisplayAdmin):
     list_filter = ("is_featured",)
-    search_fields = ("title", "slug", "description")
+    search_fields = ("title", "slug", "description", "generation_seed_keyword")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at",)
 
@@ -197,7 +218,6 @@ class MembershipStreamVideoAdmin(admin.ModelAdmin):
         return super().get_queryset(request).filter(show_in_membership=True).order_by("-created_at")
 
     def save_model(self, request, obj, form, change):
-        # Default behavior for this section: membership-only.
         if not change:
             obj.show_in_membership = True
             obj.show_in_programs = False

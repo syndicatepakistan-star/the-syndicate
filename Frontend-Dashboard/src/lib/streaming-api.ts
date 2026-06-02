@@ -154,11 +154,15 @@ export async function fetchStreamVideoDetail(id: number): Promise<StreamVideoDet
   return res.data as StreamVideoDetail;
 }
 
-export async function fetchStreamPlaylists(options?: { allowPublicFallback?: boolean }): Promise<StreamPlaylistListItem[]> {
-  if (playlistsCache && isFresh(playlistsCache.at, PLAYLISTS_CACHE_TTL_MS)) {
+export async function fetchStreamPlaylists(options?: {
+  allowPublicFallback?: boolean;
+  forceRefresh?: boolean;
+}): Promise<StreamPlaylistListItem[]> {
+  const forceRefresh = !!options?.forceRefresh;
+  if (!forceRefresh && playlistsCache && isFresh(playlistsCache.at, PLAYLISTS_CACHE_TTL_MS)) {
     return playlistsCache.data;
   }
-  const sessionCached = readPlaylistsSessionCache();
+  const sessionCached = forceRefresh ? null : readPlaylistsSessionCache();
   if (sessionCached) {
     const normalized = normalizePlaylistList(sessionCached);
     playlistsCache = { at: Date.now(), data: normalized };

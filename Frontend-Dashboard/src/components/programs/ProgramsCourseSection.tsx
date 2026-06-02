@@ -234,9 +234,12 @@ export function ProgramsCourseSection({
     setCoursesError(coursesListErrorMessage(res.status, res.data));
   }, []);
 
-  const reloadStreamPlaylists = useCallback(async () => {
+  const reloadStreamPlaylists = useCallback(async (options?: { forceRefresh?: boolean }) => {
     try {
-      const list = await fetchStreamPlaylists({ allowPublicFallback: false });
+      const list = await fetchStreamPlaylists({
+        allowPublicFallback: false,
+        forceRefresh: !!options?.forceRefresh,
+      });
       setStreamPlaylists(Array.isArray(list) ? list : []);
       setPlaylistsError(null);
     } catch {
@@ -264,7 +267,7 @@ export function ProgramsCourseSection({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refreshFromCheckout = () => {
-      void reloadStreamPlaylists();
+      void reloadStreamPlaylists({ forceRefresh: true });
       try {
         window.sessionStorage.removeItem("playlist_checkout_confirmed");
       } catch {
@@ -353,7 +356,7 @@ export function ProgramsCourseSection({
         returnBaseUrl: typeof window !== "undefined" ? window.location.origin : undefined,
       });
       if (checkout.is_unlocked) {
-        await reloadStreamPlaylists();
+        await reloadStreamPlaylists({ forceRefresh: true });
         return;
       }
       if (checkout.checkout_url) {

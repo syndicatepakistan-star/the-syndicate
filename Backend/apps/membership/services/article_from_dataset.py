@@ -25,7 +25,7 @@ from apps.membership.keyword_dataset import VALID_CATEGORIES, normalize_category
 from apps.membership.keyword_levels import normalize_level
 from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState
 
-DEFAULT_MEMBERSHIP_ARTICLE_COUNT = 15
+DEFAULT_MEMBERSHIP_ARTICLE_COUNT = 60
 OPERATOR_BRIEF_TAG = "operator-brief"
 
 

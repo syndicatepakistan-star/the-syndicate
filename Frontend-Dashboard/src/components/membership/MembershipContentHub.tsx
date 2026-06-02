@@ -381,10 +381,28 @@ export function MembershipContentHub() {
           ) : null}
 
           {articlesLoading && !articles.length ? (
-            <div className="relative overflow-hidden rounded-xl border border-amber-500/15 bg-black/40 py-16 text-center">
-              <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(34,211,238,0.03)_3px,rgba(34,211,238,0.03)_4px)]" />
-              <p className="relative font-mono text-[13px] uppercase tracking-[0.2em] text-cyan-200/70">Decrypting archive…</p>
-              <p className="relative mt-2 text-[15px] text-neutral-500">Stand by</p>
+            <div className="space-y-4">
+              <div className="relative overflow-hidden rounded-xl border border-cyan-400/25 bg-cyan-950/15 px-5 py-4 text-left">
+                <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(34,211,238,0.03)_3px,rgba(34,211,238,0.03)_4px)]" />
+                <div className="relative flex items-center gap-2 text-cyan-100/90">
+                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+                  <p className="font-mono text-[12px] font-bold uppercase tracking-[0.16em]">Loading membership articles…</p>
+                </div>
+                <p className="relative mt-1.5 text-[13px] leading-relaxed text-cyan-100/70">
+                  Fetching your archive now. Articles will appear automatically in a moment.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="rounded-2xl border border-cyan-300/20 bg-black/50 p-4 sm:p-5">
+                    <div className="h-3 w-20 animate-pulse rounded bg-cyan-300/20" />
+                    <div className="mt-4 h-40 animate-pulse rounded-lg bg-white/[0.06]" />
+                    <div className="mt-4 h-5 w-[88%] animate-pulse rounded bg-white/[0.08]" />
+                    <div className="mt-2 h-4 w-[74%] animate-pulse rounded bg-white/[0.06]" />
+                    <div className="mt-6 h-10 animate-pulse rounded-lg bg-cyan-300/12" />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : articles.length > 0 ? (
             <div

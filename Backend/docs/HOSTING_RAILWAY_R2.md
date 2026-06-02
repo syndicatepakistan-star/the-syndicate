@@ -34,8 +34,10 @@ Step-by-step guide for this repo: **Django API** + **Next.js frontend** on Railw
 
 | `STREAM_PLAYBACK_USE_S3_PRESIGNED_GET` | Behavior |
 |----------------------------------------|----------|
-| `false` (**recommended**) | Browser hits your **Railway backend**; Django streams bytes from private R2. Bucket URL never appears in DevTools. No R2 CORS setup. |
-| `true` | Browser gets a short-lived presigned R2 URL (smoother for very long MP4s). You must add **CORS** on the bucket allowing `GET` from your frontend origin. |
+| `false` | Browser hits your **Railway backend**; Django streams bytes from private R2. No R2 CORS setup. Fine for **small** test files; **slow or black player** on large rclone MP4s. |
+| `true` (**recommended for rclone / 100MB+**) | Browser streams directly from R2 via presigned GET (fast seeking). Add **CORS** on the bucket — see `R2_PLAYBACK_TROUBLESHOOTING.md`. |
+
+Before uploading large lessons, run: `ffmpeg -i in.mp4 -c copy -movflags +faststart out.mp4` then `rclone copy`.
 
 ---
 

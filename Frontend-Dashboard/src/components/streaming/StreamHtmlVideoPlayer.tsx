@@ -44,6 +44,7 @@ export default function StreamHtmlVideoPlayer({
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
   const onMetadataRef = useRef(onMetadata);
   const startAtSecondsRef = useRef(startAtSeconds);
   const onTimeProgressRef = useRef(onTimeProgress);
@@ -65,6 +66,7 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     setMeasured(null);
+    setPlaybackError(null);
   }, [src]);
 
   const aspect = useMemo(() => {
@@ -129,11 +131,20 @@ export default function StreamHtmlVideoPlayer({
         });
       }
     };
+    const onError = () => {
+      const code = video.error?.code;
+      const hint =
+        code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+          ? "Format not supported — use H.264/AAC in an MP4 with faststart."
+          : "Stream failed — large files often need direct R2 playback (presigned GET + bucket CORS).";
+      setPlaybackError(hint);
+    };
 
     video.src = src;
     video.load();
 
     video.addEventListener("loadedmetadata", emitMetadata);
+    video.addEventListener("error", onError);
     video.addEventListener("timeupdate", emitTimeProgress);
     video.addEventListener("ended", emitEnded);
     video.addEventListener("seeking", onSeeking);
@@ -145,6 +156,7 @@ export default function StreamHtmlVideoPlayer({
       video.removeEventListener("ended", emitEnded);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("error", onError);
       video.removeAttribute("src");
       video.load();
     };
@@ -225,11 +237,16 @@ export default function StreamHtmlVideoPlayer({
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.16)_34%,transparent_52%)] opacity-55"
         aria-hidden
       />
+      {playbackError ? (
+        <div className="absolute inset-x-0 bottom-0 z-[2] border-t border-red-500/40 bg-red-950/85 px-3 py-2 text-center text-[12px] leading-snug text-red-100/95">
+          {playbackError}
+        </div>
+      ) : null}
       <video
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="auto"
+        preload="metadata"
         playsInline
         controlsList="nodownload"
         disablePictureInPicture

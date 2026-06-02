@@ -627,14 +627,13 @@ export default function AuthScreen({
 
       if (!response.ok) {
         if (response.status === 404 && data.code === "SIGNUP_REQUIRED") {
-          const loginEmail = (data.email || email.trim()).trim();
-          setMessage(apiErrorMessage(data, "No account found. Redirecting to signup..."));
-          router.replace(syndicateOtpSignupHref(loginEmail));
+          setMessage("");
+          setError("Your email does not exist. Please sign up first.");
           return;
         }
         // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
         if (response.status === 404) {
-          throw new Error(apiErrorMessage(data, "You do not have any account. Please sign up."));
+          throw new Error(apiErrorMessage(data, "Your email does not exist. Please sign up first."));
         }
         if (response.status === 400 || response.status === 401) {
           const msg = apiErrorMessage(data, "Request failed");
@@ -645,11 +644,11 @@ export default function AuthScreen({
             normalized.includes("signup required") ||
             normalized.includes("no active account")
           ) {
-            throw new Error("You do not have any account. Please sign up.");
+            throw new Error("Your email does not exist. Please sign up first.");
           }
           throw new Error(msg);
         }
-        throw new Error(apiErrorMessage(data, "You do not have any account with this email. Please sign up."));
+        throw new Error(apiErrorMessage(data, "Your email does not exist. Please sign up first."));
       }
 
       if (!data.otp_required) {
@@ -672,7 +671,7 @@ export default function AuthScreen({
           normalized.includes("no account") ||
           normalized.includes("sign up")
         ) {
-          setError("You do not have any account with this email.");
+          setError("Your email does not exist. Please sign up first.");
         } else {
           setError(rawMessage);
         }

@@ -132,13 +132,31 @@ def describe_seed_in_dataset(article, dataset) -> str:
     )
 
 
-def format_all_keywords_for_search(rows: list[dict[str, Any]]) -> str:
+# Rendering 2000+ lines in Django admin can OOM small Railway containers.
+MAX_KEYWORDS_ADMIN_DISPLAY = 80
+
+
+def format_all_keywords_for_search(rows: list[dict[str, Any]], *, limit: int = MAX_KEYWORDS_ADMIN_DISPLAY) -> str:
     lines: list[str] = []
+    total = 0
+    for r in rows:
+        if isinstance(r, dict) and str(r.get("keyword") or "").strip():
+            total += 1
+    show = min(total, max(1, int(limit)))
+    shown = 0
     for i, r in enumerate(rows, start=1):
         if not isinstance(r, dict):
             continue
         kw, cat = split_row_keyword_category(r)
         if not kw:
             continue
+        if shown >= show:
+            break
         lines.append(f"{i}. [{cat}] {kw}")
-    return "\n".join(lines) if lines else "(no keywords parsed — upload file and Save)"
+        shown += 1
+    if not lines:
+        return "(no keywords parsed — upload file and Save)"
+    header = f"Showing {shown} of {total} keywords (admin preview cap; articles still use the full dataset).\n\n"
+    if total > shown:
+        header += f"Use Ctrl+F within these lines, or export your CSV. Full count: {total}.\n\n"
+    return header + "\n".join(lines)

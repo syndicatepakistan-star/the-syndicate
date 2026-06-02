@@ -14,6 +14,9 @@ from typing import Any
 
 MIN_CHARS_FOR_AI_EXTRACTION = 80
 MAX_CHARS_SENT_TO_AI = 18_000
+# PDF loose parse can create thousands of comma-lines; prefer AI seeds above this.
+MAX_STRUCTURED_ROWS_BEFORE_AI = 250
+MAX_DATASET_ROWS = 500
 
 VALID_CATEGORIES = frozenset({"business", "money", "power", "grooming", "others"})
 _OLE_DOC_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
@@ -291,8 +294,10 @@ def ingest_article_keyword_dataset_bytes(raw: bytes, filename: str = "") -> list
     call OpenAI to build {category, keyword} rows.
     """
     structured = _try_structured_keyword_rows(raw, filename)
+    if structured and len(structured) > MAX_STRUCTURED_ROWS_BEFORE_AI:
+        structured = []
     if structured:
-        return structured
+        return structured[:MAX_DATASET_ROWS]
 
     text = _extract_full_document_text(raw, filename).strip()
     if len(text) < MIN_CHARS_FOR_AI_EXTRACTION:
@@ -320,7 +325,7 @@ def ingest_article_keyword_dataset_bytes(raw: bytes, filename: str = "") -> list
 
     if not rows:
         raise KeywordDatasetParseError("Automatic keyword extraction returned no usable rows.")
-    return rows
+    return rows[:MAX_DATASET_ROWS]
 
 
 def parse_keyword_dataset_bytes(raw: bytes, filename: str = "") -> list[dict[str, str]]:

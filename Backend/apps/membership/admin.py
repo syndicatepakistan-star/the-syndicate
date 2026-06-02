@@ -10,7 +10,11 @@ from apps.membership.dataset_match import (
     format_all_keywords_for_search,
     seed_matches_dataset,
 )
-from apps.membership.keyword_dataset import KeywordDatasetParseError, parse_keyword_dataset_bytes
+from apps.membership.keyword_dataset import (
+    MAX_DATASET_ROWS,
+    KeywordDatasetParseError,
+    parse_keyword_dataset_bytes,
+)
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
 from apps.membership.services.article_from_dataset import (
     DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
@@ -36,7 +40,7 @@ class AllFieldsListDisplayAdmin(admin.ModelAdmin):
 class ArticleKeywordDatasetForm(forms.ModelForm):
     class Meta:
         model = ArticleKeywordDataset
-        fields = "__all__"
+        fields = ("name", "csv_file", "is_active")
 
     def clean_csv_file(self):
         f = self.cleaned_data.get("csv_file")
@@ -60,34 +64,89 @@ class ArticleKeywordDatasetForm(forms.ModelForm):
 
 
 @admin.register(ArticleKeywordDataset)
-class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
+class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
     form = ArticleKeywordDatasetForm
     change_form_template = "admin/membership/articlekeyworddataset/change_form.html"
+    list_display = ("name", "is_active", "row_count", "created_at")
     list_filter = ("is_active",)
     search_fields = ("name",)
     readonly_fields = ("created_at", "rows_preview", "all_keywords_searchable")
+    show_full_result_count = False
+    fieldsets = (
+        (None, {"fields": ("name", "csv_file", "is_active")}),
+        (
+            "Parsed keywords",
+            {
+                "fields": ("rows_preview", "all_keywords_searchable"),
+                "description": "Rows are stored in the database but not shown as raw JSON (large files can crash the server).",
+            },
+        ),
+        ("Meta", {"fields": ("created_at",)}),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).defer("rows")
+
+    def get_object(self, request, object_id, from_field=None):
+        qs = self.get_queryset(request)
+        if from_field:
+            return qs.filter(**{from_field: object_id}).first()
+        return qs.filter(pk=object_id).first()
 
     @admin.display(description="Rows")
     def row_count(self, obj: ArticleKeywordDataset) -> int:
-        return len(obj.rows) if isinstance(obj.rows, list) else 0
+        if obj is None:
+            return 0
+        rows = obj.rows if isinstance(obj.rows, list) else []
+        if not rows and obj.pk:
+            rows = ArticleKeywordDataset.objects.filter(pk=obj.pk).values_list("rows", flat=True).first() or []
+        return len(rows) if isinstance(rows, list) else 0
+
+    def _load_rows(self, obj: ArticleKeywordDataset) -> list:
+        if not getattr(obj, "pk", None):
+            return []
+        rows = obj.rows if isinstance(obj.rows, list) and obj.rows else None
+        if rows is None:
+            raw = ArticleKeywordDataset.objects.filter(pk=obj.pk).values_list("rows", flat=True).first()
+            rows = raw if isinstance(raw, list) else []
+        return rows
 
     def rows_preview(self, obj: ArticleKeywordDataset) -> str:
         if not getattr(obj, "pk", None):
             return "Save the dataset once with a file to preview parsed rows."
-        if not obj.rows:
+        rows = self._load_rows(obj)
+        if not rows:
             return "-"
         import json
 
-        return json.dumps(obj.rows[:8], ensure_ascii=False, indent=2) + (
-            f"\n... ({len(obj.rows)} total)" if len(obj.rows) > 8 else ""
+        return json.dumps(rows[:8], ensure_ascii=False, indent=2) + (
+            f"\n... ({len(rows)} total)" if len(rows) > 8 else ""
         )
 
-    @admin.display(description="All keywords (Ctrl+F here)")
+    @admin.display(description="Keywords preview (first 80)")
     def all_keywords_searchable(self, obj: ArticleKeywordDataset) -> str:
         if not getattr(obj, "pk", None):
             return "Save the dataset first."
-        rows = obj.rows if isinstance(obj.rows, list) else []
-        return format_all_keywords_for_search(rows)
+        return format_all_keywords_for_search(self._load_rows(obj))
+
+    def delete_model(self, request, obj):
+        self._delete_datasets_efficiently([obj.pk])
+        self.message_user(request, f"Deleted dataset “{obj.name}”.", messages.SUCCESS)
+
+    def delete_queryset(self, request, queryset):
+        ids = list(queryset.values_list("pk", flat=True))
+        self._delete_datasets_efficiently(ids)
+        self.message_user(request, f"Deleted {len(ids)} dataset(s).", messages.SUCCESS)
+
+    @staticmethod
+    def _delete_datasets_efficiently(dataset_ids: list[int]) -> None:
+        if not dataset_ids:
+            return
+        KeywordUsageStat.objects.filter(dataset_id__in=dataset_ids).delete()
+        Article.objects.filter(generation_source_dataset_id__in=dataset_ids).update(
+            generation_source_dataset_id=None
+        )
+        ArticleKeywordDataset.objects.filter(pk__in=dataset_ids).delete()
 
     def get_urls(self):
         urls = super().get_urls()
@@ -180,6 +239,14 @@ class ArticleKeywordDatasetAdmin(AllFieldsListDisplayAdmin):
                 self.message_user(request, str(exc), level=messages.ERROR)
                 rows = []
         if rows is not None:
+            if len(rows) > MAX_DATASET_ROWS:
+                self.message_user(
+                    request,
+                    f"Dataset capped at {MAX_DATASET_ROWS} keywords (file had more). "
+                    "Use CSV with one keyword per row, or a shorter PDF, for better article seeds.",
+                    level=messages.WARNING,
+                )
+                rows = rows[:MAX_DATASET_ROWS]
             ArticleKeywordDataset.objects.filter(pk=obj.pk).update(rows=rows)
             obj.rows = rows
             if rows and (not change or "csv_file" in form.changed_data):

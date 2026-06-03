@@ -276,11 +276,6 @@ export default function MembershipArticleDetailPage() {
               <h1 className="membership-article-title w-full min-w-0 text-left text-[clamp(1.65rem,3.1vw+0.8rem,2.8rem)] font-semibold leading-[1.12] tracking-tight text-cyan-300 [text-shadow:0_0_14px_rgba(34,211,238,0.62),0_0_30px_rgba(34,211,238,0.42),0_0_52px_rgba(14,165,233,0.34)] sm:text-center">
                 {article.title}
               </h1>
-              {article.description?.trim() ? (
-                <p className="membership-article-prose mt-5 w-full min-w-0 text-left text-[15px] leading-[1.78] text-neutral-300 sm:mx-auto sm:mt-6 sm:max-w-5xl sm:text-[18px] sm:leading-[1.86]">
-                  {article.description}
-                </p>
-              ) : null}
               <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-3">
                 {publishedLabel ? (
                   <span className="rounded-md border border-white/15 bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-neutral-300">

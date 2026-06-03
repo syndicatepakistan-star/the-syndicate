@@ -8,6 +8,10 @@ export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
 type Props = {
   /** Absolute playback URL (S3 presigned GET or signed Django proxy URL). */
   src: string;
+  /** Stable id for the current video session (resets player when changed). */
+  sessionKey?: string | number;
+  /** Increment when ``src`` is rotated in-place (preserves watch position). */
+  srcRevision?: number;
   className?: string;
   onMetadata?: (size: { width: number; height: number }) => void;
   playerLayout?: StreamHtmlPlayerLayoutMode;
@@ -25,12 +29,37 @@ function lateResumeKey(src: string, startSeconds: number): string {
   return `${src}::${Number(startSeconds).toFixed(3)}`;
 }
 
+function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string): void {
+  const savedTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const wasPaused = video.paused;
+  const savedRate = video.playbackRate;
+
+  const onReady = () => {
+    const duration = Number(video.duration || 0);
+    if (savedTime > 0 && Number.isFinite(duration) && duration > 0) {
+      video.currentTime = Math.min(Math.max(0, savedTime), Math.max(0, duration - 0.05));
+    }
+    video.playbackRate = savedRate;
+    if (!wasPaused) {
+      void video.play().catch(() => {
+        // Autoplay may be blocked after src swap in some browsers.
+      });
+    }
+  };
+
+  video.addEventListener("loadedmetadata", onReady, { once: true });
+  video.src = newSrc;
+  video.load();
+}
+
 /**
  * HTML5 MP4 playback for signed URLs (no HLS / MSE).
- * Binds listeners and loads `src` only when `src` changes — not when resume/progress props change.
+ * Binds listeners once per session; loads or hot-swaps `src` when the signed URL rotates.
  */
 export default function StreamHtmlVideoPlayer({
   src,
+  sessionKey = "default",
+  srcRevision = 0,
   className,
   onMetadata,
   playerLayout = "auto",
@@ -54,6 +83,9 @@ export default function StreamHtmlVideoPlayer({
   const lastSeekStartRef = useRef(0);
   /** Prevents duplicate resume seeks (metadata handler + late hydration effect). */
   const lateResumeAppliedKeyRef = useRef("");
+  const appliedSrcRef = useRef<string | null>(null);
+  const appliedRevisionRef = useRef(-1);
+  const initialResumeDoneRef = useRef(false);
 
   useEffect(() => {
     onMetadataRef.current = onMetadata;
@@ -66,6 +98,15 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     setMeasured(null);
+    setPlaybackError(null);
+    appliedSrcRef.current = null;
+    appliedRevisionRef.current = -1;
+    lateResumeAppliedKeyRef.current = "";
+    initialResumeDoneRef.current = false;
+  }, [sessionKey]);
+
+  useEffect(() => {
+    if (src) return;
     setPlaybackError(null);
   }, [src]);
 
@@ -83,9 +124,7 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
-
-    lateResumeAppliedKeyRef.current = "";
+    if (!video) return;
 
     const emitMetadata = () => {
       const width = Number(video.videoWidth || 0);
@@ -95,7 +134,8 @@ export default function StreamHtmlVideoPlayer({
         onMetadataRef.current?.({ width, height });
       }
       const start = Number(startAtSecondsRef.current || 0);
-      if (start > 0 && Number.isFinite(video.duration) && video.duration > 0) {
+      if (!initialResumeDoneRef.current && start > 0 && Number.isFinite(video.duration) && video.duration > 0) {
+        initialResumeDoneRef.current = true;
         const target = Math.min(Math.max(0, start), Math.max(0, video.duration - 0.05));
         if (target > 0) {
           suppressNextSeekEventRef.current = true;
@@ -140,9 +180,6 @@ export default function StreamHtmlVideoPlayer({
       setPlaybackError(hint);
     };
 
-    video.src = src;
-    video.load();
-
     video.addEventListener("loadedmetadata", emitMetadata);
     video.addEventListener("error", onError);
     video.addEventListener("timeupdate", emitTimeProgress);
@@ -157,10 +194,39 @@ export default function StreamHtmlVideoPlayer({
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
+    };
+  }, [sessionKey, src]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    return () => {
+      if (!video) return;
       video.removeAttribute("src");
       video.load();
     };
-  }, [src]);
+  }, [sessionKey]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+    if (appliedSrcRef.current === src && appliedRevisionRef.current === srcRevision) return;
+
+    const isHotSwap = srcRevision > 0 && appliedSrcRef.current !== null;
+    appliedSrcRef.current = src;
+    appliedRevisionRef.current = srcRevision;
+
+    if (isHotSwap) {
+      setPlaybackError(null);
+      suppressNextSeekEventRef.current = true;
+      hotSwapVideoSrc(video, src);
+      return;
+    }
+
+    lateResumeAppliedKeyRef.current = "";
+    setPlaybackError(null);
+    video.src = src;
+    video.load();
+  }, [src, srcRevision, sessionKey]);
 
   useEffect(() => {
     const video = videoRef.current;

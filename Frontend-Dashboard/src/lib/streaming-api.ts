@@ -24,6 +24,8 @@ export type StreamPayload = {
   id: number;
   status: string;
   playback_url: string | null;
+  /** Unix epoch seconds when ``playback_url`` expires (for client-side refresh). */
+  playback_expires_at?: number | null;
 };
 
 /** Parsed from admin `description` when section title lines are used (see API / admin help). */
@@ -300,12 +302,12 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
 
 export async function fetchStreamVideoPlayback(
   id: number,
-  options?: { context?: "programs" | "membership" }
+  options?: { context?: "programs" | "membership"; forceRefresh?: boolean }
 ): Promise<StreamPayload> {
   const ctx = options?.context === "membership" ? "membership" : "programs";
   const cacheKey = playbackCacheKey(id, ctx);
   const cached = playbackCache.get(cacheKey);
-  if (cached && isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) {
+  if (!options?.forceRefresh && cached && isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) {
     return cached.data;
   }
   const path =

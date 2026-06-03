@@ -241,9 +241,9 @@ def build_playback_url_for_video(
     user_id: int,
     video: StreamVideo,
     access_mode: str = "programs",
-) -> str | None:
+) -> tuple[str | None, int | None]:
     """
-    Absolute URL for `<video src>`.
+    Absolute URL for `<video src>` and its Unix expiry epoch.
 
     - Default: signed same-origin proxy (entitlement re-check on every Range; storage host hidden).
     - Optional: short-lived S3 presigned GET when ``STREAM_PLAYBACK_USE_S3_PRESIGNED_GET`` is true
@@ -251,20 +251,55 @@ def build_playback_url_for_video(
     """
     key = (getattr(video.original_video, "name", None) or "").strip()
     if not key:
-        return None
-    exp = int(time.time()) + playback_ttl_seconds()
+        return None, None
+    ttl = playback_ttl_seconds()
+    exp = int(time.time()) + ttl
     bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
     use_presign = bool(getattr(settings, "STREAM_PLAYBACK_USE_S3_PRESIGNED_GET", False))
     if use_presign and getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
-        url = presigned_get_object_url(bucket=bucket, key=key, expires_in=playback_ttl_seconds())
+        url = presigned_get_object_url(bucket=bucket, key=key, expires_in=ttl)
         if url:
-            return url
+            return url, exp
     token = build_playback_token(user_id=user_id, video_id=video.pk, exp=exp, access_mode=access_mode)
     rel = reverse("streaming-video-playback-file", kwargs={"video_id": video.pk})
     from urllib.parse import urlencode
 
     qs = urlencode({"token": token, "expires": str(exp)})
-    return request.build_absolute_uri(f"{rel}?{qs}")
+    return request.build_absolute_uri(f"{rel}?{qs}"), exp
+
+
+def build_stream_playback_api_payload(
+    request,
+    *,
+    user_id: int,
+    video: StreamVideo,
+    access_mode: str = "programs",
+) -> dict:
+    """JSON payload for stream-info endpoints (includes ``playback_expires_at`` for client refresh)."""
+    base: dict = {
+        "id": video.id,
+        "status": video.status,
+        "playback_url": None,
+        "playback_expires_at": None,
+    }
+    if not video.original_video or not video.original_video.name:
+        return base
+    if video.status != StreamVideo.Status.READY:
+        return base
+    url, exp = build_playback_url_for_video(
+        request,
+        user_id=user_id,
+        video=video,
+        access_mode=access_mode,
+    )
+    if not url:
+        return base
+    return {
+        "id": video.id,
+        "status": video.status,
+        "playback_url": url,
+        "playback_expires_at": exp,
+    }
 
 
 def file_response_for_local_original(video: StreamVideo):

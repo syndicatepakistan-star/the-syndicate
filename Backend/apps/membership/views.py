@@ -26,7 +26,7 @@ from apps.video_streaming.playback_access import (
     user_can_play_membership_stream_video,
     user_has_membership_stream_catalog_access,
 )
-from apps.video_streaming.services.playback_delivery import build_playback_url_for_video
+from apps.video_streaming.services.playback_delivery import build_stream_playback_api_payload
 
 
 class MembershipPagination(PageNumberPagination):
@@ -164,26 +164,18 @@ class MembershipSecureVideoStreamView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if not video.original_video or not video.original_video.name:
-            payload = {"id": video.id, "status": video.status, "playback_url": None}
-            return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
-
-        if video.status != StreamVideo.Status.READY:
-            payload = {"id": video.id, "status": video.status, "playback_url": None}
-            return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
-
-        url = build_playback_url_for_video(
+        payload = build_stream_playback_api_payload(
             request,
             user_id=request.user.id,
             video=video,
             access_mode="membership",
         )
-        if not url:
-            return Response(
-                {"detail": "Playback is temporarily unavailable."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-        payload = {"id": video.id, "status": video.status, "playback_url": url}
+        if video.status == StreamVideo.Status.READY and video.original_video and video.original_video.name:
+            if not payload.get("playback_url"):
+                return Response(
+                    {"detail": "Playback is temporarily unavailable."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
         return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
 

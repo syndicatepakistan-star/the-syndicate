@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
+import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import {
   fetchStreamVideoDetail,
-  fetchStreamVideoPlayback,
-  type StreamPayload,
   type StreamVideoDetail
 } from "@/lib/streaming-api";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -30,35 +29,36 @@ export function StreamVideoProgramPanel({
   detailsOverride
 }: Props) {
   const [detail, setDetail] = useState<StreamVideoDetail | null>(null);
-  const [playback, setPlayback] = useState<StreamPayload | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(true);
   const reportedReadyRef = useRef(false);
+
+  const {
+    playback,
+    srcRevision,
+    loading: playbackLoading,
+  } = useStreamPlaybackRefresh(streamVideoId, { context: playbackContext });
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setDetailLoading(true);
     setErr(null);
     void (async () => {
       try {
-        const [d, p] = await Promise.all([
-          fetchStreamVideoDetail(streamVideoId),
-          fetchStreamVideoPlayback(streamVideoId, { context: playbackContext })
-        ]);
+        const d = await fetchStreamVideoDetail(streamVideoId);
         if (!cancelled) {
           setDetail(d);
-          setPlayback(p);
         }
       } catch (e) {
         if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load video.");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setDetailLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [streamVideoId, playbackContext]);
+  }, [streamVideoId]);
 
   useEffect(() => {
     reportedReadyRef.current = false;
@@ -76,24 +76,7 @@ export function StreamVideoProgramPanel({
     }
   }, [playback?.status, playback?.playback_url, onPlaybackReady]);
 
-  useEffect(() => {
-    if (!playback || playback.status !== "processing") return;
-    let cancelled = false;
-    const timer = window.setInterval(() => {
-      void (async () => {
-        try {
-          const p = await fetchStreamVideoPlayback(streamVideoId, { context: playbackContext });
-          if (!cancelled) setPlayback(p);
-        } catch {
-          // Keep current UI state; next poll may recover.
-        }
-      })();
-    }, 5000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [playback?.status, streamVideoId, playbackContext]);
+  const loading = detailLoading || playbackLoading;
 
   if (loading) {
     return (
@@ -147,7 +130,9 @@ export function StreamVideoProgramPanel({
             </div>
           ) : (
             <StreamHtmlVideoPlayer
+              sessionKey={streamVideoId}
               src={playbackUrl ?? ""}
+              srcRevision={srcRevision}
               className={playerShell}
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}

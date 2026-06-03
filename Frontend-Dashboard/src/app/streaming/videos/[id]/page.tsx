@@ -4,37 +4,42 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
-import {
-  fetchStreamVideoDetail,
-  fetchStreamVideoPlayback,
-  type StreamPayload,
-  type StreamVideoDetail
-} from "@/lib/streaming-api";
+import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
+import { fetchStreamVideoDetail, type StreamVideoDetail } from "@/lib/streaming-api";
 
 export default function StreamVideoDetailPage() {
   const params = useParams();
   const raw = params.id;
   const id = typeof raw === "string" ? Number.parseInt(raw, 10) : Number.NaN;
+  const videoId = Number.isFinite(id) ? id : null;
 
   const [detail, setDetail] = useState<StreamVideoDetail | null>(null);
-  const [playback, setPlayback] = useState<StreamPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [detailLoading, setDetailLoading] = useState(true);
+
+  const { playback, srcRevision, loading: playbackLoading } = useStreamPlaybackRefresh(videoId, {
+    enabled: videoId != null,
+  });
 
   useEffect(() => {
     if (!Number.isFinite(id)) {
       setError("Invalid video id.");
+      setDetailLoading(false);
       return;
     }
     let cancelled = false;
-    (async () => {
+    setDetailLoading(true);
+    setError(null);
+    void (async () => {
       try {
-        const [d, p] = await Promise.all([fetchStreamVideoDetail(id), fetchStreamVideoPlayback(id)]);
+        const d = await fetchStreamVideoDetail(id);
         if (!cancelled) {
           setDetail(d);
-          setPlayback(p);
         }
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load video.");
+      } finally {
+        if (!cancelled) setDetailLoading(false);
       }
     })();
     return () => {
@@ -53,7 +58,7 @@ export default function StreamVideoDetailPage() {
     );
   }
 
-  if (!detail || !playback) {
+  if (detailLoading || playbackLoading || !detail || !playback) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10 text-white">
         <p className="text-white/70">Loading…</p>
@@ -83,7 +88,9 @@ export default function StreamVideoDetailPage() {
         ) : (
           <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
             <StreamHtmlVideoPlayer
+              sessionKey={detail.id}
               src={playbackUrl}
+              srcRevision={srcRevision}
               className="rounded-[inherit]"
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}

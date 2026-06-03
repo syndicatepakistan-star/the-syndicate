@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
+import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import {
   fetchStreamPlaylistDetail,
   fetchStreamVideoPlayback,
@@ -278,6 +279,17 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   const activeVideo: StreamVideoListItem | null = items[activeIdx]?.stream_video ?? null;
 
+  const {
+    playback: activePlaybackFromHook,
+    srcRevision: activeSrcRevision,
+    loading: activePlaybackLoading,
+  } = useStreamPlaybackRefresh(activeVideo?.id, { enabled: Boolean(activeVideo?.id) });
+
+  useEffect(() => {
+    if (!activeVideo?.id || !activePlaybackFromHook) return;
+    setPlaybackCache((prev) => ({ ...prev, [activeVideo.id]: activePlaybackFromHook }));
+  }, [activeVideo?.id, activePlaybackFromHook]);
+
   useEffect(() => {
     if (!activeVideo?.id) {
       setResumeStartSeconds(0);
@@ -286,7 +298,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     setResumeStartSeconds(progressMap[activeVideo.id]?.currentPositionSeconds ?? 0);
   }, [activeVideo?.id, activeIdx, progressHydrated]);
 
-  const activePlayback = activeVideo?.id ? playbackCache[activeVideo.id] ?? playback : playback;
+  const activePlayback =
+    activeVideo?.id != null
+      ? activePlaybackFromHook ?? playbackCache[activeVideo.id] ?? playback
+      : null;
   const totalDuration = useMemo(
     () =>
       items.reduce((sum, row) => {
@@ -322,29 +337,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   useEffect(() => {
     if (!activeVideo?.id) {
       setPlayback(null);
-      return;
     }
-    const cached = playbackCache[activeVideo.id];
-    if (cached) {
-      setPlayback(cached);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const p = await fetchStreamVideoPlayback(activeVideo.id);
-        if (!cancelled) {
-          setPlayback(p);
-          setPlaybackCache((prev) => ({ ...prev, [activeVideo.id]: p }));
-        }
-      } catch {
-        if (!cancelled) setPlayback(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeVideo?.id, playbackCache]);
+  }, [activeVideo?.id]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -573,7 +567,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   const playbackUrl = activePlayback?.playback_url ?? null;
   /** Wait for watch-progress hydration so resume snapshot matches localStorage before the player mounts. */
-  const ready = progressHydrated && activePlayback?.status === "ready" && !!playbackUrl;
+  const ready =
+    progressHydrated && activePlayback?.status === "ready" && !!playbackUrl && !activePlaybackLoading;
   const playlistPrice = parsePlaylistNumber(playlist.price);
 
   return (
@@ -602,7 +597,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           ) : (
             <StreamHtmlVideoPlayer
               key={activeVideo.id}
+              sessionKey={activeVideo.id}
               src={playbackUrl}
+              srcRevision={activeSrcRevision}
               className={playerShell}
               playerLayout={activeVideo.player_layout ?? "auto"}
               sourceWidth={activeVideo.source_width ?? null}

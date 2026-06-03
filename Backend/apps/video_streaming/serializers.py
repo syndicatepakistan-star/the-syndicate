@@ -42,6 +42,7 @@ class StreamVideoStreamSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     status = serializers.CharField()
     playback_url = serializers.CharField(allow_null=True, allow_blank=True)
+    playback_expires_at = serializers.IntegerField(allow_null=True, required=False)
 
 
 class StreamPlaylistItemSerializer(serializers.ModelSerializer):

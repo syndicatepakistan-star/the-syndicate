@@ -23,7 +23,7 @@ import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { createPlaylistCheckoutSession, fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { createPlaylistCheckoutSession, fetchStreamPlaylists, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -340,6 +340,7 @@ export function ProgramsCourseSection({
     setDetailCourseId(null);
     setDetailPlaylistId(id);
     setSecureView("detail");
+    void prefetchStreamPlaylistExperience(id);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("playlist", String(id));
@@ -496,6 +497,7 @@ export function ProgramsCourseSection({
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
+    void prefetchStreamPlaylistExperience(playlistIdFromUrl);
   }, [streamPlaylists, detailPlaylistId, secureView]);
 
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
@@ -530,6 +532,14 @@ export function ProgramsCourseSection({
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
           playlistCardPrimary();
+        }}
+        onMouseEnter={() => {
+          if (comingSoon || locked) return;
+          void prefetchStreamPlaylistExperience(pl.id);
+        }}
+        onFocus={() => {
+          if (comingSoon || locked) return;
+          void prefetchStreamPlaylistExperience(pl.id);
         }}
         className={cn(
           "group/card relative flex aspect-[3/4] w-full min-w-0 max-w-none justify-self-stretch flex-col overflow-hidden text-left outline-none",

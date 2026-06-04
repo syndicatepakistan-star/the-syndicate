@@ -312,7 +312,7 @@ export default function StreamHtmlVideoPlayer({
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="metadata"
+        preload="auto"
         playsInline
         controlsList="nodownload"
         disablePictureInPicture

@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchStreamVideoPlayback, type StreamPayload } from "@/lib/streaming-api";
+import {
+  fetchStreamVideoPlayback,
+  getCachedStreamVideoPlayback,
+  type StreamPayload,
+} from "@/lib/streaming-api";
 
 /** Refresh signed playback URLs this many ms before server expiry. */
 const REFRESH_BUFFER_MS = 3 * 60 * 1000;
@@ -77,20 +81,30 @@ export function useStreamPlaybackRefresh(
     }
 
     let cancelled = false;
-    setLoading(true);
-    setSrcRevision(0);
-    setPlayback(null);
+    const cached = getCachedStreamVideoPlayback(videoId, { context });
+    if (cached?.playback_url) {
+      setPlayback(cached);
+      setSrcRevision(0);
+      setLoading(false);
+      if (cached.status === "ready") {
+        scheduleRefresh(cached.playback_expires_at ?? null, videoId);
+      }
+    } else {
+      setLoading(true);
+      setSrcRevision(0);
+      setPlayback(null);
+    }
 
     void (async () => {
       try {
-        const initial = await fetchStreamVideoPlayback(videoId, { context, forceRefresh: true });
+        const initial = await fetchStreamVideoPlayback(videoId, { context });
         if (cancelled || videoIdRef.current !== videoId) return;
         setPlayback(initial);
         if (initial.status === "ready" && initial.playback_url) {
           scheduleRefresh(initial.playback_expires_at ?? null, videoId);
         }
       } catch {
-        if (!cancelled && videoIdRef.current === videoId) {
+        if (!cancelled && videoIdRef.current === videoId && !cached?.playback_url) {
           setPlayback(null);
         }
       } finally {

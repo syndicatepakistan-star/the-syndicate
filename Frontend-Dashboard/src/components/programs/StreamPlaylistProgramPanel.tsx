@@ -6,7 +6,8 @@ import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer"
 import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import {
   fetchStreamPlaylistDetail,
-  fetchStreamVideoPlayback,
+  prefetchStreamVideoPlaybacks,
+  warmStreamVideoMedia,
   type StreamPayload,
   type StreamPlaylistDetail,
   type StreamVideoListItem
@@ -184,6 +185,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const lastPlaybackPositionRef = useRef<Record<number, number>>({});
   const ignorePlaybackUntilRef = useRef(0);
 
+  const prefetchStartedRef = useRef<string>("");
+
   const loadPlaylist = useCallback(async () => {
     setLoading(true);
     setErr(null);
@@ -282,7 +285,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const {
     playback: activePlaybackFromHook,
     srcRevision: activeSrcRevision,
-    loading: activePlaybackLoading,
   } = useStreamPlaybackRefresh(activeVideo?.id, { enabled: Boolean(activeVideo?.id) });
 
   useEffect(() => {
@@ -342,19 +344,49 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   useEffect(() => {
     if (!items.length) return;
-    const idsToPrefetch = items.map((row) => row.stream_video.id).filter(Boolean).slice(0, 8);
-    idsToPrefetch.forEach((videoId) => {
-      if (playbackCache[videoId]) return;
-      void (async () => {
-        try {
-          const p = await fetchStreamVideoPlayback(videoId);
-          setPlaybackCache((prev) => (prev[videoId] ? prev : { ...prev, [videoId]: p }));
-        } catch {
-          // Ignore prefetch failures; active playback effect handles visible errors.
+    const signature = items.map((row) => row.stream_video.id).join(",");
+    if (prefetchStartedRef.current === signature) return;
+    prefetchStartedRef.current = signature;
+
+    const videoIds = items.map((row) => row.stream_video.id).filter(Boolean);
+    const priorityId = videoIds[activeIdx] ?? videoIds[0];
+
+    void (async () => {
+      const prefetched = await prefetchStreamVideoPlaybacks(videoIds, {
+        priorityId,
+        concurrency: 6,
+      });
+      setPlaybackCache((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        for (const [id, payload] of Object.entries(prefetched)) {
+          const vid = Number(id);
+          if (!next[vid]) {
+            next[vid] = payload;
+            changed = true;
+          }
         }
-      })();
-    });
-  }, [items, playbackCache]);
+        return changed ? next : prev;
+      });
+
+      const warmUrls = videoIds
+        .slice(Math.max(0, activeIdx - 1), activeIdx + 3)
+        .map((id) => prefetched[id]?.playback_url)
+        .filter((url): url is string => Boolean(url));
+      warmStreamVideoMedia(warmUrls);
+    })();
+  }, [items, activeIdx]);
+
+  useEffect(() => {
+    if (!activeVideo?.id) return;
+    const neighborIds = [activeIdx - 1, activeIdx, activeIdx + 1]
+      .map((i) => items[i]?.stream_video.id)
+      .filter((id): id is number => Number.isFinite(id) && id > 0);
+    const warmUrls = neighborIds
+      .map((id) => playbackCache[id]?.playback_url ?? (activeVideo.id === id ? activePlayback?.playback_url : null))
+      .filter((url): url is string => Boolean(url));
+    warmStreamVideoMedia(warmUrls);
+  }, [activeVideo?.id, activeIdx, items, playbackCache, activePlayback?.playback_url]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -566,9 +598,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }
 
   const playbackUrl = activePlayback?.playback_url ?? null;
-  /** Wait for watch-progress hydration so resume snapshot matches localStorage before the player mounts. */
-  const ready =
-    progressHydrated && activePlayback?.status === "ready" && !!playbackUrl && !activePlaybackLoading;
+  /** Show player as soon as a ready URL exists; background refresh must not block cached switches. */
+  const ready = progressHydrated && activePlayback?.status === "ready" && !!playbackUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
 
   return (

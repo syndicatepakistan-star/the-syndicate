@@ -77,7 +77,8 @@ export type StreamPlaylistPurchaseHistoryItem = {
 
 const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
-const PLAYBACK_CACHE_TTL_MS = 20 * 1000;
+const PLAYBACK_CACHE_TTL_MS = 45 * 60 * 1000;
+const WARM_VIDEO_POOL_LIMIT = 14;
 const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
 
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
@@ -300,6 +301,16 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
   return detail;
 }
 
+export function getCachedStreamVideoPlayback(
+  id: number,
+  options?: { context?: "programs" | "membership" }
+): StreamPayload | null {
+  const ctx = options?.context === "membership" ? "membership" : "programs";
+  const cached = playbackCache.get(playbackCacheKey(id, ctx));
+  if (!cached || !isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) return null;
+  return cached.data;
+}
+
 export async function fetchStreamVideoPlayback(
   id: number,
   options?: { context?: "programs" | "membership"; forceRefresh?: boolean }
@@ -327,4 +338,97 @@ export async function fetchStreamVideoPlayback(
   const payload = res.data as StreamPayload;
   playbackCache.set(cacheKey, { at: Date.now(), data: payload });
   return payload;
+}
+
+/** Fetch signed playback URLs for many videos in parallel (playlist warm-up). */
+export async function prefetchStreamVideoPlaybacks(
+  ids: number[],
+  options?: {
+    context?: "programs" | "membership";
+    priorityId?: number;
+    concurrency?: number;
+  }
+): Promise<Record<number, StreamPayload>> {
+  const ctx = options?.context === "membership" ? "membership" : "programs";
+  const concurrency = Math.max(1, Math.min(options?.concurrency ?? 6, 12));
+  const unique = [...new Set(ids.filter((id) => Number.isFinite(id) && id > 0))];
+  if (options?.priorityId && unique.includes(options.priorityId)) {
+    unique.sort((a, b) => {
+      if (a === options.priorityId) return -1;
+      if (b === options.priorityId) return 1;
+      return a - b;
+    });
+  }
+  const out: Record<number, StreamPayload> = {};
+  for (let i = 0; i < unique.length; i += concurrency) {
+    const batch = unique.slice(i, i + concurrency);
+    await Promise.all(
+      batch.map(async (videoId) => {
+        const cached = getCachedStreamVideoPlayback(videoId, { context: ctx });
+        if (cached) {
+          out[videoId] = cached;
+          return;
+        }
+        try {
+          out[videoId] = await fetchStreamVideoPlayback(videoId, { context: ctx });
+        } catch {
+          // Caller handles missing entries.
+        }
+      })
+    );
+  }
+  return out;
+}
+
+/** Warm playlist detail + all playback URLs before the detail panel mounts. */
+export async function prefetchStreamPlaylistExperience(
+  playlistId: number,
+  options?: { context?: "programs" | "membership" }
+): Promise<void> {
+  try {
+    const detail = await fetchStreamPlaylistDetail(playlistId);
+    const ids = (detail.items ?? [])
+      .map((row) => row.stream_video?.id)
+      .filter((id): id is number => Number.isFinite(id) && id > 0);
+    if (!ids.length) return;
+    await prefetchStreamVideoPlaybacks(ids, {
+      context: options?.context,
+      priorityId: ids[0],
+      concurrency: 6,
+    });
+    warmStreamVideoMedia(
+      ids
+        .slice(0, 4)
+        .map((id) => getCachedStreamVideoPlayback(id, { context: options?.context })?.playback_url)
+        .filter((url): url is string => Boolean(url))
+    );
+  } catch {
+    // Best-effort warm-up; panel still loads normally.
+  }
+}
+
+const warmVideoPool = new Map<string, HTMLVideoElement>();
+
+/** Start buffering MP4 bytes in hidden video elements (browser cache). */
+export function warmStreamVideoMedia(urls: string[]): void {
+  if (typeof window === "undefined") return;
+  for (const raw of urls) {
+    const url = (raw || "").trim();
+    if (!url || warmVideoPool.has(url)) continue;
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+    video.load();
+    warmVideoPool.set(url, video);
+  }
+  while (warmVideoPool.size > WARM_VIDEO_POOL_LIMIT) {
+    const oldest = warmVideoPool.keys().next().value;
+    if (!oldest) break;
+    const el = warmVideoPool.get(oldest);
+    el?.removeAttribute("src");
+    el?.load();
+    warmVideoPool.delete(oldest);
+  }
 }

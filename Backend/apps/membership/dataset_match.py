@@ -33,8 +33,8 @@ def _row_field(row: dict[str, Any], *keys: str) -> str:
     return ""
 
 
-MIN_SOURCE_TEXT_CHARS = 250
-MIN_SOURCE_WORD_COUNT = 50
+MIN_SOURCE_TEXT_CHARS = 180
+MIN_SOURCE_WORD_COUNT = 35
 TARGET_SOURCE_WORD_COUNT = 120
 
 
@@ -64,9 +64,16 @@ def row_has_substantive_source(source: dict[str, str]) -> bool:
             return True
 
     if (
-        len(description) >= 80
+        len(description) >= 60
         and not text_is_mostly_keyword(description, keyword)
         and description.lower() != title.lower()
+    ):
+        return True
+
+    if (
+        len(source_text) >= 80
+        and len(source_text.split()) >= 12
+        and not text_is_mostly_keyword(source_text, keyword)
     ):
         return True
 

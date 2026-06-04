@@ -9,28 +9,26 @@
     method="post"
     action="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
     style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;"
-    onsubmit="return confirm('Generate unique articles from unused dataset rows?');"
+    onsubmit="return confirm('Generate unique articles from this dataset?');"
   >
     {% csrf_token %}
     <label for="article_count" style="font-weight: 600; color: #333;">
       {% trans "Articles:" %}
     </label>
     <input
-      type="number"
+      type="text"
       id="article_count"
       name="article_count"
-      min="1"
-      max="500"
-      placeholder="{% trans 'All unused rows' %}"
+      placeholder="{% trans 'Default 15' %}"
       style="width: 9rem; padding: 6px 8px;"
     />
     <button type="submit" class="default" style="background: #417690; padding: 10px 16px; font-weight: 600;">
       {% trans "Generate articles from dataset" %}
     </button>
   </form>
-  <p class="help" style="margin: 8px 0 0; max-width: 46rem; color: #666;">
-    {% trans "Leave the number blank to generate one unique article per unused row in the dataset (not a fixed count). Enter a number to limit how many are created this click. Each article uses a different keyword row and title." %}
-    {% trans "Requires OPENAI_API_KEY. Save the dataset first." %}
+  <p class="help" style="margin: 8px 0 0; max-width: 48rem; color: #666;">
+    {% trans "After uploading a PDF, click Save first, then use this button. Leave blank for 15 unique articles per click (recommended). Type a number for a custom batch size, or type all for every unused row (slow on large datasets)." %}
+    {% trans "Requires OPENAI_API_KEY." %}
   </p>
 </div>
 {% endif %}

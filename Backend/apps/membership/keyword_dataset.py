@@ -273,8 +273,9 @@ def _try_structured_keyword_rows(raw: bytes, filename: str = "") -> list[dict[st
         )
 
     if raw.startswith(b"%PDF") or name.endswith(".pdf"):
-        text = _extract_pdf_text(raw)
-        return _parse_keyword_csv_loose(text)
+        # Never use comma-line loose parse on PDF text — it creates hundreds of junk rows
+        # without source_text. Always use full-document AI extraction instead.
+        return []
 
     if zipfile.is_zipfile(io.BytesIO(raw)):
         if _is_xlsx_zip(raw) and not _is_docx_zip(raw):

@@ -42,6 +42,14 @@ MAX_MEMBERSHIP_ARTICLE_BATCH = max(
         int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_MAX") or "500").strip() or "500"),
     ),
 )
+# Default articles created per admin click when the count field is left blank.
+DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK = max(
+    1,
+    min(
+        50,
+        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_PER_CLICK") or "15").strip() or "15"),
+    ),
+)
 ARTICLE_GENERATION_PAUSE_SECONDS = max(
     0.0,
     float((os.environ.get("MEMBERSHIP_ARTICLE_GEN_PAUSE_SECONDS") or "0.75").strip() or "0.75"),
@@ -97,14 +105,17 @@ def resolve_article_generation_count(
     dataset: ArticleKeywordDataset,
     *,
     requested: int | None = None,
+    generate_all: bool = False,
 ) -> int:
-    """Pick batch size from unused dataset rows (not a fixed number)."""
+    """Pick batch size from unused dataset rows (safe default per click for PDF-sized datasets)."""
     unused = count_unused_dataset_rows(dataset)
     if unused < 1:
         return 0
-    if requested is None or requested <= 0:
+    if generate_all:
         return min(unused, MAX_MEMBERSHIP_ARTICLE_BATCH)
-    return min(max(1, int(requested)), unused, MAX_MEMBERSHIP_ARTICLE_BATCH)
+    if requested is not None and requested > 0:
+        return min(max(1, int(requested)), unused, MAX_MEMBERSHIP_ARTICLE_BATCH)
+    return min(unused, DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK)
 
 
 def count_operator_brief_articles() -> int:

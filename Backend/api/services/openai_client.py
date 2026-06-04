@@ -1054,7 +1054,11 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
                 row[field] = val[:cap]
         enriched = extract_row_article_source(row)
         if not row_has_substantive_source(enriched):
-            continue
+            # Keep rows with title + description from AI even if source_text is short.
+            has_title = len(enriched.get("title") or "") >= 12
+            has_body = len(enriched.get("source_text") or "") >= 60 or len(enriched.get("description") or "") >= 40
+            if not (has_title and has_body):
+                continue
         out.append(
             {
                 "category": enriched["category"],
@@ -1092,7 +1096,7 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
     data = chat_json(
         MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM,
         user,
-        max_tokens=5200,
+        max_tokens=8000,
         temperature=0.35,
     )
     return _normalize_extracted_keyword_rows(data)
@@ -1137,7 +1141,11 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
                 row[field] = val[:cap]
         enriched = extract_row_article_source(row)
         if not row_has_substantive_source(enriched):
-            continue
+            # Keep rows with title + description from AI even if source_text is short.
+            has_title = len(enriched.get("title") or "") >= 12
+            has_body = len(enriched.get("source_text") or "") >= 60 or len(enriched.get("description") or "") >= 40
+            if not (has_title and has_body):
+                continue
         out.append(
             {
                 "category": enriched["category"],
@@ -1175,7 +1183,7 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
     data = chat_json(
         MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM,
         user,
-        max_tokens=5200,
+        max_tokens=8000,
         temperature=0.35,
     )
     return _normalize_extracted_keyword_rows(data)

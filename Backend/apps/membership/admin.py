@@ -17,6 +17,7 @@ from apps.membership.keyword_dataset import (
 )
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
 from apps.membership.services.article_from_dataset import (
+    DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK,
     MembershipArticleGenerationError,
     OpenAINotConfiguredError,
     count_unused_dataset_rows,
@@ -190,6 +191,7 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
 
         unused_rows = count_unused_dataset_rows(ds)
         raw_count = (request.POST.get("article_count") or "").strip().lower()
+        generate_all = raw_count in ("all", "0")
         requested: int | None
         if raw_count in ("", "all", "0"):
             requested = None
@@ -199,7 +201,11 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
             except (TypeError, ValueError):
                 requested = None
 
-        per_click = resolve_article_generation_count(ds, requested=requested)
+        per_click = resolve_article_generation_count(
+            ds,
+            requested=requested,
+            generate_all=generate_all,
+        )
         if per_click < 1:
             self.message_user(
                 request,
@@ -235,8 +241,9 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 self.message_user(
                     request,
                     f"Created {len(generated)} unique article(s) from “{ds.name}” "
-                    f"({len(generated)} of {unused_rows} unused rows; {row_count} total in file). "
-                    f"Keywords: {seeds}{extra}",
+                    f"({len(generated)} this click; {unused_rows - len(generated)} unused rows remain; "
+                    f"{row_count} total in file). Keywords: {seeds}{extra}. "
+                    f"Click Generate again for more (default {DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK} per click).",
                     level=messages.SUCCESS,
                 )
             if batch.errors:
@@ -282,7 +289,17 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
             ArticleKeywordDataset.objects.filter(pk=obj.pk).update(rows=rows)
             obj.rows = rows
             if rows and (not change or "csv_file" in form.changed_data):
-                self.message_user(request, f"Keyword dataset saved with {len(rows)} seeds.", messages.SUCCESS)
+                fname = (obj.csv_file.name or "").lower()
+                if fname.endswith(".pdf"):
+                    self.message_user(
+                        request,
+                        f"PDF parsed with AI into {len(rows)} article rows (title, description, source_text). "
+                        f"Scroll down and click “Generate articles from dataset” — "
+                        f"default is {DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK} unique articles per click.",
+                        messages.SUCCESS,
+                    )
+                else:
+                    self.message_user(request, f"Keyword dataset saved with {len(rows)} seeds.", messages.SUCCESS)
         if obj.is_active:
             ArticleKeywordDataset.objects.exclude(pk=obj.pk).update(is_active=False)
 

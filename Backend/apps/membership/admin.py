@@ -212,9 +212,9 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 extra = f" … (+{len(generated) - 5} more)" if len(generated) > 5 else ""
                 self.message_user(
                     request,
-                    f"Created {len(generated)} unique article(s) from “{ds.name}” "
+                    f"Created {len(generated)} article(s) from “{ds.name}” "
                     f"({row_count} seeds in file). Keywords: {seeds}{extra}. "
-                    f"Click again for up to {per_click} more unused rows.",
+                    f"Click again to generate up to {per_click} more from the same dataset.",
                     level=messages.SUCCESS,
                 )
             if batch.errors:

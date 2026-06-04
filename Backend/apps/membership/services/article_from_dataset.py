@@ -23,8 +23,6 @@ from apps.membership.dataset_match import (
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
-    collect_dataset_avoid_titles,
-    collect_dataset_used_fingerprints,
     keyword_fingerprint,
     merge_progression_by_rank,
     pick_keyword_row,
@@ -140,7 +138,7 @@ def _pick_row_fresh_batch(
     rows: list[dict[str, Any]],
     batch_avoid_fingerprints: set[str],
 ) -> dict[str, Any]:
-    """Pick an unused dataset row; reuse rows only when the dataset is smaller than the batch size."""
+    """Prefer unused rows within this batch; reuse dataset rows when the pool is smaller than the batch."""
     available: list[dict[str, Any]] = []
     for r in rows:
         kw, cat = split_row_keyword_category(r)
@@ -149,12 +147,10 @@ def _pick_row_fresh_batch(
         fp = keyword_fingerprint(cat, kw)
         if fp not in batch_avoid_fingerprints:
             available.append(r)
-    if not available:
-        raise MembershipArticleGenerationError(
-            "No unused dataset rows left for this dataset — each keyword already has an article. "
-            "Upload more rows or delete existing articles, then try again."
-        )
-    return random.choice(available)
+    pool = available if available else list(rows)
+    if not pool:
+        raise MembershipArticleGenerationError("Dataset has no keyword rows to generate from.")
+    return random.choice(pool)
 
 
 @dataclass
@@ -377,9 +373,20 @@ def generate_membership_articles_batch(
 
     result = MembershipArticleBatchResult()
     batch_fps: set[str] = set()
+    avoid_titles: list[str] = []
     if fresh_batch:
-        batch_fps |= collect_dataset_used_fingerprints(ds)
-    avoid_titles: list[str] = collect_dataset_avoid_titles(ds) if fresh_batch else []
+        state = MembershipGenerationState.objects.filter(pk=1).first()
+        if state and isinstance(state.recent_titles, list):
+            seen_titles: set[str] = set()
+            for raw in state.recent_titles[:40]:
+                title = str(raw or "").strip()[:500]
+                if not title:
+                    continue
+                low = title.lower()
+                if low in seen_titles:
+                    continue
+                seen_titles.add(low)
+                avoid_titles.append(title)
     target = max(0, int(count))
     for index in range(target):
         close_old_connections()

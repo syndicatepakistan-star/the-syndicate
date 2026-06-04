@@ -50,7 +50,7 @@ def article_keyword_fingerprint(article: Article) -> str | None:
 
 
 def collect_dataset_used_fingerprints(dataset: ArticleKeywordDataset) -> set[str]:
-    """Keyword fingerprints already used for articles tied to this dataset."""
+    """Keyword fingerprints from articles currently linked to this dataset (not usage stats)."""
     out: set[str] = set()
     for kw, cat in (
         Article.objects.filter(generation_source_dataset=dataset)
@@ -58,9 +58,6 @@ def collect_dataset_used_fingerprints(dataset: ArticleKeywordDataset) -> set[str
         .values_list("generation_seed_keyword", "generation_seed_category")
     ):
         out.add(keyword_fingerprint(cat or "", kw))
-    for fp in KeywordUsageStat.objects.filter(dataset=dataset).values_list("fingerprint", flat=True):
-        if fp:
-            out.add(str(fp))
     return out
 
 

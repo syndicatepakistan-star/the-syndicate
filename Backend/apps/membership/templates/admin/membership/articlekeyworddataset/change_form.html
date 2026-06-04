@@ -13,14 +13,14 @@
     formmethod="post"
     class="default"
     style="background: #417690; padding: 10px 16px; font-weight: 600;"
-    onclick="return confirm('Create 10 unique membership articles from unused dataset rows?');"
+    onclick="return confirm('Create 10 membership articles from this dataset using OpenAI?');"
   >
     {% trans "Generate 10 articles from this dataset" %}
   </button>
   <p class="help" style="margin: 8px 0 0; max-width: 42rem; color: #666;">
-    Creates <strong>10 articles per click</strong>, each from a <strong>different unused keyword row</strong>
-    in this dataset. Click again to generate 10 more until all rows are used.
-    Requires <code>OPENAI_API_KEY</code>. Save the dataset first — do not click “Save” at the same time.
+    Creates <strong>10 articles per click</strong> from rows in this dataset. You can click again as many times
+    as you want — the same keywords may be reused with new AI rewrites. Requires <code>OPENAI_API_KEY</code>.
+    Save the dataset first — do not click “Save” at the same time.
   </p>
 </div>
 {% endif %}

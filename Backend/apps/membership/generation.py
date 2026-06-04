@@ -49,6 +49,41 @@ def article_keyword_fingerprint(article: Article) -> str | None:
     return None
 
 
+def collect_dataset_used_fingerprints(dataset: ArticleKeywordDataset) -> set[str]:
+    """Keyword fingerprints already used for articles tied to this dataset."""
+    out: set[str] = set()
+    for kw, cat in (
+        Article.objects.filter(generation_source_dataset=dataset)
+        .exclude(generation_seed_keyword="")
+        .values_list("generation_seed_keyword", "generation_seed_category")
+    ):
+        out.add(keyword_fingerprint(cat or "", kw))
+    for fp in KeywordUsageStat.objects.filter(dataset=dataset).values_list("fingerprint", flat=True):
+        if fp:
+            out.add(str(fp))
+    return out
+
+
+def collect_dataset_avoid_titles(dataset: ArticleKeywordDataset, *, limit: int = 80) -> list[str]:
+    titles: list[str] = []
+    seen: set[str] = set()
+    for title in (
+        Article.objects.filter(generation_source_dataset=dataset)
+        .exclude(title="")
+        .order_by("-id")
+        .values_list("title", flat=True)[: max(1, int(limit))]
+    ):
+        s = (title or "").strip()
+        if not s:
+            continue
+        low = s.lower()
+        if low in seen:
+            continue
+        seen.add(low)
+        titles.append(s[:500])
+    return titles
+
+
 def collect_avoid_fingerprints(
     *,
     operator_brief_limit: int = 40,

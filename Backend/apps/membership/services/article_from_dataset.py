@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
+
+from django.db import close_old_connections
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +23,8 @@ from apps.membership.dataset_match import (
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
+    collect_dataset_avoid_titles,
+    collect_dataset_used_fingerprints,
     keyword_fingerprint,
     merge_progression_by_rank,
     pick_keyword_row,
@@ -30,7 +36,17 @@ from apps.membership.keyword_dataset import VALID_CATEGORIES, normalize_category
 from apps.membership.keyword_levels import normalize_level
 from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState
 
-DEFAULT_MEMBERSHIP_ARTICLE_COUNT = 60
+DEFAULT_MEMBERSHIP_ARTICLE_COUNT = max(
+    1,
+    min(
+        30,
+        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_COUNT") or "10").strip() or "10"),
+    ),
+)
+ARTICLE_GENERATION_PAUSE_SECONDS = max(
+    0.0,
+    float((os.environ.get("MEMBERSHIP_ARTICLE_GEN_PAUSE_SECONDS") or "0.75").strip() or "0.75"),
+)
 OPERATOR_BRIEF_TAG = "operator-brief"
 
 
@@ -133,8 +149,12 @@ def _pick_row_fresh_batch(
         fp = keyword_fingerprint(cat, kw)
         if fp not in batch_avoid_fingerprints:
             available.append(r)
-    pool = available if available else list(rows)
-    return random.choice(pool)
+    if not available:
+        raise MembershipArticleGenerationError(
+            "No unused dataset rows left for this dataset — each keyword already has an article. "
+            "Upload more rows or delete existing articles, then try again."
+        )
+    return random.choice(available)
 
 
 @dataclass
@@ -357,11 +377,17 @@ def generate_membership_articles_batch(
 
     result = MembershipArticleBatchResult()
     batch_fps: set[str] = set()
-    for index in range(max(0, int(count))):
+    if fresh_batch:
+        batch_fps |= collect_dataset_used_fingerprints(ds)
+    avoid_titles: list[str] = collect_dataset_avoid_titles(ds) if fresh_batch else []
+    target = max(0, int(count))
+    for index in range(target):
+        close_old_connections()
         try:
             item = generate_one_membership_article_from_dataset(
                 dataset=ds,
                 category_filter=category_filter,
+                avoid_titles=avoid_titles if fresh_batch else None,
                 batch_avoid_fingerprints=batch_fps,
                 fresh_batch=fresh_batch,
                 use_openai=use_openai,
@@ -369,28 +395,34 @@ def generate_membership_articles_batch(
             )
             result.generated.append(item)
             batch_fps.add(keyword_fingerprint(item.category, item.keyword))
+            if fresh_batch and item.article.title:
+                title = item.article.title.strip()[:500]
+                if title.lower() not in {t.lower() for t in avoid_titles}:
+                    avoid_titles.append(title)
             logger.info(
                 "membership article %s/%s saved id=%s slug=%s seed=%r",
                 index + 1,
-                count,
+                target,
                 item.article.id,
                 item.article.slug,
                 item.keyword[:80],
             )
+            if ARTICLE_GENERATION_PAUSE_SECONDS and index + 1 < target:
+                time.sleep(ARTICLE_GENERATION_PAUSE_SECONDS)
         except OpenAINotConfiguredError:
             raise
         except MembershipArticleGenerationError as exc:
             msg = str(exc) or "Generation failed."
             result.errors.append(msg)
-            logger.exception("membership article batch failed at %s/%s: %s", index + 1, count, msg)
+            logger.warning("membership article batch failed at %s/%s: %s", index + 1, target, msg)
             if stop_on_error:
                 raise
-            break
+            continue
         except Exception as exc:
             msg = str(exc) or exc.__class__.__name__
             result.errors.append(msg)
-            logger.exception("membership article batch unexpected error at %s/%s", index + 1, count)
+            logger.exception("membership article batch unexpected error at %s/%s", index + 1, target)
             if stop_on_error:
                 raise MembershipArticleGenerationError(msg) from exc
-            break
+            continue
     return result

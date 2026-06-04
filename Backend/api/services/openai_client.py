@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from django.conf import settings
-from openai import OpenAI
+from openai import APIConnectionError, APITimeoutError, OpenAI, RateLimitError
 
 
 def _normalize_api_key(raw: str) -> str:
@@ -21,7 +23,12 @@ def _client() -> OpenAI:
     key = _normalize_api_key(getattr(settings, "OPENAI_API_KEY", None) or "")
     if not key:
         raise RuntimeError("OPENAI_API_KEY is not set in environment or .env")
-    return OpenAI(api_key=key)
+    raw_timeout = (os.environ.get("OPENAI_TIMEOUT_SECONDS") or "120").strip() or "120"
+    try:
+        timeout = float(raw_timeout)
+    except ValueError:
+        timeout = 120.0
+    return OpenAI(api_key=key, timeout=max(30.0, min(timeout, 300.0)))
 
 
 def _model() -> str:
@@ -34,6 +41,7 @@ def chat_json(
     *,
     max_tokens: int | None = None,
     temperature: float = 0.7,
+    retries: int = 3,
 ) -> dict[str, Any]:
     """Return parsed JSON object from OpenAI chat completion."""
     client = _client()
@@ -48,9 +56,24 @@ def chat_json(
     }
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
-    resp = client.chat.completions.create(**kwargs)
-    text = (resp.choices[0].message.content or "").strip()
-    return json.loads(text)
+    last_err: Exception | None = None
+    attempts = max(1, int(retries))
+    for attempt in range(attempts):
+        try:
+            resp = client.chat.completions.create(**kwargs)
+            text = (resp.choices[0].message.content or "").strip()
+            return json.loads(text)
+        except (RateLimitError, APITimeoutError, APIConnectionError) as exc:
+            last_err = exc
+            if attempt + 1 >= attempts:
+                raise
+            time.sleep(min(8.0, 1.5 * (2**attempt)))
+        except json.JSONDecodeError as exc:
+            last_err = exc
+            if attempt + 1 >= attempts:
+                raise
+            time.sleep(1.0)
+    raise last_err or RuntimeError("OpenAI chat_json failed")
 
 
 def validate_user_mission_response_for_scoring(
@@ -1180,7 +1203,7 @@ def generate_membership_article(
             "category": (category or "others").strip().lower()[:32],
             "dataset_title": (dataset_title or keyword or "").strip()[:500],
             "dataset_description": (dataset_description or "").strip()[:900],
-            "source_text": (source_text or dataset_description or keyword or "").strip()[:8000],
+            "source_text": (source_text or dataset_description or keyword or "").strip()[:5000],
             "course_title_line": (course_title_line or dataset_title or "").strip()[:500],
             "writing_goal": (
                 "Lengthy membership article grounded in source_text: same course section as "
@@ -1193,11 +1216,21 @@ def generate_membership_article(
         },
         ensure_ascii=False,
     )
+    raw_max = (os.environ.get("MEMBERSHIP_ARTICLE_OPENAI_MAX_TOKENS") or "3200").strip() or "3200"
+    try:
+        article_max_tokens = max(1200, min(int(raw_max), 5200))
+    except ValueError:
+        article_max_tokens = 3200
     last_err: Exception | None = None
     for attempt in range(2):
         temp = 0.4 if attempt == 0 else 0.5
         try:
-            data = chat_json(MEMBERSHIP_ARTICLE_SYSTEM, user, max_tokens=5200, temperature=temp)
+            data = chat_json(
+                MEMBERSHIP_ARTICLE_SYSTEM,
+                user,
+                max_tokens=article_max_tokens,
+                temperature=temp,
+            )
             return _normalize_membership_article(
                 data,
                 keyword=keyword,

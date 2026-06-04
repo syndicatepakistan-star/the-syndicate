@@ -187,9 +187,11 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
             )
 
+        per_click = DEFAULT_MEMBERSHIP_ARTICLE_COUNT
+
         try:
             batch = generate_membership_articles_batch(
-                count=DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
+                count=per_click,
                 dataset=ds,
                 use_openai=True,
                 fresh_batch=True,
@@ -210,15 +212,16 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 extra = f" … (+{len(generated) - 5} more)" if len(generated) > 5 else ""
                 self.message_user(
                     request,
-                    f"Created {len(generated)} article(s) from “{ds.name}” ({row_count} seeds in file). "
-                    f"Keywords: {seeds}{extra}",
+                    f"Created {len(generated)} unique article(s) from “{ds.name}” "
+                    f"({row_count} seeds in file). Keywords: {seeds}{extra}. "
+                    f"Click again for up to {per_click} more unused rows.",
                     level=messages.SUCCESS,
                 )
             if batch.errors:
                 self.message_user(
                     request,
-                    f"Generation stopped: {batch.errors[0]}",
-                    level=messages.ERROR,
+                    f"{len(batch.errors)} row(s) skipped or failed: {batch.errors[0]}",
+                    level=messages.WARNING,
                 )
             if not generated and not batch.errors:
                 self.message_user(
@@ -226,8 +229,6 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                     "No articles were created. Check Railway logs and OPENAI_API_KEY.",
                     level=messages.WARNING,
                 )
-            elif not generated and batch.errors:
-                pass
 
         return HttpResponseRedirect(
             reverse("admin:membership_articlekeyworddataset_change", args=[object_id])

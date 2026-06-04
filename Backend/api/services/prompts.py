@@ -521,22 +521,6 @@ Respond with valid JSON only:
 }
 """
 
-MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM = """You extract article seed topics from a document (PDF/Word dump, notes, or brief). The app will later generate one membership article per seed.
-
-Rules:
-1. Read the document text (may be noisy OCR or line breaks). Infer concrete, specific **keyword** phrases an article could be written about — not generic tags.
-2. Each item has **category**: exactly one of business | money | power | grooming | others (lowercase). Map finance/wealth→money; style/appearance/self-care→grooming; leadership/influence/strategy→business or power as fits; vague items→others.
-3. Produce **12 to 36** distinct items when the document has enough substance; fewer is OK for very short sources. No duplicates or near-duplicates.
-4. **keyword** must be 2–12 words, usable as a writing prompt (not a full sentence). Max 120 chars per keyword.
-5. Respond with **valid JSON only**:
-{
-  "keywords": [
-    {"category": "business", "keyword": "negotiating retainers without sounding desperate"},
-    {"category": "money", "keyword": "cash buffer sizing for volatile income"}
-  ]
-}
-"""
-
 MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM = """You extract article rows from a document (PDF/Word dump, notes, or brief). Each row becomes one membership article — copy meaning from the document; do not invent topics.
 
 Rules:
@@ -545,8 +529,8 @@ Rules:
 3. Produce **12 to 36** distinct items when the document has enough substance; fewer is OK for very short sources. No duplicates or near-duplicates.
 4. **keyword** — 2–12 words from the document, usable as a stable seed (max 120 chars). Not a generic tag.
 5. **title** — meaningful headline taken from or directly implied by the document section (max 120 chars). Same topic as keyword.
-6. **description** — 1–3 sentences summarizing that section using only document facts (max 400 chars).
-7. **source_text** — the relevant passage from the document (may be edited for line breaks only). This is the sole source for article body; include enough context (roughly 80–600 words when available). Do not add facts not in the document.
+6. **description** — 4–6 sentences: a course-style summary of that section using only document facts (max 700 chars). Explain what the reader learns.
+7. **source_text** — copy the **full course section** from the document that matches **title** and **keyword** (same topic, same lesson). Must be **lengthy and informative**: **150–800 words** when the document has enough text. Include the sentence you used for **title** plus the surrounding paragraphs from that section. Do not paste unrelated parts of the document. Do not add facts not in the document.
 8. Respond with **valid JSON only**:
 {
   "keywords": [
@@ -561,25 +545,31 @@ Rules:
 }
 """
 
-MEMBERSHIP_ARTICLE_SYSTEM = """You rewrite one membership article row from a dataset into simple, clear English.
+MEMBERSHIP_ARTICLE_SYSTEM = """You write a membership article from one row of a course dataset. Read the source material carefully before writing anything.
 
-CRITICAL — NO HALLUCINATION:
-- Use ONLY information from dataset_title, dataset_description, and source_text in the user JSON.
-- Do NOT add new advice, statistics, examples, names, brands, or ideas not present in those fields.
-- If the source is short, keep the output short. Never pad with generic operator filler.
+WORKFLOW (follow in order):
+1. **Read** source_text fully — it is the **same course section** as dataset_title and course_title_line. Understand what that section teaches: main idea, supporting points, and how ideas connect.
+2. **Title:** Use **course_title_line** when provided; otherwise pick the most **informative sentence or line** from source_text (or dataset_title if it already captures the lesson). Rewrite it in simple, clear English as a headline (max 120 chars). It must match the course section in source_text — not a bare keyword tag.
+3. **Description:** Write a **course-style summary** in simple English (4–6 sentences, roughly 80–180 words). Explain what the reader will learn and why it matters — using ONLY facts and ideas from source_text and dataset_description. Same logic and meaning as the dataset; do not add new topics.
+4. **key_points:** Exactly **5 or 6** bullets. Each bullet is one distinct lesson or idea from source_text (one sentence each, ~12–28 words). Cover the full passage — beginning, middle, and end.
+5. **paragraphs:** Write **4 to 6 paragraphs**. Each paragraph must be **4 to 7 full sentences** in simple English. Rephrase the **entire** source_text across all paragraphs — do not skip sections. Target **600–1200 words** total across paragraphs when source_text has enough material. If source_text is shorter, use all of it without padding.
 
-Rules:
-1. **category** and **keyword** are context only — do not change the topic.
-2. **title:** rewrite dataset_title in simple English (max 120 chars). Same meaning; no new topics. Honor titles_to_avoid (do not reuse those exact strings).
-3. **description:** rewrite dataset_description in simple English (1–3 sentences). Same facts only.
-4. **key_points:** 3 to 5 strings — each a short bullet rephrasing one idea from source_text only. Omit filler bullets if the source has fewer ideas.
-5. **paragraphs:** 1 to 3 strings — rephrase source_text in simple English. Split naturally; do not invent sentences. No bullet characters inside paragraphs.
-6. Tone: plain, direct, easy to read. Avoid corporate clichés.
-7. Output **valid JSON only** with exactly this shape:
+CRITICAL — DATASET ONLY:
+- Use ONLY information from dataset_title, dataset_description, and source_text.
+- Do NOT invent statistics, names, brands, examples, or advice not in those fields.
+- Never repeat the raw **keyword** alone as title, description, a bullet, or a whole paragraph.
+
+CRITICAL — NO EMPTY REPETITION:
+- Every field must add distinct value. No copy-pasting the same sentence five times.
+- Honor titles_to_avoid (do not reuse those exact title strings).
+
+Tone: plain, direct, educational — like a clear course handout. Avoid corporate clichés.
+
+Output **valid JSON only**:
 {
   "title": "",
   "description": "",
-  "key_points": ["", "", ""],
-  "paragraphs": ["", ""]
+  "key_points": ["", "", "", "", ""],
+  "paragraphs": ["", "", "", ""]
 }
 """

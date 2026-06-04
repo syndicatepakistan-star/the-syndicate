@@ -119,7 +119,16 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
             return "-"
         import json
 
-        return json.dumps(rows[:8], ensure_ascii=False, indent=2) + (
+        preview_rows = []
+        for row in rows[:8]:
+            if not isinstance(row, dict):
+                continue
+            item = dict(row)
+            st = str(item.get("source_text") or item.get("content") or "")
+            if len(st) > 280:
+                item["source_text"] = st[:280] + "…"
+            preview_rows.append(item)
+        return json.dumps(preview_rows, ensure_ascii=False, indent=2) + (
             f"\n... ({len(rows)} total)" if len(rows) > 8 else ""
         )
 

@@ -64,59 +64,20 @@ function estimateReadMinutesFromText(text: string): number {
   return Math.max(1, Math.round(words / 220));
 }
 
-function stripBulletPrefix(text: string): string {
-  return text.replace(/^\s*[-•*]\s*/, "").trim();
-}
-
-function toSentence(text: string): string {
-  const t = (text || "").trim();
-  if (!t) return "";
-  return /[.!?]$/.test(t) ? t : `${t}.`;
-}
-
-function buildDetailedBreakdown(article: ArticleDto, contentBlocks: string[]): string[] {
-  const description = (article.description || "").trim();
-  const focus = (article.generation_seed_keyword || "").trim();
-  const category = (article.generation_seed_category || "").trim();
-  const level = (article.generation_seed_level || "").trim();
-  const tags = (article.tags || []).filter(Boolean).slice(0, 4);
-
-  const keyPointBlock = contentBlocks.find((b, idx, arr) => {
-    if (b.toLowerCase() === "key points") {
-      const next = arr[idx + 1] || "";
-      return /^[-•*]\s/.test(next.trim());
-    }
-    return false;
-  });
-  const bullets = keyPointBlock
-    ? []
-    : contentBlocks
-        .flatMap((block) => block.split("\n"))
-        .map(stripBulletPrefix)
-        .filter((line) => line.length > 12)
-        .slice(0, 4);
-
-  const p1 = toSentence(
-    description ||
-      "This article outlines a practical operator standard designed to improve consistency, presentation, and long-term execution quality."
-  );
-  const p2 = toSentence(
-    bullets.length
-      ? `In practice, the key actions are: ${bullets.join(" ")}`
-      : "Execution improves when the guidance is applied as a repeatable routine rather than a one-time task."
-  );
-  const p3 = toSentence(
-    focus || category
-      ? `The core focus is ${focus || category}, and this should be implemented with measurable discipline so progress is visible week over week.`
-      : "The central focus should be implemented with measurable discipline so progress is visible week over week."
-  );
-  const p4 = toSentence(
-    `At ${level || "membership"} level, treat this brief as an operating protocol: apply it daily, audit outcomes, and refine execution based on results${
-      tags.length ? ` across themes like ${tags.join(", ")}` : ""
-    }.`
-  );
-
-  return [p1, p2, p3, p4].filter(Boolean);
+function buildDetailedBreakdown(contentBlocks: string[]): string[] {
+  const paragraphs: string[] = [];
+  for (const block of contentBlocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+    if (trimmed.toLowerCase() === "key points") continue;
+    if (/^seed:\s/i.test(trimmed)) continue;
+    const lines = trimmed.split("\n").map((l) => l.trim()).filter(Boolean);
+    const isBulletBlock = lines.length > 0 && lines.every((line) => /^[-•*]\s/.test(line));
+    if (isBulletBlock) continue;
+    if (trimmed.length < 40) continue;
+    paragraphs.push(trimmed);
+  }
+  return paragraphs.slice(0, 4);
 }
 
 export default function MembershipArticleDetailPage() {
@@ -207,8 +168,8 @@ export default function MembershipArticleDetailPage() {
     [articleBodyText]
   );
   const detailedBreakdown = useMemo(
-    () => (article ? buildDetailedBreakdown(article, contentBlocks) : []),
-    [article, contentBlocks]
+    () => buildDetailedBreakdown(contentBlocks),
+    [contentBlocks]
   );
   const showFatal = !loading && Boolean(err || (!article && slug));
 
@@ -315,9 +276,7 @@ export default function MembershipArticleDetailPage() {
             <section className="mt-8 rounded-xl border border-amber-300/20 bg-[linear-gradient(180deg,rgba(250,204,21,0.09),rgba(0,0,0,0.18))] p-4 shadow-[inset_0_0_0_1px_rgba(250,204,21,0.09)] sm:mt-10 sm:p-5">
               <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-200/90">Executive summary</p>
               <p className="mt-2 text-[14px] leading-relaxed text-neutral-100/95 sm:text-[15px]">
-                {article.description?.trim()
-                  ? article.description
-                  : "This brief outlines key tactical insights from the membership archive. Study the sections below and apply one action immediately."}
+                {article.description?.trim() || "No summary available for this article."}
               </p>
             </section>
 

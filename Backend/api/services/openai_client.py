@@ -948,11 +948,11 @@ def merge_user_device_mindset_summary(
 
 
 def _normalize_membership_paragraphs_dataset_grounded(paragraphs: list[str]) -> list[str]:
-    """Keep AI paragraphs as-is; do not pad with invented filler sentences."""
+    """Keep AI paragraphs as-is; allow up to six lengthy sections."""
     cleaned = [str(x).strip() for x in paragraphs if str(x).strip()]
     if not cleaned:
         return [""]
-    return cleaned[:3]
+    return cleaned[:6]
 
 
 def _normalize_membership_article(
@@ -976,13 +976,13 @@ def _normalize_membership_article(
     kp = raw.get("key_points")
     if not isinstance(kp, list):
         kp = []
-    key_points = [str(x).strip() for x in kp if str(x).strip()][:5]
+    key_points = [str(x).strip() for x in kp if str(x).strip()][:6]
 
     paras = raw.get("paragraphs")
     if not isinstance(paras, list):
         paras = []
     paragraphs = _normalize_membership_paragraphs_dataset_grounded(
-        [str(x).strip() for x in paras if str(x).strip()][:5],
+        [str(x).strip() for x in paras if str(x).strip()][:6],
     )
     return {
         "title": title[:500],
@@ -993,7 +993,7 @@ def _normalize_membership_article(
 
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
-    from apps.membership.dataset_match import extract_row_article_source
+    from apps.membership.dataset_match import extract_row_article_source, row_has_substantive_source
     from apps.membership.keyword_dataset import normalize_category
 
     if not isinstance(raw, dict):
@@ -1030,6 +1030,8 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
                 cap = 8000 if field == "source_text" else (900 if field == "description" else 500)
                 row[field] = val[:cap]
         enriched = extract_row_article_source(row)
+        if not row_has_substantive_source(enriched):
+            continue
         out.append(
             {
                 "category": enriched["category"],
@@ -1067,14 +1069,14 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
     data = chat_json(
         MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM,
         user,
-        max_tokens=3600,
+        max_tokens=5200,
         temperature=0.35,
     )
     return _normalize_extracted_keyword_rows(data)
 
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
-    from apps.membership.dataset_match import extract_row_article_source
+    from apps.membership.dataset_match import extract_row_article_source, row_has_substantive_source
     from apps.membership.keyword_dataset import normalize_category
 
     if not isinstance(raw, dict):
@@ -1111,6 +1113,8 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
                 cap = 8000 if field == "source_text" else (900 if field == "description" else 500)
                 row[field] = val[:cap]
         enriched = extract_row_article_source(row)
+        if not row_has_substantive_source(enriched):
+            continue
         out.append(
             {
                 "category": enriched["category"],
@@ -1148,7 +1152,7 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
     data = chat_json(
         MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM,
         user,
-        max_tokens=3600,
+        max_tokens=5200,
         temperature=0.35,
     )
     return _normalize_extracted_keyword_rows(data)
@@ -1161,6 +1165,7 @@ def generate_membership_article(
     dataset_title: str = "",
     dataset_description: str = "",
     source_text: str = "",
+    course_title_line: str = "",
     avoid_titles: list[str] | None = None,
     avoid_keywords: list[str] | None = None,
     creative_seed: str = "",
@@ -1176,6 +1181,13 @@ def generate_membership_article(
             "dataset_title": (dataset_title or keyword or "").strip()[:500],
             "dataset_description": (dataset_description or "").strip()[:900],
             "source_text": (source_text or dataset_description or keyword or "").strip()[:8000],
+            "course_title_line": (course_title_line or dataset_title or "").strip()[:500],
+            "writing_goal": (
+                "Lengthy membership article grounded in source_text: same course section as "
+                "course_title_line and dataset_title. Title from the most informative source line, "
+                "4-6 sentence course summary as description, 5-6 key points, 4-6 paragraphs "
+                "covering the full source_text in simple English."
+            ),
             "titles_to_avoid": avoid,
             "creative_seed": (creative_seed or "").strip()[:64],
         },
@@ -1183,9 +1195,9 @@ def generate_membership_article(
     )
     last_err: Exception | None = None
     for attempt in range(2):
-        temp = 0.35 if attempt == 0 else 0.45
+        temp = 0.4 if attempt == 0 else 0.5
         try:
-            data = chat_json(MEMBERSHIP_ARTICLE_SYSTEM, user, max_tokens=2800, temperature=temp)
+            data = chat_json(MEMBERSHIP_ARTICLE_SYSTEM, user, max_tokens=5200, temperature=temp)
             return _normalize_membership_article(
                 data,
                 keyword=keyword,

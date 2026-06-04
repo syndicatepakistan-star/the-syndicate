@@ -10,7 +10,12 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-from apps.membership.dataset_match import extract_row_article_source, split_row_keyword_category
+from apps.membership.dataset_match import (
+    extract_row_article_source,
+    row_has_substantive_source,
+    sanitize_article_body_from_source,
+    split_row_keyword_category,
+)
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
@@ -81,9 +86,12 @@ def build_article_fields_from_openai_body(
     paragraphs = [str(x).strip() for x in (body.get("paragraphs") or []) if str(x).strip()]
     title = str(body.get("title") or dataset_title or keyword or "Article").strip()[:500]
     description = str(body.get("description") or dataset_description or "").strip()
-    if not description:
-        desc_parts = key_points[:2] if key_points else paragraphs[:1]
-        description = " ".join(desc_parts)[:900] if desc_parts else ""
+    if not description or len(description.split()) < 35:
+        if dataset_description and len(dataset_description.split()) >= 20:
+            description = dataset_description.strip()
+        else:
+            desc_parts = key_points[:3] if key_points else paragraphs[:2]
+            description = " ".join(desc_parts)[:900] if desc_parts else description
 
     content_lines = [
         f"Seed: {keyword} - {category}",
@@ -144,20 +152,20 @@ def _stub_openai_body(
     source_text: str = "",
 ) -> dict[str, Any]:
     """Offline fallback: simple reformat of dataset text only (no invented content)."""
-    title = (dataset_title or keyword)[:500]
-    description = (dataset_description or source_text or keyword)[:900]
-    text = (source_text or description or keyword).strip()
-    sentences = [s.strip() for s in text.replace("\n", " ").split(". ") if s.strip()]
-    key_points = [s if s.endswith(".") else f"{s}." for s in sentences[:5]]
-    if len(sentences) <= 3:
-        paragraphs = [text] if text else []
-    else:
-        third = max(1, len(sentences) // 3)
-        chunks = [
-            ". ".join(sentences[i : i + third])
-            for i in range(0, len(sentences), third)
-        ]
-        paragraphs = [c if c.endswith(".") else f"{c}." for c in chunks[:3]]
+    from apps.membership.dataset_match import (
+        pick_informative_title_line,
+        source_text_to_key_points,
+        source_text_to_paragraphs,
+        source_text_to_summary_description,
+    )
+
+    text = (source_text or dataset_description or keyword).strip()
+    title = pick_informative_title_line(text, keyword=keyword, dataset_title=dataset_title)[:500]
+    description = source_text_to_summary_description(text)[:900]
+    if not description:
+        description = (dataset_description or text)[:900]
+    key_points = source_text_to_key_points(text, max_points=6)
+    paragraphs = source_text_to_paragraphs(text, max_paras=6)
     return {
         "title": title,
         "description": description,
@@ -184,8 +192,16 @@ def generate_one_membership_article_from_dataset(
     rows = [r for r in (dataset.rows or []) if isinstance(r, dict) and str(r.get("keyword") or "").strip()]
     if cat_req != "all":
         rows = [r for r in rows if normalize_category(str(r.get("category") or "")) == cat_req]
+    substantive_rows = [r for r in rows if row_has_substantive_source(extract_row_article_source(r))]
+    if substantive_rows:
+        rows = substantive_rows
     if not rows:
-        raise MembershipArticleGenerationError("No keywords in dataset for the requested category.")
+        raise MembershipArticleGenerationError(
+            "No usable rows in dataset. Each row needs a lengthy **content** (or source_text) "
+            "from the same course section as its title — at least ~50 words of informative text. "
+            "Re-upload the dataset file and Save, or use a CSV with columns: "
+            "category, keyword, title, description, content."
+        )
 
     read_slugs = read_slugs or []
     read_articles: list[Article] = []
@@ -249,6 +265,7 @@ def generate_one_membership_article_from_dataset(
     dataset_title = row_source["title"]
     dataset_description = row_source["description"]
     source_text = row_source["source_text"]
+    course_title_line = row_source.get("course_title_line") or dataset_title
     creative_seed = uuid.uuid4().hex[:14]
 
     body: dict[str, Any]
@@ -262,6 +279,7 @@ def generate_one_membership_article_from_dataset(
                 dataset_title=dataset_title,
                 dataset_description=dataset_description,
                 source_text=source_text,
+                course_title_line=course_title_line,
                 avoid_titles=merged_titles,
                 creative_seed=creative_seed,
             )
@@ -290,6 +308,8 @@ def generate_one_membership_article_from_dataset(
             dataset_description=dataset_description,
             source_text=source_text,
         )
+
+    body = sanitize_article_body_from_source(body, row_source)
 
     fields = build_article_fields_from_openai_body(
         body,

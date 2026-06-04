@@ -319,13 +319,21 @@ def _extract_full_document_text(raw: bytes, filename: str = "") -> str:
 def ingest_article_keyword_dataset_bytes(raw: bytes, filename: str = "") -> list[dict[str, str]]:
     """
     Full admin pipeline: structured parse if possible; otherwise read full document text and
-    call OpenAI to build {category, keyword} rows.
+    call OpenAI to build {category, keyword, title, description, source_text} rows.
     """
+    from apps.membership.dataset_match import extract_row_article_source, row_has_substantive_source
+
     structured = _try_structured_keyword_rows(raw, filename)
     if structured and len(structured) > MAX_STRUCTURED_ROWS_BEFORE_AI:
         structured = []
     if structured:
-        return structured[:MAX_DATASET_ROWS]
+        substantive = sum(
+            1 for r in structured if row_has_substantive_source(extract_row_article_source(r))
+        )
+        # PDF/CSV loose lines often yield keyword-only rows — prefer AI extraction instead.
+        if substantive >= max(3, int(len(structured) * 0.35)):
+            return structured[:MAX_DATASET_ROWS]
+        structured = []
 
     text = _extract_full_document_text(raw, filename).strip()
     if len(text) < MIN_CHARS_FOR_AI_EXTRACTION:

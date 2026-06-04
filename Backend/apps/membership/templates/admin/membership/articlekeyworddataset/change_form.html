@@ -5,22 +5,32 @@
 {{ block.super }}
 {% if original.pk %}
 <div class="submit-row" style="margin-top: 12px; padding-left: 0; border-top: 1px solid #ddd; padding-top: 12px;">
-  <button
-    type="submit"
-    name="_generate_membership_articles"
-    value="1"
-    formaction="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
-    formmethod="post"
-    class="default"
-    style="background: #417690; padding: 10px 16px; font-weight: 600;"
-    onclick="return confirm('Create 10 membership articles from this dataset using OpenAI?');"
+  <form
+    method="post"
+    action="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
+    style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;"
+    onsubmit="return confirm('Generate unique articles from unused dataset rows?');"
   >
-    {% trans "Generate 10 articles from this dataset" %}
-  </button>
-  <p class="help" style="margin: 8px 0 0; max-width: 42rem; color: #666;">
-    Creates <strong>10 articles per click</strong> from rows in this dataset. You can click again as many times
-    as you want — the same keywords may be reused with new AI rewrites. Requires <code>OPENAI_API_KEY</code>.
-    Save the dataset first — do not click “Save” at the same time.
+    {% csrf_token %}
+    <label for="article_count" style="font-weight: 600; color: #333;">
+      {% trans "Articles:" %}
+    </label>
+    <input
+      type="number"
+      id="article_count"
+      name="article_count"
+      min="1"
+      max="500"
+      placeholder="{% trans 'All unused rows' %}"
+      style="width: 9rem; padding: 6px 8px;"
+    />
+    <button type="submit" class="default" style="background: #417690; padding: 10px 16px; font-weight: 600;">
+      {% trans "Generate articles from dataset" %}
+    </button>
+  </form>
+  <p class="help" style="margin: 8px 0 0; max-width: 46rem; color: #666;">
+    {% trans "Leave the number blank to generate one unique article per unused row in the dataset (not a fixed count). Enter a number to limit how many are created this click. Each article uses a different keyword row and title." %}
+    {% trans "Requires OPENAI_API_KEY. Save the dataset first." %}
   </p>
 </div>
 {% endif %}

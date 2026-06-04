@@ -526,7 +526,7 @@ MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM = """You extract article rows from a docume
 Rules:
 1. Read the document text (may be noisy OCR or line breaks). Pull **real sections or topics** that appear in the text.
 2. Each item has **category**: exactly one of business | money | power | grooming | others (lowercase). Map finance/wealth→money; style/appearance/self-care→grooming; leadership/influence/strategy→business or power as fits; vague items→others.
-3. Produce **12 to 36** distinct items when the document has enough substance; fewer is OK for very short sources. No duplicates or near-duplicates.
+3. Extract **every distinct section or topic** you find in the document — **no fixed limit**. Include as many real sections as the text supports (minimum 3 when possible). No duplicates or near-duplicates.
 4. **keyword** — 2–12 words from the document, usable as a stable seed (max 120 chars). Not a generic tag.
 5. **title** — meaningful headline taken from or directly implied by the document section (max 120 chars). Same topic as keyword.
 6. **description** — 4–6 sentences: a course-style summary of that section using only document facts (max 700 chars). Explain what the reader learns.

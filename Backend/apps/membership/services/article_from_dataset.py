@@ -16,13 +16,14 @@ logger = logging.getLogger(__name__)
 
 from apps.membership.dataset_match import (
     extract_row_article_source,
-    row_has_substantive_source,
     sanitize_article_body_from_source,
     split_row_keyword_category,
 )
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
+    collect_dataset_avoid_titles,
+    collect_dataset_used_fingerprints,
     keyword_fingerprint,
     merge_progression_by_rank,
     pick_keyword_row,
@@ -34,11 +35,11 @@ from apps.membership.keyword_dataset import VALID_CATEGORIES, normalize_category
 from apps.membership.keyword_levels import normalize_level
 from apps.membership.models import Article, ArticleKeywordDataset, MembershipGenerationState
 
-DEFAULT_MEMBERSHIP_ARTICLE_COUNT = max(
+MAX_MEMBERSHIP_ARTICLE_BATCH = max(
     1,
     min(
-        30,
-        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_COUNT") or "10").strip() or "10"),
+        500,
+        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_MAX") or "500").strip() or "500"),
     ),
 )
 ARTICLE_GENERATION_PAUSE_SECONDS = max(
@@ -60,6 +61,10 @@ class OpenAINotConfiguredError(MembershipArticleGenerationError):
     pass
 
 
+class NoUniqueDatasetRowsError(MembershipArticleGenerationError):
+    """All dataset keyword rows are already used for this batch or dataset."""
+
+
 @dataclass
 class GeneratedMembershipArticle:
     article: Article
@@ -67,6 +72,39 @@ class GeneratedMembershipArticle:
     category: str
     level_used: str
     openai_body: dict[str, Any]
+
+
+def count_unused_dataset_rows(dataset: ArticleKeywordDataset) -> int:
+    """How many unique keyword rows in the dataset do not yet have an article."""
+    used = collect_dataset_used_fingerprints(dataset)
+    seen: set[str] = set()
+    total = 0
+    for r in dataset.rows or []:
+        if not isinstance(r, dict):
+            continue
+        kw, cat = split_row_keyword_category(r)
+        if not kw:
+            continue
+        fp = keyword_fingerprint(cat, kw)
+        if fp in used or fp in seen:
+            continue
+        seen.add(fp)
+        total += 1
+    return total
+
+
+def resolve_article_generation_count(
+    dataset: ArticleKeywordDataset,
+    *,
+    requested: int | None = None,
+) -> int:
+    """Pick batch size from unused dataset rows (not a fixed number)."""
+    unused = count_unused_dataset_rows(dataset)
+    if unused < 1:
+        return 0
+    if requested is None or requested <= 0:
+        return min(unused, MAX_MEMBERSHIP_ARTICLE_BATCH)
+    return min(max(1, int(requested)), unused, MAX_MEMBERSHIP_ARTICLE_BATCH)
 
 
 def count_operator_brief_articles() -> int:
@@ -138,7 +176,7 @@ def _pick_row_fresh_batch(
     rows: list[dict[str, Any]],
     batch_avoid_fingerprints: set[str],
 ) -> dict[str, Any]:
-    """Prefer unused rows within this batch; reuse dataset rows when the pool is smaller than the batch."""
+    """Pick one unused dataset row for this batch (no duplicate keywords in the same click)."""
     available: list[dict[str, Any]] = []
     for r in rows:
         kw, cat = split_row_keyword_category(r)
@@ -147,10 +185,12 @@ def _pick_row_fresh_batch(
         fp = keyword_fingerprint(cat, kw)
         if fp not in batch_avoid_fingerprints:
             available.append(r)
-    pool = available if available else list(rows)
-    if not pool:
-        raise MembershipArticleGenerationError("Dataset has no keyword rows to generate from.")
-    return random.choice(pool)
+    if not available:
+        raise NoUniqueDatasetRowsError(
+            "No unused keywords left — each article needs a different dataset row. "
+            "Upload more rows to the dataset, delete duplicate articles, or click again after adding content."
+        )
+    return random.choice(available)
 
 
 @dataclass
@@ -208,15 +248,9 @@ def generate_one_membership_article_from_dataset(
     rows = [r for r in (dataset.rows or []) if isinstance(r, dict) and str(r.get("keyword") or "").strip()]
     if cat_req != "all":
         rows = [r for r in rows if normalize_category(str(r.get("category") or "")) == cat_req]
-    substantive_rows = [r for r in rows if row_has_substantive_source(extract_row_article_source(r))]
-    if substantive_rows:
-        rows = substantive_rows
     if not rows:
         raise MembershipArticleGenerationError(
-            "No usable rows in dataset. Each row needs a lengthy **content** (or source_text) "
-            "from the same course section as its title — at least ~50 words of informative text. "
-            "Re-upload the dataset file and Save, or use a CSV with columns: "
-            "category, keyword, title, description, content."
+            "No keyword rows in dataset. Upload a file and Save first."
         )
 
     read_slugs = read_slugs or []
@@ -325,7 +359,7 @@ def generate_one_membership_article_from_dataset(
             source_text=source_text,
         )
 
-    body = sanitize_article_body_from_source(body, row_source)
+    body = sanitize_article_body_from_source(body, row_source, avoid_titles=merged_titles)
 
     fields = build_article_fields_from_openai_body(
         body,
@@ -356,7 +390,7 @@ def generate_one_membership_article_from_dataset(
 
 def generate_membership_articles_batch(
     *,
-    count: int = DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
+    count: int | None = None,
     dataset: ArticleKeywordDataset | None = None,
     dataset_id: int | None = None,
     category_filter: str = "all",
@@ -371,13 +405,26 @@ def generate_membership_articles_batch(
             "No active keyword dataset with rows. Upload a file in Django admin and save."
         )
 
+    target = resolve_article_generation_count(ds, requested=count)
+    if target < 1:
+        raise MembershipArticleGenerationError(
+            "No unused dataset rows left — every keyword row already has an article. "
+            "Upload more rows or delete existing articles, then try again."
+        )
+
     result = MembershipArticleBatchResult()
     batch_fps: set[str] = set()
     avoid_titles: list[str] = []
     if fresh_batch:
+        batch_fps |= collect_dataset_used_fingerprints(ds)
+        seen_titles: set[str] = set()
+        for title in collect_dataset_avoid_titles(ds):
+            low = title.lower()
+            if low not in seen_titles:
+                seen_titles.add(low)
+                avoid_titles.append(title)
         state = MembershipGenerationState.objects.filter(pk=1).first()
         if state and isinstance(state.recent_titles, list):
-            seen_titles: set[str] = set()
             for raw in state.recent_titles[:40]:
                 title = str(raw or "").strip()[:500]
                 if not title:
@@ -387,7 +434,7 @@ def generate_membership_articles_batch(
                     continue
                 seen_titles.add(low)
                 avoid_titles.append(title)
-    target = max(0, int(count))
+    target = max(0, int(target))
     for index in range(target):
         close_old_connections()
         try:
@@ -418,6 +465,11 @@ def generate_membership_articles_batch(
                 time.sleep(ARTICLE_GENERATION_PAUSE_SECONDS)
         except OpenAINotConfiguredError:
             raise
+        except NoUniqueDatasetRowsError as exc:
+            msg = str(exc) or "No unused dataset rows left."
+            result.errors.append(msg)
+            logger.info("membership article batch stopped at %s/%s: %s", index + 1, target, msg)
+            break
         except MembershipArticleGenerationError as exc:
             msg = str(exc) or "Generation failed."
             result.errors.append(msg)

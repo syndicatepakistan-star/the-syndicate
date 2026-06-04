@@ -17,10 +17,11 @@ from apps.membership.keyword_dataset import (
 )
 from apps.membership.models import Article, ArticleKeywordDataset, KeywordUsageStat, MembershipGenerationState, MembershipStreamVideo, Video
 from apps.membership.services.article_from_dataset import (
-    DEFAULT_MEMBERSHIP_ARTICLE_COUNT,
     MembershipArticleGenerationError,
     OpenAINotConfiguredError,
+    count_unused_dataset_rows,
     generate_membership_articles_batch,
+    resolve_article_generation_count,
 )
 
 
@@ -187,7 +188,28 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
             )
 
-        per_click = DEFAULT_MEMBERSHIP_ARTICLE_COUNT
+        unused_rows = count_unused_dataset_rows(ds)
+        raw_count = (request.POST.get("article_count") or "").strip().lower()
+        requested: int | None
+        if raw_count in ("", "all", "0"):
+            requested = None
+        else:
+            try:
+                requested = max(1, int(raw_count))
+            except (TypeError, ValueError):
+                requested = None
+
+        per_click = resolve_article_generation_count(ds, requested=requested)
+        if per_click < 1:
+            self.message_user(
+                request,
+                f"No unused rows in “{ds.name}” ({row_count} total, all already have articles). "
+                "Upload more content or delete existing articles.",
+                level=messages.WARNING,
+            )
+            return HttpResponseRedirect(
+                reverse("admin:membership_articlekeyworddataset_change", args=[object_id])
+            )
 
         try:
             batch = generate_membership_articles_batch(
@@ -212,9 +234,9 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                 extra = f" … (+{len(generated) - 5} more)" if len(generated) > 5 else ""
                 self.message_user(
                     request,
-                    f"Created {len(generated)} article(s) from “{ds.name}” "
-                    f"({row_count} seeds in file). Keywords: {seeds}{extra}. "
-                    f"Click again to generate up to {per_click} more from the same dataset.",
+                    f"Created {len(generated)} unique article(s) from “{ds.name}” "
+                    f"({len(generated)} of {unused_rows} unused rows; {row_count} total in file). "
+                    f"Keywords: {seeds}{extra}",
                     level=messages.SUCCESS,
                 )
             if batch.errors:

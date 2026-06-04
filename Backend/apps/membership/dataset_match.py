@@ -203,23 +203,62 @@ def build_course_source_text(
 
 def pick_informative_title_line(source_text: str, keyword: str = "", dataset_title: str = "") -> str:
     """Choose the most informative line from source material for use as article title."""
+    return pick_unique_title_line(
+        source_text,
+        keyword=keyword,
+        dataset_title=dataset_title,
+    )
+
+
+def pick_unique_title_line(
+    source_text: str,
+    *,
+    keyword: str = "",
+    dataset_title: str = "",
+    avoid_titles: list[str] | None = None,
+) -> str:
+    """Pick the best unused title line from source material (skips duplicates)."""
+    from apps.membership.models import Article
+
+    avoid_norm = {normalize_search_text(t) for t in (avoid_titles or []) if str(t).strip()}
+
+    def taken(title: str) -> bool:
+        s = (title or "").strip()
+        if not s:
+            return True
+        if normalize_search_text(s) in avoid_norm:
+            return True
+        return Article.objects.filter(title__iexact=s).exists()
+
+    candidates: list[tuple[int, str]] = []
     if dataset_title and not text_is_mostly_keyword(dataset_title, keyword) and len(dataset_title) >= 24:
-        return dataset_title[:500]
-    sentences = _sentence_list(source_text, min_len=20)
-    if not sentences:
-        return (dataset_title or keyword)[:500]
-    scored: list[tuple[int, str]] = []
-    for s in sentences:
+        candidates.append((10, dataset_title))
+    for s in _sentence_list(source_text, min_len=20):
         if text_is_mostly_keyword(s, keyword):
             continue
         words = len(s.split())
         length_score = 3 if 40 <= len(s) <= 140 else (1 if 24 <= len(s) <= 180 else 0)
         word_score = min(4, words // 6)
-        scored.append((length_score + word_score, s))
-    if scored:
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return scored[0][1][:500]
-    return sentences[0][:500]
+        candidates.append((length_score + word_score, s))
+    for s in _sentence_list(source_text, min_len=12):
+        if text_is_mostly_keyword(s, keyword):
+            continue
+        if not any(normalize_search_text(s) == normalize_search_text(c[1]) for c in candidates):
+            candidates.append((0, s))
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    for _, candidate in candidates:
+        if not taken(candidate):
+            return candidate[:500]
+
+    fallback = (dataset_title or keyword or "Article").strip()
+    if not taken(fallback):
+        return fallback[:500]
+    for n in range(2, 40):
+        variant = f"{fallback[:480]} ({n})"
+        if not taken(variant):
+            return variant[:500]
+    return fallback[:500]
 
 
 def source_text_to_summary_description(text: str, *, max_chars: int = 900) -> str:
@@ -268,20 +307,30 @@ def source_text_to_paragraphs(text: str, *, max_paras: int = 6) -> list[str]:
     return paras[:max_paras]
 
 
-def sanitize_article_body_from_source(body: dict[str, Any], row_source: dict[str, str]) -> dict[str, Any]:
+def sanitize_article_body_from_source(
+    body: dict[str, Any],
+    row_source: dict[str, str],
+    *,
+    avoid_titles: list[str] | None = None,
+) -> dict[str, Any]:
     """Ensure title, description, key_points, and paragraphs are distinct, sourced, and sufficiently long."""
     keyword = (row_source.get("keyword") or "").strip()
     source_text = (row_source.get("source_text") or "").strip()
     dataset_title = (row_source.get("title") or keyword).strip()
     dataset_description = (row_source.get("description") or "").strip()
+    avoid = [str(t).strip() for t in (avoid_titles or []) if str(t).strip()]
 
     title = str(body.get("title") or "").strip()
     course_title_line = (row_source.get("course_title_line") or "").strip()
-    if not title or text_is_mostly_keyword(title, keyword):
-        title = course_title_line or pick_informative_title_line(
-            source_text, keyword=keyword, dataset_title=dataset_title
-        )
-    title = title[:500]
+    seed_title = title
+    if not seed_title or text_is_mostly_keyword(seed_title, keyword):
+        seed_title = course_title_line or dataset_title
+    title = pick_unique_title_line(
+        source_text,
+        keyword=keyword,
+        dataset_title=seed_title,
+        avoid_titles=avoid,
+    )[:500]
 
     description = str(body.get("description") or "").strip()
     if not description or text_is_mostly_keyword(description, keyword) or len(description.split()) < 35:

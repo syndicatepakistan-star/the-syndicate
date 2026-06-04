@@ -1017,7 +1017,7 @@ def _normalize_membership_article(
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
     from apps.membership.dataset_match import extract_row_article_source, row_has_substantive_source
-    from apps.membership.keyword_dataset import normalize_category
+    from apps.membership.keyword_dataset import MAX_DATASET_ROWS, normalize_category
 
     if not isinstance(raw, dict):
         raise ValueError("Keyword extraction response was not a JSON object")
@@ -1066,7 +1066,7 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
         )
     if len(out) < 3:
         raise ValueError("Too few distinct keywords extracted (need at least 3)")
-    return out[:48]
+    return out[:MAX_DATASET_ROWS]
 
 
 def extract_membership_keywords_from_document(document_text: str, *, creative_seed: str = "") -> list[dict[str, str]]:
@@ -1100,7 +1100,7 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
     from apps.membership.dataset_match import extract_row_article_source, row_has_substantive_source
-    from apps.membership.keyword_dataset import normalize_category
+    from apps.membership.keyword_dataset import MAX_DATASET_ROWS, normalize_category
 
     if not isinstance(raw, dict):
         raise ValueError("Keyword extraction response was not a JSON object")
@@ -1149,7 +1149,7 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
         )
     if len(out) < 3:
         raise ValueError("Too few distinct keywords extracted (need at least 3)")
-    return out[:48]
+    return out[:MAX_DATASET_ROWS]
 
 
 def extract_membership_keywords_from_document(document_text: str, *, creative_seed: str = "") -> list[dict[str, str]]:

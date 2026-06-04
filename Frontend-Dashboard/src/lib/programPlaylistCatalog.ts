@@ -121,14 +121,20 @@ export function resolveProgramPlaylistSummary(playlist: ProgramPlaylistLike): st
   return `Explore ${title} — structured lessons and tactical frameworks inside the Syndicate library.`;
 }
 
+/**
+ * Cover for program cards and path tiles.
+ * Curated static assets (homepage globe) win over Django admin uploads so public pages stay in sync.
+ */
 export function resolveProgramPlaylistThumbnail(
   playlist: ProgramPlaylistLike,
   djangoCover?: string | null
 ): string | undefined {
-  if (djangoCover) return djangoCover;
   const catalog = findProgramCatalogEntry(playlist);
   const thumbId = catalog?.id ?? playlist.id;
-  return getProgramPlaylistThumbnail(thumbId);
+  const staticThumb = getProgramPlaylistThumbnail(thumbId);
+  if (staticThumb) return staticThumb;
+  const cover = (djangoCover ?? "").trim();
+  return cover || undefined;
 }
 
 /** Merge API playlist with catalog fallbacks for UI. */

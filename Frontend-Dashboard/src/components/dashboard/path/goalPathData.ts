@@ -212,9 +212,7 @@ function mergeProgramPool(
       earningHint: copy.earningHint,
       tone: "amber",
       programId: playlistMatch?.id,
-      posterSrc: playlistMatch
-        ? resolveProgramPlaylistThumbnail(playlistMatch, playlistMatch.cover_image_url)
-        : undefined,
+      posterSrc: playlistMatch ? resolveProgramPlaylistThumbnail(playlistMatch) : undefined,
       price: playlistMatch ? parsePlaylistPrice(playlistMatch.price) : undefined,
       summary,
     });

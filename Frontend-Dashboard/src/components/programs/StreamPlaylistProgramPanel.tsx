@@ -13,6 +13,7 @@ import {
   type StreamVideoListItem
 } from "@/lib/streaming-api";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import { issuePlaylistCertificate } from "@/lib/certificates-api";
 import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
@@ -601,6 +602,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   /** Show player as soon as a ready URL exists; background refresh must not block cached switches. */
   const ready = progressHydrated && activePlayback?.status === "ready" && !!playbackUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
+  const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
 
   return (
     <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-10">
@@ -772,7 +774,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           {items.map((row, i) => {
             const v = row.stream_video;
             const on = i === activeIdx;
-            const thumbSrc = resolveDjangoMediaUrl(v.thumbnail_url);
+            const thumbSrc = resolveDjangoMediaUrl(v.thumbnail_url) || playlistCoverThumb;
             return (
               <li key={row.id}>
                 <button

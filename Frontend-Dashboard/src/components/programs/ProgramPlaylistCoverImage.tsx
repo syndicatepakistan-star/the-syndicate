@@ -30,11 +30,12 @@ export function ProgramPlaylistCoverImage({
   displayWidth = 640,
 }: Props) {
   const djangoCover = resolveDjangoMediaUrl(playlist.cover_image_url ?? null);
-  const primarySrc = optimizeCoverImageSrc(
-    resolveProgramPlaylistThumbnail(playlist, djangoCover),
+  const staticThumb = resolveProgramPlaylistThumbnail(playlist);
+  const primarySrc = optimizeCoverImageSrc(staticThumb ?? djangoCover ?? undefined, displayWidth);
+  const fallbackSrc = optimizeCoverImageSrc(
+    staticThumb && djangoCover && djangoCover !== staticThumb ? djangoCover : staticThumb ?? djangoCover ?? undefined,
     displayWidth
   );
-  const fallbackSrc = optimizeCoverImageSrc(resolveProgramPlaylistThumbnail(playlist, null), displayWidth);
 
   const [src, setSrc] = useState(primarySrc);
 

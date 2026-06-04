@@ -66,6 +66,34 @@ def _append_row(rows: list[dict[str, str]], row: dict[str, str | Any]) -> None:
     lvl = norm.get("level") or norm.get("tier") or norm.get("difficulty") or ""
     if lvl:
         entry["level"] = lvl[:24]
+    title = norm.get("title") or norm.get("headline") or norm.get("name") or ""
+    if title:
+        entry["title"] = title[:500]
+    desc = (
+        norm.get("description")
+        or norm.get("desc")
+        or norm.get("summary")
+        or norm.get("excerpt")
+        or norm.get("subtitle")
+        or norm.get("blurb")
+        or ""
+    )
+    if desc:
+        entry["description"] = desc[:900]
+    source = (
+        norm.get("source_text")
+        or norm.get("source")
+        or norm.get("content")
+        or norm.get("body")
+        or norm.get("text")
+        or norm.get("article")
+        or norm.get("details")
+        or norm.get("notes")
+        or norm.get("passage")
+        or ""
+    )
+    if source:
+        entry["source_text"] = source[:8000]
     rows.append(entry)
 
 

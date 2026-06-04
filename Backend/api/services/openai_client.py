@@ -947,32 +947,53 @@ def merge_user_device_mindset_summary(
     return s
 
 
-def _normalize_membership_article(raw: Any, *, keyword: str = "", category: str = "") -> dict[str, Any]:
+def _normalize_membership_paragraphs_dataset_grounded(paragraphs: list[str]) -> list[str]:
+    """Keep AI paragraphs as-is; do not pad with invented filler sentences."""
+    cleaned = [str(x).strip() for x in paragraphs if str(x).strip()]
+    if not cleaned:
+        return [""]
+    return cleaned[:3]
+
+
+def _normalize_membership_article(
+    raw: Any,
+    *,
+    keyword: str = "",
+    category: str = "",
+    dataset_title: str = "",
+    dataset_description: str = "",
+) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValueError("Article response was not a JSON object")
     title = str(raw.get("title") or "").strip()
-    if len(title) < 8:
+    if len(title) < 3:
+        title = (dataset_title or keyword or "").strip()
+    if len(title) < 3:
         raise ValueError("Title too short")
+    description = str(raw.get("description") or "").strip()
+    if not description:
+        description = (dataset_description or "").strip()
     kp = raw.get("key_points")
     if not isinstance(kp, list):
         kp = []
-    key_points = [str(x).strip() for x in kp if str(x).strip()][:8]
-    while len(key_points) < 5:
-        key_points.append("")
-    key_points = key_points[:5]
+    key_points = [str(x).strip() for x in kp if str(x).strip()][:5]
 
     paras = raw.get("paragraphs")
     if not isinstance(paras, list):
         paras = []
-    paragraphs = _normalize_membership_paragraphs(
+    paragraphs = _normalize_membership_paragraphs_dataset_grounded(
         [str(x).strip() for x in paras if str(x).strip()][:5],
-        keyword=keyword,
-        category=category,
     )
-    return {"title": title[:500], "key_points": key_points, "paragraphs": paragraphs}
+    return {
+        "title": title[:500],
+        "description": description[:900],
+        "key_points": key_points,
+        "paragraphs": paragraphs,
+    }
 
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
+    from apps.membership.dataset_match import extract_row_article_source
     from apps.membership.keyword_dataset import normalize_category
 
     if not isinstance(raw, dict):
@@ -993,7 +1014,31 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
         if dedupe in seen:
             continue
         seen.add(dedupe)
-        out.append({"category": cat, "keyword": kw[:500]})
+        row: dict[str, str] = {"category": cat, "keyword": kw[:500]}
+        for field, keys in (
+            ("title", ("title", "headline", "name")),
+            ("description", ("description", "desc", "summary", "excerpt")),
+            ("source_text", ("source_text", "source", "content", "body", "text")),
+        ):
+            val = ""
+            for k in keys:
+                v = item.get(k)
+                if v is not None and str(v).strip():
+                    val = str(v).strip()
+                    break
+            if val:
+                cap = 8000 if field == "source_text" else (900 if field == "description" else 500)
+                row[field] = val[:cap]
+        enriched = extract_row_article_source(row)
+        out.append(
+            {
+                "category": enriched["category"],
+                "keyword": enriched["keyword"][:500],
+                "title": enriched["title"][:500],
+                "description": enriched["description"][:900],
+                "source_text": enriched["source_text"][:8000],
+            }
+        )
     if len(out) < 3:
         raise ValueError("Too few distinct keywords extracted (need at least 3)")
     return out[:48]
@@ -1029,6 +1074,7 @@ def extract_membership_keywords_from_document(document_text: str, *, creative_se
 
 
 def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
+    from apps.membership.dataset_match import extract_row_article_source
     from apps.membership.keyword_dataset import normalize_category
 
     if not isinstance(raw, dict):
@@ -1049,7 +1095,31 @@ def _normalize_extracted_keyword_rows(raw: Any) -> list[dict[str, str]]:
         if dedupe in seen:
             continue
         seen.add(dedupe)
-        out.append({"category": cat, "keyword": kw[:500]})
+        row: dict[str, str] = {"category": cat, "keyword": kw[:500]}
+        for field, keys in (
+            ("title", ("title", "headline", "name")),
+            ("description", ("description", "desc", "summary", "excerpt")),
+            ("source_text", ("source_text", "source", "content", "body", "text")),
+        ):
+            val = ""
+            for k in keys:
+                v = item.get(k)
+                if v is not None and str(v).strip():
+                    val = str(v).strip()
+                    break
+            if val:
+                cap = 8000 if field == "source_text" else (900 if field == "description" else 500)
+                row[field] = val[:cap]
+        enriched = extract_row_article_source(row)
+        out.append(
+            {
+                "category": enriched["category"],
+                "keyword": enriched["keyword"][:500],
+                "title": enriched["title"][:500],
+                "description": enriched["description"][:900],
+                "source_text": enriched["source_text"][:8000],
+            }
+        )
     if len(out) < 3:
         raise ValueError("Too few distinct keywords extracted (need at least 3)")
     return out[:48]
@@ -1088,31 +1158,41 @@ def generate_membership_article(
     *,
     keyword: str,
     category: str,
+    dataset_title: str = "",
+    dataset_description: str = "",
+    source_text: str = "",
     avoid_titles: list[str] | None = None,
     avoid_keywords: list[str] | None = None,
     creative_seed: str = "",
 ) -> dict[str, Any]:
-    """JSON article for membership hub: title, key_points (5), paragraphs (3)."""
+    """JSON article for membership hub: title, description, key_points, paragraphs — grounded in dataset row."""
     from .prompts import MEMBERSHIP_ARTICLE_SYSTEM
 
     avoid = "\n".join(f"- {t}" for t in (avoid_titles or [])[:30] if str(t).strip()) or "(none)"
-    avoid_kw = "\n".join(f"- {k}" for k in (avoid_keywords or [])[:30] if str(k).strip()) or "(none)"
     user = json.dumps(
         {
             "keyword": (keyword or "").strip()[:400],
             "category": (category or "others").strip().lower()[:32],
+            "dataset_title": (dataset_title or keyword or "").strip()[:500],
+            "dataset_description": (dataset_description or "").strip()[:900],
+            "source_text": (source_text or dataset_description or keyword or "").strip()[:8000],
             "titles_to_avoid": avoid,
-            "keywords_to_avoid": avoid_kw,
             "creative_seed": (creative_seed or "").strip()[:64],
         },
         ensure_ascii=False,
     )
     last_err: Exception | None = None
     for attempt in range(2):
-        temp = 0.82 if attempt == 0 else 0.92
+        temp = 0.35 if attempt == 0 else 0.45
         try:
             data = chat_json(MEMBERSHIP_ARTICLE_SYSTEM, user, max_tokens=2800, temperature=temp)
-            return _normalize_membership_article(data, keyword=keyword, category=category)
+            return _normalize_membership_article(
+                data,
+                keyword=keyword,
+                category=category,
+                dataset_title=dataset_title or keyword,
+                dataset_description=dataset_description,
+            )
         except (ValueError, TypeError, KeyError, json.JSONDecodeError) as e:
             last_err = e
             if attempt == 0:

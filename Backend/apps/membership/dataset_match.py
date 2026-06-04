@@ -21,6 +21,64 @@ def normalize_search_text(text: str) -> str:
     return s
 
 
+def _row_field(row: dict[str, Any], *keys: str) -> str:
+    """Read the first non-empty string value from row (case-insensitive keys)."""
+    norm = {(k or "").strip().lower(): v for k, v in row.items() if isinstance(k, str)}
+    for key in keys:
+        raw = row.get(key)
+        if raw is None:
+            raw = norm.get(key.lower())
+        if raw is not None and str(raw).strip():
+            return str(raw).strip()
+    return ""
+
+
+def extract_row_article_source(row: dict[str, Any]) -> dict[str, str]:
+    """
+    Title, description, and body text for one dataset row.
+    Falls back to keyword when dedicated columns are missing (legacy CSV rows).
+    """
+    keyword, category = split_row_keyword_category(row)
+    title = _row_field(row, "title", "headline", "name") or keyword
+    description = _row_field(
+        row,
+        "description",
+        "desc",
+        "summary",
+        "excerpt",
+        "subtitle",
+        "blurb",
+    )
+    source_text = _row_field(
+        row,
+        "source_text",
+        "source",
+        "content",
+        "body",
+        "text",
+        "article",
+        "details",
+        "notes",
+        "passage",
+    )
+    if not source_text:
+        parts: list[str] = []
+        if description and description != title:
+            parts.append(description)
+        if keyword and keyword not in {title, description}:
+            parts.append(keyword)
+        source_text = "\n\n".join(parts) or keyword
+    if not description:
+        description = source_text[:400] if source_text else keyword
+    return {
+        "keyword": keyword,
+        "category": category,
+        "title": title[:500],
+        "description": description[:900],
+        "source_text": source_text[:8000],
+    }
+
+
 def split_row_keyword_category(row: dict[str, Any]) -> tuple[str, str]:
     """Normalize keyword/category from a dataset row (fixes 'keyword - others' stuck in keyword)."""
     cat = normalize_category(str(row.get("category") or ""))
@@ -152,7 +210,7 @@ def format_all_keywords_for_search(rows: list[dict[str, Any]], *, limit: int = M
             continue
         if shown >= show:
             break
-        lines.append(f"{i}. [{cat}] {kw}")
+        lines.append(f"{i}. [{cat}] {kw}" + (f" — {row.get('title')}" if str(row.get("title") or "").strip() else ""))
         shown += 1
     if not lines:
         return "(no keywords parsed — upload file and Save)"

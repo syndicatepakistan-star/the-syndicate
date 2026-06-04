@@ -56,8 +56,8 @@ class ArticleKeywordDatasetForm(forms.ModelForm):
                 raise forms.ValidationError(str(exc)) from exc
             if not rows:
                 raise forms.ValidationError(
-                    "No keywords could be parsed or extracted. Check the file has enough text, "
-                    "or use CSV / two-column Word tables (category, keyword)."
+                    "No rows could be parsed or extracted. Check the file has enough text, "
+                    "or use CSV with columns such as category, keyword, title, description, content."
                 )
             self.parsed_keyword_rows = rows
         return f

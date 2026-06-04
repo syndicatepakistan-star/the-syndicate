@@ -537,35 +537,49 @@ Rules:
 }
 """
 
-MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM = """You extract article seed topics from a document (PDF/Word dump, notes, or brief). The app will later generate one membership article per seed.
+MEMBERSHIP_KEYWORD_EXTRACTION_SYSTEM = """You extract article rows from a document (PDF/Word dump, notes, or brief). Each row becomes one membership article — copy meaning from the document; do not invent topics.
 
 Rules:
-1. Read the document text (may be noisy OCR or line breaks). Infer concrete, specific **keyword** phrases an article could be written about — not generic tags.
+1. Read the document text (may be noisy OCR or line breaks). Pull **real sections or topics** that appear in the text.
 2. Each item has **category**: exactly one of business | money | power | grooming | others (lowercase). Map finance/wealth→money; style/appearance/self-care→grooming; leadership/influence/strategy→business or power as fits; vague items→others.
 3. Produce **12 to 36** distinct items when the document has enough substance; fewer is OK for very short sources. No duplicates or near-duplicates.
-4. **keyword** must be 2–12 words, usable as a writing prompt (not a full sentence). Max 120 chars per keyword.
-5. Respond with **valid JSON only**:
+4. **keyword** — 2–12 words from the document, usable as a stable seed (max 120 chars). Not a generic tag.
+5. **title** — meaningful headline taken from or directly implied by the document section (max 120 chars). Same topic as keyword.
+6. **description** — 1–3 sentences summarizing that section using only document facts (max 400 chars).
+7. **source_text** — the relevant passage from the document (may be edited for line breaks only). This is the sole source for article body; include enough context (roughly 80–600 words when available). Do not add facts not in the document.
+8. Respond with **valid JSON only**:
 {
   "keywords": [
-    {"category": "business", "keyword": "negotiating retainers without sounding desperate"},
-    {"category": "money", "keyword": "cash buffer sizing for volatile income"}
+    {
+      "category": "business",
+      "keyword": "negotiating retainers without sounding desperate",
+      "title": "How to negotiate retainers with confidence",
+      "description": "Short summary copied from the document section.",
+      "source_text": "The passage from the document that supports the title and description."
+    }
   ]
 }
 """
 
-MEMBERSHIP_ARTICLE_SYSTEM = """You write short membership briefings for disciplined operators (business, money, power, grooming, and general life craft).
+MEMBERSHIP_ARTICLE_SYSTEM = """You rewrite one membership article row from a dataset into simple, clear English.
+
+CRITICAL — NO HALLUCINATION:
+- Use ONLY information from dataset_title, dataset_description, and source_text in the user JSON.
+- Do NOT add new advice, statistics, examples, names, brands, or ideas not present in those fields.
+- If the source is short, keep the output short. Never pad with generic operator filler.
 
 Rules:
-1. The user JSON gives **keyword** (exact topic seed) and **category** (business | money | power | grooming | others). Build the whole piece around that keyword; do not switch topics.
-2. **Tone:** professional, clear, and direct — like a sharp mentor or field guide. **Not** corporate: avoid clichés such as "leverage", "synergy", "circle back", "best-in-class", "move the needle", "deep dive", "bandwidth", "low-hanging fruit", "win-win", "thought leadership", "paradigm shift", "game-changer", "robust", "world-class", "stakeholder alignment", "optimize the funnel", "lean in", "take it offline".
-3. **title:** one compelling line, max 120 characters, no subtitle, no colon spam.
-4. **key_points:** exactly **5** strings. Each is one tight bullet (max ~18 words), actionable or insight-heavy, no numbering prefix in the string.
-5. **paragraphs:** exactly **3** strings. Each paragraph must be **5 or 6 full sentences** (not single-line fragments). Short punchy sentences are fine. No bullet characters inside paragraphs.
-6. **Uniqueness:** creative_seed is only for your internal variation — produce a **fresh** angle each time. Honor **titles_to_avoid** (never reuse those exact titles) and **keywords_to_avoid** (those are recent seed phrases — vary examples and framing so the piece does not read as a near-duplicate, while still fully developing the assigned **keyword**).
+1. **category** and **keyword** are context only — do not change the topic.
+2. **title:** rewrite dataset_title in simple English (max 120 chars). Same meaning; no new topics. Honor titles_to_avoid (do not reuse those exact strings).
+3. **description:** rewrite dataset_description in simple English (1–3 sentences). Same facts only.
+4. **key_points:** 3 to 5 strings — each a short bullet rephrasing one idea from source_text only. Omit filler bullets if the source has fewer ideas.
+5. **paragraphs:** 1 to 3 strings — rephrase source_text in simple English. Split naturally; do not invent sentences. No bullet characters inside paragraphs.
+6. Tone: plain, direct, easy to read. Avoid corporate clichés.
 7. Output **valid JSON only** with exactly this shape:
 {
   "title": "",
-  "key_points": ["", "", "", "", ""],
-  "paragraphs": ["", "", ""]
+  "description": "",
+  "key_points": ["", "", ""],
+  "paragraphs": ["", ""]
 }
 """

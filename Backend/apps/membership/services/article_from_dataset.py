@@ -10,7 +10,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-from apps.membership.dataset_match import split_row_keyword_category
+from apps.membership.dataset_match import extract_row_article_source, split_row_keyword_category
 from apps.membership.generation import (
     collect_avoid_fingerprints,
     collect_avoid_keyword_phrases,
@@ -74,11 +74,16 @@ def build_article_fields_from_openai_body(
     keyword: str,
     category: str,
     level_used: str,
+    dataset_title: str = "",
+    dataset_description: str = "",
 ) -> dict[str, Any]:
     key_points = [str(x).strip() for x in (body.get("key_points") or []) if str(x).strip()]
     paragraphs = [str(x).strip() for x in (body.get("paragraphs") or []) if str(x).strip()]
-    desc_parts = key_points[:2] if key_points else paragraphs[:1]
-    description = " ".join(desc_parts)[:900] if desc_parts else ""
+    title = str(body.get("title") or dataset_title or keyword or "Article").strip()[:500]
+    description = str(body.get("description") or dataset_description or "").strip()
+    if not description:
+        desc_parts = key_points[:2] if key_points else paragraphs[:1]
+        description = " ".join(desc_parts)[:900] if desc_parts else ""
 
     content_lines = [
         f"Seed: {keyword} - {category}",
@@ -88,13 +93,14 @@ def build_article_fields_from_openai_body(
     ]
     for kp in key_points:
         content_lines.append(f"- {kp}")
-    content_lines.extend(["", ""])
-    content_lines.extend(paragraphs)
+    if paragraphs:
+        content_lines.extend(["", ""])
+        content_lines.extend(paragraphs)
     content = "\n".join(content_lines).strip()
 
     return {
-        "title": str(body.get("title") or "Operator brief")[:500],
-        "description": description,
+        "title": title,
+        "description": description[:900],
         "content": content,
         "tags": [OPERATOR_BRIEF_TAG, category],
         "source_url": "",
@@ -129,34 +135,34 @@ class MembershipArticleBatchResult:
     errors: list[str] = field(default_factory=list)
 
 
-def _stub_openai_body(*, keyword: str, category: str) -> dict[str, Any]:
-    title = f"{keyword[:80]} — operator brief"
+def _stub_openai_body(
+    *,
+    keyword: str,
+    category: str,
+    dataset_title: str = "",
+    dataset_description: str = "",
+    source_text: str = "",
+) -> dict[str, Any]:
+    """Offline fallback: simple reformat of dataset text only (no invented content)."""
+    title = (dataset_title or keyword)[:500]
+    description = (dataset_description or source_text or keyword)[:900]
+    text = (source_text or description or keyword).strip()
+    sentences = [s.strip() for s in text.replace("\n", " ").split(". ") if s.strip()]
+    key_points = [s if s.endswith(".") else f"{s}." for s in sentences[:5]]
+    if len(sentences) <= 3:
+        paragraphs = [text] if text else []
+    else:
+        third = max(1, len(sentences) // 3)
+        chunks = [
+            ". ".join(sentences[i : i + third])
+            for i in range(0, len(sentences), third)
+        ]
+        paragraphs = [c if c.endswith(".") else f"{c}." for c in chunks[:3]]
     return {
         "title": title,
-        "key_points": [
-            f"Frame {keyword} as a repeatable operator habit, not a one-off tactic.",
-            f"Connect {category} outcomes to measurable weekly actions.",
-            "Document decisions and review them every seven days.",
-            "Reduce friction: one clear next step after reading.",
-            "Protect reputation: speed with discipline beats reckless urgency.",
-        ],
-        "paragraphs": [
-            (
-                f"This brief treats “{keyword}” as a practical lens for {category} work. "
-                "Start with a single constraint you control this week—calendar, capital, or communication—and "
-                "design one experiment that tests the idea in the field."
-            ),
-            (
-                "Operators win by compounding small corrections. Write the hypothesis, run the experiment for "
-                "seven days, and capture what moved: revenue, trust, energy, or clarity. Drop what fails; "
-                "double down on what repeats."
-            ),
-            (
-                "Syndicate standard: mastery without corruption. Use power and money as tools for stewardship, "
-                "not spectacle. When in doubt, choose the action that strengthens long-term alliances and "
-                "keeps your word unbreakable."
-            ),
-        ],
+        "description": description,
+        "key_points": key_points,
+        "paragraphs": paragraphs,
     }
 
 
@@ -239,6 +245,10 @@ def generate_one_membership_article_from_dataset(
     if not category or category not in VALID_CATEGORIES:
         category = normalize_category(str(row.get("category") or cat_req))
     level_used = normalize_level(str(row.get("level") or row.get("tier") or row.get("difficulty") or ""))
+    row_source = extract_row_article_source(row)
+    dataset_title = row_source["title"]
+    dataset_description = row_source["description"]
+    source_text = row_source["source_text"]
     creative_seed = uuid.uuid4().hex[:14]
 
     body: dict[str, Any]
@@ -249,15 +259,23 @@ def generate_one_membership_article_from_dataset(
             body = generate_membership_article(
                 keyword=keyword,
                 category=category,
+                dataset_title=dataset_title,
+                dataset_description=dataset_description,
+                source_text=source_text,
                 avoid_titles=merged_titles,
-                avoid_keywords=avoid_keywords,
                 creative_seed=creative_seed,
             )
         except RuntimeError as e:
             msg = str(e)
             if "OPENAI_API_KEY" in msg:
                 if allow_stub_without_openai:
-                    body = _stub_openai_body(keyword=keyword, category=category)
+                    body = _stub_openai_body(
+                        keyword=keyword,
+                        category=category,
+                        dataset_title=dataset_title,
+                        dataset_description=dataset_description,
+                        source_text=source_text,
+                    )
                 else:
                     raise OpenAINotConfiguredError(msg) from e
             else:
@@ -265,13 +283,21 @@ def generate_one_membership_article_from_dataset(
         except Exception as e:
             raise MembershipArticleGenerationError(str(e) or "Generation failed.") from e
     else:
-        body = _stub_openai_body(keyword=keyword, category=category)
+        body = _stub_openai_body(
+            keyword=keyword,
+            category=category,
+            dataset_title=dataset_title,
+            dataset_description=dataset_description,
+            source_text=source_text,
+        )
 
     fields = build_article_fields_from_openai_body(
         body,
         keyword=keyword,
         category=category,
         level_used=level_used,
+        dataset_title=dataset_title,
+        dataset_description=dataset_description,
     )
     article = Article(**fields)
     article.generation_source_dataset = dataset

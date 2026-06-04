@@ -51,6 +51,7 @@ class StreamVideo(models.Model):
     )
     original_video = models.FileField(
         upload_to=stream_video_original_upload_to,
+        max_length=2048,
         blank=True,
         help_text="Original MP4 (or other supported format). Stored privately; served only via signed playback URLs.",
     )

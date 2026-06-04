@@ -210,7 +210,7 @@ def format_all_keywords_for_search(rows: list[dict[str, Any]], *, limit: int = M
             continue
         if shown >= show:
             break
-        lines.append(f"{i}. [{cat}] {kw}" + (f" — {row.get('title')}" if str(row.get("title") or "").strip() else ""))
+        lines.append(f"{i}. [{cat}] {kw}" + (f" — {r.get('title')}" if str(r.get("title") or "").strip() else ""))
         shown += 1
     if not lines:
         return "(no keywords parsed — upload file and Save)"

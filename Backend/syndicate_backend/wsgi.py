@@ -55,6 +55,8 @@ if (os.environ.get("SKIP_WSGI_MIGRATE") or "").strip().lower() not in ("1", "tru
 
         print("syndicate_backend.wsgi: migrate finished", flush=True)
 
+        call_command("repair_streamvideo_original_video_column", verbosity=1)
+
         from django.db import connection
 
         connection.ensure_connection()

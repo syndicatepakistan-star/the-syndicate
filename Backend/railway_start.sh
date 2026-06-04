@@ -21,6 +21,9 @@ run_bootstrap_tasks() {
   echo "railway_start: migrate"
   "$PYTHON" manage.py migrate --noinput --verbosity 1
 
+  echo "railway_start: repair_streamvideo_original_video_column"
+  "$PYTHON" manage.py repair_streamvideo_original_video_column
+
   echo "railway_start: ensure_staticfiles"
   CLEAR_FLAG=""
   if [ "${COLLECTSTATIC_CLEAR:-false}" = "true" ]; then

@@ -45,10 +45,10 @@ export const QUIZ_QUESTIONS: QuizQuestionRow[] = [
     "id": 5,
     "question": "[Section 2: The Strengths] If you were forced to make $5,000 this month using only a laptop, where would you naturally start?",
     "options": [
-      "A) I'd find a trending product and flip it or market it. (Profit Raider)",
-      "B) I'd create content, edit videos, or design a brand image. (Attention Broker)",
-      "C) I'd set up automation bots or build a system to do the work. (System Architect)",
-      "D) I'd get into the code, build an app, or script a new tool. (Ghost Architect)"
+      "A) I'd find a trending product and flip it or market it.",
+      "B) I'd create content, edit videos, or design a brand image.",
+      "C) I'd set up automation bots or build a system to do the work.",
+      "D) I'd get into the code, build an app, or script a new tool."
     ]
   },
   {

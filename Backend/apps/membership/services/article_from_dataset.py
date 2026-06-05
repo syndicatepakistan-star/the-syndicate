@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 from apps.membership.dataset_match import (
     extract_row_article_source,
+    row_has_substantive_source,
     sanitize_article_body_from_source,
     split_row_keyword_category,
 )
@@ -42,12 +43,20 @@ MAX_MEMBERSHIP_ARTICLE_BATCH = max(
         int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_MAX") or "500").strip() or "500"),
     ),
 )
+# One-click admin batch size (dedicated "Generate 5 articles" button).
+QUICK_ARTICLE_BATCH_SIZE = max(
+    1,
+    min(
+        20,
+        int((os.environ.get("MEMBERSHIP_ARTICLE_QUICK_BATCH") or "5").strip() or "5"),
+    ),
+)
 # Default articles created per admin click when the count field is left blank.
 DEFAULT_MEMBERSHIP_ARTICLE_GEN_PER_CLICK = max(
     1,
     min(
         50,
-        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_PER_CLICK") or "15").strip() or "15"),
+        int((os.environ.get("MEMBERSHIP_ARTICLE_GEN_PER_CLICK") or "5").strip() or "5"),
     ),
 )
 ARTICLE_GENERATION_PAUSE_SECONDS = max(
@@ -183,11 +192,24 @@ def build_article_fields_from_openai_body(
     }
 
 
+def _filter_substantive_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep rows with enough source_text for title, key points, and paragraphs."""
+    substantive: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        source = extract_row_article_source(row)
+        if row_has_substantive_source(source):
+            substantive.append(row)
+    return substantive or rows
+
+
 def _pick_row_fresh_batch(
     rows: list[dict[str, Any]],
     batch_avoid_fingerprints: set[str],
 ) -> dict[str, Any]:
     """Pick one unused dataset row for this batch (no duplicate keywords in the same click)."""
+    rows = _filter_substantive_rows(rows)
     available: list[dict[str, Any]] = []
     for r in rows:
         kw, cat = split_row_keyword_category(r)
@@ -259,6 +281,7 @@ def generate_one_membership_article_from_dataset(
     rows = [r for r in (dataset.rows or []) if isinstance(r, dict) and str(r.get("keyword") or "").strip()]
     if cat_req != "all":
         rows = [r for r in rows if normalize_category(str(r.get("category") or "")) == cat_req]
+    rows = _filter_substantive_rows(rows)
     if not rows:
         raise MembershipArticleGenerationError(
             "No keyword rows in dataset. Upload a file and Save first."
@@ -380,6 +403,14 @@ def generate_one_membership_article_from_dataset(
         dataset_title=dataset_title,
         dataset_description=dataset_description,
     )
+    from apps.membership.dataset_match import pick_unique_title_line
+
+    fields["title"] = pick_unique_title_line(
+        source_text,
+        keyword=keyword,
+        dataset_title=fields["title"],
+        avoid_titles=merged_titles,
+    )[:500]
     article = Article(**fields)
     article.generation_source_dataset = dataset
     article.save()

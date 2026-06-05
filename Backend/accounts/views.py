@@ -96,6 +96,9 @@ def _normalize_ticket_title(title: str) -> str:
   aliases = {
     "the business of empire": "The Business of Empire Building",
     "business of empire": "The Business of Empire Building",
+    "business warfare": "The Art of Mastering Human Behavior in Business",
+    "micro business protocol": "Prompt Engineering",
+    "mastering risk and uncertainty": "The Art of Critical Thinking",
   }
   if t in aliases:
     return aliases[t]

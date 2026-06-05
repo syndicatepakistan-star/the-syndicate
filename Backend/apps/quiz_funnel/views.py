@@ -7,16 +7,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .quiz_data import QUIZ_QUESTIONS
 from .ai_service import generate_ai_report
-from .logic import (
-    compute_score,
-    detect_archetype,
-    detect_fatal_flaw,
-    get_category,
-    get_designation_short,
-    get_recommended_protocol,
-    get_recommended_shield,
-    get_weapon_course,
-)
+from .logic import build_recommendation, get_designation_short
 from .models import QuizOption, QuizQuestion, Result, User
 
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -96,13 +87,14 @@ def submit_answers(request):
             return HttpResponseBadRequest("Invalid answer option.")
         normalized_answers.append({"question_id": question_id, "selected_option": selected_option})
 
-    score = compute_score(normalized_answers)
-    designation = get_category(score)
-    archetype = detect_archetype(normalized_answers)
-    fatal_flaw = detect_fatal_flaw(normalized_answers)
-    weapon_course = get_weapon_course(archetype, score, normalized_answers)
-    shield_course = get_recommended_shield(fatal_flaw)
-    protocol_course = get_recommended_protocol(designation)
+    recommendation = build_recommendation(normalized_answers)
+    score = recommendation["score"]
+    designation = recommendation["category"]
+    archetype = recommendation["archetype"]
+    fatal_flaw = recommendation["detected_virus"]
+    weapon_course = recommendation["execution_stack"]["weapon"]
+    shield_course = recommendation["execution_stack"]["shield"]
+    protocol_course = recommendation["execution_stack"]["protocol"]
     user_id = (email.split("@")[0] if email else name).upper().replace(" ", "_")
 
     ai_report = generate_ai_report(
@@ -131,9 +123,12 @@ def submit_answers(request):
         {
             "score": score,
             "category": designation,
-            "designation": designation,
+            "designation": recommendation["designation"],
             "designation_short": get_designation_short(designation),
             "archetype": archetype,
+            "detected_virus": fatal_flaw,
+            "diagnosis": recommendation["diagnosis"],
+            "execution_stack": recommendation["execution_stack"],
             "recommended_track": weapon_course,
             "weapon_course": weapon_course,
             "shield_course": shield_course,

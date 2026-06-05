@@ -7,7 +7,11 @@ import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 
 const TRACK_BY_ARCHETYPE = {
-  "Ghost Architect": "AI Agents and automated software bots.",
+  "Ghost Architect": "AI Agents, Python, React, Flutter, and automation systems.",
+  "Digital Raider": "Crypto markets, trading, and high-velocity digital plays.",
+  "Creative Infiltrator": "Canva, faceless content, POD, and Amazon KDP.",
+  "Asset Grinder": "KDP, print on demand, content automation, and AI agents.",
+  // Legacy labels (older quiz results)
   "Attention Broker": "Faceless content and digital influence.",
   "System Architect": "Global logistics and automated publishing.",
   "Profit Raider": "Crypto markets and Blockchain loops.",

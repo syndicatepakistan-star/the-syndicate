@@ -75,40 +75,40 @@ export const QUIZ_QUESTIONS: QuizQuestionRow[] = [
     "id": 8,
     "question": "[Section 3: The Fatal Flaws] What is the \"Silent Killer\" of your progress right now?",
     "options": [
-      "A) I'm looking for a \"hack\" or a shortcut. (The Magic Pill Delusion)",
-      "B) I spend money on status before I've made it. (The Financial Leak)",
-      "C) I have 100 ideas but finish nothing. (Analysis Paralysis)",
-      "D) I'm the smartest person in my circle, and that's the problem. (Crabs in a Bucket)"
+      "A) I'm looking for a \"hack\" or a shortcut.",
+      "B) I spend money on status before I've made it.",
+      "C) I have 100 ideas but finish nothing.",
+      "D) I'm the smartest person in my circle, and that's the problem."
     ]
   },
   {
     "id": 9,
     "question": "[Section 3: The Fatal Flaws] What is the one thing that will cause you to quit this journey in 3 months?",
     "options": [
-      "A) If it gets \"boring\" or I lose the initial hype. (The Quitter)",
-      "B) If I have to talk to people or \"sell\" myself. (The Order Taker)",
-      "C) If I can't figure out the technical \"how-to\" part. (The Amateur)",
-      "D) Nothing. I'll die before I go back to being average. (The Visionary)"
+      "A) If it gets \"boring\" or I lose the initial hype.",
+      "B) If I have to talk to people or \"sell\" myself.",
+      "C) If I can't figure out the technical \"how-to\" part.",
+      "D) Nothing. I'll die before I go back to being average."
     ]
   },
   {
     "id": 10,
     "question": "[Section 3: The Fatal Flaws] If you were given a million-dollar business tomorrow, why would you fail?",
     "options": [
-      "A) I wouldn't know how to manage the people or the \"snakes.\" (The Loner)",
-      "B) I'd spend the profits on status symbols too early. (The Spender)",
-      "C) I wouldn't know how to scale it to the next level. (The Amateur)",
-      "D) I wouldn't. I just need the infrastructure to start. (The Visionary)"
+      "A) I wouldn't know how to manage the people or the \"snakes.\"",
+      "B) I'd spend the profits on status symbols too early.",
+      "C) I wouldn't know how to scale it to the next level.",
+      "D) I wouldn't. I just need the infrastructure to start."
     ]
   },
   {
     "id": 11,
     "question": "[Section 3: The Fatal Flaws] How does your current \"inner circle\" react to your business ideas?",
     "options": [
-      "A) They laugh and tell me to get a \"real job.\" (The Victim)",
-      "B) They ask for a handout before I've even made a dollar. (The Spender)",
-      "C) I move in silence because I don't trust them. (The Loner)",
-      "D) They are also hustling, but we lack a unified map. (The Chaos Agent)"
+      "A) They laugh and tell me to get a \"real job.\"",
+      "B) They ask for a handout before I've even made a dollar.",
+      "C) I move in silence because I don't trust them.",
+      "D) They are also hustling, but we lack a unified map."
     ]
   },
   {
@@ -155,10 +155,10 @@ export const QUIZ_QUESTIONS: QuizQuestionRow[] = [
     "id": 16,
     "question": "[Section 4: The Grind & Sacrifice] If you had to talk a millionaire into investing in you, how would you feel?",
     "options": [
-      "A) I'd have no idea what to say. (The Order Taker)",
-      "B) I'd feel like a fraud. (The Identity Crisis)",
-      "C) I'd focus on the hustle I've done. (The Slow Burner)",
-      "D) I'd present the data with cold logic. (The Specialist)"
+      "A) I'd have no idea what to say.",
+      "B) I'd feel like a fraud.",
+      "C) I'd focus on the hustle I've done.",
+      "D) I'd present the data with cold logic."
     ]
   },
   {

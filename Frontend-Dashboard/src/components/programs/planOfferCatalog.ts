@@ -36,6 +36,8 @@ export type PlanOfferDef = {
   detailFeatures: readonly string[];
   /** When false, checkout records billing only — no program entitlements yet. */
   grantsEntitlement?: boolean;
+  /** Optional CSS object-position for cover art (e.g. tall PNGs with title text). */
+  imageObjectPosition?: string;
 };
 
 /** Row 1 — Money Mastery + The Knight */
@@ -157,6 +159,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billing: "monthly",
     openLabel: "Open",
     accent: "purple",
+    imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
     detailDescription:
       "Reserve lifetime access to the Trading Advanced Technical Analysis vault. Checkout unlocks dashboard access; the full curriculum unlocks when the program is published.",

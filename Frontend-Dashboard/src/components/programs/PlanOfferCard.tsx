@@ -14,6 +14,8 @@ type Props = {
 const PLAN_OFFER_THEMES = {
   amber: {
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(251,191,36,0.42),0_0_58px_rgba(245,158,11,0.52),0_0_110px_rgba(245,158,11,0.26)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(251,191,36,0.55),0_0_72px_rgba(245,158,11,0.72),0_0_140px_rgba(245,158,11,0.38),0_0_200px_rgba(245,158,11,0.18)]",
     ring: "from-amber-300/95 via-yellow-400/95 to-orange-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.45)_0%,rgba(234,88,12,0.28)_35%,rgba(0,0,0,0)_75%)]",
     spark: "from-amber-100/0 via-amber-100/90 to-white/0",
@@ -26,6 +28,8 @@ const PLAN_OFFER_THEMES = {
   },
   cyan: {
     glow: "shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(103,232,249,0.42),0_0_58px_rgba(34,211,238,0.5),0_0_110px_rgba(14,165,233,0.24)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_14px_38px_rgba(0,0,0,0.58),0_0_0_1px_rgba(103,232,249,0.55),0_0_72px_rgba(34,211,238,0.68),0_0_140px_rgba(14,165,233,0.36),0_0_200px_rgba(34,211,238,0.16)]",
     ring: "from-cyan-300/95 via-sky-400/95 to-blue-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.4)_0%,rgba(14,165,233,0.28)_35%,rgba(0,0,0,0)_75%)]",
     spark: "from-cyan-200/0 via-cyan-100/85 to-white/0",
@@ -38,6 +42,8 @@ const PLAN_OFFER_THEMES = {
   },
   pink: {
     glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(244,114,182,0.55),0_0_72px_rgba(236,72,153,0.62),0_0_130px_rgba(217,70,239,0.38),0_0_180px_rgba(244,114,182,0.18)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(244,114,182,0.68),0_0_88px_rgba(236,72,153,0.82),0_0_160px_rgba(217,70,239,0.48),0_0_220px_rgba(244,114,182,0.24)]",
     ring: "from-fuchsia-300/95 via-pink-400/95 to-rose-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.52)_0%,rgba(217,70,239,0.32)_38%,rgba(0,0,0,0)_76%)]",
     spark: "from-pink-200/0 via-fuchsia-200/95 to-white/0",
@@ -50,6 +56,8 @@ const PLAN_OFFER_THEMES = {
   },
   green: {
     glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(74,222,128,0.55),0_0_72px_rgba(52,211,153,0.62),0_0_130px_rgba(16,185,129,0.38),0_0_180px_rgba(74,222,128,0.18)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(74,222,128,0.68),0_0_88px_rgba(52,211,153,0.82),0_0_160px_rgba(16,185,129,0.48),0_0_220px_rgba(74,222,128,0.24)]",
     ring: "from-emerald-300/95 via-lime-400/95 to-green-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.52)_0%,rgba(16,185,129,0.32)_38%,rgba(0,0,0,0)_76%)]",
     spark: "from-lime-200/0 via-emerald-200/95 to-white/0",
@@ -62,6 +70,8 @@ const PLAN_OFFER_THEMES = {
   },
   purple: {
     glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(192,132,252,0.55),0_0_72px_rgba(168,85,247,0.62),0_0_130px_rgba(139,92,246,0.38),0_0_180px_rgba(192,132,252,0.18)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(192,132,252,0.68),0_0_88px_rgba(168,85,247,0.82),0_0_160px_rgba(139,92,246,0.48),0_0_220px_rgba(192,132,252,0.24)]",
     ring: "from-violet-300/95 via-purple-400/95 to-fuchsia-300/95",
     aura: "bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.52)_0%,rgba(124,58,237,0.32)_38%,rgba(0,0,0,0)_76%)]",
     spark: "from-violet-200/0 via-purple-200/95 to-white/0",
@@ -84,19 +94,20 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
         "plan-offer-card group/card relative flex w-full flex-col text-left",
         `plan-offer-card--${offer.accent}`,
         isLarge
-          ? "mx-auto min-h-[22rem] max-w-[420px] sm:max-w-none sm:min-h-[27rem]"
+          ? "mx-auto h-full max-w-[420px] sm:max-w-none"
           : "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
       <div
         className={cn(
-          "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300 group-hover/card:shadow-[0_0_90px_rgba(255,255,255,0.06)]",
+          "relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300",
           theme.dominantBorder,
-          theme.glow
+          theme.glow,
+          theme.hoverGlow
         )}
       >
         <span
-          className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]", theme.aura)}
+          className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px] transition-[opacity,filter] duration-300 group-hover/card:opacity-100 group-hover/card:saturate-125", theme.aura)}
           aria-hidden
         />
         <span
@@ -134,8 +145,8 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
           >
             <div
               className={cn(
-                "relative overflow-hidden rounded-2xl border-2 border-white/20",
-                isLarge ? "min-h-[12.5rem] sm:min-h-[17rem] sm:flex-1" : "min-h-[9.5rem] sm:min-h-[11rem]"
+                "relative w-full shrink-0 overflow-hidden rounded-2xl border-2 border-white/20",
+                isLarge ? "aspect-[4/3]" : "aspect-[4/3] min-h-[9.5rem]"
               )}
             >
               <img
@@ -147,9 +158,10 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
+                style={offer.imageObjectPosition ? { objectPosition: offer.imageObjectPosition } : undefined}
                 className={cn(
-                  "h-full w-full object-cover [image-rendering:high-quality]",
-                  offer.plan === "bundle" ? "object-[center_38%]" : "object-center"
+                  "absolute inset-0 h-full w-full object-cover [image-rendering:high-quality]",
+                  !offer.imageObjectPosition && (offer.plan === "bundle" ? "object-[center_38%]" : "object-center")
                 )}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
@@ -173,14 +185,15 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
 
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
+                isLarge && "min-h-[10.75rem]",
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
             >
               <div
                 className={cn(
-                  "line-clamp-2 text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
+                  "line-clamp-2 min-h-[2.5em] text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
                   isLarge ? "text-[clamp(10px,2.4vw,17px)]" : "text-[10px] sm:text-[11px]"
                 )}
               >
@@ -215,7 +228,7 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
                   disabled={busy}
                   onClick={onOpen}
                   className={cn(
-                    "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition hover:scale-[1.02] disabled:cursor-wait disabled:opacity-65",
+                    "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition disabled:cursor-wait disabled:opacity-65",
                     theme.openBtn,
                     isLarge
                       ? "text-[clamp(9px,2.3vw,11px)] sm:px-2 sm:py-2 sm:tracking-[0.15em]"

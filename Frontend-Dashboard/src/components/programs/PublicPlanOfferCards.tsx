@@ -98,10 +98,10 @@ export function PublicPlanOfferCards({
       ) : null}
       {isLarge ? (
         <div className="flex w-full flex-col gap-8 lg:gap-10">
-          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8">
             {PLAN_OFFERS_PRIMARY.map(renderOffer)}
           </div>
-          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
+          <div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
             {PLAN_OFFERS_VAULT.map(renderOffer)}
           </div>
         </div>

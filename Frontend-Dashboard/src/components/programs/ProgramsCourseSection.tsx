@@ -11,6 +11,7 @@ import {
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
+import { planOfferByKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -473,13 +474,19 @@ export function ProgramsCourseSection({
   }, [showBothPlaylistColumns, visibleBusinessPsychologyPlaylists, visibleBusinessModelPlaylists]);
 
   const handleOfferAlreadyUnlocked = useCallback(
-    async (plan: "bundle" | "king") => {
-      await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
-      toast.success(
+    async (plan: PlanOfferKey) => {
+      if (plan === "bundle" || plan === "king") {
+        await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
+      }
+      const offer = planOfferByKey(plan);
+      const label = offer?.title ?? "This offer";
+      const message =
         plan === "bundle"
           ? "Money Mastery already active. All programs are unlocked."
-          : "The Knight plan is already active for this account."
-      );
+          : plan === "king"
+            ? "The Knight plan is already active for this account."
+            : `${label} is already active on this account.`;
+      toast.success(message);
     },
     [reloadApiCourses, reloadStreamPlaylists]
   );

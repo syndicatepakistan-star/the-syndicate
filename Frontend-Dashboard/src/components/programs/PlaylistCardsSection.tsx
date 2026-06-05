@@ -128,7 +128,10 @@ export function PlaylistCardsSection({
     let cancelled = false;
     void (async () => {
       try {
-        const list = await fetchPublicStreamPlaylists();
+        const authed = hasSimpleAuthSessionClient();
+        const list = authed
+          ? await fetchStreamPlaylists({ allowPublicFallback: true, forceRefresh: true })
+          : await fetchPublicStreamPlaylists();
         if (!cancelled) {
           setPlaylists(Array.isArray(list) ? list : []);
           setError(null);
@@ -372,8 +375,12 @@ export function PlaylistCardsSection({
                   disabled={pendingCheckoutPlaylistId === pl.id}
                   onClick={() => {
                     void (async () => {
+                      if (pl.is_unlocked) {
+                        router.push(`/dashboard?section=programs&playlist=${pl.id}`);
+                        return;
+                      }
                       if (!hasSimpleAuthSessionClient()) {
-                        router.push(`/signup?playlist_id=${encodeURIComponent(String(pl.id))}`);
+                        router.push(`/login?next=${encodeURIComponent(`/programs?program=${pl.id}#programs-library`)}`);
                         return;
                       }
                       setPendingCheckoutPlaylistId(pl.id);
@@ -389,10 +396,10 @@ export function PlaylistCardsSection({
                           return;
                         }
                         if (payload.is_unlocked) {
-                          router.push("/dashboard");
+                          router.push(`/dashboard?section=programs&playlist=${pl.id}`);
                           return;
                         }
-                        router.push(`/signup?playlist_id=${encodeURIComponent(String(pl.id))}`);
+                        router.push(`/login?next=${encodeURIComponent(`/programs?program=${pl.id}#programs-library`)}`);
                       } catch (e) {
                         setError(e instanceof Error ? e.message : "Could not start checkout.");
                       } finally {
@@ -402,7 +409,11 @@ export function PlaylistCardsSection({
                   }}
                   className="min-w-0 rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:px-2 sm:py-2 sm:tracking-[0.15em]"
                 >
-                  {pendingCheckoutPlaylistId === pl.id ? "Loading..." : "Unlock"}
+                  {pendingCheckoutPlaylistId === pl.id
+                    ? "Loading..."
+                    : pl.is_unlocked
+                      ? "Open Program"
+                      : "Unlock"}
                 </button>
               </div>
             </div>

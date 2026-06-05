@@ -43,7 +43,7 @@ export default function QuizFunnelLandingPage() {
         </p>
         <Link href="/quiz/questions">
           <button type="button" className="btn btn-primary">
-            BEGIN THE SOVEREIGN ENTITY AUDIT
+            START DIAGNOSIS
           </button>
         </Link>
       </section>

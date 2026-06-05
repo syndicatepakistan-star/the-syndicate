@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
@@ -440,52 +441,21 @@ export default function QuizPage() {
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
 
-  return (
-    <main className="page-wrap">
-      <section className="card card-quiz">
-        <BrandHeader
-          subtitle="MONEY • POWER • FREEDOM • HONOUR"
-          subtitleClassName="brand-subtitle-gold"
-        />
-        <ProgressBar current={currentIndex + 1} total={total} />
-        <div className="quiz-timer-badge">
-          Time Left: {minutes}:{seconds}
-        </div>
-        {showLeadGate && (
-          <>
-            <div
-              style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(4,8,18,0.72)",
-                backdropFilter: "blur(3px)",
-                zIndex: 40,
-              }}
-            />
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "min(92vw, 560px)",
-                border: "1px solid rgba(190,153,46,0.65)",
-                borderRadius: 14,
-                padding: 16,
-                background: "rgba(10,18,35,0.98)",
-                boxShadow: "0 0 30px rgba(77,163,255,0.35), 0 0 56px rgba(190,153,46,0.16)",
-                zIndex: 50,
-              }}
-            >
-              <h3 style={{ margin: "0 0 8px", color: "#be992e" }}>Continue Diagnosis</h3>
-              <p style={{ margin: "0 0 8px", color: "#d7e5ff" }}>
+  const leadGateModal =
+    showLeadGate && typeof document !== "undefined"
+      ? createPortal(
+          <div className="lead-gate-root" role="dialog" aria-modal="true" aria-labelledby="lead-gate-title">
+            <div className="lead-gate-backdrop" aria-hidden="true" />
+            <div className="lead-gate-panel">
+              <h3 id="lead-gate-title" className="lead-gate-title">
+                Continue Diagnosis
+              </h3>
+              <p className="lead-gate-copy">
                 {leadStep === "name" && `Enter your name to continue from Question ${currentIndex + 2}.`}
                 {leadStep === "email" && `Enter your email to continue from Question ${currentIndex + 2}.`}
                 {leadStep === "phone" && `Enter your phone number to continue from Question ${currentIndex + 2}.`}
               </p>
-              <p style={{ margin: "0 0 10px", color: "#be992e", fontWeight: 700 }}>
-                This is compulsory for your report.
-              </p>
+              <p className="lead-gate-required">This is compulsory for your report.</p>
               {leadStep === "name" ? (
                 <input
                   placeholder="Name"
@@ -494,7 +464,11 @@ export default function QuizPage() {
                     setLeadForm((prev) => ({ ...prev, name: e.target.value }));
                     setLeadError("");
                   }}
-                  className="quiz-input"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") continueAfterLead();
+                  }}
+                  className="quiz-input lead-gate-input"
+                  autoFocus
                 />
               ) : null}
               {leadStep === "email" ? (
@@ -507,23 +481,27 @@ export default function QuizPage() {
                       setLeadForm((prev) => ({ ...prev, email: e.target.value }));
                       setLeadError("");
                     }}
-                    className="quiz-input"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") continueAfterLead();
+                    }}
+                    className="quiz-input lead-gate-input"
+                    autoFocus
                   />
-                  <p style={{ margin: "0 0 10px", color: "#be992e", fontWeight: 700 }}>
-                    Enter the correct email. Free ticket will be linked to this email only. Wrong email means you cannot claim your free ticket.
+                  <p className="lead-gate-note">
+                    Enter the correct email. Free ticket will be linked to this email only. Wrong email means you
+                    cannot claim your free ticket.
                   </p>
                 </>
               ) : null}
               {leadStep === "phone" ? (
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div className="lead-gate-phone-row">
                   <select
                     value={leadForm.countryCode}
                     onChange={(e) => {
                       setLeadForm((prev) => ({ ...prev, countryCode: e.target.value }));
                       setLeadError("");
                     }}
-                    className="quiz-input"
-                    style={{ maxWidth: 190, marginBottom: 0, fontSize: 13, paddingRight: 28 }}
+                    className="quiz-input lead-gate-country"
                   >
                     {COUNTRY_CODES.map((item) => (
                       <option key={`${item.value}-${item.label}`} value={item.value}>
@@ -539,20 +517,38 @@ export default function QuizPage() {
                       setLeadForm((prev) => ({ ...prev, phone: digitsOnly }));
                       setLeadError("");
                     }}
-                    className="quiz-input"
-                    style={{ marginBottom: 0 }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") continueAfterLead();
+                    }}
+                    className="quiz-input lead-gate-phone"
+                    autoFocus
                   />
                 </div>
               ) : null}
-              {leadError ? (
-                <p style={{ margin: "0 0 10px", color: "#ff7f9b", fontWeight: 700 }}>{leadError}</p>
-              ) : null}
-              <button className="btn btn-primary" onClick={continueAfterLead}>
-                Continue Diagnosis
-              </button>
+              {leadError ? <p className="lead-gate-error">{leadError}</p> : null}
+              <div className="lead-gate-actions">
+                <button type="button" className="btn btn-primary lead-gate-btn" onClick={continueAfterLead}>
+                  Continue Diagnosis
+                </button>
+              </div>
             </div>
-          </>
-        )}
+          </div>,
+          document.body
+        )
+      : null;
+
+  return (
+    <main className="page-wrap">
+      {leadGateModal}
+      <section className={`card card-quiz${showLeadGate ? " card-quiz--gated" : ""}`}>
+        <BrandHeader
+          subtitle="MONEY • POWER • FREEDOM • HONOUR"
+          subtitleClassName="brand-subtitle-tagline"
+        />
+        <ProgressBar current={currentIndex + 1} total={total} />
+        <div className="quiz-timer-badge">
+          Time Left: {minutes}:{seconds}
+        </div>
         <h2 className="question-title" style={{ marginBottom: 16 }}>
           {cleanQuestionText}
         </h2>
@@ -583,29 +579,32 @@ export default function QuizPage() {
               Next
             </button>
           ) : null}
-        </div>
-
-        {isLast && !submitting && (
-          <>
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit} style={{ marginTop: 8 }}>
+          {isLast && !submitting ? (
+            <button
+              type="button"
+              className="btn btn-primary quiz-nav-btn quiz-nav-btn--submit"
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+            >
               Submit Answers
             </button>
-            {submitError ? (
-              <p style={{ marginTop: 10, color: "#ff7f9b", fontWeight: 700 }}>
-                {submitError}
-              </p>
-            ) : null}
-          </>
-        )}
-        {isLast && submitting && (
-          <div className="submit-loading-wrap">
-            <button className="btn btn-primary" disabled>
+          ) : null}
+          {isLast && submitting ? (
+            <button type="button" className="btn btn-primary quiz-nav-btn quiz-nav-btn--submit" disabled>
               Generating Report...
             </button>
+          ) : null}
+        </div>
+
+        {isLast && submitting ? (
+          <div className="submit-loading-wrap">
             <p className="loading-chant">{loadingWords[loadingWordIndex]}...</p>
             <span className="loading-spinner" aria-hidden="true" />
           </div>
-        )}
+        ) : null}
+        {isLast && !submitting && submitError ? (
+          <p className="quiz-submit-error">{submitError}</p>
+        ) : null}
       </section>
     </main>
   );

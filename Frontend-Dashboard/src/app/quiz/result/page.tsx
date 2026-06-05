@@ -5,16 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import {
+  buildFreeTicketLoginHref,
+  isFreeTicketPsychologyCourse,
+} from "@/lib/quizFreeTicketCourses";
 
 const TRACK_BY_ARCHETYPE = {
-  "Ghost Architect": "AI Agents, Python, React, Flutter, and automation systems.",
-  "Digital Raider": "Crypto markets, trading, and high-velocity digital plays.",
-  "Creative Infiltrator": "Canva, faceless content, POD, and Amazon KDP.",
-  "Asset Grinder": "KDP, print on demand, content automation, and AI agents.",
+  "Ghost Architect": "Python, React, Flutter, N8N AI Automation, and Unreal Engine.",
+  "Digital Raider": "WordPress, Framer, trading technical analysis, and AI automation.",
+  "Creative Infiltrator": "Canva, print on demand, Amazon KDP, and AI automation.",
+  "Asset Grinder": "KDP, print on demand, AI automation, and N8N AI automation.",
   // Legacy labels (older quiz results)
-  "Attention Broker": "Faceless content and digital influence.",
-  "System Architect": "Global logistics and automated publishing.",
-  "Profit Raider": "Crypto markets and Blockchain loops.",
+  "Attention Broker": "Canva, print on demand, and Amazon KDP.",
+  "System Architect": "Python, React, Flutter, and automation systems.",
+  "Profit Raider": "Trading technical analysis and AI automation.",
 };
 
 type QuizResultPayload = {
@@ -77,19 +81,9 @@ function renderStyledReport(report: string, loginEmail: string) {
             <h3 className="result-subheading">{section.title}</h3>
             {section.content.map((line, idx) => {
               if (line.startsWith("• Course:")) {
-                const nearestTrackHeading = [...section.content]
-                  .slice(0, idx)
-                  .reverse()
-                  .find((entry) => /^\d+\.\sTHE\s/.test(entry));
-                const normalizedHeading = (nearestTrackHeading || "").trim().toUpperCase();
-                const isWeaponCourse = normalizedHeading.startsWith("1. THE WEAPON");
                 const courseValue = line.replace("• Course:", "").trim();
-                const normalizedCourse = courseValue.toUpperCase();
-                const isBusinessModelCourse =
-                  normalizedCourse.includes("FACELESS YOUTUBE AI") ||
-                  normalizedCourse.includes("UNREAL ENGINE");
-                const showFreeTicket = !isWeaponCourse && !isBusinessModelCourse;
-                const freeTicketHref = `/login?email=${encodeURIComponent(loginEmail)}&ticket=${encodeURIComponent(courseValue)}&next=${encodeURIComponent("/dashboard?section=programs")}`;
+                const showFreeTicket = isFreeTicketPsychologyCourse(courseValue);
+                const freeTicketHref = buildFreeTicketLoginHref(loginEmail, courseValue);
                 return (
                   <p key={`${section.title}-${idx}`} className="result-line result-line-rich result-course-line">
                     <span className="result-key">Course:</span>{" "}

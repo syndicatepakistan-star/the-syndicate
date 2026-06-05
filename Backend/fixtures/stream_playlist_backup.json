@@ -491,5 +491,39 @@
     "created_at": "2026-05-04T12:27:40.468Z",
     "updated_at": "2026-05-04T12:27:40.468Z"
   }
+},
+{
+  "model": "video_streaming.streamplaylist",
+  "pk": 30,
+  "fields": {
+    "title": "The Micro Business Protocol",
+    "slug": "the-micro-business-protocol",
+    "category": "business_psychology",
+    "description": "The Micro Business Protocol — strategic psychology and execution framework for building lean, high-leverage micro businesses without corporate overhead.",
+    "price": "40.00",
+    "rating": "4.0",
+    "cover_image": "",
+    "is_published": true,
+    "is_coming_soon": false,
+    "created_at": "2026-05-04T12:27:40.468Z",
+    "updated_at": "2026-05-04T12:27:40.468Z"
+  }
+},
+{
+  "model": "video_streaming.streamplaylist",
+  "pk": 31,
+  "fields": {
+    "title": "Mastering Risk and Uncertainty",
+    "slug": "mastering-risk-and-uncertainty",
+    "category": "business_psychology",
+    "description": "The Hook\r\nThe Syndicate knows that fear is not a signal to retreat; it is the most critical financial metric on your internal dashboard. While amateurs freeze in the face of unpaid contracts, shrinking margins, or aggressive competition, the elite recognize this friction as a psychological notification of financial exposure. To build an unyielding empire, you must stop acting on raw emotion and start auditing fear as a data-driven warning system for your cash flow.\r\nThe Core Protocol\r\nThis protocol strips the toxic emotion out of business operations, reclassifying hesitation and anxiety as actionable data points. You will learn to lean into calculated risk, audit operational exposure, and execute with cold logic when the math demands a pivot.\r\nWhat you will Learn\r\nLesson 1.1: Dealing with Operational Risk\r\nLesson 1.2: Getting Uncomfortable\r\nLesson 2.1: The Background Apps\r\nLesson 3.1: The Toolbox\r\nLesson 4.1: Patience is Profit\r\nLesson 5.1: The Illusion of Success\r\nLesson 6.1: The Autopsy",
+    "price": "40.00",
+    "rating": "4.0",
+    "cover_image": "",
+    "is_published": true,
+    "is_coming_soon": false,
+    "created_at": "2026-05-04T12:27:40.468Z",
+    "updated_at": "2026-05-04T12:27:40.468Z"
+  }
 }
 ]

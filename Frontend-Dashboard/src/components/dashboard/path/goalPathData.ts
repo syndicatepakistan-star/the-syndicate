@@ -95,7 +95,7 @@ export const PATH_CARD_SKIN: Record<
  * Titles are matched loosely against live playlist/course API names.
  */
 export const PATH_PROGRAM_TITLES: Record<GoalId, readonly string[]> = {
-  web_dev: ["Trading with Technical Analysis Course", "THE 1 MINUTE SCALPEL"],
+  web_dev: ["Trading with Technical Analysis Course", "The Micro Business Protocol"],
   digital_marketing: [
     "Faceless YouTube AI Content Creator Course",
     "WordPress Blog",

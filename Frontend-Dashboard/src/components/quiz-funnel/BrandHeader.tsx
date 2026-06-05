@@ -18,10 +18,10 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
         />
       </div>
       <div>
-        <p className={`${publicHeadingLightning("amber")} brand-kicker`}>THE SYNDICATE</p>
-        <h1 className={`${publicHeadingLightning("amber")} brand-title`}>THE SOVEREIGN ENTITY AUDIT</h1>
+        <p className={`${publicHeadingLightning("violet")} brand-kicker`}>THE SYNDICATE</p>
+        <h1 className={`${publicHeadingLightning("violet")} brand-title`}>THE SOVEREIGN ENTITY AUDIT</h1>
         {subtitle ? (
-          <p className={`${publicHeadingLightning("amber")} brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p>
+          <p className={`${publicHeadingLightning("violet")} brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p>
         ) : null}
       </div>
     </header>

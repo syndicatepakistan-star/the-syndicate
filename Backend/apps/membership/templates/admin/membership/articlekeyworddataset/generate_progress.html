@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:membership_articlekeyworddataset_changelist' %}">{% trans 'Article keyword datasets' %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:membership_articlekeyworddataset_change' dataset.pk %}">{{ dataset.name }}</a>
+  &rsaquo; {% trans 'Generating articles' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+<p>
+  {% blocktrans with done=created_total total=total %}
+  Created {{ done }} of {{ total }} so far. Starting the next batch — keep this tab open.
+  {% endblocktrans %}
+</p>
+<p class="help">
+  {% trans "Generation runs in small batches to avoid server timeouts. If this page stops, open the dataset again and click Generate again." %}
+</p>
+<form id="continue-generation" method="post" action="{% url 'admin:membership_articlekeyworddataset_generate_articles' dataset.pk %}">
+  {% csrf_token %}
+  <input type="hidden" name="offset" value="{{ offset }}">
+  <input type="hidden" name="total" value="{{ total }}">
+  <input type="hidden" name="chunk_size" value="{{ chunk_size }}">
+</form>
+<noscript>
+  <p>{% trans "JavaScript is disabled. Click continue to run the next batch." %}</p>
+  <button type="submit" form="continue-generation" class="default">{% trans "Continue generation" %}</button>
+</noscript>
+<script>
+  setTimeout(function () {
+    document.getElementById("continue-generation").submit();
+  }, 800);
+</script>
+{% endblock %}

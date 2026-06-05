@@ -15,57 +15,128 @@ OPTION_INDEX_MAP = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 BANNED_COURSES = frozenset({"The Art Of Business Persuasion", "The Art of Business Persuasion"})
 
-# Canonical DB playlist titles (fixtures/stream_playlist_backup.json).
-# User labels mapped 1:1 where the exact title exists in the catalog.
-# User label → DB title when no exact playlist match exists:
-#   "Mastering Risk and Uncertainty" → The Art of Critical Thinking
-#   "Micro business protocol" → Prompt Engineering
-#   "Building AI Agents with Claude and Anti Gravity" → How To Build A.I Agents
-#   "AI Content Automation" → Faceless YouTube AI Content Creator Course
+# --- Allowed course catalogs (ONLY these may appear in reports/recommendations) ---
+ALLOWED_BUSINESS_MODELS: frozenset[str] = frozenset(
+    {
+        "AI Automation",
+        "App Building using Flutter",
+        "Python Full Course",
+        "Amazon KDP",
+        "Build a Real React App",
+        "Building Games Using Unreal Engine",
+        "Framer Crash Course",
+        "Wordpress Blog",
+        "Print On Demand",
+        "FULL CANVA TUTORIAL",
+        "N8N AI Automation",
+        "Trading advanced technical analysis",
+    }
+)
+
+ALLOWED_PSYCHOLOGY: frozenset[str] = frozenset(
+    {
+        "Business Warfare",
+        "Money Philosophy",
+        "13 Syndicate Business Rule",
+        "Zero to 1 Million",
+        "9 to 5 Exit Strategy",
+        "Compound Effect",
+        "The Micro Business Protocol",
+        "Hustle Hard",
+        "Mastering Consistency",
+        "Secret To Transformation",
+        "Mastering Risk and Uncertainty",
+    }
+)
+
+# Short keys → allowed catalog titles (reports use these strings only).
 COURSE = {
-    "trading_technical": "Crypto Trading with Technical Analysis Course",
-    "ai_content": "Faceless YouTube AI Content Creator Course",
+    "ai_automation": "AI Automation",
+    "n8n_automation": "N8N AI Automation",
+    "flutter": "App Building using Flutter",
+    "python": "Python Full Course",
+    "react": "Build a Real React App",
     "unreal": "Building Games Using Unreal Engine",
-    "ai_agents": "How To Build A.I Agents",
-    "wordpress": "WordPress Blog",
     "framer": "Framer Crash Course",
-    "pod": "Print On Demand Clothing",
-    "kdp": "Book Publishing On Amazon (KINDLE)",
-    "business_warfare": "The Art of Mastering Human Behavior in Business",
-    "syndicate_13": "Syndicate 13 Business Rules",
-    "micro_protocol": "Prompt Engineering",
-    "risk_uncertainty": "The Art of Critical Thinking",
-    "zero_million": "Zero to One Million",
-    "exit_9_5": "The 9 to 5 Exit Strategy",
-    "mastering_consistency": "Mastering Consistency",
-    "compound_effect": "The Compound Effect",
-    "money_philosophy": "Syndicate Money Philosophy",
-    "secret_transformation": "The Secret To Transformation",
+    "wordpress": "Wordpress Blog",
+    "pod": "Print On Demand",
+    "canva": "FULL CANVA TUTORIAL",
+    "kdp": "Amazon KDP",
+    "trading_technical": "Trading advanced technical analysis",
+    "business_warfare": "Business Warfare",
+    "money_philosophy": "Money Philosophy",
+    "syndicate_13": "13 Syndicate Business Rule",
+    "zero_million": "Zero to 1 Million",
+    "exit_9_5": "9 to 5 Exit Strategy",
+    "compound_effect": "Compound Effect",
+    "micro_protocol": "The Micro Business Protocol",
     "hustle_hard": "Hustle Hard",
-    "empire_building": "The Business of Empire Building",
+    "mastering_consistency": "Mastering Consistency",
+    "secret_transformation": "Secret To Transformation",
+    "risk_uncertainty": "Mastering Risk and Uncertainty",
 }
+
+# Map allowed catalog titles → published playlist titles (enrollment/tickets only).
+WEAPON_TO_PLAYLIST: dict[str, str] = {
+    "AI Automation": "AI Automations",
+    "N8N AI Automation": "AI Automations",
+    "App Building using Flutter": "App Building (using Flutter)",
+    "Python Full Course": "Python Programming",
+    "Amazon KDP": "Book Publishing On Amazon (KINDLE)",
+    "Build a Real React App": "Building Apps using React JS",
+    "Building Games Using Unreal Engine": "Building Games Using Unreal Engine",
+    "Framer Crash Course": "Framer Crash Course",
+    "Wordpress Blog": "WordPress Blog",
+    "Print On Demand": "Print On Demand Clothing",
+    "FULL CANVA TUTORIAL": "Graphics Design Using Canva",
+    "Trading advanced technical analysis": "Crypto Trading with Technical Analysis Course",
+}
+
+PSYCHOLOGY_TO_PLAYLIST: dict[str, str] = {
+    "Business Warfare": "The Art of Mastering Human Behavior in Business",
+    "Money Philosophy": "Syndicate Money Philosophy",
+    "13 Syndicate Business Rule": "Syndicate 13 Business Rules",
+    "Zero to 1 Million": "Zero to One Million",
+    "9 to 5 Exit Strategy": "The 9 to 5 Exit Strategy",
+    "Compound Effect": "The Compound Effect",
+    "The Micro Business Protocol": "The Micro Business Protocol",
+    "Hustle Hard": "Hustle Hard",
+    "Mastering Consistency": "Mastering Consistency",
+    "Secret To Transformation": "The Secret To Transformation",
+    "Mastering Risk and Uncertainty": "Mastering Risk and Uncertainty",
+}
+
+# Quiz free-ticket psychology programs — only these four may show a free-ticket button.
+FREE_TICKET_PSYCHOLOGY_COURSES: frozenset[str] = frozenset(
+    {
+        COURSE["secret_transformation"],
+        COURSE["micro_protocol"],
+        COURSE["zero_million"],
+        COURSE["risk_uncertainty"],
+    }
+)
 
 # --- A. Archetype → Weapon (business models) ---
 ARCHETYPE_WEAPON_MODELS: dict[str, dict[str, list[str]]] = {
     "Ghost Architect": {
-        "entry": [COURSE["trading_technical"]],
-        "elite": [COURSE["ai_content"], COURSE["unreal"]],
+        "entry": [COURSE["python"], COURSE["trading_technical"]],
+        "elite": [COURSE["react"], COURSE["flutter"], COURSE["n8n_automation"], COURSE["unreal"]],
     },
     "Digital Raider": {
         "entry": [COURSE["wordpress"], COURSE["framer"]],
-        "elite": [COURSE["ai_agents"], COURSE["unreal"]],
+        "elite": [COURSE["trading_technical"], COURSE["unreal"], COURSE["ai_automation"]],
     },
     "Creative Infiltrator": {
-        "entry": [COURSE["pod"]],
-        "elite": [COURSE["ai_content"], COURSE["kdp"]],
+        "entry": [COURSE["pod"], COURSE["canva"]],
+        "elite": [COURSE["kdp"], COURSE["ai_automation"]],
     },
     "Asset Grinder": {
         "entry": [COURSE["pod"], COURSE["kdp"]],
-        "elite": [COURSE["ai_content"], COURSE["ai_agents"]],
+        "elite": [COURSE["ai_automation"], COURSE["n8n_automation"]],
     },
 }
 
-# --- Archetype → Psychology (shields) — only courses from user lists ---
+# --- Archetype → Psychology (shields) ---
 ARCHETYPE_PSYCHOLOGY_MODELS: dict[str, list[str]] = {
     "Ghost Architect": [
         COURSE["business_warfare"],
@@ -251,12 +322,12 @@ ARCHETYPE_TIEBREAK_ORDER: tuple[str, ...] = (
     "Asset Grinder",
 )
 
-# --- C. Protocol by power level (score) ---
+# --- C. Protocol by power level (score) — psychology catalog only ---
 PROTOCOL_BY_DESIGNATION: dict[str, str] = {
     "Street Soldier": COURSE["secret_transformation"],
     "Rogue Operator": COURSE["exit_9_5"],
     "Syndicate Specialist": COURSE["risk_uncertainty"],
-    "Prospect": COURSE["empire_building"],
+    "Prospect": COURSE["syndicate_13"],
 }
 
 DESIGNATION_BY_SCORE: tuple[tuple[int, int, str], ...] = (
@@ -373,13 +444,95 @@ def get_recommended_shield(virus: str, archetype: str | None = None) -> str:
     if archetype:
         by_virus = ARCHETYPE_VIRUS_SHIELD.get(archetype, {})
         if virus in by_virus:
-            return _assert_allowed_course(by_virus[virus])
+            return _assert_allowed_psychology(by_virus[virus])
         pool = ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or []
         if pool:
             idx = sum(ord(c) for c in virus) % len(pool)
-            return _assert_allowed_course(pool[idx])
+            return _assert_allowed_psychology(pool[idx])
     shield = SHIELD_BY_VIRUS.get(virus, COURSE["syndicate_13"])
-    return _assert_allowed_course(shield)
+    return _assert_allowed_psychology(shield)
+
+
+def map_weapon_to_playlist_title(name: str) -> str:
+    """Resolve allowed business model title to published playlist for tickets."""
+    title = _assert_allowed_weapon(name)
+    return WEAPON_TO_PLAYLIST.get(title, title)
+
+
+def map_psychology_to_playlist_title(name: str) -> str:
+    """Resolve allowed psychology title to published playlist for tickets."""
+    title = _assert_allowed_psychology(name)
+    return PSYCHOLOGY_TO_PLAYLIST.get(title, title)
+
+
+def normalize_free_ticket_title(title: str) -> str | None:
+    """Return catalog title when `title` matches a free-ticket psychology program."""
+    raw = (title or "").strip()
+    if not raw:
+        return None
+    lower = raw.lower()
+    for catalog in FREE_TICKET_PSYCHOLOGY_COURSES:
+        if catalog.lower() == lower:
+            return catalog
+    for catalog in FREE_TICKET_PSYCHOLOGY_COURSES:
+        db_title = PSYCHOLOGY_TO_PLAYLIST.get(catalog, catalog)
+        if db_title.lower() == lower:
+            return catalog
+    legacy_db_titles = {
+        "the 1 minute scalpel": COURSE["micro_protocol"],
+        "the micro business protocol": COURSE["micro_protocol"],
+    }
+    if lower in legacy_db_titles:
+        return legacy_db_titles[lower]
+    return None
+
+
+def is_free_ticket_psychology_course(title: str) -> bool:
+    return normalize_free_ticket_title(title) is not None
+
+
+def free_ticket_catalog_titles_from_stack(shield: str, protocol: str) -> list[str]:
+    """Eligible free-ticket catalog titles present in shield and/or protocol only."""
+    out: list[str] = []
+    for name in (shield, protocol):
+        catalog = normalize_free_ticket_title(name)
+        if catalog and catalog not in out:
+            out.append(catalog)
+    return out
+
+
+def free_ticket_playlist_titles_from_stack(shield: str, protocol: str) -> list[str]:
+    """Published playlist titles to unlock — only shield/protocol slots in the free-ticket catalog."""
+    out: list[str] = []
+    for catalog in free_ticket_catalog_titles_from_stack(shield, protocol):
+        db_title = map_psychology_to_playlist_title(catalog)
+        if db_title not in out:
+            out.append(db_title)
+    return out
+
+
+def free_ticket_playlist_title_for_catalog(title: str) -> str | None:
+    """Single free-ticket catalog title → published playlist title."""
+    catalog = normalize_free_ticket_title(title)
+    if not catalog:
+        return None
+    return map_psychology_to_playlist_title(catalog)
+
+
+def _assert_allowed_weapon(course: str) -> str:
+    if course in BANNED_COURSES:
+        raise ValueError(f"Banned course recommendation blocked: {course}")
+    if course not in ALLOWED_BUSINESS_MODELS:
+        raise ValueError(f"Business model not in allowed catalog: {course}")
+    return course
+
+
+def _assert_allowed_psychology(course: str) -> str:
+    if course in BANNED_COURSES:
+        raise ValueError(f"Banned course recommendation blocked: {course}")
+    if course not in ALLOWED_PSYCHOLOGY:
+        raise ValueError(f"Psychology course not in allowed catalog: {course}")
+    return course
 
 
 def get_recommended_protocol(designation: str) -> str:
@@ -393,8 +546,8 @@ def get_recommended_protocol(designation: str) -> str:
             if key.lower() in (label or "").lower():
                 label = key
                 break
-    shield = PROTOCOL_BY_DESIGNATION.get(label, "The Secret To Transformation")
-    return _assert_allowed_course(shield)
+    shield = PROTOCOL_BY_DESIGNATION.get(label, COURSE["secret_transformation"])
+    return _assert_allowed_psychology(shield)
 
 
 def _budget_tier(answers: list[dict]) -> str:
@@ -421,13 +574,18 @@ def get_weapon_course(archetype: str, score: int, answers: list[dict] | None = N
     if not pool:
         pool = models["entry"]
     idx = _weapon_pick_index(answers, len(pool))
-    return _assert_allowed_course(pool[idx])
+    return _assert_allowed_weapon(pool[idx])
 
 
 def _assert_allowed_course(course: str) -> str:
+    """Backward-compatible guard — must be in weapons or psychology catalog."""
     if course in BANNED_COURSES:
         raise ValueError(f"Banned course recommendation blocked: {course}")
-    return course
+    if course in ALLOWED_BUSINESS_MODELS:
+        return course
+    if course in ALLOWED_PSYCHOLOGY:
+        return course
+    raise ValueError(f"Course not in allowed catalog: {course}")
 
 
 def get_archetype_catalog(archetype: str) -> dict[str, list[str]]:
@@ -435,9 +593,9 @@ def get_archetype_catalog(archetype: str) -> dict[str, list[str]]:
     weapons = ARCHETYPE_WEAPON_MODELS.get(archetype) or ARCHETYPE_WEAPON_MODELS["Asset Grinder"]
     business_models = list(dict.fromkeys((weapons.get("entry") or []) + (weapons.get("elite") or [])))
     return {
-        "business_models": [_assert_allowed_course(c) for c in business_models],
+        "business_models": [_assert_allowed_weapon(c) for c in business_models],
         "psychology": [
-            _assert_allowed_course(c)
+            _assert_allowed_psychology(c)
             for c in (ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or [])
         ],
     }

@@ -23,7 +23,18 @@ from django.views.decorators.http import require_POST
 
 from apps.affiliate_tracking.views import ensure_affiliate_profile_for_existing_user, referral_ids_payload
 from apps.courses.models import Course, CourseEnrollment
-from apps.quiz_funnel.logic import get_recommended_protocol, get_recommended_shield
+from apps.quiz_funnel.logic import (
+  ALLOWED_BUSINESS_MODELS,
+  ALLOWED_PSYCHOLOGY,
+  free_ticket_playlist_title_for_catalog,
+  free_ticket_playlist_titles_from_stack,
+  get_recommended_protocol,
+  get_recommended_shield,
+  is_free_ticket_psychology_course,
+  map_psychology_to_playlist_title,
+  map_weapon_to_playlist_title,
+  normalize_free_ticket_title,
+)
 from apps.portal.models import UserDashboardEntitlement, UserPlanPurchase
 from apps.quiz_funnel.models import Result as QuizResult
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
@@ -91,18 +102,25 @@ def _courses_for_quiz_offer(offer_text: str) -> list[Course]:
   return chosen
 
 
-def _normalize_ticket_title(title: str) -> str:
+def _catalog_title_match(title: str, allowed: frozenset[str]) -> str | None:
   t = (title or "").strip().lower()
-  aliases = {
-    "the business of empire": "The Business of Empire Building",
-    "business of empire": "The Business of Empire Building",
-    "business warfare": "The Art of Mastering Human Behavior in Business",
-    "micro business protocol": "Prompt Engineering",
-    "mastering risk and uncertainty": "The Art of Critical Thinking",
-  }
-  if t in aliases:
-    return aliases[t]
-  return (title or "").strip()
+  for name in allowed:
+    if name.lower() == t:
+      return name
+  return None
+
+
+def _normalize_ticket_title(title: str) -> str:
+  raw = (title or "").strip()
+  if not raw:
+    return raw
+  weapon = _catalog_title_match(raw, ALLOWED_BUSINESS_MODELS)
+  if weapon:
+    return map_weapon_to_playlist_title(weapon)
+  psych = _catalog_title_match(raw, ALLOWED_PSYCHOLOGY)
+  if psych:
+    return map_psychology_to_playlist_title(psych)
+  return raw
 
 
 def _existing_locked_ticket_titles_for_user(user: User) -> list[str]:
@@ -139,17 +157,13 @@ def _existing_locked_ticket_titles_for_user(user: User) -> list[str]:
 
 def _quiz_ticket_titles_for_result(quiz_result: QuizResult) -> list[str]:
   """
-  Free-ticket flow unlocks only psychology tracks, not business-model tracks.
+  Free-ticket flow unlocks only shield/protocol courses that are in the four-ticket catalog.
   """
-  designation = (quiz_result.category or "").strip()
   fatal_flaw = (quiz_result.virus or "").strip()
-  shield = _normalize_ticket_title(get_recommended_shield(fatal_flaw))
-  protocol = _normalize_ticket_title(get_recommended_protocol(designation))
-  out: list[str] = []
-  for item in (shield, protocol):
-    if item and item not in out:
-      out.append(item)
-  return out
+  designation = (quiz_result.category or "").strip()
+  shield = get_recommended_shield(fatal_flaw)
+  protocol = get_recommended_protocol(designation)
+  return free_ticket_playlist_titles_from_stack(shield, protocol)
 
 
 def _best_playlist_match_for_offer_part(part: str) -> StreamPlaylist | None:
@@ -245,15 +259,20 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
   if quiz_result is None:
     return user
   existing_locked_titles = _existing_locked_ticket_titles_for_user(user)
-  selected = _normalize_ticket_title(selected_ticket_title)
   quiz_ticket_titles = _quiz_ticket_titles_for_result(quiz_result)
-  if selected and quiz_ticket_titles:
-    # If user clicks any eligible "Get Free Ticket" CTA in quiz result,
-    # unlock the complete psychology ticket set together.
-    ticket_titles = quiz_ticket_titles
+  selected_is_free_ticket = is_free_ticket_psychology_course(selected_ticket_title)
+  if selected_is_free_ticket:
+    playlist_title = free_ticket_playlist_title_for_catalog(selected_ticket_title)
+    if playlist_title:
+      ticket_titles = list(existing_locked_titles)
+      if playlist_title not in ticket_titles:
+        ticket_titles.append(playlist_title)
+    else:
+      ticket_titles = list(existing_locked_titles)
   elif existing_locked_titles:
-    # Keep prior quiz-ticket unlocks for this user.
     ticket_titles = existing_locked_titles
+  elif selected_ticket_title.strip():
+    ticket_titles = []
   else:
     ticket_titles = quiz_ticket_titles
   courses = _courses_for_ticket_titles(ticket_titles)

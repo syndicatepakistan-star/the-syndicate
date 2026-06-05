@@ -10,10 +10,9 @@ export default function QuizFunnelLandingPage() {
           THE SYSTEM HAS A FILE ON YOU. IT&apos;S TIME YOU HAD THE FILE ON THE SYSTEM.
         </h2>
         <p className="section-subtitle">
-          Most people from the struggle have the engine, but they are driving in circles. You are
-          either a System Asset or a System Liability. This 17-point Audit exposes the &quot;viruses&quot;
-          in your psychology and identifies the exact &quot;Digital Weapon&quot; you need to build your War
-          Chest.
+          Most people in the hood have the engine, but they are driving in circles. You are either a
+          System Asset or a System Liability. This 17-point Audit exposes the &quot;viruses&quot; in your
+          psychology and identifies the exact &quot;Digital Weapon&quot; you need to build your War Chest.
         </p>
         <div className="landing-details-grid">
           <div className="landing-detail-card">
@@ -44,7 +43,7 @@ export default function QuizFunnelLandingPage() {
         </p>
         <Link href="/quiz/questions">
           <button type="button" className="btn btn-primary">
-            START DIAGNOSIS
+            BEGIN THE SOVEREIGN ENTITY AUDIT
           </button>
         </Link>
       </section>

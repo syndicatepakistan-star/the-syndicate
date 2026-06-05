@@ -53,6 +53,7 @@ function renderStyledReport(report: string, loginEmail: string) {
     "ANALYSIS:",
     "DETECTED VIRUS:",
     "THE STING:",
+    "THE REALITY:",
     "THE DIAGNOSIS:",
     "URGENCY OVERRIDE:",
     "WARNING:",

@@ -49,7 +49,7 @@ def generate_ai_report(
             "Section B: The Virus (Psychological Flaw)\n"
             f"DETECTED VIRUS: {fatal_flaw}\n"
             "THE STING: Your current behavior pattern is draining your leverage before you can build momentum.\n"
-            "THE DIAGNOSIS: Your data reveals a repeatable bottleneck that keeps your output disconnected from long-term capital growth.\n"
+            "THE REALITY: Your data reveals a repeatable bottleneck that keeps your output disconnected from long-term capital growth.\n"
             "URGENCY OVERRIDE: If this remains unchecked, the next 30 days will harden the same cycle and delay your exit timeline.\n\n"
             "Section C: The Syndicate Execution Stack\n"
             "To neutralize your liability status, The Syndicate prescribes the following Integrated Stack:\n"
@@ -59,7 +59,7 @@ def generate_ai_report(
             "Section D: Final Directive\n"
             'WARNING: The window to exit the system is closing. Economic shifts are making it harder for the "unmapped" to survive.\n'
             "Most people will read this audit and do nothing. They will return to the struggle and remain a statistic.\n"
-            "Your Admission Grant expires in 48 Hours. Claim your Blueprint or stay in the trap."
+            "Your Admission Grant expires in 48 Hours. Claim your Blueprint or return to the struggle."
         )
 
     client = OpenAI(api_key=api_key)
@@ -85,7 +85,7 @@ def generate_ai_report(
         "Section B: The Virus (Psychological Flaw)\n"
         f"DETECTED VIRUS: {fatal_flaw}\n"
         "THE STING: ...\n"
-        "THE DIAGNOSIS: ...\n"
+        "THE REALITY: ...\n"
         "URGENCY OVERRIDE: ...\n\n"
         "Section C: The Syndicate Execution Stack\n"
         "To neutralize your liability status, The Syndicate prescribes the following Integrated Stack:\n"
@@ -95,7 +95,7 @@ def generate_ai_report(
         "Section D: Final Directive\n"
         'WARNING: The window to exit the system is closing. Economic shifts are making it harder for the "unmapped" to survive.\n'
         "Most people will read this audit and do nothing. They will return to the struggle and remain a statistic.\n"
-        "Your Admission Grant expires in 48 Hours. Claim your Blueprint or stay in the trap."
+        "Your Admission Grant expires in 48 Hours. Claim your Blueprint or return to the struggle."
     )
 
     response = client.responses.create(

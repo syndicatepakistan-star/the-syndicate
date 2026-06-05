@@ -4,30 +4,46 @@
 {% block submit_buttons_bottom %}
 {{ block.super }}
 {% if original.pk %}
-<div class="submit-row" style="margin-top: 12px; padding-left: 0; border-top: 1px solid #ddd; padding-top: 12px;">
-  <form
-    method="post"
-    action="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
-    style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;"
-    onsubmit="return confirm('Generate unique articles from this dataset?');"
+<div
+  class="submit-row"
+  style="margin-top: 12px; padding-left: 0; border-top: 1px solid #ddd; padding-top: 12px;"
+>
+  {# Must NOT nest <form> inside Django admin's change form — use formaction POST instead. #}
+  <input type="hidden" name="quick_batch" id="membership-quick-batch-flag" value="" />
+  <input type="hidden" name="article_count" id="membership-article-count-flag" value="" />
+
+  <button
+    type="submit"
+    class="default"
+    style="background: #417690; padding: 10px 18px; font-weight: 700; margin-right: 10px;"
+    formaction="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
+    formmethod="post"
+    onclick="document.getElementById('membership-quick-batch-flag').value='1'; document.getElementById('membership-article-count-flag').value=''; return confirm('Generate 5 unique articles from this PDF dataset? Each article uses one section: informative title, key points, summary, and paragraphs from that section.');"
   >
-    {% csrf_token %}
-    <label for="article_count" style="font-weight: 600; color: #333;">
-      {% trans "Articles:" %}
-    </label>
-    <input
-      type="text"
-      id="article_count"
-      name="article_count"
-      placeholder="{% trans 'Default 15' %}"
-      style="width: 9rem; padding: 6px 8px;"
-    />
-    <button type="submit" class="default" style="background: #417690; padding: 10px 16px; font-weight: 600;">
-      {% trans "Generate articles from dataset" %}
-    </button>
-  </form>
-  <p class="help" style="margin: 8px 0 0; max-width: 48rem; color: #666;">
-    {% trans "After uploading a PDF, click Save first, then use this button. Leave blank for 15 unique articles per click (recommended). Type a number for a custom batch size, or type all for every unused row (slow on large datasets)." %}
+    {% trans "Generate 5 articles" %}
+  </button>
+
+  <label for="membership-article-count-custom" style="font-weight: 600; color: #333; margin-right: 6px;">
+    {% trans "Custom batch:" %}
+  </label>
+  <input
+    type="text"
+    id="membership-article-count-custom"
+    placeholder="{% trans 'Default 5' %}"
+    style="width: 9rem; padding: 6px 8px; margin-right: 8px;"
+  />
+  <button
+    type="submit"
+    style="padding: 10px 16px; font-weight: 600;"
+    formaction="{% url 'admin:membership_articlekeyworddataset_generate_articles' original.pk %}"
+    formmethod="post"
+    onclick="document.getElementById('membership-quick-batch-flag').value=''; var n=document.getElementById('membership-article-count-custom').value.trim(); document.getElementById('membership-article-count-flag').value=n; return confirm('Generate unique articles from this dataset?');"
+  >
+    {% trans "Generate articles" %}
+  </button>
+
+  <p class="help" style="margin: 10px 0 0; max-width: 52rem; color: #666; line-height: 1.5; flex-basis: 100%;">
+    {% trans "After Save, click “Generate 5 articles” (takes 1–3 minutes — do not close the page). Each unused PDF section becomes one article with a unique title, key points, description, and paragraphs from that section." %}
     {% trans "Requires OPENAI_API_KEY." %}
   </p>
 </div>

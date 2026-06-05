@@ -8731,6 +8731,14 @@ body {
   --poc-open-text: #bbf7d0;
 }
 
+.plan-offer-card--purple {
+  --poc-border: rgba(192, 132, 252, 0.82);
+  --poc-glow: rgba(168, 85, 247, 0.48);
+  --poc-panel-border: rgba(139, 92, 246, 0.45);
+  --poc-open-border: rgba(192, 132, 252, 0.92);
+  --poc-open-text: #ddd6fe;
+}
+
 .plan-offer-card__shell {
   border: 2px solid var(--poc-border);
   background: #04060d;

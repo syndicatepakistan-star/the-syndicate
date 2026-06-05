@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import { PlanOfferDetailModal } from "@/components/programs/PlanOfferDetailModal";
-import { PLAN_OFFERS, type PlanOfferDef, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
+import {
+  PLAN_OFFERS,
+  PLAN_OFFERS_PRIMARY,
+  PLAN_OFFERS_VAULT,
+  type PlanOfferDef,
+  type PlanOfferKey,
+} from "@/components/programs/planOfferCatalog";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 
 export function PublicPlanOfferCards({
@@ -58,11 +64,28 @@ export function PublicPlanOfferCards({
     [checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, router]
   );
 
+  const renderOffer = (offer: PlanOfferDef) => (
+    <PlanOfferCard
+      key={offer.plan}
+      offer={offer}
+      size={size}
+      busy={busyPlan === offer.plan}
+      onDetails={() => setDetailOffer(offer)}
+      onOpen={() => {
+        if (offer.openHref) {
+          router.push(offer.openHref);
+          return;
+        }
+        void joinOffer(offer);
+      }}
+    />
+  );
+
   return (
     <section
       className={cn(
         "relative mx-auto w-full",
-        isLarge ? "max-w-6xl" : "max-w-[1400px]",
+        isLarge ? "max-w-7xl" : "max-w-[1400px]",
         embedded
           ? "px-[var(--fluid-section-p,1rem)] py-6 sm:py-8"
           : "px-[clamp(1rem,3.2vw,1.5rem)] pb-6 sm:px-6 sm:pb-8"
@@ -73,31 +96,20 @@ export function PublicPlanOfferCards({
           {error}
         </div>
       ) : null}
-      <div
-        className={cn(
-          "w-full",
-          isLarge
-            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:gap-10"
-            : "flex flex-row flex-wrap items-start justify-center gap-2 sm:gap-3"
-        )}
-      >
-        {PLAN_OFFERS.map((offer) => (
-          <PlanOfferCard
-            key={offer.plan}
-            offer={offer}
-            size={size}
-            busy={busyPlan === offer.plan}
-            onDetails={() => setDetailOffer(offer)}
-            onOpen={() => {
-              if (offer.openHref) {
-                router.push(offer.openHref);
-                return;
-              }
-              void joinOffer(offer);
-            }}
-          />
-        ))}
-      </div>
+      {isLarge ? (
+        <div className="flex w-full flex-col gap-8 lg:gap-10">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+            {PLAN_OFFERS_PRIMARY.map(renderOffer)}
+          </div>
+          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
+            {PLAN_OFFERS_VAULT.map(renderOffer)}
+          </div>
+        </div>
+      ) : (
+        <div className="flex w-full flex-row flex-wrap items-start justify-center gap-2 sm:gap-3">
+          {PLAN_OFFERS.map(renderOffer)}
+        </div>
+      )}
       <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
     </section>
   );

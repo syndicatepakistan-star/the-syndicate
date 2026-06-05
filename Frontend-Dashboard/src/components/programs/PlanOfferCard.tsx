@@ -60,6 +60,18 @@ const PLAN_OFFER_THEMES = {
     openBtn:
       "border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.65),0_0_48px_rgba(16,185,129,0.35),inset_0_0_0_1px_rgba(74,222,128,0.45)] hover:shadow-[0_0_36px_rgba(52,211,153,0.85),0_0_72px_rgba(16,185,129,0.55),inset_0_0_0_1px_rgba(74,222,128,0.65)]",
   },
+  purple: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(192,132,252,0.55),0_0_72px_rgba(168,85,247,0.62),0_0_130px_rgba(139,92,246,0.38),0_0_180px_rgba(192,132,252,0.18)]",
+    ring: "from-violet-300/95 via-purple-400/95 to-fuchsia-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.52)_0%,rgba(124,58,237,0.32)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-violet-200/0 via-purple-200/95 to-white/0",
+    infoPanel: "border-violet-300/40 bg-violet-950/30",
+    dominantBorder: "border-violet-300/85",
+    priceBadge:
+      "border-violet-300/55 bg-[#120818]/95 text-violet-100 shadow-[0_0_22px_rgba(168,85,247,0.45)]",
+    openBtn:
+      "border-violet-300/90 bg-[linear-gradient(135deg,rgba(168,85,247,0.32),rgba(46,8,62,0.98))] text-violet-100 shadow-[0_0_24px_rgba(168,85,247,0.65),0_0_48px_rgba(139,92,246,0.35),inset_0_0_0_1px_rgba(192,132,252,0.45)] hover:shadow-[0_0_36px_rgba(168,85,247,0.85),0_0_72px_rgba(139,92,246,0.55),inset_0_0_0_1px_rgba(192,132,252,0.65)]",
+  },
 } as const;
 
 export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, onOpen }: Props) {

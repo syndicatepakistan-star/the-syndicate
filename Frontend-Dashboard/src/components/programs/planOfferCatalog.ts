@@ -3,11 +3,17 @@ import {
   OFFER_PLAN_THUMB_AI_CONTENT_AUTOMATION,
   OFFER_PLAN_THUMB_MONEY_MASTERY,
   OFFER_PLAN_THUMB_THE_KNIGHT,
+  OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
 
-export type PlanOfferKey = "bundle" | "king" | "agentic_ai" | "ai_content_automation";
+export type PlanOfferKey =
+  | "bundle"
+  | "king"
+  | "agentic_ai"
+  | "ai_content_automation"
+  | "trading_technical_analysis";
 
-export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green";
+export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple";
 
 export type PlanOfferDef = {
   plan: PlanOfferKey;
@@ -32,7 +38,8 @@ export type PlanOfferDef = {
   grantsEntitlement?: boolean;
 };
 
-export const PLAN_OFFERS: readonly PlanOfferDef[] = [
+/** Row 1 — Money Mastery + The Knight */
+export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
   {
     plan: "bundle",
     title: "Money Mastery Bundle",
@@ -85,6 +92,10 @@ export const PLAN_OFFERS: readonly PlanOfferDef[] = [
     ],
     grantsEntitlement: true,
   },
+] as const;
+
+/** Row 2 — upcoming vault programs (checkout + billing; curriculum unlocks later) */
+export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
   {
     plan: "agentic_ai",
     title: "Agentic AI",
@@ -133,7 +144,33 @@ export const PLAN_OFFERS: readonly PlanOfferDef[] = [
     ],
     grantsEntitlement: false,
   },
+  {
+    plan: "trading_technical_analysis",
+    title: "Trading Advanced Technical Analysis",
+    imageSrc: OFFER_PLAN_THUMB_TRADING,
+    teaser:
+      "Retail noise is designed to liquidate you — this protocol installs chart discipline, risk rails, and execution math built for asymmetric market warfare",
+    displayPrice: "$99",
+    comparePrice: "$199",
+    billingLabel: "/lifetime",
+    checkoutAmount: "99",
+    billing: "monthly",
+    openLabel: "Open",
+    accent: "purple",
+    detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
+    detailDescription:
+      "Reserve lifetime access to the Trading Advanced Technical Analysis vault. Checkout unlocks dashboard access; the full curriculum unlocks when the program is published.",
+    detailFeatures: [
+      "Lifetime access reservation for Trading Advanced Technical Analysis",
+      "Full dashboard login after checkout",
+      "Program unlock when the curriculum launches",
+      "Billing history in your account",
+    ],
+    grantsEntitlement: false,
+  },
 ] as const;
+
+export const PLAN_OFFERS: readonly PlanOfferDef[] = [...PLAN_OFFERS_PRIMARY, ...PLAN_OFFERS_VAULT];
 
 export function planOfferByKey(plan: PlanOfferKey): PlanOfferDef | undefined {
   return PLAN_OFFERS.find((o) => o.plan === plan);

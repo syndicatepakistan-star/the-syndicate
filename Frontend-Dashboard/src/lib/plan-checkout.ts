@@ -4,7 +4,12 @@ import {
   portalFetch,
 } from "@/lib/portal-api";
 
-export type SubscriptionPlanKey = "bundle" | "king" | "agentic_ai" | "ai_content_automation";
+export type SubscriptionPlanKey =
+  | "bundle"
+  | "king"
+  | "agentic_ai"
+  | "ai_content_automation"
+  | "trading_technical_analysis";
 
 export type PlanCheckoutParams = {
   plan: SubscriptionPlanKey;
@@ -130,6 +135,7 @@ const SUBSCRIPTION_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
   "king",
   "agentic_ai",
   "ai_content_automation",
+  "trading_technical_analysis",
 ];
 
 export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {

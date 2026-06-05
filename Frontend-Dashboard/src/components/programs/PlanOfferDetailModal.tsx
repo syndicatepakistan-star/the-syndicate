@@ -49,6 +49,13 @@ const DETAIL_THEMES: Record<
     featureBorder: "border-emerald-400/60",
     check: "border-emerald-400/90 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.55)]",
   },
+  purple: {
+    modal: "border-violet-400/50 shadow-[0_0_56px_rgba(168,85,247,0.35),0_0_100px_rgba(139,92,246,0.2),inset_0_0_80px_rgba(168,85,247,0.1)]",
+    closeBtn: "border-violet-400/40 text-violet-100 hover:border-violet-300/65",
+    title: "text-violet-300",
+    featureBorder: "border-violet-400/60",
+    check: "border-violet-400/90 text-violet-300 shadow-[0_0_12px_rgba(168,85,247,0.55)]",
+  },
 };
 
 function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {

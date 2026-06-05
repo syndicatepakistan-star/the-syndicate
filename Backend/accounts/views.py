@@ -339,6 +339,7 @@ _PLAN_RECORDABLE_SLUGS = frozenset(
     "knight",
     "agentic_ai",
     "ai_content_automation",
+    "trading_technical_analysis",
   }
 )
 _PLAN_PRODUCT_TITLES = {
@@ -348,6 +349,7 @@ _PLAN_PRODUCT_TITLES = {
   "knight": "The Knight",
   "agentic_ai": "Agentic AI — lifetime access",
   "ai_content_automation": "AI Content Automation — lifetime access",
+  "trading_technical_analysis": "Trading Advanced Technical Analysis — lifetime access",
 }
 
 
@@ -404,6 +406,7 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     "knight": "Knight",
     "agentic_ai": "Agentic AI",
     "ai_content_automation": "AI Content Automation",
+    "trading_technical_analysis": "Trading Advanced Technical Analysis",
   }
   try:
     amt = Decimal(str(paid_amount))

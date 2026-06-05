@@ -15,20 +15,156 @@ OPTION_INDEX_MAP = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 BANNED_COURSES = frozenset({"The Art Of Business Persuasion", "The Art of Business Persuasion"})
 
-# --- B. Virus → Shield (ONLY these shields) ---
+# Canonical DB playlist titles (fixtures/stream_playlist_backup.json).
+# User labels mapped 1:1 where the exact title exists in the catalog.
+# User label → DB title when no exact playlist match exists:
+#   "Mastering Risk and Uncertainty" → The Art of Critical Thinking
+#   "Micro business protocol" → Prompt Engineering
+#   "Building AI Agents with Claude and Anti Gravity" → How To Build A.I Agents
+#   "AI Content Automation" → Faceless YouTube AI Content Creator Course
+COURSE = {
+    "trading_technical": "Crypto Trading with Technical Analysis Course",
+    "ai_content": "Faceless YouTube AI Content Creator Course",
+    "unreal": "Building Games Using Unreal Engine",
+    "ai_agents": "How To Build A.I Agents",
+    "wordpress": "WordPress Blog",
+    "framer": "Framer Crash Course",
+    "pod": "Print On Demand Clothing",
+    "kdp": "Book Publishing On Amazon (KINDLE)",
+    "business_warfare": "The Art of Mastering Human Behavior in Business",
+    "syndicate_13": "Syndicate 13 Business Rules",
+    "micro_protocol": "Prompt Engineering",
+    "risk_uncertainty": "The Art of Critical Thinking",
+    "zero_million": "Zero to One Million",
+    "exit_9_5": "The 9 to 5 Exit Strategy",
+    "mastering_consistency": "Mastering Consistency",
+    "compound_effect": "The Compound Effect",
+    "money_philosophy": "Syndicate Money Philosophy",
+    "secret_transformation": "The Secret To Transformation",
+    "hustle_hard": "Hustle Hard",
+    "empire_building": "The Business of Empire Building",
+}
+
+# --- A. Archetype → Weapon (business models) ---
+ARCHETYPE_WEAPON_MODELS: dict[str, dict[str, list[str]]] = {
+    "Ghost Architect": {
+        "entry": [COURSE["trading_technical"]],
+        "elite": [COURSE["ai_content"], COURSE["unreal"]],
+    },
+    "Digital Raider": {
+        "entry": [COURSE["wordpress"], COURSE["framer"]],
+        "elite": [COURSE["ai_agents"], COURSE["unreal"]],
+    },
+    "Creative Infiltrator": {
+        "entry": [COURSE["pod"]],
+        "elite": [COURSE["ai_content"], COURSE["kdp"]],
+    },
+    "Asset Grinder": {
+        "entry": [COURSE["pod"], COURSE["kdp"]],
+        "elite": [COURSE["ai_content"], COURSE["ai_agents"]],
+    },
+}
+
+# --- Archetype → Psychology (shields) — only courses from user lists ---
+ARCHETYPE_PSYCHOLOGY_MODELS: dict[str, list[str]] = {
+    "Ghost Architect": [
+        COURSE["business_warfare"],
+        COURSE["syndicate_13"],
+        COURSE["micro_protocol"],
+    ],
+    "Digital Raider": [
+        COURSE["risk_uncertainty"],
+        COURSE["micro_protocol"],
+        COURSE["zero_million"],
+    ],
+    "Creative Infiltrator": [
+        COURSE["risk_uncertainty"],
+        COURSE["micro_protocol"],
+        COURSE["zero_million"],
+        COURSE["exit_9_5"],
+    ],
+    "Asset Grinder": [
+        COURSE["risk_uncertainty"],
+        COURSE["micro_protocol"],
+        COURSE["zero_million"],
+        COURSE["exit_9_5"],
+    ],
+}
+
+# Virus → shield course within each archetype's psychology pool (deterministic).
+ARCHETYPE_VIRUS_SHIELD: dict[str, dict[str, str]] = {
+    "Ghost Architect": {
+        "Loner": COURSE["business_warfare"],
+        "Chaos Agent": COURSE["syndicate_13"],
+        "Visionary": COURSE["syndicate_13"],
+        "Order Taker": COURSE["micro_protocol"],
+        "Amateur": COURSE["micro_protocol"],
+        "Quitter": COURSE["syndicate_13"],
+        "Spender": COURSE["micro_protocol"],
+        "Emotional Mover": COURSE["business_warfare"],
+        "Identity Crisis": COURSE["business_warfare"],
+        "Slow Burner": COURSE["micro_protocol"],
+        "Employee": COURSE["syndicate_13"],
+        "Victim": COURSE["business_warfare"],
+    },
+    "Digital Raider": {
+        "Emotional Mover": COURSE["risk_uncertainty"],
+        "Order Taker": COURSE["micro_protocol"],
+        "Amateur": COURSE["zero_million"],
+        "Quitter": COURSE["risk_uncertainty"],
+        "Spender": COURSE["micro_protocol"],
+        "Loner": COURSE["risk_uncertainty"],
+        "Chaos Agent": COURSE["zero_million"],
+        "Visionary": COURSE["zero_million"],
+        "Identity Crisis": COURSE["risk_uncertainty"],
+        "Slow Burner": COURSE["zero_million"],
+        "Employee": COURSE["zero_million"],
+        "Victim": COURSE["risk_uncertainty"],
+    },
+    "Creative Infiltrator": {
+        "Emotional Mover": COURSE["risk_uncertainty"],
+        "Order Taker": COURSE["micro_protocol"],
+        "Amateur": COURSE["zero_million"],
+        "Employee": COURSE["exit_9_5"],
+        "Quitter": COURSE["risk_uncertainty"],
+        "Spender": COURSE["micro_protocol"],
+        "Loner": COURSE["exit_9_5"],
+        "Chaos Agent": COURSE["zero_million"],
+        "Visionary": COURSE["exit_9_5"],
+        "Identity Crisis": COURSE["risk_uncertainty"],
+        "Slow Burner": COURSE["zero_million"],
+        "Victim": COURSE["exit_9_5"],
+    },
+    "Asset Grinder": {
+        "Emotional Mover": COURSE["risk_uncertainty"],
+        "Order Taker": COURSE["micro_protocol"],
+        "Amateur": COURSE["zero_million"],
+        "Employee": COURSE["exit_9_5"],
+        "Quitter": COURSE["risk_uncertainty"],
+        "Spender": COURSE["micro_protocol"],
+        "Loner": COURSE["exit_9_5"],
+        "Chaos Agent": COURSE["zero_million"],
+        "Visionary": COURSE["exit_9_5"],
+        "Identity Crisis": COURSE["risk_uncertainty"],
+        "Slow Burner": COURSE["zero_million"],
+        "Victim": COURSE["exit_9_5"],
+    },
+}
+
+# Legacy global virus map (fallback when archetype omitted) — never Business Persuasion.
 SHIELD_BY_VIRUS: dict[str, str] = {
-    "Quitter": "Mastering Consistency",
-    "Employee": "The 9 to 5 Exit Strategy",
-    "Chaos Agent": "Syndicate 13 Business Rules",
-    "Victim": "Syndicate Money Philosophy",
-    "Spender": "The Compound Effect",
-    "Emotional Mover": "Mastering Risk and Uncertainty",
-    "Loner": "Business Warfare",
-    "Order Taker": "Micro Business Protocol",
-    "Identity Crisis": "The Secret To Transformation",
-    "Slow Burner": "Hustle Hard",
-    "Amateur": "Zero to One Million",
-    "Visionary": "Syndicate 13 Business Rules",
+    "Quitter": COURSE["mastering_consistency"],
+    "Employee": COURSE["exit_9_5"],
+    "Chaos Agent": COURSE["syndicate_13"],
+    "Victim": COURSE["money_philosophy"],
+    "Spender": COURSE["compound_effect"],
+    "Emotional Mover": COURSE["risk_uncertainty"],
+    "Loner": COURSE["business_warfare"],
+    "Order Taker": COURSE["micro_protocol"],
+    "Identity Crisis": COURSE["secret_transformation"],
+    "Slow Burner": COURSE["hustle_hard"],
+    "Amateur": COURSE["zero_million"],
+    "Visionary": COURSE["syndicate_13"],
 }
 
 VIRUS_DIAGNOSIS: dict[str, str] = {
@@ -87,55 +223,6 @@ VIRUS_PRIORITY: tuple[str, ...] = (
     "Quitter",
 )
 
-# --- A. Archetype → Weapon models (DB playlist titles) ---
-ARCHETYPE_WEAPON_MODELS: dict[str, dict[str, list[str]]] = {
-    "Ghost Architect": {
-        "entry": [
-            "Python Programming",
-            "Building Apps using React JS",
-            "App Building (using Flutter)",
-            "How To Build A.I Agents",
-        ],
-        "elite": [
-            "AI Automations",
-            "Crypto Trading with Technical Analysis Course",
-            "Faceless YouTube AI Content Creator Course",
-            "Building Games Using Unreal Engine",
-        ],
-    },
-    "Digital Raider": {
-        "entry": [
-            "Crypto Trading with Technical Analysis Course",
-            "How To Build A.I Agents",
-        ],
-        "elite": [
-            "Building Games Using Unreal Engine",
-            "WordPress Blog",
-            "Framer Crash Course",
-        ],
-    },
-    "Creative Infiltrator": {
-        "entry": [
-            "Graphics Design Using Canva",
-            "Faceless YouTube AI Content Creator Course",
-        ],
-        "elite": [
-            "Print On Demand Clothing",
-            "Book Publishing On Amazon (KINDLE)",
-        ],
-    },
-    "Asset Grinder": {
-        "entry": [
-            "Book Publishing On Amazon (KINDLE)",
-            "Print On Demand Clothing",
-        ],
-        "elite": [
-            "Faceless YouTube AI Content Creator Course",
-            "How To Build A.I Agents",
-        ],
-    },
-}
-
 ARCHETYPE_BY_Q5: dict[str, str] = {
     "A": "Digital Raider",
     "B": "Creative Infiltrator",
@@ -166,10 +253,10 @@ ARCHETYPE_TIEBREAK_ORDER: tuple[str, ...] = (
 
 # --- C. Protocol by power level (score) ---
 PROTOCOL_BY_DESIGNATION: dict[str, str] = {
-    "Street Soldier": "The Secret To Transformation",
-    "Rogue Operator": "The 9 to 5 Exit Strategy",
-    "Syndicate Specialist": "The Art of Critical Thinking",
-    "Prospect": "The Business of Empire Building",
+    "Street Soldier": COURSE["secret_transformation"],
+    "Rogue Operator": COURSE["exit_9_5"],
+    "Syndicate Specialist": COURSE["risk_uncertainty"],
+    "Prospect": COURSE["empire_building"],
 }
 
 DESIGNATION_BY_SCORE: tuple[tuple[int, int, str], ...] = (
@@ -281,8 +368,17 @@ def detect_virus(answers: list[dict]) -> str:
     return "Amateur"
 
 
-def get_recommended_shield(virus: str) -> str:
-    shield = SHIELD_BY_VIRUS.get(virus, "Syndicate 13 Business Rules")
+def get_recommended_shield(virus: str, archetype: str | None = None) -> str:
+    """Shield from archetype psychology pool; falls back to global map without archetype."""
+    if archetype:
+        by_virus = ARCHETYPE_VIRUS_SHIELD.get(archetype, {})
+        if virus in by_virus:
+            return _assert_allowed_course(by_virus[virus])
+        pool = ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or []
+        if pool:
+            idx = sum(ord(c) for c in virus) % len(pool)
+            return _assert_allowed_course(pool[idx])
+    shield = SHIELD_BY_VIRUS.get(virus, COURSE["syndicate_13"])
     return _assert_allowed_course(shield)
 
 
@@ -334,6 +430,19 @@ def _assert_allowed_course(course: str) -> str:
     return course
 
 
+def get_archetype_catalog(archetype: str) -> dict[str, list[str]]:
+    """All allowed business models and psychology courses for an archetype."""
+    weapons = ARCHETYPE_WEAPON_MODELS.get(archetype) or ARCHETYPE_WEAPON_MODELS["Asset Grinder"]
+    business_models = list(dict.fromkeys((weapons.get("entry") or []) + (weapons.get("elite") or [])))
+    return {
+        "business_models": [_assert_allowed_course(c) for c in business_models],
+        "psychology": [
+            _assert_allowed_course(c)
+            for c in (ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or [])
+        ],
+    }
+
+
 def build_recommendation(answers: list[dict]) -> dict[str, Any]:
     """
     Deterministic Triple-Threat Execution Stack JSON.
@@ -343,7 +452,7 @@ def build_recommendation(answers: list[dict]) -> dict[str, Any]:
     archetype = detect_archetype(answers)
     virus = detect_virus(answers)
     weapon = get_weapon_course(archetype, score, answers)
-    shield = get_recommended_shield(virus)
+    shield = get_recommended_shield(virus, archetype)
     protocol = get_recommended_protocol(designation)
     diagnosis = VIRUS_DIAGNOSIS.get(virus, "Your profile shows a repeatable bottleneck blocking capital growth.")
 
@@ -358,6 +467,7 @@ def build_recommendation(answers: list[dict]) -> dict[str, Any]:
             "shield": shield,
             "protocol": protocol,
         },
+        "archetype_catalog": get_archetype_catalog(archetype),
         # Legacy fields for existing clients / DB
         "category": get_category(score),
         "fatal_flaw": virus,

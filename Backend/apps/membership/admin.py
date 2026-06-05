@@ -246,7 +246,7 @@ class ArticleKeywordDatasetAdmin(admin.ModelAdmin):
                     request,
                     f"Created {len(generated)} unique article(s) from “{ds.name}” "
                     f"({len(generated)} this click; {max(0, unused_rows - len(generated))} unused rows remain; "
-                    f"{row_count} total in file). Titles: {', '.join(g.title[:60] for g in generated[:3])}"
+                    f"{row_count} total in file). Titles: {', '.join(g.article.title[:60] for g in generated[:3])}"
                     f"{' …' if len(generated) > 3 else ''}. "
                     f"Click “Generate {QUICK_ARTICLE_BATCH_SIZE} articles” again for more.",
                     level=messages.SUCCESS,

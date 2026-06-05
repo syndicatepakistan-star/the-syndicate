@@ -330,8 +330,31 @@ def _parse_pence_from_amount_payload(raw) -> int | None:
     return None
 
 
+_PLAN_ENTITLEMENT_SLUGS = frozenset({"bundle", "king", "pawn", "knight"})
+_PLAN_RECORDABLE_SLUGS = frozenset(
+  {
+    "bundle",
+    "king",
+    "pawn",
+    "knight",
+    "agentic_ai",
+    "ai_content_automation",
+  }
+)
+_PLAN_PRODUCT_TITLES = {
+  "bundle": "Money Mastery — lifetime bundle",
+  "king": "The Knight membership",
+  "pawn": "The Pawn",
+  "knight": "The Knight",
+  "agentic_ai": "Agentic AI — lifetime access",
+  "ai_content_automation": "AI Content Automation — lifetime access",
+}
+
+
 def _checkout_plan_label(plan: str) -> str:
   p = (plan or "").strip().lower()
+  if p in _PLAN_PRODUCT_TITLES:
+    return _PLAN_PRODUCT_TITLES[p]
   if p == "king":
     return "The Knight membership"
   if p == "bundle":
@@ -341,6 +364,13 @@ def _checkout_plan_label(plan: str) -> str:
   if p == "knight":
     return "The Knight"
   return "The Syndicate — checkout"
+
+
+def _checkout_product_name(*, plan_raw: str, playlist_title: str | None = None) -> str:
+  if playlist_title:
+    return f"{playlist_title} playlist access"
+  plan = (plan_raw or "").strip().lower()
+  return _PLAN_PRODUCT_TITLES.get(plan, "The Syndicate — checkout")
 
 
 def _affiliate_attribution_payload(session_meta: dict) -> dict:
@@ -360,9 +390,9 @@ def _apply_purchased_plan(user: User, plan: str) -> None:
 
 
 def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
-  """Persist plan checkout for dashboard billing history (Money Mastery, King, etc.)."""
+  """Persist plan checkout for dashboard billing history (Money Mastery, King, future vault offers, etc.)."""
   plan_sel = (plan_sel or "").strip().lower()
-  if plan_sel not in ("bundle", "king", "pawn", "knight"):
+  if plan_sel not in _PLAN_RECORDABLE_SLUGS:
     return
   sid = str(getattr(session, "id", "") or "").strip()
   if not sid:
@@ -372,6 +402,8 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     "king": "The Knight",
     "pawn": "Pawn",
     "knight": "Knight",
+    "agentic_ai": "Agentic AI",
+    "ai_content_automation": "AI Content Automation",
   }
   try:
     amt = Decimal(str(paid_amount))
@@ -395,20 +427,23 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
 def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
   if not plan_sel:
     return
-  try:
-    _apply_purchased_plan(user, plan_sel)
-  except Exception:
-    logger.exception("Checkout succeeded but plan entitlement update failed for user_id=%s plan=%s", user.id, plan_sel)
+  plan_sel = (plan_sel or "").strip().lower()
+  if plan_sel in _PLAN_ENTITLEMENT_SLUGS:
+    try:
+      _apply_purchased_plan(user, plan_sel)
+    except Exception:
+      logger.exception("Checkout succeeded but plan entitlement update failed for user_id=%s plan=%s", user.id, plan_sel)
   try:
     _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
   except Exception:
     logger.exception("Checkout succeeded but plan purchase record write failed for user_id=%s plan=%s", user.id, plan_sel)
-  try:
-    from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
+  if plan_sel in _PLAN_ENTITLEMENT_SLUGS:
+    try:
+      from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 
-    reconcile_dashboard_entitlement_from_plan_purchases(user)
-  except Exception:
-    logger.exception("Checkout succeeded but entitlement reconcile failed for user_id=%s", user.id)
+      reconcile_dashboard_entitlement_from_plan_purchases(user)
+    except Exception:
+      logger.exception("Checkout succeeded but entitlement reconcile failed for user_id=%s", user.id)
 
 
 def _safe_affiliate_referral_ids(user: User) -> dict[str, str]:
@@ -709,14 +744,9 @@ def create_checkout_session_view(request):
       if selected_playlist is not None
       else (_parse_pence_from_amount_payload(payload.get("selected_amount")) or settings.CHECKOUT_AMOUNT_PENCE)
     )
-    product_name = (
-      f"{selected_playlist.title} playlist access"
-      if selected_playlist is not None
-      else (
-        "Money Mastery — lifetime bundle"
-        if plan_raw == "bundle"
-        else ("The Knight membership" if plan_raw == "king" else "The Syndicate — checkout")
-      )
+    product_name = _checkout_product_name(
+      plan_raw=plan_raw,
+      playlist_title=selected_playlist.title if selected_playlist is not None else None,
     )
 
     def _session_create_logged_in(pm_types: list[str]):
@@ -846,14 +876,9 @@ def create_checkout_session_view(request):
     if selected_playlist is not None
     else (_parse_pence_from_amount_payload(payload.get("selected_amount")) or settings.CHECKOUT_AMOUNT_PENCE)
   )
-  product_name = (
-    f"{selected_playlist.title} playlist access"
-    if selected_playlist is not None
-    else (
-      "The Knight membership"
-      if plan_payload == "king"
-      else ("Money Mastery — lifetime bundle" if plan_payload == "bundle" else "The Syndicate Membership Checkout")
-    )
+  product_name = _checkout_product_name(
+    plan_raw=plan_payload,
+    playlist_title=selected_playlist.title if selected_playlist is not None else None,
   )
 
   def _session_create(pm_types: list[str]):

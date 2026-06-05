@@ -62,7 +62,7 @@ export function PublicPlanOfferCards({
     <section
       className={cn(
         "relative mx-auto w-full",
-        isLarge ? "max-w-5xl" : "max-w-[1400px]",
+        isLarge ? "max-w-6xl" : "max-w-[1400px]",
         embedded
           ? "px-[var(--fluid-section-p,1rem)] py-6 sm:py-8"
           : "px-[clamp(1rem,3.2vw,1.5rem)] pb-6 sm:px-6 sm:pb-8"

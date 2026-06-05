@@ -5,3 +5,8 @@ export const OFFER_PLAN_THUMB_MONEY_MASTERY =
 export const OFFER_PLAN_THUMB_THE_KNIGHT = "/assets/theknight.png";
 /** @deprecated Use OFFER_PLAN_THUMB_THE_KNIGHT */
 export const OFFER_PLAN_THUMB_THE_KING = OFFER_PLAN_THUMB_THE_KNIGHT;
+
+const OFFERS_BASE = "/assets/programs/offers";
+
+export const OFFER_PLAN_THUMB_AGENTIC_AI = `${OFFERS_BASE}/${encodeURIComponent("Agentic Ai.jpeg")}`;
+export const OFFER_PLAN_THUMB_AI_CONTENT_AUTOMATION = `${OFFERS_BASE}/${encodeURIComponent("Ai Content Automation.jpeg")}`;

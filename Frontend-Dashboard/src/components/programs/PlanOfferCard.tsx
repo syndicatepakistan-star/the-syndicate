@@ -36,6 +36,30 @@ const PLAN_OFFER_THEMES = {
     openBtn:
       "border-cyan-300/85 bg-[linear-gradient(135deg,rgba(34,211,238,0.22),rgba(6,26,42,0.98))] text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.45),inset_0_0_0_1px_rgba(103,232,249,0.35)] hover:shadow-[0_0_30px_rgba(34,211,238,0.65),0_0_52px_rgba(14,165,233,0.35),inset_0_0_0_1px_rgba(103,232,249,0.5)]",
   },
+  pink: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(244,114,182,0.55),0_0_72px_rgba(236,72,153,0.62),0_0_130px_rgba(217,70,239,0.38),0_0_180px_rgba(244,114,182,0.18)]",
+    ring: "from-fuchsia-300/95 via-pink-400/95 to-rose-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.52)_0%,rgba(217,70,239,0.32)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-pink-200/0 via-fuchsia-200/95 to-white/0",
+    infoPanel: "border-fuchsia-300/40 bg-fuchsia-950/30",
+    dominantBorder: "border-fuchsia-300/85",
+    priceBadge:
+      "border-fuchsia-300/55 bg-[#180818]/95 text-fuchsia-100 shadow-[0_0_22px_rgba(236,72,153,0.45)]",
+    openBtn:
+      "border-fuchsia-300/90 bg-[linear-gradient(135deg,rgba(236,72,153,0.32),rgba(76,5,50,0.98))] text-pink-100 shadow-[0_0_24px_rgba(236,72,153,0.65),0_0_48px_rgba(217,70,239,0.35),inset_0_0_0_1px_rgba(244,114,182,0.45)] hover:shadow-[0_0_36px_rgba(236,72,153,0.85),0_0_72px_rgba(217,70,239,0.55),inset_0_0_0_1px_rgba(244,114,182,0.65)]",
+  },
+  green: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(74,222,128,0.55),0_0_72px_rgba(52,211,153,0.62),0_0_130px_rgba(16,185,129,0.38),0_0_180px_rgba(74,222,128,0.18)]",
+    ring: "from-emerald-300/95 via-lime-400/95 to-green-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.52)_0%,rgba(16,185,129,0.32)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-lime-200/0 via-emerald-200/95 to-white/0",
+    infoPanel: "border-emerald-300/40 bg-emerald-950/30",
+    dominantBorder: "border-emerald-300/85",
+    priceBadge:
+      "border-emerald-300/55 bg-[#041208]/95 text-emerald-100 shadow-[0_0_22px_rgba(52,211,153,0.45)]",
+    openBtn:
+      "border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.65),0_0_48px_rgba(16,185,129,0.35),inset_0_0_0_1px_rgba(74,222,128,0.45)] hover:shadow-[0_0_36px_rgba(52,211,153,0.85),0_0_72px_rgba(16,185,129,0.55),inset_0_0_0_1px_rgba(74,222,128,0.65)]",
+  },
 } as const;
 
 export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, onOpen }: Props) {
@@ -54,7 +78,7 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
     >
       <div
         className={cn(
-          "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300",
+          "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300 group-hover/card:shadow-[0_0_90px_rgba(255,255,255,0.06)]",
           theme.dominantBorder,
           theme.glow
         )}

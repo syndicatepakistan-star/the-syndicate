@@ -8715,6 +8715,22 @@ body {
   --poc-open-text: #a5f3fc;
 }
 
+.plan-offer-card--pink {
+  --poc-border: rgba(244, 114, 182, 0.82);
+  --poc-glow: rgba(236, 72, 153, 0.48);
+  --poc-panel-border: rgba(217, 70, 239, 0.45);
+  --poc-open-border: rgba(244, 114, 182, 0.92);
+  --poc-open-text: #fbcfe8;
+}
+
+.plan-offer-card--green {
+  --poc-border: rgba(74, 222, 128, 0.82);
+  --poc-glow: rgba(52, 211, 153, 0.48);
+  --poc-panel-border: rgba(16, 185, 129, 0.45);
+  --poc-open-border: rgba(74, 222, 128, 0.92);
+  --poc-open-text: #bbf7d0;
+}
+
 .plan-offer-card__shell {
   border: 2px solid var(--poc-border);
   background: #04060d;

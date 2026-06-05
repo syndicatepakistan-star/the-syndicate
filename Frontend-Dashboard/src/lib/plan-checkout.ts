@@ -4,7 +4,7 @@ import {
   portalFetch,
 } from "@/lib/portal-api";
 
-export type SubscriptionPlanKey = "bundle" | "king";
+export type SubscriptionPlanKey = "bundle" | "king" | "agentic_ai" | "ai_content_automation";
 
 export type PlanCheckoutParams = {
   plan: SubscriptionPlanKey;
@@ -125,8 +125,15 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
   return { status: "error", message };
 }
 
+const SUBSCRIPTION_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
+  "bundle",
+  "king",
+  "agentic_ai",
+  "ai_content_automation",
+];
+
 export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {
-  return value === "bundle" || value === "king";
+  return SUBSCRIPTION_PLAN_KEYS.includes(value.trim() as SubscriptionPlanKey);
 }
 
 export function hasPlanCheckoutIntent(plan: string, amount: string): boolean {

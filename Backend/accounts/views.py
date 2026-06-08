@@ -362,6 +362,10 @@ _PLAN_RECORDABLE_SLUGS = frozenset(
     "agentic_ai",
     "ai_content_automation",
     "trading_technical_analysis",
+    "trading_scalpel_protocol",
+    "trading_master_strategies",
+    "trading_master_setups",
+    "trading_master_secrets",
   }
 )
 _PLAN_PRODUCT_TITLES = {
@@ -372,6 +376,10 @@ _PLAN_PRODUCT_TITLES = {
   "agentic_ai": "Agentic AI — lifetime access",
   "ai_content_automation": "AI Content Automation — lifetime access",
   "trading_technical_analysis": "Trading Advanced Technical Analysis — lifetime access",
+  "trading_scalpel_protocol": "The Scalpel Protocol — lifetime access",
+  "trading_master_strategies": "Strategies of a Master Trader — lifetime access",
+  "trading_master_setups": "Setups of a Master Trader — lifetime access",
+  "trading_master_secrets": "Secrets of a Master Trader — lifetime access",
 }
 
 
@@ -429,6 +437,10 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     "agentic_ai": "Agentic AI",
     "ai_content_automation": "AI Content Automation",
     "trading_technical_analysis": "Trading Advanced Technical Analysis",
+    "trading_scalpel_protocol": "The Scalpel Protocol",
+    "trading_master_strategies": "Strategies of a Master Trader",
+    "trading_master_setups": "Setups of a Master Trader",
+    "trading_master_secrets": "Secrets of a Master Trader",
   }
   try:
     amt = Decimal(str(paid_amount))

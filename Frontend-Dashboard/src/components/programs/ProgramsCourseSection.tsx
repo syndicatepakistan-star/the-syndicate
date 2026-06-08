@@ -11,7 +11,8 @@ import {
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
-import { planOfferByKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
+import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
+import { isTradingSubOfferKey, tradingSubOfferByKey } from "@/components/programs/tradingSubOfferCatalog";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -474,11 +475,13 @@ export function ProgramsCourseSection({
   }, [showBothPlaylistColumns, visibleBusinessPsychologyPlaylists, visibleBusinessModelPlaylists]);
 
   const handleOfferAlreadyUnlocked = useCallback(
-    async (plan: PlanOfferKey) => {
+    async (plan: CheckoutOfferKey) => {
       if (plan === "bundle" || plan === "king") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
       }
-      const offer = planOfferByKey(plan);
+      const offer = isTradingSubOfferKey(plan)
+        ? tradingSubOfferByKey(plan)
+        : planOfferByKey(plan as PlanOfferKey);
       const label = offer?.title ?? "This offer";
       const message =
         plan === "bundle"

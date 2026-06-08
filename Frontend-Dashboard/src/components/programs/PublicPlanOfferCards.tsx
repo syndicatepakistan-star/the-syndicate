@@ -9,9 +9,10 @@ import {
   PLAN_OFFERS,
   PLAN_OFFERS_PRIMARY,
   PLAN_OFFERS_VAULT,
+  type CheckoutOfferKey,
   type PlanOfferDef,
-  type PlanOfferKey,
 } from "@/components/programs/planOfferCatalog";
+import { TradingVaultOfferModal } from "@/components/programs/TradingVaultOfferModal";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 
 export function PublicPlanOfferCards({
@@ -25,13 +26,14 @@ export function PublicPlanOfferCards({
   embedded?: boolean;
   /** `large` on public /programs and dashboard programs grid; `compact` for tight layouts. */
   size?: "large" | "compact";
-  onAlreadyUnlocked?: (plan: PlanOfferKey) => void | Promise<void>;
+  onAlreadyUnlocked?: (plan: CheckoutOfferKey) => void | Promise<void>;
   onCheckoutError?: (message: string) => void;
 } = {}) {
   const router = useRouter();
-  const [busyPlan, setBusyPlan] = useState<PlanOfferKey | null>(null);
+  const [busyPlan, setBusyPlan] = useState<CheckoutOfferKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detailOffer, setDetailOffer] = useState<PlanOfferDef | null>(null);
+  const [tradingVaultOffer, setTradingVaultOffer] = useState<PlanOfferDef | null>(null);
   const isLarge = size === "large";
 
   const joinOffer = useCallback(
@@ -72,6 +74,10 @@ export function PublicPlanOfferCards({
       busy={busyPlan === offer.plan}
       onDetails={() => setDetailOffer(offer)}
       onOpen={() => {
+        if (offer.openAction === "trading_vault") {
+          setTradingVaultOffer(offer);
+          return;
+        }
         if (offer.openHref) {
           router.push(offer.openHref);
           return;
@@ -111,6 +117,13 @@ export function PublicPlanOfferCards({
         </div>
       )}
       <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
+      <TradingVaultOfferModal
+        packOffer={tradingVaultOffer}
+        busyPlan={busyPlan}
+        onClose={() => setTradingVaultOffer(null)}
+        onDetails={setDetailOffer}
+        onUnlock={(offer) => void joinOffer(offer)}
+      />
     </section>
   );
 }

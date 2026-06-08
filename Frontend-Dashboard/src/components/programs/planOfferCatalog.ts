@@ -13,10 +13,18 @@ export type PlanOfferKey =
   | "ai_content_automation"
   | "trading_technical_analysis";
 
+export type TradingSubOfferKey =
+  | "trading_scalpel_protocol"
+  | "trading_master_strategies"
+  | "trading_master_setups"
+  | "trading_master_secrets";
+
+export type CheckoutOfferKey = PlanOfferKey | TradingSubOfferKey;
+
 export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple";
 
 export type PlanOfferDef = {
-  plan: PlanOfferKey;
+  plan: CheckoutOfferKey;
   title: string;
   imageSrc: string;
   /** Terminal-style teaser on the card (underscore added in UI). */
@@ -29,6 +37,8 @@ export type PlanOfferDef = {
   openLabel: string;
   /** When set, Open navigates here instead of starting Stripe checkout. */
   openHref?: string;
+  /** When set to trading_vault, Open shows sub-program cards instead of checkout. */
+  openAction?: "trading_vault";
   accent: PlanOfferAccent;
   /** Large display title in the Details modal. */
   detailTitle: string;
@@ -53,7 +63,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "333",
     billing: "monthly",
-    openLabel: "Open",
+    openLabel: "Unlock",
     accent: "amber",
     detailTitle: "MONEY MASTERY",
     detailDescription:
@@ -77,7 +87,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/mo",
     checkoutAmount: "19.99",
     billing: "monthly",
-    openLabel: "Open",
+    openLabel: "Unlock",
     openHref: "/membership",
     accent: "cyan",
     detailTitle: "The Knight",
@@ -204,17 +214,20 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "99",
     billing: "monthly",
-    openLabel: "Open",
+    openLabel: "Unlock",
+    openAction: "trading_vault",
     accent: "purple",
     imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
     detailDescription:
-      "Reserve lifetime access to the Trading Advanced Technical Analysis vault. Checkout unlocks dashboard access; the full curriculum unlocks when the program is published.",
+      "Unlock the full vault for $99 — or buy individual protocols à la carte. Every purchase records to your dashboard; curriculum access activates as modules go live.",
     detailFeatures: [
-      "Lifetime access reservation for Trading Advanced Technical Analysis",
-      "Full dashboard login after checkout",
-      "Program unlock when the curriculum launches",
-      "Billing history in your account",
+      "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
+      "Strategies of a Master Trader",
+      "Setups of a Master Trader",
+      "Secrets of a Master Trader",
+      "Full vault bundle — all four protocols in one checkout",
+      "Dashboard access and billing history after purchase",
     ],
     grantsEntitlement: false,
   },

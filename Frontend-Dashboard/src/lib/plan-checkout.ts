@@ -9,7 +9,11 @@ export type SubscriptionPlanKey =
   | "king"
   | "agentic_ai"
   | "ai_content_automation"
-  | "trading_technical_analysis";
+  | "trading_technical_analysis"
+  | "trading_scalpel_protocol"
+  | "trading_master_strategies"
+  | "trading_master_setups"
+  | "trading_master_secrets";
 
 export type PlanCheckoutParams = {
   plan: SubscriptionPlanKey;
@@ -136,6 +140,10 @@ const SUBSCRIPTION_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
   "agentic_ai",
   "ai_content_automation",
   "trading_technical_analysis",
+  "trading_scalpel_protocol",
+  "trading_master_strategies",
+  "trading_master_setups",
+  "trading_master_secrets",
 ];
 
 export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {

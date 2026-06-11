@@ -12,7 +12,7 @@ import {
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
-import { isTradingSubOfferKey, tradingSubOfferByKey } from "@/components/programs/tradingSubOfferCatalog";
+import { isVaultCourseSlug, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -479,8 +479,8 @@ export function ProgramsCourseSection({
       if (plan === "bundle" || plan === "king") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
       }
-      const offer = isTradingSubOfferKey(plan)
-        ? tradingSubOfferByKey(plan)
+      const offer = isVaultCourseSlug(plan)
+        ? vaultCourseBySlug(plan)
         : planOfferByKey(plan as PlanOfferKey);
       const label = offer?.title ?? "This offer";
       const message =

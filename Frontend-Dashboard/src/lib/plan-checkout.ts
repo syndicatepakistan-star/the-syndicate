@@ -1,3 +1,4 @@
+import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
 import {
   getAuthorizationHeader,
   hasSimpleAuthSessionClient,
@@ -16,14 +17,35 @@ export type SubscriptionPlanKey =
   | "trading_master_secrets";
 
 export type PlanCheckoutParams = {
-  plan: SubscriptionPlanKey;
+  plan: CheckoutOfferKey;
   billing?: string;
   amount: string;
-  /** After signup/login when checkout is deferred. */
   postAuthNext?: string;
 };
 
-/** Auth handoff before Stripe — keeps dashboard users on /login, not public /signup. */
+const CORE_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
+  "bundle",
+  "king",
+  "agentic_ai",
+  "ai_content_automation",
+  "trading_technical_analysis",
+  "trading_scalpel_protocol",
+  "trading_master_strategies",
+  "trading_master_setups",
+  "trading_master_secrets",
+];
+
+export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {
+  return CORE_PLAN_KEYS.includes(value.trim() as SubscriptionPlanKey);
+}
+
+export function isCheckoutPlanKey(value: string): boolean {
+  const v = value.trim();
+  if (!v) return false;
+  if (isSubscriptionPlanKey(v)) return true;
+  return /^agentic_ai_c\d{2}$/.test(v) || /^ai_content_c\d{2}$/.test(v);
+}
+
 export function buildPlanCheckoutAuthHref(params: PlanCheckoutParams): string {
   const search = new URLSearchParams({
     plan: params.plan,
@@ -73,7 +95,6 @@ export type StartPlanCheckoutResult =
 
 function redirectToCheckout(checkoutUrl: string) {
   if (typeof window === "undefined") return;
-  // Full navigation — assign and replace both work; replace avoids back-button loops after Stripe.
   window.location.replace(checkoutUrl);
 }
 
@@ -97,12 +118,10 @@ function shouldRetryViaAuth(status: number, message: string): boolean {
   return lower.includes("signup token") || lower.includes("not authenticated") || lower.includes("authentication");
 }
 
-/** Start Stripe checkout for Money Mastery (bundle) or The Knight. */
 export async function startPlanCheckout(params: PlanCheckoutParams): Promise<StartPlanCheckoutResult> {
   const authHeader = getAuthorizationHeader();
   if (!authHeader) {
     if (hasSimpleAuthSessionClient()) {
-      // Cookie without stored token — send through signup/login to restore session then checkout.
       redirectToAuthCheckout(params);
       return { status: "auth_required" };
     }
@@ -134,22 +153,6 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
   return { status: "error", message };
 }
 
-const SUBSCRIPTION_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
-  "bundle",
-  "king",
-  "agentic_ai",
-  "ai_content_automation",
-  "trading_technical_analysis",
-  "trading_scalpel_protocol",
-  "trading_master_strategies",
-  "trading_master_setups",
-  "trading_master_secrets",
-];
-
-export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {
-  return SUBSCRIPTION_PLAN_KEYS.includes(value.trim() as SubscriptionPlanKey);
-}
-
 export function hasPlanCheckoutIntent(plan: string, amount: string): boolean {
-  return isSubscriptionPlanKey(plan.trim()) && amount.trim().length > 0;
+  return isCheckoutPlanKey(plan.trim()) && amount.trim().length > 0;
 }

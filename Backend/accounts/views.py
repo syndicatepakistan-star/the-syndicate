@@ -35,7 +35,11 @@ from apps.quiz_funnel.logic import (
   map_weapon_to_playlist_title,
   normalize_free_ticket_title,
 )
-from apps.portal.models import UserDashboardEntitlement, UserPlanPurchase
+from accounts.vault_plan_catalog import (
+  is_vault_course_plan_slug,
+  vault_course_billing_title,
+  vault_course_product_title,
+)
 from apps.quiz_funnel.models import Result as QuizResult
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
 from rest_framework.request import Request
@@ -368,6 +372,15 @@ _PLAN_RECORDABLE_SLUGS = frozenset(
     "trading_master_secrets",
   }
 )
+
+
+def _is_recordable_plan_slug(plan: str) -> bool:
+  plan = (plan or "").strip().lower()
+  if plan in _PLAN_RECORDABLE_SLUGS:
+    return True
+  return is_vault_course_plan_slug(plan)
+
+
 _PLAN_PRODUCT_TITLES = {
   "bundle": "Money Mastery — lifetime bundle",
   "king": "The Knight membership",
@@ -385,6 +398,9 @@ _PLAN_PRODUCT_TITLES = {
 
 def _checkout_plan_label(plan: str) -> str:
   p = (plan or "").strip().lower()
+  vault = vault_course_billing_title(p)
+  if vault:
+    return vault
   if p in _PLAN_PRODUCT_TITLES:
     return _PLAN_PRODUCT_TITLES[p]
   if p == "king":
@@ -402,6 +418,9 @@ def _checkout_product_name(*, plan_raw: str, playlist_title: str | None = None) 
   if playlist_title:
     return f"{playlist_title} playlist access"
   plan = (plan_raw or "").strip().lower()
+  vault_name = vault_course_product_title(plan)
+  if vault_name:
+    return vault_name
   return _PLAN_PRODUCT_TITLES.get(plan, "The Syndicate — checkout")
 
 
@@ -424,7 +443,7 @@ def _apply_purchased_plan(user: User, plan: str) -> None:
 def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
   """Persist plan checkout for dashboard billing history (Money Mastery, King, future vault offers, etc.)."""
   plan_sel = (plan_sel or "").strip().lower()
-  if plan_sel not in _PLAN_RECORDABLE_SLUGS:
+  if not _is_recordable_plan_slug(plan_sel):
     return
   sid = str(getattr(session, "id", "") or "").strip()
   if not sid:
@@ -452,7 +471,7 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
     defaults={
       "user": user,
       "plan_slug": plan_sel,
-      "product_title": titles.get(plan_sel, plan_sel),
+      "product_title": vault_course_billing_title(plan_sel) or titles.get(plan_sel, plan_sel),
       "amount_paid": amt,
       "currency": cur,
       "status": UserPlanPurchase.Status.PAID,

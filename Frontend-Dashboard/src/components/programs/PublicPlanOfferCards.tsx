@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import { PlanOfferDetailModal } from "@/components/programs/PlanOfferDetailModal";
+import { PackVaultOfferModal } from "@/components/programs/PackVaultOfferModal";
 import {
   PLAN_OFFERS,
   PLAN_OFFERS_PRIMARY,
@@ -12,8 +13,15 @@ import {
   type CheckoutOfferKey,
   type PlanOfferDef,
 } from "@/components/programs/planOfferCatalog";
-import { TradingVaultOfferModal } from "@/components/programs/TradingVaultOfferModal";
+import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+import {
+  isVaultOfferUnlocked,
+  isVaultPackFullyUnlocked,
+  resolveOfferActionLabel,
+} from "@/components/programs/vaultUnlock";
+import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
 import { startPlanCheckout } from "@/lib/plan-checkout";
+import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 
 export function PublicPlanOfferCards({
   checkoutReturnPath = "/dashboard?section=programs",
@@ -24,7 +32,6 @@ export function PublicPlanOfferCards({
 }: {
   checkoutReturnPath?: string;
   embedded?: boolean;
-  /** `large` on public /programs and dashboard programs grid; `compact` for tight layouts. */
   size?: "large" | "compact";
   onAlreadyUnlocked?: (plan: CheckoutOfferKey) => void | Promise<void>;
   onCheckoutError?: (message: string) => void;
@@ -33,11 +40,41 @@ export function PublicPlanOfferCards({
   const [busyPlan, setBusyPlan] = useState<CheckoutOfferKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detailOffer, setDetailOffer] = useState<PlanOfferDef | null>(null);
-  const [tradingVaultOffer, setTradingVaultOffer] = useState<PlanOfferDef | null>(null);
+  const [vaultPackOffer, setVaultPackOffer] = useState<PlanOfferDef | null>(null);
+  const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
+  const [accessTier, setAccessTier] = useState<string | null>(null);
   const isLarge = size === "large";
+
+  const reloadUnlockState = useCallback(async () => {
+    if (!getAuthorizationHeader()) {
+      setPurchasedSlugs(new Set());
+      setAccessTier(null);
+      return;
+    }
+    const [slugs, identity] = await Promise.all([fetchPurchasedPlanSlugs(), fetchPortalIdentity()]);
+    setPurchasedSlugs(new Set(slugs));
+    setAccessTier(identity?.access_tier ?? null);
+  }, []);
+
+  useEffect(() => {
+    void reloadUnlockState();
+  }, [reloadUnlockState]);
+
+  const purchasedSet = useMemo(() => purchasedSlugs, [purchasedSlugs]);
+
+  const openUnlocked = useCallback(
+    (offer: PlanOfferDef) => {
+      router.push(checkoutReturnPath);
+    },
+    [checkoutReturnPath, router]
+  );
 
   const joinOffer = useCallback(
     async (offer: PlanOfferDef) => {
+      if (isVaultOfferUnlocked(offer, purchasedSet, accessTier)) {
+        openUnlocked(offer);
+        return;
+      }
       setError(null);
       setBusyPlan(offer.plan);
       try {
@@ -48,6 +85,7 @@ export function PublicPlanOfferCards({
           postAuthNext: checkoutReturnPath,
         });
         if (result.status === "already_unlocked") {
+          await reloadUnlockState();
           await onAlreadyUnlocked?.(offer.plan);
           router.push(checkoutReturnPath);
           return;
@@ -63,29 +101,44 @@ export function PublicPlanOfferCards({
         setBusyPlan(null);
       }
     },
-    [checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, router]
+    [accessTier, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState, router]
   );
 
-  const renderOffer = (offer: PlanOfferDef) => (
-    <PlanOfferCard
-      key={offer.plan}
-      offer={offer}
-      size={size}
-      busy={busyPlan === offer.plan}
-      onDetails={() => setDetailOffer(offer)}
-      onOpen={() => {
-        if (offer.openAction === "trading_vault") {
-          setTradingVaultOffer(offer);
-          return;
+  const renderOffer = (offer: PlanOfferDef) => {
+    const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
+    const packUnlocked = vaultPack ? isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier) : false;
+    const showOpenOnParent =
+      offer.openAction === "vault_picker" &&
+      (packUnlocked || isVaultOfferUnlocked(offer, purchasedSet, accessTier));
+
+    return (
+      <PlanOfferCard
+        key={offer.plan}
+        offer={offer}
+        size={size}
+        busy={busyPlan === offer.plan}
+        actionLabel={
+          showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier)
         }
-        if (offer.openHref) {
-          router.push(offer.openHref);
-          return;
-        }
-        void joinOffer(offer);
-      }}
-    />
-  );
+        onDetails={() => setDetailOffer(offer)}
+        onOpen={() => {
+          if (offer.openAction === "vault_picker") {
+            setVaultPackOffer(offer);
+            return;
+          }
+          if (offer.openHref) {
+            router.push(offer.openHref);
+            return;
+          }
+          if (isVaultOfferUnlocked(offer, purchasedSet, accessTier)) {
+            openUnlocked(offer);
+            return;
+          }
+          void joinOffer(offer);
+        }}
+      />
+    );
+  };
 
   return (
     <section
@@ -117,12 +170,15 @@ export function PublicPlanOfferCards({
         </div>
       )}
       <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
-      <TradingVaultOfferModal
-        packOffer={tradingVaultOffer}
+      <PackVaultOfferModal
+        packOffer={vaultPackOffer}
         busyPlan={busyPlan}
-        onClose={() => setTradingVaultOffer(null)}
+        purchasedSlugs={purchasedSet}
+        accessTier={accessTier}
+        onClose={() => setVaultPackOffer(null)}
         onDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}
+        onOpenUnlocked={openUnlocked}
       />
     </section>
   );

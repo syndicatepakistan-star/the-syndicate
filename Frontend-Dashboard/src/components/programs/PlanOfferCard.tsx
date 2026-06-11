@@ -5,8 +5,12 @@ import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
 
 type Props = {
   offer: PlanOfferDef;
-  size?: "large" | "compact";
+  size?: "large" | "compact" | "module";
+  /** Visual tier badge on vault picker cards. */
+  cardKind?: "pack" | "module";
   busy?: boolean;
+  /** Overrides openLabel (e.g. Open when already purchased). */
+  actionLabel?: string;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -82,10 +86,59 @@ const PLAN_OFFER_THEMES = {
     openBtn:
       "border-violet-300/90 bg-[linear-gradient(135deg,rgba(168,85,247,0.32),rgba(46,8,62,0.98))] text-violet-100 shadow-[0_0_24px_rgba(168,85,247,0.65),0_0_48px_rgba(139,92,246,0.35),inset_0_0_0_1px_rgba(192,132,252,0.45)] hover:shadow-[0_0_36px_rgba(168,85,247,0.85),0_0_72px_rgba(139,92,246,0.55),inset_0_0_0_1px_rgba(192,132,252,0.65)]",
   },
+  red: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(248,113,113,0.55),0_0_72px_rgba(239,68,68,0.62),0_0_130px_rgba(220,38,38,0.38)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(248,113,113,0.68),0_0_88px_rgba(239,68,68,0.82),0_0_160px_rgba(220,38,38,0.48)]",
+    ring: "from-red-300/95 via-rose-400/95 to-orange-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.48)_0%,rgba(185,28,28,0.28)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-red-200/0 via-rose-200/95 to-white/0",
+    infoPanel: "border-red-400/40 bg-red-950/30",
+    dominantBorder: "border-red-400/85",
+    priceBadge: "border-red-400/55 bg-[#180808]/95 text-red-100 shadow-[0_0_22px_rgba(239,68,68,0.45)]",
+    openBtn:
+      "border-red-400/90 bg-[linear-gradient(135deg,rgba(239,68,68,0.32),rgba(62,8,8,0.98))] text-red-100 shadow-[0_0_24px_rgba(239,68,68,0.65),inset_0_0_0_1px_rgba(248,113,113,0.45)] hover:shadow-[0_0_36px_rgba(239,68,68,0.85),inset_0_0_0_1px_rgba(248,113,113,0.65)]",
+  },
+  orange: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(251,146,60,0.55),0_0_72px_rgba(249,115,22,0.62),0_0_130px_rgba(234,88,12,0.38)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(251,146,60,0.68),0_0_88px_rgba(249,115,22,0.82),0_0_160px_rgba(234,88,12,0.48)]",
+    ring: "from-orange-300/95 via-amber-400/95 to-yellow-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.48)_0%,rgba(194,65,12,0.28)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-orange-200/0 via-amber-200/95 to-white/0",
+    infoPanel: "border-orange-400/40 bg-orange-950/28",
+    dominantBorder: "border-orange-400/85",
+    priceBadge: "border-orange-400/55 bg-[#180e04]/95 text-orange-100 shadow-[0_0_22px_rgba(249,115,22,0.45)]",
+    openBtn:
+      "border-orange-400/90 bg-[linear-gradient(135deg,rgba(249,115,22,0.32),rgba(62,28,8,0.98))] text-orange-100 shadow-[0_0_24px_rgba(249,115,22,0.65),inset_0_0_0_1px_rgba(251,146,60,0.45)] hover:shadow-[0_0_36px_rgba(249,115,22,0.85),inset_0_0_0_1px_rgba(251,146,60,0.65)]",
+  },
+  blue: {
+    glow: "shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(96,165,250,0.55),0_0_72px_rgba(59,130,246,0.62),0_0_130px_rgba(37,99,235,0.38)]",
+    hoverGlow:
+      "group-hover/card:shadow-[0_16px_42px_rgba(0,0,0,0.62),0_0_0_1px_rgba(96,165,250,0.68),0_0_88px_rgba(59,130,246,0.82),0_0_160px_rgba(37,99,235,0.48)]",
+    ring: "from-blue-300/95 via-indigo-400/95 to-sky-300/95",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.48)_0%,rgba(29,78,216,0.28)_38%,rgba(0,0,0,0)_76%)]",
+    spark: "from-blue-200/0 via-indigo-200/95 to-white/0",
+    infoPanel: "border-blue-400/40 bg-blue-950/30",
+    dominantBorder: "border-blue-400/85",
+    priceBadge: "border-blue-400/55 bg-[#081018]/95 text-blue-100 shadow-[0_0_22px_rgba(59,130,246,0.45)]",
+    openBtn:
+      "border-blue-400/90 bg-[linear-gradient(135deg,rgba(59,130,246,0.32),rgba(8,22,62,0.98))] text-blue-100 shadow-[0_0_24px_rgba(59,130,246,0.65),inset_0_0_0_1px_rgba(96,165,250,0.45)] hover:shadow-[0_0_36px_rgba(59,130,246,0.85),inset_0_0_0_1px_rgba(96,165,250,0.65)]",
+  },
 } as const;
 
-export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, onOpen }: Props) {
+export function PlanOfferCard({
+  offer,
+  size = "large",
+  cardKind,
+  busy = false,
+  actionLabel,
+  onDetails,
+  onOpen,
+}: Props) {
   const isLarge = size === "large";
+  const isModule = size === "module";
+  const isCompact = size === "compact";
   const theme = PLAN_OFFER_THEMES[offer.accent];
 
   return (
@@ -93,9 +146,9 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
       className={cn(
         "plan-offer-card group/card relative flex w-full flex-col text-left",
         `plan-offer-card--${offer.accent}`,
-        isLarge
-          ? "mx-auto h-full max-w-[420px] sm:max-w-none"
-          : "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
+        isLarge && "mx-auto h-full min-h-[26rem] max-w-none sm:min-h-[30rem]",
+        isModule && "h-full min-h-[15rem] w-full sm:min-h-[17rem]",
+        isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
       <div
@@ -137,16 +190,30 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
         />
 
         <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
+          {cardKind ? (
+            <div
+              className={cn(
+                "relative z-[5] mx-3 mt-3 inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] sm:text-[10px]",
+                cardKind === "pack"
+                  ? "border-white/35 bg-white/10 text-white shadow-[0_0_18px_rgba(255,255,255,0.12)]"
+                  : cn("bg-black/70", theme.priceBadge)
+              )}
+            >
+              {cardKind === "pack" ? "Full pack" : "Module"}
+            </div>
+          ) : null}
           <div
             className={cn(
               "relative z-[3] flex h-full min-h-0 flex-col gap-2",
-              isLarge ? "p-3 sm:p-3.5" : "p-2 sm:p-2.5"
+              isLarge ? "p-3 sm:p-5" : isModule ? "p-2 sm:p-2.5" : "p-2 sm:p-2.5"
             )}
           >
             <div
               className={cn(
                 "relative w-full shrink-0 overflow-hidden rounded-2xl border-2 border-white/20",
-                isLarge ? "aspect-[4/3]" : "aspect-[4/3] min-h-[9.5rem]"
+                isLarge && "aspect-[4/3] min-h-[12rem] sm:min-h-[15rem]",
+                isModule && "aspect-[16/10] min-h-[7rem] sm:min-h-[8.5rem]",
+                isCompact && "aspect-[4/3] min-h-[9.5rem]"
               )}
             >
               <img
@@ -167,12 +234,12 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
             </div>
 
-            <div className={cn("absolute z-[4]", isLarge ? "right-3 top-3" : "right-2 top-2")}>
+            <div className={cn("absolute z-[4]", isLarge ? "right-4 top-4" : isModule ? "right-2 top-2" : "right-2 top-2")}>
               <span
                 className={cn(
                   "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2 py-0.5 font-black tabular-nums tracking-normal sm:px-3 sm:py-1",
                   theme.priceBadge,
-                  isLarge ? "text-[12px] sm:text-[15px]" : "text-[10px] sm:text-[12px]"
+                  isLarge ? "text-[13px] sm:text-[16px]" : isModule ? "text-[10px] sm:text-[11px]" : "text-[10px] sm:text-[12px]"
                 )}
                 style={{
                   fontFamily: "Inter, Arial, Helvetica, sans-serif",
@@ -187,14 +254,17 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
               className={cn(
                 "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
-                isLarge && "min-h-[10.75rem]",
+                isLarge && "min-h-[12rem] sm:min-h-[13rem]",
+                isModule && "min-h-[7.5rem] sm:min-h-[8rem]",
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
             >
               <div
                 className={cn(
-                  "line-clamp-2 min-h-[2.5em] text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
-                  isLarge ? "text-[clamp(10px,2.4vw,17px)]" : "text-[10px] sm:text-[11px]"
+                  "line-clamp-3 min-h-[2.75em] text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
+                  isLarge && "text-[clamp(11px,2.2vw,18px)]",
+                  isModule && "text-[10px] sm:text-[11px]",
+                  isCompact && "text-[10px] sm:text-[11px]"
                 )}
               >
                 {offer.title}
@@ -202,23 +272,26 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
 
               <p
                 className={cn(
-                  "mt-1.5 line-clamp-3 text-left font-medium leading-snug text-white/72",
-                  isLarge ? "text-[11px] sm:text-[12px]" : "text-[9px] sm:text-[10px]"
+                  "mt-1.5 line-clamp-2 text-left font-medium leading-snug text-white/72",
+                  isLarge && "text-[11px] sm:text-[13px]",
+                  isModule && "text-[9px] sm:text-[10px]",
+                  isCompact && "text-[9px] sm:text-[10px]"
                 )}
               >
                 {offer.teaser}
                 <span className="text-cyan-300/90">_</span>
               </p>
 
-              <div className={cn("mt-2 grid grid-cols-2", isLarge ? "gap-1.5 sm:gap-2" : "gap-1")}>
+              <div className={cn("mt-2 grid grid-cols-2", isLarge ? "gap-2 sm:gap-2.5" : "gap-1")}>
                 <button
                   type="button"
                   onClick={onDetails}
                   className={cn(
                     "min-w-0 rounded-xl border border-white/40 bg-black/55 font-black uppercase tracking-[0.09em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3]",
-                    isLarge
-                      ? "px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] sm:px-2 sm:py-2 sm:tracking-[0.14em]"
-                      : "px-1.5 py-1.5 text-[9px]"
+                    isLarge &&
+                      "px-2 py-2 text-[clamp(10px,2vw,12px)] sm:px-2.5 sm:py-2.5 sm:tracking-[0.14em]",
+                    isModule && "px-1.5 py-1.5 text-[9px] sm:text-[10px]",
+                    isCompact && "px-1.5 py-1.5 text-[9px]"
                   )}
                 >
                   Details
@@ -230,12 +303,13 @@ export function PlanOfferCard({ offer, size = "large", busy = false, onDetails, 
                   className={cn(
                     "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition disabled:cursor-wait disabled:opacity-65",
                     theme.openBtn,
-                    isLarge
-                      ? "text-[clamp(9px,2.3vw,11px)] sm:px-2 sm:py-2 sm:tracking-[0.15em]"
-                      : "text-[9px]"
+                    isLarge &&
+                      "px-2 py-2 text-[clamp(10px,2vw,12px)] sm:px-2.5 sm:py-2.5 sm:tracking-[0.15em]",
+                    isModule && "px-1.5 py-1.5 text-[9px] sm:text-[10px]",
+                    isCompact && "text-[9px]"
                   )}
                 >
-                  {busy ? "Loading…" : offer.openLabel}
+                  {busy ? "Loading…" : actionLabel ?? offer.openLabel}
                 </button>
               </div>
             </div>

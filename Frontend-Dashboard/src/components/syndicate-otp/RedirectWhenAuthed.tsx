@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient, STORAGE_SIMPLE_AUTH } from "@/lib/portal-api";
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
 import { PROFILE_AVATAR_STORAGE_KEY, PROFILE_DISPLAY_NAME_KEY } from "@/lib/dashboardProfileStorage";
-import { hasPlanCheckoutIntent, isSubscriptionPlanKey, startPlanCheckout } from "@/lib/plan-checkout";
+import { hasPlanCheckoutIntent, isCheckoutPlanKey, startPlanCheckout } from "@/lib/plan-checkout";
+import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 
 /** Sends users who already have a session to the app so browser Back from `/` does not land on auth screens. */
@@ -26,9 +27,9 @@ export default function RedirectWhenAuthed() {
         const safeNext =
           rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
-        if (hasPlanCheckoutIntent(plan, amount) && isSubscriptionPlanKey(plan)) {
+        if (hasPlanCheckoutIntent(plan, amount) && isCheckoutPlanKey(plan)) {
           const checkout = await startPlanCheckout({
-            plan,
+            plan: plan as CheckoutOfferKey,
             billing,
             amount,
             postAuthNext: safeNext,

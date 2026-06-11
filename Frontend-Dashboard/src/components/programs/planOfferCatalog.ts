@@ -13,15 +13,24 @@ export type PlanOfferKey =
   | "ai_content_automation"
   | "trading_technical_analysis";
 
+export type VaultPackKey = Extract<
+  PlanOfferKey,
+  "agentic_ai" | "ai_content_automation" | "trading_technical_analysis"
+>;
+
 export type TradingSubOfferKey =
   | "trading_scalpel_protocol"
   | "trading_master_strategies"
   | "trading_master_setups"
   | "trading_master_secrets";
 
-export type CheckoutOfferKey = PlanOfferKey | TradingSubOfferKey;
+export type CheckoutOfferKey =
+  | PlanOfferKey
+  | TradingSubOfferKey
+  | `agentic_ai_c${string}`
+  | `ai_content_c${string}`;
 
-export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple";
+export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple" | "red" | "orange" | "blue";
 
 export type PlanOfferDef = {
   plan: CheckoutOfferKey;
@@ -37,8 +46,10 @@ export type PlanOfferDef = {
   openLabel: string;
   /** When set, Open navigates here instead of starting Stripe checkout. */
   openHref?: string;
-  /** When set to trading_vault, Open shows sub-program cards instead of checkout. */
-  openAction?: "trading_vault";
+  /** When set to vault_picker, Open shows sub-program cards instead of checkout. */
+  openAction?: "vault_picker";
+  /** Parent vault pack when this row is an individual course offer. */
+  vaultPackPlan?: VaultPackKey;
   accent: PlanOfferAccent;
   /** Large display title in the Details modal. */
   detailTitle: string;
@@ -119,7 +130,8 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "199",
     billing: "monthly",
-    openLabel: "Open",
+    openLabel: "Unlock",
+    openAction: "vault_picker",
     accent: "pink",
     detailTitle: "AGENTIC AI",
     detailDescription:
@@ -165,7 +177,8 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "149",
     billing: "monthly",
-    openLabel: "Open",
+    openLabel: "Unlock",
+    openAction: "vault_picker",
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
     detailDescription:
@@ -215,7 +228,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     checkoutAmount: "99",
     billing: "monthly",
     openLabel: "Unlock",
-    openAction: "trading_vault",
+    openAction: "vault_picker",
     accent: "purple",
     imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",

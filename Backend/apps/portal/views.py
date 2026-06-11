@@ -116,6 +116,23 @@ class BillingPurchasesView(views.APIView):
         return Response(rows)
 
 
+class PlanPurchaseSlugsView(views.APIView):
+    """Paid plan slugs for vault unlock UI (pack + individual course checkouts)."""
+
+    permission_classes = [IsAuthenticatedStrict]
+
+    def get(self, request):
+        slugs = list(
+            UserPlanPurchase.objects.filter(
+                user=request.user,
+                status=UserPlanPurchase.Status.PAID,
+            )
+            .values_list("plan_slug", flat=True)
+            .distinct()
+        )
+        return Response({"plan_slugs": slugs})
+
+
 class SocialLinkListCreateView(generics.ListCreateAPIView):
     serializer_class = SocialLinkSerializer
     permission_classes = [IsAuthenticatedStrict, SocialLinkPermission]

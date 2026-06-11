@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 
 type Props = {
   offer: PlanOfferDef | null;
@@ -56,6 +57,27 @@ const DETAIL_THEMES: Record<
     featureBorder: "border-violet-400/60",
     check: "border-violet-400/90 text-violet-300 shadow-[0_0_12px_rgba(168,85,247,0.55)]",
   },
+  red: {
+    modal: "border-red-400/50 shadow-[0_0_56px_rgba(239,68,68,0.35),0_0_100px_rgba(220,38,38,0.2),inset_0_0_80px_rgba(239,68,68,0.1)]",
+    closeBtn: "border-red-400/40 text-red-100 hover:border-red-300/65",
+    title: "text-red-300",
+    featureBorder: "border-red-400/60",
+    check: "border-red-400/90 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.55)]",
+  },
+  orange: {
+    modal: "border-orange-400/50 shadow-[0_0_56px_rgba(249,115,22,0.35),0_0_100px_rgba(234,88,12,0.2),inset_0_0_80px_rgba(249,115,22,0.1)]",
+    closeBtn: "border-orange-400/40 text-orange-100 hover:border-orange-300/65",
+    title: "text-orange-300",
+    featureBorder: "border-orange-400/60",
+    check: "border-orange-400/90 text-orange-300 shadow-[0_0_12px_rgba(249,115,22,0.55)]",
+  },
+  blue: {
+    modal: "border-blue-400/50 shadow-[0_0_56px_rgba(59,130,246,0.35),0_0_100px_rgba(37,99,235,0.2),inset_0_0_80px_rgba(59,130,246,0.1)]",
+    closeBtn: "border-blue-400/40 text-blue-100 hover:border-blue-300/65",
+    title: "text-blue-300",
+    featureBorder: "border-blue-400/60",
+    check: "border-blue-400/90 text-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.55)]",
+  },
 };
 
 function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {
@@ -91,6 +113,8 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
   if (!offer || typeof document === "undefined") return null;
 
   const theme = DETAIL_THEMES[offer.accent];
+  const isPackDetail = isVaultPackKey(offer.plan);
+  const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
 
   return createPortal(
     <div
@@ -102,7 +126,8 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
     >
       <div
         className={cn(
-          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative w-full max-w-md overflow-hidden rounded-2xl border-2 bg-black",
+          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative w-full overflow-hidden rounded-2xl border-2 bg-black",
+          isPackDetail ? "max-w-5xl" : "max-w-2xl",
           theme.modal
         )}
         onClick={(e) => e.stopPropagation()}
@@ -119,11 +144,24 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
           <X className="h-4 w-4" />
         </button>
 
-        <div className="max-h-[min(88dvh,680px)] overflow-y-auto px-6 py-8 sm:px-8 sm:py-10">
+        <div className="max-h-[min(88dvh,760px)] overflow-y-auto px-6 py-8 sm:px-10 sm:py-10">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={cn(
+                "inline-flex rounded-full border px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em]",
+                isPackDetail
+                  ? "border-white/35 bg-white/10 text-white"
+                  : cn("bg-black/60", theme.featureBorder, theme.title)
+              )}
+            >
+              {isPackDetail ? "Full pack" : "Module"}
+            </span>
+          </div>
+
           <h2
             id="plan-offer-detail-title"
             className={cn(
-              "plan-offer-detail__title text-[clamp(2rem,7vw,3.25rem)] font-black uppercase leading-[0.92] tracking-[0.04em]",
+              "plan-offer-detail__title mt-4 text-[clamp(2rem,6vw,3.25rem)] font-black uppercase leading-[0.92] tracking-[0.04em]",
               theme.title
             )}
           >
@@ -143,21 +181,28 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             <span className="pb-1 font-mono text-sm text-white/55 sm:text-base">{offer.billingLabel}</span>
           </div>
 
-          <p className="mt-5 max-w-prose font-mono text-[13px] leading-relaxed text-white/78 sm:text-[15px]">
+          <p className="mt-5 font-mono text-[13px] leading-relaxed text-white/78 sm:text-[15px]">
             {offer.detailDescription}
           </p>
 
-          <ul className="mt-7 space-y-3" role="list">
+          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
+            {isPackDetail ? "Included modules" : "What you get"}
+          </p>
+
+          <ul
+            className={cn("mt-3", featureColumns ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "space-y-3")}
+            role="list"
+          >
             {offer.detailFeatures.map((feature) => (
               <li key={feature}>
                 <div
                   className={cn(
-                    "plan-offer-detail__feature flex items-center gap-3 rounded-full border px-4 py-2.5",
+                    "plan-offer-detail__feature flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
                     theme.featureBorder
                   )}
                 >
                   <OfferDetailCheck accent={offer.accent} />
-                  <span className="min-w-0 font-mono text-[12px] leading-snug text-white/88 sm:text-[14px]">
+                  <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
                     {feature}
                   </span>
                 </div>

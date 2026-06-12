@@ -14,7 +14,11 @@ export type PendingCheckoutIntent = {
   postAuthNext?: string;
 };
 
-export type PostAuthCheckoutResult = "checkout" | "already_unlocked" | "none" | "error";
+export type PostAuthCheckoutResult =
+  | { status: "checkout" }
+  | { status: "already_unlocked" }
+  | { status: "none" }
+  | { status: "error"; message: string };
 
 function safePostAuthNext(next: string | undefined): string {
   const trimmed = (next || "").trim();
@@ -44,15 +48,21 @@ export async function resumePendingCheckoutAfterAuth(
       const checkout = await createPlaylistCheckoutSession(Number(playlistId), {
         returnBaseUrl: typeof window !== "undefined" ? window.location.origin : undefined,
       });
-      if (checkout.is_unlocked) return "already_unlocked";
+      if (checkout.is_unlocked) return { status: "already_unlocked" };
       const checkoutUrl = (checkout.checkout_url || "").trim();
       if (checkoutUrl) {
         window.location.assign(checkoutUrl);
-        return "checkout";
+        return { status: "checkout" };
       }
-      return "error";
-    } catch {
-      return "error";
+      return {
+        status: "error",
+        message: checkout.message?.trim() || "Playlist checkout did not return a Stripe URL.",
+      };
+    } catch (caught) {
+      return {
+        status: "error",
+        message: caught instanceof Error ? caught.message : "Playlist checkout failed.",
+      };
     }
   }
 
@@ -63,11 +73,18 @@ export async function resumePendingCheckoutAfterAuth(
       amount,
       postAuthNext: safePostAuthNext(intent.postAuthNext),
     });
-    if (result.status === "checkout") return "checkout";
-    if (result.status === "already_unlocked") return "already_unlocked";
-    if (result.status === "auth_required") return "error";
-    if (result.status === "error") return "error";
+    if (result.status === "checkout") return { status: "checkout" };
+    if (result.status === "already_unlocked") return { status: "already_unlocked" };
+    if (result.status === "auth_required") {
+      return {
+        status: "error",
+        message: "Session was not recognized for checkout. Try Verify code again.",
+      };
+    }
+    if (result.status === "error") {
+      return { status: "error", message: result.message };
+    }
   }
 
-  return "none";
+  return { status: "none" };
 }

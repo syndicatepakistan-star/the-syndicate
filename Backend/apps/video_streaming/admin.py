@@ -52,13 +52,33 @@ class StreamPlaylistItemInline(admin.TabularInline):
 
 @admin.register(StreamPlaylist)
 class StreamPlaylistAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "price", "rating", "slug", "is_published", "is_coming_soon", "updated_at")
+    list_display = (
+        "title",
+        "vault_plan_slug",
+        "category",
+        "price",
+        "rating",
+        "slug",
+        "is_published",
+        "is_coming_soon",
+        "updated_at",
+    )
     list_filter = ("category", "is_published", "is_coming_soon")
-    search_fields = ("title", "slug", "description")
+    search_fields = ("title", "slug", "vault_plan_slug", "description")
     prepopulated_fields = {"slug": ("title",)}
     inlines = [StreamPlaylistItemInline]
     fieldsets = (
-        (None, {"fields": ("title", "slug", "category", "price", "rating", "cover_image")}),
+        (
+            None,
+            {
+                "fields": ("title", "slug", "vault_plan_slug", "category", "price", "rating", "cover_image"),
+                "description": (
+                    "Set vault_plan_slug to link a mid-ticket module (e.g. agentic_ai_c01, ai_content_c05, "
+                    "trading_scalpel_protocol). One playlist per module slug. Pack purchases unlock all "
+                    "modules in that pack in the UI; each module still needs its playlist for playback."
+                ),
+            },
+        ),
         (
             "Program description (dashboard modal)",
             {

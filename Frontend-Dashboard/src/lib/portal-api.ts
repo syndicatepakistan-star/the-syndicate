@@ -128,6 +128,22 @@ export function resolveClientApiUrl(apiPath: string): string {
   return `/api/portal-proxy/${withoutApi}`;
 }
 
+/** Same-origin proxy path (avoids browser CORS to Railway backend). */
+export function resolvePortalProxyUrl(apiPath: string): string {
+  const normalized = normalizeDjangoApiPath(apiPath.startsWith("/") ? apiPath : `/${apiPath}`);
+  const withoutApi = normalized.replace(/^\/api\//, "");
+  return `/api/portal-proxy/${withoutApi}`;
+}
+
+function isCrossOriginClientUrl(url: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URL(url, window.location.origin).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 /** Hint text for login / errors (human-readable). */
 export function getApiDisplayHint(): string {
   if (!useNextProxy()) {
@@ -435,9 +451,14 @@ export async function portalFetch<T>(
   };
 
   let authorization: string | null = skipAuth ? null : getAuthorizationHeader();
+  const apiPath = path.startsWith("http") ? path : path.startsWith("/") ? path : `/${path}`;
+  const proxyUrl =
+    typeof window !== "undefined" && !path.startsWith("http")
+      ? resolvePortalProxyUrl(apiPath)
+      : null;
 
-  try {
-    let res = await fetch(url, { ...restInit, signal, headers: buildHeaders(authorization) });
+  const doFetch = async (targetUrl: string) => {
+    let res = await fetch(targetUrl, { ...restInit, signal, headers: buildHeaders(authorization) });
 
     if (res.status === 401 && !skipAuth && readStoredAccess() && readStoredRefresh()) {
       const rt = readStoredRefresh();
@@ -446,16 +467,29 @@ export async function portalFetch<T>(
           const { access } = await refreshRequest(rt);
           persistTokens(access, rt);
           authorization = getAuthorizationHeader();
-          res = await fetch(url, { ...restInit, signal, headers: buildHeaders(authorization) });
+          res = await fetch(targetUrl, { ...restInit, signal, headers: buildHeaders(authorization) });
         } catch {
           /* return the original 401 below */
         }
       }
     }
+    return res;
+  };
 
+  try {
+    const res = await doFetch(url);
     const data = await parseBody(res);
     return { ok: res.ok, status: res.status, data };
   } catch (e) {
+    if (proxyUrl && isCrossOriginClientUrl(url)) {
+      try {
+        const res = await doFetch(proxyUrl);
+        const data = await parseBody(res);
+        return { ok: res.ok, status: res.status, data };
+      } catch {
+        /* fall through */
+      }
+    }
     const name = e instanceof Error ? e.name : "";
     const detail =
       name === "AbortError"

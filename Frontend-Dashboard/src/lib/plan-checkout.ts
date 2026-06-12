@@ -116,7 +116,16 @@ function redirectToAuthCheckout(params: PlanCheckoutParams) {
   window.location.assign(buildPlanCheckoutAuthHref(params));
 }
 
-function payloadErrorMessage(payload: PlanCheckoutSessionPayload, status: number): string {
+function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, status: number): string {
+  if (typeof payload === "string" && payload.trim()) {
+    const snippet = payload.replace(/\s+/g, " ").trim().slice(0, 200);
+    if (snippet.toLowerCase().includes("<!doctype") || snippet.toLowerCase().includes("<html")) {
+      return status === 500
+        ? "Checkout is unavailable right now. Please try again shortly."
+        : "Could not start checkout.";
+    }
+    return snippet;
+  }
   if (typeof payload.message === "string" && payload.message.trim()) return payload.message.trim();
   if (typeof payload.error === "string" && payload.error.trim()) return payload.error.trim();
   if (typeof payload.detail === "string" && payload.detail.trim()) return payload.detail.trim();

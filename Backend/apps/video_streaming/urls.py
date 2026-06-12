@@ -12,6 +12,7 @@ urlpatterns = [
     path("playlists/<int:playlist_id>/checkout/", views.StreamPlaylistCheckoutSessionView.as_view(), name="streaming-playlists-checkout"),
     path("playlists/checkout/success/", views.StreamPlaylistCheckoutSuccessView.as_view(), name="streaming-playlists-checkout-success"),
     path("public-playlists/", views.public_stream_playlists_view, name="streaming-playlists-public"),
+    path("vault-playlist-map/", views.vault_playlist_map_view, name="streaming-vault-playlist-map"),
     path(
         "playlists/<int:playlist_id>/certificate/",
         views.StreamPlaylistCertificateIssueView.as_view(),

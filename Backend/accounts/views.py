@@ -801,6 +801,9 @@ def create_checkout_session_view(request):
   signup_token = str(payload.get("signup_token", "")).strip()
   checkout_user = _authenticate_checkout_user(request) if not signup_token else None
   if not signup_token and checkout_user is None:
+    auth_header = (request.META.get("HTTP_AUTHORIZATION") or "").strip()
+    if auth_header:
+      return _json_error("Authentication failed. Sign in again and retry checkout.", status=401)
     return _json_error("Signup token is required.")
 
   if checkout_user is not None:
@@ -925,9 +928,14 @@ def create_checkout_session_view(request):
         return _json_error(msg, status=400)
     except stripe.error.StripeError as exc:
       msg = getattr(exc, "user_message", None) or str(exc) or "Stripe could not start checkout."
+      logger.exception("Stripe checkout session failed (logged-in): %s", msg)
       return _json_error(msg, status=400)
-    except Exception:
-      return _json_error("Unable to create checkout session.", status=500)
+    except Exception as exc:
+      logger.exception("Checkout session failed (logged-in)")
+      return _json_error(f"Unable to create checkout session: {exc}", status=500)
+
+    if not session.url:
+      return _json_error("Stripe did not return a checkout URL.", status=500)
 
     return JsonResponse(
       {

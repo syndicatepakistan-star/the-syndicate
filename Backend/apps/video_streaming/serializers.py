@@ -64,6 +64,7 @@ class StreamPlaylistListSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
+            "vault_plan_slug",
             "category",
             "description",
             "description_sections",

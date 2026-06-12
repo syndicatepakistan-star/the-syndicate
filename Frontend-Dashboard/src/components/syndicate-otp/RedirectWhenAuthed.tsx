@@ -39,8 +39,8 @@ export default function RedirectWhenAuthed() {
             postAuthNext: safeNext,
           });
           if (cancelled) return;
-          if (checkout === "checkout") return;
-          if (checkout === "already_unlocked") {
+          if (checkout.status === "checkout") return;
+          if (checkout.status === "already_unlocked") {
             router.replace(safeNext);
             return;
           }

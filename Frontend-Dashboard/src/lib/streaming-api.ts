@@ -39,6 +39,8 @@ export type StreamPlaylistListItem = {
   id: number;
   title: string;
   slug: string;
+  /** Mid-ticket vault module checkout slug when linked in Django admin. */
+  vault_plan_slug?: string;
   category: "business_model" | "business_psychology";
   description: string;
   /** Present on current API; each string is body under that heading in admin description. */

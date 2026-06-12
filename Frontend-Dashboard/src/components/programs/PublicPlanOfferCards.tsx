@@ -24,6 +24,7 @@ import { startPlanCheckout } from "@/lib/plan-checkout";
 import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { buildVaultModulePlaylistHref, fetchVaultPlaylistMap } from "@/lib/vaultPlaylistMap";
 
 const PACK_SPOTLIGHT: Record<
   PlanOfferDef["accent"],
@@ -113,7 +114,17 @@ export function PublicPlanOfferCards({
   }, [activeSpotlightOffer]);
 
   const openUnlocked = useCallback(
-    (offer: PlanOfferDef) => {
+    async (offer: PlanOfferDef) => {
+      try {
+        const map = await fetchVaultPlaylistMap();
+        const href = buildVaultModulePlaylistHref(offer.plan, map, checkoutReturnPath);
+        if (href !== checkoutReturnPath) {
+          router.push(href);
+          return;
+        }
+      } catch {
+        // Fall back to dashboard/programs when map API is unavailable.
+      }
       router.push(checkoutReturnPath);
     },
     [checkoutReturnPath, router]
@@ -122,7 +133,7 @@ export function PublicPlanOfferCards({
   const joinOffer = useCallback(
     async (offer: PlanOfferDef) => {
       if (isVaultOfferUnlocked(offer, purchasedSet, accessTier)) {
-        openUnlocked(offer);
+        void openUnlocked(offer);
         return;
       }
       setError(null);

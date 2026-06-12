@@ -717,14 +717,14 @@ export default function AuthScreen({
             playlistId: prefilledPlaylistId,
             postAuthNext: nextUrl,
           });
-          if (resumed === "checkout") return;
-          if (resumed === "already_unlocked") {
+          if (resumed.status === "checkout") return;
+          if (resumed.status === "already_unlocked") {
             window.location.replace(nextUrl);
             return;
           }
-          if (resumed === "error") {
+          if (resumed.status === "error") {
             redirectPendingRef.current = false;
-            setError("Could not start checkout. Please try again.");
+            setError(resumed.message || "Could not start checkout. Please try again.");
             return;
           }
         }

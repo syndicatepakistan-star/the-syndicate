@@ -91,6 +91,24 @@ VAULT_COURSE_TITLES: dict[str, str] = {
 VAULT_PACK_SLUGS = frozenset({"agentic_ai", "ai_content_automation", "trading_technical_analysis"})
 
 
+def vault_pack_for_module_slug(plan: str) -> str | None:
+  """Parent pack slug for a vault module slug, or the pack slug itself."""
+  plan = (plan or "").strip().lower()
+  if plan in VAULT_PACK_SLUGS:
+    return plan
+  if plan in TRADING_COURSE_SLUGS_TITLES:
+    return "trading_technical_analysis"
+  m = _VAULT_COURSE_SLUG_RE.match(plan)
+  if not m:
+    return None
+  prefix = m.group(1)
+  if prefix == "agentic_ai":
+    return "agentic_ai"
+  if prefix == "ai_content":
+    return "ai_content_automation"
+  return None
+
+
 def is_vault_course_plan_slug(plan: str) -> bool:
   plan = (plan or "").strip().lower()
   if plan in VAULT_COURSE_TITLES:

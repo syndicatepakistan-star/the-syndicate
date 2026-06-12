@@ -602,8 +602,13 @@ POST_LOGIN_REDIRECT_URL = os.environ.get("POST_LOGIN_REDIRECT_URL", "http://loca
 # Stripe checkout (signup -> checkout -> dashboard).
 FRONTEND_BASE_URL = (os.environ.get("FRONTEND_BASE_URL") or "http://localhost:3000").strip().rstrip("/")
 MEDIA_PUBLIC_BASE_URL = (os.environ.get("MEDIA_PUBLIC_BASE_URL") or "").strip().rstrip("/")
-STRIPE_SECRET_KEY = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
-STRIPE_PUBLISHABLE_KEY = (os.environ.get("STRIPE_PUBLISHABLE_KEY") or "").strip()
+def _normalize_stripe_key(raw: str) -> str:
+    """Remove accidental line breaks/spaces from pasted Railway env values."""
+    return "".join((raw or "").split())
+
+
+STRIPE_SECRET_KEY = _normalize_stripe_key(os.environ.get("STRIPE_SECRET_KEY") or "")
+STRIPE_PUBLISHABLE_KEY = _normalize_stripe_key(os.environ.get("STRIPE_PUBLISHABLE_KEY") or "")
 # Backward compatibility: older env files used a typo `PCHECKOUT_AMOUNT_PENCE`.
 _checkout_amount_raw = (
     (os.environ.get("CHECKOUT_AMOUNT_PENCE") or "").strip()

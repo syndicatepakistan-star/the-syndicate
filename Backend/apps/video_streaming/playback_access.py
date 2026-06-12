@@ -13,6 +13,7 @@ from apps.portal.king_access import king_allowed_playlist_ids, king_selection_co
 from apps.portal.models import UserDashboardEntitlement
 from apps.video_streaming.entitlements import user_stream_playlists_unlocked_by_entitlement
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase, StreamVideo
+from apps.video_streaming.vault_entitlements import user_has_vault_module_access, purchased_vault_plan_slugs
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,8 @@ def stream_playlist_accessible_for_playback(user, playlist: StreamPlaylist) -> b
         playlist=playlist,
         status=StreamPlaylistPurchase.Status.PAID,
     ).exists():
+        return True
+    if (playlist.vault_plan_slug or "").strip() and user_has_vault_module_access(user, playlist.vault_plan_slug):
         return True
     if not user_stream_playlists_unlocked_by_entitlement(user):
         return False
@@ -85,6 +88,18 @@ def _user_can_play_programs_stream_video_eval(user, video: StreamVideo) -> bool:
         status=StreamPlaylistPurchase.Status.PAID,
     ).exists():
         return True
+
+    vault_slug_by_id = {
+        int(pid): (slug or "").strip()
+        for pid, slug in StreamPlaylist.objects.filter(id__in=playlist_ids).values_list("id", "vault_plan_slug")
+        if slug
+    }
+    if vault_slug_by_id:
+        purchased = purchased_vault_plan_slugs(user)
+        for pid in playlist_ids:
+            module_slug = vault_slug_by_id.get(int(pid), "")
+            if module_slug and user_has_vault_module_access(user, module_slug, purchased):
+                return True
 
     if not user_stream_playlists_unlocked_by_entitlement(user):
         return False

@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.auth.models import User
 from syndicate_backend.media_storages import get_image_storage
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -164,16 +165,49 @@ class StreamPlaylist(models.Model):
         db_index=True,
         help_text="Show this playlist card as Coming Soon on Programs.",
     )
+    vault_plan_slug = models.CharField(
+        max_length=48,
+        blank=True,
+        db_index=True,
+        help_text=(
+            "Optional vault module checkout slug (e.g. agentic_ai_c01, trading_scalpel_protocol). "
+            "Links this playlist to mid-ticket pack modules for unlock + Open from the vault modal."
+        ),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["title"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["vault_plan_slug"],
+                condition=~models.Q(vault_plan_slug=""),
+                name="video_streaming_playlist_unique_vault_plan_slug",
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.title
 
+    def clean(self):
+        from accounts.vault_plan_catalog import VAULT_PACK_SLUGS, is_vault_course_plan_slug
+
+        super().clean()
+        slug = (self.vault_plan_slug or "").strip().lower()
+        if not slug:
+            return
+        if slug in VAULT_PACK_SLUGS:
+            raise ValidationError(
+                {"vault_plan_slug": "Use a module slug (e.g. agentic_ai_c01), not a full pack slug."}
+            )
+        if not is_vault_course_plan_slug(slug):
+            raise ValidationError(
+                {"vault_plan_slug": f"Unknown vault module slug: {slug}. Sync with vault_plan_catalog.py."}
+            )
+
     def save(self, *args, **kwargs):
+        self.vault_plan_slug = (self.vault_plan_slug or "").strip().lower()
         if not self.slug:
             base = slugify(self.title) or "playlist"
             slug = base

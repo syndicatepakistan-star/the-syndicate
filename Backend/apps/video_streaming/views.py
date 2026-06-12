@@ -26,6 +26,7 @@ from apps.video_streaming.entitlements import (
     user_can_access_stream_playlist,
     user_stream_playlists_unlocked_by_entitlement,
 )
+from apps.video_streaming.vault_entitlements import vault_unlocked_playlist_ids_for_user
 from apps.video_streaming.playback_access import (
     user_can_play_membership_stream_video,
     user_can_play_programs_stream_video,
@@ -223,6 +224,7 @@ class StreamPlaylistListView(generics.ListAPIView):
                         unlocked_ids |= set(
                             StreamPlaylist.objects.filter(is_published=True).values_list("id", flat=True)
                         )
+            unlocked_ids |= vault_unlocked_playlist_ids_for_user(user)
             ctx["unlocked_playlist_ids"] = unlocked_ids
         else:
             ctx["unlocked_playlist_ids"] = set()
@@ -333,6 +335,34 @@ class StreamPlaylistPurchaseHistoryView(generics.ListAPIView):
             .select_related("playlist")
             .order_by("-updated_at", "-id")
         )
+
+
+def vault_playlist_map_view(request):
+    """Published vault-linked playlists keyed by vault_plan_slug (for vault modal Open actions)."""
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+
+    qs = (
+        StreamPlaylist.objects.filter(is_published=True)
+        .exclude(vault_plan_slug="")
+        .order_by("vault_plan_slug")
+        .annotate(video_count=Count("items", distinct=True))
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
+            )
+        )
+    )
+    rows = StreamPlaylistListSerializer(qs, many=True, context={"request": request}).data
+    mapping = {}
+    for row in rows:
+        slug = str(row.get("vault_plan_slug") or "").strip().lower()
+        if slug:
+            mapping[slug] = row
+    resp = JsonResponse({"map": mapping})
+    resp["Cache-Control"] = "public, max-age=60, s-maxage=300"
+    return resp
 
 
 def public_stream_playlists_view(request):

@@ -18,13 +18,12 @@ import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboar
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
   resolveProgramPlaylistDescription,
-  resolveProgramPlaylistSummary,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
 import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
-import { fetchPortalIdentity } from "@/lib/portal-api";
-import { startPlanCheckout } from "@/lib/plan-checkout";
+import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
+import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
@@ -338,6 +337,13 @@ export function ProgramsCourseSection({
     setSecureView("detail");
   };
 
+  const resetProgramsViewportScroll = () => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const shell = document.querySelector<HTMLElement>("[data-main-shell-scroll]");
+    if (shell) shell.scrollTop = 0;
+  };
+
   const openStreamPlaylist = (id: number) => {
     setDetailCourseId(null);
     setDetailPlaylistId(id);
@@ -347,12 +353,21 @@ export function ProgramsCourseSection({
       const url = new URL(window.location.href);
       url.searchParams.set("playlist", String(id));
       window.history.replaceState({}, "", url.toString());
+      requestAnimationFrame(resetProgramsViewportScroll);
     }
   };
 
   const startPlaylistCheckout = useCallback(async (playlistId: number) => {
     if (checkoutBusyPlaylistId === playlistId) return;
     setCheckoutError(null);
+    if (!hasSimpleAuthSessionClient()) {
+      const returnPath =
+        typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+          : `/programs?playlist=${playlistId}`;
+      window.location.assign(buildPlaylistCheckoutAuthHref(playlistId, returnPath));
+      return;
+    }
     setCheckoutBusyPlaylistId(playlistId);
     try {
       const checkout = await createPlaylistCheckoutSession(playlistId, {
@@ -514,7 +529,6 @@ export function ProgramsCourseSection({
     const i = j;
     const grad = PROGRAM_CARD_BACKGROUNDS[i % PROGRAM_CARD_BACKGROUNDS.length];
     const cardTitle = resolveProgramPlaylistTitle(pl);
-    const cardSummary = resolveProgramPlaylistSummary(pl);
     const comingSoon = !!pl.is_coming_soon;
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
@@ -552,7 +566,8 @@ export function ProgramsCourseSection({
           void prefetchStreamPlaylistExperience(pl.id);
         }}
         className={cn(
-          "group/card relative flex aspect-[3/4] w-full min-w-0 max-w-none justify-self-stretch flex-col overflow-hidden text-left outline-none",
+          "group/card relative flex w-full min-w-0 max-w-none justify-self-stretch flex-col overflow-hidden text-left outline-none",
+          "max-lg:aspect-[3/5] lg:aspect-[3/4]",
           "rounded-2xl border-2",
           theme.dominantBorder,
           theme.glow,
@@ -571,7 +586,12 @@ export function ProgramsCourseSection({
             aria-hidden
           />
             <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2 sm:p-2.5">
-            <div className={cn("relative min-h-[8.25rem] flex-1 overflow-hidden rounded-xl border sm:min-h-[9.25rem]", theme.mediaBorder)}>
+            <div
+              className={cn(
+                "relative min-h-[7.5rem] flex-1 overflow-hidden rounded-xl border max-lg:min-h-[7rem] max-lg:flex-[1.15] sm:min-h-[9.25rem]",
+                theme.mediaBorder
+              )}
+            >
               <ProgramPlaylistCoverImage
                 playlist={pl}
                 gradClassName={grad}
@@ -589,7 +609,7 @@ export function ProgramsCourseSection({
             </div>
             <div
               className={cn(
-                "shrink-0 flex min-h-[3.25rem] flex-col justify-center overflow-hidden rounded-xl border px-2 py-2 sm:min-h-[3.75rem] sm:px-2.5 sm:py-2.5",
+                "flex shrink-0 flex-col justify-end gap-1.5 overflow-hidden rounded-xl border px-2 py-2 sm:px-2.5 sm:py-2",
                 theme.infoPanel,
                 "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
@@ -603,13 +623,8 @@ export function ProgramsCourseSection({
               >
                 {cardTitle}
               </div>
-              {cardSummary ? (
-                <p className="mt-1 line-clamp-2 text-left text-[10px] font-medium leading-snug text-white/70 sm:text-[11px]">
-                  {cardSummary}
-                </p>
-              ) : null}
               {!comingSoon ? (
-                <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                <div className="grid shrink-0 grid-cols-2 gap-1.5">
                   <button
                     type="button"
                     {...{ [PROGRAM_DETAIL_TRIGGER_ATTR]: "" }}
@@ -654,7 +669,7 @@ export function ProgramsCourseSection({
   return (
     <>
       {showSecureBlock ? (
-        <div className="mb-8 space-y-5">
+        <div className="mb-8 space-y-5 max-lg:pb-6">
           {!inProgramLessonView ? (
             <div className="space-y-8 pb-2 sm:space-y-10 sm:pb-3">
               <div className="w-full text-left">
@@ -887,7 +902,6 @@ export function ProgramsCourseSection({
                   cover_image_url: c.cover_image_url,
                 };
                 const cardTitle = resolveProgramPlaylistTitle(courseMeta);
-                const cardSummary = resolveProgramPlaylistSummary(courseMeta);
                 const theme = COURSE_CARD_THEMES[i % COURSE_CARD_THEMES.length];
                 const courseLocked = c.can_access === false;
                 return (
@@ -974,11 +988,6 @@ export function ProgramsCourseSection({
                           >
                             {courseLocked ? "Course · not included" : "Course · playlist"}
                           </div>
-                          {cardSummary ? (
-                            <p className="mt-1.5 line-clamp-4 font-sans text-left text-[13px] font-medium leading-5 tracking-normal text-white/95 antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]">
-                              {cardSummary}
-                            </p>
-                          ) : null}
                         </div>
                       </div>
                     </span>

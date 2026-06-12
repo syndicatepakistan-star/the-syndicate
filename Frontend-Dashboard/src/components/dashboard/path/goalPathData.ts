@@ -4,6 +4,15 @@ import {
   resolveProgramPlaylistThumbnail,
 } from "@/lib/programPlaylistCatalog";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+import {
+  planOfferByKey,
+  type CheckoutOfferKey,
+  type PlanOfferKey,
+  type VaultPackKey,
+} from "@/components/programs/planOfferCatalog";
+import { vaultCoursesForPack } from "@/components/programs/vaultPackCatalog";
+import { resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
+import { planOfferDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 export type GoalId = "web_dev" | "digital_marketing" | "youtube" | "money_online" | "ai_automation";
 
@@ -30,6 +39,12 @@ export type CourseRec = {
   posterSrc?: string;
   price?: number;
   summary?: string;
+  /** Syndicate Elite pack, vault module, or library program. */
+  offerKind?: "program" | "pack" | "module";
+  packPlan?: PlanOfferKey;
+  modulePlan?: CheckoutOfferKey;
+  vaultPackPlan?: VaultPackKey;
+  deepLinkHref?: string;
 };
 
 /** Carousel / step count (fixed stages; content comes from program pool). */
@@ -37,11 +52,153 @@ export const GOAL_PATH_STAGE_COUNT = 6;
 
 export const GOAL_OPTIONS: { id: GoalId; label: string; short: string }[] = [
   { id: "web_dev", label: "Trader", short: "Trade" },
-  { id: "digital_marketing", label: "Content Automation", short: "Auto" },
+  { id: "digital_marketing", label: "Content Automation", short: "Content" },
   { id: "youtube", label: "Ai Agents", short: "Agents" },
   { id: "money_online", label: "Money Mastery", short: "Vault" },
   { id: "ai_automation", label: "Make Money Online", short: "MMO" },
 ];
+
+/** Path + Next Opportunities copy — matches Syndicate Elite / affiliate operator tone. */
+export const PATH_GOAL_INTRO: Record<
+  GoalId,
+  { path: string; opportunities: string }
+> = {
+  web_dev: {
+    path: "Chart warfare, risk rails, and capital discipline — trading vault protocols stacked with psychology programs that harden operators.",
+    opportunities:
+      "Deploy the Trading vault, individual chart protocols, and risk programs — asymmetric edges without retail noise.",
+  },
+  digital_marketing: {
+    path: "Faceless content machines and AI publishing pipelines — the Content Automation vault plus library programs that scale off-camera.",
+    opportunities:
+      "Unlock the AI Content vault, viral Shorts modules, and supporting library tracks — publish at scale while you stay invisible.",
+  },
+  youtube: {
+    path: "Autonomous agents and workflow systems — Agentic AI vault modules wired to N8N and AI Automations in the library.",
+    opportunities:
+      "Stack the Agentic AI vault, n8n agent modules, and automation programs — stop babysitting tasks agents should execute.",
+  },
+  money_online: {
+    path: "Total ecosystem command — Money Mastery and The Knight elite offers plus the Business Psychology library that compounds mindset into capital.",
+    opportunities:
+      "Capture full vault access or advance through psychology programs — ownership over rented progress, one protocol at a time.",
+  },
+  ai_automation: {
+    path: "Digital income architecture — Print On Demand, KDP, dev stacks, and publishing programs from the Business Model library.",
+    opportunities:
+      "Build online revenue rails through curated MMO programs — launch assets, code products, and publishing machines without guesswork.",
+  },
+};
+
+type PathItemRef =
+  | { type: "program"; title: string }
+  | { type: "pack"; plan: PlanOfferKey }
+  | { type: "module"; pack: VaultPackKey; title: string };
+
+/**
+ * Syndicate catalog grouped for YOUR PATH — programs, elite packs, and vault modules.
+ * Titles are matched loosely against live playlist/course API names.
+ */
+export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
+  web_dev: [
+    { type: "pack", plan: "trading_technical_analysis" },
+    {
+      type: "module",
+      pack: "trading_technical_analysis",
+      title: "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
+    },
+    { type: "module", pack: "trading_technical_analysis", title: "Strategies of a Master Trader" },
+    { type: "module", pack: "trading_technical_analysis", title: "Setups of a Master Trader" },
+    { type: "module", pack: "trading_technical_analysis", title: "Secrets of a Master Trader" },
+    { type: "program", title: "Mastering Risk and Uncertainty" },
+    { type: "program", title: "The Micro Business Protocol" },
+  ],
+  digital_marketing: [
+    { type: "pack", plan: "ai_content_automation" },
+    {
+      type: "module",
+      pack: "ai_content_automation",
+      title: "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
+    },
+    {
+      type: "module",
+      pack: "ai_content_automation",
+      title: "How I Create Viral High RPM Finance Videos Using AI (Full Blueprint)",
+    },
+    {
+      type: "module",
+      pack: "ai_content_automation",
+      title: "Create 1,000 YouTube Shorts in 13 Minutes Using FREE AI — Free Auto Shorts in Bulk",
+    },
+    {
+      type: "module",
+      pack: "ai_content_automation",
+      title: "I Studied 5,000 Faceless YouTube Videos — Here's How To ACTUALLY Go Viral",
+    },
+    { type: "program", title: "Print On Demand" },
+    { type: "program", title: "Graphics Design Using Canva" },
+    {
+      type: "module",
+      pack: "ai_content_automation",
+      title: "Clone ANY YouTube Channel With AI (NotebookLM Hack) | Automation 2.0",
+    },
+  ],
+  youtube: [
+    { type: "pack", plan: "agentic_ai" },
+    { type: "module", pack: "agentic_ai", title: "Build a WhatsApp Agent with n8n" },
+    { type: "module", pack: "agentic_ai", title: "From Zero to RAG Agent" },
+    {
+      type: "module",
+      pack: "agentic_ai",
+      title: "CLAUDE CODE FULL COURSE 4 HOURS — Build & Sell (2026)",
+    },
+    { type: "module", pack: "agentic_ai", title: "Agentic Workflow for Businesses" },
+    { type: "program", title: "N8N Ai Automation" },
+    { type: "program", title: "AI Automations" },
+    { type: "module", pack: "agentic_ai", title: "n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)" },
+  ],
+  money_online: [
+    { type: "pack", plan: "bundle" },
+    { type: "pack", plan: "king" },
+    { type: "program", title: "Hustle Hard" },
+    { type: "program", title: "Mastering Consistency" },
+    { type: "program", title: "Zero to One Million" },
+    { type: "program", title: "The Compound Effect" },
+    { type: "program", title: "The 9 to 5 Exit Strategy" },
+    { type: "program", title: "Mastering Risk and Uncertainty" },
+    { type: "program", title: "The Micro Business Protocol" },
+    { type: "program", title: "The Secret To Transformation" },
+  ],
+  ai_automation: [
+    { type: "program", title: "Print On Demand" },
+    { type: "program", title: "Amazon KDP" },
+    { type: "program", title: "WordPress Blog" },
+    { type: "program", title: "Framer Crash Course" },
+    { type: "program", title: "App Building (using Flutter)" },
+    { type: "program", title: "Building Apps using React JS" },
+    { type: "program", title: "Python Programming" },
+    { type: "program", title: "Building Games Using Unreal Engine" },
+  ],
+};
+
+/** @deprecated Use PATH_CATALOG — program titles only. */
+export const PATH_PROGRAM_TITLES = {
+  web_dev: PATH_CATALOG.web_dev
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  digital_marketing: PATH_CATALOG.digital_marketing
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  youtube: PATH_CATALOG.youtube
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  money_online: PATH_CATALOG.money_online
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  ai_automation: PATH_CATALOG.ai_automation
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+} satisfies Record<GoalId, readonly string[]>;
 
 /** Path selector tiles: each goal has its own neon channel (idle + selected). */
 export const PATH_CARD_SKIN: Record<
@@ -90,42 +247,6 @@ export const PATH_CARD_SKIN: Record<
   },
 };
 
-/**
- * Syndicate catalog grouped for YOUR PATH — order preserved per focus.
- * Titles are matched loosely against live playlist/course API names.
- */
-export const PATH_PROGRAM_TITLES: Record<GoalId, readonly string[]> = {
-  web_dev: ["Trading with Technical Analysis Course", "The Micro Business Protocol"],
-  digital_marketing: [
-    "Faceless YouTube AI Content Creator Course",
-    "WordPress Blog",
-    "Graphics Design Using Canva",
-  ],
-  youtube: ["How To Build A.I Agents", "Prompt Engineering", "AI Automations"],
-  money_online: [
-    "Hustle Hard",
-    "Mastering Consistency",
-    "Syndicate 13 Business Rules",
-    "Syndicate Money Philosophy",
-    "The 9 to 5 Exit Strategy",
-    "The Art of Critical Thinking",
-    "The Compound Effect",
-    "The Secret To Transformation",
-    "Zero to One Million",
-  ],
-  ai_automation: [
-    "Affiliate Marketing",
-    "App Building (using Flutter)",
-    "Block Chain and Smart Contract Building with Solidity",
-    "Book Publishing On Amazon (KINDLE)",
-    "Building Apps using React JS",
-    "Building Games Using Unreal Engine",
-    "Framer Crash Course",
-    "Print On Demand Clothing",
-    "Python Programming",
-  ],
-};
-
 /** Placeholder roadmap — length drives UI only; program cards use `opportunityTriplesForStage`. */
 export const ROADMAPS: Record<GoalId, RoadmapStep[]> = Object.fromEntries(
   (GOAL_OPTIONS.map((g) => g.id) as GoalId[]).map((gid) => [
@@ -164,10 +285,26 @@ function titleMatches(courseTitle: string, canonical: string): boolean {
   return overlap / bTokens.length >= 0.72;
 }
 
-function defaultCopyForTitle(title: string): { outcome: string; earningHint: string } {
+const PATH_EARNING_HINTS: Record<GoalId, string> = {
+  web_dev: "Asymmetric edge: chart discipline compounds when retail noise fades",
+  digital_marketing: "Invisible leverage: machines publish while influence scales off-camera",
+  youtube: "Autonomous systems: agents execute while you architect the empire",
+  money_online: "Total ownership: psychology + vault access under one Syndicate identity",
+  ai_automation: "Digital rails: launch assets that earn without trading hours for output",
+};
+
+const PACK_TONE: Partial<Record<PlanOfferKey, OpportunityTone>> = {
+  bundle: "amber",
+  king: "cyan",
+  agentic_ai: "fuchsia",
+  ai_content_automation: "cyan",
+  trading_technical_analysis: "fuchsia",
+};
+
+function defaultCopyForTitle(title: string, goal: GoalId): { outcome: string; earningHint: string } {
   return {
-    outcome: `Follow the ${title} track in Programs — build proof, then stack the next module.`,
-    earningHint: "Skilled path: compounding skills + launches as reputation hardens",
+    outcome: `Deploy ${title} inside your command dashboard — controlled entitlement, measurable progress, no vanity consumption.`,
+    earningHint: PATH_EARNING_HINTS[goal],
   };
 }
 
@@ -184,6 +321,81 @@ function findPlaylistMatch(
   return playlists.find((pl) => titleMatches(pl.title, canonical));
 }
 
+function resolvePathItem(
+  item: PathItemRef,
+  goal: GoalId,
+  courses: { id: string; title: string }[],
+  playlists?: StreamPlaylistListItem[],
+): CourseRec | null {
+  if (item.type === "pack") {
+    const offer = planOfferByKey(item.plan);
+    if (!offer) return null;
+    const copy = defaultCopyForTitle(offer.title, goal);
+    const deepLink =
+      item.plan === "king" && offer.openHref
+        ? offer.openHref
+        : planOfferDeepLink(item.plan as GlobePackKey);
+    return {
+      id: `pack-${offer.plan}`,
+      title: offer.title,
+      outcome: offer.teaser,
+      earningHint: copy.earningHint,
+      tone: PACK_TONE[item.plan] ?? "amber",
+      offerKind: "pack",
+      packPlan: item.plan,
+      posterSrc: offer.imageSrc,
+      price: parsePlaylistPrice(offer.checkoutAmount),
+      summary: offer.teaser,
+      deepLinkHref: deepLink,
+    };
+  }
+
+  if (item.type === "module") {
+    const moduleOffer = vaultCoursesForPack(item.pack).find((row) =>
+      titleMatches(row.title, item.title),
+    );
+    if (!moduleOffer) return null;
+    const teaser = resolveVaultModuleTeaser(moduleOffer.title, item.pack);
+    const copy = defaultCopyForTitle(moduleOffer.title, goal);
+    return {
+      id: `module-${moduleOffer.plan}`,
+      title: moduleOffer.title,
+      outcome: teaser,
+      earningHint: copy.earningHint,
+      tone: PACK_TONE[item.pack] ?? "amber",
+      offerKind: "module",
+      modulePlan: moduleOffer.plan,
+      vaultPackPlan: item.pack,
+      posterSrc: moduleOffer.imageSrc,
+      price: parsePlaylistPrice(moduleOffer.checkoutAmount),
+      summary: teaser,
+      deepLinkHref: planOfferDeepLink(item.pack),
+    };
+  }
+
+  const playlistMatch = findPlaylistMatch(playlists, item.title);
+  const courseMatch = courses.find((c) => titleMatches(c.title, item.title));
+  const title = formatProgramDisplayTitle(
+    playlistMatch?.title ?? courseMatch?.title ?? item.title,
+  );
+  const copy = defaultCopyForTitle(title, goal);
+  const summary = playlistMatch ? resolveProgramPlaylistSummary(playlistMatch) : copy.outcome;
+  return {
+    id: playlistMatch
+      ? String(playlistMatch.id)
+      : (courseMatch?.id ?? `path-${goal}-${normTitle(title).replace(/\s+/g, "-")}`),
+    title,
+    outcome: summary,
+    earningHint: copy.earningHint,
+    tone: "amber",
+    offerKind: "program",
+    programId: playlistMatch?.id,
+    posterSrc: playlistMatch ? resolveProgramPlaylistThumbnail(playlistMatch) : undefined,
+    price: playlistMatch ? parsePlaylistPrice(playlistMatch.price) : undefined,
+    summary,
+  };
+}
+
 function mergeProgramPool(
   goal: GoalId,
   courses: { id: string; title: string }[],
@@ -192,30 +404,13 @@ function mergeProgramPool(
   const seen = new Set<string>();
   const out: CourseRec[] = [];
 
-  for (const canonical of PATH_PROGRAM_TITLES[goal]) {
-    const playlistMatch = findPlaylistMatch(playlists, canonical);
-    const courseMatch = courses.find((c) => titleMatches(c.title, canonical));
-    const title = formatProgramDisplayTitle(
-      playlistMatch?.title ?? courseMatch?.title ?? canonical,
-    );
-    const key = normTitle(title);
+  for (const item of PATH_CATALOG[goal]) {
+    const row = resolvePathItem(item, goal, courses, playlists);
+    if (!row) continue;
+    const key = normTitle(row.title);
     if (seen.has(key)) continue;
     seen.add(key);
-    const copy = defaultCopyForTitle(title);
-    const summary = playlistMatch ? resolveProgramPlaylistSummary(playlistMatch) : copy.outcome;
-    out.push({
-      id: playlistMatch
-        ? String(playlistMatch.id)
-        : (courseMatch?.id ?? `path-${goal}-${key.replace(/\s+/g, "-")}`),
-      title,
-      outcome: summary,
-      earningHint: copy.earningHint,
-      tone: "amber",
-      programId: playlistMatch?.id,
-      posterSrc: playlistMatch ? resolveProgramPlaylistThumbnail(playlistMatch) : undefined,
-      price: playlistMatch ? parsePlaylistPrice(playlistMatch.price) : undefined,
-      summary,
-    });
+    out.push(row);
   }
 
   return out;

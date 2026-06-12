@@ -49,8 +49,17 @@ const mediaRemote = backendMediaRemotePattern();
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "recharts"]
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "recharts",
+      "gsap",
+      "@use-gesture/react",
+      "qrcode.react",
+    ],
   },
   devIndicators: {
     buildActivity: false
@@ -134,6 +143,74 @@ const nextConfig = {
     return [
       { source: "/challenges", destination: "/", permanent: false },
       { source: "/challenges/:path*", destination: "/", permanent: false }
+    ];
+  },
+  async headers() {
+    const immutableStatic = "public, max-age=31536000, immutable";
+    const imageCache = "public, max-age=2592000, stale-while-revalidate=604800";
+    const publicPageCache =
+      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400";
+    return [
+      {
+        source: "/assets/:path*",
+        headers: [{ key: "Cache-Control", value: immutableStatic }],
+      },
+      {
+        source: "/fonts/:path*",
+        headers: [{ key: "Cache-Control", value: immutableStatic }],
+      },
+      {
+        source: "/instructors/:path*",
+        headers: [{ key: "Cache-Control", value: immutableStatic }],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: immutableStatic }],
+      },
+      {
+        source: "/_next/image",
+        headers: [{ key: "Cache-Control", value: imageCache }],
+      },
+      {
+        source: "/_next/image/:path*",
+        headers: [{ key: "Cache-Control", value: imageCache }],
+      },
+      {
+        source: "/favicon.ico",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, immutable" }],
+      },
+      {
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/what-you-get",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/our-methods",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/programs",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/membership",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/affiliate",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/quiz",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
     ];
   }
 };

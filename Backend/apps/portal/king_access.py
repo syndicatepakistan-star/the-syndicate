@@ -43,6 +43,15 @@ def king_selection_required(user: AbstractBaseUser) -> bool:
     return user_entitlement_tier(user) == UserDashboardEntitlement.AccessTier.KING and not king_selection_completed(user)
 
 
+def user_has_knight_tier_access(user: AbstractBaseUser) -> bool:
+    """The Knight (king tier) unlocks Syndicate Mode and the Membership section."""
+    tier = user_entitlement_tier(user)
+    return tier in (
+        UserDashboardEntitlement.AccessTier.KING,
+        UserDashboardEntitlement.AccessTier.FULL,
+    )
+
+
 def king_allowed_course_ids(user: AbstractBaseUser) -> set[int]:
     rec = king_selection_record(user)
     if rec is None:

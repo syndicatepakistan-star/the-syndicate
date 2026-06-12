@@ -74,7 +74,7 @@ export default function SiteFooter({
             </p>
             <nav
               aria-label="Quick links"
-              className="mt-3 grid max-sm:grid-cols-1 grid-cols-2 gap-x-[clamp(0.85rem,2.2vw,2rem)] gap-y-2.5 text-[clamp(0.82rem,1.25vw,1.05rem)] font-semibold leading-snug max-sm:justify-items-center sm:gap-y-2 md:justify-items-end sm:[&>a:last-child]:col-span-2 sm:[&>a:last-child]:justify-self-end"
+              className="mt-3 grid max-sm:grid-cols-1 grid-cols-2 gap-x-[clamp(0.85rem,2.2vw,2rem)] gap-y-2.5 text-[clamp(0.82rem,1.25vw,1.05rem)] font-semibold leading-snug max-sm:justify-items-center sm:gap-y-2 md:justify-items-end"
             >
               <Link href="/" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Home</Link>
               <Link href="/what-you-get" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>What You Get</Link>
@@ -86,19 +86,9 @@ export default function SiteFooter({
               <Link href="/login" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Join Now</Link>
             </nav>
             <div className="mt-3 flex items-center justify-center gap-3 md:justify-end">
-              <a href="https://www.youtube.com/" target="_blank" rel="noreferrer" aria-label="YouTube" className={socialIconClass}>
-                <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current" aria-hidden>
-                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.7V8.3L15.8 12l-6.2 3.7Z" />
-                </svg>
-              </a>
               <a href="https://www.instagram.com/followthesyndicate?igsh=MXV5b3E5NnF4YWxjNg==" target="_blank" rel="noreferrer" aria-label="Instagram" className={socialIconClass}>
                 <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current" aria-hidden>
                   <path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.1.1 1.7.2 2.1.4.6.2 1 .4 1.5.9s.7.9.9 1.5c.2.4.3 1 .4 2.1.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.1-.2 1.7-.4 2.1-.2.6-.4 1-.9 1.5s-.9.7-1.5.9c-.4.2-1 .3-2.1.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.1-.1-1.7-.2-2.1-.4-.6-.2-1-.4-1.5-.9s-.7-.9-.9-1.5c-.2-.4-.3-1-.4-2.1C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.1.2-1.7.4-2.1.2-.6.4-1 .9-1.5s.9-.7 1.5-.9c.4-.2 1-.3 2.1-.4 1.2-.1 1.6-.1 4.8-.1Zm0 2.2c-3.1 0-3.5 0-4.7.1-.8 0-1.3.2-1.6.3-.4.1-.7.3-1 .6-.3.3-.5.6-.6 1-.1.3-.2.8-.3 1.6-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c0 .8.2 1.3.3 1.6.1.4.3.7.6 1 .3.3.6.5 1 .6.3.1.8.2 1.6.3 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c.8 0 1.3-.2 1.6-.3.8-.3 1.4-.9 1.7-1.7.1-.3.2-.8.3-1.6.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c0-.8-.2-1.3-.3-1.6-.1-.4-.3-.7-.6-1-.3-.3-.6-.5-1-.6-.3-.1-.8-.2-1.6-.3-1.2-.1-1.6-.1-4.7-.1Zm0 3.7A3.9 3.9 0 1 1 12 16a3.9 3.9 0 0 1 0-7.8Zm0 5.6a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Zm5-6.8a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0Z" />
-                </svg>
-              </a>
-              <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook" className={socialIconClass}>
-                <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current" aria-hidden>
-                  <path d="M13.7 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.5 1.6-1.5H17V4.1c-.8-.1-1.6-.1-2.4-.1-2.4 0-4 1.5-4 4.1v2.3H8v3.2h2.7V22h3Z" />
                 </svg>
               </a>
               <a href="https://www.tiktok.com/@followthesyndicate?_r=1&_t=ZG-95id6R01vZh" target="_blank" rel="noreferrer" aria-label="TikTok" className={socialIconClass}>

@@ -1,4 +1,5 @@
 import type { CheckoutOfferKey, PlanOfferAccent, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
+import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
 
 const PACKS_BASE = "/assets/programs/packs courses";
 
@@ -16,11 +17,6 @@ function packThumb(folder: string, filename: string): string {
 
 function slugIndex(prefix: string, index: number): CheckoutOfferKey {
   return `${prefix}_c${String(index).padStart(2, "0")}` as CheckoutOfferKey;
-}
-
-function courseTeaser(title: string): string {
-  const short = title.length > 92 ? `${title.slice(0, 89)}…` : title;
-  return `Lifetime access — ${short}`;
 }
 
 /** Rotating neon accents for vault sub-course cards (gold, pink, green, purple, cyan, red, orange, blue). */
@@ -41,11 +37,12 @@ function toOffer(
   packPlan: VaultPackKey
 ): PlanOfferDef {
   const price = String(row.unitPrice);
+  const teaser = resolveVaultModuleTeaser(row.title, packPlan);
   return {
     plan: row.slug,
     title: row.title,
     imageSrc: row.image,
-    teaser: courseTeaser(row.title),
+    teaser,
     displayPrice: `$${row.unitPrice}`,
     comparePrice: `$${row.comparePrice}`,
     billingLabel: "/lifetime",
@@ -54,8 +51,8 @@ function toOffer(
     openLabel: "Unlock",
     accent,
     detailTitle: row.title.toUpperCase().slice(0, 80),
-    detailDescription: `Buy once — unlock "${row.title}" in your dashboard. Curriculum access activates when the lesson is published in the vault.`,
-    detailFeatures: [row.title, "Lifetime access for this course", "Dashboard billing record after checkout"],
+    detailDescription: resolveVaultModuleDetail(row.title, packPlan),
+    detailFeatures: [row.title, "Lifetime access for this module", "Dashboard billing record after checkout"],
     grantsEntitlement: false,
     vaultPackPlan: packPlan,
   };
@@ -183,21 +180,24 @@ export const VAULT_PACK_MODAL_COPY: Record<
 > = {
   agentic_ai: {
     title: "Agentic AI",
-    subtitle: "Unlock the full vault or buy courses individually. Pack $199 vs $19 each à la carte.",
+    subtitle:
+      "This is not a course drop — it is an autonomous systems vault. Unlock the full protocol stack for $199 or deploy individual modules at $19 each. Every purchase records to your command dashboard; curriculum activates as the vault deploys.",
     borderClass: "border-fuchsia-400/45 shadow-[0_0_56px_rgba(236,72,153,0.35)]",
     labelClass: "text-fuchsia-300/85",
     closeBtnClass: "border-fuchsia-400/35 text-fuchsia-100 hover:border-fuchsia-300/60",
   },
   ai_content_automation: {
     title: "AI Content Automation",
-    subtitle: "Unlock the full vault or buy courses individually. Pack $149 vs $15 each à la carte.",
+    subtitle:
+      "Content without a machine behind it is manual labour — this vault wires faceless YouTube, Shorts, documentaries, and finance niches into AI pipelines that scale. Full pack $149 or modules at $15 each. One checkout. Controlled entitlement under your Syndicate identity.",
     borderClass: "border-emerald-400/45 shadow-[0_0_56px_rgba(52,211,153,0.35)]",
     labelClass: "text-emerald-300/85",
     closeBtnClass: "border-emerald-400/35 text-emerald-100 hover:border-emerald-300/60",
   },
   trading_technical_analysis: {
     title: "Trading Advanced Technical Analysis",
-    subtitle: "Unlock the full vault or buy protocols individually. Pack $99 vs $35 each à la carte.",
+    subtitle:
+      "Retail noise exists to liquidate undisciplined capital — this vault installs chart doctrine, risk rails, and execution math built for asymmetric warfare. Full protocol stack $99 or individual edges at $35 each. Every purchase tracked in your command dashboard.",
     borderClass: "border-violet-400/45 shadow-[0_0_56px_rgba(168,85,247,0.35)]",
     labelClass: "text-violet-300/85",
     closeBtnClass: "border-violet-400/35 text-violet-100 hover:border-violet-300/60",

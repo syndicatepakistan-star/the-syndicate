@@ -179,6 +179,7 @@ export default function WhatYouGetPage() {
         <section className="relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
           <ViewportDecorVideo
             src="/assets/bg-video.mp4"
+            priority
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
           />
           <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">

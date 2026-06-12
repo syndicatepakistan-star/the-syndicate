@@ -9,9 +9,9 @@ export const FREE_TICKET_PSYCHOLOGY_COURSES = [
 /** Catalog title (lowercase) → public programs page playlist id. */
 const FREE_TICKET_PROGRAM_IDS: Record<string, number> = {
   "secret to transformation": 9,
-  "the micro business protocol": 30,
+  "the micro business protocol": 31,
   "zero to 1 million": 2,
-  "mastering risk and uncertainty": 31,
+  "mastering risk and uncertainty": 30,
 };
 
 export function isFreeTicketPsychologyCourse(courseName: string): boolean {

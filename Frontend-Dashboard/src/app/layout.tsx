@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 import "./syndicate-otp/syndicate-otp.css";
 
@@ -39,13 +40,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
         <link rel="preload" href="/fonts/Thryon.otf" as="font" type="font/otf" crossOrigin="anonymous" />
-        <link rel="preload" href="/assets/logo.webp" as="image" />
+        <link rel="preload" href="/assets/logo.webp" as="image" type="image/webp" fetchPriority="high" />
       </head>
       <body
         className={`${jetbrainsMono.variable} min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased`}
         suppressHydrationWarning
       >
         <Providers>
+          <ServiceWorkerRegister />
           <RouteWarmup />
           {children}
         </Providers>

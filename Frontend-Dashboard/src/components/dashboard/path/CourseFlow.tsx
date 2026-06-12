@@ -5,14 +5,23 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CourseRec, GoalId, OpportunityTone } from "./goalPathData";
-import { getPathProgramPool, GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage } from "./goalPathData";
+import { getPathProgramPool, GOAL_PATH_STAGE_COUNT, opportunityTriplesForStage, PATH_GOAL_INTRO } from "./goalPathData";
 import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { ArrowConnectorHorizontal, ArrowConnectorVertical } from "./ArrowConnector";
 import { cn } from "../dashboardPrimitives";
 import { ProgramOpportunityCardContent } from "@/components/programs/ProgramOpportunityCardContent";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
+import { PlanOfferDetailModal } from "@/components/programs/PlanOfferDetailModal";
+import { planOfferByKey, type PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import { vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { createPlaylistCheckoutSession, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
+import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
+import {
+  navigateToPlanOfferCard,
+  navigateToProgramLibraryCard,
+} from "@/lib/programCardScroll";
+import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 const CAROUSEL_MS = 4200;
 
@@ -126,6 +135,16 @@ const OPPORTUNITY_CARD_SIZE_PROGRAM =
 export type OpportunityCardFrame = "path" | "methods";
 export type OpportunityContentMode = "text" | "program";
 
+function resolvePlanOfferForCourse(course: CourseRec): PlanOfferDef | null {
+  if (course.packPlan && course.offerKind === "pack") {
+    return planOfferByKey(course.packPlan) ?? null;
+  }
+  if (course.modulePlan && course.offerKind === "module") {
+    return vaultCourseBySlug(course.modulePlan) ?? null;
+  }
+  return null;
+}
+
 function CourseFlowCard({
   course,
   variant,
@@ -137,6 +156,9 @@ function CourseFlowCard({
   onContinue,
   onDetails,
   onUnlock,
+  onPlanDetails,
+  onPlanUnlock,
+  onPlanOpen,
 }: {
   course: CourseRec;
   variant: "support" | "focus" | "future";
@@ -148,11 +170,17 @@ function CourseFlowCard({
   onContinue: () => void;
   onDetails: (playlist: StreamPlaylistListItem) => void;
   onUnlock: (playlist: StreamPlaylistListItem) => void;
+  onPlanDetails: (offer: PlanOfferDef) => void;
+  onPlanUnlock: (offer: PlanOfferDef) => void;
+  onPlanOpen: (course: CourseRec) => void;
 }) {
   const skin = TONE_SKIN[course.tone];
   const isMethods = cardFrame === "methods";
   const clip = variant === "focus" ? CLIP_HUD_B : CLIP_HUD_A;
-  const isProgramCard = contentMode === "program" && course.programId != null;
+  const planOffer = resolvePlanOfferForCourse(course);
+  const isProgramCard =
+    contentMode === "program" &&
+    (course.programId != null || course.offerKind === "pack" || course.offerKind === "module");
   const cardSizeClass = isProgramCard ? OPPORTUNITY_CARD_SIZE_PROGRAM : OPPORTUNITY_CARD_SIZE;
 
   const label =
@@ -163,6 +191,7 @@ function CourseFlowCard({
       course={course}
       variant={variant}
       playlist={playlist}
+      planOffer={planOffer}
       skin={{
         heading: skin.heading,
         titleText: skin.titleText,
@@ -171,6 +200,9 @@ function CourseFlowCard({
       cardIndex={cardIndex}
       onDetails={onDetails}
       onUnlock={onUnlock}
+      onPlanDetails={onPlanDetails}
+      onPlanUnlock={onPlanUnlock}
+      onPlanOpen={onPlanOpen}
     />
   ) : (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -342,6 +374,7 @@ export function CourseFlow({
   const roadmapLen = GOAL_PATH_STAGE_COUNT;
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] =
     useState<StreamPlaylistListItem | null>(null);
+  const [detailPlanOffer, setDetailPlanOffer] = useState<PlanOfferDef | null>(null);
 
   const playlistById = useMemo(() => {
     const map = new Map<number, StreamPlaylistListItem>();
@@ -420,7 +453,9 @@ export function CourseFlow({
     (playlist: StreamPlaylistListItem) => {
       void (async () => {
         if (!hasSimpleAuthSessionClient()) {
-          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+          window.location.assign(
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+          );
           return;
         }
         try {
@@ -437,14 +472,66 @@ export function CourseFlow({
             router.push("/dashboard");
             return;
           }
-          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+          window.location.assign(
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+          );
         } catch {
-          router.push(`/signup?playlist_id=${encodeURIComponent(String(playlist.id))}`);
+          window.location.assign(
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+          );
         }
       })();
     },
     [router],
   );
+
+  const handlePlanUnlock = useCallback(
+    (offer: PlanOfferDef) => {
+      void (async () => {
+        try {
+          const result = await startPlanCheckout({
+            plan: offer.plan,
+            billing: offer.billing,
+            amount: offer.checkoutAmount,
+            postAuthNext:
+              typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
+                ? "/dashboard?section=programs"
+                : "/programs",
+          });
+          if (result.status === "already_unlocked") {
+            router.push("/dashboard?section=programs");
+            return;
+          }
+          if (result.status === "error") {
+            if (offer.openHref) {
+              router.push(offer.openHref);
+            }
+          }
+        } catch {
+          if (offer.openHref) router.push(offer.openHref);
+        }
+      })();
+    },
+    [router],
+  );
+
+  const handlePlanOpen = useCallback((course: CourseRec) => {
+    if (course.programId != null) {
+      navigateToProgramLibraryCard(course.programId);
+      return;
+    }
+    if (course.packPlan && course.offerKind === "pack") {
+      if (course.deepLinkHref?.startsWith("/membership")) {
+        window.location.assign(course.deepLinkHref);
+        return;
+      }
+      navigateToPlanOfferCard(course.packPlan as GlobePackKey);
+      return;
+    }
+    if (course.vaultPackPlan) {
+      navigateToPlanOfferCard(course.vaultPackPlan);
+    }
+  }, []);
 
   const resolvePlaylist = useCallback(
     (course: CourseRec) =>
@@ -467,10 +554,13 @@ export function CourseFlow({
       }}
     >
       {contentMode === "program" ? (
-        <ProgramPlaylistDescriptionModal
-          playlist={descriptionModalPlaylist}
-          onClose={() => setDescriptionModalPlaylist(null)}
-        />
+        <>
+          <ProgramPlaylistDescriptionModal
+            playlist={descriptionModalPlaylist}
+            onClose={() => setDescriptionModalPlaylist(null)}
+          />
+          <PlanOfferDetailModal offer={detailPlanOffer} onClose={() => setDetailPlanOffer(null)} />
+        </>
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-[clamp(0.65rem,1.8vw+0.2rem,1rem)]">
         <div>
@@ -478,11 +568,11 @@ export function CourseFlow({
             Next Opportunities
           </div>
           <p className="mt-2 text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/88 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">
-            Natural progression — earn more and sharpen skills without noise.
+            {PATH_GOAL_INTRO[goal].opportunities}
           </p>
           {browseCount > 1 ? (
             <p className="mt-1 font-mono text-[clamp(0.5rem,0.35vw+0.38rem,0.58rem)] uppercase tracking-[0.18em] text-white/55">
-              Supporting (left) stays on your step · use arrows or dots to browse {browseCount} programs in this path
+              Supporting (left) stays on your step · browse {browseCount} offers in this path — programs, packs, and vault modules
               {manualBrowse ? " · manual" : paused ? " · auto paused on hover" : ""}
             </p>
           ) : null}
@@ -581,6 +671,9 @@ export function CourseFlow({
             onContinue={go}
             onDetails={handleDetails}
             onUnlock={handleUnlock}
+            onPlanDetails={setDetailPlanOffer}
+            onPlanUnlock={handlePlanUnlock}
+            onPlanOpen={handlePlanOpen}
           />
         </div>
 
@@ -612,6 +705,9 @@ export function CourseFlow({
                 onContinue={go}
                 onDetails={handleDetails}
                 onUnlock={handleUnlock}
+                onPlanDetails={setDetailPlanOffer}
+                onPlanUnlock={handlePlanUnlock}
+                onPlanOpen={handlePlanOpen}
               />
             </motion.div>
             </AnimatePresence>
@@ -645,6 +741,9 @@ export function CourseFlow({
                   onContinue={go}
                   onDetails={handleDetails}
                   onUnlock={handleUnlock}
+                  onPlanDetails={setDetailPlanOffer}
+                  onPlanUnlock={handlePlanUnlock}
+                  onPlanOpen={handlePlanOpen}
                 />
               </motion.div>
             </AnimatePresence>

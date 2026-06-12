@@ -1,4 +1,5 @@
 import AuthScreen from "@/components/syndicate-otp/AuthScreen";
+import MobileAuthBackToHome from "@/components/syndicate-otp/MobileAuthBackToHome";
 import RedirectWhenAuthed from "@/components/syndicate-otp/RedirectWhenAuthed";
 
 type PageProps = {
@@ -17,7 +18,8 @@ export default async function SignupPage({ searchParams }: PageProps) {
   const fromPlanCheckout = selectedPlan.trim().length > 0 && selectedAmount.trim().length > 0;
   return (
     <div id="syndicate-otp-mount" className="min-h-dvh">
-      {!fromPlaylistUnlock && !isBuyFlow && !fromPlanCheckout ? <RedirectWhenAuthed /> : null}
+      <MobileAuthBackToHome />
+      <RedirectWhenAuthed />
       <AuthScreen
         mode="signup"
         prefilledEmail={email}

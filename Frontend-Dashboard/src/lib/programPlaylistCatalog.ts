@@ -1,5 +1,11 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
-import { getProgramPlaylistThumbnail } from "@/lib/programPlaylistThumbnails";
+import {
+  getProgramDisplayTitle,
+  getProgramPlaylistThumbnail,
+  PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
+  PUBLIC_PROGRAMS_PAGE_IDS,
+} from "@/lib/programPlaylistThumbnails";
+import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export type ProgramPlaylistCatalogEntry = {
   id: number;
@@ -100,9 +106,11 @@ export function extractProgramSummary(description: string, maxLen = 168): string
 }
 
 export function resolveProgramPlaylistTitle(playlist: ProgramPlaylistLike): string {
+  const catalog = findProgramCatalogEntry(playlist);
+  const id = catalog?.id ?? playlist.id;
   const fromApi = playlist.title?.trim();
-  if (fromApi) return fromApi;
-  return findProgramCatalogEntry(playlist)?.title ?? "Syndicate Program";
+  const catalogTitle = catalog?.title?.trim();
+  return getProgramDisplayTitle(id, fromApi ?? catalogTitle);
 }
 
 export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike): string {
@@ -144,4 +152,38 @@ export function enrichProgramPlaylist<T extends ProgramPlaylistLike>(playlist: T
     title: resolveProgramPlaylistTitle(playlist),
     description: resolveProgramPlaylistDescription(playlist),
   };
+}
+
+function publicPlaylistCategory(id: number): StreamPlaylistListItem["category"] {
+  return PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER.includes(id) ? "business_model" : "business_psychology";
+}
+
+/** Ensure allowlisted public programs render even when the API omits them. */
+export function fillMissingPublicProgramPlaylists(
+  playlists: StreamPlaylistListItem[]
+): StreamPlaylistListItem[] {
+  const byId = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+  const merged = [...playlists];
+
+  for (const id of PUBLIC_PROGRAMS_PAGE_IDS) {
+    if (byId.has(id)) continue;
+    const entry = BY_ID.get(id);
+    if (!entry) continue;
+    merged.push({
+      id: entry.id,
+      title: getProgramDisplayTitle(entry.id, entry.title),
+      slug: entry.slug,
+      category: publicPlaylistCategory(entry.id),
+      description: entry.description,
+      price: "40.00",
+      rating: "4.0",
+      cover_image_url: null,
+      video_count: 0,
+      is_published: true,
+      is_coming_soon: false,
+      created_at: "1970-01-01T00:00:00.000Z",
+    });
+  }
+
+  return merged;
 }

@@ -107,6 +107,17 @@ const FEATURE_MENU_ENTRIES: FeatureMenuEntry[] = [
   { section: "More options", label: "Settings", navKey: "settings" }
 ];
 
+/** Mobile/tablet: in-shell scroll (Syndicate Mode layout) — top bar fixed, content scrolls inside gold frame. */
+const BOUNDED_MOBILE_SHELL_KEYS = new Set([
+  "dashboard",
+  "programs",
+  "monk",
+  "resources",
+  "support",
+  "quickaccess",
+  "settings",
+]);
+
 const PROFILE_AVATAR_MAX_BYTES = Math.floor(1.5 * 1024 * 1024);
 
 const menuMotion = {
@@ -254,19 +265,79 @@ function CheckboxSlot({ active }: { active?: boolean }) {
   );
 }
 
-function SidebarNavKeyDecor() {
+function InNavbarSidebarDock({
+  sidebarRef,
+  nav,
+  selectedNavKey,
+  applyNavKey,
+  onItemActivate,
+  isNavLocked,
+  onClose,
+  attached,
+}: {
+  sidebarRef: React.Ref<HTMLDivElement>;
+  nav: { key: string; label: string; active?: boolean }[];
+  selectedNavKey: string;
+  applyNavKey: (key: string) => void;
+  onItemActivate: () => void;
+  isNavLocked: (key: string) => boolean;
+  onClose: () => void;
+  attached?: boolean;
+}) {
   return (
-    <div className="sidebar-nav-key-slot" aria-hidden>
-      <div className="sidebar-nav-key-decor pointer-events-none select-none">
-        <img
-          src="/assets/Gold-Key.png"
-          alt=""
-          width={120}
-          height={120}
-          className="sidebar-nav-key-spin"
-          draggable={false}
+    <div
+      ref={sidebarRef}
+      className={cn(
+        "sidebar-nav-dock dashboard-innav-sidebar-rail mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative border-0 bg-black dashboard-shell-surface no-scrollbar",
+        attached
+          ? "dashboard-innav-sidebar-rail--attached overflow-hidden pt-0 max-[820px]:fixed max-[820px]:left-0 max-[820px]:z-[95] max-[820px]:top-[100px] max-[820px]:w-[clamp(310px,46vw,460px)] max-[820px]:[--sidebar-nav-section-pt:0]"
+          : "overflow-y-auto pt-1"
+      )}
+    >
+      <DashboardChromeLetterGlitch />
+      <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
+      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col px-1">
+        <SidebarNavRailList
+          nav={nav}
+          selectedNavKey={selectedNavKey}
+          setSelectedNavKey={applyNavKey}
+          onItemActivate={onItemActivate}
+          isNavLocked={isNavLocked}
         />
+        <SidebarNavKeyDecor onClose={onClose} />
       </div>
+    </div>
+  );
+}
+
+function SidebarNavKeyDecor({ onClose }: { onClose?: () => void }) {
+  const keyImage = (
+    <img
+      src="/assets/Gold-Key.png"
+      alt=""
+      width={120}
+      height={120}
+      className="sidebar-nav-key-spin"
+      draggable={false}
+    />
+  );
+
+  return (
+    <div className="sidebar-nav-key-slot">
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="sidebar-nav-key-decor sidebar-nav-key-decor--interactive"
+        >
+          {keyImage}
+        </button>
+      ) : (
+        <div className="sidebar-nav-key-decor pointer-events-none select-none" aria-hidden>
+          {keyImage}
+        </div>
+      )}
     </div>
   );
 }
@@ -1835,7 +1906,8 @@ export default function Page() {
   const isNavLocked = useCallback(
     (key: string) => {
       const L = portalUser?.dashboard_nav_locks;
-      if (!L) return false;
+      const knightOnly = key === "monk" || key === "resources";
+      if (!L) return knightOnly;
       if (key === "monk" && L.monk) return true;
       if (key === "resources" && L.resources) return true;
       if (key === "dashboard" && L.dashboard) return true;
@@ -2168,12 +2240,12 @@ export default function Page() {
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const mq1023 = window.matchMedia("(max-width: 1023px), ((width: 1024px) and (height: 1366px))");
-    const mq820 = window.matchMedia("(width: 1024px) and (height: 1366px)");
+    const mqInnav = window.matchMedia("(max-width: 820px), ((width: 1024px) and (height: 1366px))");
     const mq767 = window.matchMedia("(max-width: 767px)");
     const isIpadPortraitLike =
       window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
     setIsOverlaySidebarBp(mq1023.matches);
-    setIsMobileNavUi(mq820.matches || isIpadPortraitLike);
+    setIsMobileNavUi(mqInnav.matches || isIpadPortraitLike);
     setIsIpadProPortraitUi(isIpadPortraitLike);
     setIsNarrowViewport(mq767.matches);
     if (!mq1023.matches) setSidebarOpen(true);
@@ -2194,18 +2266,18 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(width: 1024px) and (height: 1366px)");
+    const mqInnav = window.matchMedia("(max-width: 820px), ((width: 1024px) and (height: 1366px))");
     const apply = () => {
       const isIpadPortraitLike =
         window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
       setIsIpadProPortraitUi(isIpadPortraitLike);
-      setIsMobileNavUi(mq.matches || isIpadPortraitLike);
+      setIsMobileNavUi(mqInnav.matches || isIpadPortraitLike);
     };
     apply();
-    mq.addEventListener("change", apply);
+    mqInnav.addEventListener("change", apply);
     window.addEventListener("resize", apply);
     return () => {
-      mq.removeEventListener("change", apply);
+      mqInnav.removeEventListener("change", apply);
       window.removeEventListener("resize", apply);
     };
   }, []);
@@ -2217,6 +2289,30 @@ export default function Page() {
     el.scrollTop = 0;
   }, [selectedNavKey, sidebarOpen]);
 
+  /** Bounded shell sections: reset scroll so the sticky top bar stays visible on section change. */
+  useLayoutEffect(() => {
+    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
+    if (shell) shell.scrollTop = 0;
+  }, [selectedNavKey]);
+
+  /** Bounded shell (non–Syndicate Mode): lock document scroll on mobile so only the main panel scrolls. */
+  useEffect(() => {
+    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || selectedNavKey === "monk" || typeof window === "undefined") {
+      return;
+    }
+    const mq = window.matchMedia("(max-width: 1023px)");
+    if (!mq.matches) return;
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, [selectedNavKey]);
 
   /** lg+: collapse grid rail when not on Dashboard so missions / detail use full shell width (reopen via menu). */
   useEffect(() => {
@@ -2241,6 +2337,15 @@ export default function Page() {
   }, [isOverlaySidebarBp, sidebarOpen]);
 
   const sidebarOccupiesGrid = useMemo(() => sidebarOpen && !isOverlaySidebarBp, [sidebarOpen, isOverlaySidebarBp]);
+
+  /** Mobile / tablet overlay: close rail after any nav pick so content is immediately visible. */
+  const handleSidebarNavActivate = useCallback(() => {
+    if (isOverlaySidebarBp) setSidebarOpen(false);
+  }, [isOverlaySidebarBp]);
+
+  const closeOverlaySidebar = useCallback(() => {
+    setSidebarOpen(false);
+  }, []);
 
   /** Narrow overlay (≤820px): in-navbar dock + slide; wider tablet keeps short motion on fixed rail. */
   const useMobileOverlaySidebarMotion = isOverlaySidebarBp && isMobileNavUi;
@@ -2640,21 +2745,38 @@ export default function Page() {
     if (!el) return;
     const update = () => {
       if (!topbarRef.current) return;
-      const h = topbarRef.current.getBoundingClientRect().height;
-      const v = `${h}px`;
-      if (rootRef.current) rootRef.current.style.setProperty("--topbarH", v);
-      document.documentElement.style.setProperty("--topbarH", v);
+      const rect = topbarRef.current.getBoundingClientRect();
+      const height = `${rect.height}px`;
+      const bottom = `${Math.max(0, Math.round(rect.bottom))}px`;
+      const searchPanel = topbarRef.current.querySelector<HTMLElement>(
+        ".dashboard-innav-search-stack .navbar-chrome-panel"
+      );
+      const searchBottom = searchPanel
+        ? `${Math.max(0, Math.round(searchPanel.getBoundingClientRect().bottom))}px`
+        : bottom;
+      if (rootRef.current) {
+        rootRef.current.style.setProperty("--topbarH", height);
+        rootRef.current.style.setProperty("--topbarBottom", bottom);
+        rootRef.current.style.setProperty("--topbarSearchBottom", searchBottom);
+      }
+      document.documentElement.style.setProperty("--topbarH", height);
+      document.documentElement.style.setProperty("--topbarBottom", bottom);
+      document.documentElement.style.setProperty("--topbarSearchBottom", searchBottom);
     };
     update();
     const ro = new ResizeObserver(() => update());
     ro.observe(el);
     window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, { passive: true });
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
       document.documentElement.style.removeProperty("--topbarH");
+      document.documentElement.style.removeProperty("--topbarBottom");
+      document.documentElement.style.removeProperty("--topbarSearchBottom");
     };
-  }, []);
+  }, [sidebarOpen, selectedNavKey]);
 
   useLayoutEffect(() => {
     if (!rootRef.current) return;
@@ -2710,13 +2832,17 @@ export default function Page() {
     };
   }, [selectedNavKey]);
 
+  const usesBoundedMobileShell = BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey);
+  const usesBoundedShellChrome = usesBoundedMobileShell && selectedNavKey !== "monk";
+
   return (
     <div
       ref={rootRef}
+      data-dashboard-bounded-shell={usesBoundedShellChrome ? "" : undefined}
       className={cn(
         "dashboard-hamburger-chrome relative min-h-screen hud-void hud-scanlines hud-noise overflow-x-hidden lg:h-screen",
-        selectedNavKey === "monk"
-          ? "flex w-full flex-col overflow-hidden no-scrollbar h-[100dvh] max-h-[100dvh] min-h-0 lg:h-screen lg:max-h-screen"
+        usesBoundedMobileShell
+          ? "flex w-full flex-col overflow-hidden no-scrollbar max-lg:h-[100svh] max-lg:max-h-[100svh] min-h-0 lg:h-screen lg:max-h-screen"
           : "w-screen overflow-y-auto lg:h-screen lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
@@ -2737,25 +2863,22 @@ export default function Page() {
       <div
         className={cn(
           "relative z-[1] flex w-full max-w-[100vw] flex-col fluid-page-px",
-          selectedNavKey === "monk"
+          usesBoundedMobileShell
             ? "min-h-0 flex-1 overflow-hidden pb-0 lg:h-full lg:min-h-0"
             : "min-h-screen fluid-page-pb lg:h-full lg:min-h-0",
         )}
       >
         {/* Sticky shell has no GSAP transform; inner bar uses data-anim (transform breaks sticky on same node). */}
-        <div className="sticky top-0 z-[60] w-full max-w-full shrink-0">
+        <div className="sticky top-0 z-[60] w-full max-w-full shrink-0 max-lg:pt-[env(safe-area-inset-top,0px)]">
           <div
             ref={topbarRef}
             data-anim="in"
             className={cn(
               "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
-              isMobileNavUi
-                ? isIpadProPortraitUi
-                  ? "max-lg:grid-rows-[auto_auto]"
-                  : "max-lg:grid-rows-[auto_auto_auto]"
-                : "max-lg:grid-rows-[auto_auto]",
-              isIpadProPortraitUi && "max-lg:!py-2 max-lg:gap-y-1",
+              "max-lg:grid-rows-[auto_auto]",
+              isMobileNavUi && isIpadProPortraitUi && "max-lg:!py-2 max-lg:gap-y-1",
+              isMobileNavUi && sidebarOpen && "max-lg:gap-y-0",
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
             )}
           >
@@ -2831,7 +2954,14 @@ export default function Page() {
               />
             </div>
 
-            <div className="relative z-[2] min-w-0 w-full max-lg:col-span-3 max-lg:col-start-1 max-lg:row-start-2 lg:w-[min(248px,34vw)] lg:shrink-0">
+            <div
+              className={cn(
+                "relative z-[2] min-w-0 w-full max-lg:col-span-3 max-lg:col-start-1 max-lg:row-start-2 lg:w-[min(248px,34vw)] lg:shrink-0",
+                isMobileNavUi &&
+                  "dashboard-innav-search-stack flex max-lg:flex-col max-lg:gap-0",
+                isMobileNavUi && sidebarOpen && "dashboard-innav-search-stack--open"
+              )}
+            >
               <label htmlFor="nav-quick-search" className="sr-only">
                 Quick navigation search
               </label>
@@ -2839,7 +2969,8 @@ export default function Page() {
                 style={neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.search))}
                 className={cn(
                   "navbar-chrome-panel navbar-chrome-neon cut-frame-sm cyber-frame gold-stroke flex h-8 min-h-8 w-full items-center gap-1.5 border bg-black px-2 sm:h-9 sm:min-h-9 sm:gap-2 sm:px-2.5 md:h-10 md:min-h-10 md:px-3",
-                  "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-accent)_12%,transparent)]"
+                  "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-accent)_12%,transparent)]",
+                  isMobileNavUi && sidebarOpen && isOverlaySidebarBp && "dashboard-innav-search--attached max-lg:rounded-b-none max-lg:border-b-0"
                 )}
               >
                 <svg
@@ -2888,6 +3019,40 @@ export default function Page() {
                   className="min-w-0 flex-1 bg-transparent py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--neon-accent-bright)]/95 outline-none placeholder:text-[color:var(--neon-accent-bright)]/38 sm:text-[9px] sm:tracking-[0.16em] md:text-[10px] md:tracking-[0.18em]"
                 />
               </div>
+
+              {isMobileNavUi && isOverlaySidebarBp ? (
+                <AnimatePresence initial={true} mode="sync">
+                  {sidebarOpen ? (
+                    <motion.div
+                      key="navbar-mobile-nav"
+                      initial={{ height: 0, opacity: 1 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 1 }}
+                      transition={mobileOverlaySidebarTransition}
+                      className="overflow-hidden bg-black max-lg:m-0 max-lg:p-0 max-lg:leading-none"
+                    >
+                      <motion.div
+                        initial={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
+                        transition={mobileOverlaySidebarTransition}
+                        className="w-full max-lg:m-0 max-lg:p-0 will-change-transform"
+                      >
+                        <InNavbarSidebarDock
+                          sidebarRef={sidebarRef as unknown as React.Ref<HTMLDivElement>}
+                          nav={nav}
+                          selectedNavKey={selectedNavKey}
+                          applyNavKey={applyNavKey}
+                          onItemActivate={handleSidebarNavActivate}
+                          isNavLocked={isNavLocked}
+                          onClose={closeOverlaySidebar}
+                          attached
+                        />
+                      </motion.div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              ) : null}
             </div>
 
             <div className="relative z-[2] flex shrink-0 items-center gap-x-1.5 max-lg:col-start-3 max-lg:row-start-1 max-lg:justify-end sm:gap-x-2 lg:shrink-0">
@@ -2946,73 +3111,6 @@ export default function Page() {
               </div>
             </div>
 
-            {isMobileNavUi ? (
-              <div
-                className={cn(
-                  "relative z-[3] min-h-0 max-lg:col-span-3 max-lg:col-start-1 max-lg:w-full",
-                  isIpadProPortraitUi ? "max-lg:row-start-2 max-lg:mt-0.5" : "max-lg:row-start-3"
-                )}
-              >
-                <AnimatePresence initial={true} mode="sync">
-                  {sidebarOpen && isOverlaySidebarBp && !isIpadProPortraitUi ? (
-                    <motion.div
-                      key="navbar-mobile-nav"
-                      initial={{ height: 0, opacity: 1 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 1 }}
-                      transition={mobileOverlaySidebarTransition}
-                      className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black"
-                    >
-                      <motion.div
-                        initial={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
-                        transition={mobileOverlaySidebarTransition}
-                        className="w-full will-change-transform"
-                      >
-                        <div
-                          ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                          className="sidebar-nav-dock mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[min(52vh,440px)] overflow-y-auto border-0 bg-black dashboard-shell-surface pb-2 pt-1.5 no-scrollbar"
-                        >
-                          <DashboardChromeLetterGlitch />
-                          <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                          <div className="relative z-[1] min-w-0 px-1">
-                            <SidebarNavRailList
-                              nav={nav}
-                              selectedNavKey={selectedNavKey}
-                              setSelectedNavKey={applyNavKey}
-                              onItemActivate={() => {}}
-                              isNavLocked={isNavLocked}
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-                {sidebarOpen && isOverlaySidebarBp && isIpadProPortraitUi ? (
-                  <div className="overflow-hidden border-t border-[color:var(--gold-neon-border-mid)] bg-black">
-                    <div
-                      ref={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                      className="sidebar-nav-dock mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative max-h-[40vh] overflow-y-auto border-0 bg-black dashboard-shell-surface pb-2 pt-1.5 no-scrollbar"
-                    >
-                      <DashboardChromeLetterGlitch />
-                      <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col px-1">
-                        <SidebarNavRailList
-                          nav={nav}
-                          selectedNavKey={selectedNavKey}
-                          setSelectedNavKey={applyNavKey}
-                          onItemActivate={() => {}}
-                          isNavLocked={isNavLocked}
-                        />
-                        <SidebarNavKeyDecor />
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
           </div>
         </div>
 
@@ -3147,13 +3245,13 @@ export default function Page() {
               style={
                 isMobileNavUi
                   ? {
-                      top: "var(--topbarH, 4.5rem)",
+                      top: "var(--topbarBottom, var(--topbarH, 4.5rem))",
                       left: 0,
                       right: 0,
-                      height: "calc(100dvh - var(--topbarH, 4.5rem))"
+                      height: "calc(100svh - var(--topbarBottom, var(--topbarH, 4.5rem)))"
                     }
                   : {
-                      top: "calc(var(--topbarH, 4.5rem) + var(--fluid-main-grid-pt))",
+                      top: "var(--topbarBottom, var(--topbarH, 4.5rem))",
                       bottom: 0,
                       left: 0,
                       right: 0
@@ -3171,7 +3269,12 @@ export default function Page() {
         </AnimatePresence>
 
         {/* Main frame — `relative` + popLayout: exiting sidebar leaves grid flow so main shell does not wrap to row 2 (14 cols) during close. */}
-        <div className="relative mt-0 grid min-h-0 w-full max-w-none flex-1 auto-rows-[minmax(0,1fr)] grid-cols-12 fluid-main-grid max-md:items-start lg:h-full lg:min-h-0 lg:items-stretch">
+        <div
+          className={cn(
+            "relative mt-0 grid min-h-0 w-full max-w-none flex-1 auto-rows-[minmax(0,1fr)] grid-cols-12 fluid-main-grid lg:h-full lg:min-h-0 lg:items-stretch",
+            usesBoundedMobileShell ? "min-h-0 items-stretch max-lg:flex-1" : "max-md:items-start"
+          )}
+        >
           <AnimatePresence initial={true} mode="popLayout">
             {sidebarOpen && (!isOverlaySidebarBp || !isMobileNavUi) ? (
               <motion.aside
@@ -3199,23 +3302,21 @@ export default function Page() {
                   "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
                   isMobileNavUi && "mobile-sidebar-rail",
                   "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
-                  "max-lg:top-[calc(var(--topbarH,4.5rem)+var(--fluid-main-grid-pt))] max-lg:h-[40vh]",
-                  /* Mobile: shorter rail (~52px + safe-area) above bottom chrome / FAB; tablet (max-lg) unchanged */
-                  "max-[820px]:!top-[calc(var(--topbarH,4.5rem)+3px)] max-[820px]:!h-[calc(100dvh-var(--topbarH,4.5rem)-3px-3.25rem-env(safe-area-inset-bottom))] max-[820px]:box-border max-[820px]:overflow-x-hidden max-[820px]:rounded-br-lg max-[820px]:pb-2",
+                  "dashboard-overlay-sidebar-rail max-lg:top-[var(--topbarBottom,var(--topbarH,4.5rem))] max-lg:box-border max-lg:overflow-x-hidden max-lg:rounded-br-lg max-lg:[--sidebar-nav-section-pt:0.4rem] max-[820px]:top-[100px] max-[820px]:[--sidebar-nav-section-pt:0] max-[820px]:pt-0",
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
                 <DashboardChromeLetterGlitch />
                 <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-                <div className="sidebar-nav-dock-inner relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col bg-black lg:min-h-full">
+                <div className="sidebar-nav-dock-inner relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-black lg:min-h-full">
                   <SidebarNavRailList
                     nav={nav}
                     selectedNavKey={selectedNavKey}
                     setSelectedNavKey={applyNavKey}
-                    onItemActivate={() => {}}
+                    onItemActivate={handleSidebarNavActivate}
                     isNavLocked={isNavLocked}
                   />
-                  <SidebarNavKeyDecor />
+                  <SidebarNavKeyDecor onClose={isOverlaySidebarBp ? closeOverlaySidebar : undefined} />
                 </div>
               </motion.aside>
             ) : null}
@@ -3235,6 +3336,7 @@ export default function Page() {
                 sidebarOpen &&
                 !isMobileNavUi &&
                 "max-lg:pointer-events-none max-lg:opacity-[0.42] max-lg:transition-opacity max-lg:duration-200 max-lg:ease-out",
+              usesBoundedMobileShell && "max-lg:min-h-0 max-lg:h-full max-lg:flex-1",
               "lg:h-full lg:min-h-0",
               sidebarOpen ? "col-span-7 md:col-span-10 lg:col-span-10" : "col-span-12",
               selectedNavKey === "monk" && "syndicate-main-shell min-h-0 flex-1",
@@ -3248,7 +3350,9 @@ export default function Page() {
               data-main-shell-scroll
               data-dashboard-video-scroll
               className={cn(
-                "dashboard-main-scroll dashboard-main-with-video col-start-1 row-start-1 z-[1] flex min-h-0 min-h-full w-full flex-col overflow-y-auto overflow-x-hidden bg-transparent no-scrollbar",
+                "dashboard-main-scroll dashboard-main-with-video col-start-1 row-start-1 z-[1] flex min-h-0 w-full flex-col overflow-y-auto overflow-x-hidden bg-transparent no-scrollbar",
+                selectedNavKey === "monk" && "lg:min-h-0",
+                usesBoundedShellChrome && "max-lg:flex-1 dashboard-bounded-main-scroll",
                 !sidebarOccupiesGrid && "lg:pl-14",
                 selectedNavKey === "monk"
                   ? "px-[clamp(0.4rem,1.1vw+0.2rem,0.85rem)] pr-0"
@@ -3341,7 +3445,7 @@ export default function Page() {
               ) : selectedNavKey === "quickaccess" ? (
                 <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
                   <section aria-label="Quick access tools" className="relative w-full min-w-0 flex-1 scroll-mt-2">
-                    <div className="relative flex w-full min-h-[min(56vh,700px)] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[rgba(212,175,55,0.28)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(212,175,55,0.1),0_0_52px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(212,175,55,0.08)] sm:min-h-[min(52vh,640px)]">
+                    <div className="relative flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-visible rounded-xl border border-[rgba(212,175,55,0.28)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(212,175,55,0.1),0_0_52px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(212,175,55,0.08)] lg:min-h-[min(52vh,640px)]">
                       <div
                         className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(212,175,55,0.12),rgba(0,0,0,0)_60%)]"
                         aria-hidden

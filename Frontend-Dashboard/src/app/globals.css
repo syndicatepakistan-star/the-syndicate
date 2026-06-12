@@ -120,6 +120,84 @@
  * Mobile overlay rail: `mix-blend-mode: screen` on .cyber-frame can read as a cyan line at the left edge in the gap; normalize blend.
  * Border lines: `.cut-frame` clip-path cuts off the real border (especially bottom/right); remove clip + tighten glow so the gold frame reads as one closed outline.
  */
+@media (max-width: 1023px) {
+  .dashboard-hamburger-chrome .sidebar-nav-dock.max-lg\:fixed,
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-overlay-sidebar-rail {
+    --sidebar-nav-section-pt: 0.4rem;
+    --sidebar-nav-section-pb: 0.3rem;
+    height: calc(
+      100svh - var(--topbarBottom, var(--topbarH, 4.5rem)) -
+        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
+    );
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* In-navbar mobile / iPad: search + sidebar one unified stack */
+  .dashboard-hamburger-chrome .dashboard-innav-search-stack {
+    min-width: 0;
+    gap: 0;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-innav-search-stack--open {
+    background: #000;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-innav-search--attached {
+    margin-bottom: 0 !important;
+    border-bottom-width: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    clip-path: none !important;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-innav-search--attached.cut-frame-sm::after {
+    clip-path: inset(0 0 3px 0);
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail--attached {
+    margin-top: -1px !important;
+    padding-top: 0 !important;
+    --sidebar-nav-section-pt: 0.1rem;
+    border-top: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    clip-path: none !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail--attached.cut-frame::after {
+    clip-path: inset(3px 0 0 0);
+  }
+
+  /* Height from search bottom (not full navbar) so rail fills viewport below search */
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail {
+    display: flex;
+    flex-direction: column;
+    height: calc(
+      100svh - var(--topbarSearchBottom, var(--topbarBottom, var(--topbarH, 4.5rem))) -
+        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
+    );
+    min-height: min(68svh, 640px);
+    max-height: calc(
+      100svh - var(--topbarSearchBottom, var(--topbarBottom, var(--topbarH, 4.5rem))) -
+        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
+    );
+    margin-bottom: max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 3.75rem));
+    padding-bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem));
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail .sidebar-nav-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail .sidebar-nav-key-slot {
+    flex: 0 0 auto;
+    min-height: clamp(3.5rem, 14cqi, 6.5rem);
+    padding-bottom: 0.25rem;
+  }
+}
+
 @media (max-width: 820px) {
   .mobile-sidebar-rail.cyber-frame::before {
     mix-blend-mode: normal;
@@ -129,6 +207,40 @@
   .mobile-sidebar-rail.cyber-frame::after {
     mix-blend-mode: normal;
     opacity: 0.55;
+  }
+
+  /* Mobile sidebar: flush nav list, fixed rail starts at 100px from viewport top */
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-rail,
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail {
+    top: 100px !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    --sidebar-nav-section-pt: 0 !important;
+    min-height: 0 !important;
+    height: calc(
+      100svh - 100px - max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
+    );
+    max-height: calc(
+      100svh - 100px - max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
+    );
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail--attached {
+    position: fixed !important;
+    left: 0 !important;
+    z-index: 95 !important;
+    width: clamp(310px, 46vw, 460px) !important;
+    max-width: clamp(310px, 46vw, 460px) !important;
+    margin-top: 0 !important;
+    border-radius: 0 12px 12px 0;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-rail .sidebar-nav-list,
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail .sidebar-nav-list {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    flex: 0 1 auto !important;
+    justify-content: flex-start !important;
   }
 
   .sidebar-nav-dock.mobile-sidebar-rail.cut-frame {
@@ -1390,6 +1502,29 @@ figcaption {
   justify-content: center;
   align-items: center;
   width: 100%;
+}
+
+.sidebar-nav-key-decor--interactive {
+  pointer-events: auto;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.2s ease;
+}
+
+.sidebar-nav-key-decor--interactive:hover .sidebar-nav-key-spin,
+.sidebar-nav-key-decor--interactive:focus-visible .sidebar-nav-key-spin {
+  filter: drop-shadow(0 0 30px rgba(250, 204, 21, 0.58));
+}
+
+.sidebar-nav-key-decor--interactive:focus-visible {
+  outline: 2px solid rgba(250, 204, 21, 0.45);
+  outline-offset: 4px;
+  border-radius: 999px;
 }
 
 .sidebar-nav-key-spin {
@@ -6656,7 +6791,7 @@ html.syndicate-mode-active,
 body.syndicate-mode-active {
   overflow: hidden !important;
   height: 100% !important;
-  max-height: 100dvh !important;
+  max-height: 100svh !important;
   width: 100% !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
@@ -8633,6 +8768,8 @@ body {
   animation: hamburger-attract 2.8s ease-in-out infinite;
 }
 
+/* Homepage hero: always-on breathe + golden glow (logo + nav hamburger) — see end of file */
+
 /* Paywall headline: softer scale so phrases do not collide when pulsing */
 @keyframes paywall-headline-attract {
   0%,
@@ -8742,11 +8879,68 @@ body {
 .plan-offer-card__shell {
   border: 2px solid var(--poc-border);
   background: #04060d;
-  box-shadow:
+    box-shadow:
     0 14px 38px rgba(0, 0, 0, 0.58),
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 0 42px var(--poc-glow);
   transition: box-shadow 0.3s ease;
+}
+
+/* Vault picker — individual modules: tighter glow + grid spacing (no bleed into neighbors) */
+.vault-modules-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .vault-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+}
+
+.vault-module-cell {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+  padding: 0.625rem;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  isolation: isolate;
+}
+
+@media (min-width: 640px) {
+  .vault-module-cell {
+    padding: 0.75rem;
+  }
+}
+
+.plan-offer-card--vault-module {
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  min-height: calc(13rem - 10px);
+}
+
+@media (min-width: 640px) {
+  .plan-offer-card--vault-module {
+    min-height: calc(15rem - 10px);
+  }
+}
+
+.plan-offer-card--vault-module .plan-offer-card__vault-module-shell {
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 20px var(--poc-glow);
+}
+
+.plan-offer-card--vault-module:hover .plan-offer-card__vault-module-shell,
+.plan-offer-card--vault-module:focus-within .plan-offer-card__vault-module-shell {
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 0 28px var(--poc-glow);
 }
 
 .plan-offer-card:hover .plan-offer-card__shell,
@@ -9050,6 +9244,28 @@ body {
 }
 
 /* Globe deep-link: selected program scales to 1.12 + strong background glow */
+@keyframes globe-enlarge-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.55),
+      0 0 18px rgba(217, 70, 239, 0.55),
+      0 0 42px rgba(34, 211, 238, 0.42),
+      0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.75),
+      0 0 28px rgba(217, 70, 239, 0.78),
+      0 0 58px rgba(34, 211, 238, 0.58),
+      0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.globe-enlarge-glow {
+  animation: globe-enlarge-glow-pulse 1.15s ease-in-out infinite;
+}
+
 @keyframes program-card-globe-spotlight {
   0%,
   100% {
@@ -9089,6 +9305,18 @@ body {
   z-index: 80;
   overflow: visible !important;
   isolation: isolate;
+}
+
+/* Open nav must paint above globe spotlight cards (z-80 / z-120) */
+body.nav-menu-open .program-card-globe-spotlight-host,
+body.nav-menu-open article[data-globe-spotlight="true"] {
+  z-index: 1 !important;
+}
+
+body.nav-menu-open .program-card-spotlight-field,
+body.nav-menu-open .program-card-spotlight-aura {
+  opacity: 0.35 !important;
+  filter: blur(48px);
 }
 
 .program-card-spotlight-field {
@@ -9144,6 +9372,86 @@ body {
 article[data-globe-spotlight="true"] {
   position: relative;
   z-index: 80;
+}
+
+/* Pack offer cards — glow must stack above neighboring cards */
+article.plan-offer-card[data-globe-spotlight="true"],
+article.plan-offer-card.program-card-globe-spotlight-host {
+  position: relative;
+  z-index: 120;
+  overflow: visible !important;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-field {
+  z-index: 0;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-aura {
+  z-index: 1;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-globe-spotlight {
+  z-index: 2;
+}
+
+/* Pack spotlight — border glow only (no scale pulse) */
+@keyframes plan-offer-globe-border-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(var(--spotlight-a), 0.98),
+      0 0 18px rgba(var(--spotlight-a), 0.92),
+      0 0 36px rgba(var(--spotlight-a), 0.68),
+      0 0 56px rgba(var(--spotlight-b), 0.52),
+      0 0 80px rgba(var(--spotlight-b), 0.34);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(var(--spotlight-a), 1),
+      0 0 28px rgba(var(--spotlight-a), 0.98),
+      0 0 52px rgba(var(--spotlight-a), 0.82),
+      0 0 78px rgba(var(--spotlight-b), 0.62),
+      0 0 110px rgba(var(--spotlight-b), 0.42);
+  }
+}
+
+@keyframes plan-offer-spotlight-field-opacity {
+  0%,
+  100% {
+    opacity: 0.58;
+  }
+  50% {
+    opacity: 0.88;
+  }
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .plan-offer-globe-border-glow {
+  position: relative;
+  z-index: 2;
+  transform: none !important;
+  border-color: rgba(var(--spotlight-a), 0.98) !important;
+  animation: plan-offer-globe-border-glow 2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-field {
+  animation: plan-offer-spotlight-field-opacity 2.2s ease-in-out infinite;
+  transform: none !important;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-aura {
+  animation: plan-offer-spotlight-field-opacity 2.2s ease-in-out infinite;
+  transform: none !important;
+}
+
+#syndicate-elite-offers[data-globe-spotlight-active="true"],
+#syndicate-elite-offers:has(article[data-globe-spotlight="true"]) {
+  overflow: visible !important;
+}
+
+[data-globe-spotlight-active="true"] article.plan-offer-card:not([data-globe-spotlight="true"]) {
+  opacity: 0.88;
+  transition: opacity 0.35s ease;
 }
 
 [data-globe-spotlight-active="true"] article:not([data-globe-spotlight="true"]) {
@@ -10577,6 +10885,7 @@ article[data-globe-spotlight="true"] {
   .paywall-cta-headline__line--glow,
   .program-card-hamburger-glow,
   .program-card-globe-spotlight,
+  .plan-offer-globe-border-glow,
   .nav-card-lightning,
   .animate-pillar-from-left,
   .animate-pillar-from-right,
@@ -10861,7 +11170,12 @@ article[data-globe-spotlight="true"] {
       rgba(97, 179, 220, 0.06) 9px,
       rgba(97, 179, 220, 0.06) 10px
     );
-  opacity: 0.55;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.hero-glitch-placeholder[data-glitch-ready="true"] {
+  opacity: 0;
 }
 
 .hero-glitch-shell {
@@ -10947,7 +11261,26 @@ article[data-globe-spotlight="true"] {
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
   pointer-events: auto !important;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-hamburger-chrome.syndicate-mood-context [data-dashboard-video-shell] > [data-dashboard-video-scroll],
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll] {
+    flex: 1 1 0% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-bounded-main-scroll {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    padding-bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 6rem));
+  }
 }
 
 .dashboard-hamburger-chrome .instructor-slideshow-bg {
@@ -11170,6 +11503,89 @@ article[data-globe-spotlight="true"] {
   .dashboard-fab-label-lightning {
     animation: none !important;
     filter: none;
+  }
+}
+
+/* ── Homepage hero logo + hamburger: scale breathe + gold glow (must stay last for cascade) ── */
+@keyframes hero-logo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes hero-logo-glow-ring {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes hero-hamburger-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 14px rgba(251, 191, 36, 0.35),
+      0 0 28px rgba(245, 158, 11, 0.18),
+      inset 0 0 12px rgba(251, 191, 36, 0.08);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow:
+      0 0 28px rgba(251, 191, 36, 0.75),
+      0 0 52px rgba(245, 158, 11, 0.42),
+      0 0 72px rgba(251, 191, 36, 0.22),
+      inset 0 0 18px rgba(253, 224, 71, 0.14);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-logo-pulse {
+    position: relative;
+    display: block;
+    transform-origin: center center;
+    animation: hero-logo-breathe 2.6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .hero-logo-pulse::before {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(251, 191, 36, 0.62) 0%,
+      rgba(245, 158, 11, 0.28) 38%,
+      transparent 72%
+    );
+    animation: hero-logo-glow-ring 2.6s ease-in-out infinite;
+    filter: blur(14px);
+    will-change: transform, opacity;
+  }
+
+  .hero-logo-pulse img {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.55))
+      drop-shadow(0 0 40px rgba(245, 158, 11, 0.32));
+  }
+
+  .hero-hamburger-pulse {
+    transform-origin: center center;
+    animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
+    will-change: transform, box-shadow;
   }
 }
 

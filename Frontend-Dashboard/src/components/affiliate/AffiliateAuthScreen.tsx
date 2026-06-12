@@ -40,6 +40,7 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
   const [email, setEmail] = useState(prefilledEmail);
   const [otpDigits, setOtpDigits] = useState<string[]>(() => Array.from({ length: 6 }, () => ""));
   const [loading, setLoading] = useState(false);
+  const [resendBusy, setResendBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -255,6 +256,44 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
     setOtpDigits(nextDigits);
     const focusIndex = Math.min(pasted.length, 5);
     otpRefs.current[focusIndex]?.focus();
+  }
+
+  async function resendOtp() {
+    const targetEmail = email.trim();
+    if (!targetEmail) return;
+    setResendBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      let response: Response;
+      try {
+        response = await fetch(affiliateAuthPostUrl("request-otp"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: targetEmail }),
+        });
+      } catch (caught) {
+        if (caught instanceof TypeError) {
+          throw new Error(`Cannot reach the API. ${getApiDisplayHint()}`);
+        }
+        throw caught;
+      }
+      const data = await readApiPayload(response);
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Could not resend code.");
+      }
+      setOtpDigits(Array.from({ length: 6 }, () => ""));
+      const devOtp = typeof data.dev_otp === "string" ? data.dev_otp.trim() : "";
+      if (devOtp) {
+        setMessage(`${data.message || "Dev mode."} Code: ${devOtp}`);
+      } else {
+        setMessage(data.message || "A new code was sent to your email.");
+      }
+    } catch (resendError) {
+      setError(resendError instanceof Error ? resendError.message : "Could not resend code.");
+    } finally {
+      setResendBusy(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -478,9 +517,20 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
               </p>
             )}
 
-            <button className="cyber-btn hamburger-attract" type="submit" disabled={loading}>
+            <button className="cyber-btn hamburger-attract" type="submit" disabled={loading || resendBusy}>
               <span className="cyber-btn__text">{loading ? "PLEASE WAIT" : submitLabel.toUpperCase()}</span>
             </button>
+
+            {isOtp ? (
+              <button
+                type="button"
+                className="auth-switch-link mt-2 disabled:opacity-60"
+                disabled={resendBusy || loading || !email.trim()}
+                onClick={() => void resendOtp()}
+              >
+                {resendBusy ? "Sending new code…" : "Resend code"}
+              </button>
+            ) : null}
           </form>
         </div>
       </div>

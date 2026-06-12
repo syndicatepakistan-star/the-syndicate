@@ -31,10 +31,10 @@ def apply_purchased_plan(user: User, plan: str) -> bool:
             target = UserDashboardEntitlement.AccessTier.MONEY_MASTERY
         for course in Course.objects.filter(is_published=True):
             CourseEnrollment.objects.get_or_create(user=user, course=course)
-    elif plan == "king":
+    elif plan in ("king", "knight"):
         if current != UserDashboardEntitlement.AccessTier.FULL:
             target = UserDashboardEntitlement.AccessTier.KING
-    elif plan in ("pawn", "knight"):
+    elif plan == "pawn":
         target = current
 
     if target == current:
@@ -65,7 +65,7 @@ def reconcile_dashboard_entitlement_from_plan_purchases(user: User) -> bool:
         return False
 
     changed = False
-    if "king" in paid_slugs:
+    if "king" in paid_slugs or "knight" in paid_slugs:
         changed = apply_purchased_plan(user, "king") or changed
     if "bundle" in paid_slugs:
         changed = apply_purchased_plan(user, "bundle") or changed

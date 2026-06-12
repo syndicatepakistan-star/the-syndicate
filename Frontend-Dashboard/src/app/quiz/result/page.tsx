@@ -42,7 +42,9 @@ function getCleanReportLines(report: string) {
     .filter((line) => !line.startsWith("• System Architect:"))
     .filter((line) => !line.startsWith("• Profit Raider:"))
     .filter((line) => !line.startsWith("Selected Archetype:"))
-    .filter((line) => !line.startsWith("Recommended Track:"));
+    .filter((line) => !line.startsWith("Recommended Track:"))
+    .filter((line) => !/project\s+obsidian/i.test(line))
+    .filter((line) => !line.includes("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN"));
 }
 
 function renderStyledReport(report: string, loginEmail: string) {
@@ -143,7 +145,7 @@ export default function ResultPage() {
     return (
       <main className="page-wrap">
         <section className="card">
-          <BrandHeader subtitle="No profile found yet. Complete the audit to generate your Project Obsidian diagnosis." />
+          <BrandHeader subtitle="No profile found yet. Complete the audit to generate your diagnosis." />
           <h2>Audit result not found</h2>
           <p>Complete the Sovereign Entity Audit first.</p>
           <Link href="/quiz/questions">
@@ -476,9 +478,6 @@ export default function ResultPage() {
       y = cardY + cardH + 18;
     };
 
-    addLine("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN", 18, "bold", COLORS.gold, 12);
-    y += 6;
-
     drawSummaryCard();
 
     const reportLines = getCleanReportLines(snapshot.ai_report ?? "");
@@ -493,7 +492,7 @@ export default function ResultPage() {
     });
 
     const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `project-obsidian-report-${timestamp}.pdf`;
+    const filename = `syndicate-audit-report-${timestamp}.pdf`;
 
     // Use blob download to avoid browser navigating to broken file:// URLs.
     const pdfBlob = doc.output("blob");
@@ -518,7 +517,6 @@ export default function ResultPage() {
         <div className="result-summary-panel hud-frame">
           <div className="result-hud-topbar">
             <span className="hud-chip">MISSION REPORT</span>
-            <span className="hud-chip hud-chip-accent">PROJECT OBSIDIAN</span>
           </div>
           <h2 className="section-title public-heading-lightning public-heading-lightning--violet">TACTICAL DIAGNOSIS BOARD</h2>
           <div className="result-summary-grid">

@@ -172,6 +172,37 @@ export async function trackLead(
   });
 }
 
+/**
+ * Non-blocking lead tracking: survives navigation away (checkout redirect, back button, tab close).
+ */
+export function trackLeadFireAndForget(
+  affiliateId: string,
+  visitorId: string,
+  email: string,
+  options: TrackLeadOptions = {}
+): void {
+  if (typeof window === "undefined") return;
+  const aid = affiliateId.trim();
+  const vid = visitorId.trim();
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!aid || !vid || !normalizedEmail || !normalizedEmail.includes("@")) return;
+  const kind: TrackLeadKind = options.kind ?? "auth";
+  const body = JSON.stringify({
+    affiliate_id: aid,
+    visitor_id: vid,
+    email: normalizedEmail,
+    lead_kind: kind,
+    ...(options.label ? { lead_label: options.label } : {}),
+  });
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const extra = authHeaders();
+  if (extra && typeof extra === "object" && !Array.isArray(extra)) {
+    Object.assign(headers, extra as Record<string, string>);
+  }
+  const url = `${root()}/track/lead`;
+  void fetch(url, { method: "POST", keepalive: true, headers, body }).catch(() => {});
+}
+
 export async function trackSale(
   affiliateId: string,
   visitorId: string,

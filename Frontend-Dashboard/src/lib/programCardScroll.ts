@@ -1,5 +1,5 @@
 import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
-import { programPlaylistDeepLink } from "@/lib/programPlaylistThumbnails";
+import { programPlaylistDeepLink, planOfferDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 export type ProgramLibraryScrollTarget = "public" | "dashboard";
 
@@ -129,6 +129,33 @@ export function navigateToDashboardProgramCard(programId: number): void {
   focus();
 }
 
+/** Deep link: highlight and scroll to the Syndicate Elite offer card. */
+export function navigateToPlanOfferCard(pack: GlobePackKey): void {
+  if (typeof window === "undefined") return;
+
+  const focus = () => {
+    focusPlanOfferCardWithRetries(pack);
+  };
+
+  if (window.location.pathname.startsWith("/dashboard")) {
+    if (!isDashboardProgramsSection()) {
+      requestDashboardShellNav("programs");
+      window.setTimeout(focus, 450);
+      return;
+    }
+    focus();
+    return;
+  }
+
+  const target = planOfferDeepLink(pack);
+  if (window.location.pathname === "/programs") {
+    window.history.pushState({}, "", target);
+    focus();
+    return;
+  }
+  window.location.assign(target);
+}
+
 /** Deep link: highlight and scroll to the program library card. */
 export function navigateToProgramLibraryCard(programId: number): void {
   if (typeof window === "undefined") return;
@@ -143,4 +170,45 @@ export function navigateToProgramLibraryCard(programId: number): void {
     return;
   }
   window.location.assign(target);
+}
+
+export function planOfferCardId(pack: GlobePackKey): string {
+  return `plan-offer-${pack}`;
+}
+
+export function findVisiblePlanOfferCard(pack: GlobePackKey): HTMLElement | undefined {
+  const el = document.getElementById(planOfferCardId(pack));
+  if (!el) return undefined;
+  const rect = el.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0 ? el : undefined;
+}
+
+export function scrollPlanOfferCardIntoView(pack: GlobePackKey): boolean {
+  const el = findVisiblePlanOfferCard(pack);
+  if (!el) return false;
+  el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  return true;
+}
+
+/** Retry scroll while layout/images load after route change. */
+export function focusPlanOfferCardWithRetries(
+  pack: GlobePackKey,
+  onComplete?: () => void,
+  options?: { delays?: readonly number[] },
+): () => void {
+  const delays = options?.delays ?? DEFAULT_FOCUS_DELAYS_MS;
+  const timers = delays.map((ms) =>
+    window.setTimeout(() => {
+      scrollPlanOfferCardIntoView(pack);
+    }, ms)
+  );
+
+  const doneTimer = window.setTimeout(() => {
+    onComplete?.();
+  }, delays[delays.length - 1]! + 400);
+
+  return () => {
+    timers.forEach((id) => window.clearTimeout(id));
+    window.clearTimeout(doneTimer);
+  };
 }

@@ -23,6 +23,7 @@ from django.views.decorators.http import require_POST
 
 from apps.affiliate_tracking.views import ensure_affiliate_profile_for_existing_user, referral_ids_payload
 from apps.courses.models import Course, CourseEnrollment
+from apps.portal.models import UserDashboardEntitlement
 from apps.quiz_funnel.logic import (
   ALLOWED_BUSINESS_MODELS,
   ALLOWED_PSYCHOLOGY,
@@ -225,14 +226,29 @@ def _courses_for_ticket_titles(ticket_titles: list[str]) -> list[Course]:
   return out
 
 
+def _playlist_for_ticket_title(title: str) -> StreamPlaylist | None:
+  normalized = (title or "").strip()
+  if not normalized:
+    return None
+  qs = StreamPlaylist.objects.filter(is_published=True, is_coming_soon=False)
+  exact = qs.filter(title__iexact=normalized).order_by("title").first()
+  if exact is not None:
+    return exact
+  mapped = free_ticket_playlist_title_for_catalog(normalized)
+  if mapped and mapped.lower() != normalized.lower():
+    mapped_row = qs.filter(title__iexact=mapped).order_by("title").first()
+    if mapped_row is not None:
+      return mapped_row
+  if is_free_ticket_psychology_course(normalized):
+    return None
+  return _best_playlist_match_for_offer_part(normalized)
+
+
 def _playlists_for_ticket_titles(ticket_titles: list[str]) -> list[StreamPlaylist]:
   out: list[StreamPlaylist] = []
   seen: set[int] = set()
   for title in ticket_titles:
-    exact = StreamPlaylist.objects.filter(
-      is_published=True, is_coming_soon=False, title__iexact=title
-    ).order_by("title").first()
-    playlist = exact or _best_playlist_match_for_offer_part(title)
+    playlist = _playlist_for_ticket_title(title)
     if not playlist or playlist.id in seen:
       continue
     seen.add(playlist.id)
@@ -267,12 +283,9 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
   selected_is_free_ticket = is_free_ticket_psychology_course(selected_ticket_title)
   if selected_is_free_ticket:
     playlist_title = free_ticket_playlist_title_for_catalog(selected_ticket_title)
-    if playlist_title:
-      ticket_titles = list(existing_locked_titles)
-      if playlist_title not in ticket_titles:
-        ticket_titles.append(playlist_title)
-    else:
-      ticket_titles = list(existing_locked_titles)
+    ticket_titles = list(quiz_ticket_titles)
+    if playlist_title and playlist_title not in ticket_titles:
+      ticket_titles.insert(0, playlist_title)
   elif existing_locked_titles:
     ticket_titles = existing_locked_titles
   elif selected_ticket_title.strip():
@@ -281,10 +294,15 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
     ticket_titles = quiz_ticket_titles
   courses = _courses_for_ticket_titles(ticket_titles)
   playlists = _playlists_for_ticket_titles(ticket_titles)
+  playlist_ids = [p.id for p in playlists]
+  if quiz_result is not None:
+    StreamPlaylistPurchase.objects.filter(
+      user=user,
+      stripe_session_id__startswith="quiz_ticket_",
+    ).exclude(playlist_id__in=playlist_ids).delete()
   if str(user.username).startswith("quiz_ticket_"):
     CourseEnrollment.objects.filter(user=user).exclude(course_id__in=[c.id for c in courses]).delete()
-    # Keep only ticket-entitled playlist unlocks for quiz-ticket users.
-    StreamPlaylistPurchase.objects.filter(user=user).exclude(playlist_id__in=[p.id for p in playlists]).delete()
+    StreamPlaylistPurchase.objects.filter(user=user).exclude(playlist_id__in=playlist_ids).delete()
   for course in courses:
     CourseEnrollment.objects.get_or_create(user=user, course=course)
   for playlist in playlists:
@@ -588,6 +606,40 @@ def _create_and_email_login_otp(email: str):
   return None
 
 
+def _create_and_email_signup_otp(email: str):
+  """Create SignupOTP and send email. Returns None on success, or JsonResponse error."""
+  try:
+    pending_signup = PendingSignup.objects.get(email=email)
+  except PendingSignup.DoesNotExist:
+    return _json_error("No pending signup for this email.", status=404)
+
+  if pending_signup.is_paid:
+    return _json_error("Checkout already completed for this email.", status=400)
+
+  if User.objects.filter(email=email).exists():
+    return _json_error("Email already registered. Please log in.", status=400)
+
+  otp_code = _generate_otp()
+  expires_at = timezone.now() + timedelta(
+    minutes=getattr(settings, "OTP_EXPIRES_MINUTES", 10)
+  )
+  SignupOTP.objects.update_or_create(
+    email=email,
+    defaults={"otp_code": otp_code, "otp_expires_at": expires_at},
+  )
+
+  try:
+    _send_signup_otp_email(email=email, otp_code=otp_code)
+  except Exception:
+    logger.exception("Failed to send signup OTP email to %s", email)
+    if settings.DEBUG:
+      print(f"[DEV OTP FALLBACK] signup {email}: {otp_code}")
+      return None
+    return _json_error("Failed to send signup OTP email.", status=500)
+
+  return None
+
+
 @csrf_exempt
 @require_POST
 def signup_view(request):
@@ -639,6 +691,34 @@ def signup_view(request):
       "signup_token": str(pending.token),
     },
     status=200,
+  )
+
+
+@csrf_exempt
+@require_POST
+def resend_signup_otp_view(request):
+  payload = _read_payload(request)
+  if payload is None:
+    return _json_error("Invalid JSON payload.")
+
+  email = str(payload.get("email", "")).strip().lower()
+  if not email:
+    return _json_error("Email is required.")
+  try:
+    validate_email(email)
+  except ValidationError:
+    return _json_error("Enter a valid email address.")
+
+  signup_err = _create_and_email_signup_otp(email)
+  if signup_err is not None:
+    return signup_err
+
+  return JsonResponse(
+    {
+      "message": "A new verification code was sent to your email.",
+      "email": email,
+      "otp_required": True,
+    },
   )
 
 

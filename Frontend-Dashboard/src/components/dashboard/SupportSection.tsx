@@ -290,7 +290,7 @@ export function SupportSection() {
     >
       <section
         aria-label="Support and help"
-        className="relative w-full min-w-0 flex-1 scroll-mt-2 overflow-hidden rounded-xl border border-[rgba(255,215,0,0.38)] bg-[#050508]/90 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.22),0_0_48px_rgba(255,165,0,0.18),0_0_88px_rgba(56,189,248,0.12),0_0_120px_rgba(167,139,250,0.08)]"
+        className="relative w-full min-w-0 flex-1 scroll-mt-2 overflow-visible rounded-xl border border-[rgba(255,215,0,0.38)] bg-[#050508]/90 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(255,215,0,0.22),0_0_48px_rgba(255,165,0,0.18),0_0_88px_rgba(56,189,248,0.12),0_0_120px_rgba(167,139,250,0.08)]"
       >
         <motion.div
           className="pointer-events-none absolute inset-0 opacity-100"
@@ -305,7 +305,7 @@ export function SupportSection() {
           aria-hidden
         />
 
-        <div className="relative z-[1] flex min-h-[min(56vh,640px)] flex-col gap-5">
+        <div className="relative z-[1] flex min-h-0 flex-col gap-5 lg:min-h-[min(56vh,640px)]">
           <header className="relative">
             <div
               className="pointer-events-none absolute -left-1 top-0 h-full w-1 rounded-full bg-gradient-to-b from-amber-400 via-fuchsia-400 to-cyan-400 opacity-80"

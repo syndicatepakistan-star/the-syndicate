@@ -68,7 +68,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     title: "Money Mastery Bundle",
     imageSrc: OFFER_PLAN_THUMB_MONEY_MASTERY,
     teaser:
-      "Most men spend their lives trading finite hours for flat returns, trapped in the linear delusion of buying one playlist at a time",
+      "The linear economy was designed to keep you purchasing forever — one course, one playlist, one dead end. Money Mastery ends that cycle. One vault. One checkout. Full lifetime command of the complete Syndicate arsenal.",
     displayPrice: "$333",
     comparePrice: "$555",
     billingLabel: "/lifetime",
@@ -78,7 +78,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     accent: "amber",
     detailTitle: "MONEY MASTERY",
     detailDescription:
-      "You will access everything with full lifetime coverage across the complete Syndicate ecosystem.",
+      "This is not à la carte consumption — it is total ecosystem ownership. Money Mastery grants lifetime command across every Syndicate program, every protocol, and every future drop inside the dashboard. No hidden tiers. No monthly rent on your own progress. One checkout records under your identity; your command surface stays unlocked as the vault expands.",
     detailFeatures: [
       "You will access everything",
       "All programs lifetime",
@@ -92,7 +92,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     title: "The Knight",
     imageSrc: OFFER_PLAN_THUMB_THE_KNIGHT,
     teaser:
-      "Membership is not a PDF drop — it is the live command surface: Syndicate Mode, your curriculum, and the full goals deck behind one tier",
+      "The Knight is not a PDF drop — it is your live operating tier inside The Syndicate. Hand-pick your curriculum, enter Syndicate Mode, run the goals deck, and stay inside weekly drops and member intelligence. One subscription. One command surface.",
     displayPrice: "$19.99",
     comparePrice: "$99.99",
     billingLabel: "/mo",
@@ -103,7 +103,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     accent: "cyan",
     detailTitle: "The Knight",
     detailDescription:
-      "Your membership, your curriculum: hand-pick 4–5 courses, then stay inside weekly drops, the dashboard, articles, and Syndicate Mode challenges.",
+      "Membership is leverage, not content hoarding. The Knight tier puts you inside the live command surface: select 4–5 courses from the catalog, access weekly member drops, run Syndicate Mode challenges, and operate the full goals and milestone deck. Your dashboard becomes the centre of execution — not a shelf of unfinished playlists.",
     detailFeatures: [
       "Select 4–5 courses yourself from the catalog",
       "Weekly content and member drops",
@@ -124,7 +124,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     title: "Agentic AI",
     imageSrc: OFFER_PLAN_THUMB_AGENTIC_AI,
     teaser:
-      "Stop babysitting every workflow — deploy autonomous agents that execute, scale, and compound leverage while you architect the empire",
+      "Manual workflows are wage labour disguised as entrepreneurship — stop babysitting tasks agents should execute. Agentic AI installs autonomous n8n pipelines, Claude Code systems, MCP servers, and RAG stacks that compound leverage while you architect the empire.",
     displayPrice: "$199",
     comparePrice: "$349",
     billingLabel: "/lifetime",
@@ -135,7 +135,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     accent: "pink",
     detailTitle: "AGENTIC AI",
     detailDescription:
-      "Buy Agentic AI once — unlock every course in the vault below. n8n agents, Claude Code, MCP workflows, RAG pipelines, and business automations. Dashboard access after checkout; full library unlocks as courses go live.",
+      "Agentic AI is not a single course — it is a vault of autonomous systems. Buy once for $199 and unlock every module below: n8n agents, Claude Code doctrine, MCP workflows, RAG pipelines, and business automations built for operators who refuse manual execution. Dashboard access records immediately; full library entitlement activates as each protocol deploys. Deploy à la carte at $19 each if you prefer surgical strikes over total vault capture.",
     detailFeatures: [
       "Build a Blog Writing Agent With N8N",
       "Build a WhatsApp Agent with n8n",
@@ -171,7 +171,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     title: "AI Content Automation",
     imageSrc: OFFER_PLAN_THUMB_AI_CONTENT_AUTOMATION,
     teaser:
-      "Content without a machine behind it is manual labor — this protocol wires AI pipelines that publish, repurpose, and scale while you stay invisible",
+      "Publishing without a machine behind you is invisible labour — this vault wires faceless YouTube, viral Shorts, documentary channels, and finance niches into AI pipelines that scale while you stay off camera. One checkout. Total content warfare capability.",
     displayPrice: "$149",
     comparePrice: "$249",
     billingLabel: "/lifetime",
@@ -182,7 +182,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
     detailDescription:
-      "Buy AI Content Automation once — unlock every course in the vault below. Faceless YouTube, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and full automation blueprints. Dashboard access after checkout; full library unlocks as courses go live.",
+      "AI Content Automation is the faceless operator's arsenal. Buy the full vault for $149 and unlock every module below — YouTube automation, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and bulk publishing blueprints. No vanity access: every purchase records to your dashboard with controlled entitlement as modules go live. Prefer precision? Deploy individual protocols at $15 each.",
     detailFeatures: [
       "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
       "New YouTube Policy ENDS Those Faceless YouTube Channels",
@@ -221,7 +221,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     title: "Trading Advanced Technical Analysis",
     imageSrc: OFFER_PLAN_THUMB_TRADING,
     teaser:
-      "Retail noise is designed to liquidate you — this protocol installs chart discipline, risk rails, and execution math built for asymmetric market warfare",
+      "Retail noise exists to liquidate undisciplined capital — this vault replaces guesswork with chart doctrine, risk rails, and execution math built for asymmetric market warfare. Unlock the full stack or deploy individual edges on your terms.",
     displayPrice: "$99",
     comparePrice: "$199",
     billingLabel: "/lifetime",
@@ -233,7 +233,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
     detailDescription:
-      "Unlock the full vault for $99 — or buy individual protocols à la carte. Every purchase records to your dashboard; curriculum access activates as modules go live.",
+      "Trading Advanced Technical Analysis is a protocol vault, not entertainment. Unlock the full stack for $99 — Scalpel Protocol, Master Trader strategies, setups, and classified execution secrets — or buy individual edges at $35 each. Every purchase records to your command dashboard with billing history and controlled curriculum access as modules deploy. Built for operators who treat the chart as a battlefield, not a casino.",
     detailFeatures: [
       "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
       "Strategies of a Master Trader",

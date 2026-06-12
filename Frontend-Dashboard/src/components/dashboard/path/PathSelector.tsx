@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { GoalId } from "./goalPathData";
-import { GOAL_OPTIONS, PATH_CARD_SKIN } from "./goalPathData";
+import { GOAL_OPTIONS, PATH_CARD_SKIN, PATH_GOAL_INTRO } from "./goalPathData";
 import { cn } from "../dashboardPrimitives";
 
 export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelect: (g: GoalId) => void }) {
@@ -12,7 +12,7 @@ export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelec
         Your Path
       </div>
       <p className="mt-2 max-w-2xl text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/68 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">
-        Choose a focus. Your roadmap and course flow update automatically.
+        {PATH_GOAL_INTRO[selected].path}
       </p>
       <div className="mt-[clamp(0.85rem,2vw+0.25rem,1.25rem)] grid grid-cols-1 fluid-path-grid-gap min-[480px]:grid-cols-2 lg:grid-cols-5">
         {GOAL_OPTIONS.map((g) => {

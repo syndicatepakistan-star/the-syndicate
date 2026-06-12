@@ -1,19 +1,11 @@
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 import {
-  GLOBE_FILENAME_TO_PROGRAM_ID,
-  GLOBE_FILENAME_TO_PROGRAM_ID_OVERRIDE,
-  GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS,
-  isHiddenProgramPlaylist,
+  CURATED_GLOBE_TILES,
+  type CuratedGlobeTile,
   programPlaylistDeepLink,
 } from "@/lib/programPlaylistThumbnails";
 
-export type ProgramGalleryImage = {
-  src: string;
-  alt: string;
-  fileName: string;
-  programId?: number;
-  href?: string;
-};
+export type ProgramGalleryImage = CuratedGlobeTile;
 
 /** Filename → playlist title hints when auto-match is ambiguous. */
 const FILE_HINTS: Record<string, string> = {
@@ -21,11 +13,9 @@ const FILE_HINTS: Record<string, string> = {
   "canvics-to-canva": "Graphics Design Using Canva",
   "flutter-app-building": "App Building (using Flutter)",
   "automaton-name-change": "AI Automations",
-  "trading with technical analysis": "Trading with Technical Analysis Course",
-  "dystopian-demand": "Print On Demand Clothing",
-  "make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0":
-    "Python Programming",
-  "new-project (12)": "Building Apps using React JS",
+  "N8N Ai": "N8N Ai Automation",
+  "cyber-dystopian-city": "Amazon KDP",
+  "print on demand": "Print On Demand",
 };
 
 function normalizeTitle(value: string): string {
@@ -36,10 +26,6 @@ function normalizeTitle(value: string): string {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function programHref(programId: number): string {
-  return programPlaylistDeepLink(programId);
 }
 
 function scoreMatch(candidate: string, playlistTitle: string): number {
@@ -58,28 +44,11 @@ function scoreMatch(candidate: string, playlistTitle: string): number {
   return Math.round((overlap / Math.max(aTokens.size, bTokens.size)) * 65);
 }
 
-function resolveGlobeProgramId(
-  fileName: string,
-  alt: string,
-  playlists: StreamPlaylistListItem[]
-): number | undefined {
-  const override = GLOBE_FILENAME_TO_PROGRAM_ID_OVERRIDE[fileName];
-  if (override != null) return override;
-
-  const mapped = GLOBE_FILENAME_TO_PROGRAM_ID[fileName];
-  if (mapped != null) return mapped;
-
-  return matchPlaylistIdForGalleryImage(fileName, alt, playlists);
-}
-
 export function matchPlaylistIdForGalleryImage(
   fileName: string,
   alt: string,
   playlists: StreamPlaylistListItem[]
 ): number | undefined {
-  const mapped = GLOBE_FILENAME_TO_PROGRAM_ID[fileName];
-  if (mapped != null && !isHiddenProgramPlaylist(mapped)) return mapped;
-
   if (!playlists.length) return undefined;
 
   const baseName = fileName.replace(/\.[^/.]+$/, "");
@@ -103,21 +72,22 @@ export function matchPlaylistIdForGalleryImage(
   return bestScore >= 55 ? bestId : undefined;
 }
 
+/** Homepage globe tiles (curated allowlist with explicit hrefs). */
+export function getLinkedGlobeGalleryImages(): ProgramGalleryImage[] {
+  return [...CURATED_GLOBE_TILES];
+}
+
+/** @deprecated Homepage uses CURATED_GLOBE_TILES directly. */
 export function attachProgramLinksToGalleryImages(
   images: Array<{ src: string; alt: string; fileName: string }>,
   playlists: StreamPlaylistListItem[]
 ): ProgramGalleryImage[] {
   return images.map((img) => {
-    const rawProgramId = resolveGlobeProgramId(img.fileName, img.alt, playlists);
-    const programId =
-      rawProgramId != null &&
-      (!isHiddenProgramPlaylist(rawProgramId) || GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS.has(rawProgramId))
-        ? rawProgramId
-        : undefined;
+    const programId = matchPlaylistIdForGalleryImage(img.fileName, img.alt, playlists);
     return {
       ...img,
       programId,
-      href: programId ? programHref(programId) : "/programs",
+      href: programId ? programPlaylistDeepLink(programId) : "/programs",
     };
   });
 }

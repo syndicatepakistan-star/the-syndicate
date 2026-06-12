@@ -5,7 +5,7 @@ import { GoalPathSystem } from "@/components/dashboard/path/GoalPathSystem";
 import type { DashboardCourseLike } from "@/components/dashboard/useDashboardSnapshots";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import { scrollToProgramLibrary, type ProgramLibraryScrollTarget } from "@/lib/programCardScroll";
-import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import { isPublicProgramsLibraryPlaylist } from "@/lib/programPlaylistThumbnails";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 type Props = {
@@ -23,7 +23,7 @@ export function PublicGoalPathSection({ playlists, libraryTarget = "public", cla
         .filter(
           (pl) =>
             !pl.is_coming_soon &&
-            !isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title }),
+            isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title }),
         )
         .map((pl) => enrichProgramPlaylist(pl)),
     [playlists],

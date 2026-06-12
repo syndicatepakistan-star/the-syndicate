@@ -75,8 +75,8 @@ export const OUR_METHODS_BLOCKS: OurMethodsBlock[] = [
       "Our philosophy is clear: money and power are tools. When wielded with moral integrity, they can create profound personal transformation and societal impact. When misused, they have the potential to enslave and corrupt.",
       "What sets The Syndicate apart is its commitment to ethics and societal impact. This is not just about wealth; it's about defining true success as a balance between prosperity and moral codes.",
     ]),
+    image: "/assets/programs/cources%20imnages/money-philosophy.jpeg",
     imageAlt: "Syndicate philosophy — honour and leverage",
-    keySrc: "/assets/White-Key.png",
     accent: "cyan",
   },
   {
@@ -88,7 +88,7 @@ export const OUR_METHODS_BLOCKS: OurMethodsBlock[] = [
       "The Syndicate brings clarity to the complicated dynamics of wealth and power accumulation. Through immersive, elite training programmes that — if implemented correctly — allow participants to learn the secrets to master money and power and to bend reality to their will.",
       "Our special methods are designed to naturally absorb this information and put it into practice straight away. Every lesson delivers techniques that can be implemented immediately, from the very first video.",
     ]),
-    videoSrc: "/assets/video.mp4",
+    image: "/assets/our-2.jpg",
     imageAlt: "Syndicate techniques in motion",
     accent: "amber",
   },

@@ -11,17 +11,19 @@ import {
 } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries } from "@/lib/programCardScroll";
 import {
-  resolveProgramPlaylistSummary,
+  fillMissingPublicProgramPlaylists,
   resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
 import {
-  GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS,
-  isHiddenProgramPlaylist,
+  isPublicProgramsLibraryPlaylist,
+  PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
+  PUBLIC_PSYCHOLOGY_PROGRAM_ORDER,
 } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
+import { buildPlaylistCheckoutAuthHref } from "@/lib/plan-checkout";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
 
@@ -99,6 +101,16 @@ const CATEGORY_LABELS: Record<"business_model" | "business_psychology", string> 
   business_psychology: "Business Psychology",
 };
 
+function sortPlaylistsByOrder(
+  playlists: StreamPlaylistListItem[],
+  order: readonly number[]
+): StreamPlaylistListItem[] {
+  const rank = new Map(order.map((id, index) => [id, index]));
+  return [...playlists].sort(
+    (a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999)
+  );
+}
+
 export function PlaylistCardsSection({
   title = "Programs",
   subtitle = "All playlists added from admin are shown here. Open dashboard to continue learning.",
@@ -117,7 +129,9 @@ export function PlaylistCardsSection({
     }
   };
   const router = useRouter();
-  const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() => readInitialPlaylistsFromSession());
+  const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() =>
+    fillMissingPublicProgramPlaylists(readInitialPlaylistsFromSession())
+  );
   const [error, setError] = useState<string | null>(null);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
   const [pendingCheckoutPlaylistId, setPendingCheckoutPlaylistId] = useState<number | null>(null);
@@ -133,7 +147,7 @@ export function PlaylistCardsSection({
           ? await fetchStreamPlaylists({ allowPublicFallback: true, forceRefresh: true })
           : await fetchPublicStreamPlaylists();
         if (!cancelled) {
-          setPlaylists(Array.isArray(list) ? list : []);
+          setPlaylists(fillMissingPublicProgramPlaylists(Array.isArray(list) ? list : []));
           setError(null);
         }
       } catch {
@@ -158,7 +172,7 @@ export function PlaylistCardsSection({
       try {
         await confirmPlaylistCheckoutSuccess(sessionId);
         const list = await fetchPublicStreamPlaylists();
-        setPlaylists(Array.isArray(list) ? list : []);
+        setPlaylists(fillMissingPublicProgramPlaylists(Array.isArray(list) ? list : []));
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Payment confirmation failed.");
@@ -176,20 +190,27 @@ export function PlaylistCardsSection({
     () =>
       playlists.filter((pl) => {
         if (pl.is_coming_soon) return false;
-        const hidden = isHiddenProgramPlaylist(pl.id, { slug: pl.slug, title: pl.title });
-        if (!hidden) return true;
-        return (
-          highlightPlaylistId === pl.id && GLOBE_LINKABLE_HIDDEN_PROGRAM_IDS.has(pl.id)
-        );
+        if (isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title })) {
+          return true;
+        }
+        return highlightPlaylistId === pl.id;
       }),
     [playlists, highlightPlaylistId]
   );
   const businessPsychologyPlaylists = useMemo(
-    () => visiblePlaylists.filter((pl) => pl.category !== "business_model"),
+    () =>
+      sortPlaylistsByOrder(
+        visiblePlaylists.filter((pl) => pl.category !== "business_model"),
+        PUBLIC_PSYCHOLOGY_PROGRAM_ORDER
+      ),
     [visiblePlaylists]
   );
   const businessModelPlaylists = useMemo(
-    () => visiblePlaylists.filter((pl) => pl.category === "business_model"),
+    () =>
+      sortPlaylistsByOrder(
+        visiblePlaylists.filter((pl) => pl.category === "business_model"),
+        PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER
+      ),
     [visiblePlaylists]
   );
   const mobilePairedRows = useMemo(() => {
@@ -253,7 +274,6 @@ export function PlaylistCardsSection({
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const cardTitle = resolveProgramPlaylistTitle(pl);
-    const cardSummary = resolveProgramPlaylistSummary(pl);
     const playlistThemeIdx = visiblePlaylists.findIndex((item) => item.id === pl.id);
     const themeIdx = playlistThemeIdx >= 0 ? playlistThemeIdx : j;
     const theme = PLAYLIST_CARD_THEMES[themeIdx % PLAYLIST_CARD_THEMES.length];
@@ -274,7 +294,7 @@ export function PlaylistCardsSection({
         key={`playlist-${pl.id}`}
         style={spotlightStyle}
         className={cn(
-          "group/card relative flex min-h-[22rem] w-full flex-col text-left sm:min-h-[27rem]",
+          "group/card relative flex min-h-[18rem] w-full flex-col text-left sm:min-h-[22rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
@@ -356,13 +376,7 @@ export function PlaylistCardsSection({
               <div className={cn("line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]", theme.title)}>
                 {cardTitle}
               </div>
-              {cardSummary ? (
-                <p className="mt-1.5 line-clamp-3 text-left text-[11px] font-medium leading-snug text-white/72 sm:text-[12px]">
-                  {cardSummary}
-                </p>
-              ) : null}
-              <div className="mt-2" />
-              <div className="mt-2 grid grid-cols-2 gap-1.5 sm:gap-2">
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setDescriptionModalPlaylist(pl)}
@@ -380,7 +394,9 @@ export function PlaylistCardsSection({
                         return;
                       }
                       if (!hasSimpleAuthSessionClient()) {
-                        router.push(`/login?next=${encodeURIComponent(`/programs?program=${pl.id}#programs-library`)}`);
+                        window.location.assign(
+                          buildPlaylistCheckoutAuthHref(pl.id, `/programs?program=${pl.id}#programs-library`),
+                        );
                         return;
                       }
                       setPendingCheckoutPlaylistId(pl.id);
@@ -399,7 +415,9 @@ export function PlaylistCardsSection({
                           router.push(`/dashboard?section=programs&playlist=${pl.id}`);
                           return;
                         }
-                        router.push(`/login?next=${encodeURIComponent(`/programs?program=${pl.id}#programs-library`)}`);
+                        window.location.assign(
+                          buildPlaylistCheckoutAuthHref(pl.id, `/programs?program=${pl.id}#programs-library`),
+                        );
                       } catch (e) {
                         setError(e instanceof Error ? e.message : "Could not start checkout.");
                       } finally {

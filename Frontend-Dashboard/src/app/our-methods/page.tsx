@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { NavApp } from '@/components/NavApp'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import GlobalBottomSections from '@/components/GlobalBottomSections'
@@ -69,6 +70,7 @@ export default function OurMethodsPage() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <ViewportDecorVideo
           src="/assets/video.mp4"
+          alwaysOn
           className="absolute inset-0 h-full w-full object-cover opacity-25"
         />
         <div className="absolute left-[-10%] top-[8%] h-[280px] w-[280px] rounded-full bg-cyan-400/14 blur-3xl" />
@@ -100,10 +102,16 @@ export default function OurMethodsPage() {
               </div>
               <div className="grid gap-4">
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" innerClassName="p-2">
-                  <ViewportDecorVideo
-                    src="/assets/video.mp4"
-                    className="relative z-10 h-[360px] w-full object-cover sm:h-[440px] lg:h-[500px]"
-                  />
+                  <div className="relative z-10 h-[360px] w-full sm:h-[440px] lg:h-[500px]">
+                    <Image
+                      src="/assets/our-1.jpg"
+                      alt="Control the operating system — Syndicate doctrine"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 42vw"
+                      className="object-cover object-center"
+                    />
+                  </div>
                 </CyberChamferFrame>
               </div>
             </div>

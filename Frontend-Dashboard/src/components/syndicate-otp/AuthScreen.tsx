@@ -14,13 +14,17 @@ import {
 import { gsap } from "gsap";
 import LuxuryRedirectOverlay from "@/components/syndicate-otp/LuxuryRedirectOverlay";
 import { getAffiliateAttribution } from "@/lib/affiliateAttribution";
-import { trackLead } from "@/lib/affiliateApi";
+import { captureAffiliateAuthLead } from "@/lib/captureAffiliateLead";
 import {
   getApiDisplayHint,
-  getAuthorizationHeader,
+  hasSimpleAuthSessionClient,
   persistSimpleAuthSession,
   resolveClientApiUrl,
 } from "@/lib/portal-api";
+import {
+  hasPendingCheckoutIntent,
+  resumePendingCheckoutAfterAuth,
+} from "@/lib/post-auth-checkout";
 import {
   resolvePostOtpAppRedirect,
   syndicateOtpLoginHref,
@@ -79,8 +83,55 @@ function apiErrorMessage(data: ApiPayload, fallback: string): string {
   return fallback;
 }
 
+function isSignupRequiredResponse(response: Response, data: ApiPayload): boolean {
+  if (response.status !== 404) return false;
+  if ((data.code || "").toString().trim().toUpperCase() === "SIGNUP_REQUIRED") return true;
+  const normalized = apiErrorMessage(data, "").toLowerCase();
+  return (
+    normalized.includes("sign up first") ||
+    normalized.includes("signup required") ||
+    normalized.includes("no account found")
+  );
+}
+
+function showLoginSignupRequiredError(
+  setMessage: (value: string) => void,
+  setError: (value: string) => void,
+) {
+  setMessage("");
+  setError("Your email does not exist. Please sign up first.");
+}
+
 const DASHBOARD_FALLBACK =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "http://localhost:3000/dashboard";
+
+const OTP_PENDING_EMAIL_KEY = "syndicate_otp_pending_email_v1";
+
+function writeOtpPendingEmail(email: string): void {
+  if (typeof window === "undefined") return;
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return;
+  window.sessionStorage.setItem(OTP_PENDING_EMAIL_KEY, normalized);
+}
+
+function clearOtpPendingEmail(): void {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(OTP_PENDING_EMAIL_KEY);
+}
+
+function formatOtpVerifyError(message: string): string {
+  const normalized = message.trim().toLowerCase();
+  if (normalized.includes("otp not requested") || normalized.includes("not requested for this email")) {
+    return "This code is no longer valid — it may have already been used. Request a new code below.";
+  }
+  if (normalized.includes("expired")) {
+    return "This code has expired. Request a new code below.";
+  }
+  if (normalized.includes("invalid otp")) {
+    return "That code is incorrect. Check your email and try again, or request a new code.";
+  }
+  return message.trim() || "Verification failed. Please try again.";
+}
 
 export default function AuthScreen({
   mode,
@@ -103,7 +154,9 @@ export default function AuthScreen({
   const [error, setError] = useState("");
   const [luxuryOpen, setLuxuryOpen] = useState(false);
   const [luxuryHref, setLuxuryHref] = useState(DASHBOARD_FALLBACK);
+  const [resendBusy, setResendBusy] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const redirectPendingRef = useRef(false);
 
   const isSignup = mode === "signup";
   const isOtp = mode === "otp";
@@ -117,13 +170,23 @@ export default function AuthScreen({
   const normalizedPostLoginNext = postLoginNext.trim();
   const normalizedTicket = selectedTicket.trim();
   const appendOfferParams = (baseHref: string) => {
-    if (!normalizedPlan && !normalizedBilling && !normalizedAmount && !normalizedPostLoginNext && !normalizedTicket) return baseHref;
+    if (
+      !normalizedPlan &&
+      !normalizedBilling &&
+      !normalizedAmount &&
+      !normalizedPostLoginNext &&
+      !normalizedTicket &&
+      !prefilledPlaylistId.trim()
+    ) {
+      return baseHref;
+    }
     const params = new URLSearchParams();
     if (normalizedPlan) params.set("plan", normalizedPlan);
     if (normalizedBilling) params.set("billing", normalizedBilling);
     if (normalizedAmount) params.set("amount", normalizedAmount);
     if (normalizedPostLoginNext) params.set("next", normalizedPostLoginNext);
     if (normalizedTicket) params.set("ticket", normalizedTicket);
+    if (prefilledPlaylistId.trim()) params.set("playlist_id", prefilledPlaylistId.trim());
     return `${baseHref}${baseHref.includes("?") ? "&" : "?"}${params.toString()}`;
   };
 
@@ -138,7 +201,7 @@ export default function AuthScreen({
           ? isSignupOtp
             ? syndicateOtpSignupHref(email.trim())
             : syndicateOtpLoginHref(email.trim(), normalizedPostLoginNext)
-      : syndicateOtpSignupHref();
+      : syndicateOtpSignupHref(email.trim());
   const switchHref = appendOfferParams(switchHrefBase);
   const switchText = isSignup
     ? "Already a member? Log in"
@@ -165,6 +228,34 @@ export default function AuthScreen({
   useEffect(() => {
     setEmail(prefilledEmail);
   }, [prefilledEmail]);
+
+  const authLeadLabel = isSignup || isSignupOtp ? "Sign up lead" : "Login lead";
+
+  // Already signed in (e.g. OTP consumed then HMR remount) — skip stale verify screen.
+  useEffect(() => {
+    if (!isOtp || typeof window === "undefined") return;
+    if (!hasSimpleAuthSessionClient()) return;
+    const next =
+      normalizedPostLoginNext ||
+      resolvePostOtpAppRedirect(process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL);
+    window.location.replace(next);
+  }, [isOtp, normalizedPostLoginNext]);
+
+  // Capture lead when OTP page opens with a known email (user may back out before verifying).
+  useEffect(() => {
+    if (!isOtp || !prefilledEmail.trim()) return;
+    captureAffiliateAuthLead(prefilledEmail, authLeadLabel);
+  }, [authLeadLabel, isOtp, prefilledEmail]);
+
+  // Capture lead on abandon: back button, tab close, or checkout redirect before API returns.
+  useEffect(() => {
+    const onLeave = () => {
+      if (!email.trim()) return;
+      captureAffiliateAuthLead(email, authLeadLabel);
+    };
+    window.addEventListener("pagehide", onLeave);
+    return () => window.removeEventListener("pagehide", onLeave);
+  }, [authLeadLabel, email]);
 
   useEffect(() => {
     const canvas = document.getElementById("particles") as HTMLCanvasElement | null;
@@ -467,11 +558,40 @@ export default function AuthScreen({
     otpRefs.current[focusIndex]?.focus();
   }
 
+  async function resendOtp() {
+    const targetEmail = email.trim();
+    if (!targetEmail) return;
+    setResendBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const endpoint = isSignupOtp
+        ? "/api/auth/signup/resend-otp/"
+        : "/api/auth/otp-login/";
+      const { response, data } = await postJson(endpoint, { email: targetEmail });
+      if (!response.ok) {
+        throw new Error(data.error || "Could not resend code.");
+      }
+      writeOtpPendingEmail(targetEmail);
+      setOtpDigits(Array.from({ length: 6 }, () => ""));
+      setMessage(data.message || "A new code was sent to your email.");
+    } catch (resendError) {
+      setError(resendError instanceof Error ? resendError.message : "Could not resend code.");
+    } finally {
+      setResendBusy(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
     setMessage("");
+
+    const trimmedEmail = email.trim();
+    if (trimmedEmail) {
+      captureAffiliateAuthLead(trimmedEmail, authLeadLabel);
+    }
 
     try {
       if (isOtp && otpValue.length !== 6) {
@@ -498,15 +618,6 @@ export default function AuthScreen({
           throw new Error(data.error || "Request failed");
         }
         const signupEmail = email.trim();
-        const attribution = getAffiliateAttribution();
-        if (attribution && signupEmail) {
-          // Record the "Sign up lead" for the referring affiliate. This fills the auth slot
-          // (the diagnosis slot is filled separately when the user submits the quiz email).
-          void trackLead(attribution.affiliateId, attribution.visitorId, signupEmail, {
-            kind: "auth",
-            label: "Sign up lead",
-          }).catch(() => {});
-        }
         const directCheckoutUrl = typeof data.checkout_url === "string" ? data.checkout_url.trim() : "";
         if (directCheckoutUrl) {
           window.location.assign(directCheckoutUrl);
@@ -546,21 +657,27 @@ export default function AuthScreen({
           : "/api/auth/verify-login-otp/";
         const { response, data } = await postJson(endpoint, requestBody);
         if (!response.ok) {
+          if (hasSimpleAuthSessionClient()) {
+            redirectPendingRef.current = true;
+            const next =
+              normalizedPostLoginNext ||
+              resolvePostOtpAppRedirect(
+                typeof data.redirect_url === "string" ? data.redirect_url : undefined,
+              );
+            window.location.replace(next);
+            return;
+          }
           throw new Error(data.error || "Request failed");
         }
+        redirectPendingRef.current = true;
+        clearOtpPendingEmail();
         setMessage(data.message || "Welcome back.");
         setOtpDigits(Array.from({ length: 6 }, () => ""));
         const t = typeof data.token === "string" ? data.token.trim() : "";
         if (t) {
           const loginEmail = (data.user?.email || email.trim()).trim();
-          const authAttribution = getAffiliateAttribution();
-          if (authAttribution && loginEmail) {
-            // Record the auth-slot lead: "Sign up lead" if this OTP completes signup,
-            // otherwise "Login lead" for existing-user logins via the referral link.
-            void trackLead(authAttribution.affiliateId, authAttribution.visitorId, loginEmail, {
-              kind: "auth",
-              label: isSignupOtp ? "Sign up lead" : "Login lead",
-            }).catch(() => {});
+          if (loginEmail) {
+            captureAffiliateAuthLead(loginEmail, isSignupOtp ? "Sign up lead" : "Login lead");
           }
           const rid = data.referral_ids;
           const referralIds =
@@ -580,55 +697,64 @@ export default function AuthScreen({
               : undefined,
           );
         }
-        if (!isSignupOtp && normalizedAmount) {
-          const authHeader = getAuthorizationHeader();
-          const otpCheckoutAttribution = getAffiliateAttribution();
-          const checkoutResponse = await fetch(resolveClientApiUrl("/api/auth/checkout/create-session/"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(authHeader ? { Authorization: authHeader } : {}),
-            },
-            body: JSON.stringify({
-              return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
-              selected_plan: normalizedPlan || undefined,
-              selected_billing: normalizedBilling || undefined,
-              selected_amount: normalizedAmount || undefined,
-              affiliate_id: otpCheckoutAttribution?.affiliateId,
-              visitor_id: otpCheckoutAttribution?.visitorId,
-            }),
+        const nextUrl =
+          normalizedPostLoginNext ||
+          (typeof window !== "undefined"
+            ? resolvePostOtpAppRedirect(data.redirect_url)
+            : DASHBOARD_FALLBACK);
+
+        if (
+          hasPendingCheckoutIntent({
+            plan: normalizedPlan,
+            amount: normalizedAmount,
+            playlistId: prefilledPlaylistId,
+          })
+        ) {
+          const resumed = await resumePendingCheckoutAfterAuth({
+            plan: normalizedPlan,
+            billing: normalizedBilling,
+            amount: normalizedAmount,
+            playlistId: prefilledPlaylistId,
+            postAuthNext: nextUrl,
           });
-          const checkoutData = (await checkoutResponse.json().catch(() => ({}))) as { checkout_url?: string };
-          const checkoutUrl = typeof checkoutData.checkout_url === "string" ? checkoutData.checkout_url.trim() : "";
-          if (checkoutResponse.ok && checkoutUrl) {
-            window.location.assign(checkoutUrl);
+          if (resumed === "checkout") return;
+          if (resumed === "already_unlocked") {
+            window.location.replace(nextUrl);
+            return;
+          }
+          if (resumed === "error") {
+            redirectPendingRef.current = false;
+            setError("Could not start checkout. Please try again.");
             return;
           }
         }
 
-      const nextUrl =
-          normalizedPostLoginNext
-            ? normalizedPostLoginNext
-            : (typeof window !== "undefined"
-              ? resolvePostOtpAppRedirect(data.redirect_url)
-              : DASHBOARD_FALLBACK);
         setLuxuryHref(nextUrl);
         setLuxuryOpen(true);
         return;
       }
 
       let { response, data } = await postJson("/api/auth/otp-login/", requestBody);
-      // Compatibility fallback for deployments that expose OTP login at `/api/auth/login/`.
+
+      if (isSignupRequiredResponse(response, data)) {
+        showLoginSignupRequiredError(setMessage, setError);
+        return;
+      }
+
+      // Compatibility fallback when OTP route is missing — not when the account does not exist.
       if (response.status === 404) {
         const retry = await postJson("/api/auth/login/", requestBody);
+        if (isSignupRequiredResponse(retry.response, retry.data)) {
+          showLoginSignupRequiredError(setMessage, setError);
+          return;
+        }
         response = retry.response;
         data = retry.data;
       }
 
       if (!response.ok) {
-        if (response.status === 404 && data.code === "SIGNUP_REQUIRED") {
-          setMessage("");
-          setError("Your email does not exist. Please sign up first.");
+        if (isSignupRequiredResponse(response, data)) {
+          showLoginSignupRequiredError(setMessage, setError);
           return;
         }
         // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
@@ -654,6 +780,7 @@ export default function AuthScreen({
       if (!data.otp_required) {
         throw new Error("Verification step not started. Please try again.");
       }
+      writeOtpPendingEmail(data.email || email.trim());
       setMessage(data.message || "Check your inbox for the code.");
       router.replace(
         appendOfferParams(
@@ -662,6 +789,14 @@ export default function AuthScreen({
       );
     } catch (submitError) {
       const rawMessage = submitError instanceof Error ? submitError.message : "Something went wrong.";
+      if (isOtp && hasSimpleAuthSessionClient()) {
+        redirectPendingRef.current = true;
+        const next =
+          normalizedPostLoginNext ||
+          resolvePostOtpAppRedirect(process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL);
+        window.location.replace(next);
+        return;
+      }
       if (!isSignup && !isOtp) {
         const normalized = rawMessage.toLowerCase();
         if (
@@ -675,11 +810,15 @@ export default function AuthScreen({
         } else {
           setError(rawMessage);
         }
+      } else if (isOtp) {
+        setError(formatOtpVerifyError(rawMessage));
       } else {
         setError(rawMessage);
       }
     } finally {
-      setLoading(false);
+      if (!redirectPendingRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -827,11 +966,26 @@ export default function AuthScreen({
               </p>
             ) : null}
 
-            <button className="cyber-btn hamburger-attract" type="submit" disabled={loading || luxuryOpen}>
+            <button
+              className="cyber-btn hamburger-attract"
+              type="submit"
+              disabled={loading || resendBusy || luxuryOpen}
+            >
               <span className="cyber-btn__text">
                 {loading ? "PLEASE WAIT" : submitLabel.toUpperCase()}
               </span>
             </button>
+
+            {isOtp ? (
+              <button
+                type="button"
+                className="auth-switch-link mt-2 disabled:opacity-60"
+                disabled={resendBusy || loading || luxuryOpen || !email.trim()}
+                onClick={() => void resendOtp()}
+              >
+                {resendBusy ? "Sending new code…" : "Resend code"}
+              </button>
+            ) : null}
 
             <Link className="auth-switch-link" href={switchHref}>
               {switchText}

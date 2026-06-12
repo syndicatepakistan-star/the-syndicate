@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
+import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
   OFFER_PLAN_THUMB_THE_KNIGHT,
@@ -447,16 +448,10 @@ export function PricingPage({
         className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[100vw] max-w-none -translate-x-1/2 overflow-hidden"
         aria-hidden
       >
-        <video
+        <ViewportDecorVideo
+          src="/assets/video2.mp4"
           className="absolute inset-0 h-full min-h-full w-full min-w-full object-cover opacity-10"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        >
-          <source src="/assets/video2.mp4" type="video/mp4" />
-        </video>
+        />
       </div>
       <div className="relative z-[1] mx-auto flex w-full max-w-none flex-col items-center">
         <header className="mb-12 flex w-full justify-center px-[clamp(0.5rem,2vw,1rem)] md:mb-16">
@@ -492,13 +487,34 @@ export function PricingPage({
                 </h2>
                 <div className="mx-auto mt-5 max-w-[52rem] space-y-4 text-left sm:mt-6">
                   <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    <span className="text-fuchsia-200/95">Two gates. One crown.</span> Go nuclear with{' '}
-                    <strong className="text-white">Money Mastery</strong> — pay once, own the lifetime vault and every
-                    lane we run. <span className="text-zinc-400">Or</span> take <strong className="text-white">The Knight</strong>{' '}
-                    and forge your own war-chest: <strong className="text-amber-200/95">four or five</strong> courses you
-                    choose, weekly drops so you never go cold, full dashboard and field intel, then step into{' '}
-                    <strong className="text-emerald-300/95">Syndicate Mode</strong> and prove it under pressure — not
-                    passive scrolling, <em className="text-white/90 not-italic">active conquest</em>.
+                    Two paths. One objective. Total transformation.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Enter the Syndicate through the gate designed for your level of ambition.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Or choose The Knight — a personalised path for operators who want control over their own arsenal. Select your chosen programmes, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    This is not passive education.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    This is a controlled environment built for action, discipline, and execution.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and opportunity.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Enter the Syndicate.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Choose your path.
+                  </p>
+                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
+                    Build your advantage.
                   </p>
                 </div>
                 {checkoutError ? (

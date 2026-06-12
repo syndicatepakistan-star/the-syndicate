@@ -139,10 +139,7 @@ def user_has_membership_stream_catalog_access(user) -> bool:
         return False
     if tier == UserDashboardEntitlement.AccessTier.KING:
         return king_selection_completed(user)
-    return tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    return tier == UserDashboardEntitlement.AccessTier.FULL
 
 
 def _user_can_play_membership_stream_video_eval(user, video: StreamVideo) -> bool:
@@ -157,10 +154,7 @@ def _user_can_play_membership_stream_video_eval(user, video: StreamVideo) -> boo
         if not ok:
             logger.info("membership playback denied: king selection incomplete user=%s", user.pk)
         return ok
-    return tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    return tier == UserDashboardEntitlement.AccessTier.FULL
 
 
 def user_can_play_membership_stream_video(user, video: StreamVideo) -> bool:

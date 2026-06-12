@@ -45,13 +45,15 @@ export function DeferredVimeoProgramsBackground() {
 type DeferredMp4Props = {
   src: string;
   className?: string;
+  priority?: boolean;
 };
 
-export function DeferredMp4Background({ src, className }: DeferredMp4Props) {
+export function DeferredMp4Background({ src, className, priority = false }: DeferredMp4Props) {
   return (
     <ViewportDecorVideo
       src={src}
       className={className ?? "h-full w-full object-cover"}
+      priority={priority}
     />
   );
 }

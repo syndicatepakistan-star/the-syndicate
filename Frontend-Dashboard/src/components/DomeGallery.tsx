@@ -323,8 +323,8 @@ export default function DomeGallery({
     (href: string) => {
       const target = href.trim()
       if (!target) return
-      // Full navigation so ?program= and #programs-library run scroll/highlight on /programs.
-      if (target.includes('program=') || target.includes('#')) {
+      // Full navigation so ?program= / ?pack= and hash anchors run scroll/highlight on /programs.
+      if (target.includes('program=') || target.includes('pack=') || target.includes('#')) {
         window.location.assign(target)
         return
       }
@@ -340,10 +340,7 @@ export default function DomeGallery({
     }
     const parent = el.parentElement as HTMLElement | null
     const tileHref = parent?.dataset.href?.trim()
-    if (navigateOnClick && tileHref) {
-      navigateToHref(tileHref)
-      return
-    }
+    const shouldNavigateAfter = Boolean(navigateOnClick && tileHref)
     if (!parent || openingRef.current) return
     openingRef.current = true
     openStartedAtRef.current = performance.now()
@@ -386,8 +383,8 @@ export default function DomeGallery({
     ;(el.style as CSSStyleDeclaration).zIndex = '0'
 
     const overlay = document.createElement('div')
-    overlay.className = 'enlarge'
-    overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35);`
+    overlay.className = 'enlarge globe-enlarge-glow'
+    overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden;`
 
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement | null)?.src || ''
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement | null)?.alt || ''
@@ -412,6 +409,15 @@ export default function DomeGallery({
       overlay.style.transform = 'translate(0px, 0px) scale(1, 1)'
       rootRef.current?.setAttribute('data-enlarging', 'true')
     }, 16)
+
+    if (shouldNavigateAfter && tileHref) {
+      const onNavigateAfterEnlarge = (ev: TransitionEvent) => {
+        if (ev.propertyName !== 'transform') return
+        overlay.removeEventListener('transitionend', onNavigateAfterEnlarge)
+        window.setTimeout(() => navigateToHref(tileHref), 580)
+      }
+      overlay.addEventListener('transitionend', onNavigateAfterEnlarge)
+    }
 
     if (openedImageWidth || openedImageHeight) {
       const onFirstEnd = (ev: TransitionEvent) => {

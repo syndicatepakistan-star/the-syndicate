@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { isVideoWarm, warmVideo } from "@/lib/mediaWarmCache";
 
 type ViewportDecorVideoProps = {
   src: string;
@@ -8,15 +9,48 @@ type ViewportDecorVideoProps = {
   style?: React.CSSProperties;
   /** 0–1 opacity when playing */
   opacityClassName?: string;
+  /** Above-fold: load + play immediately; still pauses when scrolled away unless alwaysOn. */
+  priority?: boolean;
+  /** Keep playing even when off-screen (rare — full-page ambient backgrounds). */
+  alwaysOn?: boolean;
 };
 
-/** Decorative MP4: no decode until near viewport; pauses when off-screen to keep scroll smooth. */
-export function ViewportDecorVideo({ src, className, style, opacityClassName }: ViewportDecorVideoProps) {
+/** Decorative MP4 — warmed pool + browser cache; replays instantly on repeat visits. */
+export function ViewportDecorVideo({
+  src,
+  className,
+  style,
+  opacityClassName,
+  priority = false,
+  alwaysOn = false,
+}: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
+  const cachedOnMount = useRef(isVideoWarm(src));
+
+  useLayoutEffect(() => {
+    void warmVideo(src);
+  }, [src]);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !(priority || cachedOnMount.current)) return;
+    void el.play().catch(() => {});
+  }, [src, priority]);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    void warmVideo(src).then(() => {
+      if (priority || alwaysOn) {
+        void el.play().catch(() => {});
+      }
+    });
+
+    if (alwaysOn) {
+      void el.play().catch(() => {});
+      return;
+    }
 
     const sync = (playing: boolean) => {
       if (playing) {
@@ -26,16 +60,20 @@ export function ViewportDecorVideo({ src, className, style, opacityClassName }: 
       }
     };
 
+    if (priority) {
+      void el.play().catch(() => {});
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         sync(entry.isIntersecting);
       },
-      { rootMargin: "120px 0px", threshold: 0.06 },
+      { rootMargin: priority ? "0px 0px" : "160px 0px", threshold: priority ? 0 : 0.04 },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [src, priority, alwaysOn]);
 
   return (
     <video
@@ -45,7 +83,7 @@ export function ViewportDecorVideo({ src, className, style, opacityClassName }: 
       muted
       loop
       playsInline
-      preload="none"
+      preload={priority || alwaysOn ? "auto" : "metadata"}
       disablePictureInPicture
       aria-hidden
     >

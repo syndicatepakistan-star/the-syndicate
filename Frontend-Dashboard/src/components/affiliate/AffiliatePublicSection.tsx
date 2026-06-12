@@ -111,17 +111,10 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                   </button>
                 </div>
                 <p className="mx-auto mt-5 max-w-none font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-base md:mx-0 md:text-lg">
-                  <span className="text-fuchsia-200/95">Weaponize the link.</span> Your referral IDs sit on every click,
-                  every lead, every checkout that rolls through your pipe — funnel, partner dashboard, commissions that
-                  don&apos;t sugar-coat the truth. Built for{' '}
-                  <strong className="text-white">operators</strong> who want leverage, not slide decks.
+                  The Affiliate Programme is not a simple referral system. It is your entry point into a controlled growth channel where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.
                 </p>
                 <p className="mx-auto mt-4 max-w-none font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.95rem] md:mx-0 md:text-base lg:text-lg">
-                  <span className="text-cyan-200/90">Lock the channel.</span> Once you&apos;re cleared, hit{' '}
-                  <strong className="text-white">Affiliate login</strong> with the email we already hold — we ship a{' '}
-                  <strong className="text-amber-200/95">one-shot OTP</strong> (same luxury flow as members). Punch the
-                  code: <strong className="text-white">stats, referral kit, withdrawals</strong> when you&apos;ve earned
-                  them — live in the browser, no second-class portal.
+                  Access is secured through the same elite verification system used across The Syndicate. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that ownership begins with control.
                 </p>
                 <div className="mt-7 flex justify-center md:justify-start">
                   <Link
@@ -172,14 +165,13 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
           >
             <p className="font-semibold uppercase tracking-[0.14em] text-cyan-200/95">How to use it</p>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-justify marker:text-fuchsia-300/90 md:text-left">
-              <li>Open the <Link href="/affiliate" className="text-cyan-200 underline-offset-2 hover:text-cyan-50 hover:underline">Affiliate programme</Link> page, then use &quot;Affiliate login&quot; (or the site menu).</li>
-              <li>Enter the email tied to your affiliate profile.</li>
-              <li>Enter the 6-digit code we email you — then your dashboard opens in the browser.</li>
-              <li>Copy your referral link from the dashboard and share it; returning traffic and purchases attach to you.</li>
+              <li>Enter the Affiliate Programme through the dedicated portal. Access the Affiliate login.</li>
+              <li>Verify your identity through the secure one-time code.</li>
+              <li>Enter your private affiliate command centre.</li>
+              <li>Deploy your referral link. Monitor the entire chain — attention, conversions, revenue, and earned commissions.</li>
             </ol>
             <p className="mt-3 text-justify text-slate-400 md:text-left">
-              This login is separate from the member area. Member access still uses Join Now / login with the main OTP
-              flow.
+              Your affiliate identity is separate from the member experience. The member system remains protected through its own secure access pathway. Two systems. Two purposes. One Syndicate ecosystem.
             </p>
           </motion.div>
         ) : null}

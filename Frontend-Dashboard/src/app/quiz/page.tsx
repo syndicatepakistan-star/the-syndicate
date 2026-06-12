@@ -18,7 +18,7 @@ export default function QuizFunnelLandingPage() {
           <div className="landing-detail-card">
             <h3>What You Unlock</h3>
             <p>
-              A full Project Obsidian diagnosis with designation, fatal flaw, and a personalized
+              A full tactical diagnosis with designation, fatal flaw, and a personalized
               execution prescription aligned to your profile.
             </p>
           </div>

@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-
-type GlitchLetter = {
-  char: string
-  color: string
-  targetColor: string
-  colorProgress: number
-}
+import {
+  captureHeroGlitchState,
+  restoreHeroGlitchState,
+  type GlitchLetter,
+} from '@/lib/heroGlitchSnapshot'
 
 type LetterGlitchProps = {
   glitchColors?: string[]
@@ -121,6 +119,16 @@ export default function LetterGlitch({
     if (rect.width <= 0 || rect.height <= 0) return
 
     const dpr = window.devicePixelRatio || 1
+    const restored = restoreHeroGlitchState(canvas, dpr)
+    if (restored && Math.abs(restored.cssWidth - rect.width) < 2 && Math.abs(restored.cssHeight - rect.height) < 2) {
+      contextRef.current = canvas.getContext('2d')
+      if (contextRef.current) contextRef.current.setTransform(dpr, 0, 0, dpr, 0, 0)
+      containerSizeRef.current = { width: rect.width, height: rect.height }
+      gridRef.current = { columns: restored.columns, rows: restored.rows }
+      lettersRef.current = restored.letters.map((letter) => ({ ...letter }))
+      return
+    }
+
     canvas.width = rect.width * dpr
     canvas.height = rect.height * dpr
     canvas.style.width = `${rect.width}px`
@@ -244,6 +252,16 @@ export default function LetterGlitch({
       visibilityObserver?.disconnect()
       if (animationRef.current) window.cancelAnimationFrame(animationRef.current)
       resizeObserverRef.current?.disconnect()
+      if (canvas.width > 0 && canvas.height > 0) {
+        captureHeroGlitchState(
+          canvas,
+          containerSizeRef.current.width,
+          containerSizeRef.current.height,
+          gridRef.current.columns,
+          gridRef.current.rows,
+          lettersRef.current,
+        )
+      }
     }
   }, [glitchSpeed, smooth, handleSmoothTransitions, resizeCanvas, updateLetters, drawLetters])
 

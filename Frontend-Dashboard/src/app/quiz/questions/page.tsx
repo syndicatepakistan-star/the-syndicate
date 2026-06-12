@@ -450,31 +450,56 @@ export default function QuizPage() {
               <h3 id="lead-gate-title" className="lead-gate-title">
                 Continue Diagnosis
               </h3>
-              <p className="lead-gate-copy">
-                {leadStep === "name" && `Enter your name to continue from Question ${currentIndex + 2}.`}
-                {leadStep === "email" && `Enter your email to continue from Question ${currentIndex + 2}.`}
-                {leadStep === "phone" && `Enter your phone number to continue from Question ${currentIndex + 2}.`}
+              <p className="lead-gate-step">
+                {leadStep === "name" && "Step 1 of 3 — Name"}
+                {leadStep === "email" && "Step 2 of 3 — Email"}
+                {leadStep === "phone" && "Step 3 of 3 — Phone"}
               </p>
-              <p className="lead-gate-required">This is compulsory for your report.</p>
+              <div className="lead-gate-ticket-callout" role="note">
+                <p className="lead-gate-ticket-callout__title">Free course ticket access</p>
+                <p className="lead-gate-ticket-callout__body">
+                  Enter <strong>accurate details</strong> to receive your diagnosis report and unlock your{" "}
+                  <strong>free course ticket</strong>. Wrong information may block access to your ticket.
+                </p>
+              </div>
+              <p className="lead-gate-copy">
+                {leadStep === "name" &&
+                  `Use your real name so your report is generated correctly. Continue from Question ${currentIndex + 2}.`}
+                {leadStep === "email" &&
+                  `Your free ticket is linked to this email only. Continue from Question ${currentIndex + 2}.`}
+                {leadStep === "phone" &&
+                  `Add a valid phone number we can reach you on. Continue from Question ${currentIndex + 2}.`}
+              </p>
               {leadStep === "name" ? (
-                <input
-                  placeholder="Name"
-                  value={leadForm.name}
-                  onChange={(e) => {
-                    setLeadForm((prev) => ({ ...prev, name: e.target.value }));
-                    setLeadError("");
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") continueAfterLead();
-                  }}
-                  className="quiz-input lead-gate-input"
-                  autoFocus
-                />
+                <div className="lead-gate-field">
+                  <label className="lead-gate-label" htmlFor="lead-gate-name">
+                    Full name
+                  </label>
+                  <input
+                    id="lead-gate-name"
+                    placeholder="e.g. Alex Morgan"
+                    value={leadForm.name}
+                    onChange={(e) => {
+                      setLeadForm((prev) => ({ ...prev, name: e.target.value }));
+                      setLeadError("");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") continueAfterLead();
+                    }}
+                    className="quiz-input lead-gate-input"
+                    autoComplete="name"
+                    autoFocus
+                  />
+                </div>
               ) : null}
               {leadStep === "email" ? (
-                <>
+                <div className="lead-gate-field">
+                  <label className="lead-gate-label" htmlFor="lead-gate-email">
+                    Email address
+                  </label>
                   <input
-                    placeholder="Email"
+                    id="lead-gate-email"
+                    placeholder="e.g. you@email.com"
                     type="email"
                     value={leadForm.email}
                     onChange={(e) => {
@@ -485,44 +510,55 @@ export default function QuizPage() {
                       if (e.key === "Enter") continueAfterLead();
                     }}
                     className="quiz-input lead-gate-input"
+                    autoComplete="email"
                     autoFocus
                   />
                   <p className="lead-gate-note">
-                    Enter the correct email. Free ticket will be linked to this email only. Wrong email means you
-                    cannot claim your free ticket.
+                    Double-check spelling. You must use this exact email to claim your free course ticket.
                   </p>
-                </>
+                </div>
               ) : null}
               {leadStep === "phone" ? (
-                <div className="lead-gate-phone-row">
-                  <select
-                    value={leadForm.countryCode}
-                    onChange={(e) => {
-                      setLeadForm((prev) => ({ ...prev, countryCode: e.target.value }));
-                      setLeadError("");
-                    }}
-                    className="quiz-input lead-gate-country"
-                  >
-                    {COUNTRY_CODES.map((item) => (
-                      <option key={`${item.value}-${item.label}`} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    placeholder="Phone Number"
-                    value={leadForm.phone}
-                    onChange={(e) => {
-                      const digitsOnly = e.target.value.replace(/\D/g, "");
-                      setLeadForm((prev) => ({ ...prev, phone: digitsOnly }));
-                      setLeadError("");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") continueAfterLead();
-                    }}
-                    className="quiz-input lead-gate-phone"
-                    autoFocus
-                  />
+                <div className="lead-gate-field">
+                  <label className="lead-gate-label" htmlFor="lead-gate-phone">
+                    Phone number
+                  </label>
+                  <div className="lead-gate-phone-row">
+                    <select
+                      id="lead-gate-country"
+                      aria-label="Country code"
+                      value={leadForm.countryCode}
+                      onChange={(e) => {
+                        setLeadForm((prev) => ({ ...prev, countryCode: e.target.value }));
+                        setLeadError("");
+                      }}
+                      className="quiz-input lead-gate-country"
+                    >
+                      {COUNTRY_CODES.map((item) => (
+                        <option key={`${item.value}-${item.label}`} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="lead-gate-phone"
+                      placeholder="e.g. 7123456789"
+                      inputMode="numeric"
+                      value={leadForm.phone}
+                      onChange={(e) => {
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                        setLeadForm((prev) => ({ ...prev, phone: digitsOnly }));
+                        setLeadError("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") continueAfterLead();
+                      }}
+                      className="quiz-input lead-gate-phone"
+                      autoComplete="tel-national"
+                      autoFocus
+                    />
+                  </div>
+                  <p className="lead-gate-note">Digits only — no spaces. Include the correct country code.</p>
                 </div>
               ) : null}
               {leadError ? <p className="lead-gate-error">{leadError}</p> : null}

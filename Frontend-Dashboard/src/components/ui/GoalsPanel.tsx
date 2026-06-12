@@ -56,7 +56,7 @@ function GoalsPanelOverlay({
         className={cn(
           "pointer-events-auto absolute flex min-h-0 flex-col overflow-hidden",
           isViewport
-            ? "inset-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none"
+            ? "inset-0 h-[100svh] max-h-[100svh] w-full max-w-full rounded-none"
             : "inset-0 md:h-full md:max-h-full",
           "cut-frame cyber-frame gold-stroke border border-[rgba(255,215,0,0.42)] bg-[#060606]/98 shadow-[inset_0_1px_0_rgba(255,215,0,0.12),0_0_0_1px_rgba(255,215,0,0.2),0_24px_80px_rgba(0,0,0,0.55)]",
           isViewport &&
@@ -94,7 +94,7 @@ function GoalsPanelOverlay({
         </div>
         <div
           className={cn(
-            "min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-3 sm:p-4 md:p-5",
+            "min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-3 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] md:p-5",
             "[scrollbar-color:rgba(255,215,0,0.5)_rgba(0,0,0,0.35)] [touch-action:pan-y]"
           )}
         >

@@ -1,24 +1,21 @@
-import { readdir } from 'node:fs/promises'
-import path from 'node:path'
 import Image from 'next/image'
 import { unstable_cache } from 'next/cache'
-import { PricingPage } from '@/components/AnimatedPricingPage'
-import CertificatesSection from '@/components/CertificatesSection'
-import DomeGallery from '@/components/DomeGallery'
-import FAQSection from '@/components/FAQSection'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
-import { HeroGlitchBackground } from '@/components/home/HeroGlitchBackground'
+import {
+  HomeBottomSections,
+  HomeCertificatesSection,
+  HomeDomeGallerySection,
+  HomeFaqSection,
+  HomePaywallSection,
+  HomePricingSection,
+} from '@/components/home/HomeBelowFoldSections'
+import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
-import PaywallSnapshotsSection from '@/components/PaywallSnapshotsSection'
 import { NavApp } from '@/components/NavApp'
-import GlobalBottomSections from '@/components/GlobalBottomSections'
 import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/components/home/DeferredHomeBackgrounds'
 import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
-import { attachProgramLinksToGalleryImages } from '@/lib/programGalleryLinks'
-import { GLOBE_IMAGE_ALT_OVERRIDES } from '@/lib/programPlaylistThumbnails'
-import { applyGlobeGalleryOverrides } from '@/lib/programPlaylistThumbnails'
-import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
+import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
 import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
 const FEATURED_LOGOS = [
@@ -37,19 +34,6 @@ const FEATURED_LOGOS = [
     alt: 'GQ logo',
     href: 'https://gq.co.za/wealth/2025-02-10-how-the-syndicate-can-disrupt-the-traditional-model-of-influence-and-education-in-the-digital-age/',
   },
-]
-
-const PROGRAM_IMAGE_BASE = '/assets/programs/cources%20imnages'
-const courseImage = (fileName: string) => `${PROGRAM_IMAGE_BASE}/${encodeURIComponent(fileName)}`
-const FEATURED_PROGRAM_IMAGES = [
-  { src: courseImage('wordpress-blog.png'), alt: 'WordPress Blog' },
-  { src: courseImage('canvics-to-canva.png'), alt: 'Graphics Design using Canva' },
-  { src: courseImage('flutter-app-building.png'), alt: 'App Building using Flutter' },
-  { src: courseImage('automaton-name-change.png'), alt: 'AI Automations' },
-  { src: courseImage('trading with technical analysis.png'), alt: 'Trading with Technical Analysis' },
-  { src: courseImage('dystopian-demand.png'), alt: 'Print on Demand Clothing' },
-  { src: courseImage('make_best_thumbnails_or_cover_image_of_program_python_programming__dystopian_cyber__pds64wpqtzleuu2ucwkp_0.png'), alt: 'Python Programming' },
-  { src: courseImage('new-project (12).png'), alt: 'Building Apps using React JS' },
 ]
 
 const SOCIAL_CARD_BORDER_THEMES = [
@@ -100,54 +84,9 @@ const SOCIAL_CARD_BORDER_THEMES = [
   },
 ] as const
 
-const PROGRAM_GALLERY_DIR = 'assets/programs/cources imnages'
-const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'])
-
-const toLabel = (fileName: string) =>
-  fileName
-    .replace(/\.[^/.]+$/, '')
-    .replace(/[-_]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-async function readProgramGalleryImages() {
-  const absolute = path.join(process.cwd(), 'public', ...PROGRAM_GALLERY_DIR.split('/'))
-  try {
-    const entries = await readdir(absolute, { withFileTypes: true })
-    const files = entries
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name)
-      .filter((name) => IMAGE_EXTENSIONS.has(path.extname(name).toLowerCase()))
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-
-    if (files.length > 0) {
-      return files.map((file, index) => ({
-        src: courseImage(file),
-        alt: GLOBE_IMAGE_ALT_OVERRIDES[file] ?? (toLabel(file) || `Program image ${index + 1}`),
-        fileName: file,
-      }))
-    }
-  } catch {
-    // Use curated fallback when folder is unavailable.
-  }
-
-  return FEATURED_PROGRAM_IMAGES.map((item, index) => ({
-    ...item,
-    fileName: `fallback-${index + 1}.png`,
-  }))
-}
-
-const getProgramGalleryImages = unstable_cache(readProgramGalleryImages, ['home-program-gallery-images-v2'], {
-  revalidate: 3600,
-})
-
 const getLinkedProgramGalleryImages = unstable_cache(
-  async () => {
-    const images = applyGlobeGalleryOverrides(await getProgramGalleryImages())
-    const playlists = await fetchPublicPlaylistsServer()
-    return attachProgramLinksToGalleryImages(images, playlists)
-  },
-  ['home-program-gallery-linked-v2'],
+  async () => getCuratedGlobeGalleryImages(),
+  ['home-program-gallery-linked-v4'],
   { revalidate: 3600 }
 )
 
@@ -180,8 +119,7 @@ export default async function Home() {
         id="heroSection"
         className="relative h-[100dvh] min-h-[100dvh] w-full min-w-0 overflow-hidden"
       >
-        <div className="hero-glitch-placeholder absolute inset-0 z-0" aria-hidden />
-        <HeroGlitchBackground
+        <HeroGlitchShell
           glitchSpeed={70}
           centerVignette
           outerVignette
@@ -205,18 +143,22 @@ export default async function Home() {
           </div>
         </div>
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-[19] w-full max-w-[min(1020px,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 px-3 sm:px-4">
-          <Image
-            src="/assets/logo.webp"
-            alt="ONEM Logo"
-            width={1020}
-            height={720}
-            priority
-            className="hamburger-attract mx-auto block h-auto w-full max-w-full object-contain"
-            style={{
-              maxHeight: 'clamp(160px, 76dvh, 720px)',
-              filter: 'drop-shadow(0 0 14px rgba(251, 191, 36, 0.35))',
-            }}
-          />
+          <div
+            className="hero-logo-pulse mx-auto w-full max-w-full"
+            style={{ maxHeight: 'clamp(160px, 76dvh, 720px)' }}
+          >
+            <Image
+              src="/assets/logo.webp"
+              alt="ONEM Logo"
+              width={1020}
+              height={720}
+              priority
+              className="block h-auto w-full max-w-full object-contain"
+              style={{
+                maxHeight: 'clamp(160px, 76dvh, 720px)',
+              }}
+            />
+          </div>
         </div>
         <div className="absolute bottom-4 left-1/2 z-20 w-full max-w-[1180px] -translate-x-1/2 px-3 sm:bottom-6 sm:px-4">
           <FeaturedLogosStrip logos={FEATURED_LOGOS} speedSeconds={34} compact />
@@ -236,19 +178,17 @@ export default async function Home() {
               SYNDICATE ELITE PROGRAMS
             </span>
           </h2>
-          <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]">
-            <DomeGallery
-              images={programGalleryImages}
-              fit={0.58}
-              minRadius={260}
-              segments={18}
-              dragDampening={4.8}
-              grayscale={false}
-              autoRotateSpeedDeg={1.8}
-              tileInsetPx={12}
-              navigateOnClick
-            />
-          </div>
+          <HomeDomeGallerySection
+            images={programGalleryImages}
+            fit={0.58}
+            minRadius={260}
+            segments={18}
+            dragDampening={4.8}
+            grayscale={false}
+            autoRotateSpeedDeg={1.8}
+            tileInsetPx={12}
+            navigateOnClick
+          />
         </div>
       </section>
 
@@ -368,11 +308,11 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <PricingPage />
-      <PaywallSnapshotsSection />
-      <CertificatesSection />
-      <FAQSection />
-      <GlobalBottomSections />
+      <HomePricingSection />
+      <HomePaywallSection />
+      <HomeCertificatesSection />
+      <HomeFaqSection />
+      <HomeBottomSections />
     </div>
   )
 }

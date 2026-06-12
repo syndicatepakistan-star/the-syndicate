@@ -115,7 +115,28 @@ export function middleware(request: NextRequest) {
   }
 
   if (!pathname.startsWith("/static/")) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    const isRscPayload =
+      request.headers.get("RSC") === "1" ||
+      request.headers.get("Next-Router-Prefetch") === "1" ||
+      request.headers.get("Next-Router-State-Tree") != null;
+    if (
+      request.method === "GET" &&
+      !isRscPayload &&
+      !hasAuthSession &&
+      publicMarketingPath &&
+      !pathname.startsWith("/api/") &&
+      !pathname.startsWith("/_next/")
+    ) {
+      response.headers.set(
+        "Cache-Control",
+        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+      );
+    }
+    if (hasAuthSession || protectedDashboardPath || protectedRootSectionPath) {
+      response.headers.set("Cache-Control", "private, no-store, max-age=0");
+    }
+    return response;
   }
 
   const origin = djangoOriginFromEnv();

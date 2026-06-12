@@ -18,7 +18,7 @@ const SHOWCASE = [
     height: 335,
     accent: "cyan" as const satisfies ShowcaseAccent,
     title: "Affiliate dashboard — revenue on glass",
-    body: "Referral link, copy / share / withdraw, snapshot tiles, revenue-flow bars: one frame so you see clicks, leads, sales, conversion, and earnings without tab-hopping. This is the exact UI you run in the portal.",
+    body: "Your dashboard is your operational command centre. Every critical metric is visible: referral performance, lead activity, conversion movement, revenue generation, earnings status. No hidden layers. No confusing reports. Everything you need to understand your position is placed directly in front of you.",
   },
   {
     src: "/assets/affiliate-page/02-referrals-board.png",
@@ -26,7 +26,7 @@ const SHOWCASE = [
     height: 512,
     accent: "violet" as const satisfies ShowcaseAccent,
     title: "Referrals board — every dossier tagged",
-    body: "Money and time filters, sort newest first, Syn Diagnosis vs sign-up leads, joined vs purchased, paid lines and your earning column in gold. The board is the receipt rack: who entered, what they bought, what you cleared.",
+    body: "Every referral becomes a tracked record. Review who entered through your network, who completed registration, who converted into a buyer, what revenue was generated, and what commission belongs to you. The referrals board is your evidence layer — a complete record of your influence and execution.",
   },
   {
     src: "/assets/affiliate-page/03-referrals-feed.png",
@@ -34,7 +34,7 @@ const SHOWCASE = [
     height: 388,
     accent: "amber" as const satisfies ShowcaseAccent,
     title: "Paged lead feed — subscription + earning split",
-    body: "Each row is a clipped dual-channel read: subscription activity on the violet rail, your earning on the amber rail, status chips, paid stamps, and pagination when the list deepens. Commission tiers stay visible in the footer strip.",
+    body: "Growth creates volume. As your network expands, your lead feed becomes your operational archive. Every entry shows activity status, conversion stage, purchase movement, and commission outcome. Clear visibility. Clean intelligence. The system scales with your ambition.",
   },
   {
     src: "/assets/affiliate-page/04-conversion-formula.png",
@@ -42,7 +42,7 @@ const SHOWCASE = [
     height: 735,
     accent: "cyan" as const satisfies ShowcaseAccent,
     title: "Conversion formula — numbers on the table",
-    body: "Open the vault modal: clicks, leads, sales, the blended formula, and the percentage result with no black-box scoring. Same neon chamfer language as the rest of the cockpit — know the math or do not touch the lever.",
+    body: "Real operators understand numbers. The conversion system reveals the mechanics behind your performance: traffic, engagement, conversion, revenue. No mystery calculations. The formula is visible because control requires understanding.",
   },
   {
     src: "/assets/affiliate-page/05-withdraw-airlock.png",
@@ -50,7 +50,7 @@ const SHOWCASE = [
     height: 730,
     accent: "violet" as const satisfies ShowcaseAccent,
     title: "Withdraw rails — bank fields under lock",
-    body: "Threshold, current earnings state, multi-field bank capture with colour-coded chamfer inputs, amount cap to balance, submit under crimson glow. Payout window copy stays in-frame so you know when wire hits.",
+    body: "Your earnings remain protected behind controlled withdrawal access. The system manages available balance, withdrawal limits, payment information, and processing status. Your results are tracked. Your withdrawals are controlled. When the threshold is reached, the value you created becomes accessible.",
   },
 ] as const;
 
@@ -129,9 +129,7 @@ export default function AffiliateMarketingPage() {
                 Turn attention into withdrawals
               </h1>
               <p className="mx-auto mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">
-                Deploy a tracked Syndicate link. When your audience runs diagnosis, signs up, and buys, you earn on the
-                chain that matters: clicks → leads → checkouts → commissions. Below is exactly what the partner cockpit
-                looks like — no stock art, no alternate skins.
+                Attention is only valuable when it creates movement. Deploy your Syndicate referral link and transform your audience into a measurable growth engine. Every journey is tracked: clicks, leads, purchases, commissions. You do not guess. You do not hope. You operate through data. The Affiliate Programme gives you visibility into the entire chain, allowing you to refine your strategy, strengthen your influence, and build a revenue stream based on execution.
               </p>
             </div>
           </CyberChamferFrame>
@@ -229,8 +227,7 @@ export default function AffiliateMarketingPage() {
               Already cleared as a partner?
             </h2>
             <p className="mx-auto mt-[clamp(0.75rem,2.5vw,1rem)] max-w-2xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">
-              Same email we have on file → one-time OTP → your live portal unlocks. Hit the button and stop leaving
-              commissions on the table.
+              Your access is already prepared. Verify your identity. Enter your secure code. Enter your affiliate command centre. Your network is waiting. Your commissions are waiting. The next move is yours.
             </p>
             <div className="mt-[clamp(1.25rem,4vw,2rem)] flex flex-wrap justify-center gap-3">
               <Link href={AFFILIATE_LOGIN_HREF} prefetch className="cta-nav-button text-sm font-semibold">

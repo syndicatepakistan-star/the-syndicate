@@ -1,7 +1,8 @@
 "use client";
 
+import { type CSSProperties } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 
 type Props = {
   offer: PlanOfferDef;
@@ -11,6 +12,7 @@ type Props = {
   busy?: boolean;
   /** Overrides openLabel (e.g. Open when already purchased). */
   actionLabel?: string;
+  highlighted?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -127,38 +129,74 @@ const PLAN_OFFER_THEMES = {
   },
 } as const;
 
+const PACK_SPOTLIGHT: Record<PlanOfferAccent, { a: string; b: string }> = {
+  amber: { a: "245,158,11", b: "234,88,12" },
+  cyan: { a: "34,211,238", b: "14,165,233" },
+  pink: { a: "217,70,239", b: "236,72,153" },
+  green: { a: "52,211,153", b: "16,185,129" },
+  purple: { a: "192,132,252", b: "139,92,246" },
+  red: { a: "248,113,113", b: "239,68,68" },
+  orange: { a: "251,146,60", b: "249,115,22" },
+  blue: { a: "96,165,250", b: "59,130,246" },
+};
+
 export function PlanOfferCard({
   offer,
   size = "large",
   cardKind,
   busy = false,
   actionLabel,
+  highlighted = false,
   onDetails,
   onOpen,
 }: Props) {
   const isLarge = size === "large";
   const isModule = size === "module";
   const isCompact = size === "compact";
+  const isPack = !isModule;
   const theme = PLAN_OFFER_THEMES[offer.accent];
+  const spotlight = PACK_SPOTLIGHT[offer.accent];
+  const spotlightStyle = highlighted
+    ? ({
+        ["--spotlight-a" as string]: spotlight.a,
+        ["--spotlight-b" as string]: spotlight.b,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <article
+      id={`plan-offer-${offer.plan}`}
+      data-plan-offer={offer.plan}
+      data-globe-spotlight={highlighted ? "true" : undefined}
+      style={spotlightStyle}
       className={cn(
-        "plan-offer-card group/card relative flex w-full flex-col text-left",
+        "plan-offer-card group/card relative flex w-full flex-col text-left scroll-mt-32",
         `plan-offer-card--${offer.accent}`,
+        cardKind === "module" && "plan-offer-card--vault-module",
+        highlighted && "program-card-globe-spotlight-host",
         isLarge && "mx-auto h-full min-h-[26rem] max-w-none sm:min-h-[30rem]",
-        isModule && "h-full min-h-[15rem] w-full sm:min-h-[17rem]",
+        isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
         isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
+      {highlighted ? (
+        <>
+          <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
+          <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
+        </>
+      ) : null}
       <div
         className={cn(
           "relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300",
           theme.dominantBorder,
-          theme.glow,
-          theme.hoverGlow
+          !highlighted && !isModule && theme.glow,
+          !highlighted && !isModule && theme.hoverGlow,
+          !highlighted && isModule && "plan-offer-card__vault-module-shell",
+          highlighted && "plan-offer-globe-border-glow"
         )}
       >
+        {!highlighted && !isModule ? (
+          <>
         <span
           className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px] transition-[opacity,filter] duration-300 group-hover/card:opacity-100 group-hover/card:saturate-125", theme.aura)}
           aria-hidden
@@ -188,8 +226,10 @@ export function PlanOfferCard({
           )}
           aria-hidden
         />
+          </>
+        ) : null}
 
-        <span className="relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70">
+        <span className={cn("relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70", highlighted && "border-2")}>
           {cardKind ? (
             <div
               className={cn(
@@ -210,10 +250,12 @@ export function PlanOfferCard({
           >
             <div
               className={cn(
-                "relative w-full shrink-0 overflow-hidden rounded-2xl border-2 border-white/20",
-                isLarge && "aspect-[4/3] min-h-[12rem] sm:min-h-[15rem]",
-                isModule && "aspect-[16/10] min-h-[7rem] sm:min-h-[8.5rem]",
-                isCompact && "aspect-[4/3] min-h-[9.5rem]"
+                "relative w-full overflow-hidden rounded-2xl border-2 border-white/20",
+                isLarge && isPack && "min-h-[15rem] flex-1 sm:min-h-[18.5rem]",
+                isLarge && !isPack && "aspect-[4/3] min-h-[12rem] shrink-0 sm:min-h-[15rem]",
+                isModule && "aspect-[16/10] min-h-[7rem] shrink-0 sm:min-h-[8.5rem]",
+                isCompact && isPack && "min-h-[11.5rem] flex-1 sm:min-h-[12.5rem]",
+                isCompact && !isPack && "aspect-[4/3] min-h-[9.5rem] shrink-0"
               )}
             >
               <img
@@ -252,18 +294,21 @@ export function PlanOfferCard({
 
             <div
               className={cn(
-                "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                "flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
-                isLarge && "min-h-[12rem] sm:min-h-[13rem]",
+                isLarge && isPack && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
+                isLarge && !isPack && "min-h-[12rem] sm:min-h-[13rem]",
                 isModule && "min-h-[7.5rem] sm:min-h-[8rem]",
+                isCompact && isPack && "shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2",
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
             >
               <div
                 className={cn(
-                  "line-clamp-3 min-h-[2.75em] text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
-                  isLarge && "text-[clamp(11px,2.2vw,18px)]",
-                  isModule && "text-[10px] sm:text-[11px]",
+                  "line-clamp-3 text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
+                  isLarge && isPack && "min-h-[2.2em] text-[clamp(11px,2.2vw,18px)]",
+                  isLarge && !isPack && "min-h-[2.75em] text-[clamp(11px,2.2vw,18px)]",
+                  isModule && "min-h-[2.75em] text-[10px] sm:text-[11px]",
                   isCompact && "text-[10px] sm:text-[11px]"
                 )}
               >
@@ -272,23 +317,38 @@ export function PlanOfferCard({
 
               <p
                 className={cn(
-                  "mt-1.5 line-clamp-2 text-left font-medium leading-snug text-white/72",
-                  isLarge && "text-[11px] sm:text-[13px]",
-                  isModule && "text-[9px] sm:text-[10px]",
-                  isCompact && "text-[9px] sm:text-[10px]"
+                  "text-left font-medium leading-snug text-white/72",
+                  isLarge && isPack && "mt-1 line-clamp-4 text-[11px] sm:text-[12px]",
+                  isLarge && !isPack && "mt-1.5 line-clamp-3 text-[11px] sm:text-[13px]",
+                  isModule && "mt-1.5 line-clamp-3 text-[9px] sm:text-[10px]",
+                  isCompact && isPack && "mt-1 line-clamp-3 text-[9px] sm:text-[10px]",
+                  isCompact && !isPack && "mt-1.5 line-clamp-2 text-[9px] sm:text-[10px]"
                 )}
               >
                 {offer.teaser}
                 <span className="text-cyan-300/90">_</span>
               </p>
 
-              <div className={cn("mt-2 grid grid-cols-2", isLarge ? "gap-2 sm:gap-2.5" : "gap-1")}>
+              <div
+                className={cn(
+                  "grid grid-cols-2",
+                  isLarge && isPack && "mt-1.5 gap-1.5 sm:gap-2",
+                  isLarge && !isPack && "mt-2 gap-2 sm:gap-2.5",
+                  isModule && "mt-2 gap-1",
+                  isCompact && isPack && "mt-1.5 gap-1",
+                  isCompact && !isPack && "mt-2 gap-1"
+                )}
+              >
                 <button
                   type="button"
                   onClick={onDetails}
                   className={cn(
                     "min-w-0 rounded-xl border border-white/40 bg-black/55 font-black uppercase tracking-[0.09em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3]",
                     isLarge &&
+                      isPack &&
+                      "px-2 py-1.5 text-[clamp(10px,2vw,12px)] sm:px-2 sm:py-2 sm:tracking-[0.14em]",
+                    isLarge &&
+                      !isPack &&
                       "px-2 py-2 text-[clamp(10px,2vw,12px)] sm:px-2.5 sm:py-2.5 sm:tracking-[0.14em]",
                     isModule && "px-1.5 py-1.5 text-[9px] sm:text-[10px]",
                     isCompact && "px-1.5 py-1.5 text-[9px]"
@@ -304,6 +364,10 @@ export function PlanOfferCard({
                     "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition disabled:cursor-wait disabled:opacity-65",
                     theme.openBtn,
                     isLarge &&
+                      isPack &&
+                      "px-2 py-1.5 text-[clamp(10px,2vw,12px)] sm:px-2 sm:py-2 sm:tracking-[0.15em]",
+                    isLarge &&
+                      !isPack &&
                       "px-2 py-2 text-[clamp(10px,2vw,12px)] sm:px-2.5 sm:py-2.5 sm:tracking-[0.15em]",
                     isModule && "px-1.5 py-1.5 text-[9px] sm:text-[10px]",
                     isCompact && "text-[9px]"

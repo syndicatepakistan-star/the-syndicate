@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import type { CourseRec } from "@/components/dashboard/path/goalPathData";
+import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
-import { navigateToProgramLibraryCard } from "@/lib/programCardScroll";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 const PROGRAM_CARD_BACKGROUNDS: readonly string[] = [
@@ -26,33 +26,49 @@ type Props = {
   course: CourseRec;
   variant: "support" | "focus" | "future";
   playlist: StreamPlaylistListItem | null;
+  planOffer?: PlanOfferDef | null;
   skin: Skin;
   cardIndex: number;
   onDetails: (playlist: StreamPlaylistListItem) => void;
   onUnlock: (playlist: StreamPlaylistListItem) => void;
+  onPlanDetails: (offer: PlanOfferDef) => void;
+  onPlanUnlock: (offer: PlanOfferDef) => void;
+  onPlanOpen: (course: CourseRec) => void;
 };
 
 export function ProgramOpportunityCardContent({
   course,
   variant,
   playlist,
+  planOffer = null,
   skin,
   cardIndex,
   onDetails,
   onUnlock,
+  onPlanDetails,
+  onPlanUnlock,
+  onPlanOpen,
 }: Props) {
   const programId = course.programId;
+  const isPack = course.offerKind === "pack";
+  const isModule = course.offerKind === "module";
+  const isPlanCard = isPack || isModule;
   const label =
-    variant === "focus" ? "Recommended" : variant === "support" ? "Supporting" : "Up next";
+    variant === "focus"
+      ? "Recommended"
+      : variant === "support"
+        ? "Supporting"
+        : "Up next";
   const grad = PROGRAM_CARD_BACKGROUNDS[cardIndex % PROGRAM_CARD_BACKGROUNDS.length];
-  const price = course.price ?? 0;
+  const price = course.price ?? (planOffer ? Number(planOffer.checkoutAmount) : 0);
 
-  const openProgram = () => {
-    if (programId == null) return;
-    navigateToProgramLibraryCard(programId);
+  const openTarget = () => {
+    onPlanOpen(course);
   };
 
-  const coverSrc = course.posterSrc;
+  const coverSrc = course.posterSrc ?? planOffer?.imageSrc;
+
+  const kindBadge = isPack ? "Vault pack" : isModule ? "Vault module" : null;
 
   return (
     <div className="flex h-auto w-full flex-col pb-[10px]">
@@ -65,22 +81,28 @@ export function ProgramOpportunityCardContent({
         >
           {label}
         </span>
+        {kindBadge ? (
+          <span
+            className={cn(
+              "rounded-full border px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] sm:text-[9px]",
+              skin.infoPanel,
+            )}
+          >
+            {kindBadge}
+          </span>
+        ) : null}
       </div>
 
       <button
         type="button"
-        onClick={openProgram}
-        disabled={programId == null}
+        onClick={openTarget}
+        disabled={!programId && !isPlanCard}
         className={cn(
           "group/cover relative mt-1 block w-full shrink-0 overflow-hidden rounded-lg border border-white/20 text-left transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
           "aspect-[4/5] min-h-[6.75rem] max-h-[9.5rem] sm:min-h-[7.25rem] sm:max-h-[10.5rem]",
-          programId == null && "cursor-default opacity-80",
+          !programId && !isPlanCard && "cursor-default opacity-80",
         )}
-        aria-label={
-          programId != null
-            ? `Open ${course.title} in Programs library`
-            : course.title
-        }
+        aria-label={course.title}
       >
         <span className="absolute inset-0 z-0 block h-full w-full overflow-hidden">
           {playlist ? (
@@ -101,6 +123,11 @@ export function ProgramOpportunityCardContent({
                 loading="lazy"
                 decoding="async"
                 className="absolute inset-0 z-[1] object-cover object-center"
+                style={
+                  planOffer?.imageObjectPosition
+                    ? { objectPosition: planOffer.imageObjectPosition }
+                    : undefined
+                }
               />
             </>
           ) : (
@@ -109,7 +136,7 @@ export function ProgramOpportunityCardContent({
         </span>
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-b from-black/20 via-transparent to-black/50" />
         <span className="pointer-events-none absolute right-2 top-2 z-[3] inline-flex items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 text-[11px] font-black tabular-nums text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)] sm:text-[12px]">
-          {formatPrice(price)}
+          {isPlanCard && planOffer ? planOffer.displayPrice : formatPrice(price)}
         </span>
       </button>
 
@@ -128,10 +155,11 @@ export function ProgramOpportunityCardContent({
       <div className="mt-[5px] grid shrink-0 grid-cols-2 gap-1.5 sm:gap-2">
         <button
           type="button"
-          disabled={!playlist}
+          disabled={!playlist && !planOffer}
           onClick={(e) => {
             e.stopPropagation();
             if (playlist) onDetails(playlist);
+            else if (planOffer) onPlanDetails(planOffer);
           }}
           className="min-w-0 rounded-lg border border-white/40 bg-black/55 px-1.5 py-1.5 font-mono text-[clamp(8px,2vw,10px)] font-black uppercase tracking-[0.1em] text-white/95 transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3] disabled:opacity-50 sm:px-2 sm:py-2"
         >
@@ -139,10 +167,11 @@ export function ProgramOpportunityCardContent({
         </button>
         <button
           type="button"
-          disabled={!playlist}
+          disabled={!playlist && !planOffer}
           onClick={(e) => {
             e.stopPropagation();
             if (playlist) onUnlock(playlist);
+            else if (planOffer) onPlanUnlock(planOffer);
           }}
           className="min-w-0 rounded-lg border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 font-mono text-[clamp(8px,2vw,10px)] font-black uppercase tracking-[0.1em] text-[#ffe9a3] shadow-[0_0_16px_rgba(202,167,36,0.45)] transition hover:scale-[1.02] disabled:opacity-50 sm:px-2 sm:py-2"
         >

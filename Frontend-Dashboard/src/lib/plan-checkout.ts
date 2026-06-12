@@ -59,6 +59,19 @@ export function buildPlanCheckoutAuthHref(params: PlanCheckoutParams): string {
   return `${useLogin ? "/login" : "/signup"}?${search.toString()}`;
 }
 
+export function buildPlaylistCheckoutAuthHref(
+  playlistId: number | string,
+  postAuthNext?: string,
+): string {
+  const search = new URLSearchParams({
+    playlist_id: String(playlistId),
+    buy: "1",
+  });
+  const next = postAuthNext?.trim() ?? "";
+  if (next) search.set("next", next);
+  return `/login?${search.toString()}`;
+}
+
 export type PlanCheckoutSessionPayload = {
   checkout_url?: string;
   is_unlocked?: boolean;

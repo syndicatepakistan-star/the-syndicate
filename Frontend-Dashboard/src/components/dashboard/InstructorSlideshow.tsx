@@ -127,7 +127,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-hidden
           />
           <div className="instructor-slideshow-bg-scrim absolute inset-0 z-[1]" />

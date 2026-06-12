@@ -100,21 +100,32 @@ function getSlots(radius: number, count: number) {
       // Fold / narrow-mobile: add more vertical breathing room between rows.
       // Keep horizontal separation so bottom cards don't touch.
       xScale = 1
-      yScale = 1.24
+      yScale = 1.34
     } else if (w < 640) {
       xScale = 0.98
-      yScale = 1.1
+      yScale = 1.22
+    } else if (w < 768) {
+      xScale = 1
+      yScale = 1.14
     }
   }
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
     let x = radius * xScale * Math.cos(angle)
     let y = radius * yScale * Math.sin(angle)
-    if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < 420) {
-      // Mobile/Fold: keep a visible gap between the bottom pair
-      // (`joinNow` index 4 and `syndicateAnalysis` index 3).
-      if (i === 3) x += 8
-      if (i === 4) x -= 8
+    if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < 768) {
+      const w = window.innerWidth
+      if (w < 420) {
+        // Mobile/Fold: keep a visible gap between the bottom pair
+        // (`joinNow` index 4 and `syndicateAnalysis` index 3).
+        if (i === 3) x += 8
+        if (i === 4) x -= 8
+      }
+      // Vertical gap: LOGIN (idx 4) below PROGRAMS (5) + SYN DIAGNOSIS (3).
+      if (count >= 8) {
+        if (i === 3 || i === 5) y -= 12
+        if (i === 4) y += 21
+      }
     }
     return {
       x,
@@ -131,13 +142,14 @@ function getMobileItemNudge(id: NavSectionId, itemCount: number): {
 } {
   if (typeof window === 'undefined' || itemCount < 7) return {}
   const w = window.innerWidth
-  // Keep extra breathing room on narrow phones + iPhone 15 Pro Max style widths.
-  if (w >= 460) return {}
-  if (id === 'home') return { marginBottom: '22px' }
-  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '22px' }
-  // Most visible collapse happens on the last pair; separate them further.
-  if (id === 'joinNow') return { marginRight: '26px' }
-  if (id === 'syndicateAnalysis') return { marginLeft: '26px' }
+  if (w >= 768) return {}
+  if (id === 'home') return { marginBottom: '26px', marginLeft: '5px' }
+  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '26px' }
+  if (id === 'ourMethods' || id === 'membership') return { marginTop: '8px' }
+  // Bottom pair: nudge Login 5px right; 5px vertical gap above Login vs Programs / Syn Diagnosis.
+  if (id === 'joinNow') return { marginLeft: '5px', marginRight: '21px', marginTop: '5px' }
+  if (id === 'syndicateAnalysis') return { marginLeft: '26px', marginTop: '8px', marginBottom: '5px' }
+  if (id === 'programs') return { marginTop: '8px', marginBottom: '5px' }
   return {}
 }
 
@@ -349,7 +361,7 @@ export function RadialNav({
       ref={rootRef}
       className={
         open
-          ? 'pointer-events-none fixed inset-0 z-50'
+          ? 'pointer-events-none fixed inset-0 z-[400]'
           : 'pointer-events-none fixed inset-0 h-0 overflow-hidden opacity-0'
       }
       aria-hidden={!open}

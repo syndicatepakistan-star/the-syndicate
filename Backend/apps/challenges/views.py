@@ -33,6 +33,7 @@ from .device_batch_async import (
     is_device_generation_inflight,
     start_device_ai_batch_phase2,
 )
+from apps.portal.api_guards import require_knight_tier_response
 from .services import (
     DAILY_SYSTEM_BATCH_SIZE,
     create_user_custom_challenge,
@@ -112,6 +113,9 @@ SYNDICATE_ALLOWED_STATE_KEYS = frozenset(
 @permission_classes([IsAuthenticated])
 def syndicate_progress(request):
     """GET/PATCH user progress with DB-backed streak, points_total, and level."""
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     if request.method == "GET":
         obj, _ = SyndicateUserProgress.objects.get_or_create(
             user=request.user,
@@ -174,6 +178,9 @@ def syndicate_progress(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def syndicate_streak_record(request):
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     """
     Call once when the user completes their first mission of a calendar day.
     Rules: consecutive days → streak+1; missed ≥1 day → streak resets to 1 for today (chain restarted).
@@ -222,6 +229,9 @@ def syndicate_streak_record(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def syndicate_streak_restore(request):
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     """After referral streak restore: set streak on the server and clear break hints in JSON state."""
     try:
         n = int(request.data.get("streak_count", 1))
@@ -258,6 +268,9 @@ def challenge_list_create(request):
     GET: today's daily batch (same as /today/).
     POST: body with `mood` for one challenge, or `regenerate_daily` / `force` for daily batch.
     """
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     if request.method == "GET":
         return challenges_today(request)
     mood = (request.data.get("mood") or "").strip()
@@ -274,6 +287,9 @@ def challenge_list_create(request):
 @api_view(["POST"])
 def generate_challenge(request):
     """Body: { mood: string }. Uses latest ingested mindsets."""
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     mood = (request.data.get("mood") or "").strip()
     ok, data, err = run_generate(mood)
     if not ok:
@@ -295,6 +311,9 @@ def generate_challenges_view(request):
 
     If `category` is omitted or blank, delegates to legacy single-challenge generate (mood only).
     """
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     category = (request.data.get("category") or "").strip()
     if not category:
         return generate_challenge(request)
@@ -348,6 +367,9 @@ def challenges_recent(request):
 @api_view(["GET"])
 def challenges_today(request):
     """Today's daily batch (system missions per user) plus custom missions."""
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     _prune_old_challenge_rows()
     if not MindsetKnowledge.objects.exists():
         return Response({"results": [], "detail": "No mindsets loaded yet."})
@@ -439,6 +461,9 @@ def challenges_user_custom(request):
     Logged-in users use ``user:<pk>``; anonymous clients must pass ``device_id``.
     Points are random 3–5; agent fills description, examples, benefits; a short mindset note is appended for this device.
     """
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     if not MindsetKnowledge.objects.exists():
         return Response({"detail": "Ingest a document first."}, status=status.HTTP_400_BAD_REQUEST)
     device_id = _user_device_key(request) or (request.data.get("device_id") or "").strip()
@@ -567,6 +592,9 @@ def leaderboard_sync(request):
 @api_view(["POST"])
 def challenges_generate_daily(request):
     """Regenerate today's system batch (5 categories × 3 moods = 15). Body: { force: true, device_id?: string }."""
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     if not MindsetKnowledge.objects.exists():
         return Response({"detail": "Ingest a document first."}, status=status.HTTP_400_BAD_REQUEST)
     force = bool(request.data.get("force", False))
@@ -583,6 +611,9 @@ def challenges_generate_daily(request):
 
 @api_view(["POST"])
 def mission_score_response(request):
+    denied = require_knight_tier_response(request)
+    if denied is not None:
+        return denied
     """
     Evaluation agent (OpenAI) runs **first** and sets ``is_valid``. Invalid responses get
     zero points; time and numeric rubric are **not** applied. If valid, a deterministic

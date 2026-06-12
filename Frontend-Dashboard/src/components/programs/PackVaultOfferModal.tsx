@@ -153,18 +153,19 @@ export function PackVaultOfferModal({
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="vault-modules-grid">
             {courses.map((offer) => (
-              <PlanOfferCard
-                key={offer.plan}
-                offer={offer}
-                size="module"
-                cardKind="module"
-                busy={busyPlan === offer.plan}
-                actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier)}
-                onDetails={() => onDetails(offer)}
-                onOpen={() => handlePrimary(offer)}
-              />
+              <div key={offer.plan} className="vault-module-cell">
+                <PlanOfferCard
+                  offer={offer}
+                  size="module"
+                  cardKind="module"
+                  busy={busyPlan === offer.plan}
+                  actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier)}
+                  onDetails={() => onDetails(offer)}
+                  onOpen={() => handlePrimary(offer)}
+                />
+              </div>
             ))}
           </div>
         </div>

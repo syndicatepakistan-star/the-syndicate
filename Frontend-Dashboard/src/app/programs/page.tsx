@@ -3,7 +3,7 @@ import { NavApp } from '@/components/NavApp'
 import SiteFooter from '@/components/SiteFooter'
 import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySection'
 import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
-import { PublicPlanOfferCards } from '@/components/programs/PublicPlanOfferCards'
+import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
@@ -17,9 +17,12 @@ export default async function ProgramsPage() {
         <div className="absolute bottom-[-10%] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-cyan-400/15 blur-[130px] sm:h-[560px] sm:w-[560px]" />
       </div>
       <NavApp />
-      <section className="space-y-6 pt-8 sm:space-y-8 sm:pt-10">
+      <section
+        id="syndicate-elite-offers"
+        className="relative z-[2] scroll-mt-24 space-y-6 overflow-visible pt-8 sm:space-y-8 sm:pt-10"
+      >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
-        <PublicPlanOfferCards size="large" />
+        <ProgramsOfferSection size="large" />
       </section>
       <PublicGoalPathSection playlists={playlists} />
       <section

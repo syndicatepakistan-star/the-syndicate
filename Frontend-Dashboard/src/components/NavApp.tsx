@@ -66,6 +66,13 @@ export function NavApp() {
     warmRoutes()
   }, [menuOpen, warmRoutes])
 
+  useEffect(() => {
+    document.body.classList.toggle('nav-menu-open', menuOpen)
+    return () => {
+      document.body.classList.remove('nav-menu-open')
+    }
+  }, [menuOpen])
+
   const handlePrefetch = (id: NavSectionId) => {
     router.prefetch(MARKETING_NAV_HREF[id])
   }
@@ -81,7 +88,9 @@ export function NavApp() {
 
   return (
     <div
-      className="fixed left-0 right-0 top-0 z-50 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-75 ease-out pt-2"
+      className={`fixed left-0 right-0 top-0 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-75 ease-out pt-2 ${
+        menuOpen ? 'z-[400]' : 'z-50'
+      }`}
       style={{
         height: menuOpen ? '100dvh' : '69px',
         minHeight: menuOpen ? '100dvh' : undefined,
@@ -90,6 +99,12 @@ export function NavApp() {
       }}
       role="banner"
     >
+      {menuOpen ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-0 bg-black/55 backdrop-blur-[2px]"
+          aria-hidden
+        />
+      ) : null}
       <div className="relative z-10 flex flex-1 flex-col min-h-0">
         <div
           className={`flex h-14 min-h-14 w-full shrink-0 items-center px-4 transition-[justify-content] duration-200 ease-in-out sm:h-16 sm:min-h-16 sm:px-5 ${
@@ -100,7 +115,7 @@ export function NavApp() {
             <button
               type="button"
               onClick={handleToggleMenu}
-              className="hamburger-attract absolute right-3 flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-1.5 rounded-lg border border-amber-300/70 bg-black/55 px-2.5 py-2.5 shadow-[0_0_16px_rgba(251,191,36,0.28)] sm:right-5 sm:px-3"
+              className="hero-hamburger-pulse absolute right-3 flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-1.5 rounded-lg border border-amber-300/70 bg-black/55 px-2.5 py-2.5 sm:right-5 sm:px-3"
               aria-label="Open menu"
             >
               <span className="block h-0.5 w-5 rounded-full bg-amber-200" />

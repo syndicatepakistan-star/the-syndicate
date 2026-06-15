@@ -12,10 +12,11 @@ import {
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { NavApp } from '@/components/NavApp'
-import { DeferredMp4Background, DeferredVimeoProgramsBackground } from '@/components/home/DeferredHomeBackgrounds'
+import { ProgramsGlobeWarmup } from '@/components/home/ProgramsGlobeWarmup'
+import { DeferredMp4Background, ProgramsSectionBackground } from '@/components/home/DeferredHomeBackgrounds'
+import { getCuratedGlobeGalleryImages, GLOBE_GALLERY_IMAGE_URLS } from '@/lib/programPlaylistThumbnails'
 import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
-import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
 import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
 const FEATURED_LOGOS = [
@@ -114,6 +115,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
+      <link rel="preload" href="/assets/v.mp4" as="video" type="video/mp4" />
+      <ProgramsGlobeWarmup imageSrcs={GLOBE_GALLERY_IMAGE_URLS} />
       <NavApp />
       <section
         id="heroSection"
@@ -139,7 +142,8 @@ export default async function Home() {
               typingSpeed={34}
               deletingSpeed={24}
               pauseMs={420}
-              className="marketing-slogan-oneline footer-typing mx-auto w-full min-w-0 max-w-[min(96vw,900px)]"
+              boxed
+              className="footer-typing hero-slogan-badge mx-auto"
             />
           </div>
         </div>
@@ -168,13 +172,13 @@ export default async function Home() {
       </section>
       <section className="relative flex h-auto min-h-0 w-full min-w-0 items-start overflow-hidden bg-[#050508] px-0 py-4 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <DeferredVimeoProgramsBackground />
+          <ProgramsSectionBackground />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/72" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }} />
 
-        <div className="relative z-10 h-full w-full px-0">
-          <h2 className="mb-3 text-center text-2xl font-black uppercase sm:mb-12 sm:text-3xl md:text-4xl lg:text-5xl">
+        <div className="relative z-10 h-full w-full px-0 pt-6 sm:pt-10 md:pt-12">
+          <h2 className="mb-3 mt-2 text-center text-2xl font-black uppercase sm:mb-12 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
             <span className={publicHeadingLightning('amber')}>
               SYNDICATE ELITE PROGRAMS
             </span>

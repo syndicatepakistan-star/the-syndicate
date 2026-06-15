@@ -1,10 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import DomeGallery from "@/components/DomeGallery";
 import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import type { ComponentProps } from "react";
-
-const DomeGallery = dynamic(() => import("@/components/DomeGallery"), { ssr: false });
 const PricingPage = dynamic(
   () => import("@/components/AnimatedPricingPage").then((mod) => ({ default: mod.PricingPage })),
   { ssr: false },
@@ -18,12 +17,9 @@ type DomeGalleryProps = ComponentProps<typeof DomeGallery>;
 
 export function HomeDomeGallerySection(props: DomeGalleryProps) {
   return (
-    <LazyWhenVisible
-      className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]"
-      minHeight="clamp(300px, 52dvh, 420px)"
-    >
-      <DomeGallery {...props} />
-    </LazyWhenVisible>
+    <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]">
+      <DomeGallery {...props} eagerImages />
+    </div>
   );
 }
 

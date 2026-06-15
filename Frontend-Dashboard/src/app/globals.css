@@ -10715,13 +10715,36 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   font-weight: 600;
 }
 
+/* Home hero slogan pill — hug text, keep gold border on all breakpoints */
+.hero-slogan-badge.neon-badge,
+.neon-badge.hero-slogan-badge {
+  width: fit-content !important;
+  max-width: min(96vw, 900px);
+  margin-inline: auto;
+}
+
+.hero-slogan-badge .neon-badge-text,
+.footer-typing.hero-slogan-badge .neon-badge-text {
+  font-size: clamp(0.72rem, 2.4vw, 1.38rem);
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+
 /* Hero + footer slogans: stay on one line on phone & tablet */
 @media (max-width: 1023px) {
-  .marketing-slogan-oneline {
+  .marketing-slogan-oneline:not(.neon-badge) {
     display: flex;
     width: 100%;
     justify-content: center;
     overflow: visible;
+  }
+
+  .marketing-slogan-oneline.neon-badge,
+  .neon-badge.marketing-slogan-oneline {
+    width: fit-content !important;
+    max-width: min(96vw, 100%);
+    margin-inline: auto;
+    justify-content: center;
   }
 
   .marketing-slogan-oneline .neon-badge-text,

@@ -2,9 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ViewportDecorVideo } from "@/components/ViewportDecorVideo";
+import { PROGRAMS_SECTION_VIDEO } from "@/lib/mediaWarmCache";
 
 const VIMEO_SRC =
   "https://player.vimeo.com/video/988922121?autoplay=1&muted=1&loop=1&background=1";
+
+/** Programs band — same-origin MP4, starts immediately (no intersection defer). */
+export function ProgramsSectionBackground() {
+  return (
+    <ViewportDecorVideo
+      src={PROGRAMS_SECTION_VIDEO}
+      priority
+      alwaysOn
+      fill
+      videoClassName="scale-[1.22] opacity-60 grayscale saturate-0"
+    />
+  );
+}
 
 /** Defers Vimeo until the block is near the viewport. */
 export function DeferredVimeoProgramsBackground() {

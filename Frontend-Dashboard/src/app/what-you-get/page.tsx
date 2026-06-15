@@ -194,21 +194,19 @@ export default function WhatYouGetPage() {
             <div className="absolute inset-0 bg-black/32" aria-hidden />
           </div>
           <div className="relative z-10">
-          <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">
-            <div className="mx-auto flex w-full max-w-[920px] justify-center">
+          <div className="mx-auto flex w-full max-w-[min(1650px,96vw)] flex-col">
+            <div className="flex justify-center pb-6 pt-2 sm:pb-8 sm:pt-4">
               <NeonTypingBadge
                 phrases={['HONOUR · MONEY · POWER · FREEDOM']}
                 typingSpeed={70}
                 deletingSpeed={48}
                 pauseMs={900}
-                boxed={false}
-                className="marketing-slogan-oneline footer-typing mx-auto w-full min-w-0 max-w-[min(98vw,820px)]"
+                boxed
+                className="footer-typing hero-slogan-badge mx-auto"
               />
             </div>
-          </div>
-          <div className="mx-auto w-full max-w-[min(1650px,96vw)]">
-            <div className="pt-16 sm:pt-20">
-              <h1 className="hamburger-attract mt-4 text-6xl font-black leading-[0.98] text-zinc-100 sm:text-7xl md:text-8xl lg:text-[6.8rem]">
+            <div>
+              <h1 className="hamburger-attract text-6xl font-black leading-[0.98] text-zinc-100 sm:text-7xl md:text-8xl lg:text-[6.8rem]">
                 Access to a powerful
                 <br />
                 network

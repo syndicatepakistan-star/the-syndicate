@@ -30,13 +30,15 @@ export const MARKETING_IMAGE_URLS = ["/assets/logo.webp"] as const;
 
 /** Decorative MP4 assets — warmed in stages so they do not compete with LCP. */
 
+export const PROGRAMS_SECTION_VIDEO = "/assets/v.mp4";
+
 export const MARKETING_VIDEO_URLS = [
 
   "/assets/bg-video.mp4",
 
-  "/assets/video.mp4",
+  PROGRAMS_SECTION_VIDEO,
 
-  "/assets/v.mp4",
+  "/assets/video.mp4",
 
   "/assets/bg-video%201.mp4",
   "/assets/video2.mp4",
@@ -47,6 +49,23 @@ export const MARKETING_VIDEO_URLS = [
 /** Lower-priority GIF — warmed after hero-critical assets. */
 
 export const MARKETING_DEFERRED_IMAGE_URLS = ["/assets/tt.gif"] as const;
+
+/** Warm homepage globe tiles in parallel (same-origin thumbnails). */
+export function warmGlobeGalleryImages(urls?: readonly string[]): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  const list = urls?.length ? urls : [];
+  if (!list.length) return Promise.resolve();
+  return Promise.all(list.map((src) => warmImage(src))).then(() => undefined);
+}
+
+/** Programs hero band: background MP4 + globe tiles together. */
+export function warmProgramsSectionAssets(globeUrls?: readonly string[]): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  return Promise.all([
+    warmVideo(PROGRAMS_SECTION_VIDEO),
+    warmGlobeGalleryImages(globeUrls),
+  ]).then(() => undefined);
+}
 
 
 
@@ -338,9 +357,7 @@ export function warmHomeMedia(): Promise<void> {
 
 /**
 
- * Stage media warming: logo first, hero video next, remaining assets when idle.
-
- * Avoids saturating bandwidth during first paint.
+ * Stage media warming: logo + programs band in parallel; remaining videos when idle.
 
  */
 
@@ -354,6 +371,8 @@ export function scheduleMarketingMediaWarmup(): void {
 
   void warmImage(MARKETING_IMAGE_URLS[0]);
 
+  void warmVideo(PROGRAMS_SECTION_VIDEO);
+
 
 
   runWhenIdle(() => {
@@ -364,11 +383,15 @@ export function scheduleMarketingMediaWarmup(): void {
 
       for (const src of MARKETING_DEFERRED_IMAGE_URLS) void warmImage(src);
 
-      void warmVideosSequentially(MARKETING_VIDEO_URLS.slice(1));
+      void warmVideosSequentially(
 
-    }, 4000);
+        MARKETING_VIDEO_URLS.filter((src) => src !== PROGRAMS_SECTION_VIDEO && src !== MARKETING_VIDEO_URLS[0]),
 
-  }, 1800);
+      );
+
+    }, 2500);
+
+  }, 900);
 
 }
 

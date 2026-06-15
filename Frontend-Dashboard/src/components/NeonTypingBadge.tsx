@@ -66,8 +66,8 @@ export default function NeonTypingBadge({
     <div
       className={[
         boxed
-          ? 'neon-badge relative inline-flex max-w-full items-center rounded-full px-[clamp(1rem,4vw,2.25rem)] py-[clamp(0.65rem,2vw,1.1rem)] sm:px-9 sm:py-4'
-          : 'relative inline-flex max-w-full items-center',
+          ? 'neon-badge relative inline-flex w-fit max-w-full items-center justify-center rounded-full px-[clamp(1rem,4vw,2.25rem)] py-[clamp(0.65rem,2vw,1.1rem)] sm:px-9 sm:py-4'
+          : 'relative inline-flex max-w-full items-center justify-center',
         className ?? '',
       ].join(' ')}
       role="status"

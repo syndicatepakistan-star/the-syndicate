@@ -5,6 +5,7 @@ import {
   OFFER_PLAN_THUMB_THE_KNIGHT,
   OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
+import { VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
 const COURSE_IMAGES = "/assets/programs/cources%20imnages";
@@ -123,6 +124,19 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   31: courseThumb("micro business.jpg"),
 };
 
+/** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules). */
+export const VAULT_MODULE_THUMBNAILS: Record<string, string> = Object.fromEntries(
+  Object.values(VAULT_PACK_COURSES).flatMap((courses) =>
+    courses.map((course) => [course.plan, course.imageSrc] as const)
+  )
+);
+
+export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefined {
+  const key = vaultPlanSlug.trim().toLowerCase();
+  if (!key) return undefined;
+  return VAULT_MODULE_THUMBNAILS[key];
+}
+
 /** Deep link from homepage globe → public programs library card. */
 export function programPlaylistDeepLink(programId: number): string {
   return `/programs?program=${programId}#programs-library`;
@@ -213,6 +227,11 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("unreal engine.png"), alt: "Building Games Using Unreal Engine", fileName: "unreal engine.png", href: programPlaylistDeepLink(20), programId: 20 },
   { src: courseThumb("consistency.jpg"), alt: "Mastering Consistency", fileName: "consistency.jpg", href: programPlaylistDeepLink(6), programId: 6 },
   { src: courseThumb("print on demand.png"), alt: "Print On Demand", fileName: "print on demand.png", href: programPlaylistDeepLink(19), programId: 19 },
+];
+
+/** All unique globe tile URLs — used for parallel preload on the home page. */
+export const GLOBE_GALLERY_IMAGE_URLS: readonly string[] = [
+  ...new Set(CURATED_GLOBE_TILES.map((tile) => tile.src)),
 ];
 
 /** Shuffle tile positions on the globe without changing src/href/id bindings. */

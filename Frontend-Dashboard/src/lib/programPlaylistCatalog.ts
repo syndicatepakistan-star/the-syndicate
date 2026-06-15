@@ -2,6 +2,7 @@ import catalogEntries from "@/data/stream-playlist-catalog.json";
 import {
   getProgramDisplayTitle,
   getProgramPlaylistThumbnail,
+  getVaultModuleThumbnail,
   PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
   PUBLIC_PROGRAMS_PAGE_IDS,
 } from "@/lib/programPlaylistThumbnails";
@@ -19,6 +20,7 @@ export type ProgramPlaylistLike = {
   slug?: string | null;
   title?: string | null;
   description?: string | null;
+  vault_plan_slug?: string | null;
 };
 
 const ENTRIES = catalogEntries as ProgramPlaylistCatalogEntry[];
@@ -137,6 +139,11 @@ export function resolveProgramPlaylistThumbnail(
   playlist: ProgramPlaylistLike,
   djangoCover?: string | null
 ): string | undefined {
+  const vaultSlug = playlist.vault_plan_slug?.trim().toLowerCase();
+  if (vaultSlug) {
+    const vaultThumb = getVaultModuleThumbnail(vaultSlug);
+    if (vaultThumb) return vaultThumb;
+  }
   const catalog = findProgramCatalogEntry(playlist);
   const thumbId = catalog?.id ?? playlist.id;
   const staticThumb = getProgramPlaylistThumbnail(thumbId);

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { useGesture } from '@use-gesture/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { isImageWarm, warmGlobeGalleryImages } from '@/lib/mediaWarmCache'
 
 type ImageItem = string | { src: string; alt?: string; href?: string }
 
@@ -31,6 +32,8 @@ type DomeGalleryProps = {
   clickHref?: string
   /** When true, tiles with per-image `href` navigate on click; others enlarge. */
   navigateOnClick?: boolean
+  /** Preload all tile images in parallel and reveal tiles together (homepage globe). */
+  eagerImages?: boolean
 }
 
 type ItemDef = {
@@ -142,6 +145,7 @@ export default function DomeGallery({
   tileInsetPx = 14,
   clickHref,
   navigateOnClick = false,
+  eagerImages = false,
 }: DomeGalleryProps) {
   const router = useRouter()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -184,6 +188,36 @@ export default function DomeGallery({
   }, [])
 
   const items = useMemo(() => buildItems(images, activeSegments), [images, activeSegments])
+  const uniqueSrcs = useMemo(
+    () => [...new Set(items.map((it) => it.src).filter((src) => src.trim().length > 0))],
+    [items],
+  )
+  const [tilesReady, setTilesReady] = useState(() => {
+    if (!eagerImages || uniqueSrcs.length === 0) return true
+    return uniqueSrcs.every((src) => isImageWarm(src))
+  })
+
+  useEffect(() => {
+    if (!eagerImages || uniqueSrcs.length === 0) {
+      setTilesReady(true)
+      return
+    }
+    if (uniqueSrcs.every((src) => isImageWarm(src))) {
+      setTilesReady(true)
+      return
+    }
+    let cancelled = false
+    void warmGlobeGalleryImages(uniqueSrcs).then(() => {
+      if (!cancelled) setTilesReady(true)
+    })
+    const fallback = window.setTimeout(() => {
+      if (!cancelled) setTilesReady(true)
+    }, 1400)
+    return () => {
+      cancelled = true
+      window.clearTimeout(fallback)
+    }
+  }, [eagerImages, uniqueSrcs])
 
   const applyTransform = (xDeg: number, yDeg: number) => {
     const el = sphereRef.current
@@ -716,7 +750,10 @@ export default function DomeGallery({
         }
       >
         <main ref={mainRef} className="absolute inset-0 grid select-none place-items-center overflow-hidden bg-transparent" style={{ touchAction: 'none', WebkitUserSelect: 'none' }}>
-          <div className="stage">
+          <div
+            className="stage transition-opacity duration-300"
+            style={{ opacity: tilesReady ? 1 : 0 }}
+          >
             <div ref={sphereRef} className="sphere">
               {items.map((it, i) => (
                 <div
@@ -743,7 +780,7 @@ export default function DomeGallery({
                   }
                 >
                   <div
-                    className="item__image absolute block cursor-pointer overflow-hidden bg-gray-200 transition-transform duration-300"
+                    className="item__image absolute block cursor-pointer overflow-hidden bg-[#0c1018] transition-transform duration-300"
                     role="button"
                     tabIndex={0}
                     aria-label={it.alt || 'Open image'}
@@ -764,8 +801,8 @@ export default function DomeGallery({
                       alt={it.alt}
                       fill
                       quality={55}
-                      loading="lazy"
-                      fetchPriority="low"
+                      loading={eagerImages ? 'eager' : 'lazy'}
+                      fetchPriority={eagerImages ? 'high' : 'low'}
                       decoding="async"
                       sizes="(max-width: 768px) 34vw, (max-width: 1280px) 18vw, 220px"
                       className="h-full w-full pointer-events-none object-cover"

@@ -9,6 +9,12 @@ import {
   buildFreeTicketLoginHref,
   isFreeTicketPsychologyCourse,
 } from "@/lib/quizFreeTicketCourses";
+import {
+  buildUnlockNowProgramsHref,
+  classifyArchetypeMapLine,
+  isArchetypeCourseMapSection,
+  type ArchetypeMapLineCategory,
+} from "@/lib/quizArchetypeCourseLinks";
 
 const TRACK_BY_ARCHETYPE = {
   "Ghost Architect":
@@ -56,6 +62,67 @@ function getCleanReportLines(report: string) {
     .filter((line) => !line.includes("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN"));
 }
 
+function renderCourseActionButton(
+  courseValue: string,
+  category: ArchetypeMapLineCategory,
+  loginEmail: string
+) {
+  const showFree =
+    category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
+  if (showFree) {
+    return (
+      <a className="result-ticket-btn" href={buildFreeTicketLoginHref(loginEmail, courseValue)}>
+        Get For Free
+      </a>
+    );
+  }
+  if (category === "business" || category === "paid_psychology") {
+    const unlockHref = buildUnlockNowProgramsHref(courseValue);
+    if (unlockHref) {
+      return (
+        <a className="result-unlock-btn" href={unlockHref}>
+          Unlock Now
+        </a>
+      );
+    }
+  }
+  return null;
+}
+
+function renderArchetypeMapSectionContent(
+  content: string[],
+  sectionTitle: string,
+  loginEmail: string
+) {
+  let category: ArchetypeMapLineCategory = "other";
+  return content.map((line, idx) => {
+    const headerCategory = classifyArchetypeMapLine(line);
+    if (headerCategory) {
+      category = headerCategory;
+      return (
+        <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich result-map-category">
+          {line}
+        </p>
+      );
+    }
+    if (line.startsWith("• ")) {
+      const courseValue = line.replace("• ", "").trim();
+      const action = renderCourseActionButton(courseValue, category, loginEmail);
+      return (
+        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich result-course-line">
+          <span className="result-course-pill">{courseValue}</span>
+          {action}
+        </p>
+      );
+    }
+    return (
+      <p key={`${sectionTitle}-${idx}`} className="result-line">
+        {line}
+      </p>
+    );
+  });
+}
+
 function renderStyledReport(report: string, loginEmail: string) {
   const lines = getCleanReportLines(report);
   const reportTitle = lines.find((line) => line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER"));
@@ -90,7 +157,9 @@ function renderStyledReport(report: string, loginEmail: string) {
         {sections.map((section) => (
           <article key={section.title} className="section-card">
             <h3 className="result-subheading">{section.title}</h3>
-            {section.content.map((line, idx) => {
+            {isArchetypeCourseMapSection(section.title)
+              ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
+              : section.content.map((line, idx) => {
               if (line.startsWith("• Course:")) {
                 const courseValue = line.replace("• Course:", "").trim();
                 const showFreeTicket = isFreeTicketPsychologyCourse(courseValue);
@@ -101,7 +170,7 @@ function renderStyledReport(report: string, loginEmail: string) {
                     <span className="result-course-pill">{courseValue}</span>
                     {showFreeTicket ? (
                       <a className="result-ticket-btn" href={freeTicketHref}>
-                        Get Free Ticket
+                        Get For Free
                       </a>
                     ) : null}
                   </p>
@@ -116,7 +185,7 @@ function renderStyledReport(report: string, loginEmail: string) {
                     <span className="result-course-pill">{courseValue}</span>
                     {showFreeTicket ? (
                       <a className="result-ticket-btn" href={freeTicketHref}>
-                        Get Free Ticket
+                        Get For Free
                       </a>
                     ) : null}
                   </p>

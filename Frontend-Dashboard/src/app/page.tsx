@@ -139,6 +139,7 @@ export default async function Home() {
               typingSpeed={34}
               deletingSpeed={24}
               pauseMs={420}
+              className="marketing-slogan-oneline footer-typing mx-auto w-full max-w-[min(96vw,900px)]"
             />
           </div>
         </div>

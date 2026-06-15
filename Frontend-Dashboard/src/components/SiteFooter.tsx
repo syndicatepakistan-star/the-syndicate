@@ -61,7 +61,7 @@ export default function SiteFooter({
               deletingSpeed={sloganDeletingSpeed ?? 24}
               pauseMs={sloganPauseMs ?? 420}
               boxed={false}
-              className="footer-typing"
+              className="marketing-slogan-oneline footer-typing"
             />
           </div>
 

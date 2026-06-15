@@ -13,7 +13,7 @@ import {
 } from "react";
 import { gsap } from "gsap";
 import LuxuryRedirectOverlay from "@/components/syndicate-otp/LuxuryRedirectOverlay";
-import { getAffiliateAttribution } from "@/lib/affiliateAttribution";
+import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { captureAffiliateAuthLead } from "@/lib/captureAffiliateLead";
 import {
   getApiDisplayHint,
@@ -95,15 +95,45 @@ function isSignupRequiredResponse(response: Response, data: ApiPayload): boolean
 }
 
 function showLoginSignupRequiredError(
+  router: ReturnType<typeof useRouter>,
+  signupHref: string,
   setMessage: (value: string) => void,
   setError: (value: string) => void,
 ) {
-  setMessage("");
-  setError("Your email does not exist. Please sign up first.");
+  scheduleSignupRedirect(router, signupHref, setMessage, setError);
 }
 
 const DASHBOARD_FALLBACK =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "http://localhost:3000/dashboard";
+
+const SIGNUP_DEFAULT_REDIRECT = "/programs";
+
+const LOGIN_SIGNUP_REDIRECT_MS = 2200;
+
+function isNoAccountMessage(message: string): boolean {
+  const normalized = message.trim().toLowerCase();
+  return (
+    normalized.includes("no account") ||
+    normalized.includes("sign up first") ||
+    normalized.includes("signup required") ||
+    normalized.includes("does not exist") ||
+    normalized.includes("not registered") ||
+    normalized.includes("no active account")
+  );
+}
+
+function scheduleSignupRedirect(
+  router: ReturnType<typeof useRouter>,
+  signupHref: string,
+  setMessage: (value: string) => void,
+  setError: (value: string) => void,
+) {
+  setError("");
+  setMessage("Your email is not registered. Redirecting to sign up…");
+  window.setTimeout(() => {
+    router.replace(signupHref);
+  }, LOGIN_SIGNUP_REDIRECT_MS);
+}
 
 const OTP_PENDING_EMAIL_KEY = "syndicate_otp_pending_email_v1";
 
@@ -618,6 +648,32 @@ export default function AuthScreen({
           throw new Error(data.error || "Request failed");
         }
         const signupEmail = email.trim();
+        const pendingCheckout = hasPendingCheckoutIntent({
+          plan: normalizedPlan,
+          amount: normalizedAmount,
+          playlistId: prefilledPlaylistId,
+        });
+        if (data.otp_required) {
+          writeOtpPendingEmail(signupEmail);
+          setMessage(data.message || "Check your inbox for the verification code.");
+          redirectPendingRef.current = true;
+          const verifyNext = pendingCheckout
+            ? normalizedPostLoginNext
+            : SIGNUP_DEFAULT_REDIRECT;
+          router.replace(
+            appendOfferParams(syndicateOtpVerifyHref(signupEmail, "signup", verifyNext)),
+          );
+          return;
+        }
+        if (!pendingCheckout) {
+          writeOtpPendingEmail(signupEmail);
+          setMessage("Account created. Redirecting to programs…");
+          redirectPendingRef.current = true;
+          window.setTimeout(() => {
+            window.location.assign(SIGNUP_DEFAULT_REDIRECT);
+          }, 600);
+          return;
+        }
         const directCheckoutUrl = typeof data.checkout_url === "string" ? data.checkout_url.trim() : "";
         if (directCheckoutUrl) {
           window.location.assign(directCheckoutUrl);
@@ -628,7 +684,6 @@ export default function AuthScreen({
           throw new Error("Signup started, but checkout token is missing.");
         }
         setMessage(data.message || "Redirecting to secure checkout...");
-        const checkoutAttribution = getAffiliateAttribution();
         const checkoutPayload: Record<string, string | undefined> = {
           signup_token: signupToken,
           return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
@@ -636,8 +691,7 @@ export default function AuthScreen({
           selected_plan: normalizedPlan || undefined,
           selected_billing: normalizedBilling || undefined,
           selected_amount: normalizedAmount || undefined,
-          affiliate_id: checkoutAttribution?.affiliateId,
-          visitor_id: checkoutAttribution?.visitorId,
+          ...affiliateCheckoutFields(),
         };
         const checkout = await postJson("/api/auth/checkout/create-session/", checkoutPayload);
         if (!checkout.response.ok) {
@@ -699,9 +753,17 @@ export default function AuthScreen({
         }
         const nextUrl =
           normalizedPostLoginNext ||
-          (typeof window !== "undefined"
-            ? resolvePostOtpAppRedirect(data.redirect_url)
-            : DASHBOARD_FALLBACK);
+          (isSignupOtp
+            ? hasPendingCheckoutIntent({
+                plan: normalizedPlan,
+                amount: normalizedAmount,
+                playlistId: prefilledPlaylistId,
+              })
+              ? resolvePostOtpAppRedirect(data.redirect_url)
+              : SIGNUP_DEFAULT_REDIRECT
+            : typeof window !== "undefined"
+              ? resolvePostOtpAppRedirect(data.redirect_url)
+              : DASHBOARD_FALLBACK);
 
         if (
           hasPendingCheckoutIntent({
@@ -737,7 +799,13 @@ export default function AuthScreen({
       let { response, data } = await postJson("/api/auth/otp-login/", requestBody);
 
       if (isSignupRequiredResponse(response, data)) {
-        showLoginSignupRequiredError(setMessage, setError);
+        showLoginSignupRequiredError(
+          router,
+          appendOfferParams(syndicateOtpSignupHref(email.trim())),
+          setMessage,
+          setError,
+        );
+        redirectPendingRef.current = true;
         return;
       }
 
@@ -745,7 +813,13 @@ export default function AuthScreen({
       if (response.status === 404) {
         const retry = await postJson("/api/auth/login/", requestBody);
         if (isSignupRequiredResponse(retry.response, retry.data)) {
-          showLoginSignupRequiredError(setMessage, setError);
+          showLoginSignupRequiredError(
+            router,
+            appendOfferParams(syndicateOtpSignupHref(email.trim())),
+            setMessage,
+            setError,
+          );
+          redirectPendingRef.current = true;
           return;
         }
         response = retry.response;
@@ -754,27 +828,48 @@ export default function AuthScreen({
 
       if (!response.ok) {
         if (isSignupRequiredResponse(response, data)) {
-          showLoginSignupRequiredError(setMessage, setError);
+          showLoginSignupRequiredError(
+            router,
+            appendOfferParams(syndicateOtpSignupHref(email.trim())),
+            setMessage,
+            setError,
+          );
+          redirectPendingRef.current = true;
           return;
         }
         // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
         if (response.status === 404) {
-          throw new Error(apiErrorMessage(data, "Your email does not exist. Please sign up first."));
+          scheduleSignupRedirect(
+            router,
+            appendOfferParams(syndicateOtpSignupHref(email.trim())),
+            setMessage,
+            setError,
+          );
+          redirectPendingRef.current = true;
+          return;
         }
         if (response.status === 400 || response.status === 401) {
           const msg = apiErrorMessage(data, "Request failed");
-          const normalized = msg.toLowerCase();
-          if (
-            normalized.includes("no account") ||
-            normalized.includes("sign up first") ||
-            normalized.includes("signup required") ||
-            normalized.includes("no active account")
-          ) {
-            throw new Error("Your email does not exist. Please sign up first.");
+          if (isNoAccountMessage(msg)) {
+            scheduleSignupRedirect(
+              router,
+              appendOfferParams(syndicateOtpSignupHref(email.trim())),
+              setMessage,
+              setError,
+            );
+            redirectPendingRef.current = true;
+            return;
           }
           throw new Error(msg);
         }
-        throw new Error(apiErrorMessage(data, "Your email does not exist. Please sign up first."));
+        scheduleSignupRedirect(
+          router,
+          appendOfferParams(syndicateOtpSignupHref(email.trim())),
+          setMessage,
+          setError,
+        );
+        redirectPendingRef.current = true;
+        return;
       }
 
       if (!data.otp_required) {
@@ -798,15 +893,14 @@ export default function AuthScreen({
         return;
       }
       if (!isSignup && !isOtp) {
-        const normalized = rawMessage.toLowerCase();
-        if (
-          normalized.includes("request failed") ||
-          normalized.includes("login failed") ||
-          normalized.includes("invalid json payload") ||
-          normalized.includes("no account") ||
-          normalized.includes("sign up")
-        ) {
-          setError("Your email does not exist. Please sign up first.");
+        if (isNoAccountMessage(rawMessage)) {
+          scheduleSignupRedirect(
+            router,
+            appendOfferParams(syndicateOtpSignupHref(email.trim())),
+            setMessage,
+            setError,
+          );
+          redirectPendingRef.current = true;
         } else {
           setError(rawMessage);
         }

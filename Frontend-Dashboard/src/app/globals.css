@@ -10715,28 +10715,51 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   font-weight: 600;
 }
 
-@media (max-width: 640px) {
+/* Hero + footer slogans: stay on one line on phone & tablet */
+@media (max-width: 1023px) {
+  .marketing-slogan-oneline .neon-badge-text,
   .footer-typing .neon-badge-text {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    letter-spacing: 0.1em;
-    line-height: 1.25;
-    font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+    white-space: nowrap !important;
+    width: auto !important;
+    max-width: min(96vw, 100%);
+    display: block;
+    margin-inline: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-wrap: unset !important;
     text-align: center;
-    display: inline-block;
-    width: min(250px, 90vw);
-    text-wrap: balance;
+    line-height: 1.2 !important;
+    letter-spacing: 0.04em !important;
+    font-size: clamp(0.46rem, 2.45vw, 0.9rem) !important;
   }
 }
 
-@media (max-width: 420px) {
-  .footer-typing .neon-badge-text {
-    overflow-wrap: anywhere;
-    letter-spacing: 0.08em;
-    line-height: 1.28;
-    font-size: clamp(0.76rem, 3.4vw, 0.9rem);
-    width: min(230px, 88vw);
-    text-wrap: balance;
+/* Cyber card titles: one line + breathing room from corner brackets */
+@media (max-width: 1023px) {
+  .marketing-card-title-oneline {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: clamp(0.56rem, 3.15vw, 1.28rem) !important;
+    letter-spacing: 0.03em !important;
+    line-height: 1.15 !important;
+  }
+
+  .cyber-frame-mobile-pad {
+    padding: 2rem 1.25rem 1.4rem !important;
+  }
+
+  .cyber-frame-mobile-pad--tight {
+    padding: 1.65rem 1.1rem 1.25rem !important;
+  }
+
+  .method-cta-block {
+    padding-top: 0.35rem;
+  }
+
+  .method-cta-heading {
+    margin: 0.15rem 0 1.15rem;
+    padding-top: 0.15rem;
   }
 }
 

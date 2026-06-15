@@ -85,15 +85,13 @@ export default function OurMethodsPage() {
 
       <section className="relative z-10 px-[clamp(1rem,3vw,2.2rem)] pb-10 pt-[88px] sm:pb-12 sm:pt-[106px]">
         <div className="mx-auto max-w-[96rem]">
-          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-[72vh]" innerClassName="p-7 sm:p-10 lg:p-14">
+          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-[72vh]" innerClassName="cyber-frame-mobile-pad p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
               <div>
                 <h1
-                  className={`${publicHeadingLightning('cyan')} text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
+                  className={`${publicHeadingLightning('cyan')} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
                 >
-                  Control The
-                  <br />
-                  Operating System
+                  Control The Operating System
                 </h1>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
                   In a broken world, average behavior gets average outcomes. Our methods are engineered for operators who want structure, leverage, and execution inside high-pressure systems.

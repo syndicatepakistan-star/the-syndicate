@@ -1,4 +1,5 @@
 import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
+import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import {
   getAuthorizationHeader,
   hasSimpleAuthSessionClient,
@@ -55,8 +56,7 @@ export function buildPlanCheckoutAuthHref(params: PlanCheckoutParams): string {
   });
   const next = params.postAuthNext?.trim() ?? "";
   if (next) search.set("next", next);
-  const useLogin = next.startsWith("/dashboard");
-  return `${useLogin ? "/login" : "/signup"}?${search.toString()}`;
+  return `/signup?${search.toString()}`;
 }
 
 export function buildPlaylistCheckoutAuthHref(
@@ -69,7 +69,7 @@ export function buildPlaylistCheckoutAuthHref(
   });
   const next = postAuthNext?.trim() ?? "";
   if (next) search.set("next", next);
-  return `/login?${search.toString()}`;
+  return `/signup?${search.toString()}`;
 }
 
 export type PlanCheckoutSessionPayload = {
@@ -93,6 +93,7 @@ export async function createPlanCheckoutSession(
         selected_plan: params.plan,
         selected_billing: params.billing?.trim() || "monthly",
         selected_amount: params.amount.trim(),
+        ...affiliateCheckoutFields(),
       }),
     }
   );

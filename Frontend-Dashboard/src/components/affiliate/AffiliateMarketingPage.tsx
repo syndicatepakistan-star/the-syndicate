@@ -120,11 +120,11 @@ export default function AffiliateMarketingPage() {
             chamfer={24}
             hideOuterRing
             className="min-h-[clamp(18rem,52vh,34rem)]"
-            innerClassName="p-[clamp(1.25rem,4vw,3rem)]"
+            innerClassName="cyber-frame-mobile-pad p-[clamp(1.25rem,4vw,3rem)]"
           >
             <div className="mx-auto max-w-[min(56rem,100%)] text-center">
               <h1
-                className={`font-heading public-heading-lightning public-heading-lightning--cyan text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
+                className={`font-heading public-heading-lightning public-heading-lightning--cyan marketing-card-title-oneline text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
               >
                 Turn attention into withdrawals
               </h1>
@@ -146,7 +146,7 @@ export default function AffiliateMarketingPage() {
               accent={block.accent}
               chamfer={22}
               className="mx-auto w-full min-w-0"
-              innerClassName="p-[clamp(1rem,3.5vw,2.5rem)]"
+              innerClassName="cyber-frame-mobile-pad p-[clamp(1rem,3.5vw,2.5rem)]"
             >
               <div
                 className={cx(
@@ -163,7 +163,7 @@ export default function AffiliateMarketingPage() {
                   )}
                 >
                   <h2
-                    className={`${publicHeadingLightning("amber")} text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]`}
+                    className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]`}
                   >
                     {block.title}
                   </h2>
@@ -219,10 +219,10 @@ export default function AffiliateMarketingPage() {
           <CyberChamferFrame
             accent="amber"
             chamfer={20}
-            innerClassName="px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.75rem,5vw,3rem)] text-center"
+            innerClassName="cyber-frame-mobile-pad px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.75rem,5vw,3rem)] text-center"
           >
             <h2
-              className={`${publicHeadingLightning("amber")} text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]`}
+              className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]`}
             >
               Already cleared as a partner?
             </h2>

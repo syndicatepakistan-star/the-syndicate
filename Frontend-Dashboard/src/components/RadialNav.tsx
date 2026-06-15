@@ -179,16 +179,20 @@ export function RadialNav({
   const useCompactButtons = items.length >= 7
 
   useLayoutEffect(() => {
-    if (!rootRef.current) return
+    if (!open || !rootRef.current) return
 
+    const root = rootRef.current
     const ctx = gsap.context(() => {
-      gsap.set('[data-rnav="backdrop"]', { autoAlpha: 0 })
-      gsap.set('[data-rnav="ring"]', { rotate: 0, transformOrigin: '50% 50%' })
-      gsap.set('[data-rnav="item"]', { autoAlpha: 0 })
-    }, rootRef)
+      const backdrop = root.querySelector('[data-rnav="backdrop"]')
+      const ring = root.querySelector('[data-rnav="ring"]')
+      const items = root.querySelectorAll('[data-rnav="item"]')
+      if (backdrop) gsap.set(backdrop, { autoAlpha: 0 })
+      if (ring) gsap.set(ring, { rotate: 0, transformOrigin: '50% 50%' })
+      if (items.length) gsap.set(items, { autoAlpha: 0 })
+    }, root)
 
     return () => ctx.revert()
-  }, [])
+  }, [open])
 
   useLayoutEffect(() => {
     if (!open) return
@@ -208,15 +212,14 @@ export function RadialNav({
     if (!open) {
       tlRef.current?.kill()
       glowRef.current?.kill()
-      gsap.set('[data-rnav="backdrop"]', { autoAlpha: 0 })
-      gsap.set('[data-rnav="item"]', { autoAlpha: 0 })
       return
     }
 
     if (prefersReducedMotion) {
       const n = items.length
       const slots = getSlots(getSlotRadius(n), n)
-      gsap.set('[data-rnav="backdrop"]', { autoAlpha: 1 })
+      const backdrop = rootRef.current.querySelector('[data-rnav="backdrop"]')
+      if (backdrop) gsap.set(backdrop, { autoAlpha: 1 })
       rootRef.current.querySelectorAll<HTMLElement>('[data-rnav="item"]').forEach((el, i) => {
         const slot = slots[i % slots.length]
         if (!slot) return
@@ -273,15 +276,15 @@ export function RadialNav({
 
     tlRef.current = gsap
       .timeline({ defaults: { ease: 'power2.out' } })
-      .to('[data-rnav="backdrop"]', { autoAlpha: 1, duration: 0.32 })
+      .to(rootRef.current.querySelector('[data-rnav="backdrop"]'), { autoAlpha: 1, duration: 0.32 })
       .fromTo(
-        '[data-rnav="center"]',
+        rootRef.current.querySelector('[data-rnav="center"]'),
         { scale: 0.85, autoAlpha: 0 },
         { scale: 1, autoAlpha: 1, duration: 0.42 },
         0,
       )
       .to(
-        '[data-rnav="item"]',
+        nodes,
         {
           xPercent: -50,
           yPercent: -50,
@@ -336,9 +339,9 @@ export function RadialNav({
       .timeline({
         onComplete: onClose,
       })
-      .to('[data-rnav="backdrop"]', { autoAlpha: 0, duration: 0.24 }, 0)
+      .to(rootRef.current.querySelector('[data-rnav="backdrop"]'), { autoAlpha: 0, duration: 0.24 }, 0)
       .to(
-        '[data-rnav="item"]',
+        rootRef.current.querySelectorAll('[data-rnav="item"]'),
         {
           xPercent: -50,
           yPercent: -50,

@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
 from apps.affiliate_tracking.views import ensure_affiliate_profile_for_existing_user, referral_ids_payload
 from apps.courses.models import Course, CourseEnrollment
 from apps.portal.models import UserDashboardEntitlement
@@ -465,6 +466,23 @@ def _affiliate_attribution_payload(session_meta: dict) -> dict:
   }
 
 
+def _record_checkout_affiliate_sale(session, session_meta: dict, email: str, paid_amount: float, paid_currency: str) -> None:
+  attr = _affiliate_attribution_payload(session_meta)
+  plan_label = attr.get("plan_label") or "checkout-purchase"
+  try:
+    record_sale_from_checkout_metadata(
+      session_id=str(getattr(session, "id", "") or ""),
+      affiliate_id=attr.get("affiliate_id", ""),
+      visitor_id=attr.get("visitor_id", ""),
+      email=email,
+      purchase_amount=paid_amount,
+      currency=paid_currency,
+      plan_label=plan_label,
+    )
+  except Exception:
+    logger.exception("Checkout succeeded but affiliate sale attribution failed")
+
+
 def _apply_purchased_plan(user: User, plan: str) -> None:
   from apps.portal.entitlements import apply_purchased_plan
 
@@ -697,11 +715,16 @@ def signup_view(request):
   SignupOTP.objects.filter(email=email).delete()
   LoginOTP.objects.filter(email=email).delete()
 
+  signup_err = _create_and_email_signup_otp(email)
+  if signup_err is not None:
+    return signup_err
+
   return JsonResponse(
     {
-      "message": "Signup started. Continue to checkout.",
+      "message": "Verification code sent. Check your email to continue.",
       "email": email,
       "signup_token": str(pending.token),
+      "otp_required": True,
     },
     status=200,
   )
@@ -1015,6 +1038,18 @@ def create_checkout_session_view(request):
   if meta_visitor_id:
     metadata["visitor_id"] = meta_visitor_id
 
+  explicit_amount = _parse_pence_from_amount_payload(payload.get("selected_amount"))
+  if (
+    pending_signup is not None
+    and selected_playlist is None
+    and not plan_payload
+    and explicit_amount is None
+  ):
+    return _json_error(
+      "No purchase selected. Verify your email, then choose a program to unlock.",
+      status=400,
+    )
+
   if not settings.STRIPE_SECRET_KEY:
     return _json_error(
       "Stripe is not configured. Add STRIPE_SECRET_KEY in backend .env.",
@@ -1032,7 +1067,7 @@ def create_checkout_session_view(request):
   unit_amount = (
     int(max(50, round(float(selected_playlist.price) * 100)))
     if selected_playlist is not None
-    else (_parse_pence_from_amount_payload(payload.get("selected_amount")) or settings.CHECKOUT_AMOUNT_PENCE)
+    else (explicit_amount or settings.CHECKOUT_AMOUNT_PENCE)
   )
   product_name = _checkout_product_name(
     plan_raw=plan_payload,
@@ -1213,6 +1248,7 @@ def checkout_success_view(request):
     _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
     referral_ids = _safe_affiliate_referral_ids(user)
+    _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
 
     return JsonResponse(
       {
@@ -1263,6 +1299,7 @@ def checkout_success_view(request):
     _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
     referral_ids = _safe_affiliate_referral_ids(user)
+    _record_checkout_affiliate_sale(session, session_meta, returning.email, paid_amount, paid_currency)
     return JsonResponse(
       {
         "message": "Payment successful. Thank you for your purchase.",
@@ -1312,6 +1349,7 @@ def checkout_success_view(request):
     _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     auth_token, _ = Token.objects.get_or_create(user=user)
     referral_ids = _safe_affiliate_referral_ids(user)
+    _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
     return JsonResponse(
       {
         "message": "Payment successful.",

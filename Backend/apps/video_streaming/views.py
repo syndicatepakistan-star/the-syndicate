@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import JsonResponse
 
-from apps.portal.models import UserDashboardEntitlement
+from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
 from apps.portal.king_access import king_allowed_playlist_ids
 from apps.video_streaming.entitlements import (
     playlist_included_by_entitlement,
@@ -436,7 +436,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
             if parsed.scheme in ("http", "https") and bool(parsed.netloc):
                 frontend_base = f"{parsed.scheme}://{parsed.netloc}"
 
-        def _session_create(pm_types: list[str]):
+        def _session_create(pm_types: list[str], metadata: dict):
             return stripe.checkout.Session.create(
                 mode="payment",
                 payment_method_types=pm_types,
@@ -453,16 +453,27 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 ],
                 success_url=f"{frontend_base}/dashboard?playlist_checkout=success&session_id={{CHECKOUT_SESSION_ID}}&playlist_id={playlist.id}",
                 cancel_url=f"{frontend_base}/programs?playlist_checkout=cancelled&playlist_id={playlist.id}",
-                metadata={
-                    "checkout_kind": "playlist_unlock",
-                    "playlist_id": str(playlist.id),
-                    "user_id": str(request.user.id),
-                },
+                metadata=metadata,
             )
+
+        meta_affiliate_id = ""
+        meta_visitor_id = ""
+        if isinstance(request.data, dict):
+            meta_affiliate_id = str(request.data.get("affiliate_id", "")).strip()
+            meta_visitor_id = str(request.data.get("visitor_id", "")).strip()
+        session_metadata = {
+            "checkout_kind": "playlist_unlock",
+            "playlist_id": str(playlist.id),
+            "user_id": str(request.user.id),
+        }
+        if meta_affiliate_id:
+            session_metadata["affiliate_id"] = meta_affiliate_id
+        if meta_visitor_id:
+            session_metadata["visitor_id"] = meta_visitor_id
 
         pm_list = list(settings.STRIPE_CHECKOUT_PAYMENT_METHOD_TYPES)
         try:
-            session = _session_create(pm_list)
+            session = _session_create(pm_list, session_metadata)
         except stripe.error.InvalidRequestError as exc:
             err_txt = str(exc).lower()
             match = re.search(r"payment method type provided:\s*([a-z0-9_]+)\s+is invalid", err_txt)
@@ -471,7 +482,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
             if not pm_retry:
                 pm_retry = ["card"]
             try:
-                session = _session_create(pm_retry)
+                session = _session_create(pm_retry, session_metadata)
             except stripe.error.StripeError as exc2:
                 msg = getattr(exc2, "user_message", None) or str(exc2) or "Stripe could not start checkout."
                 return Response({"detail": msg}, status=status.HTTP_400_BAD_REQUEST)
@@ -539,7 +550,7 @@ class StreamPlaylistCheckoutSuccessView(APIView):
             if isinstance(data_attr, dict):
                 return dict(data_attr)
             result = {}
-            for k in ("playlist_id", "checkout_kind", "user_id"):
+            for k in ("playlist_id", "checkout_kind", "user_id", "affiliate_id", "visitor_id"):
                 try:
                     v = raw[k]
                 except Exception:
@@ -583,6 +594,20 @@ class StreamPlaylistCheckoutSuccessView(APIView):
         purchase.currency = currency
         purchase.paid_at = timezone.now()
         purchase.save(update_fields=["status", "stripe_session_id", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
+        buyer_email = (request.user.email or "").strip().lower()
+        if buyer_email:
+            try:
+                record_sale_from_checkout_metadata(
+                    session_id=session_id,
+                    affiliate_id=str(metadata.get("affiliate_id", "")).strip(),
+                    visitor_id=str(metadata.get("visitor_id", "")).strip(),
+                    email=buyer_email,
+                    purchase_amount=amount_paid,
+                    currency=currency,
+                    plan_label=f"{playlist.title} playlist",
+                )
+            except Exception:
+                logger.exception("Playlist checkout succeeded but affiliate sale attribution failed")
         return Response(
             {"message": "Playlist unlocked successfully.", "playlist_id": playlist.id, "is_unlocked": True},
             status=status.HTTP_200_OK,

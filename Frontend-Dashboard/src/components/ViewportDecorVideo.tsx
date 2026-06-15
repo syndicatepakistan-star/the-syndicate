@@ -17,6 +17,9 @@ type ViewportDecorVideoProps = {
   preferStaticOnMobile?: boolean;
 };
 
+const DECOR_VIDEO_BACKDROP =
+  "radial-gradient(ellipse 90% 70% at 50% 18%, rgba(34,211,238,0.14), transparent 58%), radial-gradient(ellipse 80% 55% at 82% 72%, rgba(168,85,247,0.12), transparent 52%), linear-gradient(180deg, #060a14 0%, #030508 45%, #000000 100%)";
+
 function usePreferStaticBackdrop(enabled: boolean): boolean {
   const [preferStatic, setPreferStatic] = useState(false);
 
@@ -25,7 +28,7 @@ function usePreferStaticBackdrop(enabled: boolean): boolean {
       setPreferStatic(false);
       return;
     }
-    const narrow = window.matchMedia("(max-width: 767px)");
+    const narrow = window.matchMedia("(max-width: 479px)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setPreferStatic(narrow.matches || reduced.matches);
     sync();
@@ -53,6 +56,7 @@ export function ViewportDecorVideo({
   const ref = useRef<HTMLVideoElement>(null);
   const cachedOnMount = useRef(isVideoWarm(src));
   const useStaticBackdrop = usePreferStaticBackdrop(preferStaticOnMobile);
+  const [videoReady, setVideoReady] = useState(cachedOnMount.current);
 
   useLayoutEffect(() => {
     if (useStaticBackdrop) return;
@@ -71,6 +75,11 @@ export function ViewportDecorVideo({
     const el = ref.current;
     if (!el) return;
 
+    const markReady = () => setVideoReady(true);
+    el.addEventListener("loadeddata", markReady);
+    el.addEventListener("canplay", markReady);
+    if (el.readyState >= 2) markReady();
+
     void warmVideo(src).then(() => {
       if (priority || alwaysOn) {
         void el.play().catch(() => {});
@@ -79,30 +88,38 @@ export function ViewportDecorVideo({
 
     if (alwaysOn) {
       void el.play().catch(() => {});
-      return;
-    }
+    } else {
+      const sync = (playing: boolean) => {
+        if (playing) {
+          void el.play().catch(() => {});
+        } else {
+          el.pause();
+        }
+      };
 
-    const sync = (playing: boolean) => {
-      if (playing) {
+      if (priority) {
         void el.play().catch(() => {});
-      } else {
-        el.pause();
       }
-    };
 
-    if (priority) {
-      void el.play().catch(() => {});
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          sync(entry.isIntersecting);
+        },
+        { rootMargin: priority ? "0px 0px" : "160px 0px", threshold: priority ? 0 : 0.04 },
+      );
+
+      observer.observe(el);
+      return () => {
+        el.removeEventListener("loadeddata", markReady);
+        el.removeEventListener("canplay", markReady);
+        observer.disconnect();
+      };
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        sync(entry.isIntersecting);
-      },
-      { rootMargin: priority ? "0px 0px" : "160px 0px", threshold: priority ? 0 : 0.04 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      el.removeEventListener("loadeddata", markReady);
+      el.removeEventListener("canplay", markReady);
+    };
   }, [src, priority, alwaysOn, useStaticBackdrop]);
 
   if (useStaticBackdrop) {
@@ -111,8 +128,7 @@ export function ViewportDecorVideo({
         className={[className, opacityClassName].filter(Boolean).join(" ")}
         style={{
           ...style,
-          background:
-            "radial-gradient(ellipse 90% 70% at 50% 18%, rgba(34,211,238,0.14), transparent 58%), radial-gradient(ellipse 80% 55% at 82% 72%, rgba(168,85,247,0.12), transparent 52%), linear-gradient(180deg, #060a14 0%, #030508 45%, #000000 100%)",
+          background: DECOR_VIDEO_BACKDROP,
         }}
         aria-hidden
       />
@@ -120,18 +136,31 @@ export function ViewportDecorVideo({
   }
 
   return (
-    <video
-      ref={ref}
-      className={[className, opacityClassName].filter(Boolean).join(" ")}
-      style={{ ...style, transform: "translateZ(0)" }}
-      muted
-      loop
-      playsInline
-      preload={priority || alwaysOn ? "auto" : "metadata"}
-      disablePictureInPicture
+    <div
+      className={["relative overflow-hidden", className, opacityClassName].filter(Boolean).join(" ")}
+      style={style}
       aria-hidden
     >
-      <source src={src} type="video/mp4" />
-    </video>
+      <div
+        className="absolute inset-0 h-full w-full"
+        style={{ background: DECOR_VIDEO_BACKDROP }}
+      />
+      <video
+        ref={ref}
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
+        style={{
+          transform: "translateZ(0)",
+          opacity: videoReady ? 1 : 0,
+        }}
+        muted
+        loop
+        playsInline
+        autoPlay={priority || alwaysOn}
+        preload={priority || alwaysOn ? "auto" : "metadata"}
+        disablePictureInPicture
+      >
+        <source src={src} type="video/mp4" />
+      </video>
+    </div>
   );
 }

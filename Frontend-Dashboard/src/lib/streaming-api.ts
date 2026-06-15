@@ -1,4 +1,5 @@
 import { djangoStreamingApiUrl } from "@/lib/djangoBackendOrigin";
+import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { portalFetch, resolveClientApiUrl } from "@/lib/portal-api";
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
 
@@ -224,7 +225,13 @@ export async function createPlaylistCheckoutSession(
 ): Promise<{ checkout_url?: string; session_id?: string; playlist_id?: number; is_unlocked?: boolean; message?: string }> {
   const res = await portalFetch<{ checkout_url?: string; session_id?: string; playlist_id?: number; is_unlocked?: boolean; message?: string; detail?: string }>(
     `/api/streaming/playlists/${playlistId}/checkout/`,
-    { method: "POST", body: JSON.stringify({ return_base_url: options?.returnBaseUrl || "" }) }
+    {
+      method: "POST",
+      body: JSON.stringify({
+        return_base_url: options?.returnBaseUrl || "",
+        ...affiliateCheckoutFields(),
+      }),
+    }
   );
   if (!res.ok) {
     throw new Error(errMessage(res.status, res.data, "Could not start playlist checkout."));

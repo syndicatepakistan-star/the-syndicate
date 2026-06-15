@@ -44,6 +44,16 @@ export function clearAffiliateAttribution() {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+/** Stripe checkout payload fields from stored referral attribution (30-day window). */
+export function affiliateCheckoutFields(): Record<string, string> {
+  const attr = getAffiliateAttribution();
+  if (!attr?.affiliateId || !attr?.visitorId) return {};
+  return {
+    affiliate_id: attr.affiliateId,
+    visitor_id: attr.visitorId,
+  };
+}
+
 export function resolveAffiliateDestination(offer: string): string {
   if (offer === "singleprogram" || offer === "single-program") return "/";
   return "/";

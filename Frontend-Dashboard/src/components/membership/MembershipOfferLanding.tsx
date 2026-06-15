@@ -190,7 +190,7 @@ function ChannelCard({
       <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" />
       <span className={cx("pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-[3px] border-t-[3px]", item.stepBorder)} />
       <span className={cx("pointer-events-none absolute bottom-3 right-3 h-7 w-7 border-b-[3px] border-r-[3px]", item.stepBorder)} />
-      <div className="relative z-10 rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-[1px] transition-transform duration-300 group-hover:scale-[1.02] sm:p-3">
+      <div className="relative z-10 rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-3.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-[1px] transition-transform duration-300 group-hover:scale-[1.02] sm:p-4">
         <p
           className={cx(
             "inline-flex rounded-md border-2 bg-[linear-gradient(180deg,rgba(6,4,12,0.88),rgba(2,2,8,0.92))] px-3 py-1 text-[11px] font-bold tracking-[0.24em] text-zinc-100",
@@ -202,7 +202,7 @@ function ChannelCard({
         <h3
           className={cx(
             publicHeadingLightning("amber"),
-            "mt-3 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]",
+            "marketing-card-title-oneline mt-3.5 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]",
             item.titleText
           )}
         >
@@ -278,13 +278,11 @@ export function MembershipOfferLanding({
       )}
     >
       <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
-          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="p-7 sm:p-10 lg:p-14">
+          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
               <div className="min-w-0">
-                <h1 className={`${publicHeadingLightning("amber")} text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
-                  Enter
-                  <br />
-                  The Knight Tier
+                <h1 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
+                  Enter The Knight Tier
                 </h1>
                 <p className="mt-5 max-w-2xl font-mono text-base leading-relaxed text-zinc-100/85 sm:text-lg">
                   {HERO_INTRO}
@@ -346,11 +344,11 @@ export function MembershipOfferLanding({
                 key={block.id}
                 className={isPrimary ? "grid items-start gap-4 lg:grid-cols-[1fr_200px]" : "grid items-start"}
               >
-                <CyberChamferFrame accent={accentFrame(block.accent)} chamfer={22} innerClassName="p-6 sm:p-8">
+                <CyberChamferFrame accent={accentFrame(block.accent)} chamfer={22} innerClassName="cyber-frame-mobile-pad p-6 sm:p-8">
                   <h3
                     className={cx(
                       publicHeadingLightning("amber"),
-                      "text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]",
+                      "marketing-card-title-oneline text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]",
                       titleColor[block.accent]
                     )}
                   >

@@ -49,11 +49,11 @@ export function SyndicateImageCopySection({
 
   return (
     <CyberChamferFrame accent={frameAccent} chamfer={22} className="w-full">
-      <div className="p-6 sm:p-7 md:p-8">
+      <div className="cyber-frame-mobile-pad p-6 sm:p-7 md:p-8">
         <h2
           className={cx(
             publicHeadingLightning(lightning),
-            "text-balance text-center text-[clamp(1.35rem,3.2vw,2.35rem)] font-black uppercase leading-[1.05] tracking-[0.06em] sm:text-left"
+            "marketing-card-title-oneline text-balance text-center text-[clamp(1.35rem,3.2vw,2.35rem)] font-black uppercase leading-[1.05] tracking-[0.06em] sm:text-left"
           )}
         >
           {title}

@@ -269,6 +269,7 @@ export default function CheckoutSuccessScreen({
         if (effectiveAttribution && buyerEmail) {
           const purchaseAmountValue = checkoutAmount && checkoutAmount > 0 ? checkoutAmount : 0;
           const commissionRate = purchaseAmountValue >= 333 ? 0.3 : 0.15;
+          const serverRecordedSale = Boolean(payloadAffiliateId && payloadVisitorId);
           try {
             // Auth-slot lead: fills "Sign up lead" if it wasn't already filled by the OTP flow,
             // and is idempotent on repeat purchases (the backend dedupes on (referral, visitor_id, kind)).
@@ -281,21 +282,27 @@ export default function CheckoutSuccessScreen({
           } catch {
             // Keep going: sale + earnings should still be recorded even if lead call fails.
           }
-          try {
-            await trackSale(
-              effectiveAttribution.affiliateId,
-              effectiveAttribution.visitorId,
-              buyerEmail,
-              purchaseAmountValue.toFixed(2),
-              {
-                purchase_amount: purchaseAmountValue.toFixed(2),
-                commission_rate: commissionRate,
-                offer: effectiveAttribution.offer,
-                tier: effectiveAttribution.tier,
-                program: effectiveAttribution.program,
-                currency: (typeof data.currency === "string" && data.currency.trim()) ? data.currency.trim().toLowerCase() : "usd",
-              }
-            );
+          if (!serverRecordedSale) {
+            try {
+              await trackSale(
+                effectiveAttribution.affiliateId,
+                effectiveAttribution.visitorId,
+                buyerEmail,
+                purchaseAmountValue.toFixed(2),
+                {
+                  purchase_amount: purchaseAmountValue.toFixed(2),
+                  commission_rate: commissionRate,
+                  offer: effectiveAttribution.offer,
+                  tier: effectiveAttribution.tier,
+                  program: effectiveAttribution.program,
+                  currency: (typeof data.currency === "string" && data.currency.trim()) ? data.currency.trim().toLowerCase() : "usd",
+                }
+              );
+            } catch {
+              // Payment is already successful; keep UX flow even if affiliate sale sync fails.
+            }
+          }
+          if (purchaseAmountValue > 0 || serverRecordedSale) {
             // IMPORTANT: keep the attribution alive in localStorage so subsequent purchases
             // by the same visitor (within the 30-day window) keep crediting this affiliate.
             // We refresh `createdAt` to slide the window forward on every successful sale.
@@ -306,8 +313,6 @@ export default function CheckoutSuccessScreen({
               tier: effectiveAttribution.tier,
               program: effectiveAttribution.program,
             });
-          } catch {
-            // Payment is already successful; keep UX flow even if affiliate sale sync fails.
           }
         }
 

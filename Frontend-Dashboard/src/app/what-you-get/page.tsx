@@ -99,15 +99,15 @@ function WhatYouGetNextMovePanel({
 }) {
   return (
     <div className={cx('relative', className)}>
-      <CyberChamferFrame accent="amber" chamfer={20} innerClassName="p-5 sm:p-6">
+      <CyberChamferFrame accent="amber" chamfer={20} innerClassName="cyber-frame-mobile-pad px-5 py-7 pt-9 sm:p-8 sm:pt-10">
         <p
           id={headingId}
-          className={`${publicHeadingLightning('amber')} font-mono text-xs font-bold uppercase tracking-[0.32em] sm:text-sm`}
+          className={`${publicHeadingLightning('amber')} marketing-card-title-oneline font-mono text-xs font-bold uppercase tracking-[0.32em] sm:text-sm`}
         >
           Next move
         </p>
         <nav
-          className="mx-auto mt-5 grid max-w-[34rem] gap-2.5 sm:max-w-[38rem] sm:grid-cols-3 sm:gap-3"
+          className="mx-auto mt-6 grid max-w-[34rem] gap-3 sm:max-w-[38rem] sm:grid-cols-3 sm:gap-3 sm:mt-5"
           aria-label="Next steps"
         >
           {NEXT_MOVE_LINKS.map((item) => (
@@ -181,9 +181,9 @@ export default function WhatYouGetPage() {
             src="/assets/bg-video.mp4"
             priority
             alwaysOn
-            preferStaticOnMobile
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
           />
+          <div className="pointer-events-none absolute inset-0 bg-black/35" aria-hidden />
           <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">
             <div className="mx-auto flex w-full max-w-[920px] justify-center">
               <NeonTypingBadge
@@ -192,7 +192,7 @@ export default function WhatYouGetPage() {
                 deletingSpeed={48}
                 pauseMs={900}
                 boxed={false}
-                className="footer-typing mx-auto w-full max-w-[min(92vw,720px)]"
+                className="marketing-slogan-oneline footer-typing mx-auto w-full max-w-[min(96vw,720px)]"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function WhatYouGetPage() {
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-10 pt-8 sm:pb-14 sm:pt-10">
               <div className="mx-auto max-w-[96rem]">
                 <h2
-                  className={`${publicHeadingLightning('cyan')} text-[clamp(1.75rem,4vw,3rem)] font-black uppercase tracking-[0.08em]`}
+                  className={`${publicHeadingLightning('cyan')} marketing-card-title-oneline text-[clamp(1.75rem,4vw,3rem)] font-black uppercase tracking-[0.08em]`}
                 >
                   {ALLIANCE_SECTION_HEADLINE}
                 </h2>
@@ -247,13 +247,13 @@ export default function WhatYouGetPage() {
                       decorSize="compact"
                       flatPanel
                       className="h-full min-h-0 w-full min-w-0"
-                      innerClassName="flex h-full min-h-0 flex-col p-6 sm:p-6"
+                      innerClassName="cyber-frame-mobile-pad flex h-full min-h-0 flex-col p-6 sm:p-6"
                       contentClassName="flex min-h-0 flex-1 flex-col"
                     >
                       <h3
                         className={cx(
                           publicHeadingLightning('amber'),
-                          'text-xl font-black uppercase tracking-[0.06em] sm:text-2xl',
+                          'marketing-card-title-oneline text-xl font-black uppercase tracking-[0.06em] sm:text-2xl',
                           pillarTitleClass[p.accent]
                         )}
                       >
@@ -269,11 +269,11 @@ export default function WhatYouGetPage() {
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-10 sm:pb-14">
               <div className="mx-auto max-w-[96rem]">
                 <div className="grid items-start gap-6 lg:grid-cols-[1fr_220px] xl:grid-cols-[1fr_260px]">
-                  <CyberChamferFrame accent="violet" chamfer={22} className="min-h-0" innerClassName="p-6 sm:p-8">
+                  <CyberChamferFrame accent="violet" chamfer={22} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-6 sm:p-8">
                     <h2
                       className={cx(
                         publicHeadingLightning('amber'),
-                        'max-w-[22ch] text-balance text-[clamp(1.85rem,3.6vw,3.1rem)] font-black uppercase leading-[0.98] tracking-[0.05em] text-zinc-50 [text-shadow:0_0_18px_rgba(251,113,133,0.55),0_0_42px_rgba(168,85,247,0.28)]'
+                        'marketing-card-title-oneline max-w-[22ch] text-balance text-[clamp(1.85rem,3.6vw,3.1rem)] font-black uppercase leading-[0.98] tracking-[0.05em] text-zinc-50 [text-shadow:0_0_18px_rgba(251,113,133,0.55),0_0_42px_rgba(168,85,247,0.28)]'
                       )}
                     >
                       Influence without rot
@@ -319,9 +319,9 @@ export default function WhatYouGetPage() {
 
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-12 sm:pb-16">
               <div className="mx-auto max-w-[96rem]">
-                <CyberChamferFrame accent="hero" chamfer={20} innerClassName="p-6 sm:p-10">
+                <CyberChamferFrame accent="hero" chamfer={20} innerClassName="cyber-frame-mobile-pad p-6 sm:p-10">
                   <h2
-                    className={`${publicHeadingLightning('cyan')} text-[clamp(1.65rem,3.8vw,2.75rem)] font-black uppercase tracking-[0.06em]`}
+                    className={`${publicHeadingLightning('cyan')} marketing-card-title-oneline text-[clamp(1.65rem,3.8vw,2.75rem)] font-black uppercase tracking-[0.06em]`}
                   >
                     {ROYAL_PATH_TITLE}
                   </h2>
@@ -411,9 +411,9 @@ export default function WhatYouGetPage() {
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-1/2 h-[280px] w-[min(100%,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/10 blur-[100px]" />
         </div>
-        <div className="relative mx-auto flex w-full max-w-[min(100%,80rem)] items-center justify-center gap-2 px-1 sm:gap-4 lg:gap-6">
+        <div className="relative mx-auto flex w-full max-w-[min(100%,80rem)] flex-col items-center justify-center gap-6 px-2 sm:px-4 lg:flex-row lg:gap-6">
           <div
-            className="relative mx-3 h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:h-48 lg:w-48 xl:h-52 xl:w-52"
+            className="relative mx-3 hidden h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:block lg:h-48 lg:w-48 xl:h-52 xl:w-52"
             aria-hidden
           >
             <div className="absolute inset-0">
@@ -430,7 +430,7 @@ export default function WhatYouGetPage() {
             <WhatYouGetNextMovePanel headingId="what-you-get-next-move-heading" />
           </div>
           <div
-            className="relative mx-3 h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:h-48 lg:w-48 xl:h-52 xl:w-52"
+            className="relative mx-3 hidden h-[7.25rem] w-[7.25rem] shrink-0 sm:mx-6 sm:h-40 sm:w-40 md:mx-8 md:h-44 md:w-44 lg:mx-10 lg:block lg:h-48 lg:w-48 xl:h-52 xl:w-52"
             aria-hidden
           >
             <div className="absolute inset-0">

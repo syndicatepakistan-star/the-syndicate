@@ -58,11 +58,11 @@ export function MethodSplitCard({
       accent={frameAccent(accent)}
       chamfer={22}
       className="w-full"
-      innerClassName="p-6 sm:p-8 lg:p-10"
+      innerClassName="cyber-frame-mobile-pad p-6 sm:p-8 lg:p-10"
     >
       <div className="grid gap-6 text-left lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)] lg:items-stretch xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] xl:gap-10">
         <div className="flex min-w-0 flex-col justify-center">
-          <h2 className={`${publicHeadingLightning("amber")} ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
+          <h2 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
 
           {moneyPowerTitle ? (
             <CyberInsetPanel variant="blood" className="mt-4">

@@ -71,7 +71,7 @@ export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
   17: "N8N Ai Automation",
   19: "Print On Demand",
   25: "Amazon KDP",
-  30: "Micro Business Protocols",
+  31: "Micro Business Protocols",
 };
 
 /** Display order on /programs (Business Psychology column). */
@@ -120,8 +120,8 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   27: courseThumb("affiliate-marketing.png"),
   28: courseThumb("react.jpeg"),
   29: courseThumb("1 minute scalpel.jpeg"),
-  30: courseThumb("micro business.jpg"),
-  31: courseThumb("uncertainty.jpg"),
+  30: courseThumb("uncertainty.jpg"),
+  31: courseThumb("micro business.jpg"),
 };
 
 /** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules). */
@@ -212,7 +212,7 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("9-5.png"), alt: "The 9 to 5 Exit Strategy", fileName: "9-5.png", href: programPlaylistDeepLink(1), programId: 1 },
   { src: courseThumb("compound effect.jpg"), alt: "The Compound Effect", fileName: "compound effect.jpg", href: programPlaylistDeepLink(12), programId: 12 },
   { src: courseThumb("hustle.png"), alt: "Hustle Hard", fileName: "hustle.png", href: programPlaylistDeepLink(3), programId: 3 },
-  { src: courseThumb("micro business.jpg"), alt: "Micro Business Protocols", fileName: "micro business.jpg", href: programPlaylistDeepLink(30), programId: 30 },
+  { src: courseThumb("micro business.jpg"), alt: "Micro Business Protocols", fileName: "micro business.jpg", href: programPlaylistDeepLink(31), programId: 31 },
   { src: courseThumb("secret.png"), alt: "The Secret To Transformation", fileName: "secret.png", href: programPlaylistDeepLink(9), programId: 9 },
   { src: courseThumb("flutter-app-building.png"), alt: "App Building (using Flutter)", fileName: "flutter-app-building.png", href: programPlaylistDeepLink(21), programId: 21 },
   { src: courseThumb("automaton-name-change.png"), alt: "AI Automations", fileName: "automaton-name-change.png", href: programPlaylistDeepLink(16), programId: 16 },
@@ -223,7 +223,7 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("python.png"), alt: "Python Programming", fileName: "python.png", href: programPlaylistDeepLink(24), programId: 24 },
   { src: courseThumb("N8N Ai.jpg"), alt: "N8N Ai Automation", fileName: "N8N Ai.jpg", href: programPlaylistDeepLink(17), programId: 17 },
   { src: courseThumb("framer.png"), alt: "Framer Crash Course", fileName: "framer.png", href: programPlaylistDeepLink(14), programId: 14 },
-  { src: courseThumb("uncertainty.jpg"), alt: "Mastering Risk and Uncertainty", fileName: "uncertainty.jpg", href: programPlaylistDeepLink(31), programId: 31 },
+  { src: courseThumb("uncertainty.jpg"), alt: "Mastering Risk and Uncertainty", fileName: "uncertainty.jpg", href: programPlaylistDeepLink(30), programId: 30 },
   { src: courseThumb("unreal engine.png"), alt: "Building Games Using Unreal Engine", fileName: "unreal engine.png", href: programPlaylistDeepLink(20), programId: 20 },
   { src: courseThumb("consistency.jpg"), alt: "Mastering Consistency", fileName: "consistency.jpg", href: programPlaylistDeepLink(6), programId: 6 },
   { src: courseThumb("print on demand.png"), alt: "Print On Demand", fileName: "print on demand.png", href: programPlaylistDeepLink(19), programId: 19 },

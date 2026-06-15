@@ -507,15 +507,6 @@ export function PricingPage({
                   <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
                     Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and opportunity.
                   </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Enter the Syndicate.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Choose your path.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Build your advantage.
-                  </p>
                 </div>
                 {checkoutError ? (
                   <p className="mx-auto mt-4 max-w-3xl text-center text-sm text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.45)]">

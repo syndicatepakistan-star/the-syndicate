@@ -163,14 +163,14 @@
   },
   {
     "id": 30,
-    "slug": "the-micro-business-protocol",
-    "title": "Micro Business Protocols",
-    "description": "The Micro Business Protocol — strategic psychology and execution framework for building lean, high-leverage micro businesses without corporate overhead."
-  },
-  {
-    "id": 31,
     "slug": "mastering-risk-and-uncertainty",
     "title": "Mastering Risk and Uncertainty",
     "description": "Mastering Risk and Uncertainty — turn fear and operational friction into data-driven decisions that protect your war chest and compound leverage."
+  },
+  {
+    "id": 31,
+    "slug": "the-micro-business-protocol",
+    "title": "Micro Business Protocols",
+    "description": "The Micro Business Protocol — strategic psychology and execution framework for building lean, high-leverage micro businesses without corporate overhead."
   }
 ]

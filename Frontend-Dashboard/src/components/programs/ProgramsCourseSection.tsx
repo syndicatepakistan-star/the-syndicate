@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
@@ -25,6 +25,7 @@ import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylist
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -73,6 +74,9 @@ const COURSE_CARD_THEMES = [
 
 const PLAYLIST_CARD_THEMES = [
   {
+    spotlightA: "217,70,239",
+    spotlightB: "139,92,246",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(217,70,239,0.42)_0%,rgba(139,92,246,0.28)_35%,rgba(0,0,0,0)_75%)]",
     glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
     hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-violet-300/95 via-purple-400/95 to-fuchsia-300/95",
@@ -87,6 +91,9 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-fuchsia-300/60",
   },
   {
+    spotlightA: "34,211,238",
+    spotlightB: "14,165,233",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.4)_0%,rgba(14,165,233,0.28)_35%,rgba(0,0,0,0)_75%)]",
     glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
     hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
     ring: "from-cyan-300/95 via-sky-400/95 to-blue-300/95",
@@ -101,9 +108,10 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-cyan-300/60",
   },
   {
+    spotlightA: "52,211,153",
+    spotlightB: "16,185,129",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.42)_0%,rgba(16,185,129,0.28)_35%,rgba(0,0,0,0)_75%)]",
     glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
-    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
-    ring: "from-emerald-300/95 via-teal-400/95 to-lime-300/95",
     title: "text-white",
     panel: "border-emerald-300/45 bg-emerald-950/30",
     mediaBorder: "border-emerald-300/35",
@@ -115,9 +123,10 @@ const PLAYLIST_CARD_THEMES = [
     dominantBorder: "border-emerald-300/60",
   },
   {
+    spotlightA: "245,158,11",
+    spotlightB: "234,88,12",
+    aura: "bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.45)_0%,rgba(234,88,12,0.28)_35%,rgba(0,0,0,0)_75%)]",
     glow: "shadow-[0_4px_16px_rgba(0,0,0,0.45)]",
-    hoverGlow: "hover:shadow-[0_6px_20px_rgba(0,0,0,0.5)]",
-    ring: "from-amber-300/95 via-yellow-400/95 to-orange-300/95",
     title: "text-white",
     panel: "border-amber-300/45 bg-amber-950/30",
     mediaBorder: "border-amber-300/35",
@@ -223,6 +232,9 @@ export function ProgramsCourseSection({
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [bundleCheckoutBusy, setBundleCheckoutBusy] = useState(false);
   const [playlistDescriptionModal, setPlaylistDescriptionModal] = useState<StreamPlaylistListItem | null>(null);
+  const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
+  const [highlightProgramId, setHighlightProgramId] = useState<number | null>(null);
+  const highlightHandledRef = useRef(false);
 
   const reloadApiCourses = useCallback(async () => {
     const res = await fetchCoursesList();
@@ -295,6 +307,41 @@ export function ProgramsCourseSection({
       window.removeEventListener("playlist-checkout-confirmed", onConfirmed);
     };
   }, [reloadStreamPlaylists]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = new URLSearchParams(window.location.search).get("program");
+    if (!raw || !/^\d+$/.test(raw)) return;
+    const id = Number(raw);
+    if (Number.isFinite(id) && id > 0) setHighlightProgramId(id);
+  }, []);
+
+  useEffect(() => {
+    if (!highlightProgramId) return;
+    void reloadStreamPlaylists({ forceRefresh: true });
+  }, [highlightProgramId, reloadStreamPlaylists]);
+
+  useEffect(() => {
+    highlightHandledRef.current = false;
+  }, [highlightProgramId]);
+
+  useEffect(() => {
+    if (!highlightProgramId || streamPlaylists.length === 0) return;
+    const target = streamPlaylists.find((pl) => pl.id === highlightProgramId);
+    if (!target) return;
+    if (highlightHandledRef.current) return;
+    highlightHandledRef.current = true;
+    setHighlightedPlaylistId(target.id);
+    scrollToProgramLibrary("dashboard");
+    const cancelScroll = focusProgramCardWithRetries(target.id, undefined, {
+      delays: [0, 120, 400, 900, 1400, 2200, 3200],
+    });
+    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
+    return () => {
+      cancelScroll();
+      window.clearTimeout(clearHighlight);
+    };
+  }, [highlightProgramId, streamPlaylists]);
 
   useEffect(() => {
     if (apiCourses.length === 0) {
@@ -533,6 +580,15 @@ export function ProgramsCourseSection({
     const locked = !pl.is_unlocked;
     const theme = PLAYLIST_CARD_THEMES[j % PLAYLIST_CARD_THEMES.length];
     const detailSelector = `[${PROGRAM_DETAIL_TRIGGER_ATTR}]`;
+    const isSpotlight = highlightedPlaylistId === pl.id;
+    const spotlightActive = highlightedPlaylistId != null;
+    const showIdleGlow = !spotlightActive;
+    const spotlightStyle = isSpotlight
+      ? ({
+          ["--spotlight-a" as string]: theme.spotlightA,
+          ["--spotlight-b" as string]: theme.spotlightB,
+        } as CSSProperties)
+      : undefined;
     const playlistCardPrimary = () => {
       if (comingSoon) return;
       if (locked) {
@@ -546,6 +602,8 @@ export function ProgramsCourseSection({
         key={`playlist-${pl.id}`}
         id={`program-playlist-${pl.id}`}
         data-program-playlist-id={pl.id}
+        data-globe-spotlight={isSpotlight ? "true" : undefined}
+        style={spotlightStyle}
         tabIndex={comingSoon ? -1 : 0}
         onClick={(e) => {
           if ((e.target as HTMLElement).closest(detailSelector)) return;
@@ -566,18 +624,29 @@ export function ProgramsCourseSection({
           void prefetchStreamPlaylistExperience(pl.id);
         }}
         className={cn(
-          "group/card relative flex w-full min-w-0 max-w-none justify-self-stretch flex-col overflow-hidden text-left outline-none",
+          "group/card relative flex w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
           "max-lg:aspect-[3/5] lg:aspect-[3/4]",
-          "rounded-2xl border-2",
-          theme.dominantBorder,
-          theme.glow,
-          "transition-[transform,box-shadow] duration-300 ease-out",
-          comingSoon ? "cursor-not-allowed opacity-95" : cn("cursor-pointer hover:-translate-y-0.5", theme.hoverGlow),
+          "rounded-2xl border-2 scroll-mt-32 transition-[transform,box-shadow] duration-300 ease-out",
+          isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
+          showIdleGlow && !isSpotlight && theme.dominantBorder,
+          showIdleGlow && !isSpotlight && theme.glow,
+          comingSoon ? "cursor-not-allowed opacity-95" : cn("cursor-pointer hover:-translate-y-0.5", showIdleGlow && !isSpotlight && theme.hoverGlow),
           !comingSoon && "focus-visible:ring-2 focus-visible:ring-[color:var(--gold-neon-border-mid)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         )}
         aria-disabled={comingSoon}
       >
-        <span className="relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.12rem] bg-[#04060d] ring-1 ring-black/70">
+        {isSpotlight ? (
+          <>
+            <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
+            <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
+          </>
+        ) : null}
+        <span
+          className={cn(
+            "relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.12rem] bg-[#04060d] ring-1 ring-black/70",
+            isSpotlight && "program-card-globe-spotlight border-2"
+          )}
+        >
           <span className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.28rem]" aria-hidden>
             <span className="absolute -left-[40%] top-0 h-full w-[45%] -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-0 mix-blend-overlay transition-[transform,opacity] duration-700 ease-out group-hover/card:translate-x-[280%] group-hover/card:opacity-100" />
           </span>

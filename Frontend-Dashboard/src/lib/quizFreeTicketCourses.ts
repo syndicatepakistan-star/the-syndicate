@@ -4,7 +4,7 @@ export const FREE_TICKET_PSYCHOLOGY_COURSES = [
   "9 to 5 Exit Strategy",
 ] as const;
 
-/** Catalog title (lowercase) → public programs page playlist id. */
+/** Catalog title (lowercase) → stream playlist id (API + catalog). */
 const FREE_TICKET_PROGRAM_IDS: Record<string, number> = {
   "zero to 1 million": 2,
   "zero to one million": 2,
@@ -18,19 +18,29 @@ function normalizeFreeTicketKey(courseName: string): string | null {
   return null;
 }
 
+export function resolveFreeTicketProgramId(courseName: string): number | undefined {
+  const key = normalizeFreeTicketKey(courseName);
+  if (!key) return undefined;
+  return FREE_TICKET_PROGRAM_IDS[key];
+}
+
 export function isFreeTicketPsychologyCourse(courseName: string): boolean {
   return normalizeFreeTicketKey(courseName) !== null;
 }
 
+/** Private dashboard programs library — highlight unlocked free-ticket card. */
+export function freeTicketDashboardPath(courseName: string): string {
+  const programId = resolveFreeTicketProgramId(courseName);
+  if (!programId) return "/dashboard?section=programs";
+  return `/dashboard?section=programs&program=${programId}`;
+}
+
 export function freeTicketLoginNextPath(courseName: string): string {
-  const key = normalizeFreeTicketKey(courseName);
-  const programId = key ? FREE_TICKET_PROGRAM_IDS[key] : undefined;
-  if (!programId) return "/programs#programs-library";
-  return `/programs?program=${programId}#programs-library`;
+  return freeTicketDashboardPath(courseName);
 }
 
 export function buildFreeTicketLoginHref(email: string, courseName: string): string {
-  const next = freeTicketLoginNextPath(courseName);
+  const next = freeTicketDashboardPath(courseName);
   const params = new URLSearchParams();
   if (email.trim()) params.set("email", email.trim());
   params.set("ticket", courseName.trim());

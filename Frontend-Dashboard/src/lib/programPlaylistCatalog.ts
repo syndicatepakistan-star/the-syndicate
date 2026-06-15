@@ -182,7 +182,7 @@ export function fillMissingPublicProgramPlaylists(
       slug: entry.slug,
       category: publicPlaylistCategory(entry.id),
       description: entry.description,
-      price: "40.00",
+      price: entry.id === 30 ? "39.00" : "40.00",
       rating: "4.0",
       cover_image_url: null,
       video_count: 0,

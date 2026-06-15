@@ -751,9 +751,11 @@ export default function AuthScreen({
               : undefined,
           );
         }
-        const nextUrl =
-          normalizedPostLoginNext ||
-          (isSignupOtp
+        const nextUrl = normalizedPostLoginNext
+          ? normalizedPostLoginNext.startsWith("/")
+            ? `${typeof window !== "undefined" ? window.location.origin : ""}${normalizedPostLoginNext}`
+            : normalizedPostLoginNext
+          : isSignupOtp
             ? hasPendingCheckoutIntent({
                 plan: normalizedPlan,
                 amount: normalizedAmount,
@@ -763,7 +765,7 @@ export default function AuthScreen({
               : SIGNUP_DEFAULT_REDIRECT
             : typeof window !== "undefined"
               ? resolvePostOtpAppRedirect(data.redirect_url)
-              : DASHBOARD_FALLBACK);
+              : DASHBOARD_FALLBACK;
 
         if (
           hasPendingCheckoutIntent({
@@ -879,7 +881,7 @@ export default function AuthScreen({
       setMessage(data.message || "Check your inbox for the code.");
       router.replace(
         appendOfferParams(
-          syndicateOtpVerifyHref(data.email || email.trim(), "login")
+          syndicateOtpVerifyHref(data.email || email.trim(), "login", normalizedPostLoginNext)
         )
       );
     } catch (submitError) {

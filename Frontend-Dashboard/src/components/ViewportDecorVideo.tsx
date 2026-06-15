@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isVideoWarm, warmVideo } from "@/lib/mediaWarmCache";
 
 type ViewportDecorVideoProps = {
@@ -13,7 +13,32 @@ type ViewportDecorVideoProps = {
   priority?: boolean;
   /** Keep playing even when off-screen (rare — full-page ambient backgrounds). */
   alwaysOn?: boolean;
+  /** On phones, skip MP4 decode and render a lightweight static backdrop instead. */
+  preferStaticOnMobile?: boolean;
 };
+
+function usePreferStaticBackdrop(enabled: boolean): boolean {
+  const [preferStatic, setPreferStatic] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) {
+      setPreferStatic(false);
+      return;
+    }
+    const narrow = window.matchMedia("(max-width: 767px)");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setPreferStatic(narrow.matches || reduced.matches);
+    sync();
+    narrow.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
+    return () => {
+      narrow.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, [enabled]);
+
+  return preferStatic;
+}
 
 /** Decorative MP4 — warmed pool + browser cache; replays instantly on repeat visits. */
 export function ViewportDecorVideo({
@@ -23,21 +48,26 @@ export function ViewportDecorVideo({
   opacityClassName,
   priority = false,
   alwaysOn = false,
+  preferStaticOnMobile = false,
 }: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const cachedOnMount = useRef(isVideoWarm(src));
+  const useStaticBackdrop = usePreferStaticBackdrop(preferStaticOnMobile);
 
   useLayoutEffect(() => {
+    if (useStaticBackdrop) return;
     void warmVideo(src);
-  }, [src]);
+  }, [src, useStaticBackdrop]);
 
   useLayoutEffect(() => {
+    if (useStaticBackdrop) return;
     const el = ref.current;
     if (!el || !(priority || cachedOnMount.current)) return;
     void el.play().catch(() => {});
-  }, [src, priority]);
+  }, [src, priority, useStaticBackdrop]);
 
   useEffect(() => {
+    if (useStaticBackdrop) return;
     const el = ref.current;
     if (!el) return;
 
@@ -73,13 +103,27 @@ export function ViewportDecorVideo({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [src, priority, alwaysOn]);
+  }, [src, priority, alwaysOn, useStaticBackdrop]);
+
+  if (useStaticBackdrop) {
+    return (
+      <div
+        className={[className, opacityClassName].filter(Boolean).join(" ")}
+        style={{
+          ...style,
+          background:
+            "radial-gradient(ellipse 90% 70% at 50% 18%, rgba(34,211,238,0.14), transparent 58%), radial-gradient(ellipse 80% 55% at 82% 72%, rgba(168,85,247,0.12), transparent 52%), linear-gradient(180deg, #060a14 0%, #030508 45%, #000000 100%)",
+        }}
+        aria-hidden
+      />
+    );
+  }
 
   return (
     <video
       ref={ref}
       className={[className, opacityClassName].filter(Boolean).join(" ")}
-      style={style}
+      style={{ ...style, transform: "translateZ(0)" }}
       muted
       loop
       playsInline

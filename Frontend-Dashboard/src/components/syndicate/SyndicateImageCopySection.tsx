@@ -49,7 +49,7 @@ export function SyndicateImageCopySection({
 
   return (
     <CyberChamferFrame accent={frameAccent} chamfer={22} className="w-full">
-      <div className="p-5 sm:p-7 md:p-8">
+      <div className="p-6 sm:p-7 md:p-8">
         <h2
           className={cx(
             publicHeadingLightning(lightning),
@@ -116,8 +116,8 @@ export function SyndicateImageCopySection({
               </div>
             </div>
 
-            <div className="flex flex-col justify-center px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 lg:px-8">
-              <div className="space-y-4">
+            <div className="flex flex-col justify-center px-5 py-6 sm:px-5 sm:py-6 md:px-6 md:py-7 lg:px-8">
+              <div className="space-y-5 sm:space-y-4">
                 {paragraphs.map((p) => (
                   <p
                     key={p.slice(0, 48)}

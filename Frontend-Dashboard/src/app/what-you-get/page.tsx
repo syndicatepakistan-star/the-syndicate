@@ -180,6 +180,8 @@ export default function WhatYouGetPage() {
           <ViewportDecorVideo
             src="/assets/bg-video.mp4"
             priority
+            alwaysOn
+            preferStaticOnMobile
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
           />
           <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">
@@ -236,7 +238,7 @@ export default function WhatYouGetPage() {
                 >
                   {ALLIANCE_SECTION_HEADLINE}
                 </h2>
-                <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:items-stretch">
+                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:items-stretch sm:gap-5">
                   {ACCESS_PILLARS.map((p) => (
                     <CyberChamferFrame
                       key={p.title}
@@ -245,7 +247,7 @@ export default function WhatYouGetPage() {
                       decorSize="compact"
                       flatPanel
                       className="h-full min-h-0 w-full min-w-0"
-                      innerClassName="flex h-full min-h-0 flex-col p-5 sm:p-6"
+                      innerClassName="flex h-full min-h-0 flex-col p-6 sm:p-6"
                       contentClassName="flex min-h-0 flex-1 flex-col"
                     >
                       <h3
@@ -257,7 +259,7 @@ export default function WhatYouGetPage() {
                       >
                         {p.title}
                       </h3>
-                      <p className="mt-4 flex-1 text-sm leading-relaxed text-zinc-100/88 sm:text-base">{p.body}</p>
+                      <p className="mt-5 flex-1 text-sm leading-relaxed text-zinc-100/88 sm:mt-4 sm:text-base">{p.body}</p>
                     </CyberChamferFrame>
                   ))}
                 </div>
@@ -279,13 +281,13 @@ export default function WhatYouGetPage() {
                     <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
                       Capital and leverage are neutral until a human aims them. The Syndicate trains you to read power as infrastructure — not as a costume — so you can build, defend, and scale without surrendering your spine to the machine.
                     </p>
-                    <div className="mt-6 grid gap-4 md:grid-cols-2">
-                      <CyberInsetPanel variant="blood">
+                    <div className="mt-6 grid gap-5 md:grid-cols-2 md:gap-4">
+                      <CyberInsetPanel variant="blood" className="[&>div]:p-6 sm:[&>div]:p-6">
                         <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">
                           Markets reward clarity and punish delusion. You learn to map incentives, chokepoints, and second-order effects — then move with restraint that reads as strength.
                         </p>
                       </CyberInsetPanel>
-                      <CyberInsetPanel variant="void" plasmaBar>
+                      <CyberInsetPanel variant="void" plasmaBar className="[&>div]:p-6 sm:[&>div]:p-6">
                         <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">
                           Membership layers unlock the dashboard, drops, and Syndicate Mode — the arena where discipline becomes data, and data becomes reputation you can cash.
                         </p>
@@ -329,7 +331,7 @@ export default function WhatYouGetPage() {
                         <article
                           key={item.step}
                           className={cx(
-                            'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
+                            'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-5 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
                             item.border,
                             item.glow,
                             item.panel

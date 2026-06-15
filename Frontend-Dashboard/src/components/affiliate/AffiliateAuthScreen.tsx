@@ -427,12 +427,6 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
 
       <div className="login-container">
         <div className="login-box">
-          <img
-            className="brand-logo"
-            src="https://the-syndicate.com/wp-content/uploads/2024/01/the-syndicate-primary-logo-gold-leaf-600x240.png"
-            alt="The Syndicate"
-          />
-
           <div className="login-header">
             <span className="status-dot" />
             <h1 className="glitch" data-text={heading}>
@@ -440,10 +434,6 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
             </h1>
             <span className="status-dot" />
           </div>
-
-          <p className="form-hint mb-3 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
-            Partner dashboard — email code only (separate from member login).
-          </p>
 
           <form className="login-form" autoComplete="on" onSubmit={handleSubmit}>
             <div className="input-group input-group--email">
@@ -499,23 +489,6 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
 
             {error ? <p className="form-error">{error}</p> : null}
             {!error && message ? <p className="form-message">{message}</p> : null}
-
-            {!isOtp ? (
-              <p className="form-hint">
-                We email a one-time code to the address on your Syndicate affiliate profile.
-              </p>
-            ) : (
-              <p className="form-hint">
-                Enter the 6-digit code from your inbox. Wrong email?{" "}
-                <button
-                  type="button"
-                  className="underline decoration-amber-300/80 underline-offset-2"
-                  onClick={() => router.replace("/affiliate-login")}
-                >
-                  Start over
-                </button>
-              </p>
-            )}
 
             <button className="cyber-btn hamburger-attract" type="submit" disabled={loading || resendBusy}>
               <span className="cyber-btn__text">{loading ? "PLEASE WAIT" : submitLabel.toUpperCase()}</span>

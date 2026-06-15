@@ -881,12 +881,6 @@ export default function AuthScreen({
 
       <div className="login-container">
         <div className="login-box">
-          <img
-            className="brand-logo"
-            src="https://the-syndicate.com/wp-content/uploads/2024/01/the-syndicate-primary-logo-gold-leaf-600x240.png"
-            alt="The Syndicate"
-          />
-
           <div className="login-header">
             <span className="status-dot" />
             <h1 className="glitch public-heading-lightning public-heading-lightning--gold" data-text={heading}>
@@ -949,22 +943,6 @@ export default function AuthScreen({
 
             {error ? <p className="form-error">{error}</p> : null}
             {!error && message ? <p className="form-message">{message}</p> : null}
-
-            {!isOtp && !isSignup ? (
-              <p className="form-hint">
-                No password — we email you a one-time code after we recognise your address.
-              </p>
-            ) : null}
-            {isSignup && !isOtp ? (
-              <p className="form-hint">
-                Enter your email to continue directly to secure checkout.
-              </p>
-            ) : null}
-            {isSignup && !isOtp && normalizedAmount ? (
-              <p className="form-hint">
-                Selected offer: {normalizedPlan || "membership"} ({normalizedBilling || "monthly"}) - ${normalizedAmount}
-              </p>
-            ) : null}
 
             <button
               className="cyber-btn hamburger-attract"

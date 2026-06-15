@@ -2,8 +2,8 @@
  * Device cache: first visit fetches from network; repeat visits serve static
  * assets from Cache Storage (CDN + browser disk cache still apply).
  */
-const STATIC_CACHE = "syndicate-static-v1";
-const RUNTIME_CACHE = "syndicate-runtime-v1";
+const STATIC_CACHE = "syndicate-static-v2";
+const RUNTIME_CACHE = "syndicate-runtime-v2";
 
 const PRECACHE_URLS = [
   "/assets/logo.webp",
@@ -74,7 +74,8 @@ async function cacheFirst(request) {
 
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Range requests (video/media) return 206 — Cache API cannot store partial responses.
+    if (response.ok && response.status !== 206) {
       void cache.put(request, response.clone());
     }
     return response;

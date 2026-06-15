@@ -12,9 +12,9 @@ const HOP_BY_HOP = new Set([
   "host",
 ]);
 
-export async function proxyRequestToDjango(
+async function proxyToDjangoApi(
   request: Request,
-  pathSegments: string[],
+  apiPathSegments: string[],
 ): Promise<Response> {
   const origin = resolveDjangoBackendOrigin();
   if (!origin) {
@@ -27,9 +27,9 @@ export async function proxyRequestToDjango(
     );
   }
 
-  const subpath = pathSegments.filter(Boolean).join("/");
+  const subpath = apiPathSegments.filter(Boolean).join("/");
   const incoming = new URL(request.url);
-  const target = new URL(`/api/streaming/${subpath}/`, origin);
+  const target = new URL(`/api/${subpath}/`, origin);
   target.search = incoming.search;
 
   const headers = new Headers();
@@ -56,4 +56,20 @@ export async function proxyRequestToDjango(
     statusText: upstream.statusText,
     headers: outHeaders,
   });
+}
+
+/** Legacy streaming proxy (`/api/streaming/...`). */
+export async function proxyRequestToDjango(
+  request: Request,
+  pathSegments: string[],
+): Promise<Response> {
+  return proxyToDjangoApi(request, ["streaming", ...pathSegments]);
+}
+
+/** Same-origin portal proxy (`/api/portal-proxy/...` → Django `/api/...`). */
+export async function proxyPortalRequestToDjango(
+  request: Request,
+  pathSegments: string[],
+): Promise<Response> {
+  return proxyToDjangoApi(request, pathSegments);
 }

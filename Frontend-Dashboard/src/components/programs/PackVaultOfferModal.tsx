@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -13,7 +13,6 @@ import {
   vaultPackAlaCarteTotal,
 } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
-import { fetchVaultPlaylistMap, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
 
 type Props = {
   packOffer: PlanOfferDef | null;
@@ -36,34 +35,6 @@ export function PackVaultOfferModal({
   onUnlock,
   onOpenUnlocked,
 }: Props) {
-  const [playlistMapReady, setPlaylistMapReady] = useState(false);
-  const [linkedModuleCount, setLinkedModuleCount] = useState(0);
-
-  useEffect(() => {
-    if (!packOffer || !isVaultPackKey(packOffer.plan)) {
-      setPlaylistMapReady(false);
-      setLinkedModuleCount(0);
-      return;
-    }
-    const packKey = packOffer.plan;
-    setPlaylistMapReady(false);
-    let cancelled = false;
-    void fetchVaultPlaylistMap()
-      .then((map) => {
-        if (cancelled) return;
-        const courses = vaultCoursesForPack(packKey);
-        const linked = courses.filter((offer) => vaultPlaylistIdForPlan(offer.plan, map) != null).length;
-        setLinkedModuleCount(linked);
-        setPlaylistMapReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) setPlaylistMapReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [packOffer]);
-
   useEffect(() => {
     if (!packOffer) return;
     const onKey = (e: KeyboardEvent) => {
@@ -184,13 +155,6 @@ export function PackVaultOfferModal({
             </p>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
-          {playlistMapReady && linkedModuleCount < courses.length ? (
-            <p className="mb-4 text-center font-mono text-[11px] leading-relaxed text-amber-200/75">
-              {linkedModuleCount === 0
-                ? "Stream playlists are not linked yet — add vault_plan_slug in Django admin for each module."
-                : `${linkedModuleCount} of ${courses.length} modules have stream playlists linked.`}
-            </p>
-          ) : null}
 
           <div className="vault-modules-grid">
             {courses.map((offer) => (

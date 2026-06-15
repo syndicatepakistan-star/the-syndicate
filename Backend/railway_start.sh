@@ -41,6 +41,11 @@ run_bootstrap_tasks() {
     echo "railway_start: sync_bucket_assets (media + public)"
     "$PYTHON" manage.py sync_bucket_assets --include-media --include-public
   fi
+
+  if [ "${AUTO_ENSURE_VAULT_PLAYLIST_STUBS:-true}" = "true" ]; then
+    echo "railway_start: ensure_vault_playlist_stubs"
+    "$PYTHON" manage.py ensure_vault_playlist_stubs --publish || true
+  fi
 }
 
 # Nixpacks build already installs requirements; use same Python for optional refresh.

@@ -86,10 +86,6 @@ const nextConfig = {
     return {
       beforeFiles: [
         {
-          source: "/api/portal-proxy/:path*",
-          destination: `${backendOrigin}/api/:path*`
-        },
-        {
           source: "/api/portal/:path*",
           destination: `${backendOrigin}/api/portal/:path*`
         },
@@ -118,18 +114,6 @@ const nextConfig = {
         {
           source: "/api/videos/:path*",
           destination: `${backendOrigin}/api/videos/:path*`
-        },
-        {
-          source: "/api/streaming",
-          destination: `${backendOrigin}/api/streaming/`
-        },
-        {
-          source: "/api/streaming/:path*",
-          destination: `${backendOrigin}/api/streaming/:path*`
-        },
-        {
-          source: "/api/auth/:path*",
-          destination: `${backendOrigin}/api/auth/:path*`
         },
         // Uploaded course covers & video thumbnails (Django MEDIA_URL)
         {

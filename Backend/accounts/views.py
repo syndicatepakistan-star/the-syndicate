@@ -331,6 +331,19 @@ def _json_error(message: str, status: int = 400) -> JsonResponse:
   return JsonResponse({"error": message}, status=status)
 
 
+def _sanitize_stripe_checkout_error(exc: Exception) -> str:
+  """User-safe Stripe message — never echo secret keys back to the client."""
+  msg = (getattr(exc, "user_message", None) or str(exc) or "").strip()
+  lower = msg.lower()
+  if "invalid api key" in lower:
+    return "Checkout is misconfigured on the server (invalid Stripe secret key). Update STRIPE_SECRET_KEY in Railway and redeploy the backend."
+  if "no such" in lower and "price" in lower:
+    return "Checkout product configuration is invalid. Contact support."
+  if msg:
+    return re.sub(r"sk_(test|live)_[A-Za-z0-9*]+", "sk_***", msg)
+  return "Stripe could not start checkout."
+
+
 def _authenticate_jwt_user(request):
   try:
     auth = JWTAuthentication()
@@ -924,10 +937,11 @@ def create_checkout_session_view(request):
       try:
         session = _session_create_logged_in(pm_retry)
       except stripe.error.StripeError as exc2:
-        msg = getattr(exc2, "user_message", None) or str(exc2) or "Stripe could not start checkout."
+        msg = _sanitize_stripe_checkout_error(exc2)
+        logger.exception("Stripe checkout session failed (logged-in, retry): %s", msg)
         return _json_error(msg, status=400)
     except stripe.error.StripeError as exc:
-      msg = getattr(exc, "user_message", None) or str(exc) or "Stripe could not start checkout."
+      msg = _sanitize_stripe_checkout_error(exc)
       logger.exception("Stripe checkout session failed (logged-in): %s", msg)
       return _json_error(msg, status=400)
     except Exception as exc:
@@ -1061,12 +1075,15 @@ def create_checkout_session_view(request):
     try:
       session = _session_create(pm_retry)
     except stripe.error.StripeError as exc2:
-      msg = getattr(exc2, "user_message", None) or str(exc2) or "Stripe could not start checkout."
+      msg = _sanitize_stripe_checkout_error(exc2)
+      logger.exception("Stripe checkout session failed (signup, retry): %s", msg)
       return _json_error(msg, status=400)
   except stripe.error.StripeError as exc:
-    msg = getattr(exc, "user_message", None) or str(exc) or "Stripe could not start checkout."
+    msg = _sanitize_stripe_checkout_error(exc)
+    logger.exception("Stripe checkout session failed (signup): %s", msg)
     return _json_error(msg, status=400)
   except Exception:
+    logger.exception("Checkout session failed (signup)")
     return _json_error("Unable to create checkout session.", status=500)
   
   if pending_signup is not None:

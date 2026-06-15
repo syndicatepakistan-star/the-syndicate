@@ -1,10 +1,10 @@
-import { proxyRequestToDjango } from "@/lib/djangoProxy";
+import { proxyPortalRequestToDjango } from "@/lib/djangoProxy";
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
 async function handle(request: Request, ctx: Ctx) {
   const { path } = await ctx.params;
-  return proxyRequestToDjango(request, path ?? []);
+  return proxyPortalRequestToDjango(request, path ?? []);
 }
 
 export const dynamic = "force-dynamic";

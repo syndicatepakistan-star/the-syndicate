@@ -11108,9 +11108,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 .membership-marketing-page .membership-unlock-cta-shell--public {
   position: relative;
   isolation: isolate;
-  animation:
-    membership-unlock-shell-bounce 2s ease-in-out infinite,
-    membership-unlock-shell-glow 2.2s ease-in-out infinite;
+  animation: membership-unlock-shell-glow 2.2s ease-in-out infinite;
 }
 
 .membership-marketing-page .membership-unlock-cta-shell--public::before {
@@ -11130,9 +11128,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 .membership-marketing-page .membership-unlock-cta-shell--public:hover {
-  animation:
-    membership-unlock-shell-bounce 1.4s ease-in-out infinite,
-    membership-unlock-shell-glow 1.4s ease-in-out infinite;
+  animation: membership-unlock-shell-glow 1.4s ease-in-out infinite;
 }
 
 .membership-marketing-page .membership-unlock-cta-shell--public:hover .membership-unlock-cta:not(:disabled) {

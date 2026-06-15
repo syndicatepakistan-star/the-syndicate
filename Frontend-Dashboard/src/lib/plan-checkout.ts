@@ -117,6 +117,14 @@ function redirectToAuthCheckout(params: PlanCheckoutParams) {
 }
 
 function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, status: number): string {
+  const sanitize = (msg: string): string => {
+    const trimmed = msg.replace(/\s+/g, " ").trim();
+    const lower = trimmed.toLowerCase();
+    if (lower.includes("invalid api key")) {
+      return "Checkout is misconfigured (invalid Stripe secret key on the server). Update STRIPE_SECRET_KEY in Railway backend variables and redeploy.";
+    }
+    return trimmed.replace(/sk_(test|live)_[A-Za-z0-9*]+/g, "sk_***");
+  };
   if (typeof payload === "string") {
     const snippet = payload.replace(/\s+/g, " ").trim().slice(0, 200);
     if (!snippet) {
@@ -129,11 +137,11 @@ function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, statu
         ? "Checkout is unavailable right now. Please try again shortly."
         : "Could not start checkout.";
     }
-    return snippet;
+    return sanitize(snippet);
   }
-  if (typeof payload.message === "string" && payload.message.trim()) return payload.message.trim();
-  if (typeof payload.error === "string" && payload.error.trim()) return payload.error.trim();
-  if (typeof payload.detail === "string" && payload.detail.trim()) return payload.detail.trim();
+  if (typeof payload.message === "string" && payload.message.trim()) return sanitize(payload.message.trim());
+  if (typeof payload.error === "string" && payload.error.trim()) return sanitize(payload.error.trim());
+  if (typeof payload.detail === "string" && payload.detail.trim()) return sanitize(payload.detail.trim());
   if (status === 401 || status === 403) return "Session expired. Sign in again to continue checkout.";
   if (status === 500) return "Checkout is unavailable right now. Please try again shortly.";
   return "Could not start checkout.";

@@ -603,12 +603,19 @@ POST_LOGIN_REDIRECT_URL = os.environ.get("POST_LOGIN_REDIRECT_URL", "http://loca
 FRONTEND_BASE_URL = (os.environ.get("FRONTEND_BASE_URL") or "http://localhost:3000").strip().rstrip("/")
 MEDIA_PUBLIC_BASE_URL = (os.environ.get("MEDIA_PUBLIC_BASE_URL") or "").strip().rstrip("/")
 def _normalize_stripe_key(raw: str) -> str:
-    """Remove accidental line breaks/spaces from pasted Railway env values."""
-    return "".join((raw or "").split())
+    """Remove accidental line breaks/spaces/quotes from pasted Railway env values."""
+    cleaned = _strip_optional_quotes((raw or "").strip())
+    return "".join(cleaned.split())
 
 
 STRIPE_SECRET_KEY = _normalize_stripe_key(os.environ.get("STRIPE_SECRET_KEY") or "")
 STRIPE_PUBLISHABLE_KEY = _normalize_stripe_key(os.environ.get("STRIPE_PUBLISHABLE_KEY") or "")
+if STRIPE_SECRET_KEY and not STRIPE_SECRET_KEY.startswith(("sk_test_", "sk_live_")):
+    import logging as _logging
+
+    _logging.getLogger(__name__).warning(
+        "STRIPE_SECRET_KEY does not look like a Stripe secret key (expected sk_test_ or sk_live_ prefix)."
+    )
 # Backward compatibility: older env files used a typo `PCHECKOUT_AMOUNT_PENCE`.
 _checkout_amount_raw = (
     (os.environ.get("CHECKOUT_AMOUNT_PENCE") or "").strip()

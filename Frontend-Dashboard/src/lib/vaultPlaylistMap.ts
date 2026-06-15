@@ -1,4 +1,4 @@
-import { djangoStreamingApiUrl } from "@/lib/djangoBackendOrigin";
+import { resolveClientApiUrl, resolvePortalProxyUrl } from "@/lib/portal-api";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export type VaultPlaylistMapEntry = StreamPlaylistListItem & {
@@ -38,7 +38,11 @@ export async function fetchVaultPlaylistMap(options?: {
   }
 
   inflight = (async () => {
-    const url = djangoStreamingApiUrl("/vault-playlist-map/");
+    const apiPath = "/api/streaming/vault-playlist-map/";
+    const url =
+      typeof window !== "undefined"
+        ? resolvePortalProxyUrl(apiPath)
+        : resolveClientApiUrl(apiPath);
     const response = await fetch(url, { method: "GET", cache: "no-store" });
     if (!response.ok) {
       throw new Error("Could not load vault playlist map.");

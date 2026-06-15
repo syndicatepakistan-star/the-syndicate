@@ -62,7 +62,7 @@ export function MethodSplitCard({
     >
       <div className="grid gap-6 text-left lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)] lg:items-stretch xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] xl:gap-10">
         <div className="flex min-w-0 flex-col justify-center">
-          <h2 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
+          <h2 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline mt-1 ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
 
           {moneyPowerTitle ? (
             <CyberInsetPanel variant="blood" className="mt-4">
@@ -73,10 +73,10 @@ export function MethodSplitCard({
           )}
 
           <div className="mt-5 grid gap-3 sm:gap-4">
-            <CyberInsetPanel variant={moneyPowerTitle ? "toxic" : "cyan"}>
+            <CyberInsetPanel variant={moneyPowerTitle ? "toxic" : "cyan"} className="cyber-inset-mobile-pad">
               <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">{paragraphs[0]}</p>
             </CyberInsetPanel>
-            <CyberInsetPanel variant={moneyPowerTitle ? "void" : "violet"} plasmaBar={moneyPowerTitle}>
+            <CyberInsetPanel variant={moneyPowerTitle ? "void" : "violet"} plasmaBar={moneyPowerTitle} className="cyber-inset-mobile-pad">
               <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">{paragraphs[1]}</p>
             </CyberInsetPanel>
           </div>

@@ -2,8 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { NavApp } from '@/components/NavApp'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
+import { warmVideo } from '@/lib/mediaWarmCache'
 import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import SiteFooter from '@/components/SiteFooter'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
@@ -99,15 +101,15 @@ function WhatYouGetNextMovePanel({
 }) {
   return (
     <div className={cx('relative', className)}>
-      <CyberChamferFrame accent="amber" chamfer={20} innerClassName="cyber-frame-mobile-pad px-5 py-7 pt-9 sm:p-8 sm:pt-10">
+      <CyberChamferFrame accent="amber" chamfer={20} innerClassName="cyber-frame-mobile-pad px-6 py-8 pt-11 sm:px-8 sm:py-8 sm:pt-10">
         <p
           id={headingId}
-          className={`${publicHeadingLightning('amber')} marketing-card-title-oneline font-mono text-xs font-bold uppercase tracking-[0.32em] sm:text-sm`}
+          className={`${publicHeadingLightning('amber')} marketing-card-title-oneline font-mono text-sm font-bold uppercase tracking-[0.28em] sm:text-sm`}
         >
           Next move
         </p>
         <nav
-          className="mx-auto mt-6 grid max-w-[34rem] gap-3 sm:max-w-[38rem] sm:grid-cols-3 sm:gap-3 sm:mt-5"
+          className="mx-auto mt-7 grid max-w-[34rem] gap-3.5 sm:max-w-[38rem] sm:grid-cols-3 sm:gap-3 sm:mt-6"
           aria-label="Next steps"
         >
           {NEXT_MOVE_LINKS.map((item) => (
@@ -170,6 +172,10 @@ function WhatYouGetNextMovePanel({
 }
 
 export default function WhatYouGetPage() {
+  useEffect(() => {
+    void warmVideo('/assets/bg-video.mp4')
+  }, [])
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-black">
       <NavApp />
@@ -177,13 +183,17 @@ export default function WhatYouGetPage() {
       <main className="relative z-10">
         {/* Hero — unchanged structure vs. prior What You Get */}
         <section className="relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
-          <ViewportDecorVideo
-            src="/assets/bg-video.mp4"
-            priority
-            alwaysOn
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-black/35" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            <ViewportDecorVideo
+              src="/assets/bg-video.mp4"
+              priority
+              alwaysOn
+              fill
+              videoClassName="opacity-50"
+            />
+            <div className="absolute inset-0 bg-black/32" aria-hidden />
+          </div>
+          <div className="relative z-10">
           <div className="pointer-events-none absolute left-1/2 top-[clamp(96px,11vw,136px)] z-20 w-full -translate-x-1/2 px-4 max-sm:top-[92px]">
             <div className="mx-auto flex w-full max-w-[920px] justify-center">
               <NeonTypingBadge
@@ -192,7 +202,7 @@ export default function WhatYouGetPage() {
                 deletingSpeed={48}
                 pauseMs={900}
                 boxed={false}
-                className="marketing-slogan-oneline footer-typing mx-auto w-full max-w-[min(96vw,720px)]"
+                className="marketing-slogan-oneline footer-typing mx-auto w-full min-w-0 max-w-[min(98vw,820px)]"
               />
             </div>
           </div>
@@ -209,6 +219,7 @@ export default function WhatYouGetPage() {
                 {ALLIANCE_HERO_LEDE}
               </p>
             </div>
+          </div>
           </div>
         </section>
 
@@ -282,12 +293,12 @@ export default function WhatYouGetPage() {
                       Capital and leverage are neutral until a human aims them. The Syndicate trains you to read power as infrastructure — not as a costume — so you can build, defend, and scale without surrendering your spine to the machine.
                     </p>
                     <div className="mt-6 grid gap-5 md:grid-cols-2 md:gap-4">
-                      <CyberInsetPanel variant="blood" className="[&>div]:p-6 sm:[&>div]:p-6">
+                      <CyberInsetPanel variant="blood" className="cyber-inset-mobile-pad [&>div]:p-6 sm:[&>div]:p-6">
                         <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">
                           Markets reward clarity and punish delusion. You learn to map incentives, chokepoints, and second-order effects — then move with restraint that reads as strength.
                         </p>
                       </CyberInsetPanel>
-                      <CyberInsetPanel variant="void" plasmaBar className="[&>div]:p-6 sm:[&>div]:p-6">
+                      <CyberInsetPanel variant="void" plasmaBar className="cyber-inset-mobile-pad [&>div]:p-6 sm:[&>div]:p-6">
                         <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">
                           Membership layers unlock the dashboard, drops, and Syndicate Mode — the arena where discipline becomes data, and data becomes reputation you can cash.
                         </p>
@@ -331,7 +342,7 @@ export default function WhatYouGetPage() {
                         <article
                           key={item.step}
                           className={cx(
-                            'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 p-5 transition-transform duration-300 hover:-translate-y-0.5 sm:p-5',
+                            'what-you-get-stagger-row group relative overflow-hidden rounded-2xl border-2 px-5 py-6 transition-transform duration-300 hover:-translate-y-0.5 sm:p-6',
                             item.border,
                             item.glow,
                             item.panel

@@ -53,7 +53,7 @@ export function SyndicateImageCopySection({
         <h2
           className={cx(
             publicHeadingLightning(lightning),
-            "marketing-card-title-oneline text-balance text-center text-[clamp(1.35rem,3.2vw,2.35rem)] font-black uppercase leading-[1.05] tracking-[0.06em] sm:text-left"
+            "marketing-card-title-oneline text-balance text-center text-[clamp(1.45rem,3.4vw,2.35rem)] font-black uppercase leading-[1.08] tracking-[0.06em] sm:text-left"
           )}
         >
           {title}
@@ -90,7 +90,7 @@ export function SyndicateImageCopySection({
                     ? "(max-width: 768px) 99vw, (max-width: 1280px) 42vw, 420px"
                     : "(max-width: 768px) 99vw, (max-width: 1536px) 62vw, 960px"
                 }
-                className="object-contain object-center p-1 sm:p-2"
+                className="object-contain object-center p-3 sm:p-4"
                 priority={priorityImage}
               />
               <div
@@ -116,7 +116,7 @@ export function SyndicateImageCopySection({
               </div>
             </div>
 
-            <div className="flex flex-col justify-center px-5 py-6 sm:px-5 sm:py-6 md:px-6 md:py-7 lg:px-8">
+            <div className="flex flex-col justify-center px-5 py-7 sm:px-6 sm:py-7 md:px-7 md:py-8 lg:px-8">
               <div className="space-y-5 sm:space-y-4">
                 {paragraphs.map((p) => (
                   <p

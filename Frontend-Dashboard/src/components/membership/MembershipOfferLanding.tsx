@@ -355,7 +355,7 @@ export function MembershipOfferLanding({
                     {block.title}
                   </h3>
                   <p className="mt-3 text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">{block.summary}</p>
-                  <CyberInsetPanel variant={block.accent === "violet" ? "void" : block.accent === "amber" ? "blood" : "cyan"} className="mt-6">
+                  <CyberInsetPanel variant={block.accent === "violet" ? "void" : block.accent === "amber" ? "blood" : "cyan"} className="cyber-inset-mobile-pad mt-6">
                     <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{block.body}</p>
                   </CyberInsetPanel>
                 </CyberChamferFrame>

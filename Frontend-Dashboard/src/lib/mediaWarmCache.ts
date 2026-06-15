@@ -32,9 +32,9 @@ export const MARKETING_IMAGE_URLS = ["/assets/logo.webp"] as const;
 
 export const MARKETING_VIDEO_URLS = [
 
-  "/assets/video.mp4",
-
   "/assets/bg-video.mp4",
+
+  "/assets/video.mp4",
 
   "/assets/v.mp4",
 

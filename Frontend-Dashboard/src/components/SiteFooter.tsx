@@ -54,14 +54,14 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className="flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.25rem,1vw,0.75rem)] py-[clamp(0.25rem,1vw,0.6rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
+          <div className="flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.35rem,1.2vw,0.85rem)] py-[clamp(0.35rem,1.2vw,0.75rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
             <NeonTypingBadge
               phrases={['HONOUR · MONEY · POWER · FREEDOM']}
               typingSpeed={sloganTypingSpeed ?? 24}
               deletingSpeed={sloganDeletingSpeed ?? 24}
               pauseMs={sloganPauseMs ?? 420}
               boxed={false}
-              className="marketing-slogan-oneline footer-typing"
+              className="marketing-slogan-oneline footer-typing w-full min-w-0"
             />
           </div>
 

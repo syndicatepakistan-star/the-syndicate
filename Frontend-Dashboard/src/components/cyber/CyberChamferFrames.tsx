@@ -228,7 +228,9 @@ export function CyberChamferFrame({
           )}
           aria-hidden
         />
-        <div className={cx('relative z-10', contentClassName)}>{children}</div>
+        <div className={cx('relative z-10 max-lg:px-2.5 max-lg:pb-0.5 max-lg:pt-3.5', contentClassName)}>
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -321,7 +323,7 @@ export function CyberInsetPanel({
             aria-hidden
           />
         ) : null}
-        <div className="relative z-10">{children}</div>
+        <div className="relative z-10 max-lg:px-2 max-lg:pt-2">{children}</div>
       </div>
     </div>
   )

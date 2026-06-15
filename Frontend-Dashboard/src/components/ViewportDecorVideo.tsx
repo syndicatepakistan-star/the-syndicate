@@ -7,7 +7,9 @@ type ViewportDecorVideoProps = {
   src: string;
   className?: string;
   style?: React.CSSProperties;
-  /** 0–1 opacity when playing */
+  /** Classes on the `<video>` element (e.g. opacity utilities). */
+  videoClassName?: string;
+  /** @deprecated use videoClassName */
   opacityClassName?: string;
   /** Above-fold: load + play immediately; still pauses when scrolled away unless alwaysOn. */
   priority?: boolean;
@@ -15,6 +17,8 @@ type ViewportDecorVideoProps = {
   alwaysOn?: boolean;
   /** On phones, skip MP4 decode and render a lightweight static backdrop instead. */
   preferStaticOnMobile?: boolean;
+  /** Hero/section backdrop: fill parent with absolute inset-0 video (no extra wrapper opacity). */
+  fill?: boolean;
 };
 
 const DECOR_VIDEO_BACKDROP =
@@ -48,27 +52,36 @@ export function ViewportDecorVideo({
   src,
   className,
   style,
+  videoClassName,
   opacityClassName,
   priority = false,
   alwaysOn = false,
   preferStaticOnMobile = false,
+  fill = false,
 }: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const cachedOnMount = useRef(isVideoWarm(src));
   const useStaticBackdrop = usePreferStaticBackdrop(preferStaticOnMobile);
+  const resolvedVideoClass = [videoClassName, opacityClassName].filter(Boolean).join(" ");
   const [videoReady, setVideoReady] = useState(cachedOnMount.current);
 
   useLayoutEffect(() => {
     if (useStaticBackdrop) return;
-    void warmVideo(src);
-  }, [src, useStaticBackdrop]);
+    void warmVideo(src).then(() => {
+      const el = ref.current;
+      if (!el) return;
+      if (priority || alwaysOn || cachedOnMount.current) {
+        void el.play().catch(() => {});
+      }
+    });
+  }, [src, priority, alwaysOn, useStaticBackdrop]);
 
   useLayoutEffect(() => {
     if (useStaticBackdrop) return;
     const el = ref.current;
-    if (!el || !(priority || cachedOnMount.current)) return;
+    if (!el || !(priority || alwaysOn || cachedOnMount.current)) return;
     void el.play().catch(() => {});
-  }, [src, priority, useStaticBackdrop]);
+  }, [src, priority, alwaysOn, useStaticBackdrop]);
 
   useEffect(() => {
     if (useStaticBackdrop) return;
@@ -125,7 +138,7 @@ export function ViewportDecorVideo({
   if (useStaticBackdrop) {
     return (
       <div
-        className={[className, opacityClassName].filter(Boolean).join(" ")}
+        className={[className, resolvedVideoClass].filter(Boolean).join(" ")}
         style={{
           ...style,
           background: DECOR_VIDEO_BACKDROP,
@@ -135,32 +148,51 @@ export function ViewportDecorVideo({
     );
   }
 
+  const videoNode = (
+    <video
+      ref={ref}
+      className={[
+        "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+        resolvedVideoClass,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={{
+        transform: "translateZ(0)",
+        opacity: videoReady ? undefined : 0,
+      }}
+      muted
+      loop
+      playsInline
+      autoPlay={priority || alwaysOn}
+      preload={priority || alwaysOn ? "auto" : "metadata"}
+      disablePictureInPicture
+    >
+      <source src={src} type="video/mp4" />
+    </video>
+  );
+
+  if (fill) {
+    return (
+      <div
+        className={["absolute inset-0 overflow-hidden", className].filter(Boolean).join(" ")}
+        style={style}
+        aria-hidden
+      >
+        <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+        {videoNode}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={["relative overflow-hidden", className, opacityClassName].filter(Boolean).join(" ")}
+      className={["relative overflow-hidden", className, resolvedVideoClass].filter(Boolean).join(" ")}
       style={style}
       aria-hidden
     >
-      <div
-        className="absolute inset-0 h-full w-full"
-        style={{ background: DECOR_VIDEO_BACKDROP }}
-      />
-      <video
-        ref={ref}
-        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
-        style={{
-          transform: "translateZ(0)",
-          opacity: videoReady ? 1 : 0,
-        }}
-        muted
-        loop
-        playsInline
-        autoPlay={priority || alwaysOn}
-        preload={priority || alwaysOn ? "auto" : "metadata"}
-        disablePictureInPicture
-      >
-        <source src={src} type="video/mp4" />
-      </video>
+      <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+      {videoNode}
     </div>
   );
 }

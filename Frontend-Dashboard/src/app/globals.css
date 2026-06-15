@@ -10717,40 +10717,61 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
 /* Hero + footer slogans: stay on one line on phone & tablet */
 @media (max-width: 1023px) {
+  .marketing-slogan-oneline {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    overflow: visible;
+  }
+
   .marketing-slogan-oneline .neon-badge-text,
-  .footer-typing .neon-badge-text {
+  .marketing-slogan-oneline.footer-typing .neon-badge-text,
+  .footer-typing.marketing-slogan-oneline .neon-badge-text {
     white-space: nowrap !important;
-    width: auto !important;
+    display: inline-block;
+    width: max-content;
     max-width: min(96vw, 100%);
-    display: block;
     margin-inline: auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-wrap: unset !important;
+    overflow: visible;
+    text-overflow: clip;
+    text-wrap: nowrap !important;
     text-align: center;
     line-height: 1.2 !important;
-    letter-spacing: 0.04em !important;
-    font-size: clamp(0.46rem, 2.45vw, 0.9rem) !important;
+    letter-spacing: clamp(0.025em, 0.42vw, 0.1em) !important;
+    font-size: clamp(0.58rem, 2.9vw, 1.08rem) !important;
+    transform-origin: center top;
   }
 }
 
-/* Cyber card titles: one line + breathing room from corner brackets */
+@media (max-width: 380px) {
+  .marketing-slogan-oneline .neon-badge-text,
+  .marketing-slogan-oneline.footer-typing .neon-badge-text {
+    font-size: clamp(0.5rem, 2.6vw, 0.8rem) !important;
+    letter-spacing: 0.02em !important;
+  }
+}
+
+/* Cyber card headings: keep hierarchy over body copy; clear corner brackets on phone & iPad */
 @media (max-width: 1023px) {
   .marketing-card-title-oneline {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: clamp(0.56rem, 3.15vw, 1.28rem) !important;
-    letter-spacing: 0.03em !important;
-    line-height: 1.15 !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0.04em !important;
+    padding-top: 0.45rem;
+    padding-left: 0.5rem;
+    padding-right: 0.3rem;
+    margin-bottom: 0.2rem;
   }
 
   .cyber-frame-mobile-pad {
-    padding: 2rem 1.25rem 1.4rem !important;
+    padding: 2.9rem 1.6rem 1.8rem !important;
   }
 
   .cyber-frame-mobile-pad--tight {
-    padding: 1.65rem 1.1rem 1.25rem !important;
+    padding: 2.2rem 1.4rem 1.5rem !important;
+  }
+
+  .cyber-inset-mobile-pad > div {
+    padding: 1.4rem 1.2rem 1.3rem !important;
   }
 
   .method-cta-block {
@@ -10760,6 +10781,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   .method-cta-heading {
     margin: 0.15rem 0 1.15rem;
     padding-top: 0.15rem;
+    padding-left: 0.35rem;
   }
 }
 

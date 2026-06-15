@@ -33,6 +33,21 @@ def _sanitize_placeholders(
     return report
 
 
+def _format_archetype_catalog_section(archetype_catalog: dict | None) -> str:
+    if not archetype_catalog:
+        return ""
+    business = archetype_catalog.get("business_models") or []
+    paid = archetype_catalog.get("psychology_paid") or []
+    free = archetype_catalog.get("psychology_free") or []
+    lines = ["Section E: Archetype Course Map", "Business Models:"]
+    lines.extend(f"• {title}" for title in business)
+    lines.append("Psychology (Paid Recommendations):")
+    lines.extend(f"• {title}" for title in paid)
+    lines.append("Psychology (Free — Get Free Ticket):")
+    lines.extend(f"• {title}" for title in free)
+    return "\n".join(lines) + "\n\n"
+
+
 def generate_ai_report(
     score: int,
     designation: str,
@@ -43,8 +58,10 @@ def generate_ai_report(
     protocol_course: str,
     user_id: str,
     answers: list[dict],
+    archetype_catalog: dict | None = None,
 ) -> str:
     api_key = (getattr(settings, "OPENAI_API_KEY", None) or "").strip()
+    catalog_section = _format_archetype_catalog_section(archetype_catalog)
     if not api_key:
         return (
             f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
@@ -61,8 +78,9 @@ def generate_ai_report(
             "Section C: The Syndicate Execution Stack\n"
             "To fix this, The Syndicate recommends these three courses:\n"
             f"1. THE WEAPON (Primary Business Model):\n• Course: {weapon_course}\n• Why: This business model fits your {archetype} style and is the fastest way for you to start earning.\n"
-            f"2. THE SHIELD (Behavioral Correction):\n• Course: {shield_course}\n• Why: This course helps you break the bad habit ({fatal_flaw}) that has been blocking your progress.\n"
-            f"3. THE PROTOCOL (Strategic Foundation):\n• Course: {protocol_course}\n• Why: This gives you the basic rules and mindset you need at your current level ({designation}).\n\n"
+            f"2. THE SHIELD (Behavioral Correction — Paid):\n• Course: {shield_course}\n• Why: This course helps you break the bad habit ({fatal_flaw}) that has been blocking your progress.\n"
+            f"3. THE PROTOCOL (Strategic Foundation — Free):\n• Course: {protocol_course}\n• Why: This gives you the basic rules and mindset you need at your current level ({designation}).\n\n"
+            f"{catalog_section}"
             "Section D: Final Directive\n"
             "WARNING: Time is running out. The longer you wait, the harder it gets to change.\n"
             "Most people read this and do nothing. Do not be one of them.\n"
@@ -89,7 +107,9 @@ def generate_ai_report(
         f"Answers: {answers}\n\n"
         "Output this exact structure with REAL values filled in.\n"
         "Never output bracket placeholders.\n"
-        "Keep each paragraph to 2-4 short sentences.\n\n"
+        "Keep each paragraph to 2-4 short sentences.\n"
+        "Shield is always a paid psychology course. Protocol is always a free psychology course.\n"
+        "Only Zero to 1 Million and 9 to 5 Exit Strategy are free-ticket courses.\n\n"
         f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
         "Section A: The Designation\n"
         f"STATUS: {designation}\n"
@@ -103,8 +123,9 @@ def generate_ai_report(
         "Section C: The Syndicate Execution Stack\n"
         "To fix this, The Syndicate recommends these three courses:\n"
         f"1. THE WEAPON (Primary Business Model):\n• Course: {weapon_course}\n• Why: (One or two simple sentences — why this business model fits them.)\n"
-        f"2. THE SHIELD (Behavioral Correction):\n• Course: {shield_course}\n• Why: (One or two simple sentences — how this fixes the virus {fatal_flaw}.)\n"
-        f"3. THE PROTOCOL (Strategic Foundation):\n• Course: {protocol_course}\n• Why: (One or two simple sentences — why this foundation fits their designation.)\n\n"
+        f"2. THE SHIELD (Behavioral Correction — Paid):\n• Course: {shield_course}\n• Why: (One or two simple sentences — how this fixes the virus {fatal_flaw}.)\n"
+        f"3. THE PROTOCOL (Strategic Foundation — Free):\n• Course: {protocol_course}\n• Why: (One or two simple sentences — why this foundation fits their designation.)\n\n"
+        f"{catalog_section}"
         "Section D: Final Directive\n"
         "WARNING: (One simple sentence about urgency.)\n"
         "(One simple sentence — most people do nothing; they should not.)\n"

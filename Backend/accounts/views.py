@@ -163,7 +163,7 @@ def _existing_locked_ticket_titles_for_user(user: User) -> list[str]:
 
 def _quiz_ticket_titles_for_result(quiz_result: QuizResult) -> list[str]:
   """
-  Free-ticket flow unlocks only shield/protocol courses that are in the four-ticket catalog.
+  Free-ticket flow unlocks only Zero to 1 Million and 9 to 5 Exit Strategy for the quiz email.
   """
   fatal_flaw = (quiz_result.virus or "").strip()
   designation = (quiz_result.category or "").strip()

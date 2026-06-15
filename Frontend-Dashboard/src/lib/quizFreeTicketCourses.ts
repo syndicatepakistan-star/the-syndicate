@@ -1,26 +1,30 @@
 /** Psychology programs eligible for quiz free-ticket unlock (matches backend catalog). */
 export const FREE_TICKET_PSYCHOLOGY_COURSES = [
-  "Secret To Transformation",
-  "The Micro Business Protocol",
   "Zero to 1 Million",
-  "Mastering Risk and Uncertainty",
+  "9 to 5 Exit Strategy",
 ] as const;
 
 /** Catalog title (lowercase) → public programs page playlist id. */
 const FREE_TICKET_PROGRAM_IDS: Record<string, number> = {
-  "secret to transformation": 9,
-  "the micro business protocol": 31,
   "zero to 1 million": 2,
-  "mastering risk and uncertainty": 30,
+  "zero to one million": 2,
+  "9 to 5 exit strategy": 1,
+  "the 9 to 5 exit strategy": 1,
 };
 
-export function isFreeTicketPsychologyCourse(courseName: string): boolean {
+function normalizeFreeTicketKey(courseName: string): string | null {
   const key = courseName.trim().toLowerCase();
-  return key in FREE_TICKET_PROGRAM_IDS;
+  if (key in FREE_TICKET_PROGRAM_IDS) return key;
+  return null;
+}
+
+export function isFreeTicketPsychologyCourse(courseName: string): boolean {
+  return normalizeFreeTicketKey(courseName) !== null;
 }
 
 export function freeTicketLoginNextPath(courseName: string): string {
-  const programId = FREE_TICKET_PROGRAM_IDS[courseName.trim().toLowerCase()];
+  const key = normalizeFreeTicketKey(courseName);
+  const programId = key ? FREE_TICKET_PROGRAM_IDS[key] : undefined;
   if (!programId) return "/programs#programs-library";
   return `/programs?program=${programId}#programs-library`;
 }

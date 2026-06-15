@@ -11,10 +11,13 @@ import {
 } from "@/lib/quizFreeTicketCourses";
 
 const TRACK_BY_ARCHETYPE = {
-  "Ghost Architect": "Python, React, Flutter, N8N AI Automation, and Unreal Engine.",
-  "Digital Raider": "WordPress, Framer, trading technical analysis, and AI automation.",
-  "Creative Infiltrator": "Canva, print on demand, Amazon KDP, and AI automation.",
-  "Asset Grinder": "KDP, print on demand, AI automation, and N8N AI automation.",
+  "Ghost Architect":
+    "Trading advanced technical analysis, AI Content Automation, and Building Games Using Unreal Engine.",
+  "Digital Raider":
+    "Building AI Agents with Claude and Anti Gravity, Unreal Engine, WordPress Blog, and Framer Crash Course.",
+  "Creative Infiltrator": "AI Content Automation, Print On Demand, and Amazon KDP.",
+  "Asset Grinder":
+    "AI Content Automation, Print On Demand, Amazon KDP, and Building AI Agents with Claude and Anti Gravity.",
   // Legacy labels (older quiz results)
   "Attention Broker": "Canva, print on demand, and Amazon KDP.",
   "System Architect": "Python, React, Flutter, and automation systems.",
@@ -29,6 +32,12 @@ type QuizResultPayload = {
   fatal_flaw?: string;
   recommended_track?: string;
   ai_report?: string;
+  archetype_catalog?: {
+    business_models?: string[];
+    psychology_paid?: string[];
+    psychology_free?: string[];
+    psychology?: string[];
+  };
 };
 
 function getCleanReportLines(report: string) {
@@ -89,6 +98,21 @@ function renderStyledReport(report: string, loginEmail: string) {
                 return (
                   <p key={`${section.title}-${idx}`} className="result-line result-line-rich result-course-line">
                     <span className="result-key">Course:</span>{" "}
+                    <span className="result-course-pill">{courseValue}</span>
+                    {showFreeTicket ? (
+                      <a className="result-ticket-btn" href={freeTicketHref}>
+                        Get Free Ticket
+                      </a>
+                    ) : null}
+                  </p>
+                );
+              }
+              if (line.startsWith("• ")) {
+                const courseValue = line.replace("• ", "").trim();
+                const showFreeTicket = isFreeTicketPsychologyCourse(courseValue);
+                const freeTicketHref = buildFreeTicketLoginHref(loginEmail, courseValue);
+                return (
+                  <p key={`${section.title}-${idx}`} className="result-line result-line-rich result-course-line">
                     <span className="result-course-pill">{courseValue}</span>
                     {showFreeTicket ? (
                       <a className="result-ticket-btn" href={freeTicketHref}>

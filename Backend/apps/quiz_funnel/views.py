@@ -107,6 +107,7 @@ def submit_answers(request):
         protocol_course=protocol_course,
         user_id=user_id,
         answers=normalized_answers,
+        archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
     user = User.objects.create(name=name, email=email, phone=phone)
@@ -135,5 +136,6 @@ def submit_answers(request):
             "protocol_course": protocol_course,
             "fatal_flaw": fatal_flaw,
             "ai_report": ai_report,
+            "archetype_catalog": recommendation.get("archetype_catalog"),
         }
     )

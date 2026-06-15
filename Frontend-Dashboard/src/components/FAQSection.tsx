@@ -72,7 +72,7 @@ const FAQS_BY_CATEGORY: Record<FaqCategory, { q: string; a: string }[]> = {
     },
     {
       q: 'What about the free ticket from the quiz?',
-      a: 'If you finish the quiz, you might get offered one free course — something like The Micro Business Protocol.\nPut in your email, confirm the code we send you, and that one course unlocks on the Programs page. It is a single free course, not Money Mastery and not the big Agentic AI, Content, or Trading packs.\nWant everything? That is Money Mastery or buying the packs/courses yourself.',
+      a: 'If you finish the quiz, you may unlock one free psychology course — Zero to 1 Million or 9 to 5 Exit Strategy.\nUse the same email you entered in the quiz, confirm the code we send you, and only that course unlocks on the Programs page. It is a single free course, not Money Mastery and not the Agentic AI, Content, or Trading packs.\nWant everything? That is Money Mastery or buying the packs/courses yourself.',
     },
     {
       q: 'Who is The Syndicate for?',

@@ -19,10 +19,12 @@ BANNED_COURSES = frozenset({"The Art Of Business Persuasion", "The Art of Busine
 ALLOWED_BUSINESS_MODELS: frozenset[str] = frozenset(
     {
         "AI Automation",
+        "AI Content Automation",
         "App Building using Flutter",
         "Python Full Course",
         "Amazon KDP",
         "Build a Real React App",
+        "Building AI Agents with Claude and Anti Gravity",
         "Building Games Using Unreal Engine",
         "Framer Crash Course",
         "Wordpress Blog",
@@ -52,6 +54,8 @@ ALLOWED_PSYCHOLOGY: frozenset[str] = frozenset(
 # Short keys → allowed catalog titles (reports use these strings only).
 COURSE = {
     "ai_automation": "AI Automation",
+    "ai_content_automation": "AI Content Automation",
+    "agentic_claude": "Building AI Agents with Claude and Anti Gravity",
     "n8n_automation": "N8N AI Automation",
     "flutter": "App Building using Flutter",
     "python": "Python Full Course",
@@ -79,7 +83,9 @@ COURSE = {
 # Map allowed catalog titles → published playlist titles (enrollment/tickets only).
 WEAPON_TO_PLAYLIST: dict[str, str] = {
     "AI Automation": "AI Automations",
+    "AI Content Automation": "Faceless YouTube AI Content Creator Course",
     "N8N AI Automation": "AI Automations",
+    "Building AI Agents with Claude and Anti Gravity": "How To Build A.I Agents",
     "App Building using Flutter": "App Building (using Flutter)",
     "Python Full Course": "Python Programming",
     "Amazon KDP": "Book Publishing On Amazon (KINDLE)",
@@ -106,137 +112,114 @@ PSYCHOLOGY_TO_PLAYLIST: dict[str, str] = {
     "Mastering Risk and Uncertainty": "Mastering Risk and Uncertainty",
 }
 
-# Quiz free-ticket psychology programs — only these four may show a free-ticket button.
+# Quiz free-ticket psychology programs — only these two may show a free-ticket button.
 FREE_TICKET_PSYCHOLOGY_COURSES: frozenset[str] = frozenset(
     {
-        COURSE["secret_transformation"],
-        COURSE["micro_protocol"],
         COURSE["zero_million"],
-        COURSE["risk_uncertainty"],
+        COURSE["exit_9_5"],
     }
 )
 
-# --- A. Archetype → Weapon (business models) ---
+ARCHETYPE_PSYCHOLOGY_PAID: list[str] = [
+    COURSE["micro_protocol"],
+    COURSE["business_warfare"],
+]
+
+ARCHETYPE_PSYCHOLOGY_FREE: list[str] = [
+    COURSE["zero_million"],
+    COURSE["exit_9_5"],
+]
+
+_SHARED_ARCHETYPE_PSYCHOLOGY: list[str] = ARCHETYPE_PSYCHOLOGY_PAID + ARCHETYPE_PSYCHOLOGY_FREE
+
+# --- A. Archetype → Weapon (business models) — per Re-Updated Quiz Funnel spec ---
 ARCHETYPE_WEAPON_MODELS: dict[str, dict[str, list[str]]] = {
     "Ghost Architect": {
-        "entry": [COURSE["python"], COURSE["trading_technical"]],
-        "elite": [COURSE["react"], COURSE["flutter"], COURSE["n8n_automation"], COURSE["unreal"]],
+        "entry": [
+            COURSE["trading_technical"],
+            COURSE["ai_content_automation"],
+            COURSE["unreal"],
+        ],
+        "elite": [
+            COURSE["trading_technical"],
+            COURSE["ai_content_automation"],
+            COURSE["unreal"],
+        ],
     },
     "Digital Raider": {
-        "entry": [COURSE["wordpress"], COURSE["framer"]],
-        "elite": [COURSE["trading_technical"], COURSE["unreal"], COURSE["ai_automation"]],
+        "entry": [
+            COURSE["agentic_claude"],
+            COURSE["unreal"],
+            COURSE["wordpress"],
+            COURSE["framer"],
+        ],
+        "elite": [
+            COURSE["agentic_claude"],
+            COURSE["unreal"],
+            COURSE["wordpress"],
+            COURSE["framer"],
+        ],
     },
     "Creative Infiltrator": {
-        "entry": [COURSE["pod"], COURSE["canva"]],
-        "elite": [COURSE["kdp"], COURSE["ai_automation"]],
+        "entry": [
+            COURSE["ai_content_automation"],
+            COURSE["pod"],
+            COURSE["kdp"],
+        ],
+        "elite": [
+            COURSE["ai_content_automation"],
+            COURSE["pod"],
+            COURSE["kdp"],
+        ],
     },
     "Asset Grinder": {
-        "entry": [COURSE["pod"], COURSE["kdp"]],
-        "elite": [COURSE["ai_automation"], COURSE["n8n_automation"]],
+        "entry": [
+            COURSE["ai_content_automation"],
+            COURSE["pod"],
+            COURSE["kdp"],
+            COURSE["agentic_claude"],
+        ],
+        "elite": [
+            COURSE["ai_content_automation"],
+            COURSE["pod"],
+            COURSE["kdp"],
+            COURSE["agentic_claude"],
+        ],
     },
 }
 
-# --- Archetype → Psychology (shields) ---
+# --- Archetype → Psychology (shields) — same paid + free pool for every archetype ---
 ARCHETYPE_PSYCHOLOGY_MODELS: dict[str, list[str]] = {
-    "Ghost Architect": [
-        COURSE["business_warfare"],
-        COURSE["syndicate_13"],
-        COURSE["micro_protocol"],
-    ],
-    "Digital Raider": [
-        COURSE["risk_uncertainty"],
-        COURSE["micro_protocol"],
-        COURSE["zero_million"],
-    ],
-    "Creative Infiltrator": [
-        COURSE["risk_uncertainty"],
-        COURSE["micro_protocol"],
-        COURSE["zero_million"],
-        COURSE["exit_9_5"],
-    ],
-    "Asset Grinder": [
-        COURSE["risk_uncertainty"],
-        COURSE["micro_protocol"],
-        COURSE["zero_million"],
-        COURSE["exit_9_5"],
-    ],
+    "Ghost Architect": list(_SHARED_ARCHETYPE_PSYCHOLOGY),
+    "Digital Raider": list(_SHARED_ARCHETYPE_PSYCHOLOGY),
+    "Creative Infiltrator": list(_SHARED_ARCHETYPE_PSYCHOLOGY),
+    "Asset Grinder": list(_SHARED_ARCHETYPE_PSYCHOLOGY),
 }
 
-# Virus → shield course within each archetype's psychology pool (deterministic).
-ARCHETYPE_VIRUS_SHIELD: dict[str, dict[str, str]] = {
-    "Ghost Architect": {
-        "Loner": COURSE["business_warfare"],
-        "Chaos Agent": COURSE["syndicate_13"],
-        "Visionary": COURSE["syndicate_13"],
-        "Order Taker": COURSE["micro_protocol"],
-        "Amateur": COURSE["micro_protocol"],
-        "Quitter": COURSE["syndicate_13"],
-        "Spender": COURSE["micro_protocol"],
-        "Emotional Mover": COURSE["business_warfare"],
-        "Identity Crisis": COURSE["business_warfare"],
-        "Slow Burner": COURSE["micro_protocol"],
-        "Employee": COURSE["syndicate_13"],
-        "Victim": COURSE["business_warfare"],
-    },
-    "Digital Raider": {
-        "Emotional Mover": COURSE["risk_uncertainty"],
-        "Order Taker": COURSE["micro_protocol"],
-        "Amateur": COURSE["zero_million"],
-        "Quitter": COURSE["risk_uncertainty"],
-        "Spender": COURSE["micro_protocol"],
-        "Loner": COURSE["risk_uncertainty"],
-        "Chaos Agent": COURSE["zero_million"],
-        "Visionary": COURSE["zero_million"],
-        "Identity Crisis": COURSE["risk_uncertainty"],
-        "Slow Burner": COURSE["zero_million"],
-        "Employee": COURSE["zero_million"],
-        "Victim": COURSE["risk_uncertainty"],
-    },
-    "Creative Infiltrator": {
-        "Emotional Mover": COURSE["risk_uncertainty"],
-        "Order Taker": COURSE["micro_protocol"],
-        "Amateur": COURSE["zero_million"],
-        "Employee": COURSE["exit_9_5"],
-        "Quitter": COURSE["risk_uncertainty"],
-        "Spender": COURSE["micro_protocol"],
-        "Loner": COURSE["exit_9_5"],
-        "Chaos Agent": COURSE["zero_million"],
-        "Visionary": COURSE["exit_9_5"],
-        "Identity Crisis": COURSE["risk_uncertainty"],
-        "Slow Burner": COURSE["zero_million"],
-        "Victim": COURSE["exit_9_5"],
-    },
-    "Asset Grinder": {
-        "Emotional Mover": COURSE["risk_uncertainty"],
-        "Order Taker": COURSE["micro_protocol"],
-        "Amateur": COURSE["zero_million"],
-        "Employee": COURSE["exit_9_5"],
-        "Quitter": COURSE["risk_uncertainty"],
-        "Spender": COURSE["micro_protocol"],
-        "Loner": COURSE["exit_9_5"],
-        "Chaos Agent": COURSE["zero_million"],
-        "Visionary": COURSE["exit_9_5"],
-        "Identity Crisis": COURSE["risk_uncertainty"],
-        "Slow Burner": COURSE["zero_million"],
-        "Victim": COURSE["exit_9_5"],
-    },
-}
-
-# Legacy global virus map (fallback when archetype omitted) — never Business Persuasion.
-SHIELD_BY_VIRUS: dict[str, str] = {
-    "Quitter": COURSE["mastering_consistency"],
-    "Employee": COURSE["exit_9_5"],
-    "Chaos Agent": COURSE["syndicate_13"],
-    "Victim": COURSE["money_philosophy"],
-    "Spender": COURSE["compound_effect"],
-    "Emotional Mover": COURSE["risk_uncertainty"],
+# Virus → paid shield course (Micro Business Protocol or Business Warfare only).
+VIRUS_PAID_SHIELD: dict[str, str] = {
     "Loner": COURSE["business_warfare"],
+    "Victim": COURSE["business_warfare"],
+    "Emotional Mover": COURSE["business_warfare"],
+    "Identity Crisis": COURSE["business_warfare"],
+    "Chaos Agent": COURSE["micro_protocol"],
+    "Visionary": COURSE["micro_protocol"],
     "Order Taker": COURSE["micro_protocol"],
-    "Identity Crisis": COURSE["secret_transformation"],
-    "Slow Burner": COURSE["hustle_hard"],
-    "Amateur": COURSE["zero_million"],
-    "Visionary": COURSE["syndicate_13"],
+    "Amateur": COURSE["micro_protocol"],
+    "Quitter": COURSE["micro_protocol"],
+    "Spender": COURSE["micro_protocol"],
+    "Slow Burner": COURSE["micro_protocol"],
+    "Employee": COURSE["micro_protocol"],
 }
+
+# Legacy per-archetype virus map — paid shields only.
+ARCHETYPE_VIRUS_SHIELD: dict[str, dict[str, str]] = {
+    archetype: dict(VIRUS_PAID_SHIELD)
+    for archetype in ("Ghost Architect", "Digital Raider", "Creative Infiltrator", "Asset Grinder")
+}
+
+# Legacy global virus map (fallback when archetype omitted) — paid shields only.
+SHIELD_BY_VIRUS: dict[str, str] = dict(VIRUS_PAID_SHIELD)
 
 VIRUS_DIAGNOSIS: dict[str, str] = {
     "Quitter": "You lose momentum when the hype fades — consistency is your leak.",
@@ -322,12 +305,12 @@ ARCHETYPE_TIEBREAK_ORDER: tuple[str, ...] = (
     "Asset Grinder",
 )
 
-# --- C. Protocol by power level (score) — psychology catalog only ---
+# --- C. Protocol by power level (score) — free psychology catalog only ---
 PROTOCOL_BY_DESIGNATION: dict[str, str] = {
-    "Street Soldier": COURSE["secret_transformation"],
+    "Street Soldier": COURSE["zero_million"],
     "Rogue Operator": COURSE["exit_9_5"],
-    "Syndicate Specialist": COURSE["risk_uncertainty"],
-    "Prospect": COURSE["syndicate_13"],
+    "Syndicate Specialist": COURSE["exit_9_5"],
+    "Prospect": COURSE["zero_million"],
 }
 
 DESIGNATION_BY_SCORE: tuple[tuple[int, int, str], ...] = (
@@ -449,7 +432,7 @@ def get_recommended_shield(virus: str, archetype: str | None = None) -> str:
         if pool:
             idx = sum(ord(c) for c in virus) % len(pool)
             return _assert_allowed_psychology(pool[idx])
-    shield = SHIELD_BY_VIRUS.get(virus, COURSE["syndicate_13"])
+    shield = SHIELD_BY_VIRUS.get(virus, COURSE["micro_protocol"])
     return _assert_allowed_psychology(shield)
 
 
@@ -479,8 +462,8 @@ def normalize_free_ticket_title(title: str) -> str | None:
         if db_title.lower() == lower:
             return catalog
     legacy_db_titles = {
-        "the 1 minute scalpel": COURSE["micro_protocol"],
-        "the micro business protocol": COURSE["micro_protocol"],
+        "zero to one million": COURSE["zero_million"],
+        "the 9 to 5 exit strategy": COURSE["exit_9_5"],
     }
     if lower in legacy_db_titles:
         return legacy_db_titles[lower]
@@ -594,9 +577,11 @@ def get_archetype_catalog(archetype: str) -> dict[str, list[str]]:
     business_models = list(dict.fromkeys((weapons.get("entry") or []) + (weapons.get("elite") or [])))
     return {
         "business_models": [_assert_allowed_weapon(c) for c in business_models],
+        "psychology_paid": [_assert_allowed_psychology(c) for c in ARCHETYPE_PSYCHOLOGY_PAID],
+        "psychology_free": [_assert_allowed_psychology(c) for c in ARCHETYPE_PSYCHOLOGY_FREE],
         "psychology": [
             _assert_allowed_psychology(c)
-            for c in (ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or [])
+            for c in (ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or _SHARED_ARCHETYPE_PSYCHOLOGY)
         ],
     }
 

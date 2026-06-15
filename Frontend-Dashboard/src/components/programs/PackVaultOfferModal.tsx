@@ -40,17 +40,18 @@ export function PackVaultOfferModal({
   const [linkedModuleCount, setLinkedModuleCount] = useState(0);
 
   useEffect(() => {
-    if (!packOffer) {
+    if (!packOffer || !isVaultPackKey(packOffer.plan)) {
       setPlaylistMapReady(false);
       setLinkedModuleCount(0);
       return;
     }
+    const packKey = packOffer.plan;
     setPlaylistMapReady(false);
     let cancelled = false;
     void fetchVaultPlaylistMap()
       .then((map) => {
         if (cancelled) return;
-        const courses = vaultCoursesForPack(packOffer.plan);
+        const courses = vaultCoursesForPack(packKey);
         const linked = courses.filter((offer) => vaultPlaylistIdForPlan(offer.plan, map) != null).length;
         setLinkedModuleCount(linked);
         setPlaylistMapReady(true);

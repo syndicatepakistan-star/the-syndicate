@@ -117,8 +117,13 @@ function redirectToAuthCheckout(params: PlanCheckoutParams) {
 }
 
 function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, status: number): string {
-  if (typeof payload === "string" && payload.trim()) {
+  if (typeof payload === "string") {
     const snippet = payload.replace(/\s+/g, " ").trim().slice(0, 200);
+    if (!snippet) {
+      return status === 500
+        ? "Checkout is unavailable right now. Please try again shortly."
+        : "Could not start checkout.";
+    }
     if (snippet.toLowerCase().includes("<!doctype") || snippet.toLowerCase().includes("<html")) {
       return status === 500
         ? "Checkout is unavailable right now. Please try again shortly."

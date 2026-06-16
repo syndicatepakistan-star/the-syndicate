@@ -5,6 +5,7 @@ import logging
 import random
 import re
 import secrets
+import uuid
 from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlsplit
@@ -24,7 +25,7 @@ from django.views.decorators.http import require_POST
 from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
 from apps.affiliate_tracking.views import ensure_affiliate_profile_for_existing_user, referral_ids_payload
 from apps.courses.models import Course, CourseEnrollment
-from apps.portal.models import UserDashboardEntitlement
+from apps.portal.models import UserDashboardEntitlement, UserPlanPurchase
 from apps.quiz_funnel.logic import (
   ALLOWED_BUSINESS_MODELS,
   ALLOWED_PSYCHOLOGY,
@@ -824,6 +825,17 @@ def verify_signup_otp_view(request):
   )
 
 
+def _parse_signup_token(raw: str) -> str | None:
+  """Return normalized UUID string or None if missing/invalid (avoids ORM ValidationError → 500)."""
+  s = (raw or "").strip()
+  if not s:
+    return None
+  try:
+    return str(uuid.UUID(s))
+  except ValueError:
+    return None
+
+
 @csrf_exempt
 @require_POST
 def create_checkout_session_view(request):
@@ -831,12 +843,15 @@ def create_checkout_session_view(request):
   if payload is None:
     return _json_error("Invalid JSON payload.")
 
-  signup_token = str(payload.get("signup_token", "")).strip()
+  signup_token = _parse_signup_token(str(payload.get("signup_token", "")))
   checkout_user = _authenticate_checkout_user(request) if not signup_token else None
   if not signup_token and checkout_user is None:
     auth_header = (request.META.get("HTTP_AUTHORIZATION") or "").strip()
     if auth_header:
       return _json_error("Authentication failed. Sign in again and retry checkout.", status=401)
+    raw_signup = str(payload.get("signup_token", "")).strip()
+    if raw_signup:
+      return _json_error("Checkout link expired or invalid. Sign up again to continue.", status=400)
     return _json_error("Signup token is required.")
 
   if checkout_user is not None:

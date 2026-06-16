@@ -182,12 +182,19 @@ export function fillMissingPublicProgramPlaylists(
       slug: entry.slug,
       category: publicPlaylistCategory(entry.id),
       description: entry.description,
-      price: entry.id === 31 ? "39.00" : entry.id === 30 ? "40.00" : "40.00",
+      price:
+        entry.id === 91
+          ? "49.00"
+          : entry.id === 31
+            ? "39.00"
+            : entry.id === 30
+              ? "40.00"
+              : "40.00",
       rating: "4.0",
       cover_image_url: null,
       video_count: 0,
       is_published: true,
-      is_coming_soon: false,
+      is_coming_soon: entry.id === 91,
       created_at: "1970-01-01T00:00:00.000Z",
     });
   }

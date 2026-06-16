@@ -99,7 +99,7 @@ WEAPON_TO_PLAYLIST: dict[str, str] = {
 }
 
 PSYCHOLOGY_TO_PLAYLIST: dict[str, str] = {
-    "Business Warfare": "The Art of Mastering Human Behavior in Business",
+    "Business Warfare": "Business Warfare",
     "Money Philosophy": "Syndicate Money Philosophy",
     "13 Syndicate Business Rule": "Syndicate 13 Business Rules",
     "Zero to 1 Million": "Zero to One Million",
@@ -500,6 +500,16 @@ def free_ticket_playlist_title_for_catalog(title: str) -> str | None:
     if not catalog:
         return None
     return map_psychology_to_playlist_title(catalog)
+
+
+def all_free_ticket_playlist_titles() -> list[str]:
+    """Both quiz free-ticket programs as published playlist titles."""
+    out: list[str] = []
+    for catalog in sorted(FREE_TICKET_PSYCHOLOGY_COURSES, key=str.lower):
+        db_title = map_psychology_to_playlist_title(catalog)
+        if db_title not in out:
+            out.append(db_title)
+    return out
 
 
 def _assert_allowed_weapon(course: str) -> str:

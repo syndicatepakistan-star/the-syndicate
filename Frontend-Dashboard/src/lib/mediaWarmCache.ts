@@ -58,13 +58,13 @@ export function warmGlobeGalleryImages(urls?: readonly string[]): Promise<void> 
   return Promise.all(list.map((src) => warmImage(src))).then(() => undefined);
 }
 
-/** Programs hero band: background MP4 + globe tiles together. */
+/** Programs hero band: background MP4 + globe tiles together (parallel network + decode). */
 export function warmProgramsSectionAssets(globeUrls?: readonly string[]): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  return Promise.all([
-    warmVideo(PROGRAMS_SECTION_VIDEO),
-    warmGlobeGalleryImages(globeUrls),
-  ]).then(() => undefined);
+  const globeList = globeUrls?.length ? globeUrls : [];
+  return Promise.all([warmVideo(PROGRAMS_SECTION_VIDEO), warmGlobeGalleryImages(globeList)]).then(
+    () => undefined
+  );
 }
 
 
@@ -278,27 +278,26 @@ export function warmImage(src: string): Promise<void> {
 
 
   const promise = new Promise<void>((resolve) => {
-
     const img = new Image();
-
     img.decoding = "async";
 
     const finish = () => {
-
       warmedImages.add(src);
-
       imageWarmPromises.delete(src);
-
       resolve();
-
     };
 
-    img.onload = finish;
+    const afterLoad = () => {
+      if (typeof img.decode === "function") {
+        void img.decode().then(finish).catch(finish);
+        return;
+      }
+      finish();
+    };
 
+    img.onload = afterLoad;
     img.onerror = finish;
-
     img.src = src;
-
   });
 
 

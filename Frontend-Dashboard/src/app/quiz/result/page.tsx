@@ -12,8 +12,12 @@ import {
 import {
   buildUnlockNowProgramsHref,
   classifyArchetypeMapLine,
+  classifyExecutionStackLine,
+  executionStackCategoryToActionCategory,
   isArchetypeCourseMapSection,
+  isExecutionStackSection,
   type ArchetypeMapLineCategory,
+  type ExecutionStackLineCategory,
 } from "@/lib/quizArchetypeCourseLinks";
 
 const TRACK_BY_ARCHETYPE = {
@@ -89,6 +93,63 @@ function renderCourseActionButton(
   return null;
 }
 
+function renderExecutionStackSectionContent(
+  content: string[],
+  sectionTitle: string,
+  loginEmail: string
+) {
+  let stackCategory: ExecutionStackLineCategory = "other";
+  return content.map((line, idx) => {
+    const headerCategory = classifyExecutionStackLine(line);
+    if (headerCategory) {
+      stackCategory = headerCategory;
+      const matchedPrefix = ["1. THE WEAPON", "2. THE SHIELD", "3. THE PROTOCOL"].find((prefix) =>
+        line.startsWith(prefix)
+      );
+      if (matchedPrefix) {
+        return (
+          <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich">
+            <span className="result-key">{matchedPrefix}</span>{" "}
+            {line.replace(matchedPrefix, "").trim()}
+          </p>
+        );
+      }
+      return (
+        <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich result-map-category">
+          {line}
+        </p>
+      );
+    }
+    if (line.startsWith("• Course:")) {
+      const courseValue = line.replace("• Course:", "").trim();
+      const actionCategory = executionStackCategoryToActionCategory(stackCategory);
+      const action = renderCourseActionButton(courseValue, actionCategory, loginEmail);
+      return (
+        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich result-course-line">
+          <span className="result-key">Course:</span>{" "}
+          <span className="result-course-pill">{courseValue}</span>
+          {action}
+        </p>
+      );
+    }
+    const keyPrefixes = ["Why:"];
+    const matchedPrefix = keyPrefixes.find((prefix) => line.startsWith(prefix));
+    if (matchedPrefix) {
+      return (
+        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich">
+          <span className="result-key">{matchedPrefix}</span>{" "}
+          {line.replace(matchedPrefix, "").trim()}
+        </p>
+      );
+    }
+    return (
+      <p key={`${sectionTitle}-${idx}`} className="result-line">
+        {line}
+      </p>
+    );
+  });
+}
+
 function renderArchetypeMapSectionContent(
   content: string[],
   sectionTitle: string,
@@ -159,7 +220,9 @@ function renderStyledReport(report: string, loginEmail: string) {
             <h3 className="result-subheading">{section.title}</h3>
             {isArchetypeCourseMapSection(section.title)
               ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
-              : section.content.map((line, idx) => {
+              : isExecutionStackSection(section.title)
+                ? renderExecutionStackSectionContent(section.content, section.title, loginEmail)
+                : section.content.map((line, idx) => {
               if (line.startsWith("• Course:")) {
                 const courseValue = line.replace("• Course:", "").trim();
                 const showFreeTicket = isFreeTicketPsychologyCourse(courseValue);

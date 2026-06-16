@@ -23,7 +23,7 @@ const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
   "full canva tutorial": "Graphics Design Using Canva",
   "trading advanced technical analysis": "Crypto Trading with Technical Analysis Course",
   // Psychology (PSYCHOLOGY_TO_PLAYLIST)
-  "business warfare": "The Art of Mastering Human Behavior in Business",
+  "business warfare": "Business Warfare",
   "the micro business protocol": "Micro Business Protocols",
   "micro business protocols": "Micro Business Protocols",
   "money philosophy": "Syndicate Money Philosophy",
@@ -87,4 +87,27 @@ export function classifyArchetypeMapLine(line: string): ArchetypeMapLineCategory
 export function isArchetypeCourseMapSection(sectionTitle: string): boolean {
   const t = sectionTitle.trim().toLowerCase();
   return t.includes("archetype course map") || t.startsWith("section e");
+}
+
+export type ExecutionStackLineCategory = "weapon" | "shield" | "protocol" | "other";
+
+export function classifyExecutionStackLine(line: string): ExecutionStackLineCategory | null {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("1. THE WEAPON")) return "weapon";
+  if (trimmed.startsWith("2. THE SHIELD")) return "shield";
+  if (trimmed.startsWith("3. THE PROTOCOL")) return "protocol";
+  return null;
+}
+
+export function isExecutionStackSection(sectionTitle: string): boolean {
+  const t = sectionTitle.trim().toLowerCase();
+  return t.includes("execution stack") || t.startsWith("section c");
+}
+
+export function executionStackCategoryToActionCategory(
+  category: ExecutionStackLineCategory
+): ArchetypeMapLineCategory {
+  if (category === "weapon") return "business";
+  if (category === "shield") return "paid_psychology";
+  return "other";
 }

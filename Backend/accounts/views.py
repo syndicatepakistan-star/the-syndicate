@@ -28,10 +28,8 @@ from apps.portal.models import UserDashboardEntitlement
 from apps.quiz_funnel.logic import (
   ALLOWED_BUSINESS_MODELS,
   ALLOWED_PSYCHOLOGY,
+  all_free_ticket_playlist_titles,
   free_ticket_playlist_title_for_catalog,
-  free_ticket_playlist_titles_from_stack,
-  get_recommended_protocol,
-  get_recommended_shield,
   is_free_ticket_psychology_course,
   map_psychology_to_playlist_title,
   map_weapon_to_playlist_title,
@@ -163,13 +161,10 @@ def _existing_locked_ticket_titles_for_user(user: User) -> list[str]:
 
 def _quiz_ticket_titles_for_result(quiz_result: QuizResult) -> list[str]:
   """
-  Free-ticket flow unlocks only Zero to 1 Million and 9 to 5 Exit Strategy for the quiz email.
+  Quiz free-ticket entitlement: both Zero to 1 Million and 9 to 5 Exit Strategy.
   """
-  fatal_flaw = (quiz_result.virus or "").strip()
-  designation = (quiz_result.category or "").strip()
-  shield = get_recommended_shield(fatal_flaw)
-  protocol = get_recommended_protocol(designation)
-  return free_ticket_playlist_titles_from_stack(shield, protocol)
+  del quiz_result  # entitlement is fixed; quiz result only gates email eligibility.
+  return all_free_ticket_playlist_titles()
 
 
 def _best_playlist_match_for_offer_part(part: str) -> StreamPlaylist | None:
@@ -241,6 +236,11 @@ def _playlist_for_ticket_title(title: str) -> StreamPlaylist | None:
     if mapped_row is not None:
       return mapped_row
   if is_free_ticket_psychology_course(normalized):
+    mapped = free_ticket_playlist_title_for_catalog(normalized)
+    if mapped:
+      mapped_row = qs.filter(title__iexact=mapped).order_by("title").first()
+      if mapped_row is not None:
+        return mapped_row
     return None
   return _best_playlist_match_for_offer_part(normalized)
 
@@ -283,10 +283,7 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
   quiz_ticket_titles = _quiz_ticket_titles_for_result(quiz_result)
   selected_is_free_ticket = is_free_ticket_psychology_course(selected_ticket_title)
   if selected_is_free_ticket:
-    playlist_title = free_ticket_playlist_title_for_catalog(selected_ticket_title)
-    ticket_titles = list(quiz_ticket_titles)
-    if playlist_title and playlist_title not in ticket_titles:
-      ticket_titles.insert(0, playlist_title)
+    ticket_titles = all_free_ticket_playlist_titles()
   elif existing_locked_titles:
     ticket_titles = existing_locked_titles
   elif selected_ticket_title.strip():

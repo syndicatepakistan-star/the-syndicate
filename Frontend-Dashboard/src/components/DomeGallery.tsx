@@ -173,6 +173,7 @@ export default function DomeGallery({
   const lastDragEndAt = useRef(0)
   const activeSegmentsRef = useRef(segments)
   const [activeSegments, setActiveSegments] = useState(segments)
+  const [compactViewport, setCompactViewport] = useState(false)
 
   const scrollLockedRef = useRef(false)
   const lockScroll = useCallback(() => {
@@ -212,12 +213,12 @@ export default function DomeGallery({
     })
     const fallback = window.setTimeout(() => {
       if (!cancelled) setTilesReady(true)
-    }, 1400)
+    }, compactViewport ? 700 : 1400)
     return () => {
       cancelled = true
       window.clearTimeout(fallback)
     }
-  }, [eagerImages, uniqueSrcs])
+  }, [eagerImages, uniqueSrcs, compactViewport])
 
   const applyTransform = (xDeg: number, yDeg: number) => {
     const el = sphereRef.current
@@ -237,6 +238,7 @@ export default function DomeGallery({
       const w = Math.max(1, cr.width)
       const h = Math.max(1, cr.height)
       const isMobile = w < 640
+      setCompactViewport(isMobile)
       const nextSegments = isMobile ? Math.max(10, Math.round(segments * 0.56)) : segments
       activeSegmentsRef.current = nextSegments
       setActiveSegments((prev) => (prev === nextSegments ? prev : nextSegments))
@@ -800,11 +802,11 @@ export default function DomeGallery({
                       draggable={false}
                       alt={it.alt}
                       fill
-                      quality={55}
+                      quality={compactViewport ? 42 : 55}
                       loading={eagerImages ? 'eager' : 'lazy'}
                       fetchPriority={eagerImages ? 'high' : 'low'}
                       decoding="async"
-                      sizes="(max-width: 768px) 34vw, (max-width: 1280px) 18vw, 220px"
+                      sizes={compactViewport ? '38vw' : '(max-width: 768px) 34vw, (max-width: 1280px) 18vw, 220px'}
                       className="h-full w-full pointer-events-none object-cover"
                       style={{ backfaceVisibility: 'hidden', filter: `var(--image-filter, ${grayscale ? 'grayscale(1)' : 'none'})` }}
                     />
@@ -814,10 +816,14 @@ export default function DomeGallery({
             </div>
           </div>
 
-          <div className="pointer-events-none absolute inset-0 z-[3] m-auto" style={{ backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 65%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)` }} />
-          <div className="pointer-events-none absolute inset-0 z-[3] m-auto" style={{ WebkitMaskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`, maskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`, backdropFilter: 'blur(3px)' }} />
-          <div className="pointer-events-none absolute left-0 right-0 top-0 z-[5] h-0 rotate-180 sm:h-[120px]" style={{ background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))` }} />
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[5] h-0 sm:h-[120px]" style={{ background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))` }} />
+          {!compactViewport ? (
+            <>
+              <div className="pointer-events-none absolute inset-0 z-[3] m-auto" style={{ backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 65%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)` }} />
+              <div className="pointer-events-none absolute inset-0 z-[3] m-auto" style={{ WebkitMaskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`, maskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`, backdropFilter: 'blur(3px)' }} />
+              <div className="pointer-events-none absolute left-0 right-0 top-0 z-[5] h-0 rotate-180 sm:h-[120px]" style={{ background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))` }} />
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[5] h-0 sm:h-[120px]" style={{ background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))` }} />
+            </>
+          ) : null}
 
           <div ref={viewerRef} className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center" style={{ padding: 'var(--viewer-pad)' }}>
             <div ref={scrimRef} className="scrim pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-500" style={{ background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(3px)' }} />

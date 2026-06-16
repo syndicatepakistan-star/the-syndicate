@@ -22,6 +22,10 @@ import {
 } from "@/lib/programPlaylistCatalog";
 import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import {
+  ProgramUnlockCelebration,
+  PROGRAM_UNLOCK_CELEBRATION_KEY,
+} from "@/components/programs/ProgramUnlockCelebration";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
@@ -239,6 +243,9 @@ export function ProgramsCourseSection({
   const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
   const [highlightProgramId, setHighlightProgramId] = useState<number | null>(null);
   const highlightHandledRef = useRef(false);
+  const [unlockCelebrationId, setUnlockCelebrationId] = useState<number | null>(null);
+  const unlockCelebrationStartedRef = useRef(false);
+  const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
 
   const reloadApiCourses = useCallback(async () => {
     const res = await fetchCoursesList();
@@ -281,6 +288,19 @@ export function ProgramsCourseSection({
     };
   }, [reloadApiCourses, reloadStreamPlaylists]);
 
+  const queueUnlockCelebration = useCallback((playlistId: number) => {
+    if (!Number.isFinite(playlistId) || playlistId <= 0) return;
+    if (unlockCelebrationStartedRef.current) return;
+    unlockCelebrationStartedRef.current = true;
+    setUnlockCelebrationId(playlistId);
+    setHighlightProgramId(playlistId);
+    try {
+      window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, String(playlistId));
+    } catch {
+      // Ignore storage exceptions.
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refreshFromCheckout = () => {
@@ -291,10 +311,21 @@ export function ProgramsCourseSection({
         // Ignore storage exceptions.
       }
     };
+    const onConfirmed = (e: Event) => {
+      refreshFromCheckout();
+      const detail = (e as CustomEvent<{ playlistId?: number }>).detail;
+      if (detail?.playlistId) {
+        queueUnlockCelebration(detail.playlistId);
+      }
+    };
     const params = new URLSearchParams(window.location.search);
     if (params.get("playlist_checkout") === "success") {
       const t = window.setTimeout(refreshFromCheckout, 900);
-      return () => window.clearTimeout(t);
+      window.addEventListener("playlist-checkout-confirmed", onConfirmed);
+      return () => {
+        window.clearTimeout(t);
+        window.removeEventListener("playlist-checkout-confirmed", onConfirmed);
+      };
     }
     try {
       if (window.sessionStorage.getItem("playlist_checkout_confirmed") === "1") {
@@ -303,14 +334,60 @@ export function ProgramsCourseSection({
     } catch {
       // Ignore storage exceptions.
     }
-    const onConfirmed = () => {
-      refreshFromCheckout();
-    };
     window.addEventListener("playlist-checkout-confirmed", onConfirmed);
     return () => {
       window.removeEventListener("playlist-checkout-confirmed", onConfirmed);
     };
-  }, [reloadStreamPlaylists]);
+  }, [reloadStreamPlaylists, queueUnlockCelebration]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.sessionStorage.getItem(PROGRAM_UNLOCK_CELEBRATION_KEY);
+      if (stored && /^\d+$/.test(stored)) {
+        queueUnlockCelebration(Number(stored));
+      }
+    } catch {
+      // Ignore storage exceptions.
+    }
+  }, [queueUnlockCelebration]);
+
+  useEffect(() => {
+    if (!unlockCelebrationId) return;
+    const target = streamPlaylists.find((pl) => pl.id === unlockCelebrationId);
+    if (!target?.is_unlocked) return;
+    setHighlightedPlaylistId(unlockCelebrationId);
+    scrollToProgramLibrary("dashboard");
+    const cancelScroll = focusProgramCardWithRetries(unlockCelebrationId, undefined, {
+      delays: [0, 120, 400, 900, 1400, 2200],
+    });
+    return () => cancelScroll();
+  }, [unlockCelebrationId, streamPlaylists]);
+
+  const completeUnlockCelebration = useCallback(() => {
+    const playlistId = unlockCelebrationId;
+    setUnlockCelebrationId(null);
+    try {
+      window.sessionStorage.removeItem(PROGRAM_UNLOCK_CELEBRATION_KEY);
+    } catch {
+      // Ignore storage exceptions.
+    }
+    if (playlistId) {
+      openStreamPlaylistRef.current(playlistId);
+      toast.success("Program unlocked — you can access it now.");
+    }
+  }, [unlockCelebrationId]);
+
+  const unlockCelebrationPlaylist = useMemo(
+    () =>
+      unlockCelebrationId != null
+        ? streamPlaylists.find((pl) => pl.id === unlockCelebrationId)
+        : undefined,
+    [unlockCelebrationId, streamPlaylists]
+  );
+
+  const showUnlockCelebration =
+    unlockCelebrationPlaylist != null && unlockCelebrationPlaylist.is_unlocked;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -402,11 +479,13 @@ export function ProgramsCourseSection({
     void prefetchStreamPlaylistExperience(id);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
+      url.searchParams.set("section", "programs");
       url.searchParams.set("playlist", String(id));
       window.history.replaceState({}, "", url.toString());
       requestAnimationFrame(resetProgramsViewportScroll);
     }
   };
+  openStreamPlaylistRef.current = openStreamPlaylist;
 
   const startPlaylistCheckout = useCallback(async (playlistId: number) => {
     if (checkoutBusyPlaylistId === playlistId) return;
@@ -569,12 +648,13 @@ export function ProgramsCourseSection({
     const target = streamPlaylists.find((pl) => pl.id === playlistIdFromUrl);
     if (!target) return;
     if (target.is_coming_soon || !target.is_unlocked) return;
+    if (unlockCelebrationId === playlistIdFromUrl) return;
     if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
     void prefetchStreamPlaylistExperience(playlistIdFromUrl);
-  }, [streamPlaylists, detailPlaylistId, secureView]);
+  }, [streamPlaylists, detailPlaylistId, secureView, unlockCelebrationId]);
 
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;
@@ -1132,6 +1212,12 @@ export function ProgramsCourseSection({
         playlist={playlistDescriptionModal}
         onClose={() => setPlaylistDescriptionModal(null)}
       />
+      {showUnlockCelebration && unlockCelebrationPlaylist ? (
+        <ProgramUnlockCelebration
+          programTitle={resolveProgramPlaylistTitle(unlockCelebrationPlaylist)}
+          onComplete={completeUnlockCelebration}
+        />
+      ) : null}
     </>
   );
 }

@@ -53,6 +53,7 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
   12, // The Compound Effect
   30, // The Micro Business Protocol
   31, // Mastering Risk and Uncertainty
+  91, // Business Warfare
   // Business Model
   13, // WordPress Blog
   14, // Framer Crash Course
@@ -76,7 +77,7 @@ export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
 
 /** Display order on /programs (Business Psychology column). */
 export const PUBLIC_PSYCHOLOGY_PROGRAM_ORDER: readonly number[] = [
-  3, 6, 31, 30, 1, 12, 2, 9,
+  3, 6, 31, 30, 91, 1, 12, 2, 9,
 ];
 
 /** Display order on /programs (Business Model column). */
@@ -122,6 +123,7 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   29: courseThumb("1 minute scalpel.jpeg"),
   30: courseThumb("uncertainty.jpg"),
   31: courseThumb("micro business.jpg"),
+  91: courseThumb("warfare.jpg"),
 };
 
 /** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules). */

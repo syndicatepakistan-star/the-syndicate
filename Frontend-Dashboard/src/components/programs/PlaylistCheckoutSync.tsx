@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
+import { PROGRAM_UNLOCK_CELEBRATION_KEY } from "@/components/programs/ProgramUnlockCelebration";
 
 export function PlaylistCheckoutSync() {
   useEffect(() => {
@@ -13,25 +14,39 @@ export function PlaylistCheckoutSync() {
     let cancelled = false;
     void (async () => {
       let confirmed = false;
+      let playlistId =
+        (params.get("playlist_id") || "").trim() ||
+        (params.get("playlist") || "").trim();
       try {
-        await confirmPlaylistCheckoutSuccess(sessionId);
+        const result = await confirmPlaylistCheckoutSuccess(sessionId);
         confirmed = true;
+        playlistId = String(result.playlist_id || playlistId || "").trim();
         try {
           window.sessionStorage.setItem("playlist_checkout_confirmed", "1");
+          if (playlistId) {
+            window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, playlistId);
+          }
         } catch {
           // Ignore storage exceptions.
         }
-        window.dispatchEvent(new Event("playlist-checkout-confirmed"));
+        window.dispatchEvent(
+          new CustomEvent("playlist-checkout-confirmed", {
+            detail: { playlistId: playlistId ? Number(playlistId) : undefined },
+          })
+        );
       } catch {
         // Ignore noisy errors here; dashboard data fetch will reflect final state.
       } finally {
         if (cancelled) return;
-        // Keep query params for retry/debug only when confirmation failed.
         if (!confirmed) return;
         const clean = new URL(window.location.href);
         clean.searchParams.delete("playlist_checkout");
         clean.searchParams.delete("session_id");
         clean.searchParams.delete("playlist_id");
+        clean.searchParams.set("section", "programs");
+        if (playlistId) {
+          clean.searchParams.set("playlist", playlistId);
+        }
         window.history.replaceState({}, "", clean.toString());
       }
     })();

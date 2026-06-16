@@ -19,6 +19,8 @@ type ViewportDecorVideoProps = {
   preferStaticOnMobile?: boolean;
   /** Hero/section backdrop: fill parent with absolute inset-0 video (no extra wrapper opacity). */
   fill?: boolean;
+  /** Skip the static gradient layer behind the video (lighter mobile programs band). */
+  plainBackdrop?: boolean;
 };
 
 const DECOR_VIDEO_BACKDROP =
@@ -58,6 +60,7 @@ export function ViewportDecorVideo({
   alwaysOn = false,
   preferStaticOnMobile = false,
   fill = false,
+  plainBackdrop = false,
 }: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const cachedOnMount = useRef(isVideoWarm(src));
@@ -179,7 +182,9 @@ export function ViewportDecorVideo({
         style={style}
         aria-hidden
       >
-        <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+        {!plainBackdrop ? (
+          <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+        ) : null}
         {videoNode}
       </div>
     );
@@ -191,7 +196,9 @@ export function ViewportDecorVideo({
       style={style}
       aria-hidden
     >
-      <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+      {!plainBackdrop ? (
+        <div className="absolute inset-0 h-full w-full" style={{ background: DECOR_VIDEO_BACKDROP }} />
+      ) : null}
       {videoNode}
     </div>
   );

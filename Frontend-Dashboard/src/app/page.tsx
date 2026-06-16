@@ -174,8 +174,11 @@ export default async function Home() {
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <ProgramsSectionBackground />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-black/72" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }} />
+        <div className="pointer-events-none absolute inset-0 bg-black/72 max-sm:hidden" />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08] max-sm:hidden"
+          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }}
+        />
 
         <div className="relative z-10 h-full w-full px-0 pt-6 sm:pt-10 md:pt-12">
           <h2 className="mb-3 mt-2 text-center text-2xl font-black uppercase sm:mb-12 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">

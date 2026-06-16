@@ -189,7 +189,12 @@ export function PlaylistCardsSection({
   const visiblePlaylists = useMemo(
     () =>
       playlists.filter((pl) => {
-        if (pl.is_coming_soon) return false;
+        if (pl.is_coming_soon) {
+          return (
+            isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title }) ||
+            highlightPlaylistId === pl.id
+          );
+        }
         if (isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title })) {
           return true;
         }
@@ -279,6 +284,7 @@ export function PlaylistCardsSection({
     const theme = PLAYLIST_CARD_THEMES[themeIdx % PLAYLIST_CARD_THEMES.length];
     const price = parseNumber(pl.price);
     const isSpotlight = highlightedPlaylistId === pl.id;
+    const comingSoon = !!pl.is_coming_soon;
     const showIdleGlow = !spotlightActive;
     const spotlightStyle = isSpotlight
       ? ({
@@ -356,6 +362,13 @@ export function PlaylistCardsSection({
                 loading={j < 2 ? "eager" : "lazy"}
                 fetchPriority={j < 2 ? "high" : "auto"}
               />
+              {comingSoon ? (
+                <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-3 text-center">
+                  <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-[clamp(1rem,3.8vw,1.35rem)] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-[1.15rem]">
+                    Coming Soon
+                  </span>
+                </span>
+              ) : null}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
             </div>
             <div className="absolute right-3 top-3 z-[4]">
@@ -386,8 +399,9 @@ export function PlaylistCardsSection({
                 </button>
                 <button
                   type="button"
-                  disabled={pendingCheckoutPlaylistId === pl.id}
+                  disabled={comingSoon || pendingCheckoutPlaylistId === pl.id}
                   onClick={() => {
+                    if (comingSoon) return;
                     void (async () => {
                       if (pl.is_unlocked) {
                         router.push(`/dashboard?section=programs&playlist=${pl.id}`);
@@ -425,13 +439,18 @@ export function PlaylistCardsSection({
                       }
                     })();
                   }}
-                  className="min-w-0 rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:px-2 sm:py-2 sm:tracking-[0.15em]"
+                  className={cn(
+                    "min-w-0 rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:px-2 sm:py-2 sm:tracking-[0.15em]",
+                    comingSoon && "cursor-not-allowed opacity-60 hover:scale-100"
+                  )}
                 >
-                  {pendingCheckoutPlaylistId === pl.id
-                    ? "Loading..."
-                    : pl.is_unlocked
-                      ? "Open Program"
-                      : "Unlock"}
+                  {comingSoon
+                    ? "Coming Soon"
+                    : pendingCheckoutPlaylistId === pl.id
+                      ? "Loading..."
+                      : pl.is_unlocked
+                        ? "Open Program"
+                        : "Unlock"}
                 </button>
               </div>
             </div>

@@ -7,15 +7,35 @@ import { PROGRAMS_SECTION_VIDEO } from "@/lib/mediaWarmCache";
 const VIMEO_SRC =
   "https://player.vimeo.com/video/988922121?autoplay=1&muted=1&loop=1&background=1";
 
-/** Programs band — same-origin MP4, starts immediately (no intersection defer). */
+function useMobileProgramsBand(): boolean {
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return mobile;
+}
+
+/** Programs band — same-origin MP4; lighter backdrop on phones. */
 export function ProgramsSectionBackground() {
+  const isMobile = useMobileProgramsBand();
   return (
     <ViewportDecorVideo
       src={PROGRAMS_SECTION_VIDEO}
       priority
       alwaysOn
       fill
-      videoClassName="scale-[1.22] opacity-60 grayscale saturate-0"
+      plainBackdrop={isMobile}
+      videoClassName={
+        isMobile
+          ? "scale-[1.15] opacity-85 saturate-100"
+          : "scale-[1.22] opacity-60 grayscale saturate-0"
+      }
     />
   );
 }

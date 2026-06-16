@@ -451,7 +451,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                         "quantity": 1,
                     }
                 ],
-                success_url=f"{frontend_base}/dashboard?playlist_checkout=success&session_id={{CHECKOUT_SESSION_ID}}&playlist_id={playlist.id}",
+                success_url=f"{frontend_base}/dashboard?section=programs&playlist_checkout=success&session_id={{CHECKOUT_SESSION_ID}}&playlist_id={playlist.id}",
                 cancel_url=f"{frontend_base}/programs?playlist_checkout=cancelled&playlist_id={playlist.id}",
                 metadata=metadata,
             )

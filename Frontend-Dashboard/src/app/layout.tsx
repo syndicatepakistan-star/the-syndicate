@@ -40,7 +40,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
         <link rel="preload" href="/fonts/Thryon.otf" as="font" type="font/otf" crossOrigin="anonymous" />
-        <link rel="preload" href="/assets/logo.webp" as="image" type="image/webp" fetchPriority="high" />
       </head>
       <body
         className={`${jetbrainsMono.variable} min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased`}

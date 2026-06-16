@@ -115,7 +115,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
-      <link rel="preload" href="/assets/v.mp4" as="video" type="video/mp4" />
       <ProgramsGlobeWarmup imageSrcs={GLOBE_GALLERY_IMAGE_URLS} />
       <NavApp />
       <section

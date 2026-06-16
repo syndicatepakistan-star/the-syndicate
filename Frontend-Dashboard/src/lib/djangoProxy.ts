@@ -12,6 +12,13 @@ const HOP_BY_HOP = new Set([
   "host",
 ]);
 
+/** Upstream may gzip; Node fetch decompresses the body but can leave encoding headers — strip them. */
+const STRIP_UPSTREAM_RESPONSE_HEADERS = new Set([
+  ...HOP_BY_HOP,
+  "content-encoding",
+  "content-length",
+]);
+
 async function proxyToDjangoApi(
   request: Request,
   apiPathSegments: string[],
@@ -36,6 +43,8 @@ async function proxyToDjangoApi(
   request.headers.forEach((value, key) => {
     if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value);
   });
+  // Ask upstream for identity so we never forward mismatched Content-Encoding.
+  headers.delete("accept-encoding");
 
   const init: RequestInit = {
     method: request.method,
@@ -63,7 +72,7 @@ async function proxyToDjangoApi(
   }
   const outHeaders = new Headers();
   upstream.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) outHeaders.set(key, value);
+    if (!STRIP_UPSTREAM_RESPONSE_HEADERS.has(key.toLowerCase())) outHeaders.set(key, value);
   });
   return new Response(upstream.body, {
     status: upstream.status,

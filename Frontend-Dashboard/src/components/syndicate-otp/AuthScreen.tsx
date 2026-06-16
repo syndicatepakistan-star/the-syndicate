@@ -524,11 +524,17 @@ export default function AuthScreen({
     try {
       response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(body),
       });
     } catch (caught) {
       if (caught instanceof TypeError) {
+        const msg = caught.message || "";
+        if (/content decoding|failed to fetch|networkerror/i.test(msg)) {
+          throw new Error(
+            "Could not read the server response (proxy/decode error). Redeploy the frontend service; if this persists, contact support.",
+          );
+        }
         const hint = getApiDisplayHint();
         const isRailway =
           typeof url === "string" &&

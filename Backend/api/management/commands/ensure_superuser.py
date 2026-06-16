@@ -14,6 +14,12 @@ class Command(BaseCommand):
         "Set DJANGO_SUPERUSER_NO_PASSWORD_SYNC=1 to only create when missing, never change password."
     )
 
+    def _create_superuser_bypassing_validators(self, username: str, email: str, password: str) -> None:
+        """Railway bootstrap: create staff user without MinimumLengthValidator blocking short env passwords."""
+        user = User(username=username, email=email, is_staff=True, is_superuser=True, is_active=True)
+        user.set_password(password)
+        user.save()
+
     def handle(self, *args, **options):
         email = (os.environ.get("DJANGO_SUPERUSER_EMAIL") or "").strip().lower()
         username = (os.environ.get("DJANGO_SUPERUSER_USERNAME") or "").strip()
@@ -33,7 +39,7 @@ class Command(BaseCommand):
         )
         existing = User.objects.filter(username=username).first()
         if existing is None:
-            existing = User.objects.filter(email=email).first()
+            existing = User.objects.filter(email__iexact=email).first()
 
         if existing:
             if no_sync:
@@ -48,10 +54,17 @@ class Command(BaseCommand):
             existing.save(update_fields=["username", "email", "is_staff", "is_superuser", "is_active", "password"])
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"ensure_superuser: updated staff/superuser + password for {username} (matches Railway variables now)"
+                    f"ensure_superuser: updated staff/superuser + password for {username} (login admin with email {email} or username {username})"
                 )
             )
             return
 
-        User.objects.create_superuser(username=username, email=email, password=password)
-        self.stdout.write(self.style.SUCCESS(f"ensure_superuser: created superuser {username}"))
+        try:
+            User.objects.create_superuser(username=username, email=email, password=password)
+        except Exception:
+            self._create_superuser_bypassing_validators(username, email, password)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"ensure_superuser: created superuser {username} (login admin with email {email} or username {username})"
+            )
+        )

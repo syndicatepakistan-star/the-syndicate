@@ -22,6 +22,7 @@ from django.http import JsonResponse
 from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_allowed_playlist_ids
+from apps.portal.models import UserDashboardEntitlement
 from apps.video_streaming.entitlements import (
     playlist_included_by_entitlement,
     user_can_access_stream_playlist,

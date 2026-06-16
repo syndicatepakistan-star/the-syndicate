@@ -25,7 +25,7 @@ export type GoalsPanelContextValue = {
   setShellSectionKey: (key: string | null) => void;
   themeMode: ThemeMode;
   setPanelThemeMode: (mode: ThemeMode) => void;
-  /** Money Mastery tier: Goals FAB is visible but locked (upgrade to The Knight for full access). */
+  /** When true, Goals FAB shows upgrade overlay (playlist-only buyers; not Money Mastery). */
   goalsFabLocked: boolean;
   setGoalsFabLocked: (locked: boolean) => void;
 };

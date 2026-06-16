@@ -1888,7 +1888,18 @@ export default function Page() {
         }
       }
       setNavKeyState(key);
-      const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        params.set("section", key);
+        const qs = params.toString();
+        const href = qs ? `${pathname}?${qs}` : pathname;
+        const currentHref = `${window.location.pathname}${window.location.search}`;
+        if (currentHref !== href) {
+          window.history.pushState({ dashboardSection: key }, "", href);
+        }
+        return;
+      }
+      const params = new URLSearchParams();
       params.set("section", key);
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });

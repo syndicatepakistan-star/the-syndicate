@@ -29,31 +29,34 @@ export function syndicateOtpVerifyHref(email: string, flow: "login" | "signup", 
   return `${b}/verify-otp?${params.toString()}`;
 }
 
-const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
-
-function isSameAppHost(apiHostname: string, pageHostname: string): boolean {
-  if (apiHostname === pageHostname) return true;
-  return LOOPBACK_HOSTS.has(apiHostname) && LOOPBACK_HOSTS.has(pageHostname);
-}
-
 /**
  * Django returns `POST_LOGIN_REDIRECT_URL` as-is (often `https://localhost:3000/`) while
  * `next dev` is `http://localhost:3000`. A cross-scheme jump drops the session cookie and
  * can load a blank page. When the redirect targets this app on the same host, keep the
  * current origin (scheme + host + port).
+ *
+ * After Stripe checkout on the-syndicate.com, never follow a stale `POST_LOGIN_REDIRECT_URL`
+ * on another domain (e.g. syndicateofficial.com) — always land on the same host the user paid on.
  */
+const DEFAULT_AFTER_AUTH = "/dashboard?section=programs";
+
 export function resolvePostOtpAppRedirect(redirectFromApi: string | undefined): string {
-  if (typeof window === "undefined") return "/dashboard";
+  if (typeof window === "undefined") return DEFAULT_AFTER_AUTH;
   const origin = window.location.origin;
-  const pageHost = window.location.hostname;
   const trimmed = (redirectFromApi ?? "").trim();
-  if (!trimmed) return `${origin}/dashboard`;
+  if (!trimmed) return `${origin}${DEFAULT_AFTER_AUTH}`;
+
   try {
-    const target = new URL(trimmed);
-    if (!isSameAppHost(target.hostname, pageHost)) return target.href;
-    const path = target.pathname === "/" ? "/dashboard" : target.pathname || "/dashboard";
-    return `${origin}${path}${target.search}${target.hash}`;
+    const target =
+      trimmed.startsWith("/") && !trimmed.startsWith("//")
+        ? new URL(trimmed, origin)
+        : new URL(trimmed);
+    const path =
+      target.pathname === "/" || target.pathname === ""
+        ? DEFAULT_AFTER_AUTH
+        : `${target.pathname}${target.search}${target.hash}`;
+    return `${origin}${path}`;
   } catch {
-    return `${origin}/dashboard`;
+    return `${origin}${DEFAULT_AFTER_AUTH}`;
   }
 }

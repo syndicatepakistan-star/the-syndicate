@@ -154,6 +154,18 @@ function writePlaylistsSessionCache(data: StreamPlaylistListItem[]): void {
   }
 }
 
+/** Drop cached playlist lock state (call after checkout, login, or tier change). */
+export function clearStreamPlaylistsCache(): void {
+  playlistsCache = null;
+  playlistDetailCache.clear();
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(SESSION_PLAYLISTS_CACHE_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 export async function fetchStreamVideosList(): Promise<StreamVideoListItem[]> {
   const res = await portalFetch<StreamVideoListItem[]>("/api/streaming/videos/");
   if (!res.ok) {

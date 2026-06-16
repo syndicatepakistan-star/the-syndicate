@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 
 from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
+from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_allowed_playlist_ids
 from apps.video_streaming.entitlements import (
     playlist_included_by_entitlement,
@@ -202,6 +203,7 @@ class StreamPlaylistListView(generics.ListAPIView):
         ctx = super().get_serializer_context()
         user = getattr(self.request, "user", None)
         if user is not None and getattr(user, "is_authenticated", False):
+            reconcile_dashboard_entitlement_from_plan_purchases(user)
             unlocked_ids = set(
                 StreamPlaylistPurchase.objects.filter(
                     user=user,

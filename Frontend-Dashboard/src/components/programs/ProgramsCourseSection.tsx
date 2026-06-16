@@ -13,6 +13,7 @@ import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSecti
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
 import { isVaultCourseSlug, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
+import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -28,7 +29,7 @@ import {
 } from "@/components/programs/ProgramUnlockCelebration";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
-import { createPlaylistCheckoutSession, fetchStreamPlaylists, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
@@ -231,6 +232,7 @@ export function ProgramsCourseSection({
   const [streamPlaylists, setStreamPlaylists] = useState<StreamPlaylistListItem[]>([]);
   const [playlistsError, setPlaylistsError] = useState<string | null>(null);
   const [staff, setStaff] = useState(false);
+  const [accessTier, setAccessTier] = useState<string | null>(null);
   const [secureView, setSecureView] = useState<"grid" | "detail">("grid");
   const [detailCourseId, setDetailCourseId] = useState<number | null>(null);
   const [detailPlaylistId, setDetailPlaylistId] = useState<number | null>(null);
@@ -274,19 +276,34 @@ export function ProgramsCourseSection({
 
   useEffect(() => {
     let cancelled = false;
-    void reloadApiCourses();
-    void reloadStreamPlaylists();
-    void fetchPortalIdentity()
-      .then((u) => {
-        if (!cancelled) setStaff(!!u?.is_staff);
-      })
-      .catch(() => {
+    void (async () => {
+      try {
+        const identity = await fetchPortalIdentity();
+        if (!cancelled) {
+          setStaff(!!identity?.is_staff);
+          setAccessTier(identity?.access_tier ?? null);
+        }
+        clearStreamPlaylistsCache();
+        await reloadApiCourses();
+        if (!cancelled) await reloadStreamPlaylists({ forceRefresh: true });
+      } catch {
         if (!cancelled) setStaff(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
   }, [reloadApiCourses, reloadStreamPlaylists]);
+
+  const effectiveStreamPlaylists = useMemo(() => {
+    if (!hasMoneyMasteryAccess(accessTier)) return streamPlaylists;
+    return streamPlaylists.map((pl) => ({ ...pl, is_unlocked: true }));
+  }, [streamPlaylists, accessTier]);
+
+  const effectiveApiCourses = useMemo(() => {
+    if (!hasMoneyMasteryAccess(accessTier)) return apiCourses;
+    return apiCourses.map((c) => (c.can_access === false ? { ...c, can_access: true } : c));
+  }, [apiCourses, accessTier]);
 
   const queueUnlockCelebration = useCallback((playlistId: number) => {
     if (!Number.isFinite(playlistId) || playlistId <= 0) return;
@@ -304,7 +321,9 @@ export function ProgramsCourseSection({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refreshFromCheckout = () => {
+      clearStreamPlaylistsCache();
       void reloadStreamPlaylists({ forceRefresh: true });
+      void reloadApiCourses();
       try {
         window.sessionStorage.removeItem("playlist_checkout_confirmed");
       } catch {
@@ -562,10 +581,10 @@ export function ProgramsCourseSection({
 
   const visibleApiCourses = useMemo(
     () =>
-      apiCourses.filter(
+      effectiveApiCourses.filter(
         (course) => !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title })
       ),
-    [apiCourses]
+    [effectiveApiCourses]
   );
 
   const activeDetailCourse =
@@ -582,7 +601,7 @@ export function ProgramsCourseSection({
   const normalizedPlaylistTitleQuery = playlistTitleQuery.trim().toLowerCase();
   const searchablePlaylists = useMemo(
     () => {
-      const filtered = streamPlaylists.filter((playlist) => {
+      const filtered = effectiveStreamPlaylists.filter((playlist) => {
         if (isHiddenProgramPlaylist(playlist.id, { slug: playlist.slug, title: playlist.title })) return false;
         return normalizedPlaylistTitleQuery.length === 0
           ? true
@@ -595,7 +614,7 @@ export function ProgramsCourseSection({
         return a.title.localeCompare(b.title);
       });
     },
-    [streamPlaylists, normalizedPlaylistTitleQuery]
+    [effectiveStreamPlaylists, normalizedPlaylistTitleQuery]
   );
   const businessModelPlaylists = useMemo(
     () => searchablePlaylists.filter((playlist) => playlist.category === "business_model"),

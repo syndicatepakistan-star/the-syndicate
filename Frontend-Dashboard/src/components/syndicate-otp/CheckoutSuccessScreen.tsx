@@ -7,6 +7,7 @@ import { persistSimpleAuthSession } from "@/lib/portal-api";
 import { resolveClientApiUrl } from "@/lib/portal-api";
 import { resolvePostOtpAppRedirect } from "@/lib/syndicate-otp-paths";
 import { syndicateOtpSignupHref } from "@/lib/syndicate-otp-paths";
+import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 import { getAffiliateAttribution, saveAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead, trackSale } from "@/lib/affiliateApi";
 
@@ -317,6 +318,7 @@ export default function CheckoutSuccessScreen({
         }
 
         setLuxuryHref(nextUrl);
+        clearStreamPlaylistsCache();
         window.history.replaceState({}, "", "/");
         window.setTimeout(() => setLuxuryOpen(true), 80);
         window.setTimeout(() => {

@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from apps.portal.permissions import IsAuthenticatedStrict
 
 from apps.courses.access import user_can_access_course, user_can_access_video
+from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.courses.models import Course, CourseCertificate, Video, VideoProgress
 from apps.courses.serializers import (
     CourseSerializer,
@@ -28,6 +29,7 @@ class CourseListCreateView(APIView):
         return [IsAuthenticatedStrict()]
 
     def get(self, request):
+        reconcile_dashboard_entitlement_from_plan_purchases(request.user)
         qs = Course.objects.filter(show_in_programs=True)
         if not getattr(request.user, "is_staff", False):
             qs = qs.filter(is_published=True)

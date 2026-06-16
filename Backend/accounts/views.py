@@ -836,6 +836,32 @@ def _parse_signup_token(raw: str) -> str | None:
     return None
 
 
+def _checkout_success_redirect_path(plan_slug: str = "", playlist_id: str = "") -> str:
+  """In-app path after Stripe success (frontend keeps the user's current origin)."""
+  plan = (plan_slug or "").strip().lower()
+  pid = (playlist_id or "").strip()
+  if pid.isdigit():
+    return "/dashboard?section=programs"
+  if plan in ("king", "knight"):
+    return "/dashboard?section=resources"
+  if (
+    plan in ("bundle", "pawn")
+    or plan.startswith("agentic_ai")
+    or plan.startswith("ai_content")
+    or plan.startswith("trading_")
+    or is_vault_course_plan_slug(plan)
+  ):
+    return "/dashboard?section=programs"
+  raw = (getattr(settings, "POST_LOGIN_REDIRECT_URL", "") or "").strip()
+  if raw.startswith("/") and not raw.startswith("//"):
+    return raw.split("#")[0] or "/dashboard?section=programs"
+  if raw.startswith("http://") or raw.startswith("https://"):
+    parsed = urlsplit(raw)
+    if parsed.path and parsed.path != "/":
+      return f"{parsed.path}{f'?{parsed.query}' if parsed.query else ''}"
+  return "/dashboard?section=programs"
+
+
 @csrf_exempt
 @require_POST
 def create_checkout_session_view(request):
@@ -1267,7 +1293,7 @@ def checkout_success_view(request):
         "message": "Payment successful.",
         "email": user.email,
         "token": auth_token.key,
-        "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
+        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
         "user": {"id": user.id, "username": user.username, "email": user.email},
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,
@@ -1317,7 +1343,7 @@ def checkout_success_view(request):
         "message": "Payment successful. Thank you for your purchase.",
         "email": returning.email,
         "token": auth_token.key,
-        "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
+        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
         "user": {"id": user.id, "username": user.username, "email": user.email},
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,
@@ -1367,7 +1393,7 @@ def checkout_success_view(request):
         "message": "Payment successful.",
         "email": user.email,
         "token": auth_token.key,
-        "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
+        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
         "user": {"id": user.id, "username": user.username, "email": user.email},
         "referral_ids": referral_ids,
         "amount_paid": paid_amount,

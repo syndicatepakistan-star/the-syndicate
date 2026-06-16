@@ -80,11 +80,11 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     def get_dashboard_nav_locks(self, obj: User) -> dict[str, bool]:
         tier = self._stored_entitlement_tier(obj)
-        # True = locked. Only The Knight (king tier) unlocks Syndicate Mode + Membership.
+        # True = locked. Knight unlocks Syndicate Mode + Membership; Money Mastery unlocks programs + goals.
         if tier in (UserDashboardEntitlement.AccessTier.KING, UserDashboardEntitlement.AccessTier.FULL):
             return {"monk": False, "resources": False, "goals": False, "dashboard": False}
         if tier == UserDashboardEntitlement.AccessTier.MONEY_MASTERY:
-            return {"monk": True, "resources": True, "goals": True, "dashboard": False}
+            return {"monk": True, "resources": True, "goals": False, "dashboard": False}
         from apps.courses.access import _user_is_playlist_only_buyer
 
         if _user_is_playlist_only_buyer(obj):

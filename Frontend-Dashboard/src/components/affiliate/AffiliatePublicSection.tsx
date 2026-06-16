@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState, type CSSProperties } from 'react'
 import { HelpCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { MobileReadMoreText } from '@/components/MobileReadMoreText'
 
 const VIMEO_EMBED =
   'https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1'
@@ -12,6 +13,17 @@ const VIMEO_EMBED =
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
+
+const AFFILIATE_BODY_PARAGRAPHS = [
+  'The Affiliate Programme is not a simple referral system. It is your entry point into a controlled growth channel where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.',
+  'Access is secured through the same elite verification system used across The Syndicate. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that ownership begins with control.',
+] as const
+
+const AFFILIATE_BODY_PRIMARY_CLASS =
+  'mx-auto max-w-none font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-base md:mx-0 md:text-lg'
+
+const AFFILIATE_BODY_SECONDARY_CLASS =
+  'mx-auto max-w-none font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.95rem] md:mx-0 md:text-base lg:text-lg'
 
 const AFFILIATE_NOTCH_CLIP =
   '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
@@ -24,8 +36,8 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
       id="affiliate-program"
       className={cn(
         'relative left-1/2 z-[2] flex w-[100vw] min-w-[100vw] max-w-none -translate-x-1/2 flex-col overflow-hidden',
-        'min-h-[min(100vh,1080px)] shadow-[0_0_48px_rgba(251,191,36,0.08)]',
-        'px-[clamp(1.25rem,5vw,3.75rem)] pt-12 pb-[clamp(5rem,18vh,11rem)] md:pt-16 md:pb-[clamp(6.5rem,22vh,13rem)]',
+        'shadow-[0_0_48px_rgba(251,191,36,0.08)]',
+        'px-[clamp(1.25rem,5vw,3.75rem)] pt-10 pb-8 sm:pt-12 sm:pb-10 md:pt-14 md:pb-12',
         className,
       )}
       aria-labelledby="affiliate-program-heading"
@@ -59,8 +71,8 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-1 flex-col gap-10 md:min-h-[calc(100vh-12rem)] md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
-        <div className="flex min-h-[clamp(20rem,48vh,28rem)] min-w-0 w-full flex-[1.15] flex-col md:min-h-[min(540px,62vh)] lg:flex-[1.2]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-col gap-8 md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
+        <div className="flex min-h-0 min-w-0 w-full flex-[1.15] flex-col md:min-h-[min(420px,52vh)] lg:flex-[1.2]">
           <div
             className={cn('lightning-glow-card relative h-full min-h-[inherit] w-full max-w-none', AFFILIATE_NOTCH_CLIP)}
             style={
@@ -110,12 +122,12 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     <span className="sr-only">How affiliate login works</span>
                   </button>
                 </div>
-                <p className="mx-auto mt-5 max-w-none font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-base md:mx-0 md:text-lg">
-                  The Affiliate Programme is not a simple referral system. It is your entry point into a controlled growth channel where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.
-                </p>
-                <p className="mx-auto mt-4 max-w-none font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.95rem] md:mx-0 md:text-base lg:text-lg">
-                  Access is secured through the same elite verification system used across The Syndicate. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that ownership begins with control.
-                </p>
+                <MobileReadMoreText
+                  paragraphs={[...AFFILIATE_BODY_PARAGRAPHS]}
+                  previewSentences={3}
+                  className="mt-5"
+                  paragraphClassNames={[AFFILIATE_BODY_PRIMARY_CLASS, AFFILIATE_BODY_SECONDARY_CLASS]}
+                />
                 <div className="mt-7 flex justify-center md:justify-start">
                   <Link
                     href="/affiliate"
@@ -131,7 +143,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
 
         {/* Coin — wheel spin on Y axis + neon rim glow */}
         <div
-          className="hamburger-attract relative flex min-h-[clamp(18rem,44vh,26rem)] w-full min-w-0 flex-1 items-center justify-center self-center md:min-h-[min(540px,62vh)] md:max-w-[44vw] md:flex-[1] lg:max-w-[42vw] [perspective:1100px]"
+          className="hamburger-attract relative flex min-h-[clamp(14rem,34vh,22rem)] w-full min-w-0 flex-1 items-center justify-center self-center md:min-h-[min(420px,52vh)] md:max-w-[44vw] md:flex-[1] lg:max-w-[42vw] [perspective:1100px]"
           aria-hidden
         >
           <div className="absolute inset-0 blur-3xl md:scale-125">
@@ -176,9 +188,6 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
           </motion.div>
         ) : null}
       </div>
-
-      {/* Fills remaining min-height so money background covers the bottom band */}
-      <div className="relative z-0 min-h-[clamp(3.5rem,12vh,7rem)] flex-1 shrink-0" aria-hidden />
     </section>
   )
 }

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
+import { MobileReadMoreText } from '@/components/MobileReadMoreText'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
@@ -29,6 +30,19 @@ interface PricingTier {
   cta: string
   billingMode?: 'lifetime' | 'recurring'
 }
+
+const ELITE_OFFERS_PARAGRAPHS = [
+  'Two paths. One objective. Total transformation.',
+  'Enter the Syndicate through the gate designed for your level of ambition.',
+  'Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.',
+  'Or choose The Knight — a personalised path for operators who want control over their own arsenal. Select your chosen programmes, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.',
+  'This is not passive education.',
+  'This is a controlled environment built for action, discipline, and execution.',
+  'Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and opportunity.',
+] as const
+
+const ELITE_OFFERS_BODY_CLASS =
+  'font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg'
 
 /** Octagonal / tech clip shared by pricing cards (matches home social marquees). */
 const PRICING_NOTCH_CLIP =
@@ -440,7 +454,7 @@ export function PricingPage({
     <section
       id="pricing"
       className={cn(
-        'relative isolate w-full min-h-[100dvh] overflow-x-clip overflow-y-visible bg-black px-[clamp(0.75rem,2.2vw,2rem)] pt-20 pb-0 md:pt-24',
+        'relative isolate w-full min-h-0 overflow-x-clip overflow-y-visible bg-black px-[clamp(0.75rem,2.2vw,2rem)] pt-20 pb-8 md:pt-24 md:pb-10',
         className,
       )}
     >
@@ -485,29 +499,12 @@ export function PricingPage({
                 <h2 className="public-heading-lightning public-heading-lightning--gold font-display text-4xl font-black uppercase tracking-[0.14em] sm:text-5xl md:text-6xl lg:text-7xl">
                   SYNDICATE ELITE OFFERS
                 </h2>
-                <div className="mx-auto mt-5 max-w-[52rem] space-y-4 text-left sm:mt-6">
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Two paths. One objective. Total transformation.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Enter the Syndicate through the gate designed for your level of ambition.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Or choose The Knight — a personalised path for operators who want control over their own arsenal. Select your chosen programmes, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    This is not passive education.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    This is a controlled environment built for action, discipline, and execution.
-                  </p>
-                  <p className="font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg">
-                    Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and opportunity.
-                  </p>
-                </div>
+                <MobileReadMoreText
+                  paragraphs={[...ELITE_OFFERS_PARAGRAPHS]}
+                  previewSentences={3}
+                  className="mx-auto mt-5 max-w-[52rem] space-y-0 text-left sm:mt-6"
+                  paragraphClassName={ELITE_OFFERS_BODY_CLASS}
+                />
                 {checkoutError ? (
                   <p className="mx-auto mt-4 max-w-3xl text-center text-sm text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.45)]">
                     {checkoutError}
@@ -559,7 +556,7 @@ export function PricingPage({
 
       </div>
 
-      <AffiliatePublicSection className="mt-[clamp(2.75rem,8vw,5rem)]" />
+      <AffiliatePublicSection className="mt-10 sm:mt-12 md:mt-14" />
     </section>
   )
 }

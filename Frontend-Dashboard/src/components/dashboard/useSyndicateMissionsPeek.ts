@@ -158,7 +158,7 @@ function buildPeekList(rows: ChallengeRow[], nowMs: number): SyndicateMissionPee
   return acc.slice(0, 10).map(({ sortKey: _s, ...rest }) => rest);
 }
 
-export function useSyndicateMissionsPeek(): {
+export function useSyndicateMissionsPeek(enabled = true): {
   rows: SyndicateMissionPeekRow[];
   loading: boolean;
   error: string | null;
@@ -175,6 +175,14 @@ export function useSyndicateMissionsPeek(): {
 
   const refresh = useCallback(() => {
     if (typeof window === "undefined") return;
+    if (!enabled) {
+      setLinkedAccount(false);
+      setLoading(false);
+      setError(null);
+      setRows([]);
+      setApiReached(false);
+      return;
+    }
     const token = getSyndicateAuthToken();
     const user = getSyndicateUser();
     setLinkedAccount(!!(token && user));
@@ -198,7 +206,7 @@ export function useSyndicateMissionsPeek(): {
         else setError(null);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     refresh();

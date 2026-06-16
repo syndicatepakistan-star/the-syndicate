@@ -265,51 +265,6 @@ function CheckboxSlot({ active }: { active?: boolean }) {
   );
 }
 
-function InNavbarSidebarDock({
-  sidebarRef,
-  nav,
-  selectedNavKey,
-  applyNavKey,
-  onItemActivate,
-  isNavLocked,
-  onClose,
-  attached,
-}: {
-  sidebarRef: React.Ref<HTMLDivElement>;
-  nav: { key: string; label: string; active?: boolean }[];
-  selectedNavKey: string;
-  applyNavKey: (key: string) => void;
-  onItemActivate: () => void;
-  isNavLocked: (key: string) => boolean;
-  onClose: () => void;
-  attached?: boolean;
-}) {
-  return (
-    <div
-      ref={sidebarRef}
-      className={cn(
-        "sidebar-nav-dock dashboard-innav-sidebar-rail mobile-sidebar-rail shell-chrome-multineon cut-frame shell-neon-yellow cyber-frame gold-stroke relative border-0 bg-black dashboard-shell-surface no-scrollbar",
-        attached
-          ? "dashboard-innav-sidebar-rail--attached overflow-hidden pt-0 max-[820px]:fixed max-[820px]:left-0 max-[820px]:z-[95] max-[820px]:top-[100px] max-[820px]:w-[clamp(310px,46vw,460px)] max-[820px]:[--sidebar-nav-section-pt:0]"
-          : "overflow-y-auto pt-1"
-      )}
-    >
-      <DashboardChromeLetterGlitch />
-      <div className="pointer-events-none absolute inset-0 z-0 dashboard-shell-wash [background:radial-gradient(520px_220px_at_20%_0%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
-      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col px-1">
-        <SidebarNavRailList
-          nav={nav}
-          selectedNavKey={selectedNavKey}
-          setSelectedNavKey={applyNavKey}
-          onItemActivate={onItemActivate}
-          isNavLocked={isNavLocked}
-        />
-        <SidebarNavKeyDecor onClose={onClose} />
-      </div>
-    </div>
-  );
-}
-
 function SidebarNavKeyDecor({ onClose }: { onClose?: () => void }) {
   const keyImage = (
     <img
@@ -2338,16 +2293,16 @@ export default function Page() {
 
   const sidebarOccupiesGrid = useMemo(() => sidebarOpen && !isOverlaySidebarBp, [sidebarOpen, isOverlaySidebarBp]);
 
-  /** Mobile / tablet overlay: close rail after any nav pick so content is immediately visible. */
+  /** Tablet overlay: close rail after nav pick. Mobile closes only via hamburger. */
   const handleSidebarNavActivate = useCallback(() => {
-    if (isOverlaySidebarBp) setSidebarOpen(false);
-  }, [isOverlaySidebarBp]);
+    if (isOverlaySidebarBp && !isMobileNavUi) setSidebarOpen(false);
+  }, [isOverlaySidebarBp, isMobileNavUi]);
 
   const closeOverlaySidebar = useCallback(() => {
-    setSidebarOpen(false);
-  }, []);
+    if (!isMobileNavUi) setSidebarOpen(false);
+  }, [isMobileNavUi]);
 
-  /** Narrow overlay (≤820px): in-navbar dock + slide; wider tablet keeps short motion on fixed rail. */
+  /** Narrow overlay (≤820px): fixed rail slides in (not nested in navbar transform). */
   const useMobileOverlaySidebarMotion = isOverlaySidebarBp && isMobileNavUi;
 
   /** Same off-screen X for enter + exit so open mirrors close (avoids % width timing quirks). */
@@ -2957,9 +2912,7 @@ export default function Page() {
             <div
               className={cn(
                 "relative z-[2] min-w-0 w-full max-lg:col-span-3 max-lg:col-start-1 max-lg:row-start-2 lg:w-[min(248px,34vw)] lg:shrink-0",
-                isMobileNavUi &&
-                  "dashboard-innav-search-stack flex max-lg:flex-col max-lg:gap-0",
-                isMobileNavUi && sidebarOpen && "dashboard-innav-search-stack--open"
+                isMobileNavUi && "dashboard-innav-search-stack flex max-lg:flex-col max-lg:gap-0"
               )}
             >
               <label htmlFor="nav-quick-search" className="sr-only">
@@ -2969,8 +2922,7 @@ export default function Page() {
                 style={neonAccentStyleVars(getInstructorSlideNeonTheme(DASHBOARD_NAVBAR_CHROME_NEON.search))}
                 className={cn(
                   "navbar-chrome-panel navbar-chrome-neon cut-frame-sm cyber-frame gold-stroke flex h-8 min-h-8 w-full items-center gap-1.5 border bg-black px-2 sm:h-9 sm:min-h-9 sm:gap-2 sm:px-2.5 md:h-10 md:min-h-10 md:px-3",
-                  "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-accent)_12%,transparent)]",
-                  isMobileNavUi && sidebarOpen && isOverlaySidebarBp && "dashboard-innav-search--attached max-lg:rounded-b-none max-lg:border-b-0"
+                  "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-accent)_12%,transparent)]"
                 )}
               >
                 <svg
@@ -3019,40 +2971,6 @@ export default function Page() {
                   className="min-w-0 flex-1 bg-transparent py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--neon-accent-bright)]/95 outline-none placeholder:text-[color:var(--neon-accent-bright)]/38 sm:text-[9px] sm:tracking-[0.16em] md:text-[10px] md:tracking-[0.18em]"
                 />
               </div>
-
-              {isMobileNavUi && isOverlaySidebarBp ? (
-                <AnimatePresence initial={true} mode="sync">
-                  {sidebarOpen ? (
-                    <motion.div
-                      key="navbar-mobile-nav"
-                      initial={{ height: 0, opacity: 1 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 1 }}
-                      transition={mobileOverlaySidebarTransition}
-                      className="overflow-hidden bg-black max-lg:m-0 max-lg:p-0 max-lg:leading-none"
-                    >
-                      <motion.div
-                        initial={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }}
-                        transition={mobileOverlaySidebarTransition}
-                        className="w-full max-lg:m-0 max-lg:p-0 will-change-transform"
-                      >
-                        <InNavbarSidebarDock
-                          sidebarRef={sidebarRef as unknown as React.Ref<HTMLDivElement>}
-                          nav={nav}
-                          selectedNavKey={selectedNavKey}
-                          applyNavKey={applyNavKey}
-                          onItemActivate={handleSidebarNavActivate}
-                          isNavLocked={isNavLocked}
-                          onClose={closeOverlaySidebar}
-                          attached
-                        />
-                      </motion.div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              ) : null}
             </div>
 
             <div className="relative z-[2] flex shrink-0 items-center gap-x-1.5 max-lg:col-start-3 max-lg:row-start-1 max-lg:justify-end sm:gap-x-2 lg:shrink-0">
@@ -3060,6 +2978,7 @@ export default function Page() {
                 themeMode={themeMode}
                 userName={profileName}
                 courses={dashboardCoursesForSnapshots}
+                syndicateKnightApi={!isNavLocked("monk")}
                 onNavigate={(nav: DashboardNavKey) => {
                   if (nav === "affiliate") router.push("/affiliate-login");
                   else applyNavKey(nav);
@@ -3231,7 +3150,7 @@ export default function Page() {
           : null}
 
         <AnimatePresence>
-          {isOverlaySidebarBp && sidebarOpen ? (
+          {isOverlaySidebarBp && sidebarOpen && !isMobileNavUi ? (
             <motion.button
               key="overlay-sidebar-dismiss"
               type="button"
@@ -3276,7 +3195,7 @@ export default function Page() {
           )}
         >
           <AnimatePresence initial={true} mode="popLayout">
-            {sidebarOpen && (!isOverlaySidebarBp || !isMobileNavUi) ? (
+            {sidebarOpen ? (
               <motion.aside
                 key="main-sidebar"
                 ref={sidebarRef as unknown as React.Ref<HTMLElement>}
@@ -3301,8 +3220,8 @@ export default function Page() {
                 className={cn(
                   "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
                   isMobileNavUi && "mobile-sidebar-rail",
-                  "max-lg:fixed max-lg:left-0 max-lg:z-[95] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
-                  "dashboard-overlay-sidebar-rail max-lg:top-[var(--topbarBottom,var(--topbarH,4.5rem))] max-lg:box-border max-lg:overflow-x-hidden max-lg:rounded-br-lg max-lg:[--sidebar-nav-section-pt:0.4rem] max-[820px]:top-[100px] max-[820px]:[--sidebar-nav-section-pt:0] max-[820px]:pt-0",
+                  "max-lg:fixed max-lg:left-0 max-lg:z-[100] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
+                  "dashboard-overlay-sidebar-rail max-lg:top-[var(--topbarBottom,var(--topbarH,4.5rem))] max-lg:box-border max-lg:overflow-x-hidden max-lg:rounded-br-lg max-lg:[--sidebar-nav-section-pt:0.4rem] max-[820px]:[--sidebar-nav-section-pt:0] max-[820px]:pt-0",
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
@@ -3316,7 +3235,9 @@ export default function Page() {
                     onItemActivate={handleSidebarNavActivate}
                     isNavLocked={isNavLocked}
                   />
-                  <SidebarNavKeyDecor onClose={isOverlaySidebarBp ? closeOverlaySidebar : undefined} />
+                  <SidebarNavKeyDecor
+                    onClose={isOverlaySidebarBp && !isMobileNavUi ? closeOverlaySidebar : undefined}
+                  />
                 </div>
               </motion.aside>
             ) : null}

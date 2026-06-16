@@ -74,6 +74,9 @@ export async function fetchSyndicateProgress(): Promise<SyndicateProgressPayload
     return { state: {}, streak_count: 0, last_activity_date: null };
   }
   const r = await apiFetch(challengesApiUrl("me/progress/"), { cache: "no-store" });
+  if (r.status === 403) {
+    return { state: {}, streak_count: 0, last_activity_date: null };
+  }
   const j = (await r.json()) as { state?: Record<string, unknown>; streak_count?: unknown; last_activity_date?: unknown; detail?: string };
   if (!r.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Failed to load progress");
   return parseProgressJson(j);
@@ -216,6 +219,9 @@ export async function fetchChallengesToday(deviceId?: string): Promise<Challenge
   const q = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
   const r = await apiFetch(challengesApiUrl(`today/${q}`), { cache: "no-store" });
   const j = (await r.json()) as ChallengesTodayResponse;
+  if (r.status === 403) {
+    return { results: [], batch_complete: true, generating: false };
+  }
   if (!r.ok) {
     throw new Error(typeof j.detail === "string" ? j.detail : "Failed to load missions");
   }

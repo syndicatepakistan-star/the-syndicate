@@ -104,7 +104,7 @@ function SyndicateMissionsSnapshotCard({
   onNavigate: (nav: DashboardNavKey) => void;
   syndicateNavLocked?: boolean;
 }) {
-  const { rows, loading, error, linkedAccount, apiReached, refresh } = useSyndicateMissionsPeek();
+  const { rows, loading, error, linkedAccount, apiReached, refresh } = useSyndicateMissionsPeek(!syndicateNavLocked);
   const [reminderTick, setReminderTick] = useState(0);
   useEffect(() => {
     const id = window.setInterval(() => setReminderTick((n) => n + 1), 30_000);
@@ -1251,7 +1251,7 @@ export function DashboardHeroStatusPanel({
   onNavigate: (nav: DashboardNavKey) => void;
   syndicateNavLocked?: boolean;
 }) {
-  const { snapshots } = useDashboardSnapshots({ userName, courses });
+  const { snapshots } = useDashboardSnapshots({ userName, courses, syndicateKnightApi: !syndicateNavLocked });
   return (
     <HeroStatusPanel
       themeMode={themeMode}
@@ -1276,9 +1276,9 @@ export default function DashboardControlCenter({
   dashboardNavLocks,
   showHeroStatusPanel = true
 }: DashboardControlCenterProps) {
-  const { snapshots } = useDashboardSnapshots({ userName, courses });
-  const integrityHigh = snapshots.coreIntegrity.integrityPct > 90;
   const syndicateLocked = !!dashboardNavLocks?.monk;
+  const { snapshots } = useDashboardSnapshots({ userName, courses, syndicateKnightApi: !syndicateLocked });
+  const integrityHigh = snapshots.coreIntegrity.integrityPct > 90;
   const [streamPlaylists, setStreamPlaylists] = useState<StreamPlaylistListItem[]>([]);
 
   useEffect(() => {

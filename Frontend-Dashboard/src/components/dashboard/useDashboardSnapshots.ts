@@ -91,10 +91,13 @@ function bumpUptimeStreak(): number {
 
 export function useDashboardSnapshots({
   userName,
-  courses
+  courses,
+  syndicateKnightApi = true,
 }: {
   userName: string;
   courses: DashboardCourseLike[];
+  /** When false (Money Mastery / monk locked), skip knight-only challenge API calls. */
+  syndicateKnightApi?: boolean;
 }): { snapshots: DashboardSnapshots; hydrated: boolean } {
   const [hydrated, setHydrated] = useState(false);
   const [snap, setSnap] = useState<DashboardSnapshots | null>(null);
@@ -298,7 +301,7 @@ export function useDashboardSnapshots({
     const pullSyndicateLive = async () => {
       const token = getSyndicateAuthToken();
       let streakDays = 0;
-      if (token) {
+      if (token && syndicateKnightApi) {
         try {
           const pr = await fetchSyndicateProgress();
           if (cancelled) return;
@@ -312,12 +315,14 @@ export function useDashboardSnapshots({
       const points = readSyndicatePointsTotal();
       const rank = computeSyndicateRankFromPoints(points);
       let rows: ChallengeRow[] = [];
-      try {
-        const td = await fetchChallengesToday(getSyndicateDeviceId());
-        if (cancelled) return;
-        rows = td.results ?? [];
-      } catch {
-        /* same-origin / device missions may still be in local storage */
+      if (syndicateKnightApi) {
+        try {
+          const td = await fetchChallengesToday(getSyndicateDeviceId());
+          if (cancelled) return;
+          rows = td.results ?? [];
+        } catch {
+          /* same-origin / device missions may still be in local storage */
+        }
       }
 
       const now = Date.now();
@@ -373,7 +378,7 @@ export function useDashboardSnapshots({
       window.removeEventListener("focus", onWindowFocus);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [courses, userName]);
+  }, [courses, userName, syndicateKnightApi]);
 
   const snapshots = useMemo(() => {
     if (snap) return snap;

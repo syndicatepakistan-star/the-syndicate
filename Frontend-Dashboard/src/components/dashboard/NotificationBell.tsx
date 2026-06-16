@@ -279,15 +279,17 @@ export function NavbarNotificationBell({
   userName,
   courses,
   onNavigate,
-  onOpenChange
+  onOpenChange,
+  syndicateKnightApi = true,
 }: {
   themeMode: ThemeMode;
   userName: string;
   courses: DashboardCourseLike[];
   onNavigate: (nav: DashboardNavKey) => void;
   onOpenChange?: (open: boolean) => void;
+  syndicateKnightApi?: boolean;
 }) {
-  const { snapshots } = useDashboardSnapshots({ userName, courses });
+  const { snapshots } = useDashboardSnapshots({ userName, courses, syndicateKnightApi });
   return (
     <NotificationBell
       variant="navbar"

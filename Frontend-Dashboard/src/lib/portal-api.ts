@@ -100,6 +100,25 @@ function normalizeDjangoApiPath(apiPath: string): string {
   return query ? `${withSlash}?${query}` : withSlash;
 }
 
+/**
+ * Same-origin API paths for Next route handlers. Next.js 308-strips trailing slashes on POST
+ * (checkout breaks when the body is lost on redirect) — never use a trailing slash here.
+ */
+function toSameOriginProxyUrl(apiPath: string): string {
+  const raw = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
+  const qIdx = raw.indexOf("?");
+  const pathOnly = (qIdx === -1 ? raw : raw.slice(0, qIdx)).replace(/\/+$/, "");
+  const query = qIdx === -1 ? "" : raw.slice(qIdx + 1);
+
+  if (pathOnly.startsWith("/api/streaming/") || pathOnly.startsWith("/api/auth/")) {
+    return query ? `${pathOnly}?${query}` : pathOnly;
+  }
+
+  const sub = pathOnly.replace(/^\/api\//, "").replace(/^\/+/, "");
+  const proxyPath = `/api/portal-proxy/${sub}`;
+  return query ? `${proxyPath}?${query}` : proxyPath;
+}
+
 /** Build fetch URL for an API path like `/api/auth/login/`. */
 export function resolveClientApiUrl(apiPath: string): string {
   if (apiPath.startsWith("http://") || apiPath.startsWith("https://")) return apiPath;
@@ -119,20 +138,16 @@ export function resolveClientApiUrl(apiPath: string): string {
       base = "";
     }
     if (!base) {
-      const withoutApi = normalized.replace(/^\/api\//, "");
-      return `/api/portal-proxy/${withoutApi}`;
+      return toSameOriginProxyUrl(apiPath);
     }
     return `${base}${normalized}`;
   }
-  const withoutApi = normalized.replace(/^\/api\//, "");
-  return `/api/portal-proxy/${withoutApi}`;
+  return toSameOriginProxyUrl(apiPath);
 }
 
 /** Same-origin proxy path (avoids browser CORS to Railway backend). */
 export function resolvePortalProxyUrl(apiPath: string): string {
-  const normalized = normalizeDjangoApiPath(apiPath.startsWith("/") ? apiPath : `/${apiPath}`);
-  const withoutApi = normalized.replace(/^\/api\//, "");
-  return `/api/portal-proxy/${withoutApi}`;
+  return toSameOriginProxyUrl(apiPath.startsWith("/") ? apiPath : `/${apiPath}`);
 }
 
 function isCrossOriginClientUrl(url: string): boolean {

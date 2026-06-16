@@ -25,7 +25,7 @@ export function HomeDomeGallerySection(props: DomeGalleryProps) {
 
 export function HomePricingSection() {
   return (
-    <LazyWhenVisible minHeight="100dvh">
+    <LazyWhenVisible className="bg-black">
       <PricingPage />
     </LazyWhenVisible>
   );

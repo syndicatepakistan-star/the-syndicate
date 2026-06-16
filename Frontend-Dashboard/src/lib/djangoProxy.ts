@@ -46,7 +46,21 @@ async function proxyToDjangoApi(
     init.body = await request.arrayBuffer();
   }
 
-  const upstream = await fetch(target.toString(), init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(target.toString(), init);
+  } catch (err) {
+    const detail =
+      err instanceof Error && err.message
+        ? err.message
+        : "Could not reach Django backend from the frontend service.";
+    return new Response(
+      JSON.stringify({
+        detail: `Backend proxy failed (${origin}). Set BACKEND_INTERNAL_URL on the frontend Railway service. ${detail}`,
+      }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  }
   const outHeaders = new Headers();
   upstream.headers.forEach((value, key) => {
     if (!HOP_BY_HOP.has(key.toLowerCase())) outHeaders.set(key, value);

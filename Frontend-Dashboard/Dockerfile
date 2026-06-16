@@ -7,10 +7,12 @@ RUN npm ci
 
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
-# Railway must pass this at image build time (Variables → enable for build / Docker build args).
-# Without it, Next embeds http://127.0.0.1:8000/api and signup/login fail with "Failed to fetch" on HTTPS.
+# Railway must pass these at image build time (Variables → enable for build / Docker build args).
+# Without them, the browser falls back to same-origin proxy and checkout can fail after deploy.
 ARG NEXT_PUBLIC_SYNDICATE_API_URL
+ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_SYNDICATE_API_URL=${NEXT_PUBLIC_SYNDICATE_API_URL}
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1

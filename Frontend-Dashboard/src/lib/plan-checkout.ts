@@ -134,9 +134,13 @@ function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, statu
         : "Could not start checkout.";
     }
     if (snippet.toLowerCase().includes("<!doctype") || snippet.toLowerCase().includes("<html")) {
-      return status === 500
-        ? "Checkout is unavailable right now. Please try again shortly."
-        : "Could not start checkout.";
+      if (status === 502 || status === 503 || status === 504) {
+        return "Checkout service is temporarily unavailable (deploy or backend restart). Wait a minute and try again.";
+      }
+      if (status === 500) {
+        return "Checkout service error. Verify STRIPE_SECRET_KEY on the backend Railway service and BACKEND_INTERNAL_URL on the frontend, then redeploy both.";
+      }
+      return "Could not start checkout.";
     }
     return sanitize(snippet);
   }
@@ -144,7 +148,12 @@ function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, statu
   if (typeof payload.error === "string" && payload.error.trim()) return sanitize(payload.error.trim());
   if (typeof payload.detail === "string" && payload.detail.trim()) return sanitize(payload.detail.trim());
   if (status === 401 || status === 403) return "Session expired. Sign in again to continue checkout.";
-  if (status === 500) return "Checkout is unavailable right now. Please try again shortly.";
+  if (status === 502 || status === 503 || status === 504) {
+    return "Checkout service is temporarily unavailable. Wait a minute and try again.";
+  }
+  if (status === 500) {
+    return "Checkout is unavailable right now. Check Railway backend logs and confirm STRIPE_SECRET_KEY is set.";
+  }
   return "Could not start checkout.";
 }
 

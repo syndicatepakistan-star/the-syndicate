@@ -6,6 +6,7 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
+import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
 import { MobileReadMoreText } from '@/components/MobileReadMoreText'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
@@ -415,7 +416,7 @@ export function PricingPage({
       }
       if (result.status === 'error') {
         setCheckoutError(result.message)
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !hasSimpleAuthSessionClient()) {
           window.location.assign(
             buildPlanCheckoutAuthHref({
               plan,
@@ -427,7 +428,7 @@ export function PricingPage({
         }
       }
     } catch {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !hasSimpleAuthSessionClient()) {
         window.location.assign(
           buildPlanCheckoutAuthHref({
             plan,
@@ -436,6 +437,8 @@ export function PricingPage({
             postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
           })
         )
+      } else if (typeof window !== 'undefined') {
+        setCheckoutError('Checkout failed. Please try again.')
       }
     } finally {
       setRedirectingPlan(null)
@@ -454,7 +457,7 @@ export function PricingPage({
     <section
       id="pricing"
       className={cn(
-        'relative isolate w-full min-h-0 overflow-x-clip overflow-y-visible bg-black px-[clamp(0.75rem,2.2vw,2rem)] pt-20 pb-8 md:pt-24 md:pb-10',
+        'relative isolate w-full min-h-0 overflow-x-clip overflow-y-visible bg-black px-[clamp(0.75rem,2.2vw,2rem)] pt-20 pb-0 md:pt-24',
         className,
       )}
     >
@@ -536,7 +539,7 @@ export function PricingPage({
           </div>
         </header>
 
-        <div className="relative mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 rounded-3xl border border-white/8 bg-transparent px-[clamp(0.5rem,2vw,1.25rem)] py-6 shadow-[0_0_60px_rgba(0,0,0,0.35),inset_0_0_80px_rgba(34,211,238,0.06)] sm:gap-7 sm:py-8 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="relative mx-auto grid w-full max-w-[min(1320px,calc(100vw-1.25rem))] grid-cols-1 gap-6 rounded-3xl border border-white/8 bg-transparent px-[clamp(0.5rem,2vw,1.25rem)] py-6 shadow-[0_0_60px_rgba(0,0,0,0.35),inset_0_0_80px_rgba(34,211,238,0.06)] sm:gap-7 sm:pb-5 md:grid-cols-2 md:items-stretch md:gap-8 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
           {tiers.map(({ key, tier }) => (
             <div
               key={key}
@@ -556,7 +559,7 @@ export function PricingPage({
 
       </div>
 
-      <AffiliatePublicSection className="mt-10 sm:mt-12 md:mt-14" />
+      <AffiliatePublicSection />
     </section>
   )
 }

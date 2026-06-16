@@ -93,8 +93,25 @@ function playbackCacheKey(id: number, context: "programs" | "membership"): strin
 }
 
 function errMessage(status: number, data: unknown, fallback: string): string {
-  if (typeof data === "object" && data && "detail" in data) {
-    return String((data as { detail?: string }).detail ?? fallback);
+  if (typeof data === "object" && data) {
+    const row = data as { detail?: string; error?: string; message?: string };
+    const msg = (row.detail || row.error || row.message || "").trim();
+    if (msg) return msg;
+  }
+  if (typeof data === "string" && data.trim()) {
+    const snippet = data.replace(/\s+/g, " ").trim().slice(0, 200);
+    if (snippet.toLowerCase().includes("<!doctype") || snippet.toLowerCase().includes("<html")) {
+      if (status === 502 || status === 503 || status === 504) {
+        return "Checkout service is temporarily unavailable. Wait a minute and try again.";
+      }
+      if (status === 500) {
+        return "Checkout service error. Verify STRIPE_SECRET_KEY on the backend and BACKEND_INTERNAL_URL on the frontend.";
+      }
+    }
+    return snippet;
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return "Checkout service is temporarily unavailable. Wait a minute and try again.";
   }
   return fallback || `Request failed (${status}).`;
 }

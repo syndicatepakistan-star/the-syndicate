@@ -35,9 +35,9 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
     <section
       id="affiliate-program"
       className={cn(
-        'relative left-1/2 z-[2] flex w-[100vw] min-w-[100vw] max-w-none -translate-x-1/2 flex-col overflow-hidden',
+        'relative left-1/2 z-[2] flex w-[100vw] min-w-[100vw] max-w-none -translate-x-1/2 flex-col overflow-hidden bg-black',
         'shadow-[0_0_48px_rgba(251,191,36,0.08)]',
-        'px-[clamp(1.25rem,5vw,3.75rem)] pt-10 pb-8 sm:pt-12 sm:pb-10 md:pt-14 md:pb-12',
+        'px-[clamp(1.25rem,5vw,3.75rem)] pt-4 pb-3 sm:pt-5 sm:pb-4 md:pt-6 md:pb-5',
         className,
       )}
       aria-labelledby="affiliate-program-heading"
@@ -47,7 +47,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         <iframe
           title=""
           src={VIMEO_EMBED}
-          className="pointer-events-none absolute left-1/2 top-1/2 opacity-75 max-md:opacity-90 md:opacity-60"
+          className="pointer-events-none absolute left-1/2 top-1/2 opacity-50 md:opacity-45"
           style={{
             border: 'none',
             width: '100vw',
@@ -61,7 +61,17 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-col gap-8 md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/72" aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[#030308]/94 via-[#030308]/90 to-[#020208]/96"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] shadow-[inset_0_0_80px_rgba(0,0,0,0.65),inset_0_-24px_64px_rgba(0,0,0,0.45)]"
+        aria-hidden
+      />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-col gap-6 md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
         <div className="flex min-h-0 min-w-0 w-full flex-[1.15] flex-col md:min-h-[min(420px,52vh)] lg:flex-[1.2]">
           <div
             className={cn('lightning-glow-card relative h-full min-h-[inherit] w-full max-w-none', AFFILIATE_NOTCH_CLIP)}
@@ -157,7 +167,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-8 w-full max-w-[min(1720px,calc(100vw-2.5rem))] md:mt-0">
+      <div className="relative z-10 mx-auto mt-4 w-full max-w-[min(1720px,calc(100vw-2.5rem))] md:mt-0">
         {helpOpen ? (
           <motion.div
             id="affiliate-how-panel"

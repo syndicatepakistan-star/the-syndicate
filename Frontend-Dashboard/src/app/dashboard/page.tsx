@@ -307,7 +307,7 @@ function SidebarNavRailList({
   nav: NavItem[];
   selectedNavKey: string;
   setSelectedNavKey: (key: string) => void;
-  onItemActivate?: () => void;
+  onItemActivate?: (key: string) => void;
   isNavLocked: (key: string) => boolean;
 }) {
   return (
@@ -322,7 +322,7 @@ function SidebarNavRailList({
             type="button"
             onClick={() => {
               setSelectedNavKey(item.key);
-              onItemActivate?.();
+              onItemActivate?.(item.key);
             }}
             data-dock-item="sidebar"
             data-nav-neon={item.key}
@@ -1996,6 +1996,8 @@ export default function Page() {
   const [isOverlaySidebarBp, setIsOverlaySidebarBp] = useState(false);
   /** ≤820px: in-navbar menu under search + overlay rail behavior (tablet/desktop unchanged). */
   const [isMobileNavUi, setIsMobileNavUi] = useState(false);
+  /** ≤820px only (not iPad Pro portrait): compact mobile sidebar width + auto-close rules. */
+  const [isCompactMobileUi, setIsCompactMobileUi] = useState(false);
   /** iPad Pro portrait-like viewport: pin topbar row layout and disable nav rail animation. */
   const [isIpadProPortraitUi, setIsIpadProPortraitUi] = useState(false);
   const [navQuickSearch, setNavQuickSearch] = useState("");
@@ -2207,11 +2209,13 @@ export default function Page() {
     if (typeof window === "undefined") return;
     const mq1023 = window.matchMedia("(max-width: 1023px), ((width: 1024px) and (height: 1366px))");
     const mqInnav = window.matchMedia("(max-width: 820px), ((width: 1024px) and (height: 1366px))");
+    const mqCompact = window.matchMedia("(max-width: 820px)");
     const mq767 = window.matchMedia("(max-width: 767px)");
     const isIpadPortraitLike =
       window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
     setIsOverlaySidebarBp(mq1023.matches);
     setIsMobileNavUi(mqInnav.matches || isIpadPortraitLike);
+    setIsCompactMobileUi(mqCompact.matches);
     setIsIpadProPortraitUi(isIpadPortraitLike);
     setIsNarrowViewport(mq767.matches);
     if (!mq1023.matches) setSidebarOpen(true);
@@ -2233,17 +2237,21 @@ export default function Page() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mqInnav = window.matchMedia("(max-width: 820px), ((width: 1024px) and (height: 1366px))");
+    const mqCompact = window.matchMedia("(max-width: 820px)");
     const apply = () => {
       const isIpadPortraitLike =
         window.innerWidth >= 980 && window.innerWidth <= 1035 && window.innerHeight >= 1290;
       setIsIpadProPortraitUi(isIpadPortraitLike);
       setIsMobileNavUi(mqInnav.matches || isIpadPortraitLike);
+      setIsCompactMobileUi(mqCompact.matches);
     };
     apply();
     mqInnav.addEventListener("change", apply);
+    mqCompact.addEventListener("change", apply);
     window.addEventListener("resize", apply);
     return () => {
       mqInnav.removeEventListener("change", apply);
+      mqCompact.removeEventListener("change", apply);
       window.removeEventListener("resize", apply);
     };
   }, []);
@@ -2304,17 +2312,21 @@ export default function Page() {
 
   const sidebarOccupiesGrid = useMemo(() => sidebarOpen && !isOverlaySidebarBp, [sidebarOpen, isOverlaySidebarBp]);
 
-  /** Tablet overlay: close rail after nav pick. Mobile closes only via hamburger. */
-  const handleSidebarNavActivate = useCallback(() => {
-    if (isOverlaySidebarBp && !isMobileNavUi) setSidebarOpen(false);
-  }, [isOverlaySidebarBp, isMobileNavUi]);
+  /** Tablet overlay: close rail after nav pick. Compact mobile: auto-close when opening Dashboard. */
+  const handleSidebarNavActivate = useCallback(
+    (key: string) => {
+      if (isOverlaySidebarBp && !isCompactMobileUi) setSidebarOpen(false);
+      if (isCompactMobileUi && key === "dashboard") setSidebarOpen(false);
+    },
+    [isOverlaySidebarBp, isCompactMobileUi]
+  );
 
   const closeOverlaySidebar = useCallback(() => {
-    if (!isMobileNavUi) setSidebarOpen(false);
-  }, [isMobileNavUi]);
+    if (!isCompactMobileUi) setSidebarOpen(false);
+  }, [isCompactMobileUi]);
 
-  /** Narrow overlay (≤820px): fixed rail slides in (not nested in navbar transform). */
-  const useMobileOverlaySidebarMotion = isOverlaySidebarBp && isMobileNavUi;
+  /** Compact mobile overlay: fixed rail slides in (not nested in navbar transform). */
+  const useMobileOverlaySidebarMotion = isOverlaySidebarBp && isCompactMobileUi;
 
   /** Same off-screen X for enter + exit so open mirrors close (avoids % width timing quirks). */
   const MOBILE_SIDEBAR_OFF_X = -320;
@@ -3161,38 +3173,19 @@ export default function Page() {
           : null}
 
         <AnimatePresence>
-          {isOverlaySidebarBp && sidebarOpen && !isMobileNavUi ? (
+          {isOverlaySidebarBp && sidebarOpen && !isCompactMobileUi ? (
             <motion.button
               key="overlay-sidebar-dismiss"
               type="button"
               aria-label="Close menu"
-              className={cn(
-                "fixed border-0 p-0 max-lg:block lg:hidden",
-                isMobileNavUi
-                  ? "z-[55] cursor-pointer bg-[rgba(0,0,0,0.4)]"
-                  : "z-[88] bottom-0 cursor-default bg-transparent"
-              )}
-              style={
-                isMobileNavUi
-                  ? {
-                      top: "var(--topbarBottom, var(--topbarH, 4.5rem))",
-                      left: 0,
-                      right: 0,
-                      height: "calc(100svh - var(--topbarBottom, var(--topbarH, 4.5rem)))"
-                    }
-                  : {
-                      top: "var(--topbarBottom, var(--topbarH, 4.5rem))",
-                      bottom: 0,
-                      left: 0,
-                      right: 0
-                    }
-              }
+              className="fixed bottom-0 left-0 right-0 z-[88] cursor-default border-0 bg-transparent p-0"
+              style={{
+                top: "var(--topbarBottom, var(--topbarH, 4.5rem))"
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={
-                isMobileNavUi ? mobileOverlaySidebarTransition : { duration: 0.15 }
-              }
+              transition={{ duration: 0.15 }}
               onClick={() => setSidebarOpen(false)}
             />
           ) : null}
@@ -3230,10 +3223,17 @@ export default function Page() {
                 }}
                 className={cn(
                   "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
-                  isMobileNavUi && "mobile-sidebar-rail",
-                  "max-lg:fixed max-lg:left-0 max-lg:z-[100] max-lg:w-[clamp(310px,46vw,460px)] max-lg:max-w-[clamp(310px,46vw,460px)] max-lg:rounded-r-lg max-lg:border-r max-lg:shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
-                  "dashboard-overlay-sidebar-rail max-lg:top-[var(--topbarBottom,var(--topbarH,4.5rem))] max-lg:box-border max-lg:overflow-x-hidden max-lg:rounded-br-lg max-lg:[--sidebar-nav-section-pt:0.4rem] max-[820px]:[--sidebar-nav-section-pt:0] max-[820px]:pt-0",
-                  "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
+                  isCompactMobileUi && "mobile-sidebar-rail",
+                  isOverlaySidebarBp &&
+                    cn(
+                      "dashboard-overlay-sidebar-rail fixed left-0 z-[100] box-border overflow-x-hidden rounded-br-lg shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
+                      "top-[var(--topbarBottom,var(--topbarH,4.5rem))] rounded-r-lg border-r",
+                      isCompactMobileUi
+                        ? "w-[min(calc(100%-20px),clamp(290px,46vw,440px))] max-w-[min(calc(100%-20px),clamp(290px,46vw,440px))] pt-0 [--sidebar-nav-section-pt:0]"
+                        : "w-[clamp(380px,52vw,540px)] max-w-[clamp(380px,52vw,540px)] [--sidebar-nav-section-pt:0.4rem]"
+                    ),
+                  !isOverlaySidebarBp &&
+                    "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
                 <DashboardChromeLetterGlitch />
@@ -3247,7 +3247,7 @@ export default function Page() {
                     isNavLocked={isNavLocked}
                   />
                   <SidebarNavKeyDecor
-                    onClose={isOverlaySidebarBp && !isMobileNavUi ? closeOverlaySidebar : undefined}
+                    onClose={isOverlaySidebarBp && !isCompactMobileUi ? closeOverlaySidebar : undefined}
                   />
                 </div>
               </motion.aside>
@@ -3266,11 +3266,11 @@ export default function Page() {
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
               isOverlaySidebarBp &&
                 sidebarOpen &&
-                !isMobileNavUi &&
-                "max-lg:pointer-events-none max-lg:opacity-[0.42] max-lg:transition-opacity max-lg:duration-200 max-lg:ease-out",
+                !isCompactMobileUi &&
+                "pointer-events-none opacity-[0.42] transition-opacity duration-200 ease-out",
               usesBoundedMobileShell && "max-lg:min-h-0 max-lg:h-full max-lg:flex-1",
               "lg:h-full lg:min-h-0",
-              sidebarOpen ? "col-span-7 md:col-span-10 lg:col-span-10" : "col-span-12",
+              sidebarOpen && !isOverlaySidebarBp ? "col-span-7 md:col-span-10 lg:col-span-10" : "col-span-12",
               selectedNavKey === "monk" && "syndicate-main-shell min-h-0 flex-1",
               selectedNavKey === "monk"
                 ? "px-0 pt-1 pb-0 sm:pt-1.5 sm:pb-0"

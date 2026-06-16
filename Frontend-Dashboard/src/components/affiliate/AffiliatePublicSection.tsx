@@ -47,7 +47,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
         <iframe
           title=""
           src={VIMEO_EMBED}
-          className="pointer-events-none absolute left-1/2 top-1/2 opacity-60"
+          className="pointer-events-none absolute left-1/2 top-1/2 opacity-75 max-md:opacity-90 md:opacity-60"
           style={{
             border: 'none',
             width: '100vw',
@@ -60,16 +60,6 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
           loading="lazy"
         />
       </div>
-
-      {/* Flat read layer — lighter toward bottom so footage fills the section edge */}
-      <div
-        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[#030308]/94 via-[#030308]/90 to-[#030308]/82"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 z-[1] shadow-[inset_0_0_80px_rgba(0,0,0,0.65),inset_0_-24px_64px_rgba(0,0,0,0.45)]"
-        aria-hidden
-      />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[min(1720px,calc(100vw-2.5rem))] flex-col gap-8 md:flex-row md:items-stretch md:justify-between md:gap-10 lg:gap-14 xl:gap-16">
         <div className="flex min-h-0 min-w-0 w-full flex-[1.15] flex-col md:min-h-[min(420px,52vh)] lg:flex-[1.2]">

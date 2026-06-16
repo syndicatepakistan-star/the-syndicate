@@ -501,7 +501,7 @@ export function PricingPage({
                 </h2>
                 <MobileReadMoreText
                   paragraphs={[...ELITE_OFFERS_PARAGRAPHS]}
-                  previewSentences={3}
+                  previewSentences={5}
                   className="mx-auto mt-5 max-w-[52rem] space-y-0 text-left sm:mt-6"
                   paragraphClassName={ELITE_OFFERS_BODY_CLASS}
                 />

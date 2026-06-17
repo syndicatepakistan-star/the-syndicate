@@ -1884,6 +1884,11 @@ export default function Page() {
         const currentKey = raw && valid.has(raw) ? raw : "dashboard";
         if (currentKey === key) {
           setNavKeyState(key);
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+            const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
+            if (shell) shell.scrollTop = 0;
+          });
           return;
         }
       }
@@ -1998,6 +2003,10 @@ export default function Page() {
   const [isMobileNavUi, setIsMobileNavUi] = useState(false);
   /** ≤820px only (not iPad Pro portrait): compact mobile sidebar width + auto-close rules. */
   const [isCompactMobileUi, setIsCompactMobileUi] = useState(false);
+  /** Viewport Y for compact mobile rail top edge (flush under search). */
+  const [mobileSidebarTopPx, setMobileSidebarTopPx] = useState(0);
+  /** Tablet / iPad overlay: sidebar top aligns to full navbar bottom (below search row). */
+  const [tabletOverlayTopPx, setTabletOverlayTopPx] = useState(0);
   /** iPad Pro portrait-like viewport: pin topbar row layout and disable nav rail animation. */
   const [isIpadProPortraitUi, setIsIpadProPortraitUi] = useState(false);
   const [navQuickSearch, setNavQuickSearch] = useState("");
@@ -2312,11 +2321,17 @@ export default function Page() {
 
   const sidebarOccupiesGrid = useMemo(() => sidebarOpen && !isOverlaySidebarBp, [sidebarOpen, isOverlaySidebarBp]);
 
-  /** Tablet overlay: close rail after nav pick. Compact mobile: auto-close when opening Dashboard. */
+  /** Compact mobile: close rail after any nav pick. Tablet overlay: close after nav pick. */
   const handleSidebarNavActivate = useCallback(
-    (key: string) => {
-      if (isOverlaySidebarBp && !isCompactMobileUi) setSidebarOpen(false);
-      if (isCompactMobileUi && key === "dashboard") setSidebarOpen(false);
+    (_key: string) => {
+      if (isCompactMobileUi || isOverlaySidebarBp) {
+        setSidebarOpen(false);
+      }
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
+        if (shell) shell.scrollTop = 0;
+      });
     },
     [isOverlaySidebarBp, isCompactMobileUi]
   );
@@ -2325,11 +2340,8 @@ export default function Page() {
     if (!isCompactMobileUi) setSidebarOpen(false);
   }, [isCompactMobileUi]);
 
-  /** Compact mobile overlay: fixed rail slides in (not nested in navbar transform). */
-  const useMobileOverlaySidebarMotion = isOverlaySidebarBp && isCompactMobileUi;
-
-  /** Same off-screen X for enter + exit so open mirrors close (avoids % width timing quirks). */
-  const MOBILE_SIDEBAR_OFF_X = -320;
+  /** Compact mobile: slide via `left` (not `x`) so the 220px rail is fully visible when open. */
+  const MOBILE_SIDEBAR_OFF_LEFT = -220;
   const mobileOverlaySidebarTransition = useMemo(
     () => ({ duration: 0.38, ease: [0.22, 1, 0.36, 1] as const }),
     []
@@ -2502,6 +2514,7 @@ export default function Page() {
 
       // GSAP "Dock" magnification for sidebar items (vertical)
       const sidebarTick: gsap.TickerCallback = () => {
+        if (window.matchMedia("(max-width: 820px)").matches) return;
         const root = sidebarRef.current;
         if (!root) return;
         const items = Array.from(root.querySelectorAll<HTMLElement>("[data-dock-item='sidebar']"));
@@ -2726,12 +2739,17 @@ export default function Page() {
       const rect = topbarRef.current.getBoundingClientRect();
       const height = `${rect.height}px`;
       const bottom = `${Math.max(0, Math.round(rect.bottom))}px`;
-      const searchPanel = topbarRef.current.querySelector<HTMLElement>(
-        ".dashboard-innav-search-stack .navbar-chrome-panel"
-      );
-      const searchBottom = searchPanel
-        ? `${Math.max(0, Math.round(searchPanel.getBoundingClientRect().bottom))}px`
-        : bottom;
+      const searchStack = topbarRef.current.querySelector<HTMLElement>(".dashboard-innav-search-stack");
+      const searchPanel =
+        searchStack?.querySelector<HTMLElement>(".navbar-chrome-panel") ??
+        topbarRef.current.querySelector<HTMLElement>(".navbar-chrome-panel");
+      const searchBottomPx = searchPanel
+        ? Math.max(0, Math.round(searchPanel.getBoundingClientRect().bottom))
+        : Math.max(0, Math.round(rect.bottom));
+      const searchBottom = `${searchBottomPx}px`;
+      const topbarBottomPx = Math.max(0, Math.round(rect.bottom));
+      setMobileSidebarTopPx(searchBottomPx);
+      setTabletOverlayTopPx(topbarBottomPx);
       if (rootRef.current) {
         rootRef.current.style.setProperty("--topbarH", height);
         rootRef.current.style.setProperty("--topbarBottom", bottom);
@@ -2824,6 +2842,7 @@ export default function Page() {
           : "w-screen overflow-y-auto lg:h-screen lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
+        isIpadProPortraitUi && "dashboard-ipad-pro-ui",
         !sidebarOpen && "focus-mode",
         selectedNavKey === "monk" && "syndicate-mood-context"
       )}
@@ -2855,7 +2874,7 @@ export default function Page() {
               "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
               "max-lg:grid-rows-[auto_auto]",
-              isMobileNavUi && isIpadProPortraitUi && "max-lg:!py-2 max-lg:gap-y-1",
+        isMobileNavUi && isIpadProPortraitUi && "dashboard-ipad-pro-nav max-lg:!py-2 max-lg:gap-y-1",
               isMobileNavUi && sidebarOpen && "max-lg:gap-y-0",
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
             )}
@@ -3172,26 +3191,110 @@ export default function Page() {
             )
           : null}
 
-        <AnimatePresence>
-          {isOverlaySidebarBp && sidebarOpen && !isCompactMobileUi ? (
-            <motion.button
-              key="overlay-sidebar-dismiss"
-              type="button"
-              aria-label="Close menu"
-              className="fixed bottom-0 left-0 right-0 z-[88] cursor-default border-0 bg-transparent p-0"
-              style={{
-                top: "var(--topbarBottom, var(--topbarH, 4.5rem))"
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => setSidebarOpen(false)}
-            />
-          ) : null}
-        </AnimatePresence>
+        {overlayMount && isOverlaySidebarBp
+          ? createPortal(
+              <div
+                className={cn(
+                  "dashboard-hamburger-chrome dashboard-overlay-sidebar-root pointer-events-none fixed bottom-0 left-0 right-0 z-[85]",
+                  isCompactMobileUi && "mobile-sidebar-overlay-root",
+                  !isCompactMobileUi && "tablet-sidebar-overlay-root"
+                )}
+                style={{
+                  top: isCompactMobileUi ? mobileSidebarTopPx : tabletOverlayTopPx
+                }}
+              >
+                <AnimatePresence>
+                  {sidebarOpen ? (
+                    <motion.button
+                      key="overlay-sidebar-dismiss"
+                      type="button"
+                      aria-label="Close menu"
+                      className={cn(
+                        "pointer-events-auto fixed bottom-0 left-0 right-0 z-[85] cursor-pointer border-0 bg-[rgba(0,0,0,0.52)] p-0",
+                        isCompactMobileUi ? "mobile-sidebar-overlay-backdrop" : "tablet-sidebar-overlay-backdrop"
+                      )}
+                      style={{
+                        top: isCompactMobileUi ? mobileSidebarTopPx : tabletOverlayTopPx
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={mobileOverlaySidebarTransition}
+                      onClick={() => setSidebarOpen(false)}
+                    />
+                  ) : null}
+                  {sidebarOpen ? (
+                    <motion.aside
+                      key={isCompactMobileUi ? "main-sidebar-mobile" : "main-sidebar-tablet"}
+                      layout={false}
+                      ref={sidebarRef as unknown as React.Ref<HTMLElement>}
+                      initial={
+                        isCompactMobileUi
+                          ? { left: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
+                          : { x: "-100%", opacity: 1 }
+                      }
+                      animate={isCompactMobileUi ? { left: 0, opacity: 1 } : { x: 0, opacity: 1 }}
+                      exit={
+                        isCompactMobileUi
+                          ? { left: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
+                          : { x: "-100%", opacity: 1 }
+                      }
+                      transition={mobileOverlaySidebarTransition}
+                      className={cn(
+                        "sidebar-nav-dock dashboard-overlay-sidebar-rail pointer-events-auto",
+                        "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface",
+                        "fixed bottom-0 left-0 z-[86] box-border flex flex-col bg-black no-scrollbar",
+                        "shadow-[0_12px_48px_rgba(0,0,0,0.72)] [--sidebar-nav-section-pt:0]",
+                        isCompactMobileUi
+                          ? cn(
+                              "mobile-sidebar-rail mobile-sidebar-overlay-panel",
+                              "w-[220px] max-w-[220px] overflow-y-auto overflow-x-hidden rounded-none rounded-br-xl border border-l-0 border-t-0"
+                            )
+                          : cn(
+                              "tablet-sidebar-overlay-panel",
+                              "w-[clamp(380px,52vw,540px)] max-w-[clamp(380px,52vw,540px)] overflow-hidden rounded-none rounded-br-xl border border-l-0 border-t-0 border-r"
+                            )
+                      )}
+                      style={{
+                        top: isCompactMobileUi ? mobileSidebarTopPx : tabletOverlayTopPx,
+                        height: isCompactMobileUi
+                          ? `calc(100svh - ${mobileSidebarTopPx}px)`
+                          : `calc(100svh - ${tabletOverlayTopPx}px)`,
+                        maxHeight: isCompactMobileUi
+                          ? `calc(100svh - ${mobileSidebarTopPx}px)`
+                          : `calc(100svh - ${tabletOverlayTopPx}px)`
+                      }}
+                    >
+                      <DashboardChromeLetterGlitch />
+                      <div
+                        className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]"
+                      />
+                      <div
+                        className={cn(
+                          "sidebar-nav-dock-inner relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col bg-black",
+                          isCompactMobileUi ? "overflow-y-auto px-3 pb-3 pt-3" : "overflow-hidden px-3 pb-3 pt-3"
+                        )}
+                      >
+                        <SidebarNavRailList
+                          nav={nav}
+                          selectedNavKey={selectedNavKey}
+                          setSelectedNavKey={applyNavKey}
+                          onItemActivate={handleSidebarNavActivate}
+                          isNavLocked={isNavLocked}
+                        />
+                        <SidebarNavKeyDecor
+                          onClose={!isCompactMobileUi ? closeOverlaySidebar : undefined}
+                        />
+                      </div>
+                    </motion.aside>
+                  ) : null}
+                </AnimatePresence>
+              </div>,
+              document.body
+            )
+          : null}
 
-        {/* Main frame — `relative` + popLayout: exiting sidebar leaves grid flow so main shell does not wrap to row 2 (14 cols) during close. */}
+        {/* Main frame — overlay sidebars are portaled; grid rail is desktop-only (lg+). */}
         <div
           className={cn(
             "relative mt-0 grid min-h-0 w-full max-w-none flex-1 auto-rows-[minmax(0,1fr)] grid-cols-12 fluid-main-grid lg:h-full lg:min-h-0 lg:items-stretch",
@@ -3199,22 +3302,15 @@ export default function Page() {
           )}
         >
           <AnimatePresence initial={true} mode="popLayout">
-            {sidebarOpen ? (
+            {sidebarOpen && !isOverlaySidebarBp ? (
               <motion.aside
                 key="main-sidebar"
+                layout={false}
                 ref={sidebarRef as unknown as React.Ref<HTMLElement>}
-                initial={
-                  useMobileOverlaySidebarMotion
-                    ? { x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }
-                    : sidebarMotion.initial
-                }
-                animate={useMobileOverlaySidebarMotion ? { x: 0, opacity: 1 } : sidebarMotion.animate}
-                exit={
-                  useMobileOverlaySidebarMotion
-                    ? { x: MOBILE_SIDEBAR_OFF_X, opacity: 1 }
-                    : sidebarMotion.exit
-                }
-                transition={useMobileOverlaySidebarMotion ? mobileOverlaySidebarTransition : sidebarMotion.transition}
+                initial={sidebarMotion.initial}
+                animate={sidebarMotion.animate}
+                exit={sidebarMotion.exit}
+                transition={sidebarMotion.transition}
                 onMouseMove={(e) => {
                   dockMouseY.current = e.clientY;
                 }}
@@ -3223,17 +3319,7 @@ export default function Page() {
                 }}
                 className={cn(
                   "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
-                  isCompactMobileUi && "mobile-sidebar-rail",
-                  isOverlaySidebarBp &&
-                    cn(
-                      "dashboard-overlay-sidebar-rail fixed left-0 z-[100] box-border overflow-x-hidden rounded-br-lg shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
-                      "top-[var(--topbarBottom,var(--topbarH,4.5rem))] rounded-r-lg border-r",
-                      isCompactMobileUi
-                        ? "w-[min(calc(100%-20px),clamp(290px,46vw,440px))] max-w-[min(calc(100%-20px),clamp(290px,46vw,440px))] pt-0 [--sidebar-nav-section-pt:0]"
-                        : "w-[clamp(380px,52vw,540px)] max-w-[clamp(380px,52vw,540px)] [--sidebar-nav-section-pt:0.4rem]"
-                    ),
-                  !isOverlaySidebarBp &&
-                    "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
+                  "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
                 <DashboardChromeLetterGlitch />
@@ -3246,9 +3332,7 @@ export default function Page() {
                     onItemActivate={handleSidebarNavActivate}
                     isNavLocked={isNavLocked}
                   />
-                  <SidebarNavKeyDecor
-                    onClose={isOverlaySidebarBp && !isCompactMobileUi ? closeOverlaySidebar : undefined}
-                  />
+                  <SidebarNavKeyDecor />
                 </div>
               </motion.aside>
             ) : null}

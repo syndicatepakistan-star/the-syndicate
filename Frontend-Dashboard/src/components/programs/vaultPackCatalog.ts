@@ -1,5 +1,9 @@
 import type { CheckoutOfferKey, PlanOfferAccent, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
 import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
+import {
+  allTradingSubmoduleOffers,
+  tradingSubmoduleOfferBySlug,
+} from "@/components/programs/tradingVaultCatalog";
 
 const PACKS_BASE = "/assets/programs/packs courses";
 
@@ -213,6 +217,8 @@ export function isVaultPackKey(plan: string): plan is VaultPackKey {
 }
 
 export function vaultCourseBySlug(slug: CheckoutOfferKey): PlanOfferDef | undefined {
+  const submodule = tradingSubmoduleOfferBySlug(slug);
+  if (submodule) return submodule;
   for (const pack of Object.keys(VAULT_PACK_COURSES) as VaultPackKey[]) {
     const hit = VAULT_PACK_COURSES[pack].find((c) => c.plan === slug);
     if (hit) return hit;
@@ -223,6 +229,7 @@ export function vaultCourseBySlug(slug: CheckoutOfferKey): PlanOfferDef | undefi
 export function isVaultCourseSlug(value: string): boolean {
   const v = value.trim();
   if (/^agentic_ai_c\d{2}$/.test(v) || /^ai_content_c\d{2}$/.test(v)) return true;
+  if (/^trading_(secrets|setups|strategies|scalpel)_\d{2}$/.test(v)) return true;
   return (
     v === "trading_scalpel_protocol" ||
     v === "trading_master_strategies" ||
@@ -231,7 +238,15 @@ export function isVaultCourseSlug(value: string): boolean {
   );
 }
 
-/** Sum of à la carte prices for a pack (for display). */
+/** Sum of à la carte module prices for a pack (trading: modules only, not every lesson). */
 export function vaultPackAlaCarteTotal(pack: VaultPackKey): number {
+  if (pack === "trading_technical_analysis") {
+    return vaultCoursesForPack(pack).reduce((sum, c) => sum + Number(c.checkoutAmount), 0);
+  }
   return vaultCoursesForPack(pack).reduce((sum, c) => sum + Number(c.checkoutAmount), 0);
+}
+
+/** All purchasable lesson rows inside trading modules (for admin / search). */
+export function tradingLessonOfferCount(): number {
+  return allTradingSubmoduleOffers().length;
 }

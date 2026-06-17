@@ -1,4 +1,5 @@
 import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
+import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import {
   getAuthorizationHeader,
@@ -44,7 +45,9 @@ export function isCheckoutPlanKey(value: string): boolean {
   const v = value.trim();
   if (!v) return false;
   if (isSubscriptionPlanKey(v)) return true;
-  return /^agentic_ai_c\d{2}$/.test(v) || /^ai_content_c\d{2}$/.test(v);
+  if (/^agentic_ai_c\d{2}$/.test(v) || /^ai_content_c\d{2}$/.test(v)) return true;
+  if (isTradingSubmoduleSlug(v)) return true;
+  return false;
 }
 
 export function buildPlanCheckoutAuthHref(params: PlanCheckoutParams): string {

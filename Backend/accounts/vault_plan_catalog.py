@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import re
 
+from accounts.trading_vault_catalog import (
+    TRADING_MODULE_SLUGS,
+    TRADING_MODULE_TITLES,
+    trading_parent_module_for_slug,
+    trading_submodule_titles_for_catalog,
+)
+
 AGENTIC_AI_COURSE_TITLES: tuple[str, ...] = (
   "Build a Blog Writing Agent With N8N",
   "Build a WhatsApp Agent with n8n",
@@ -66,10 +73,8 @@ AI_CONTENT_COURSE_TITLES: tuple[str, ...] = (
 )
 
 TRADING_COURSE_SLUGS_TITLES: dict[str, str] = {
-  "trading_scalpel_protocol": "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
-  "trading_master_strategies": "Strategies of a Master Trader",
-  "trading_master_setups": "Setups of a Master Trader",
-  "trading_master_secrets": "Secrets of a Master Trader",
+    **TRADING_MODULE_TITLES,
+    **trading_submodule_titles_for_catalog(),
 }
 
 _VAULT_COURSE_SLUG_RE = re.compile(r"^(agentic_ai_c|ai_content_c)(\d{2})$")
@@ -96,7 +101,10 @@ def vault_pack_for_module_slug(plan: str) -> str | None:
   plan = (plan or "").strip().lower()
   if plan in VAULT_PACK_SLUGS:
     return plan
-  if plan in TRADING_COURSE_SLUGS_TITLES:
+  parent = trading_parent_module_for_slug(plan)
+  if parent:
+    return "trading_technical_analysis"
+  if plan in TRADING_MODULE_SLUGS or plan in TRADING_COURSE_SLUGS_TITLES:
     return "trading_technical_analysis"
   m = _VAULT_COURSE_SLUG_RE.match(plan)
   if not m:
@@ -114,6 +122,11 @@ def is_vault_course_plan_slug(plan: str) -> bool:
   if plan in VAULT_COURSE_TITLES:
     return True
   return _VAULT_COURSE_SLUG_RE.match(plan) is not None
+
+
+def vault_parent_module_for_slug(plan: str) -> str | None:
+  """Trading submodule → parent module slug (e.g. trading_secrets_01 → trading_master_secrets)."""
+  return trading_parent_module_for_slug(plan)
 
 
 def vault_course_product_title(plan: str) -> str | None:

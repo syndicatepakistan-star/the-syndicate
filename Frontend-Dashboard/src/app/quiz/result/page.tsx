@@ -50,6 +50,38 @@ type QuizResultPayload = {
   };
 };
 
+function parseQuizSectionMeta(title: string) {
+  const match = title.match(/^Section\s+([A-Z])\s*:?\s*(.*)$/i);
+  if (!match) {
+    const slug = title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 48);
+    return {
+      id: `quiz-result-section-${slug || "section"}`,
+      letter: null as string | null,
+      shortLabel: title,
+      fullTitle: "",
+    };
+  }
+  const letter = match[1].toUpperCase();
+  const rest = match[2]?.trim() ?? "";
+  return {
+    id: `quiz-result-section-${letter.toLowerCase()}`,
+    letter,
+    shortLabel: `Section ${letter}`,
+    fullTitle: rest,
+  };
+}
+
+function scrollToQuizSection(sectionId: string) {
+  const el = document.getElementById(sectionId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function getCleanReportLines(report: string) {
   return report
     .split("\n")
@@ -214,9 +246,30 @@ function renderStyledReport(report: string, loginEmail: string) {
       {reportTitle ? (
         <h2 className="result-heading public-heading-lightning public-heading-lightning--violet">{reportTitle}</h2>
       ) : null}
-      <div className="section-cards-grid">
-        {sections.map((section) => (
-          <article key={section.title} className="section-card">
+      <div className="result-report-layout">
+        <nav className="result-section-sidebar" aria-label="Report sections">
+          {sections.map((section) => {
+            const meta = parseQuizSectionMeta(section.title);
+            return (
+              <button
+                key={`nav-${section.title}`}
+                type="button"
+                className="result-section-sidebar-item"
+                onClick={() => scrollToQuizSection(meta.id)}
+              >
+                <span className="result-section-sidebar-letter">{meta.shortLabel}</span>
+                {meta.fullTitle ? (
+                  <span className="result-section-sidebar-desc">{meta.fullTitle}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="section-cards-grid">
+        {sections.map((section) => {
+          const meta = parseQuizSectionMeta(section.title);
+          return (
+          <article key={section.title} id={meta.id} className="section-card scroll-mt-4">
             <h3 className="result-subheading">{section.title}</h3>
             {isArchetypeCourseMapSection(section.title)
               ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
@@ -270,7 +323,9 @@ function renderStyledReport(report: string, loginEmail: string) {
               );
             })}
           </article>
-        ))}
+        );
+        })}
+        </div>
       </div>
     </>
   );

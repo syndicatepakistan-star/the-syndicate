@@ -6,20 +6,16 @@ import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planOfferCatalog";
-import {
-  isVaultPackKey,
-  VAULT_PACK_MODAL_COPY,
-  vaultCoursesForPack,
-  vaultPackAlaCarteTotal,
-} from "@/components/programs/vaultPackCatalog";
+import { VAULT_PACK_MODAL_COPY } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import {
   tradingSubmodulesForModule,
+  tradingSubmoduleOffersForModule,
   type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
 
 type Props = {
-  packOffer: PlanOfferDef | null;
+  moduleOffer: PlanOfferDef | null;
   busyPlan: CheckoutOfferKey | null;
   purchasedSlugs: ReadonlySet<string>;
   accessTier: string | null;
@@ -27,11 +23,10 @@ type Props = {
   onDetails: (offer: PlanOfferDef) => void;
   onUnlock: (offer: PlanOfferDef) => void;
   onOpenUnlocked: (offer: PlanOfferDef) => void;
-  onExploreTradingModule?: (offer: PlanOfferDef) => void;
 };
 
-export function PackVaultOfferModal({
-  packOffer,
+export function TradingModuleVaultModal({
+  moduleOffer,
   busyPlan,
   purchasedSlugs,
   accessTier,
@@ -39,10 +34,9 @@ export function PackVaultOfferModal({
   onDetails,
   onUnlock,
   onOpenUnlocked,
-  onExploreTradingModule,
 }: Props) {
   useEffect(() => {
-    if (!packOffer) return;
+    if (!moduleOffer) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -53,43 +47,30 @@ export function PackVaultOfferModal({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [packOffer, onClose]);
+  }, [moduleOffer, onClose]);
 
-  if (!packOffer || !isVaultPackKey(packOffer.plan) || typeof document === "undefined") return null;
+  if (!moduleOffer || typeof document === "undefined") return null;
 
-  const packKey = packOffer.plan;
-  const copy = VAULT_PACK_MODAL_COPY[packKey];
-  const courses = vaultCoursesForPack(packKey);
-  const alaCarteTotal = vaultPackAlaCarteTotal(packKey);
+  const moduleSlug = moduleOffer.plan as TradingModuleSlug;
+  const copy = VAULT_PACK_MODAL_COPY.trading_technical_analysis;
+  const lessons = tradingSubmoduleOffersForModule(moduleSlug);
+  const submoduleCount = tradingSubmodulesForModule(moduleSlug).length;
+  const moduleUnlocked = isVaultOfferUnlocked(moduleOffer, purchasedSlugs, accessTier);
 
   const handlePrimary = (offer: PlanOfferDef) => {
     if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier)) {
-      if (isVaultPackKey(offer.plan)) {
-        return;
-      }
       onOpenUnlocked(offer);
       return;
     }
     onUnlock(offer);
   };
 
-  const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier);
-  const isTradingPack = packKey === "trading_technical_analysis";
-
-  const handleModuleOpen = (offer: PlanOfferDef) => {
-    if (isTradingPack) {
-      onExploreTradingModule?.(offer);
-      return;
-    }
-    handlePrimary(offer);
-  };
-
   return createPortal(
     <div
-      className="fixed inset-0 z-[115] flex items-start justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[116] flex items-start justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="vault-pack-modal-title"
+      aria-labelledby="trading-module-modal-title"
       onClick={onClose}
     >
       <div
@@ -110,28 +91,24 @@ export function PackVaultOfferModal({
               )}
             >
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-              Back
+              Back to pack
             </button>
             <h2
-              id="vault-pack-modal-title"
-              className="text-[clamp(1.1rem,3.5vw,1.65rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
+              id="trading-module-modal-title"
+              className="text-[clamp(1.05rem,3.2vw,1.5rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
             >
-              {copy.title}
+              {moduleOffer.title}
             </h2>
             <p className="mt-2 max-w-2xl font-mono text-[12px] leading-relaxed text-white/72 sm:text-[13px]">
-              {copy.subtitle}
-              {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-                <span className="mt-1 block text-white/50">
-                  Full pack {packOffer.displayPrice} — individual total ${alaCarteTotal} if bought separately.
-                </span>
-              ) : null}
+              {submoduleCount} lessons inside this module. Unlock the full module for {moduleOffer.displayPrice} or buy
+              individual lessons at $9 each.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className={cn("shrink-0 rounded-lg border bg-black/80 p-1.5 transition", copy.closeBtnClass)}
-            aria-label="Close vault offers"
+            aria-label="Close module lessons"
           >
             <X className="h-4 w-4" />
           </button>
@@ -145,20 +122,20 @@ export function PackVaultOfferModal({
             )}
           >
             <p className={cn("mb-4 text-center font-mono text-[11px] uppercase tracking-[0.2em]", copy.labelClass)}>
-              Full vault — best value
+              Full module — all {submoduleCount} lessons
             </p>
             <PlanOfferCard
-              offer={packOffer}
+              offer={moduleOffer}
               size="large"
-              cardKind="pack"
-              busy={busyPlan === packOffer.plan}
-              actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier)}
-              onDetails={() => onDetails(packOffer)}
-              onOpen={() => handlePrimary(packOffer)}
+              cardKind="module"
+              busy={busyPlan === moduleOffer.plan}
+              actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier)}
+              onDetails={() => onDetails(moduleOffer)}
+              onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
             />
-            {packUnlocked ? (
+            {moduleUnlocked ? (
               <p className="mt-3 text-center font-mono text-[11px] text-emerald-300/90">
-                Pack unlocked — choose a module below and tap Open to watch.
+                Module unlocked — open any lesson below.
               </p>
             ) : null}
           </section>
@@ -166,41 +143,25 @@ export function PackVaultOfferModal({
           <div className="mb-5 flex items-center gap-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="shrink-0 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
-              Individual modules ({courses.length})
+              Individual lessons ({lessons.length})
             </p>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
           <div className="vault-modules-grid">
-            {courses.map((offer) => {
-              const lessonCount = isTradingPack
-                ? tradingSubmodulesForModule(offer.plan as TradingModuleSlug).length
-                : 0;
-              return (
+            {lessons.map((offer) => (
               <div key={offer.plan} className="vault-module-cell">
-                {isTradingPack && lessonCount > 0 ? (
-                  <p className="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-violet-300/75">
-                    {lessonCount} lessons inside
-                  </p>
-                ) : null}
                 <PlanOfferCard
                   offer={offer}
                   size="module"
                   cardKind="module"
                   busy={busyPlan === offer.plan}
-                  actionLabel={
-                    isTradingPack
-                      ? isVaultOfferUnlocked(offer, purchasedSlugs, accessTier)
-                        ? "View lessons"
-                        : "Browse lessons"
-                      : resolveOfferActionLabel(offer, purchasedSlugs, accessTier)
-                  }
+                  actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier)}
                   onDetails={() => onDetails(offer)}
-                  onOpen={() => handleModuleOpen(offer)}
+                  onOpen={() => handlePrimary(offer)}
                 />
               </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { CheckoutOfferKey, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
 import { vaultCoursesForPack } from "@/components/programs/vaultPackCatalog";
+import { isTradingSubmoduleSlug, tradingParentModuleForSlug } from "@/components/programs/tradingVaultCatalog";
 
 const MONEY_MASTERY_TIERS = new Set(["money_mastery", "full"]);
 
@@ -14,6 +15,8 @@ export function isVaultOfferUnlocked(
 ): boolean {
   if (hasMoneyMasteryAccess(accessTier)) return true;
   if (purchasedSlugs.has(offer.plan)) return true;
+  const parentModule = tradingParentModuleForSlug(offer.plan);
+  if (parentModule && purchasedSlugs.has(parentModule)) return true;
   const pack = offer.vaultPackPlan ?? (isVaultPackPlanKey(offer.plan) ? offer.plan : null);
   if (pack && purchasedSlugs.has(pack)) return true;
   return false;

@@ -6,6 +6,7 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import { PlanOfferDetailModal } from "@/components/programs/PlanOfferDetailModal";
 import { PackVaultOfferModal } from "@/components/programs/PackVaultOfferModal";
+import { TradingModuleVaultModal } from "@/components/programs/TradingModuleVaultModal";
 import {
   PLAN_OFFERS,
   PLAN_OFFERS_PRIMARY,
@@ -62,6 +63,7 @@ export function PublicPlanOfferCards({
   const [error, setError] = useState<string | null>(null);
   const [detailOffer, setDetailOffer] = useState<PlanOfferDef | null>(null);
   const [vaultPackOffer, setVaultPackOffer] = useState<PlanOfferDef | null>(null);
+  const [tradingModuleOffer, setTradingModuleOffer] = useState<PlanOfferDef | null>(null);
   const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
   const [accessTier, setAccessTier] = useState<string | null>(null);
   const isLarge = size === "large";
@@ -241,6 +243,17 @@ export function PublicPlanOfferCards({
         purchasedSlugs={purchasedSet}
         accessTier={accessTier}
         onClose={() => setVaultPackOffer(null)}
+        onDetails={setDetailOffer}
+        onUnlock={(offer) => void joinOffer(offer)}
+        onOpenUnlocked={openUnlocked}
+        onExploreTradingModule={(offer) => setTradingModuleOffer(offer)}
+      />
+      <TradingModuleVaultModal
+        moduleOffer={tradingModuleOffer}
+        busyPlan={busyPlan}
+        purchasedSlugs={purchasedSet}
+        accessTier={accessTier}
+        onClose={() => setTradingModuleOffer(null)}
         onDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}
         onOpenUnlocked={openUnlocked}

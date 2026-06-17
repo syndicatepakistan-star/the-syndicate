@@ -120,16 +120,64 @@
  * Mobile overlay rail: `mix-blend-mode: screen` on .cyber-frame can read as a cyan line at the left edge in the gap; normalize blend.
  * Border lines: `.cut-frame` clip-path cuts off the real border (especially bottom/right); remove clip + tighten glow so the gold frame reads as one closed outline.
  */
-@media (max-width: 1023px) {
+@media (max-width: 1023px), ((width: 1024px) and (height: 1366px)) {
   .dashboard-hamburger-chrome .sidebar-nav-dock.max-lg\:fixed,
-  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-overlay-sidebar-rail {
+  .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-overlay-sidebar-rail:not(.mobile-sidebar-rail) {
     --sidebar-nav-section-pt: 0.4rem;
     --sidebar-nav-section-pb: 0.3rem;
-    height: calc(
-      100svh - var(--topbarBottom, var(--topbarH, 4.5rem)) -
-        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
-    );
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    height: calc(100svh - var(--topbarBottom, var(--topbarH, 4.5rem)));
+    max-height: calc(100svh - var(--topbarBottom, var(--topbarH, 4.5rem)));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Portaled tablet / iPad overlay: full height below navbar, scrollable nav list */
+  .dashboard-overlay-sidebar-root.tablet-sidebar-overlay-root {
+    z-index: 85 !important;
+    isolation: isolate;
+  }
+
+  .tablet-sidebar-overlay-backdrop {
+    z-index: 85 !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.tablet-sidebar-overlay-panel {
+    z-index: 86 !important;
+    isolation: isolate;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    background: #000 !important;
+    border-top-left-radius: 0 !important;
+    clip-path: none !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.tablet-sidebar-overlay-panel.shell-chrome-multineon.cyber-frame::before {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.tablet-sidebar-overlay-panel .sidebar-nav-dock-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+    padding: 0.75rem !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.tablet-sidebar-overlay-panel .sidebar-nav-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.tablet-sidebar-overlay-panel .sidebar-nav-key-slot {
+    flex: 0 0 auto !important;
+    min-height: clamp(3.5rem, 12cqi, 5.5rem);
   }
 
   /* In-navbar mobile / iPad: search + sidebar one unified stack */
@@ -209,34 +257,98 @@
     opacity: 0.55;
   }
 
-  /* Mobile sidebar: flush under topbar, 20px inset from right edge */
+  /* Mobile sidebar: portaled overlay above main content (below sticky navbar z-60) */
+  .mobile-sidebar-overlay-root {
+    z-index: 85 !important;
+    isolation: isolate;
+  }
+
+  .mobile-sidebar-overlay-backdrop {
+    z-index: 85 !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel {
+    z-index: 86 !important;
+    isolation: isolate;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    --sidebar-nav-section-pt: 0 !important;
+    width: 220px !important;
+    max-width: 220px !important;
+    min-height: 0 !important;
+    background: #000 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel.shell-chrome-multineon.cyber-frame::before {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel.cut-frame {
+    clip-path: none !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel .sidebar-nav-dock-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+    padding: 0.75rem !important;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel .sidebar-nav-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel .sidebar-nav-key-slot {
+    flex: 0 0 auto !important;
+  }
+
   .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-rail,
   .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail {
-    top: var(--topbarBottom, var(--topbarH, 4.5rem)) !important;
     margin-top: 0 !important;
-    padding-top: 0 !important;
     --sidebar-nav-section-pt: 0 !important;
-    width: min(calc(100% - 20px), clamp(290px, 46vw, 440px)) !important;
-    max-width: min(calc(100% - 20px), clamp(290px, 46vw, 440px)) !important;
-    min-height: 0 !important;
-    height: calc(
-      100svh - var(--topbarBottom, var(--topbarH, 4.5rem)) -
-        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
-    );
-    max-height: calc(
-      100svh - var(--topbarBottom, var(--topbarH, 4.5rem)) -
-        max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem))
-    );
+    width: 220px !important;
+    max-width: 220px !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+
+  @container syndicate-sidebar (max-width: 400px) {
+    .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel {
+      --sidebar-nav-section-pt: 0 !important;
+      padding-top: 0 !important;
+    }
+
+    .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-overlay-panel .sidebar-nav-dock-inner {
+      padding-top: 0.75rem !important;
+    }
   }
 
   .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-innav-sidebar-rail--attached {
     position: fixed !important;
     left: 0 !important;
     z-index: 95 !important;
-    width: min(calc(100% - 20px), clamp(290px, 46vw, 440px)) !important;
-    max-width: min(calc(100% - 20px), clamp(290px, 46vw, 440px)) !important;
+    width: 220px !important;
+    max-width: 220px !important;
+    height: 600px !important;
+    max-height: 600px !important;
     margin-top: 0 !important;
     border-radius: 0 12px 12px 0;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-rail .sidebar-nav-key-slot {
+    flex: 0 0 auto;
+    min-height: clamp(2.75rem, 12cqi, 4rem);
+    padding-bottom: 0.15rem;
   }
 
   .dashboard-hamburger-chrome .sidebar-nav-dock.mobile-sidebar-rail .sidebar-nav-list,
@@ -280,11 +392,24 @@
   }
 }
 
-/* Tablet / iPad overlay rail: wider than compact mobile so labels fit (JS also sets width at 1024px). */
+/* Tablet / iPad overlay rail: wider than compact mobile so labels fit. */
 @media (max-width: 1023px), ((width: 1024px) and (height: 1366px)) {
   .dashboard-hamburger-chrome .sidebar-nav-dock.dashboard-overlay-sidebar-rail:not(.mobile-sidebar-rail) {
     width: clamp(380px, 52vw, 540px) !important;
     max-width: clamp(380px, 52vw, 540px) !important;
+  }
+}
+
+/* iPad Pro portrait (~1024×1366): sidebar top flush to navbar bottom; compact top band */
+@media ((width: 1024px) and (height: 1366px)), (min-width: 980px) and (max-width: 1035px) and (min-height: 1290px) {
+  .dashboard-ipad-pro-ui .premium-navbar.dashboard-ipad-pro-nav {
+    min-height: auto !important;
+    align-content: end;
+    padding-bottom: 0.35rem;
+  }
+
+  .dashboard-ipad-pro-ui .premium-navbar.dashboard-ipad-pro-nav .dashboard-innav-search-stack {
+    margin-top: 0.15rem;
   }
 }
 

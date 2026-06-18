@@ -1,5 +1,6 @@
 import type { CheckoutOfferKey, PlanOfferAccent, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
 import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
+import { TRADING_PACK_DESCRIPTION } from "@/components/programs/tradingVaultCopy";
 import {
   allTradingSubmoduleOffers,
   tradingSubmoduleOfferBySlug,
@@ -200,8 +201,7 @@ export const VAULT_PACK_MODAL_COPY: Record<
   },
   trading_technical_analysis: {
     title: "Trading Advanced Technical Analysis",
-    subtitle:
-      "Retail noise exists to liquidate undisciplined capital — this vault installs chart doctrine, risk rails, and execution math built for asymmetric warfare. Full protocol stack $99 or individual edges at $35 each. Every purchase tracked in your command dashboard.",
+    subtitle: TRADING_PACK_DESCRIPTION,
     borderClass: "border-violet-400/45 shadow-[0_0_56px_rgba(168,85,247,0.35)]",
     labelClass: "text-violet-300/85",
     closeBtnClass: "border-violet-400/35 text-violet-100 hover:border-violet-300/60",

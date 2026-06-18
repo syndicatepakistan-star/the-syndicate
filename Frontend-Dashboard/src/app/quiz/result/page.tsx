@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 import {
@@ -16,23 +15,53 @@ import {
   executionStackCategoryToActionCategory,
   isArchetypeCourseMapSection,
   isExecutionStackSection,
+  normalizeExecutionStackLines,
+  parseStackCourseAccess,
+  parseStackCourseTitle,
   type ArchetypeMapLineCategory,
   type ExecutionStackLineCategory,
 } from "@/lib/quizArchetypeCourseLinks";
+import {
+  courseActionButtonTheme,
+  resolveCourseNeonTheme,
+  type CourseNeonTheme,
+} from "@/lib/quizResultCourseNeon";
 
-const TRACK_BY_ARCHETYPE = {
-  "Ghost Architect":
-    "Trading advanced technical analysis, AI Content Automation, and Building Games Using Unreal Engine.",
-  "Digital Raider":
-    "Building AI Agents with Claude and Anti Gravity, Unreal Engine, WordPress Blog, and Framer Crash Course.",
-  "Creative Infiltrator": "AI Content Automation, Print On Demand, and Amazon KDP.",
-  "Asset Grinder":
-    "AI Content Automation, Print On Demand, Amazon KDP, and Building AI Agents with Claude and Anti Gravity.",
-  // Legacy labels (older quiz results)
-  "Attention Broker": "Canva, print on demand, and Amazon KDP.",
-  "System Architect": "Python, React, Flutter, and automation systems.",
-  "Profit Raider": "Trading technical analysis and AI automation.",
-};
+const PDF_VIRUS_HEADING_PREFIXES = new Set([
+  "THE STING:",
+  "THE REALITY:",
+  "THE DIAGNOSIS:",
+  "URGENCY OVERRIDE:",
+]);
+
+function stripSectionEFromReport(lines: string[]): string[] {
+  const out: string[] = [];
+  let skippingSectionE = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^Section E:/i.test(trimmed)) {
+      skippingSectionE = true;
+      continue;
+    }
+    if (skippingSectionE && /^Section [A-D]:/i.test(trimmed)) {
+      skippingSectionE = false;
+    }
+    if (skippingSectionE) continue;
+    out.push(line);
+  }
+  return out;
+}
+
+function isPdfLeftAlignedLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (/^(\d+\.\sTHE\s|STATUS:|ARCHETYPE:|DETECTED VIRUS:|WARNING:|•\s|• Course:|Why:)/.test(trimmed)) {
+    return true;
+  }
+  for (const prefix of PDF_VIRUS_HEADING_PREFIXES) {
+    if (trimmed.startsWith(prefix)) return true;
+  }
+  return false;
+}
 
 type QuizResultPayload = {
   score?: number;
@@ -86,6 +115,10 @@ function getCleanReportLines(report: string) {
   return report
     .split("\n")
     .filter((line) => line.trim() !== "")
+    .filter((line) => !line.startsWith("Section E:"))
+    .filter((line) => !line.startsWith("Business Models:"))
+    .filter((line) => !line.startsWith("Psychology (Paid"))
+    .filter((line) => !line.startsWith("Psychology (Free"))
     .filter((line) => !line.startsWith("The Archetype (Skill Course Mapping)"))
     .filter((line) => !line.startsWith("Determined by the majority of answers in Q2 and Q6."))
     .filter((line) => !line.startsWith("• Ghost Architect:"))
@@ -101,13 +134,17 @@ function getCleanReportLines(report: string) {
 function renderCourseActionButton(
   courseValue: string,
   category: ArchetypeMapLineCategory,
-  loginEmail: string
+  loginEmail: string,
+  buttonTheme: CourseNeonTheme
 ) {
   const showFree =
     category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
   if (showFree) {
     return (
-      <a className="result-ticket-btn" href={buildFreeTicketLoginHref(loginEmail, courseValue)}>
+      <a
+        className={`result-ticket-btn result-ticket-btn--${buttonTheme}`}
+        href={buildFreeTicketLoginHref(loginEmail, courseValue)}
+      >
         Get For Free
       </a>
     );
@@ -116,13 +153,70 @@ function renderCourseActionButton(
     const unlockHref = buildUnlockNowProgramsHref(courseValue);
     if (unlockHref) {
       return (
-        <a className="result-unlock-btn" href={unlockHref}>
-          Unlock Now
+        <a className={`result-unlock-btn result-unlock-btn--${buttonTheme}`} href={unlockHref}>
+          Unlock
         </a>
       );
     }
   }
   return null;
+}
+
+function renderStackFreeTag() {
+  return (
+    <>
+      {" "}
+      (<span className="result-stack-access result-stack-access--free">FREE</span>)
+    </>
+  );
+}
+
+function renderNeonCourseLine(
+  key: string,
+  displayLabel: string,
+  courseValue: string,
+  category: ArchetypeMapLineCategory,
+  loginEmail: string
+) {
+  const rowTheme = resolveCourseNeonTheme(displayLabel);
+  const isFree =
+    category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
+  const btnTheme = courseActionButtonTheme(displayLabel, isFree);
+  return (
+    <p
+      key={key}
+      className={`result-line result-line-rich result-course-line result-course-line--${rowTheme}`}
+    >
+      <span className={`result-course-pill result-course-pill--${rowTheme}`}>{displayLabel}</span>
+      {renderCourseActionButton(courseValue, category, loginEmail, btnTheme)}
+    </p>
+  );
+}
+
+function renderExecutionStackCourseLine(
+  key: string,
+  rawCourse: string,
+  courseValue: string,
+  category: ArchetypeMapLineCategory,
+  loginEmail: string
+) {
+  const access = parseStackCourseAccess(rawCourse);
+  const rowTheme = resolveCourseNeonTheme(courseValue);
+  const isFree =
+    access === "free" ||
+    category === "free_psychology" ||
+    isFreeTicketPsychologyCourse(courseValue);
+  const btnTheme = courseActionButtonTheme(courseValue, isFree);
+  return (
+    <p
+      key={key}
+      className={`result-line result-line-rich result-course-line result-course-line--${rowTheme}`}
+    >
+      <span className="result-stack-course-title">{courseValue}</span>
+      {access === "free" ? renderStackFreeTag() : null}
+      {renderCourseActionButton(courseValue, category, loginEmail, btnTheme)}
+    </p>
+  );
 }
 
 function renderExecutionStackSectionContent(
@@ -131,7 +225,7 @@ function renderExecutionStackSectionContent(
   loginEmail: string
 ) {
   let stackCategory: ExecutionStackLineCategory = "other";
-  return content.map((line, idx) => {
+  return normalizeExecutionStackLines(content).map((line, idx) => {
     const headerCategory = classifyExecutionStackLine(line);
     if (headerCategory) {
       stackCategory = headerCategory;
@@ -153,15 +247,27 @@ function renderExecutionStackSectionContent(
       );
     }
     if (line.startsWith("• Course:")) {
-      const courseValue = line.replace("• Course:", "").trim();
-      const actionCategory = executionStackCategoryToActionCategory(stackCategory);
-      const action = renderCourseActionButton(courseValue, actionCategory, loginEmail);
-      return (
-        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich result-course-line">
-          <span className="result-key">Course:</span>{" "}
-          <span className="result-course-pill">{courseValue}</span>
-          {action}
-        </p>
+      const rawCourse = line.replace("• Course:", "").trim();
+      const courseValue = parseStackCourseTitle(rawCourse);
+      const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
+      return renderExecutionStackCourseLine(
+        `${sectionTitle}-${idx}`,
+        rawCourse,
+        courseValue,
+        actionCategory,
+        loginEmail
+      );
+    }
+    if (line.startsWith("• ")) {
+      const rawCourse = line.replace("• ", "").trim();
+      const courseValue = parseStackCourseTitle(rawCourse);
+      const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
+      return renderExecutionStackCourseLine(
+        `${sectionTitle}-${idx}`,
+        rawCourse,
+        courseValue,
+        actionCategory,
+        loginEmail
       );
     }
     const keyPrefixes = ["Why:"];
@@ -200,12 +306,12 @@ function renderArchetypeMapSectionContent(
     }
     if (line.startsWith("• ")) {
       const courseValue = line.replace("• ", "").trim();
-      const action = renderCourseActionButton(courseValue, category, loginEmail);
-      return (
-        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich result-course-line">
-          <span className="result-course-pill">{courseValue}</span>
-          {action}
-        </p>
+      return renderNeonCourseLine(
+        `${sectionTitle}-${idx}`,
+        courseValue,
+        courseValue,
+        category,
+        loginEmail
       );
     }
     return (
@@ -220,11 +326,19 @@ function renderStyledReport(report: string, loginEmail: string) {
   const lines = getCleanReportLines(report);
   const reportTitle = lines.find((line) => line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER"));
   const sectionTitles = lines.filter((line) => line.startsWith("Section "));
-  const sections = sectionTitles.map((title, index) => {
+  const visibleSectionTitles = sectionTitles.filter(
+    (title) => !title.toLowerCase().includes("section e")
+  );
+  const sections = visibleSectionTitles.map((title, index) => {
     const start = lines.indexOf(title) + 1;
-    const end = index < sectionTitles.length - 1 ? lines.indexOf(sectionTitles[index + 1]) : lines.length;
+    const end =
+      index < visibleSectionTitles.length - 1
+        ? lines.indexOf(visibleSectionTitles[index + 1])
+        : lines.length;
     return { title, content: lines.slice(start, end) };
   });
+
+  const virusHeadings = new Set(["THE STING:", "THE REALITY:", "URGENCY OVERRIDE:"]);
 
   const keyPrefixes = [
     "STATUS:",
@@ -268,8 +382,15 @@ function renderStyledReport(report: string, loginEmail: string) {
         <div className="section-cards-grid">
         {sections.map((section) => {
           const meta = parseQuizSectionMeta(section.title);
+          const isVirusSection =
+            section.title.toLowerCase().includes("section b") ||
+            section.title.toLowerCase().includes("virus");
           return (
-          <article key={section.title} id={meta.id} className="section-card scroll-mt-4">
+          <article
+            key={section.title}
+            id={meta.id}
+            className={`section-card scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
+          >
             <h3 className="result-subheading">{section.title}</h3>
             {isArchetypeCourseMapSection(section.title)
               ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
@@ -309,9 +430,13 @@ function renderStyledReport(report: string, loginEmail: string) {
               }
               const matchedPrefix = keyPrefixes.find((prefix) => line.startsWith(prefix));
               if (matchedPrefix) {
+                const headingClass =
+                  isVirusSection && virusHeadings.has(matchedPrefix)
+                    ? "result-virus-heading"
+                    : "result-key";
                 return (
                   <p key={`${section.title}-${idx}`} className="result-line result-line-rich">
-                    <span className="result-key">{matchedPrefix}</span>{" "}
+                    <span className={headingClass}>{matchedPrefix}</span>{" "}
                     {line.replace(matchedPrefix, "").trim()}
                   </p>
                 );
@@ -334,7 +459,7 @@ function renderStyledReport(report: string, loginEmail: string) {
 export default function ResultPage() {
   const [result, setResult] = useState<QuizResultPayload | null>(null);
   const [quizEmail, setQuizEmail] = useState("");
-  const router = useRouter();
+  const [downloadReady, setDownloadReady] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("quiz_result");
@@ -346,8 +471,11 @@ export default function ResultPage() {
   }, []);
 
   useEffect(() => {
+    document.documentElement.classList.add("result-view");
     document.body.classList.add("result-view");
+    window.scrollTo(0, 0);
     return () => {
+      document.documentElement.classList.remove("result-view");
       document.body.classList.remove("result-view");
     };
   }, []);
@@ -366,12 +494,6 @@ export default function ResultPage() {
       </main>
     );
   }
-
-  const archetypeKey = result.archetype as keyof typeof TRACK_BY_ARCHETYPE | undefined;
-  const resolvedTrack =
-    result.recommended_track ??
-    (archetypeKey ? TRACK_BY_ARCHETYPE[archetypeKey] : undefined) ??
-    "Track to be assigned";
 
   async function loadLogoDataUrl(): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -402,6 +524,9 @@ export default function ResultPage() {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 44;
     const maxTextWidth = pageWidth - margin * 2;
+    const pdfInnerPadX = 4;
+    const pdfInnerPadY = 4;
+    const pdfSectionGap = 4;
     let y = margin;
 
     const COLORS = {
@@ -415,6 +540,10 @@ export default function ResultPage() {
       gold: [217, 176, 71] as const,
       cyan: [76, 209, 255] as const,
       magenta: [171, 107, 255] as const,
+      green: [92, 255, 138] as const,
+      red: [255, 71, 87] as const,
+      yellow: [255, 217, 61] as const,
+      orange: [255, 159, 26] as const,
     };
 
     const paintPageBackground = () => {
@@ -501,14 +630,63 @@ export default function ResultPage() {
     };
 
     const drawSectionCard = (sectionTitle: string, lines: string[]) => {
-      const textLeft = margin + 10;
+      const isSectionB = /Section B:/i.test(sectionTitle);
+      const sectionBExtraPad = isSectionB ? pdfSectionGap * 2 : 0;
+      const sectionBBottomReserve = isSectionB ? 22 : 8;
+      y += pdfSectionGap;
+
+      const textLeft = margin + 10 + pdfInnerPadX;
       const isFinalDirectiveSection = sectionTitle.startsWith("Section D");
       const rowFontSize = isFinalDirectiveSection ? 11 : 12;
       const rowLineAdvance = isFinalDirectiveSection ? 15 : 17;
-      const rowGap = isFinalDirectiveSection ? 4 : 5;
-      const innerWidth = maxTextWidth - (isFinalDirectiveSection ? 44 : 38);
+      const rowGap = isSectionB ? 7 : isFinalDirectiveSection ? 4 : 5;
+      const innerWidth = maxTextWidth - (isFinalDirectiveSection ? 44 : 38) - pdfInnerPadX * 2;
+
+      const writeJustified = (text: string, startY: number) => {
+        const body = text.trim();
+        if (!body) return startY + rowGap;
+        doc.text(body, textLeft, startY, { maxWidth: innerWidth, align: "justify" });
+        const lineCount = doc.splitTextToSize(body, innerWidth).length;
+        return startY + lineCount * rowLineAdvance + rowGap;
+      };
+
+      const writeStackFreeTagPdf = (startX: number, baselineY: number) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(rowFontSize);
+        let x = startX;
+        doc.setTextColor(...COLORS.white);
+        doc.text(" (", x, baselineY);
+        x += doc.getTextWidth(" (");
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...COLORS.green);
+        doc.text("FREE", x, baselineY);
+        x += doc.getTextWidth("FREE");
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...COLORS.white);
+        doc.text(")", x, baselineY);
+      };
+
+      const writeStackCourseLinePdf = (line: string, baselineY: number) => {
+        const raw = line.replace(/^•\s*/, "").trim();
+        const title = parseStackCourseTitle(raw);
+        const access = parseStackCourseAccess(raw);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(rowFontSize);
+        doc.setTextColor(...COLORS.white);
+        const prefix = "• ";
+        let x = textLeft;
+        doc.text(prefix, x, baselineY);
+        x += doc.getTextWidth(prefix);
+        doc.text(title, x, baselineY);
+        if (access === "free") {
+          x += doc.getTextWidth(title);
+          writeStackFreeTagPdf(x, baselineY);
+        }
+        return baselineY + rowLineAdvance + rowGap;
+      };
+
       const splitHeadingPrefix = (line: string) => {
-        const prefixes = ["THE STING:", "THE DIAGNOSIS:", "URGENCY OVERRIDE:"];
+        const prefixes = ["THE STING:", "THE REALITY:", "THE DIAGNOSIS:", "URGENCY OVERRIDE:"];
         const match = prefixes.find((prefix) => line.startsWith(prefix));
         if (!match) return null;
         return {
@@ -517,7 +695,7 @@ export default function ResultPage() {
         };
       };
       const wrappedLines = lines.map((line) => {
-        const isHeading = /^(\d+\.\sTHE\s|STATUS:|ARCHETYPE:|ANALYSIS:|DETECTED VIRUS:|THE STING:|THE DIAGNOSIS:|URGENCY OVERRIDE:|WARNING:)/.test(
+        const isHeading = /^(\d+\.\sTHE\s|STATUS:|ARCHETYPE:|ANALYSIS:|DETECTED VIRUS:|THE STING:|THE REALITY:|THE DIAGNOSIS:|URGENCY OVERRIDE:|WARNING:)/.test(
           line
         );
         const isCourse = line.startsWith("• Course:");
@@ -552,7 +730,7 @@ export default function ResultPage() {
       let firstChunk = true;
 
       while (currentIndex < wrappedLines.length) {
-        const pageTopY = y - 14;
+        const pageTopY = y;
         const titleBarHeight = 32;
         const contentTopY = pageTopY + titleBarHeight + 8;
         const availableBottomY = pageHeight - margin - 6;
@@ -572,7 +750,7 @@ export default function ResultPage() {
           continue;
         }
 
-        const cardHeightChunk = cursorY - pageTopY + 8;
+        const cardHeightChunk = cursorY - pageTopY + sectionBBottomReserve + sectionBExtraPad * 2;
         doc.setFillColor(9, 16, 30);
         doc.setDrawColor(...COLORS.line);
         doc.setLineWidth(0.9);
@@ -589,9 +767,9 @@ export default function ResultPage() {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
       doc.setTextColor(...COLORS.magenta);
-        doc.text(firstChunk ? sectionTitle : `${sectionTitle} (cont.)`, margin + 6, pageTopY + 26);
+        doc.text(firstChunk ? sectionTitle : `${sectionTitle} (cont.)`, margin + 6 + pdfInnerPadX, pageTopY + 26);
 
-        let sectionY = contentTopY + 6;
+        let sectionY = contentTopY + 6 + pdfInnerPadY + sectionBExtraPad;
         for (let i = currentIndex; i < endIndex; i += 1) {
           const row = wrappedLines[i];
           let color: Readonly<[number, number, number]> = COLORS.white;
@@ -600,6 +778,7 @@ export default function ResultPage() {
           else if (
             row.line.startsWith("ANALYSIS:") ||
             row.line.startsWith("THE STING:") ||
+            row.line.startsWith("THE REALITY:") ||
             row.line.startsWith("THE DIAGNOSIS:") ||
             row.line.startsWith("URGENCY OVERRIDE:")
           ) {
@@ -611,28 +790,45 @@ export default function ResultPage() {
           doc.setFont("helvetica", row.isHeading || row.isCourse ? "bold" : "normal");
           doc.setFontSize(rowFontSize);
           if (row.splitLabel) {
-            // Color heading label, keep value/body white.
-            const labelText = `${row.splitLabel.label} `;
+            const labelIsVirusHeading = PDF_VIRUS_HEADING_PREFIXES.has(row.splitLabel.label);
+            doc.setFont("helvetica", labelIsVirusHeading || row.isHeading || row.isCourse ? "bold" : "normal");
             doc.setTextColor(...COLORS.cyan);
-            doc.text(labelText, textLeft, sectionY);
-            const labelWidth = doc.getTextWidth(labelText);
+            doc.text(row.splitLabel.label, textLeft, sectionY);
+            sectionY += rowLineAdvance;
+            if (row.splitLabel.value) {
+              doc.setFont("helvetica", "normal");
+              doc.setTextColor(...COLORS.white);
+              sectionY = writeJustified(row.splitLabel.value, sectionY);
+            } else {
+              sectionY += rowGap;
+            }
+          } else if (row.line.startsWith("ANALYSIS:")) {
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(...COLORS.cyan);
+            doc.text("ANALYSIS:", textLeft, sectionY);
+            sectionY += rowLineAdvance;
+            doc.setFont("helvetica", "normal");
             doc.setTextColor(...COLORS.white);
-            const valueWrapped = row.splitValueWrapped ?? doc.splitTextToSize(row.splitLabel.value, Math.max(120, innerWidth - labelWidth));
-            if (valueWrapped.length > 0) {
-              doc.text(valueWrapped[0], textLeft + labelWidth, sectionY);
-            }
-            if (valueWrapped.length > 1) {
-              doc.text(valueWrapped.slice(1), textLeft, sectionY + rowLineAdvance);
-            }
-            sectionY += valueWrapped.length * rowLineAdvance + rowGap;
-          } else {
+            sectionY = writeJustified(row.line.replace("ANALYSIS:", ""), sectionY);
+          } else if (
+            row.line.startsWith("• ") &&
+            !row.line.startsWith("• Course:") &&
+            !row.isWhy &&
+            parseStackCourseAccess(row.line.replace(/^•\s*/, "").trim())
+          ) {
+            sectionY = writeStackCourseLinePdf(row.line, sectionY);
+          } else if (isPdfLeftAlignedLine(row.line) || row.isHeading || row.isCourse) {
             doc.setTextColor(color[0], color[1], color[2]);
             doc.text(row.wrapped, textLeft, sectionY);
             sectionY += row.wrapped.length * rowLineAdvance + rowGap;
+          } else {
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(color[0], color[1], color[2]);
+            sectionY = writeJustified(row.line, sectionY);
           }
         }
 
-        y = pageTopY + cardHeightChunk + 16;
+        y = pageTopY + cardHeightChunk + pdfSectionGap;
         currentIndex = endIndex;
         firstChunk = false;
         if (currentIndex < wrappedLines.length) addNewPage();
@@ -644,7 +840,6 @@ export default function ResultPage() {
         { label: "Score:", value: `${snapshot.score} / 170` },
         { label: "Designation:", value: `${snapshot.designation || snapshot.category}` },
         { label: "Archetype:", value: `${snapshot.archetype}` },
-        { label: "Recommended Track:", value: `${resolvedTrack}` },
         { label: "Detected Virus:", value: `${snapshot.fatal_flaw}` },
       ];
       const summaryValueColor = COLORS.cyan;
@@ -673,39 +868,55 @@ export default function ResultPage() {
       doc.setLineWidth(0.35);
       doc.roundedRect(cardX + 5, cardY + 5, cardW - 10, cardH - 10, 6, 6, "S");
 
-      let lineY = cardY + 20;
+      let lineY = cardY + 20 + pdfInnerPadY;
+      const summaryTextX = margin + pdfInnerPadX;
       summaryLines.forEach((item) => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
         doc.setTextColor(...COLORS.white);
         const labelText = `${item.label} `;
-        doc.text(labelText, margin, lineY);
+        doc.text(labelText, summaryTextX, lineY);
         const labelWidth = doc.getTextWidth(labelText);
         doc.setTextColor(...summaryValueColor);
-        doc.text(item.value, margin + labelWidth, lineY);
+        doc.text(item.value, summaryTextX + labelWidth, lineY);
         lineY += lineHeight;
       });
 
-      y = cardY + cardH + 18;
+      y = cardY + cardH + pdfSectionGap + 12;
     };
 
     drawSummaryCard();
 
-    const reportLines = getCleanReportLines(snapshot.ai_report ?? "");
-    const sectionTitles = reportLines.filter((line) => line.startsWith("Section "));
+    const reportLines = stripSectionEFromReport(getCleanReportLines(snapshot.ai_report ?? ""));
+    const sectionTitles = reportLines.filter(
+      (line) => line.startsWith("Section ") && !line.toLowerCase().includes("section e")
+    );
     sectionTitles.forEach((title, idx) => {
+      if (/^Section C:/i.test(title.trim())) {
+        addNewPage();
+      }
       const start = reportLines.indexOf(title) + 1;
-      const end = idx < sectionTitles.length - 1 ? reportLines.indexOf(sectionTitles[idx + 1]) : reportLines.length;
+      const end =
+        idx < sectionTitles.length - 1 ? reportLines.indexOf(sectionTitles[idx + 1]!) : reportLines.length;
       const sectionBody = reportLines
         .slice(start, end)
-        .filter((line) => line.trim() && !line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER"));
-      drawSectionCard(title, sectionBody);
+        .filter(
+          (line) =>
+            line.trim() &&
+            !line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER") &&
+            !/^Section E:/i.test(line.trim()) &&
+            !line.startsWith("Business Models:") &&
+            !line.startsWith("Psychology (Paid") &&
+            !line.startsWith("Psychology (Free")
+        );
+      const normalizedBody = isExecutionStackSection(title)
+        ? normalizeExecutionStackLines(sectionBody)
+        : sectionBody;
+      drawSectionCard(title, normalizedBody);
     });
 
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `syndicate-audit-report-${timestamp}.pdf`;
+    const filename = "Syndicate Diagnosis Report.pdf";
 
-    // Use blob download to avoid browser navigating to broken file:// URLs.
     const pdfBlob = doc.output("blob");
     const downloadUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement("a");
@@ -715,14 +926,11 @@ export default function ResultPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(downloadUrl);
-    // Give the browser a brief moment to start the download before redirecting.
-    window.setTimeout(() => {
-      router.push("/");
-    }, 350);
+    setDownloadReady(true);
   }
 
   return (
-    <main className="page-wrap">
+    <main className="page-wrap result-page-wrap">
       <section className="card result-page-shell">
         <BrandHeader subtitle="Your strategic report is ready." />
         <div className="result-summary-panel hud-frame">
@@ -755,9 +963,30 @@ export default function ResultPage() {
         </div>
         {renderStyledReport(result.ai_report ?? "", quizEmail)}
 
-        <button className="btn btn-primary result-download-btn" onClick={() => void downloadReportPdf()}>
-          DOWNLOAD THE BLUEPRINT &amp; ENTER THE SYNDICATE
-        </button>
+        <div className="result-actions-footer">
+          <button className="btn btn-primary result-download-btn" onClick={() => void downloadReportPdf()}>
+            DOWNLOAD SYNDICATE DIAGNOSIS REPORT
+          </button>
+          {downloadReady ? (
+            <p className="result-download-confirm">Report saved as &ldquo;Syndicate Diagnosis Report.pdf&rdquo;</p>
+          ) : null}
+          <Link href="/" className="result-home-btn" aria-label="Return to home">
+            <svg
+              className="result-home-btn__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M3 10.5 12 3l9 7.5" />
+              <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1V9.5" />
+            </svg>
+            Return Home
+          </Link>
+        </div>
       </section>
     </main>
   );

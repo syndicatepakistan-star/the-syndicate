@@ -23,6 +23,8 @@ import {
 } from "@/lib/programPlaylistCatalog";
 import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import {
   ProgramUnlockCelebration,
   PROGRAM_UNLOCK_CELEBRATION_KEY,
@@ -722,6 +724,10 @@ export function ProgramsCourseSection({
           if (comingSoon || locked) return;
           void prefetchStreamPlaylistExperience(pl.id);
         }}
+        onTouchStart={() => {
+          if (comingSoon || locked) return;
+          void prefetchStreamPlaylistExperience(pl.id);
+        }}
         onFocus={() => {
           if (comingSoon || locked) return;
           void prefetchStreamPlaylistExperience(pl.id);
@@ -795,6 +801,13 @@ export function ProgramsCourseSection({
               >
                 {cardTitle}
               </div>
+              {!comingSoon ? (
+                <ProgramCardStatsLines
+                  stats={streamPlaylistCardStats(pl.video_count)}
+                  size="stream"
+                  className="shrink-0"
+                />
+              ) : null}
               {!comingSoon ? (
                 <div className="grid shrink-0 grid-cols-2 gap-1.5">
                   <button

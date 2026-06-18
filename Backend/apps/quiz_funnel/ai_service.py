@@ -1,12 +1,19 @@
+import re
+
 from django.conf import settings
 from openai import OpenAI
+
+from .logic import build_section_c_report
 
 _EASY_ENGLISH_RULES = (
     "Write in simple, easy English. Use short sentences and everyday words. "
     "Avoid jargon, corporate buzzwords, and overly technical language. "
     "Explain ideas like you are talking to a smart friend who is new to business. "
-    "Keep the Syndicate tone direct and motivating, but always plain and clear."
+    "Keep the Syndicate tone direct, intense, and motivating — plain words, hard truth."
 )
+
+_SECTION_C_PATTERN = re.compile(r"Section C:.*?(?=Section D:|$)", re.DOTALL | re.IGNORECASE)
+_SECTION_E_PATTERN = re.compile(r"Section E:.*?(?=Section D:|$)", re.DOTALL | re.IGNORECASE)
 
 
 def _sanitize_placeholders(
@@ -33,19 +40,38 @@ def _sanitize_placeholders(
     return report
 
 
-def _format_archetype_catalog_section(archetype_catalog: dict | None) -> str:
-    if not archetype_catalog:
-        return ""
-    business = archetype_catalog.get("business_models") or []
-    paid = archetype_catalog.get("psychology_paid") or []
-    free = archetype_catalog.get("psychology_free") or []
-    lines = ["Section E: Archetype Course Map", "Business Models:"]
-    lines.extend(f"• {title}" for title in business)
-    lines.append("Psychology (Paid Recommendations):")
-    lines.extend(f"• {title}" for title in paid)
-    lines.append("Psychology (Free — Get Free Ticket):")
-    lines.extend(f"• {title}" for title in free)
-    return "\n".join(lines) + "\n\n"
+def _virus_sting_copy(fatal_flaw: str) -> str:
+    return (
+        f"The {fatal_flaw} virus is not a quirk — it is a weekly tax on your time, money, and momentum. "
+        "Every time you feed this pattern, disciplined operators take ground you will not get back."
+    )
+
+
+def _virus_reality_copy(fatal_flaw: str) -> str:
+    return (
+        f"Until you break {fatal_flaw}, you will keep hitting the same ceiling — stalled income, broken promises to yourself, "
+        "and progress that resets the moment pressure shows up."
+    )
+
+
+def _virus_urgency_copy() -> str:
+    return (
+        "You have a narrow window to install a new standard. Wait 30 days and this report becomes another bookmark — "
+        "same habits, same losses, same story."
+    )
+
+
+def compose_full_report(ai_report: str, archetype: str) -> str:
+    """Strip Section E and inject deterministic Section C before Section D."""
+    report = _SECTION_E_PATTERN.sub("", ai_report)
+    section_c = build_section_c_report(archetype).strip() + "\n\n"
+    if _SECTION_C_PATTERN.search(report):
+        report = _SECTION_C_PATTERN.sub(section_c, report)
+    elif "Section D:" in report:
+        report = report.replace("Section D:", section_c + "Section D:", 1)
+    else:
+        report = report.rstrip() + "\n\n" + section_c
+    return report.strip() + "\n"
 
 
 def generate_ai_report(
@@ -60,32 +86,28 @@ def generate_ai_report(
     answers: list[dict],
     archetype_catalog: dict | None = None,
 ) -> str:
+    del archetype_catalog  # Section E removed — catalog is not appended to reports.
+
     api_key = (getattr(settings, "OPENAI_API_KEY", None) or "").strip()
-    catalog_section = _format_archetype_catalog_section(archetype_catalog)
     if not api_key:
-        return (
+        base = (
             f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
             "Section A: The Designation\n"
             f"STATUS: {designation}\n"
             f"ARCHETYPE: {archetype}\n"
-            "ANALYSIS: You have real potential, but right now your habits are holding you back. "
-            "You are working hard, but not in the right direction. You need a clear plan that matches how you think and move.\n\n"
+            "ANALYSIS: You have real potential, but your current habits are misaligned with how you think and move. "
+            "You are working hard without a stack that matches your archetype. You need a clear plan built for operators at your level.\n\n"
             "Section B: The Virus (Psychological Flaw)\n"
             f"DETECTED VIRUS: {fatal_flaw}\n"
-            "THE STING: This pattern is costing you time, money, and momentum every week.\n"
-            "THE REALITY: Until you fix this, you will keep repeating the same results.\n"
-            "URGENCY OVERRIDE: If you ignore this for the next 30 days, nothing meaningful will change.\n\n"
-            "Section C: The Syndicate Execution Stack\n"
-            "To fix this, The Syndicate recommends these three courses:\n"
-            f"1. THE WEAPON (Primary Business Model):\n• Course: {weapon_course}\n• Why: This business model fits your {archetype} style and is the fastest way for you to start earning.\n"
-            f"2. THE SHIELD (Behavioral Correction — Paid):\n• Course: {shield_course}\n• Why: This course helps you break the bad habit ({fatal_flaw}) that has been blocking your progress.\n"
-            f"3. THE PROTOCOL (Strategic Foundation — Free):\n• Course: {protocol_course}\n• Why: This gives you the basic rules and mindset you need at your current level ({designation}).\n\n"
-            f"{catalog_section}"
+            f"THE STING: {_virus_sting_copy(fatal_flaw)}\n"
+            f"THE REALITY: {_virus_reality_copy(fatal_flaw)}\n"
+            f"URGENCY OVERRIDE: {_virus_urgency_copy()}\n\n"
             "Section D: Final Directive\n"
-            "WARNING: Time is running out. The longer you wait, the harder it gets to change.\n"
+            "WARNING: Time is running out — every week you delay, the gap between you and disciplined operators widens.\n"
             "Most people read this and do nothing. Do not be one of them.\n"
             "Your free access window closes in 48 hours. Claim your plan now or stay stuck where you are."
         )
+        return compose_full_report(base, archetype)
 
     client = OpenAI(api_key=api_key)
     prompt = (
@@ -98,18 +120,13 @@ def generate_ai_report(
         f"Designation: {designation}\n"
         f"Archetype: {archetype}\n"
         f"Detected Virus: {fatal_flaw}\n"
-        f"Weapon Course: {weapon_course}\n"
-        f"Shield Course: {shield_course}\n"
-        f"Protocol Course: {protocol_course}\n"
-        "IMPORTANT: Use ONLY the three course names above in Section C. "
-        "Do not mention any other Syndicate course titles.\n"
         f"Dossier User ID: {user_id}\n"
         f"Answers: {answers}\n\n"
         "Output this exact structure with REAL values filled in.\n"
         "Never output bracket placeholders.\n"
-        "Keep each paragraph to 2-4 short sentences.\n"
-        "Shield is always a paid psychology course. Protocol is always a free psychology course.\n"
-        "Only Zero to 1 Million and 9 to 5 Exit Strategy are free-ticket courses.\n\n"
+        "Do NOT write Section C — it is added automatically after generation.\n"
+        "Do NOT write Section E.\n"
+        "Keep Section A to 2-4 short sentences.\n\n"
         f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
         "Section A: The Designation\n"
         f"STATUS: {designation}\n"
@@ -117,15 +134,9 @@ def generate_ai_report(
         "ANALYSIS: (Write 2-4 simple sentences about their level and what it means in plain English.)\n\n"
         "Section B: The Virus (Psychological Flaw)\n"
         f"DETECTED VIRUS: {fatal_flaw}\n"
-        "THE STING: (One simple sentence — what this habit is costing them.)\n"
-        "THE REALITY: (One simple sentence — what happens if they do not change.)\n"
-        "URGENCY OVERRIDE: (One simple sentence — why they must act in the next 30 days.)\n\n"
-        "Section C: The Syndicate Execution Stack\n"
-        "To fix this, The Syndicate recommends these three courses:\n"
-        f"1. THE WEAPON (Primary Business Model):\n• Course: {weapon_course}\n• Why: (One or two simple sentences — why this business model fits them.)\n"
-        f"2. THE SHIELD (Behavioral Correction — Paid):\n• Course: {shield_course}\n• Why: (One or two simple sentences — how this fixes the virus {fatal_flaw}.)\n"
-        f"3. THE PROTOCOL (Strategic Foundation — Free):\n• Course: {protocol_course}\n• Why: (One or two simple sentences — why this foundation fits their designation.)\n\n"
-        f"{catalog_section}"
+        "THE STING: (Write 2-3 powerful sentences — name what this virus costs them in time, money, and momentum. Direct Syndicate tone.)\n"
+        "THE REALITY: (Write 2-3 powerful sentences — what keeps repeating if they refuse to change. No soft language.)\n"
+        "URGENCY OVERRIDE: (One strong sentence — why they must act within the next 30 days.)\n\n"
         "Section D: Final Directive\n"
         "WARNING: (One simple sentence about urgency.)\n"
         "(One simple sentence — most people do nothing; they should not.)\n"
@@ -137,7 +148,7 @@ def generate_ai_report(
         input=prompt,
         temperature=0.7,
     )
-    return _sanitize_placeholders(
+    sanitized = _sanitize_placeholders(
         response.output_text.strip(),
         designation=designation,
         archetype=archetype,
@@ -147,3 +158,4 @@ def generate_ai_report(
         protocol_course=protocol_course,
         user_id=user_id,
     )
+    return compose_full_report(sanitized, archetype)

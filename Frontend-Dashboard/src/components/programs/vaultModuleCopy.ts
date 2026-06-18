@@ -1,4 +1,12 @@
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
+import {
+  resolveTradingModuleDetail,
+  resolveTradingModuleTeaser,
+  resolveTradingSubmoduleTeaser,
+  TRADING_MODULE_DESCRIPTIONS,
+  TRADING_PACK_DESCRIPTION,
+} from "@/components/programs/tradingVaultCopy";
+import { TRADING_SUBMODULES } from "@/components/programs/tradingVaultCatalog";
 
 const PACK_FRAMING: Record<
   VaultPackKey,
@@ -139,16 +147,19 @@ export const VAULT_MODULE_TEASERS: Readonly<Record<string, string>> = {
 
   // — Trading —
   "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart":
-    "The one-minute chart is a battlefield — precision entry architecture, risk containment, and compounding math for operators who refuse random execution.",
-  "Strategies of a Master Trader":
-    "Master traders do not improvise — install strategic frameworks that separate systematic edge from retail noise and emotional liquidation.",
-  "Setups of a Master Trader":
-    "Setups are ammunition — catalogue high-probability chart configurations with the discipline to wait and the courage to strike.",
-  "Secrets of a Master Trader":
-    "Institutions hide process, not magic — unlock the classified execution layer reserved for operators who treat markets as warfare, not gambling.",
+    resolveTradingModuleTeaser("The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart"),
+  "Strategies of a Master Trader": resolveTradingModuleTeaser("Strategies of a Master Trader"),
+  "Setups of a Master Trader": resolveTradingModuleTeaser("Setups of a Master Trader"),
+  "Secrets of a Master Trader": resolveTradingModuleTeaser("Secrets of a Master Trader"),
 };
 
 export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey): string {
+  if (pack === "trading_technical_analysis") {
+    const moduleTeaser = VAULT_MODULE_TEASERS[title];
+    if (moduleTeaser) return moduleTeaser;
+    const index = TRADING_SUBMODULES.findIndex((row) => row.title === title);
+    if (index >= 0) return resolveTradingSubmoduleTeaser(index);
+  }
   const custom = VAULT_MODULE_TEASERS[title];
   if (custom) return custom;
   const lead = PACK_FRAMING[pack].teaserLead;
@@ -157,6 +168,15 @@ export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey): str
 }
 
 export function resolveVaultModuleDetail(title: string, pack: VaultPackKey): string {
+  if (pack === "trading_technical_analysis") {
+    if (TRADING_MODULE_DESCRIPTIONS[title]) return resolveTradingModuleDetail(title);
+    const index = TRADING_SUBMODULES.findIndex((row) => row.title === title);
+    if (index >= 0) {
+      const teaser = resolveTradingSubmoduleTeaser(index);
+      return `${teaser} Buy once — your dashboard records ownership. Curriculum access activates when the module deploys in the vault. No vanity access. Only controlled entitlement under your Syndicate identity.`;
+    }
+    return `${TRADING_PACK_DESCRIPTION} Buy once — your dashboard records ownership. Curriculum access activates when the module deploys in the vault.`;
+  }
   const teaser = VAULT_MODULE_TEASERS[title] ?? title;
   const lead = PACK_FRAMING[pack].detailLead;
   return `${lead} ${teaser} Buy once — your dashboard records ownership. Curriculum access activates when the module deploys in the vault. No vanity access. Only controlled entitlement under your Syndicate identity.`;

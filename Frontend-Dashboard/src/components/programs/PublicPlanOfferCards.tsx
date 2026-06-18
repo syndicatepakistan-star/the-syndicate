@@ -24,6 +24,7 @@ import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
+import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { buildVaultModulePlaylistHref, fetchVaultPlaylistMap } from "@/lib/vaultPlaylistMap";
 
@@ -179,6 +180,8 @@ export function PublicPlanOfferCards({
         key={offer.plan}
         offer={offer}
         size={size}
+        cardKind={vaultPack ? "pack" : undefined}
+        cardStats={vaultPack ? resolveOfferCardStats(offer, "pack") : undefined}
         busy={busyPlan === offer.plan}
         highlighted={highlightedPack === offer.plan}
         actionLabel={

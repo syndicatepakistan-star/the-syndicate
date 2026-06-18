@@ -105,9 +105,40 @@ export function isExecutionStackSection(sectionTitle: string): boolean {
 }
 
 export function executionStackCategoryToActionCategory(
-  category: ExecutionStackLineCategory
+  category: ExecutionStackLineCategory,
+  courseName: string
 ): ArchetypeMapLineCategory {
+  const access = parseStackCourseAccess(courseName);
+  if (access === "free") return "free_psychology";
+  if (access === "paid") return "paid_psychology";
   if (category === "weapon") return "business";
-  if (category === "shield") return "paid_psychology";
   return "other";
+}
+
+const STACK_ACCESS_SUFFIX = /\((FREE|PAID|UNLOCK)\)\s*$/i;
+
+/** Parse trailing (FREE), (PAID), or (UNLOCK) from stack bullet lines. */
+export function parseStackCourseAccess(courseLine: string): "free" | "paid" | null {
+  const trimmed = courseLine.trim();
+  const match = trimmed.match(STACK_ACCESS_SUFFIX);
+  if (!match) return null;
+  return match[1].toUpperCase() === "FREE" ? "free" : "paid";
+}
+
+export function parseStackCourseTitle(courseLine: string): string {
+  return courseLine.replace(/\s*\((FREE|PAID|UNLOCK)\)\s*$/i, "").trim();
+}
+
+/** Strip (PAID)/(UNLOCK) from stack lines; keep (FREE) only. */
+export function normalizeExecutionStackLines(lines: string[]): string[] {
+  return lines.map((line) => {
+    if (!line.startsWith("• ")) return line;
+    const raw = line.replace(/^•\s*/, "").trim();
+    const title = parseStackCourseTitle(raw);
+    const access = parseStackCourseAccess(raw);
+    if (access === "free") {
+      return `• ${title} (FREE)`;
+    }
+    return `• ${title}`;
+  });
 }

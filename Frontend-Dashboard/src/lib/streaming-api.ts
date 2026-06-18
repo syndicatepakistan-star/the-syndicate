@@ -81,7 +81,8 @@ export type StreamPlaylistPurchaseHistoryItem = {
 const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYBACK_CACHE_TTL_MS = 45 * 60 * 1000;
-const WARM_VIDEO_POOL_LIMIT = 14;
+const WARM_VIDEO_POOL_LIMIT = 22;
+const preloadedStreamVideoUrls = new Set<string>();
 const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
 
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
@@ -418,7 +419,7 @@ export async function prefetchStreamVideoPlaybacks(
   return out;
 }
 
-/** Warm playlist detail + all playback URLs before the detail panel mounts. */
+/** Warm playlist detail + playback URLs before the detail panel mounts. */
 export async function prefetchStreamPlaylistExperience(
   playlistId: number,
   options?: { context?: "programs" | "membership" }
@@ -429,15 +430,33 @@ export async function prefetchStreamPlaylistExperience(
       .map((row) => row.stream_video?.id)
       .filter((id): id is number => Number.isFinite(id) && id > 0);
     if (!ids.length) return;
-    await prefetchStreamVideoPlaybacks(ids, {
+
+    const priorityId = ids[0]!;
+    const cachedFirst = getCachedStreamVideoPlayback(priorityId, { context: options?.context });
+    if (cachedFirst?.playback_url) {
+      warmStreamVideoMedia([cachedFirst.playback_url], { priority: true });
+    } else {
+      try {
+        const first = await fetchStreamVideoPlayback(priorityId, { context: options?.context });
+        if (first.playback_url) warmStreamVideoMedia([first.playback_url], { priority: true });
+      } catch {
+        // Continue warming the rest.
+      }
+    }
+
+    const prefetched = await prefetchStreamVideoPlaybacks(ids, {
       context: options?.context,
-      priorityId: ids[0],
-      concurrency: 6,
+      priorityId,
+      concurrency: 8,
     });
     warmStreamVideoMedia(
       ids
-        .slice(0, 4)
-        .map((id) => getCachedStreamVideoPlayback(id, { context: options?.context })?.playback_url)
+        .slice(0, 6)
+        .map(
+          (id) =>
+            prefetched[id]?.playback_url ??
+            getCachedStreamVideoPlayback(id, { context: options?.context })?.playback_url
+        )
         .filter((url): url is string => Boolean(url))
     );
   } catch {
@@ -448,9 +467,9 @@ export async function prefetchStreamPlaylistExperience(
 const warmVideoPool = new Map<string, HTMLVideoElement>();
 
 /** Start buffering MP4 bytes in hidden video elements (browser cache). */
-export function warmStreamVideoMedia(urls: string[]): void {
+export function warmStreamVideoMedia(urls: string[], options?: { priority?: boolean }): void {
   if (typeof window === "undefined") return;
-  for (const raw of urls) {
+  for (const [index, raw] of urls.entries()) {
     const url = (raw || "").trim();
     if (!url || warmVideoPool.has(url)) continue;
     const video = document.createElement("video");
@@ -460,6 +479,17 @@ export function warmStreamVideoMedia(urls: string[]): void {
     video.src = url;
     video.load();
     warmVideoPool.set(url, video);
+
+    const shouldPreloadHint = options?.priority === true || index === 0;
+    if (shouldPreloadHint && !preloadedStreamVideoUrls.has(url)) {
+      preloadedStreamVideoUrls.add(url);
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "fetch";
+      link.href = url;
+      link.crossOrigin = "anonymous";
+      document.head.appendChild(link);
+    }
   }
   while (warmVideoPool.size > WARM_VIDEO_POOL_LIMIT) {
     const oldest = warmVideoPool.keys().next().value;

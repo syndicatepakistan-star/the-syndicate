@@ -174,6 +174,21 @@ export default function DomeGallery({
   const activeSegmentsRef = useRef(segments)
   const [activeSegments, setActiveSegments] = useState(segments)
   const [compactViewport, setCompactViewport] = useState(false)
+  const compactViewportRef = useRef(false)
+  const layoutModeRef = useRef<'mobile' | 'desktop' | null>(null)
+  const mobileMotionRef = useRef({
+    autoMul: 1,
+    dragMul: 1,
+    inertiaVelMul: 80,
+    inertiaDivisor: 200,
+  })
+
+  useEffect(() => {
+    compactViewportRef.current = compactViewport
+    mobileMotionRef.current = compactViewport
+      ? { autoMul: 3.4, dragMul: 0.36, inertiaVelMul: 115, inertiaDivisor: 135 }
+      : { autoMul: 1, dragMul: 1, inertiaVelMul: 80, inertiaDivisor: 200 }
+  }, [compactViewport])
 
   const scrollLockedRef = useRef(false)
   const lockScroll = useCallback(() => {
@@ -213,7 +228,7 @@ export default function DomeGallery({
     })
     const fallback = window.setTimeout(() => {
       if (!cancelled) setTilesReady(true)
-    }, compactViewport ? 700 : 1400)
+    }, compactViewport ? 380 : 1400)
     return () => {
       cancelled = true
       window.clearTimeout(fallback)
@@ -223,7 +238,7 @@ export default function DomeGallery({
   const applyTransform = (xDeg: number, yDeg: number) => {
     const el = sphereRef.current
     if (el) {
-      el.style.transform = `translateZ(calc(var(--radius) * -1)) rotateX(${xDeg}deg) rotateY(${yDeg}deg)`
+      el.style.transform = `translate3d(0, 0, 0) translateZ(calc(var(--radius) * -1)) rotateX(${xDeg}deg) rotateY(${yDeg}deg)`
     }
   }
 
@@ -238,10 +253,15 @@ export default function DomeGallery({
       const w = Math.max(1, cr.width)
       const h = Math.max(1, cr.height)
       const isMobile = w < 640
-      setCompactViewport(isMobile)
-      const nextSegments = isMobile ? Math.max(10, Math.round(segments * 0.56)) : segments
-      activeSegmentsRef.current = nextSegments
-      setActiveSegments((prev) => (prev === nextSegments ? prev : nextSegments))
+      const layoutMode = isMobile ? 'mobile' : 'desktop'
+      if (layoutModeRef.current !== layoutMode) {
+        layoutModeRef.current = layoutMode
+        setCompactViewport(isMobile)
+        const nextSegments = isMobile ? Math.max(12, Math.round(segments * 0.62)) : segments
+        activeSegmentsRef.current = nextSegments
+        setActiveSegments(nextSegments)
+      }
+      const nextSegments = activeSegmentsRef.current
       const minDim = Math.min(w, h)
       const maxDim = Math.max(w, h)
       const aspect = w / h
@@ -301,7 +321,8 @@ export default function DomeGallery({
       autoRotateLastTs.current = ts
 
       if (!draggingRef.current && !focusedElRef.current && !openingRef.current) {
-        const nextY = wrapAngleSigned(rotationRef.current.y + autoRotateSpeedDeg * dt)
+        const spinRate = autoRotateSpeedDeg * mobileMotionRef.current.autoMul
+        const nextY = wrapAngleSigned(rotationRef.current.y + spinRate * dt)
         rotationRef.current = {
           x: rotationRef.current.x,
           y: nextY,
@@ -324,14 +345,15 @@ export default function DomeGallery({
 
   const startInertia = useCallback(
     (vx: number, vy: number) => {
-      const MAX_V = 1.4
-      let vX = clamp(vx, -MAX_V, MAX_V) * 80
-      let vY = clamp(vy, -MAX_V, MAX_V) * 80
+      const motion = mobileMotionRef.current
+      const MAX_V = compactViewportRef.current ? 2.1 : 1.4
+      let vX = clamp(vx, -MAX_V, MAX_V) * motion.inertiaVelMul
+      let vY = clamp(vy, -MAX_V, MAX_V) * motion.inertiaVelMul
       let frames = 0
       const d = clamp(dragDampening ?? 0.6, 0, 1)
-      const frictionMul = 0.94 + 0.055 * d
-      const stopThreshold = 0.015 - 0.01 * d
-      const maxFrames = Math.round(90 + 270 * d)
+      const frictionMul = compactViewportRef.current ? 0.965 + 0.028 * d : 0.94 + 0.055 * d
+      const stopThreshold = compactViewportRef.current ? 0.022 - 0.012 * d : 0.015 - 0.01 * d
+      const maxFrames = Math.round(compactViewportRef.current ? 70 + 180 * d : 90 + 270 * d)
       const step = () => {
         vX *= frictionMul
         vY *= frictionMul
@@ -343,8 +365,8 @@ export default function DomeGallery({
           inertiaRAF.current = null
           return
         }
-        const nextX = clamp(rotationRef.current.x - vY / 200, -maxVerticalRotationDeg, maxVerticalRotationDeg)
-        const nextY = wrapAngleSigned(rotationRef.current.y + vX / 200)
+        const nextX = clamp(rotationRef.current.x - vY / motion.inertiaDivisor, -maxVerticalRotationDeg, maxVerticalRotationDeg)
+        const nextY = wrapAngleSigned(rotationRef.current.y + vX / motion.inertiaDivisor)
         rotationRef.current = { x: nextX, y: nextY }
         applyTransform(nextX, nextY)
         inertiaRAF.current = requestAnimationFrame(step)
@@ -487,6 +509,7 @@ export default function DomeGallery({
       onDragStart: ({ event }) => {
         if (focusedElRef.current) return
         stopInertia()
+        rootRef.current?.setAttribute('data-dragging', 'true')
         const evt = event as PointerEvent
         pointerTypeRef.current = (evt.pointerType as 'mouse' | 'pen' | 'touch') || 'mouse'
         if (pointerTypeRef.current === 'touch') evt.preventDefault()
@@ -507,8 +530,9 @@ export default function DomeGallery({
         const dyTotal = evt.clientY - startPosRef.current.y
         if (!movedRef.current && dxTotal * dxTotal + dyTotal * dyTotal > 16) movedRef.current = true
 
-        const nextX = clamp(startRotRef.current.x - dyTotal / dragSensitivity, -maxVerticalRotationDeg, maxVerticalRotationDeg)
-        const nextY = startRotRef.current.y + dxTotal / dragSensitivity
+        const dragSens = dragSensitivity * mobileMotionRef.current.dragMul
+        const nextX = clamp(startRotRef.current.x - dyTotal / dragSens, -maxVerticalRotationDeg, maxVerticalRotationDeg)
+        const nextY = startRotRef.current.y + dxTotal / dragSens
         const cur = rotationRef.current
         if (cur.x !== nextX || cur.y !== nextY) {
           rotationRef.current = { x: nextX, y: nextY }
@@ -529,11 +553,14 @@ export default function DomeGallery({
           let vy = vMagY * dirY
           if (!isTap && Math.abs(vx) < 0.001 && Math.abs(vy) < 0.001 && Array.isArray(movement)) {
             const [mx, my] = movement
-            vx = (mx / dragSensitivity) * 0.02
-            vy = (my / dragSensitivity) * 0.02
+            const dragSens = dragSensitivity * mobileMotionRef.current.dragMul
+            const flickScale = compactViewportRef.current ? 0.034 : 0.02
+            vx = (mx / dragSens) * flickScale
+            vy = (my / dragSens) * flickScale
           }
           if (!isTap && (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005)) startInertia(vx, vy)
 
+          rootRef.current?.removeAttribute('data-dragging')
           startPosRef.current = null
           cancelTapRef.current = !isTap
           if (isTap && tapTargetRef.current && !focusedElRef.current) openItemFromElement(tapTargetRef.current)
@@ -557,6 +584,7 @@ export default function DomeGallery({
       movedRef.current = false
       cancelTapRef.current = false
       tapTargetRef.current = null
+      rootRef.current?.removeAttribute('data-dragging')
       unlockScroll()
     }
 
@@ -697,7 +725,12 @@ export default function DomeGallery({
     .sphere-root * { box-sizing: border-box; }
     .sphere, .sphere-item, .item__image { transform-style: preserve-3d; }
     .stage { width: 100%; height: 100%; display: grid; place-items: center; position: absolute; inset: 0; margin: auto; perspective: calc(var(--radius) * 2); perspective-origin: 50% 50%; }
-    .sphere { transform: translateZ(calc(var(--radius) * -1)); will-change: transform; position: absolute; }
+    .sphere { transform: translate3d(0, 0, 0) translateZ(calc(var(--radius) * -1)); will-change: transform; position: absolute; }
+    .sphere-root[data-compact="true"] .sphere-item,
+    .sphere-root[data-dragging="true"] .sphere-item,
+    .sphere-root[data-compact="true"] .item__image {
+      transition: none !important;
+    }
     .sphere-item {
       width: calc(var(--item-width) * var(--item-size-x));
       height: calc(var(--item-height) * var(--item-size-y));
@@ -739,6 +772,7 @@ export default function DomeGallery({
       <div
         ref={rootRef}
         className="sphere-root relative h-full w-full"
+        data-compact={compactViewport ? 'true' : undefined}
         style={
           {
             ['--segments-x' as string]: segments,
@@ -753,7 +787,7 @@ export default function DomeGallery({
       >
         <main ref={mainRef} className="absolute inset-0 grid select-none place-items-center overflow-hidden bg-transparent" style={{ touchAction: 'none', WebkitUserSelect: 'none' }}>
           <div
-            className="stage transition-opacity duration-300"
+            className={`stage ${compactViewport ? '' : 'transition-opacity duration-300'}`}
             style={{ opacity: tilesReady ? 1 : 0 }}
           >
             <div ref={sphereRef} className="sphere">

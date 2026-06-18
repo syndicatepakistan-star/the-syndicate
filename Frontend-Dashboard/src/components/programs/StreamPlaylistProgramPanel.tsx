@@ -6,7 +6,9 @@ import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer"
 import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import {
   fetchStreamPlaylistDetail,
+  getCachedStreamVideoPlayback,
   prefetchStreamVideoPlaybacks,
+  prefetchStreamPlaylistExperience,
   warmStreamVideoMedia,
   type StreamPayload,
   type StreamPlaylistDetail,
@@ -191,17 +193,49 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const loadPlaylist = useCallback(async () => {
     setLoading(true);
     setErr(null);
+    void prefetchStreamPlaylistExperience(playlistId);
     try {
       const p = await fetchStreamPlaylistDetail(playlistId);
       setPlaylist(p);
       setActiveIdx(0);
       setPlayback(null);
-      setPlaybackCache({});
       setDidAutoPickReady(false);
       setCertificateMessage(null);
       lastPlaybackPositionRef.current = {};
+
+      const videoIds = (p.items ?? [])
+        .map((row) => row.stream_video?.id)
+        .filter((id): id is number => Number.isFinite(id) && id > 0);
+      const seededCache: Record<number, StreamPayload> = {};
+      for (const id of videoIds) {
+        const cached = getCachedStreamVideoPlayback(id);
+        if (cached) seededCache[id] = cached;
+      }
+      setPlaybackCache(seededCache);
+
+      const firstUrl = videoIds[0] != null ? seededCache[videoIds[0]]?.playback_url : null;
+      if (firstUrl) warmStreamVideoMedia([firstUrl], { priority: true });
+
+      if (videoIds.length > 0) {
+        void prefetchStreamVideoPlaybacks(videoIds, {
+          priorityId: videoIds[0],
+          concurrency: 8,
+        }).then((prefetched) => {
+          setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
+          warmStreamVideoMedia(
+            videoIds
+              .slice(0, 5)
+              .map(
+                (id) =>
+                  prefetched[id]?.playback_url ?? getCachedStreamVideoPlayback(id)?.playback_url ?? null
+              )
+              .filter((url): url is string => Boolean(url))
+          );
+        });
+      }
     } catch (e) {
       setPlaylist(null);
+      setPlaybackCache({});
       setErr(e instanceof Error ? e.message : "Failed to load playlist.");
     } finally {
       setLoading(false);
@@ -355,7 +389,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     void (async () => {
       const prefetched = await prefetchStreamVideoPlaybacks(videoIds, {
         priorityId,
-        concurrency: 6,
+        concurrency: 8,
       });
       setPlaybackCache((prev) => {
         const next = { ...prev };
@@ -371,10 +405,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       });
 
       const warmUrls = videoIds
-        .slice(Math.max(0, activeIdx - 1), activeIdx + 3)
+        .slice(Math.max(0, activeIdx - 1), activeIdx + 4)
         .map((id) => prefetched[id]?.playback_url)
         .filter((url): url is string => Boolean(url));
-      warmStreamVideoMedia(warmUrls);
+      warmStreamVideoMedia(warmUrls, { priority: true });
     })();
   }, [items, activeIdx]);
 

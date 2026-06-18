@@ -3,12 +3,17 @@
 import { type CSSProperties } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
+import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { ReadMoreText } from "@/components/programs/ReadMoreText";
+import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 
 type Props = {
   offer: PlanOfferDef;
   size?: "large" | "compact" | "module";
   /** Visual tier badge on vault picker cards. */
   cardKind?: "pack" | "module";
+  /** Optional lesson count / watch time shown inside the card. */
+  cardStats?: ProgramCardStats;
   busy?: boolean;
   /** Overrides openLabel (e.g. Open when already purchased). */
   actionLabel?: string;
@@ -144,6 +149,7 @@ export function PlanOfferCard({
   offer,
   size = "large",
   cardKind,
+  cardStats,
   busy = false,
   actionLabel,
   highlighted = false,
@@ -315,19 +321,30 @@ export function PlanOfferCard({
                 {offer.title}
               </div>
 
-              <p
+              {cardStats ? (
+                <ProgramCardStatsLines stats={cardStats} size={size} className="mt-1" />
+              ) : null}
+
+              <ReadMoreText
+                text={offer.teaser}
+                maxLines={isLarge && isPack ? 6 : isModule ? 5 : 5}
                 className={cn(
-                  "text-left font-medium leading-snug text-white/72",
-                  isLarge && isPack && "mt-1 line-clamp-4 text-[11px] sm:text-[12px]",
-                  isLarge && !isPack && "mt-1.5 line-clamp-3 text-[11px] sm:text-[13px]",
-                  isModule && "mt-1.5 line-clamp-3 text-[9px] sm:text-[10px]",
-                  isCompact && isPack && "mt-1 line-clamp-3 text-[9px] sm:text-[10px]",
-                  isCompact && !isPack && "mt-1.5 line-clamp-2 text-[9px] sm:text-[10px]"
+                  isLarge && isPack && "mt-1",
+                  isLarge && !isPack && "mt-1.5",
+                  isModule && "mt-1.5",
+                  isCompact && "mt-1"
                 )}
-              >
-                {offer.teaser}
-                <span className="text-cyan-300/90">_</span>
-              </p>
+                textClassName={cn(
+                  "text-left font-medium text-white/72",
+                  isLarge && isPack && "text-[11px] sm:text-[12px]",
+                  isLarge && !isPack && "text-[11px] sm:text-[13px]",
+                  isModule && "text-[9px] sm:text-[10px]",
+                  isCompact && isPack && "text-[9px] sm:text-[10px]",
+                  isCompact && !isPack && "text-[9px] sm:text-[10px]"
+                )}
+                buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
+              />
+              <span className="sr-only">_</span>
 
               <div
                 className={cn(

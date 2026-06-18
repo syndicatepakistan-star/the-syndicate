@@ -190,9 +190,10 @@ export default async function Home() {
             fit={0.58}
             minRadius={260}
             segments={18}
-            dragDampening={4.8}
+            dragSensitivity={14}
+            dragDampening={3.6}
             grayscale={false}
-            autoRotateSpeedDeg={1.8}
+            autoRotateSpeedDeg={2.4}
             tileInsetPx={12}
             navigateOnClick
           />

@@ -120,9 +120,21 @@ FREE_TICKET_PSYCHOLOGY_COURSES: frozenset[str] = frozenset(
     }
 )
 
+ARCHETYPE_PROTOCOL_COURSES: list[tuple[str, str]] = [
+    (COURSE["exit_9_5"], "FREE"),
+    (COURSE["business_warfare"], "PAID"),
+    (COURSE["risk_uncertainty"], "PAID"),
+]
+
+ARCHETYPE_SHIELD_COURSES: list[tuple[str, str]] = [
+    (COURSE["zero_million"], "FREE"),
+    (COURSE["micro_protocol"], "PAID"),
+]
+
 ARCHETYPE_PSYCHOLOGY_PAID: list[str] = [
     COURSE["micro_protocol"],
     COURSE["business_warfare"],
+    COURSE["risk_uncertainty"],
 ]
 
 ARCHETYPE_PSYCHOLOGY_FREE: list[str] = [
@@ -583,17 +595,48 @@ def _assert_allowed_course(course: str) -> str:
 
 def get_archetype_catalog(archetype: str) -> dict[str, list[str]]:
     """All allowed business models and psychology courses for an archetype."""
-    weapons = ARCHETYPE_WEAPON_MODELS.get(archetype) or ARCHETYPE_WEAPON_MODELS["Asset Grinder"]
-    business_models = list(dict.fromkeys((weapons.get("entry") or []) + (weapons.get("elite") or [])))
+    weapons = _weapon_courses_for_archetype(archetype)
     return {
-        "business_models": [_assert_allowed_weapon(c) for c in business_models],
+        "business_models": [_assert_allowed_weapon(c) for c in weapons],
         "psychology_paid": [_assert_allowed_psychology(c) for c in ARCHETYPE_PSYCHOLOGY_PAID],
         "psychology_free": [_assert_allowed_psychology(c) for c in ARCHETYPE_PSYCHOLOGY_FREE],
         "psychology": [
             _assert_allowed_psychology(c)
             for c in (ARCHETYPE_PSYCHOLOGY_MODELS.get(archetype) or _SHARED_ARCHETYPE_PSYCHOLOGY)
         ],
+        "shield_courses": [title for title, _ in ARCHETYPE_SHIELD_COURSES],
+        "protocol_courses": [title for title, _ in ARCHETYPE_PROTOCOL_COURSES],
     }
+
+
+def _weapon_courses_for_archetype(archetype: str) -> list[str]:
+    models = ARCHETYPE_WEAPON_MODELS.get(archetype) or ARCHETYPE_WEAPON_MODELS["Asset Grinder"]
+    return list(dict.fromkeys((models.get("entry") or []) + (models.get("elite") or [])))
+
+
+def _stack_course_bullet(title: str, access: str) -> str:
+    if access.upper() == "FREE":
+        return f"• {title} (FREE)"
+    return f"• {title}"
+
+
+def build_section_c_report(archetype: str) -> str:
+    """Deterministic Section C — full Weapon / Shield / Protocol stacks per archetype."""
+    weapons = _weapon_courses_for_archetype(archetype)
+    lines = [
+        "Section C: The Syndicate Execution Stack",
+        f"Based on your {archetype} archetype, The Syndicate recommends these courses:",
+        "",
+        "1. THE WEAPON (Primary Business Models):",
+    ]
+    lines.extend(f"• {title}" for title in weapons)
+    lines.append("2. THE SHIELD (Behavioral Correction):")
+    for title, access in ARCHETYPE_SHIELD_COURSES:
+        lines.append(_stack_course_bullet(title, access))
+    lines.append("3. THE PROTOCOL (Strategic Foundation):")
+    for title, access in ARCHETYPE_PROTOCOL_COURSES:
+        lines.append(_stack_course_bullet(title, access))
+    return "\n".join(lines)
 
 
 def build_recommendation(answers: list[dict]) -> dict[str, Any]:

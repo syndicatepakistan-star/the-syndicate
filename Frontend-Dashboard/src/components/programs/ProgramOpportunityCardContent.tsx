@@ -3,6 +3,8 @@
 import Image from "next/image";
 import type { CourseRec } from "@/components/dashboard/path/goalPathData";
 import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { resolveOfferCardStats, streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -69,6 +71,12 @@ export function ProgramOpportunityCardContent({
   const coverSrc = course.posterSrc ?? planOffer?.imageSrc;
 
   const kindBadge = isPack ? "Vault pack" : isModule ? "Vault module" : null;
+
+  const cardStats = playlist
+    ? streamPlaylistCardStats(playlist.video_count)
+    : planOffer
+      ? resolveOfferCardStats(planOffer, isPack ? "pack" : isModule ? "module" : undefined)
+      : undefined;
 
   return (
     <div className="flex h-auto w-full flex-col pb-[10px]">
@@ -148,6 +156,9 @@ export function ProgramOpportunityCardContent({
       >
         {course.title}
       </h3>
+      {cardStats ? (
+        <ProgramCardStatsLines stats={cardStats} size="stream" className="mt-1" />
+      ) : null}
       <p className="mt-1 line-clamp-3 font-mono text-[clamp(0.62rem,0.4vw+0.48rem,0.78rem)] leading-snug text-white/88">
         {course.summary ?? course.outcome}
       </p>

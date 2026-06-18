@@ -221,7 +221,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     title: "Trading Advanced Technical Analysis",
     imageSrc: OFFER_PLAN_THUMB_TRADING,
     teaser:
-      "Retail noise exists to liquidate undisciplined capital — this vault replaces guesswork with chart doctrine, risk rails, and execution math built for asymmetric market warfare. Unlock the full stack or deploy individual edges on your terms.",
+      "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. This protocol is your definitive strategic weapon — master-level technical analysis, high-leverage indicators, and cold, mathematical execution across stocks and crypto.",
     displayPrice: "$99",
     comparePrice: "$199",
     billingLabel: "/lifetime",
@@ -233,7 +233,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
     detailDescription:
-      "Trading Advanced Technical Analysis is a protocol vault, not entertainment. Unlock the full stack for $99 — Scalpel Protocol, Master Trader strategies, setups, and classified execution secrets — or buy individual edges at $35 each. Every purchase records to your command dashboard with billing history and controlled curriculum access as modules deploy. Built for operators who treat the chart as a battlefield, not a casino.",
+      "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. If you are trading based on hype, hope, or uncalculated intuition, you are not an investor—you are liquidity. The elite do not guess; they execute proven, probabilistic trading strategies that extract capital regardless of economic conditions. You lack the systematic leverage to read the charts and command the market. This protocol is your definitive strategic weapon. It is the ultimate roadmap to strip away emotion, deploy master-level technical analysis, and architect a system for compounding wealth across stocks and crypto. We eliminate the theoretical noise and amateur gambling psychology to deliver the raw, operational mechanics of a professional trading matrix. This is a comprehensive, three-part masterclass in trading architecture. You will master the logic of advanced technical analysis, deploy high-leverage indicators, and command advanced candlestick strategies. Furthermore, you will weaponize complex chart setups—from mature candlestick patterns to confirmation signals and RSI divergences. By internalizing multi-hit methodology, time counts, and flawless entry-point fine-tuning, you are not just learning to trade. You are engineering a ruthless, self-sustaining system that executes your financial will with cold, mathematical precision. Unlock the full stack for $99 — Scalpel Protocol, Master Trader strategies, setups, and classified execution secrets — or buy individual edges at $35 each.",
     detailFeatures: [
       "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
       "Strategies of a Master Trader",

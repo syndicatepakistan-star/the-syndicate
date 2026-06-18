@@ -29,6 +29,42 @@ def user_stream_playlists_unlocked_by_entitlement(user) -> bool:
     )
 
 
+def unlocked_stream_playlist_ids_for_user(user) -> set[int]:
+    """
+    Published playlist ids the dashboard may treat as unlocked (list `is_unlocked` + detail fetch).
+    Includes direct playlist purchases, vault module/plan purchases, and tier-based access.
+    """
+    from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
+    from apps.video_streaming.vault_entitlements import vault_unlocked_playlist_ids_for_user
+
+    if not getattr(user, "is_authenticated", False):
+        return set()
+    if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
+        return set(StreamPlaylist.objects.filter(is_published=True).values_list("id", flat=True))
+
+    unlocked_ids = set(
+        StreamPlaylistPurchase.objects.filter(
+            user=user,
+            status=StreamPlaylistPurchase.Status.PAID,
+        ).values_list("playlist_id", flat=True)
+    )
+
+    if user_stream_playlists_unlocked_by_entitlement(user):
+        try:
+            ent = user.dashboard_entitlement
+        except UserDashboardEntitlement.DoesNotExist:
+            ent = None
+        if ent is not None and ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+            unlocked_ids |= king_allowed_playlist_ids(user)
+        else:
+            unlocked_ids |= set(
+                StreamPlaylist.objects.filter(is_published=True).values_list("id", flat=True)
+            )
+
+    unlocked_ids |= vault_unlocked_playlist_ids_for_user(user)
+    return unlocked_ids
+
+
 def user_can_access_stream_playlist(user, playlist) -> bool:
     """Whether the user may view/issue certificates for this published playlist."""
     from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase

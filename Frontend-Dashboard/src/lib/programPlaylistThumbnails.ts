@@ -6,6 +6,7 @@ import {
   OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
 import { VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
+import { allTradingSubmoduleOffers } from "@/components/programs/tradingVaultCatalog";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
 const COURSE_IMAGES = "/assets/programs/cources%20imnages";
@@ -126,12 +127,17 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   91: courseThumb("warfare.jpg"),
 };
 
-/** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules). */
-export const VAULT_MODULE_THUMBNAILS: Record<string, string> = Object.fromEntries(
-  Object.values(VAULT_PACK_COURSES).flatMap((courses) =>
-    courses.map((course) => [course.plan, course.imageSrc] as const)
-  )
-);
+/** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules + lessons). */
+export const VAULT_MODULE_THUMBNAILS: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.values(VAULT_PACK_COURSES).flatMap((courses) =>
+      courses.map((course) => [course.plan, course.imageSrc] as const)
+    )
+  ),
+  ...Object.fromEntries(
+    allTradingSubmoduleOffers().map((offer) => [offer.plan, offer.imageSrc] as const)
+  ),
+};
 
 export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefined {
   const key = vaultPlanSlug.trim().toLowerCase();

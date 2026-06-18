@@ -170,10 +170,10 @@ export default async function Home() {
         <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
       </section>
       <section className="relative flex h-auto min-h-0 w-full min-w-0 items-start overflow-hidden bg-[#050508] px-0 py-4 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#050508]">
           <ProgramsSectionBackground />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-black/72 max-sm:hidden" />
+        <div className="pointer-events-none absolute inset-0 bg-black/45 max-sm:block sm:bg-black/72" />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08] max-sm:hidden"
           style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }}
@@ -192,6 +192,7 @@ export default async function Home() {
             segments={18}
             dragSensitivity={14}
             dragDampening={3.6}
+            maxVerticalRotationDeg={32}
             grayscale={false}
             autoRotateSpeedDeg={2.4}
             tileInsetPx={12}

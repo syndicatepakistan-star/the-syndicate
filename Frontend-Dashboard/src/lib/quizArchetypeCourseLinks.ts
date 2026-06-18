@@ -1,5 +1,5 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
-import { programPlaylistDeepLink } from "@/lib/programPlaylistThumbnails";
+import { planOfferDeepLink, programPlaylistDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 type CatalogEntry = { id: number; title: string };
 
@@ -37,6 +37,22 @@ const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
   "mastering risk and uncertainty": "Mastering Risk and Uncertainty",
 };
 
+/** Mid-ticket Syndicate Elite pack deep links for weapon business models. */
+const MID_TICKET_PACK_BY_COURSE: Record<string, GlobePackKey> = {
+  "trading advanced technical analysis": "trading_technical_analysis",
+};
+
+/** Stable DOM ids for Section C unlock CTAs (analytics / testing hooks). */
+export const QUIZ_STACK_UNLOCK_BUTTON_IDS: Record<string, string> = {
+  "the micro business protocol": "quiz-unlock-shield-micro-business-protocol",
+  "micro business protocols": "quiz-unlock-shield-micro-business-protocol",
+  "business warfare": "quiz-unlock-protocol-business-warfare",
+  "mastering risk and uncertainty": "quiz-unlock-protocol-mastering-risk-uncertainty",
+  "trading advanced technical analysis": "quiz-unlock-weapon-trading-technical-analysis",
+};
+
+const KNOWN_FREE_STACK_COURSES = new Set(["zero to 1 million", "9 to 5 exit strategy"]);
+
 function normalizeTitle(value: string): string {
   return value
     .toLowerCase()
@@ -69,9 +85,16 @@ export function resolveQuizCatalogCourseProgramId(courseName: string): number | 
 }
 
 export function buildUnlockNowProgramsHref(courseName: string): string | undefined {
+  const titleKey = normalizeTitle(parseStackCourseTitle(courseName));
+  const pack = MID_TICKET_PACK_BY_COURSE[titleKey];
+  if (pack) return planOfferDeepLink(pack);
   const programId = resolveQuizCatalogCourseProgramId(courseName);
   if (!programId) return undefined;
   return programPlaylistDeepLink(programId);
+}
+
+export function resolveQuizStackUnlockButtonId(courseName: string): string | undefined {
+  return QUIZ_STACK_UNLOCK_BUTTON_IDS[normalizeTitle(parseStackCourseTitle(courseName))];
 }
 
 export type ArchetypeMapLineCategory = "business" | "paid_psychology" | "free_psychology" | "other";
@@ -108,10 +131,12 @@ export function executionStackCategoryToActionCategory(
   category: ExecutionStackLineCategory,
   courseName: string
 ): ArchetypeMapLineCategory {
+  const titleKey = normalizeTitle(parseStackCourseTitle(courseName));
   const access = parseStackCourseAccess(courseName);
-  if (access === "free") return "free_psychology";
+  if (access === "free" || KNOWN_FREE_STACK_COURSES.has(titleKey)) return "free_psychology";
   if (access === "paid") return "paid_psychology";
   if (category === "weapon") return "business";
+  if (category === "shield" || category === "protocol") return "paid_psychology";
   return "other";
 }
 

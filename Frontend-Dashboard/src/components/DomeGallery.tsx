@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useGesture } from '@use-gesture/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -181,14 +181,27 @@ export default function DomeGallery({
     dragMul: 1,
     inertiaVelMul: 80,
     inertiaDivisor: 200,
+    verticalLimitDeg: maxVerticalRotationDeg,
   })
 
   useEffect(() => {
     compactViewportRef.current = compactViewport
     mobileMotionRef.current = compactViewport
-      ? { autoMul: 3.4, dragMul: 0.36, inertiaVelMul: 115, inertiaDivisor: 135 }
-      : { autoMul: 1, dragMul: 1, inertiaVelMul: 80, inertiaDivisor: 200 }
-  }, [compactViewport])
+      ? {
+          autoMul: 3.4,
+          dragMul: 0.36,
+          inertiaVelMul: 115,
+          inertiaDivisor: 135,
+          verticalLimitDeg: Math.max(maxVerticalRotationDeg, 34),
+        }
+      : {
+          autoMul: 1,
+          dragMul: 1,
+          inertiaVelMul: 80,
+          inertiaDivisor: 200,
+          verticalLimitDeg: maxVerticalRotationDeg,
+        }
+  }, [compactViewport, maxVerticalRotationDeg])
 
   const scrollLockedRef = useRef(false)
   const lockScroll = useCallback(() => {
@@ -210,13 +223,21 @@ export default function DomeGallery({
   )
   const [tilesReady, setTilesReady] = useState(() => {
     if (!eagerImages || uniqueSrcs.length === 0) return true
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches) return true
     return uniqueSrcs.every((src) => isImageWarm(src))
   })
+
+  useLayoutEffect(() => {
+    if (compactViewport && eagerImages) setTilesReady(true)
+  }, [compactViewport, eagerImages])
 
   useEffect(() => {
     if (!eagerImages || uniqueSrcs.length === 0) {
       setTilesReady(true)
       return
+    }
+    if (compactViewport) {
+      setTilesReady(true)
     }
     if (uniqueSrcs.every((src) => isImageWarm(src))) {
       setTilesReady(true)
@@ -365,7 +386,8 @@ export default function DomeGallery({
           inertiaRAF.current = null
           return
         }
-        const nextX = clamp(rotationRef.current.x - vY / motion.inertiaDivisor, -maxVerticalRotationDeg, maxVerticalRotationDeg)
+        const vertLimit = mobileMotionRef.current.verticalLimitDeg
+        const nextX = clamp(rotationRef.current.x - vY / motion.inertiaDivisor, -vertLimit, vertLimit)
         const nextY = wrapAngleSigned(rotationRef.current.y + vX / motion.inertiaDivisor)
         rotationRef.current = { x: nextX, y: nextY }
         applyTransform(nextX, nextY)
@@ -374,7 +396,7 @@ export default function DomeGallery({
       stopInertia()
       inertiaRAF.current = requestAnimationFrame(step)
     },
-    [dragDampening, maxVerticalRotationDeg, stopInertia]
+    [dragDampening, stopInertia]
   )
 
   const navigateToHref = useCallback(
@@ -531,7 +553,8 @@ export default function DomeGallery({
         if (!movedRef.current && dxTotal * dxTotal + dyTotal * dyTotal > 16) movedRef.current = true
 
         const dragSens = dragSensitivity * mobileMotionRef.current.dragMul
-        const nextX = clamp(startRotRef.current.x - dyTotal / dragSens, -maxVerticalRotationDeg, maxVerticalRotationDeg)
+        const vertLimit = mobileMotionRef.current.verticalLimitDeg
+        const nextX = clamp(startRotRef.current.x - dyTotal / dragSens, -vertLimit, vertLimit)
         const nextY = startRotRef.current.y + dxTotal / dragSens
         const cur = rotationRef.current
         if (cur.x !== nextX || cur.y !== nextY) {
@@ -787,8 +810,8 @@ export default function DomeGallery({
       >
         <main ref={mainRef} className="absolute inset-0 grid select-none place-items-center overflow-hidden bg-transparent" style={{ touchAction: 'none', WebkitUserSelect: 'none' }}>
           <div
-            className={`stage ${compactViewport ? '' : 'transition-opacity duration-300'}`}
-            style={{ opacity: tilesReady ? 1 : 0 }}
+            className={`stage ${compactViewport || tilesReady ? '' : 'transition-opacity duration-300'}`}
+            style={{ opacity: compactViewport || tilesReady ? 1 : 0 }}
           >
             <div ref={sphereRef} className="sphere">
               {items.map((it, i) => (

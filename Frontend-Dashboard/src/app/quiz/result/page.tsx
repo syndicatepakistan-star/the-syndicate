@@ -18,6 +18,7 @@ import {
   normalizeExecutionStackLines,
   parseStackCourseAccess,
   parseStackCourseTitle,
+  resolveQuizStackUnlockButtonId,
   type ArchetypeMapLineCategory,
   type ExecutionStackLineCategory,
 } from "@/lib/quizArchetypeCourseLinks";
@@ -152,8 +153,13 @@ function renderCourseActionButton(
   if (category === "business" || category === "paid_psychology") {
     const unlockHref = buildUnlockNowProgramsHref(courseValue);
     if (unlockHref) {
+      const unlockId = resolveQuizStackUnlockButtonId(courseValue);
       return (
-        <a className={`result-unlock-btn result-unlock-btn--${buttonTheme}`} href={unlockHref}>
+        <a
+          id={unlockId}
+          className={`result-unlock-btn result-unlock-btn--${buttonTheme}`}
+          href={unlockHref}
+        >
           Unlock
         </a>
       );

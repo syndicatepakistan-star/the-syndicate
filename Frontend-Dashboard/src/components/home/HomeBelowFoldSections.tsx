@@ -17,7 +17,7 @@ type DomeGalleryProps = ComponentProps<typeof DomeGallery>;
 
 export function HomeDomeGallerySection(props: DomeGalleryProps) {
   return (
-    <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-transparent sm:h-[calc(100dvh-9rem)] sm:min-h-[520px]">
+    <div className="h-[clamp(300px,52dvh,420px)] w-full min-w-0 overflow-hidden rounded-none bg-[#050508] sm:h-[calc(100dvh-9rem)] sm:min-h-[520px] sm:bg-transparent">
       <DomeGallery {...props} eagerImages />
     </div>
   );

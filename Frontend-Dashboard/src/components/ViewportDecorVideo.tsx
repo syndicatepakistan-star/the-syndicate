@@ -66,7 +66,8 @@ export function ViewportDecorVideo({
   const cachedOnMount = useRef(isVideoWarm(src));
   const useStaticBackdrop = usePreferStaticBackdrop(preferStaticOnMobile);
   const resolvedVideoClass = [videoClassName, opacityClassName].filter(Boolean).join(" ");
-  const [videoReady, setVideoReady] = useState(cachedOnMount.current);
+  const showImmediately = cachedOnMount.current || priority || alwaysOn;
+  const [videoReady, setVideoReady] = useState(showImmediately);
 
   useLayoutEffect(() => {
     if (useStaticBackdrop) return;
@@ -155,14 +156,14 @@ export function ViewportDecorVideo({
     <video
       ref={ref}
       className={[
-        "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+        alwaysOn ? "absolute inset-0 h-full w-full object-cover" : "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
         resolvedVideoClass,
       ]
         .filter(Boolean)
         .join(" ")}
       style={{
         transform: "translateZ(0)",
-        opacity: videoReady ? undefined : 0,
+        opacity: showImmediately || videoReady ? undefined : 0,
       }}
       muted
       loop

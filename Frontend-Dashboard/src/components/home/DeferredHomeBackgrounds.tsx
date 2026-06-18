@@ -21,7 +21,7 @@ function useMobileProgramsBand(): boolean {
   return mobile;
 }
 
-/** Programs band — same-origin MP4; lighter backdrop on phones. */
+/** Programs band — same-origin MP4; gradient always visible under video on mobile. */
 export function ProgramsSectionBackground() {
   const isMobile = useMobileProgramsBand();
   return (
@@ -30,10 +30,9 @@ export function ProgramsSectionBackground() {
       priority
       alwaysOn
       fill
-      plainBackdrop={isMobile}
       videoClassName={
         isMobile
-          ? "scale-[1.15] opacity-85 saturate-100"
+          ? "scale-[1.08] opacity-80 saturate-95"
           : "scale-[1.22] opacity-60 grayscale saturate-0"
       }
     />

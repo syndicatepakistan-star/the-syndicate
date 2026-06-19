@@ -41,6 +41,9 @@ const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
 const MID_TICKET_PACK_BY_COURSE: Record<string, GlobePackKey> = {
   "trading advanced technical analysis": "trading_technical_analysis",
   "ai content automation": "ai_content_automation",
+  "ai automation": "agentic_ai",
+  "n8n ai automation": "agentic_ai",
+  "building ai agents with claude and anti gravity": "agentic_ai",
 };
 
 /** Stable DOM ids for Section C unlock CTAs (analytics / testing hooks). */
@@ -51,6 +54,9 @@ export const QUIZ_STACK_UNLOCK_BUTTON_IDS: Record<string, string> = {
   "mastering risk and uncertainty": "quiz-unlock-protocol-mastering-risk-uncertainty",
   "trading advanced technical analysis": "quiz-unlock-weapon-trading-technical-analysis",
   "ai content automation": "quiz-unlock-weapon-ai-content-automation",
+  "ai automation": "quiz-unlock-weapon-agentic-ai",
+  "n8n ai automation": "quiz-unlock-weapon-agentic-ai",
+  "building ai agents with claude and anti gravity": "quiz-unlock-weapon-agentic-ai",
 };
 
 const KNOWN_FREE_STACK_COURSES = new Set(["zero to 1 million", "9 to 5 exit strategy"]);

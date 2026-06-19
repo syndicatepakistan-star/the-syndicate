@@ -13,7 +13,7 @@ import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { NavApp } from '@/components/NavApp'
 import { ProgramsGlobeWarmup } from '@/components/home/ProgramsGlobeWarmup'
-import { DeferredMp4Background, ProgramsSectionBackground } from '@/components/home/DeferredHomeBackgrounds'
+import { DeferredMp4Background } from '@/components/home/DeferredHomeBackgrounds'
 import { getCuratedGlobeGalleryImages, GLOBE_GALLERY_IMAGE_URLS } from '@/lib/programPlaylistThumbnails'
 import { TIKTOK_MOST_INFORMATIVE } from '@/data/tiktok-most-informative'
 import { TIKTOK_MOST_VIEWED } from '@/data/tiktok-most-viewed'
@@ -169,18 +169,25 @@ export default async function Home() {
         </div>
         <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
       </section>
-      <section className="home-mobile-vh-section relative flex h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-3 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <ProgramsSectionBackground />
-        </div>
-        <div className="pointer-events-none absolute inset-0 hidden bg-black/72 sm:block" />
+      <section
+        id="programsGlobeSection"
+        className="home-globe-section relative flex w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-1 sm:items-center sm:py-0"
+      >
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.08] max-sm:hidden"
-          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }}
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 55% at 50% 42%, rgba(250,204,21,0.07), transparent 62%), linear-gradient(180deg, #050508 0%, #030306 100%)",
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 hidden opacity-[0.08] sm:block"
+          style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)" }}
         />
 
-        <div className="relative z-10 flex min-h-0 w-full max-w-full flex-1 flex-col px-0 pt-2 sm:pt-10 md:pt-12">
-          <h2 className="mb-2 shrink-0 text-center text-xl font-black uppercase sm:mb-12 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
+        <div className="relative z-10 flex min-h-0 w-full max-w-full flex-1 flex-col px-0 pt-1 sm:pt-8 md:pt-10">
+          <h2 className="mb-1 shrink-0 text-center text-xl font-black uppercase sm:mb-8 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
             <span className={publicHeadingLightning('amber')}>
               SYNDICATE ELITE PROGRAMS
             </span>
@@ -203,13 +210,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="home-mobile-vh-section relative flex h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full min-w-0 flex-col overflow-hidden bg-black py-4 sm:py-0">
+      <section className="home-social-clips-section relative flex w-full min-w-0 flex-col overflow-hidden bg-black py-3 sm:py-8">
         <div className="pointer-events-none absolute inset-0">
           <DeferredMp4Background src="/assets/video.mp4" className="h-full w-full object-cover opacity-24" />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/68" />
-        <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col justify-start overflow-y-auto overflow-x-clip px-3 py-0 sm:h-full sm:justify-center sm:overflow-visible sm:px-6 sm:py-12 md:px-8">
-          <div className="w-full max-w-full space-y-3 sm:space-y-5">
+        <div className="relative z-10 mx-auto flex w-full max-w-full flex-col justify-start overflow-x-clip px-3 py-0 sm:px-6 md:px-8">
+          <div className="w-full max-w-full space-y-3 sm:space-y-4">
             <h3
               className={`${publicHeadingLightning('amber')} mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-4 sm:text-3xl md:text-4xl`}
             >
@@ -264,7 +271,7 @@ export default async function Home() {
 
             <>
               <h3
-                className={`${publicHeadingLightning('amber')} mb-3 mt-6 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-4 sm:mt-8 sm:text-3xl md:text-4xl`}
+                className={`${publicHeadingLightning('amber')} mb-2 mt-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-3 sm:mt-5 sm:text-3xl md:text-4xl`}
               >
                 MOST INFORMATIVE
               </h3>

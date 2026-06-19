@@ -11968,6 +11968,14 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 /* Mobile — keep sections inside viewport (home, public /programs, dashboard shell) */
+@media (min-width: 640px) {
+  .home-globe-section {
+    height: clamp(620px, 88dvh, 900px);
+    min-height: clamp(600px, 84dvh, 860px);
+    max-height: clamp(680px, 92dvh, 940px);
+  }
+}
+
 @media (max-width: 767px) {
   :root {
     --fluid-section-p: clamp(0.45rem, 1.8vw, 0.65rem);
@@ -11982,6 +11990,24 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+  }
+
+  .home-globe-section {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    height: clamp(520px, 68dvh, 640px);
+    min-height: clamp(500px, 66dvh, 620px);
+    max-height: clamp(540px, 70dvh, 660px);
+  }
+
+  .home-social-clips-section {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    padding-bottom: 0.35rem;
   }
 
   .home-mobile-vh-section {

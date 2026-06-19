@@ -21,10 +21,14 @@ export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>([
   5, // The Art of Mastering Human Behavior in Business
   10, // The Business of Empire Building
   11, // The Art Of Business Persuasion
-  15, // Faceless YouTube AI Content Creator Course
+  15, // Faceless YouTube AI Content Creator Course (legacy — use ai_content_automation pack)
+  16, // AI Automations (legacy — use agentic_ai pack)
+  17, // N8N / How To Build AI Agents (legacy — use agentic_ai pack)
+  18, // Crypto Trading (legacy — use trading_technical_analysis pack)
   22, // Block Chain and Smart Contract Building with Solidity
   26, // Prompt Engineering
   27, // Affiliate Marketing
+  29, // THE 1 MINUTE SCALPEL (legacy — use trading_scalpel_protocol module)
 ]);
 
 export const HIDDEN_PROGRAM_PLAYLIST_SLUGS = new Set<string>([
@@ -33,6 +37,10 @@ export const HIDDEN_PROGRAM_PLAYLIST_SLUGS = new Set<string>([
   "the-business-of-empire-building",
   "the-art-of-business-persuasion",
   "faceless-youtube-ai-content-creator-course",
+  "ai-automations",
+  "how-to-build-ai-agents",
+  "crypto-trading-with-technical-analysis-course",
+  "the-1-minute-scalpel",
   "block-chain-and-smart-contract-building-with-solidity",
   "prompt-engineering",
   "affiliate-marketing",
@@ -66,8 +74,6 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
   // Business Model
   13, // WordPress Blog
   14, // Framer Crash Course
-  16, // AI Automations
-  17, // N8N Ai Automation
   19, // Print On Demand
   20, // Building Games Using Unreal Engine
   21, // App Building (using Flutter)
@@ -91,7 +97,7 @@ export const PUBLIC_PSYCHOLOGY_PROGRAM_ORDER: readonly number[] = [
 
 /** Display order on /programs (Business Model column). */
 export const PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER: readonly number[] = [
-  16, 17, 21, 28, 25, 20, 14, 23, 19, 24, 13,
+  21, 28, 25, 20, 14, 23, 19, 24, 13,
 ];
 
 /**
@@ -231,13 +237,11 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("micro business.jpg"), alt: "Micro Business Protocols", fileName: "micro business.jpg", href: programPlaylistDeepLink(31), programId: 31 },
   { src: courseThumb("secret.png"), alt: "The Secret To Transformation", fileName: "secret.png", href: programPlaylistDeepLink(9), programId: 9 },
   { src: courseThumb("flutter-app-building.png"), alt: "App Building (using Flutter)", fileName: "flutter-app-building.png", href: programPlaylistDeepLink(21), programId: 21 },
-  { src: courseThumb("automaton-name-change.png"), alt: "AI Automations", fileName: "automaton-name-change.png", href: programPlaylistDeepLink(16), programId: 16 },
   { src: courseThumb("canvics-to-canva.png"), alt: "Graphics Design Using Canva", fileName: "canvics-to-canva.png", href: programPlaylistDeepLink(23), programId: 23 },
   { src: courseThumb("cyber-dystopian-city.png"), alt: "Amazon KDP", fileName: "cyber-dystopian-city.png", href: programPlaylistDeepLink(25), programId: 25 },
   { src: courseThumb("wordpress-blog.png"), alt: "WordPress Blog", fileName: "wordpress-blog.png", href: programPlaylistDeepLink(13), programId: 13 },
   { src: courseThumb("react.jpeg"), alt: "Building Apps using React JS", fileName: "react.jpeg", href: programPlaylistDeepLink(28), programId: 28 },
   { src: courseThumb("python.png"), alt: "Python Programming", fileName: "python.png", href: programPlaylistDeepLink(24), programId: 24 },
-  { src: courseThumb("N8N Ai.jpg"), alt: "N8N Ai Automation", fileName: "N8N Ai.jpg", href: programPlaylistDeepLink(17), programId: 17 },
   { src: courseThumb("framer.png"), alt: "Framer Crash Course", fileName: "framer.png", href: programPlaylistDeepLink(14), programId: 14 },
   { src: courseThumb("uncertainty.jpg"), alt: "Mastering Risk and Uncertainty", fileName: "uncertainty.jpg", href: programPlaylistDeepLink(30), programId: 30 },
   { src: courseThumb("unreal engine.png"), alt: "Building Games Using Unreal Engine", fileName: "unreal engine.png", href: programPlaylistDeepLink(20), programId: 20 },
@@ -303,6 +307,10 @@ export function isHiddenProgramPlaylist(
   if (title.includes("affiliate marketing")) return true;
   if (title === "prompt engineering") return true;
   if (title.includes("faceless youtube")) return true;
+  if (title.includes("ai automations")) return true;
+  if (title.includes("how to build") && title.includes("agent")) return true;
+  if (title.includes("crypto trading")) return true;
+  if (title.includes("1 minute scalpel")) return true;
   if (title.includes("block chain") || title.includes("blockchain")) return true;
   return false;
 }

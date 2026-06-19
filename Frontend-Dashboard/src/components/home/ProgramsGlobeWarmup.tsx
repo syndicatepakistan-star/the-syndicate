@@ -1,20 +1,21 @@
 "use client";
 
 import { useLayoutEffect } from "react";
-import { warmProgramsSectionAssets } from "@/lib/mediaWarmCache";
+import { warmGlobeGalleryImages } from "@/lib/mediaWarmCache";
 
 type ProgramsGlobeWarmupProps = {
   imageSrcs: readonly string[];
 };
 
-let programsSectionWarmStarted = false;
-
-/** Preloads programs-section MP4 + globe tiles once per session (avoids repeat work on home revisit). */
+/** Globe tiles first — no background MP4 (frees bandwidth for tile decode). */
 export function ProgramsGlobeWarmup({ imageSrcs }: ProgramsGlobeWarmupProps) {
   useLayoutEffect(() => {
-    if (programsSectionWarmStarted) return;
-    programsSectionWarmStarted = true;
-    void warmProgramsSectionAssets(imageSrcs);
+    if (!imageSrcs.length) return;
+    const priority = imageSrcs.slice(0, 14);
+    const rest = imageSrcs.slice(14);
+    void warmGlobeGalleryImages(priority).then(() => {
+      if (rest.length) void warmGlobeGalleryImages(rest);
+    });
   }, [imageSrcs]);
 
   return null;

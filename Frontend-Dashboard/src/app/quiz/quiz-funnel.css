@@ -1927,6 +1927,10 @@ body.result-view .section-cards-grid {
     line-height: 1.35;
   }
 
+  .result-stack-free-tag {
+    display: none;
+  }
+
   .btn {
     width: 100%;
   }

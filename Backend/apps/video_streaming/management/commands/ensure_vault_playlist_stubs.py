@@ -1,6 +1,8 @@
 """
 Create unpublished StreamPlaylist rows for every vault module slug (if missing).
 
+Prefer ``seed_vault_playlists`` for full mid-ticket structure (videos + nested playlists).
+
 Usage (from Backend/):
   python manage.py ensure_vault_playlist_stubs
   python manage.py ensure_vault_playlist_stubs --publish

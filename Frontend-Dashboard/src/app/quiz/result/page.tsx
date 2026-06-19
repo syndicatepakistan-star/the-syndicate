@@ -171,10 +171,10 @@ function renderCourseActionButton(
 
 function renderStackFreeTag() {
   return (
-    <>
+    <span className="result-stack-free-tag">
       {" "}
       (<span className="result-stack-access result-stack-access--free">FREE</span>)
-    </>
+    </span>
   );
 }
 

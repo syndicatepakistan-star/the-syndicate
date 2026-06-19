@@ -223,7 +223,7 @@ export default function DomeGallery({
   )
   const [tilesReady, setTilesReady] = useState(() => {
     if (!eagerImages || uniqueSrcs.length === 0) return true
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches) return true
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) return true
     return uniqueSrcs.every((src) => isImageWarm(src))
   })
 
@@ -249,7 +249,7 @@ export default function DomeGallery({
     })
     const fallback = window.setTimeout(() => {
       if (!cancelled) setTilesReady(true)
-    }, compactViewport ? 120 : 900)
+    }, compactViewport ? 60 : 500)
     return () => {
       cancelled = true
       window.clearTimeout(fallback)
@@ -524,18 +524,30 @@ export default function DomeGallery({
       }
       overlay.addEventListener('transitionend', onFirstEnd)
     }
-  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, navigateOnClick, navigateToHref, openedImageBorderRadius, openedImageHeight, openedImageWidth, unlockScroll])
+  }, [clickHref, enlargeTransitionMs, grayscale, isGlobeInteractionTarget, lockScroll, navigateOnClick, navigateToHref, openedImageBorderRadius, openedImageHeight, openedImageWidth, unlockScroll])
+
+  const isGlobeInteractionTarget = useCallback((target: EventTarget | null) => {
+    const el = target as Element | null
+    if (!el?.closest) return false
+    return Boolean(el.closest('.sphere, .sphere-item, .item__image'))
+  }, [])
 
   useGesture(
     {
-      onDragStart: ({ event }) => {
-        if (focusedElRef.current) return
+      onDragStart: ({ event, cancel }) => {
+        if (focusedElRef.current) {
+          cancel()
+          return
+        }
+        const evt = event as PointerEvent
+        if (!isGlobeInteractionTarget(evt.target)) {
+          cancel()
+          return
+        }
         stopInertia()
         rootRef.current?.setAttribute('data-dragging', 'true')
-        const evt = event as PointerEvent
         pointerTypeRef.current = (evt.pointerType as 'mouse' | 'pen' | 'touch') || 'mouse'
         if (pointerTypeRef.current === 'touch') evt.preventDefault()
-        if (pointerTypeRef.current === 'touch') lockScroll()
         draggingRef.current = true
         cancelTapRef.current = false
         movedRef.current = false
@@ -543,10 +555,29 @@ export default function DomeGallery({
         startPosRef.current = { x: evt.clientX, y: evt.clientY }
         tapTargetRef.current = (evt.target as Element).closest?.('.item__image') as HTMLElement | null
       },
-      onDrag: ({ event, last, velocity: velArr = [0, 0], direction: dirArr = [0, 0], movement }) => {
+      onDrag: ({ event, last, velocity: velArr = [0, 0], direction: dirArr = [0, 0], movement, cancel }) => {
         if (focusedElRef.current || !draggingRef.current || !startPosRef.current) return
         const evt = event as PointerEvent
-        if (pointerTypeRef.current === 'touch') evt.preventDefault()
+        if (!isGlobeInteractionTarget(evt.target)) {
+          cancel()
+          draggingRef.current = false
+          startPosRef.current = null
+          rootRef.current?.removeAttribute('data-dragging')
+          unlockScroll()
+          return
+        }
+
+        const dxTotal = evt.clientX - startPosRef.current.x
+        const dyTotal = evt.clientY - startPosRef.current.y
+        if (!movedRef.current && dxTotal * dxTotal + dyTotal * dyTotal > 16) {
+          movedRef.current = true
+          if (pointerTypeRef.current === 'touch') {
+            evt.preventDefault()
+            lockScroll()
+          }
+        } else if (pointerTypeRef.current === 'touch' && movedRef.current) {
+          evt.preventDefault()
+        }
 
         const dxTotal = evt.clientX - startPosRef.current.x
         const dyTotal = evt.clientY - startPosRef.current.y
@@ -808,7 +839,11 @@ export default function DomeGallery({
           } as CSSProperties
         }
       >
-        <main ref={mainRef} className="absolute inset-0 grid select-none place-items-center overflow-hidden bg-transparent" style={{ touchAction: 'none', WebkitUserSelect: 'none' }}>
+        <main
+          ref={mainRef}
+          className="absolute inset-0 grid select-none place-items-center overflow-hidden bg-transparent"
+          style={{ touchAction: 'pan-y', WebkitUserSelect: 'none' }}
+        >
           <div
             className={`stage ${compactViewport || tilesReady ? '' : 'transition-opacity duration-300'}`}
             style={{ opacity: compactViewport || tilesReady ? 1 : 0 }}

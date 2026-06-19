@@ -20,6 +20,9 @@ from django.views.decorators.http import require_GET, require_POST
 from accounts.syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
 
 from .models import AffiliateProfile, AffiliateWithdrawalAccount, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
+from .subscription_labels import display_subscription_name, join_display_subscription_names
+from .withdrawal_alerts import send_affiliate_withdrawal_staff_alert
+from .withdrawal_status import REFUNDED_WITHDRAWAL_STATUSES, ensure_withdrawal_transferred_fields
 
 CLICK_POINTS = 1
 LEAD_POINTS = 5
@@ -277,8 +280,6 @@ def _section_stats(referral: SectionReferral) -> dict:
         "lead_emails": sorted(set(lead_qs.values_list("email", flat=True))),
     }
 
-
-REFUNDED_WITHDRAWAL_STATUSES = {"rejected", "cancelled", "denied", "refunded", "failed"}
 
 
 def _withdrawn_total_for_profile(profile: AffiliateProfile) -> Decimal:
@@ -721,7 +722,7 @@ def affiliate_visitors(request):
     for vid in set(click_map.keys()) | set(lead_map.keys()) | set(sale_map.keys()):
         lead_obj = lead_map.get(vid)
         latest_sale = latest_sale_by_vid.get(vid)
-        subscription_name = (latest_sale.subscription_name or "").strip() if latest_sale else ""
+        subscription_name = display_subscription_name((latest_sale.subscription_name or "").strip()) if latest_sale else ""
         visitors.append(
             {
                 "visitor_id": vid,
@@ -841,15 +842,19 @@ def recent_referrals(request):
             elif latest_sale and latest_sale.purchase_amount is not None:
                 row["purchase_amount"] = str(latest_sale.purchase_amount.quantize(Decimal("0.01")))
             # Show every distinct subscription the visitor bought (ordered by first purchase).
+            raw_subscription_names = [
+                (s.subscription_name or "").strip() for s in visitor_sales if (s.subscription_name or "").strip()
+            ]
             seen_subs: set[str] = set()
             subscription_names: list[str] = []
-            for s in visitor_sales:
-                name = (s.subscription_name or "").strip()
-                if name and name.lower() not in seen_subs:
-                    seen_subs.add(name.lower())
-                    subscription_names.append(name)
+            for raw in raw_subscription_names:
+                title = display_subscription_name(raw)
+                key = title.lower()
+                if title and key not in seen_subs:
+                    seen_subs.add(key)
+                    subscription_names.append(title)
             if subscription_names:
-                row["subscription_name"] = " · ".join(subscription_names)[:280]
+                row["subscription_name"] = join_display_subscription_names(subscription_names)
                 row["subscription_names"] = subscription_names
             if latest_sale and (latest_sale.currency or "").strip():
                 row["purchase_currency"] = (latest_sale.currency or "").strip().lower()
@@ -884,14 +889,22 @@ def withdrawal_statement(request):
     )
     items = []
     for w in qs:
+        status, transferred_at = ensure_withdrawal_transferred_fields(
+            status=w.status,
+            transferred_at=w.transferred_at,
+        )
+        if status != w.status or transferred_at != w.transferred_at:
+            w.status = status
+            w.transferred_at = transferred_at
+            w.save(update_fields=["status", "transferred_at"])
         items.append(
             {
                 "id": w.id,
                 "requested_amount": str(w.requested_amount.quantize(Decimal("0.01"))),
                 "earnings_snapshot": str(w.earnings_snapshot.quantize(Decimal("0.01"))),
-                "status": w.status,
+                "status": status,
                 "created_at": w.created_at.isoformat(),
-                "transferred_at": w.transferred_at.isoformat() if w.transferred_at else None,
+                "transferred_at": transferred_at.isoformat() if transferred_at else None,
                 "account_name": w.account_name,
                 "affiliate_link_id": w.section_referral.referral_id,
             }
@@ -969,6 +982,19 @@ def request_withdrawal(request):
         requested_amount=requested_amount.quantize(Decimal("0.01")),
         earnings_snapshot=earnings_total,
     )
+    try:
+        affiliate_user = referral.profile.user
+        admin_url = request.build_absolute_uri(
+            f"/admin/affiliate_tracking/withdrawalrequest/{withdrawal.id}/change/"
+        )
+        send_affiliate_withdrawal_staff_alert(
+            withdrawal=withdrawal,
+            affiliate_email=getattr(affiliate_user, "email", "") or "",
+            admin_url=admin_url,
+        )
+    except Exception:
+        # Payout request must succeed even if mail delivery fails.
+        pass
     # Recompute the available balance after the new withdrawal so the frontend can render
     # the updated number immediately (without waiting for the next stats poll).
     refreshed = _overall_stats(referral.profile)

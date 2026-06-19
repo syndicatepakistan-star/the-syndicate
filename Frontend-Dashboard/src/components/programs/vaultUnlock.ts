@@ -1,29 +1,21 @@
 import type { CheckoutOfferKey, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
-import { vaultCoursesForPack } from "@/components/programs/vaultPackCatalog";
+import { vaultCoursesForPack, vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
 import {
   isTradingModuleSlug,
   isTradingSubmoduleSlug,
   tradingParentModuleForSlug,
 } from "@/components/programs/tradingVaultCatalog";
+import { hasMoneyMasteryAccess } from "@/lib/moneyMasteryAccess";
 
-const MONEY_MASTERY_TIERS = new Set(["money_mastery", "full"]);
-
-/** Money Mastery / staff-full: all program vault cards + playlists; Syndicate Mode + Membership stay locked via nav. */
-export function hasMoneyMasteryAccess(accessTier: string | undefined | null): boolean {
-  return MONEY_MASTERY_TIERS.has(String(accessTier ?? "").trim().toLowerCase());
-}
-
-function isVaultPackPlanKey(plan: CheckoutOfferKey): plan is VaultPackKey {
-  return plan === "agentic_ai" || plan === "ai_content_automation" || plan === "trading_technical_analysis";
-}
+export { hasMoneyMasteryAccess };
 
 function resolveVaultPackForOffer(offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan">): VaultPackKey | null {
   if (offer.vaultPackPlan) return offer.vaultPackPlan;
-  return isVaultPackPlanKey(offer.plan) ? offer.plan : null;
+  return vaultPackForPlanSlug(String(offer.plan));
 }
 
 /**
- * Vault unlock cascade (trading + other packs):
+ * Vault unlock cascade (all mid-ticket packs):
  * - Money Mastery → every vault module and nested trading lesson
  * - Full pack slug → every module + nested lesson in that pack
  * - Trading parent module → all nested lessons in that module only
@@ -32,14 +24,27 @@ function resolveVaultPackForOffer(offer: Pick<PlanOfferDef, "plan" | "vaultPackP
 export function isVaultOfferUnlocked(
   offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan">,
   purchasedSlugs: ReadonlySet<string>,
-  accessTier: string | undefined | null
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
 ): boolean {
-  if (hasMoneyMasteryAccess(accessTier)) return true;
+  return userHasVaultPlanAccess(String(offer.plan), purchasedSlugs, accessTier, moneyMasteryActive, offer.vaultPackPlan);
+}
 
-  const plan = offer.plan;
+/** Check unlock for a raw plan slug (pack, module, or lesson). */
+export function userHasVaultPlanAccess(
+  planRaw: string,
+  purchasedSlugs: ReadonlySet<string>,
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
+  vaultPackPlan?: VaultPackKey,
+): boolean {
+  if (hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return true;
+
+  const plan = (planRaw || "").trim().toLowerCase();
+  if (!plan) return false;
   if (purchasedSlugs.has(plan)) return true;
 
-  const pack = resolveVaultPackForOffer(offer);
+  const pack = vaultPackPlan ?? vaultPackForPlanSlug(plan);
   if (pack && purchasedSlugs.has(pack)) return true;
 
   if (isTradingSubmoduleSlug(plan)) {
@@ -54,32 +59,31 @@ export function isVaultOfferUnlocked(
 export function isVaultPackFullyUnlocked(
   pack: VaultPackKey,
   purchasedSlugs: ReadonlySet<string>,
-  accessTier: string | undefined | null
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
 ): boolean {
-  if (hasMoneyMasteryAccess(accessTier)) return true;
+  if (hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return true;
   if (purchasedSlugs.has(pack)) return true;
   const courses = vaultCoursesForPack(pack);
-  return courses.length > 0 && courses.every((c) => purchasedSlugs.has(c.plan));
+  return courses.length > 0 && courses.every((c) => userHasVaultPlanAccess(c.plan, purchasedSlugs, accessTier, moneyMasteryActive, pack));
 }
 
 export function resolveOfferActionLabel(
   offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan" | "openLabel">,
   purchasedSlugs: ReadonlySet<string>,
-  accessTier: string | undefined | null
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
 ): string {
-  return isVaultOfferUnlocked(offer, purchasedSlugs, accessTier) ? "Open" : offer.openLabel;
+  return isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive) ? "Open" : offer.openLabel;
 }
 
-/** Parent trading module cards stay locked when only a nested lesson was purchased. */
+/** Parent trading module cards unlock when the full pack or that module was purchased. */
 export function isTradingModuleOfferUnlocked(
   moduleSlug: CheckoutOfferKey,
   purchasedSlugs: ReadonlySet<string>,
-  accessTier: string | undefined | null
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
 ): boolean {
   if (!isTradingModuleSlug(moduleSlug)) return false;
-  return isVaultOfferUnlocked(
-    { plan: moduleSlug, vaultPackPlan: "trading_technical_analysis" },
-    purchasedSlugs,
-    accessTier
-  );
+  return userHasVaultPlanAccess(moduleSlug, purchasedSlugs, accessTier, moneyMasteryActive, "trading_technical_analysis");
 }

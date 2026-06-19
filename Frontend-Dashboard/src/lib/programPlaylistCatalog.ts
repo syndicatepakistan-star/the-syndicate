@@ -1,4 +1,5 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
+import { vaultCourseByTitle } from "@/components/programs/vaultPackCatalog";
 import {
   getProgramDisplayTitle,
   getProgramPlaylistThumbnail,
@@ -144,6 +145,11 @@ export function resolveProgramPlaylistThumbnail(
     const vaultThumb = getVaultModuleThumbnail(vaultSlug);
     if (vaultThumb) return vaultThumb;
   }
+  const title = playlist.title?.trim();
+  if (title) {
+    const vaultCourse = vaultCourseByTitle(title);
+    if (vaultCourse?.imageSrc) return vaultCourse.imageSrc;
+  }
   const catalog = findProgramCatalogEntry(playlist);
   const thumbId = catalog?.id ?? playlist.id;
   const staticThumb = getProgramPlaylistThumbnail(thumbId);
@@ -183,7 +189,7 @@ export function fillMissingPublicProgramPlaylists(
       category: publicPlaylistCategory(entry.id),
       description: entry.description,
       price:
-        entry.id === 91
+        entry.id === 99
           ? "49.00"
           : entry.id === 31
             ? "39.00"
@@ -194,7 +200,7 @@ export function fillMissingPublicProgramPlaylists(
       cover_image_url: null,
       video_count: 0,
       is_published: true,
-      is_coming_soon: entry.id === 91,
+      is_coming_soon: entry.id === 99,
       created_at: "1970-01-01T00:00:00.000Z",
     });
   }

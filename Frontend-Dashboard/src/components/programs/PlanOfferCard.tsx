@@ -180,7 +180,7 @@ export function PlanOfferCard({
         `plan-offer-card--${offer.accent}`,
         cardKind === "module" && "plan-offer-card--vault-module",
         highlighted && "program-card-globe-spotlight-host",
-        isLarge && "mx-auto h-full min-h-[26rem] max-w-none sm:min-h-[30rem]",
+        isLarge && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
         isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
         isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
@@ -257,8 +257,8 @@ export function PlanOfferCard({
             <div
               className={cn(
                 "relative w-full overflow-hidden rounded-2xl border-2 border-white/20",
-                isLarge && isPack && "min-h-[15rem] flex-1 sm:min-h-[18.5rem]",
-                isLarge && !isPack && "aspect-[4/3] min-h-[12rem] shrink-0 sm:min-h-[15rem]",
+                isLarge && isPack && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
+                isLarge && !isPack && "plan-offer-card__media aspect-[16/10] min-h-[min(24dvh,8.5rem)] shrink-0 sm:aspect-[4/3] sm:min-h-[15rem]",
                 isModule && "aspect-[16/10] min-h-[7rem] shrink-0 sm:min-h-[8.5rem]",
                 isCompact && isPack && "min-h-[11.5rem] flex-1 sm:min-h-[12.5rem]",
                 isCompact && !isPack && "aspect-[4/3] min-h-[9.5rem] shrink-0"

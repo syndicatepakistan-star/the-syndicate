@@ -17,6 +17,7 @@ import { vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { createPlaylistCheckoutSession, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
+import { resolveDashboardPathForPlan } from "@/lib/programUnlockFlow";
 import {
   navigateToPlanOfferCard,
   navigateToProgramLibraryCard,
@@ -469,7 +470,7 @@ export function CourseFlow({
             return;
           }
           if (payload.is_unlocked) {
-            router.push("/dashboard");
+            router.push(`/dashboard?section=programs&playlist=${playlist.id}`);
             return;
           }
           window.location.assign(
@@ -499,7 +500,8 @@ export function CourseFlow({
                 : "/programs",
           });
           if (result.status === "already_unlocked") {
-            router.push("/dashboard?section=programs");
+            const href = await resolveDashboardPathForPlan(offer.plan, "/dashboard?section=programs");
+            router.push(href);
             return;
           }
           if (result.status === "error") {

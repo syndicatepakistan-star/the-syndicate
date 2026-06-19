@@ -289,6 +289,10 @@ SUPPORT_EMAIL = (os.environ.get("SUPPORT_EMAIL") or "").strip()
 SUPPORT_EMAIL_NORMAL = (os.environ.get("SUPPORT_EMAIL_NORMAL") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_ELEVATED = (os.environ.get("SUPPORT_EMAIL_ELEVATED") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_CRITICAL = (os.environ.get("SUPPORT_EMAIL_CRITICAL") or SUPPORT_EMAIL_ELEVATED or SUPPORT_EMAIL).strip()
+# Comma-separated inbox for affiliate withdrawal alerts (falls back to SUPPORT_EMAIL_*).
+AFFILIATE_WITHDRAWAL_ALERT_EMAIL = (
+    os.environ.get("AFFILIATE_WITHDRAWAL_ALERT_EMAIL") or "syndicatepakistan@gmail.com"
+).strip()
 
 # Optional: Redis for membership article search index (inverted index + short-lived result cache).
 REDIS_URL = (os.environ.get("REDIS_URL") or "").strip()
@@ -610,6 +614,7 @@ def _normalize_stripe_key(raw: str) -> str:
 
 STRIPE_SECRET_KEY = _normalize_stripe_key(os.environ.get("STRIPE_SECRET_KEY") or "")
 STRIPE_PUBLISHABLE_KEY = _normalize_stripe_key(os.environ.get("STRIPE_PUBLISHABLE_KEY") or "")
+STRIPE_WEBHOOK_SECRET = (os.environ.get("STRIPE_WEBHOOK_SECRET") or "").strip()
 if STRIPE_SECRET_KEY and not STRIPE_SECRET_KEY.startswith(("sk_test_", "sk_live_")):
     import logging as _logging
 

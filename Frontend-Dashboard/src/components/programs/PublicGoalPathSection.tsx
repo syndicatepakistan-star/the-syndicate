@@ -23,7 +23,11 @@ export function PublicGoalPathSection({ playlists, libraryTarget = "public", cla
         .filter(
           (pl) =>
             !pl.is_coming_soon &&
-            isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title }),
+            isPublicProgramsLibraryPlaylist(pl.id, {
+              slug: pl.slug,
+              title: pl.title,
+              vault_plan_slug: pl.vault_plan_slug,
+            }),
         )
         .map((pl) => enrichProgramPlaylist(pl)),
     [playlists],

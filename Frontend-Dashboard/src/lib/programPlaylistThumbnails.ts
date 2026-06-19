@@ -5,7 +5,7 @@ import {
   OFFER_PLAN_THUMB_THE_KNIGHT,
   OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
-import { VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
+import { isVaultCourseSlug, VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
 import { allTradingSubmoduleOffers } from "@/components/programs/tradingVaultCatalog";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
@@ -41,7 +41,15 @@ export const HIDDEN_PROGRAM_PLAYLIST_SLUGS = new Set<string>([
 export type ProgramPlaylistVisibilityMeta = {
   slug?: string | null;
   title?: string | null;
+  vault_plan_slug?: string | null;
 };
+
+/** Mid-ticket vault lessons/modules — browse/unlock only inside pack modals, not the main program grid. */
+export function isVaultSubmoduleStreamPlaylist(vaultPlanSlug?: string | null): boolean {
+  const slug = (vaultPlanSlug ?? "").trim();
+  if (!slug) return false;
+  return isVaultCourseSlug(slug);
+}
 
 /** Public /programs library — Business Psychology + Business Model (packs shown separately). */
 export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
@@ -54,7 +62,7 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
   12, // The Compound Effect
   30, // The Micro Business Protocol
   31, // Mastering Risk and Uncertainty
-  91, // Business Warfare
+  99, // Business Warfare
   // Business Model
   13, // WordPress Blog
   14, // Framer Crash Course
@@ -78,7 +86,7 @@ export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
 
 /** Display order on /programs (Business Psychology column). */
 export const PUBLIC_PSYCHOLOGY_PROGRAM_ORDER: readonly number[] = [
-  3, 6, 31, 30, 91, 1, 12, 2, 9,
+  3, 6, 31, 30, 99, 1, 12, 2, 9,
 ];
 
 /** Display order on /programs (Business Model column). */
@@ -124,7 +132,7 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   29: courseThumb("1 minute scalpel.jpeg"),
   30: courseThumb("uncertainty.jpg"),
   31: courseThumb("micro business.jpg"),
-  91: courseThumb("warfare.jpg"),
+  99: courseThumb("warfare.jpg"),
 };
 
 /** Vault module slug → pack course thumbnail (Agentic AI, AI Content, Trading modules + lessons). */
@@ -282,6 +290,7 @@ export function isHiddenProgramPlaylist(
   programId: number,
   meta?: ProgramPlaylistVisibilityMeta
 ): boolean {
+  if (isVaultSubmoduleStreamPlaylist(meta?.vault_plan_slug)) return true;
   if (HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId)) return true;
   const slug = meta?.slug?.trim().toLowerCase();
   if (slug && HIDDEN_PROGRAM_PLAYLIST_SLUGS.has(slug)) return true;

@@ -8,7 +8,7 @@ import {
 } from "@/lib/streaming-api";
 
 /** Refresh signed playback URLs this many ms before server expiry. */
-const REFRESH_BUFFER_MS = 3 * 60 * 1000;
+const REFRESH_BUFFER_MS = 5 * 60 * 1000;
 const MIN_REFRESH_DELAY_MS = 15_000;
 const REFRESH_RETRY_MS = 30_000;
 

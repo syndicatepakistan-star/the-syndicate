@@ -1,5 +1,10 @@
 import { resolveClientApiUrl, resolvePortalProxyUrl } from "@/lib/portal-api";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+import { vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
+import {
+  isTradingModuleSlug,
+  tradingParentModuleForSlug,
+} from "@/components/programs/tradingVaultCatalog";
 
 export type VaultPlaylistMapEntry = StreamPlaylistListItem & {
   vault_plan_slug?: string;
@@ -61,12 +66,44 @@ export async function fetchVaultPlaylistMap(options?: {
   }
 }
 
+export function clearVaultPlaylistMapCache(): void {
+  cachedMap = null;
+  cachedAt = 0;
+  inflight = null;
+}
+
 export function vaultPlaylistIdForPlan(
   planSlug: string,
   map: ReadonlyMap<string, VaultPlaylistMapEntry>
 ): number | null {
-  const entry = map.get(planSlug.trim().toLowerCase());
-  return entry?.id ?? null;
+  const key = planSlug.trim().toLowerCase();
+  const direct = map.get(key);
+  if (direct?.id) return direct.id;
+
+  const pack = vaultPackForPlanSlug(key);
+  if (pack && key === pack) {
+    for (const [slug, entry] of map.entries()) {
+      if (vaultPackForPlanSlug(slug) === pack && entry?.id) {
+        return entry.id;
+      }
+    }
+  }
+
+  if (isTradingModuleSlug(key)) {
+    for (const [slug, entry] of map.entries()) {
+      if (tradingParentModuleForSlug(slug) === key && entry?.id) {
+        return entry.id;
+      }
+    }
+  }
+
+  const modulePrefix = `${key}_c`;
+  for (const [slug, entry] of map.entries()) {
+    if (slug.startsWith(modulePrefix) && entry?.id) {
+      return entry.id;
+    }
+  }
+  return null;
 }
 
 export function buildVaultModulePlaylistHref(

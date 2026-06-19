@@ -7,9 +7,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apps.courses.models import Course
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_selection_completed, king_selection_required
+from apps.portal.king_selection_catalog import (
+    knight_selectable_courses_qs,
+    knight_selectable_playlists_qs,
+)
 from apps.portal.models import KingProgramSelection, Mission, Note, Reminder, SocialLink, UserPlanPurchase
 from apps.video_streaming.models import StreamPlaylistItem, StreamPlaylistPurchase, StreamPlaylist
 from apps.portal.permissions import DeckPermission, IsAuthenticatedStrict, SocialLinkPermission
@@ -228,16 +231,12 @@ class KingProgramSelectionView(views.APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         selection, _ = KingProgramSelection.objects.get_or_create(user=user)
-        courses_qs = Course.objects.filter(is_published=True, show_in_programs=True).order_by("title")
-        playlists_qs = (
-            StreamPlaylist.objects.filter(is_published=True, is_coming_soon=False)
-            .prefetch_related(
-                Prefetch(
-                    "items",
-                    queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
-                )
+        courses_qs = knight_selectable_courses_qs()
+        playlists_qs = knight_selectable_playlists_qs().prefetch_related(
+            Prefetch(
+                "items",
+                queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
             )
-            .order_by("title")
         )
 
         from syndicate_backend.media_storages import public_media_url
@@ -267,7 +266,15 @@ class KingProgramSelectionView(views.APIView):
                 "selection_completed": king_selection_completed(user),
                 "selected_items": selected_items,
                 "courses": [{"id": c.id, "title": c.title, "thumbnail_url": _field_url(c.cover_image)} for c in courses_qs],
-                "playlists": [{"id": p.id, "title": p.title, "thumbnail_url": _playlist_thumb_url(p)} for p in playlists_qs],
+                "playlists": [
+                    {
+                        "id": p.id,
+                        "title": p.title,
+                        "thumbnail_url": _playlist_thumb_url(p),
+                        "vault_plan_slug": (p.vault_plan_slug or "").strip() or None,
+                    }
+                    for p in playlists_qs
+                ],
             }
         )
 
@@ -299,14 +306,15 @@ class KingProgramSelectionView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        valid_course_ids = set(
-            Course.objects.filter(id__in=course_ids, is_published=True, show_in_programs=True).values_list("id", flat=True)
-        )
+        valid_course_ids = set(knight_selectable_courses_qs().filter(id__in=course_ids).values_list("id", flat=True))
         valid_playlist_ids = set(
-            StreamPlaylist.objects.filter(id__in=playlist_ids, is_published=True, is_coming_soon=False).values_list("id", flat=True)
+            knight_selectable_playlists_qs().filter(id__in=playlist_ids).values_list("id", flat=True)
         )
         if valid_course_ids != course_ids or valid_playlist_ids != playlist_ids:
-            return Response({"detail": "One or more selected programs are invalid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "One or more selected programs are invalid. Knight tier includes standalone Level 1 programs only (no vault packs, mid-ticket modules, or Money Mastery)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         selection, _ = KingProgramSelection.objects.get_or_create(user=user)
         selection.courses.set(sorted(valid_course_ids))

@@ -2,6 +2,7 @@ import { djangoStreamingApiUrl } from "@/lib/djangoBackendOrigin";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { portalFetch, resolveClientApiUrl } from "@/lib/portal-api";
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
+import { warmPlaybackHeader } from "@/lib/streamPlaybackSeek";
 
 export type StreamVideoPlayerLayout = "auto" | "landscape" | "portrait";
 
@@ -269,8 +270,19 @@ export async function createPlaylistCheckoutSession(
   return res.data ?? {};
 }
 
-export async function confirmPlaylistCheckoutSuccess(sessionId: string): Promise<{ playlist_id: number; is_unlocked: boolean; message?: string }> {
-  const res = await portalFetch<{ playlist_id?: number; is_unlocked?: boolean; message?: string; detail?: string }>(
+export async function confirmPlaylistCheckoutSuccess(sessionId: string): Promise<{
+  playlist_id: number;
+  is_unlocked: boolean;
+  already_purchased?: boolean;
+  message?: string;
+}> {
+  const res = await portalFetch<{
+    playlist_id?: number;
+    is_unlocked?: boolean;
+    already_purchased?: boolean;
+    message?: string;
+    detail?: string;
+  }>(
     "/api/streaming/playlists/checkout/success/",
     {
       method: "POST",
@@ -283,6 +295,7 @@ export async function confirmPlaylistCheckoutSuccess(sessionId: string): Promise
   return {
     playlist_id: Number(res.data.playlist_id),
     is_unlocked: !!res.data.is_unlocked,
+    already_purchased: !!res.data.already_purchased,
     message: res.data.message,
   };
 }
@@ -464,39 +477,20 @@ export async function prefetchStreamPlaylistExperience(
   }
 }
 
-const warmVideoPool = new Map<string, HTMLVideoElement>();
-
-/** Start buffering MP4 bytes in hidden video elements (browser cache). */
+/** Warm MP4 header bytes only (metadata / faststart moov) — avoids downloading whole files. */
 export function warmStreamVideoMedia(urls: string[], options?: { priority?: boolean }): void {
   if (typeof window === "undefined") return;
-  for (const [index, raw] of urls.entries()) {
-    const url = (raw || "").trim();
-    if (!url || warmVideoPool.has(url)) continue;
-    const video = document.createElement("video");
-    video.preload = "auto";
-    video.muted = true;
-    video.playsInline = true;
-    video.src = url;
-    video.load();
-    warmVideoPool.set(url, video);
-
-    const shouldPreloadHint = options?.priority === true || index === 0;
-    if (shouldPreloadHint && !preloadedStreamVideoUrls.has(url)) {
-      preloadedStreamVideoUrls.add(url);
-      const link = document.createElement("link");
-      link.rel = "preload";
-      link.as = "fetch";
-      link.href = url;
-      link.crossOrigin = "anonymous";
-      document.head.appendChild(link);
-    }
+  const unique = [...new Set(urls.map((raw) => (raw || "").trim()).filter(Boolean))];
+  for (const [index, url] of unique.entries()) {
+    if (!url || preloadedStreamVideoUrls.has(url)) continue;
+    const shouldWarm = options?.priority === true || index === 0;
+    if (!shouldWarm) continue;
+    preloadedStreamVideoUrls.add(url);
+    warmPlaybackHeader(url);
   }
-  while (warmVideoPool.size > WARM_VIDEO_POOL_LIMIT) {
-    const oldest = warmVideoPool.keys().next().value;
+  while (preloadedStreamVideoUrls.size > WARM_VIDEO_POOL_LIMIT) {
+    const oldest = preloadedStreamVideoUrls.values().next().value;
     if (!oldest) break;
-    const el = warmVideoPool.get(oldest);
-    el?.removeAttribute("src");
-    el?.load();
-    warmVideoPool.delete(oldest);
+    preloadedStreamVideoUrls.delete(oldest);
   }
 }

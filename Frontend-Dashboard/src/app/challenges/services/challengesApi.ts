@@ -236,12 +236,32 @@ export async function fetchChallengesTodayUntilComplete(
     maxPolls?: number;
     /** Called after each fetch so the UI can show missions as categories finish saving. */
     onPartial?: (td: ChallengesTodayResponse) => void;
+    /** When true, return after the first response if it already has missions (background poll elsewhere). */
+    returnEarlyWhenPartial?: boolean;
   }
 ): Promise<ChallengesTodayResponse> {
   const intervalMs = opts?.intervalMs ?? 450;
   const maxPolls = opts?.maxPolls ?? 120;
   let td = await fetchChallengesToday(deviceId);
   opts?.onPartial?.(td);
+  if (
+    opts?.returnEarlyWhenPartial &&
+    (td.results?.length ?? 0) > 0 &&
+    td.generating === true &&
+    td.batch_complete === false
+  ) {
+    void (async () => {
+      let polls = 0;
+      let next = td;
+      while (next.generating === true && next.batch_complete === false && polls < maxPolls) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+        next = await fetchChallengesToday(deviceId);
+        opts?.onPartial?.(next);
+        polls += 1;
+      }
+    })();
+    return td;
+  }
   let polls = 0;
   while (td.generating === true && td.batch_complete === false && polls < maxPolls) {
     await new Promise((r) => setTimeout(r, intervalMs));

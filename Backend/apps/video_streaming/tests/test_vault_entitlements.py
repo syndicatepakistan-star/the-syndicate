@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 
 from apps.portal.models import UserDashboardEntitlement, UserPlanPurchase
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamVideo
-from apps.video_streaming.vault_entitlements import user_has_vault_module_access
+from apps.video_streaming.vault_entitlements import user_has_vault_module_access, vault_unlocked_playlist_ids_for_user
 User = get_user_model()
 
 
@@ -48,6 +48,25 @@ class VaultEntitlementHierarchyTests(TestCase):
         self.assertTrue(user_has_vault_module_access(self.user, "trading_master_setups"))
         self.assertTrue(user_has_vault_module_access(self.user, "trading_setups_05"))
         self.assertTrue(user_has_vault_module_access(self.user, "trading_strategies_08"))
+        self.assertTrue(user_has_vault_module_access(self.user, "trading_master_secrets"))
+        self.assertTrue(user_has_vault_module_access(self.user, "trading_secrets_12"))
+
+    def test_full_agentic_ai_pack_unlocks_all_courses(self):
+        self._purchase("agentic_ai")
+        self.assertTrue(user_has_vault_module_access(self.user, "agentic_ai_c01"))
+        self.assertTrue(user_has_vault_module_access(self.user, "agentic_ai_c26"))
+
+    def test_full_ai_content_pack_unlocks_all_courses(self):
+        self._purchase("ai_content_automation")
+        self.assertTrue(user_has_vault_module_access(self.user, "ai_content_c01"))
+        self.assertTrue(user_has_vault_module_access(self.user, "ai_content_c29"))
+
+    def test_trading_secrets_module_unlocks_all_lessons_in_module(self):
+        self._purchase("trading_master_secrets")
+        self.assertTrue(user_has_vault_module_access(self.user, "trading_master_secrets"))
+        self.assertTrue(user_has_vault_module_access(self.user, "trading_secrets_01"))
+        self.assertTrue(user_has_vault_module_access(self.user, "trading_secrets_16"))
+        self.assertFalse(user_has_vault_module_access(self.user, "trading_setups_01"))
 
     def test_money_mastery_unlocks_all_vault_slugs(self):
         UserDashboardEntitlement.objects.create(
@@ -99,3 +118,8 @@ class VaultPlaylistDetailAccessTests(TestCase):
         self.assertEqual(res.status_code, 200, res.content)
         self.assertEqual(res.data["id"], self.playlist.id)
         self.assertEqual(len(res.data["items"]), 1)
+
+    def test_full_pack_unlocks_vault_playlist_by_slug(self):
+        self._purchase_plan("trading_scalpel_protocol")
+        unlocked = vault_unlocked_playlist_ids_for_user(self.user)
+        self.assertIn(self.playlist.id, unlocked)

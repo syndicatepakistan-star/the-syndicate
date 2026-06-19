@@ -6942,6 +6942,26 @@ body.syndicate-mode-active::-webkit-scrollbar {
   background: transparent !important;
 }
 
+/* Bounded dashboard sections — document must not scroll (only the gold-frame panel does). */
+html.dashboard-shell-scroll-lock,
+body.dashboard-shell-scroll-lock {
+  overflow: hidden !important;
+  height: 100% !important;
+  max-height: 100svh !important;
+  width: 100% !important;
+  overscroll-behavior: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html.dashboard-shell-scroll-lock::-webkit-scrollbar,
+body.dashboard-shell-scroll-lock::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
 .syndicate-mood-context.dashboard-hamburger-chrome {
   display: flex;
   flex-direction: column;
@@ -11726,6 +11746,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   visibility: visible !important;
   display: block !important;
   object-fit: cover !important;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] .dashboard-cyber-neon-panel {
@@ -11942,6 +11964,88 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     transform-origin: center center;
     animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
     will-change: transform, box-shadow;
+  }
+}
+
+/* Mobile — keep sections inside viewport (home, public /programs, dashboard shell) */
+@media (max-width: 767px) {
+  :root {
+    --fluid-section-p: clamp(0.45rem, 1.8vw, 0.65rem);
+    --fluid-main-grid-pt: 4px;
+    --fluid-page-px: clamp(0.375rem, 1.2vw, 0.55rem);
+    --fluid-nav-py: clamp(0.38rem, 1vw, 0.52rem);
+  }
+
+  .mobile-viewport-contain,
+  .home-mobile-vh-section {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .home-mobile-vh-section {
+    min-height: 100dvh;
+    min-height: 100svh;
+    max-height: 100dvh;
+    max-height: 100svh;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] section.dashboard-main-content-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-bounded-main-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+    box-sizing: border-box !important;
+    padding-left: var(--fluid-section-p) !important;
+    padding-right: var(--fluid-section-p) !important;
+    padding-bottom: max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .plan-offer-card {
+    max-width: 100% !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-panel {
+    padding: clamp(0.65rem, 2vw, 0.95rem) !important;
+    max-height: min(36dvh, 280px);
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-title {
+    font-size: clamp(1.05rem, 4.8vw, 1.45rem) !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-description {
+    font-size: clamp(0.78rem, 2.8vw, 0.92rem) !important;
+    line-height: 1.45 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-nav-btn {
+    height: 2.25rem !important;
+    width: 2.25rem !important;
   }
 }
 

@@ -10,6 +10,13 @@ import { syndicateOtpSignupHref } from "@/lib/syndicate-otp-paths";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 import { getAffiliateAttribution, saveAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead, trackSale } from "@/lib/affiliateApi";
+import { PROGRAM_UNLOCK_CELEBRATION_KEY } from "@/components/programs/ProgramUnlockCelebration";
+import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
+import {
+  clearVaultPlaylistMapCache,
+  fetchVaultPlaylistMap,
+  vaultPlaylistIdForPlan,
+} from "@/lib/vaultPlaylistMap";
 
 const SYNDICATE_URL =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "https://the-syndicate.com/";
@@ -47,6 +54,9 @@ type SuccessPayload = {
     plan_slug?: string;
     plan_label?: string;
   };
+  selected_plan?: string | null;
+  playlist_id?: number | null;
+  already_purchased?: boolean;
 };
 
 function toNumber(value: unknown): number | null {
@@ -234,13 +244,53 @@ export default function CheckoutSuccessScreen({
               : undefined,
           );
         }
-        const nextUrl =
+
+        const payloadAttr = data.affiliate_attribution;
+        const purchasedPlan = (
+          data.selected_plan ||
+          payloadAttr?.plan_slug ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+        let nextUrl =
           typeof window !== "undefined"
             ? resolvePostOtpAppRedirect(data.redirect_url)
             : SYNDICATE_URL;
 
+        if (purchasedPlan && typeof window !== "undefined") {
+          clearVaultPlaylistMapCache();
+          clearUnlockCelebrationStorage();
+          try {
+            const map = await fetchVaultPlaylistMap({ forceRefresh: true });
+            const playlistId = vaultPlaylistIdForPlan(purchasedPlan, map);
+            if (playlistId) {
+              window.sessionStorage.setItem(
+                PROGRAM_UNLOCK_CELEBRATION_KEY,
+                String(playlistId),
+              );
+              nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
+            } else {
+              nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
+            }
+          } catch {
+            nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
+          }
+        } else if (typeof data.playlist_id === "number" && data.playlist_id > 0) {
+          clearUnlockCelebrationStorage();
+          try {
+            window.sessionStorage.setItem(
+              PROGRAM_UNLOCK_CELEBRATION_KEY,
+              String(data.playlist_id),
+            );
+          } catch {
+            // Ignore storage exceptions.
+          }
+          nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${data.playlist_id}`;
+        }
+
         const attribution = getAffiliateAttribution();
-        const payloadAttr = data.affiliate_attribution;
         const payloadAffiliateId = (payloadAttr?.affiliate_id || "").trim();
         const payloadVisitorId = (payloadAttr?.visitor_id || "").trim();
         const planLabel = (payloadAttr?.plan_label || "").trim();
@@ -319,6 +369,7 @@ export default function CheckoutSuccessScreen({
 
         setLuxuryHref(nextUrl);
         clearStreamPlaylistsCache();
+        clearVaultPlaylistMapCache();
         window.history.replaceState({}, "", "/");
         window.setTimeout(() => setLuxuryOpen(true), 80);
         window.setTimeout(() => {

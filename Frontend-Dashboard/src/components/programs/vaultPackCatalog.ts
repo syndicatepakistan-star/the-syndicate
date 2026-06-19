@@ -216,12 +216,60 @@ export function isVaultPackKey(plan: string): plan is VaultPackKey {
   return plan === "agentic_ai" || plan === "ai_content_automation" || plan === "trading_technical_analysis";
 }
 
+/** Parent mid-ticket pack for a vault module / lesson slug (mirrors backend vault_plan_catalog). */
+export function vaultPackForPlanSlug(plan: string): VaultPackKey | null {
+  const p = (plan || "").trim().toLowerCase();
+  if (!p) return null;
+  if (isVaultPackKey(p)) return p;
+  if (/^agentic_ai_c\d{2}$/.test(p)) return "agentic_ai";
+  if (/^ai_content_c\d{2}$/.test(p)) return "ai_content_automation";
+  if (
+    p.startsWith("trading_") ||
+    p === "trading_scalpel_protocol" ||
+    p === "trading_master_strategies" ||
+    p === "trading_master_setups" ||
+    p === "trading_master_secrets"
+  ) {
+    return "trading_technical_analysis";
+  }
+  return null;
+}
+
 export function vaultCourseBySlug(slug: CheckoutOfferKey): PlanOfferDef | undefined {
   const submodule = tradingSubmoduleOfferBySlug(slug);
   if (submodule) return submodule;
   for (const pack of Object.keys(VAULT_PACK_COURSES) as VaultPackKey[]) {
     const hit = VAULT_PACK_COURSES[pack].find((c) => c.plan === slug);
     if (hit) return hit;
+  }
+  return undefined;
+}
+
+function normalizeVaultCourseTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Resolve vault pack module thumbnail when API id/slug differs (e.g. Knight program picker). */
+export function vaultCourseByTitle(title: string): PlanOfferDef | undefined {
+  const target = normalizeVaultCourseTitle(title);
+  if (!target) return undefined;
+  for (const pack of Object.keys(VAULT_PACK_COURSES) as VaultPackKey[]) {
+    for (const course of VAULT_PACK_COURSES[pack]) {
+      const courseNorm = normalizeVaultCourseTitle(course.title);
+      if (courseNorm === target || courseNorm.includes(target) || target.includes(courseNorm)) {
+        return course;
+      }
+    }
+  }
+  for (const offer of allTradingSubmoduleOffers()) {
+    const offerNorm = normalizeVaultCourseTitle(offer.title);
+    if (offerNorm === target || offerNorm.includes(target) || target.includes(offerNorm)) {
+      return offer;
+    }
   }
   return undefined;
 }

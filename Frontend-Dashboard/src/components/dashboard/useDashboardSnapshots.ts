@@ -28,6 +28,8 @@ export type DashboardCourseLike = {
   meta?: string;
   statusText?: string;
   imageSrc?: string;
+  progressPct?: number;
+  unlocked?: boolean;
 };
 
 function safeJson<T>(raw: string | null): T | null {
@@ -114,11 +116,20 @@ export function useDashboardSnapshots({
         title: c.title,
         meta: c.meta ?? c.statusText,
         imageSrc: c.imageSrc,
-        progressPct: clampPct(progressMap[c.id] ?? 0),
+        progressPct: clampPct(c.progressPct ?? progressMap[c.id] ?? 0),
         lastOpenedTs: c.id === lastCourseId ? nowMinus(8) : c.id === activeProgramId ? nowMinus(3) : undefined
       }))
-      .filter((p) => p.progressPct > 0 || p.id === lastCourseId || p.id === activeProgramId)
+      .filter((p) => {
+        const course = courses.find((c) => c.id === p.id);
+        if (course?.unlocked) return true;
+        return p.progressPct > 0 || p.id === lastCourseId || p.id === activeProgramId;
+      })
       .sort((a, b) => (b.lastOpenedTs ?? 0) - (a.lastOpenedTs ?? 0));
+
+    const programStats = {
+      unlocked: courses.filter((c) => c.unlocked).length || programs.length,
+      inProgress: programs.filter((p) => p.progressPct > 0).length,
+    };
 
     const durationRaw = window.localStorage.getItem("dashboarded:syndicate-duration");
     const durationNum = durationRaw ? Number(durationRaw) : NaN;
@@ -203,6 +214,7 @@ export function useDashboardSnapshots({
 
     setSnap({
       programs,
+      programStats,
       syndicate,
       affiliate: {
         referralLink,
@@ -301,12 +313,20 @@ export function useDashboardSnapshots({
     const pullSyndicateLive = async () => {
       const token = getSyndicateAuthToken();
       let streakDays = 0;
-      if (token && syndicateKnightApi) {
+      let rows: ChallengeRow[] = [];
+
+      if (syndicateKnightApi) {
         try {
-          const pr = await fetchSyndicateProgress();
+          const progressP = token
+            ? fetchSyndicateProgress()
+            : Promise.resolve({ state: {}, streak_count: 0, last_activity_date: null });
+          const [pr, td] = await Promise.all([progressP, fetchChallengesToday(getSyndicateDeviceId())]);
           if (cancelled) return;
-          applySyncedStateFromServer(pr.state ?? {});
-          streakDays = pr.streak_count ?? 0;
+          if (token) {
+            applySyncedStateFromServer(pr.state ?? {});
+            streakDays = pr.streak_count ?? 0;
+          }
+          rows = td.results ?? [];
         } catch {
           /* offline */
         }
@@ -314,17 +334,6 @@ export function useDashboardSnapshots({
 
       const points = readSyndicatePointsTotal();
       const rank = computeSyndicateRankFromPoints(points);
-      let rows: ChallengeRow[] = [];
-      if (syndicateKnightApi) {
-        try {
-          const td = await fetchChallengesToday(getSyndicateDeviceId());
-          if (cancelled) return;
-          rows = td.results ?? [];
-        } catch {
-          /* same-origin / device missions may still be in local storage */
-        }
-      }
-
       const now = Date.now();
       const mission = computeMissionBoardStats(rows, now);
       const liveTitle = rows
@@ -401,6 +410,7 @@ export function useDashboardSnapshots({
     };
     const empty: DashboardSnapshots = {
       programs: [],
+      programStats: { unlocked: 0, inProgress: 0 },
       syndicate: emptySyndicate,
       affiliate: { clicks: 0, conversions: 0, earnings: 0, recent: [] },
       coreIntegrity: { integrityPct: 0, systemUptimeDays: 0, energyLevel: 0, loadSeries: [] },

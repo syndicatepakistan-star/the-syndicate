@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import {
+  clearPlaybackByteLengthCache,
+  prefetchPlaybackNearTime,
+  warmPlaybackHeader,
+} from "@/lib/streamPlaybackSeek";
 
 export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
 
@@ -74,6 +79,7 @@ export default function StreamHtmlVideoPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [buffering, setBuffering] = useState(false);
   const onMetadataRef = useRef(onMetadata);
   const startAtSecondsRef = useRef(startAtSeconds);
   const onTimeProgressRef = useRef(onTimeProgress);
@@ -81,6 +87,8 @@ export default function StreamHtmlVideoPlayer({
   const onSeekSegmentRef = useRef(onSeekSegment);
   const suppressNextSeekEventRef = useRef(false);
   const lastSeekStartRef = useRef(0);
+  const srcRef = useRef(src);
+  const seekPrefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Prevents duplicate resume seeks (metadata handler + late hydration effect). */
   const lateResumeAppliedKeyRef = useRef("");
   const appliedSrcRef = useRef<string | null>(null);
@@ -95,14 +103,20 @@ export default function StreamHtmlVideoPlayer({
   onTimeProgressRef.current = onTimeProgress;
   onPlaybackEndedRef.current = onPlaybackEnded;
   onSeekSegmentRef.current = onSeekSegment;
+  srcRef.current = src;
 
   useEffect(() => {
     setMeasured(null);
     setPlaybackError(null);
+    setBuffering(false);
     appliedSrcRef.current = null;
     appliedRevisionRef.current = -1;
     lateResumeAppliedKeyRef.current = "";
     initialResumeDoneRef.current = false;
+    if (seekPrefetchTimerRef.current) {
+      clearTimeout(seekPrefetchTimerRef.current);
+      seekPrefetchTimerRef.current = null;
+    }
   }, [sessionKey]);
 
   useEffect(() => {
@@ -138,6 +152,7 @@ export default function StreamHtmlVideoPlayer({
         initialResumeDoneRef.current = true;
         const target = Math.min(Math.max(0, start), Math.max(0, video.duration - 0.05));
         if (target > 0) {
+          prefetchPlaybackNearTime(srcRef.current, target, video.duration);
           suppressNextSeekEventRef.current = true;
           video.currentTime = target;
           lateResumeAppliedKeyRef.current = lateResumeKey(src, start);
@@ -155,7 +170,19 @@ export default function StreamHtmlVideoPlayer({
     };
     const onSeeking = () => {
       lastSeekStartRef.current = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      const target = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const playbackUrl = srcRef.current;
+      if (playbackUrl && duration > 0 && target > 0) {
+        if (seekPrefetchTimerRef.current) clearTimeout(seekPrefetchTimerRef.current);
+        seekPrefetchTimerRef.current = setTimeout(() => {
+          prefetchPlaybackNearTime(playbackUrl, target, duration);
+        }, 80);
+      }
     };
+    const onWaiting = () => setBuffering(true);
+    const onCanPlay = () => setBuffering(false);
+    const onPlaying = () => setBuffering(false);
     const onSeeked = () => {
       const to = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
@@ -186,6 +213,9 @@ export default function StreamHtmlVideoPlayer({
     video.addEventListener("ended", emitEnded);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("playing", onPlaying);
 
     return () => {
       video.removeEventListener("loadedmetadata", emitMetadata);
@@ -193,6 +223,9 @@ export default function StreamHtmlVideoPlayer({
       video.removeEventListener("ended", emitEnded);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("playing", onPlaying);
       video.removeEventListener("error", onError);
     };
   }, [sessionKey, src]);
@@ -218,12 +251,19 @@ export default function StreamHtmlVideoPlayer({
     if (isHotSwap) {
       setPlaybackError(null);
       suppressNextSeekEventRef.current = true;
+      const savedTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      if (savedTime > 0 && duration > 0) {
+        prefetchPlaybackNearTime(src, savedTime, duration);
+      }
       hotSwapVideoSrc(video, src);
       return;
     }
 
     lateResumeAppliedKeyRef.current = "";
     setPlaybackError(null);
+    clearPlaybackByteLengthCache(src);
+    warmPlaybackHeader(src);
     video.src = src;
     video.load();
   }, [src, srcRevision, sessionKey]);
@@ -308,11 +348,22 @@ export default function StreamHtmlVideoPlayer({
           {playbackError}
         </div>
       ) : null}
+      {buffering ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center bg-black/35"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span className="rounded-full border border-white/25 bg-black/55 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white/85">
+            Buffering…
+          </span>
+        </div>
+      ) : null}
       <video
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="auto"
+        preload="metadata"
         playsInline
         controlsList="nodownload"
         disablePictureInPicture

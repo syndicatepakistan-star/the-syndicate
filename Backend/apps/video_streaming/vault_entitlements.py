@@ -6,8 +6,8 @@ Money Mastery / Full tiers continue to unlock all published playlists via entitl
 from __future__ import annotations
 
 from accounts.vault_plan_catalog import vault_pack_for_module_slug, vault_parent_module_for_slug
+from apps.portal.commercial_access import user_has_money_mastery
 from apps.portal.models import UserPlanPurchase
-from apps.video_streaming.entitlements import user_stream_playlists_unlocked_by_entitlement
 from apps.video_streaming.models import StreamPlaylist
 
 
@@ -33,7 +33,7 @@ def user_has_vault_module_access(
         return False
     if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
         return True
-    if user_stream_playlists_unlocked_by_entitlement(user):
+    if user_has_money_mastery(user):
         return True
 
     module_slug = (module_slug or "").strip().lower()
@@ -64,7 +64,7 @@ def vault_unlocked_playlist_ids_for_user(user) -> set[int]:
     """Playlist IDs unlocked via vault plan purchases (not Money Mastery / Full)."""
     if not getattr(user, "is_authenticated", False):
         return set()
-    if user_stream_playlists_unlocked_by_entitlement(user):
+    if user_has_money_mastery(user):
         return set()
 
     purchased = purchased_vault_plan_slugs(user)

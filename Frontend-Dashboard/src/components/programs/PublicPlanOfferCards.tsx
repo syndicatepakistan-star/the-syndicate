@@ -27,6 +27,7 @@ import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { buildVaultModulePlaylistHref, fetchVaultPlaylistMap } from "@/lib/vaultPlaylistMap";
+import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 
 const PACK_SPOTLIGHT: Record<
   PlanOfferDef["accent"],
@@ -67,17 +68,20 @@ export function PublicPlanOfferCards({
   const [tradingModuleOffer, setTradingModuleOffer] = useState<PlanOfferDef | null>(null);
   const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
   const [accessTier, setAccessTier] = useState<string | null>(null);
+  const [moneyMasteryActive, setMoneyMasteryActive] = useState(false);
   const isLarge = size === "large";
 
   const reloadUnlockState = useCallback(async () => {
     if (!getAuthorizationHeader()) {
       setPurchasedSlugs(new Set());
       setAccessTier(null);
+      setMoneyMasteryActive(false);
       return;
     }
     const [slugs, identity] = await Promise.all([fetchPurchasedPlanSlugs(), fetchPortalIdentity()]);
     setPurchasedSlugs(new Set(slugs));
     setAccessTier(identity?.access_tier ?? null);
+    setMoneyMasteryActive(!!identity?.money_mastery_active);
   }, []);
 
   useEffect(() => {
@@ -135,7 +139,7 @@ export function PublicPlanOfferCards({
 
   const joinOffer = useCallback(
     async (offer: PlanOfferDef) => {
-      if (isVaultOfferUnlocked(offer, purchasedSet, accessTier)) {
+      if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
         void openUnlocked(offer);
         return;
       }
@@ -150,8 +154,14 @@ export function PublicPlanOfferCards({
         });
         if (result.status === "already_unlocked") {
           await reloadUnlockState();
-          await onAlreadyUnlocked?.(offer.plan);
-          router.push(checkoutReturnPath);
+          if (onAlreadyUnlocked) {
+            await onAlreadyUnlocked(offer.plan);
+          } else {
+            await navigateToAlreadyUnlockedProgram({
+              plan: offer.plan,
+              postAuthNext: checkoutReturnPath,
+            });
+          }
           return;
         }
         if (result.status === "error") {
@@ -165,15 +175,15 @@ export function PublicPlanOfferCards({
         setBusyPlan(null);
       }
     },
-    [accessTier, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState, router]
+    [accessTier, moneyMasteryActive, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState, router]
   );
 
   const renderOffer = (offer: PlanOfferDef) => {
     const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
-    const packUnlocked = vaultPack ? isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier) : false;
+    const packUnlocked = vaultPack ? isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier, moneyMasteryActive) : false;
     const showOpenOnParent =
       offer.openAction === "vault_picker" &&
-      (packUnlocked || isVaultOfferUnlocked(offer, purchasedSet, accessTier));
+      (packUnlocked || isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive));
 
     return (
       <PlanOfferCard
@@ -185,7 +195,7 @@ export function PublicPlanOfferCards({
         busy={busyPlan === offer.plan}
         highlighted={highlightedPack === offer.plan}
         actionLabel={
-          showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier)
+          showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
         }
         onDetails={() => setDetailOffer(offer)}
         onOpen={() => {
@@ -197,7 +207,7 @@ export function PublicPlanOfferCards({
             router.push(offer.openHref);
             return;
           }
-          if (isVaultOfferUnlocked(offer, purchasedSet, accessTier)) {
+          if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
             openUnlocked(offer);
             return;
           }
@@ -226,11 +236,11 @@ export function PublicPlanOfferCards({
         </div>
       ) : null}
       {isLarge ? (
-        <div className="flex w-full flex-col gap-8 overflow-visible lg:gap-10">
-          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-6 overflow-visible sm:grid-cols-2 sm:gap-8">
+        <div className="flex w-full max-w-full flex-col gap-4 overflow-x-clip sm:gap-8 lg:gap-10">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8">
             {PLAN_OFFERS_PRIMARY.map(renderOffer)}
           </div>
-          <div className="grid w-full grid-cols-1 items-stretch gap-6 overflow-visible sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
+          <div className="grid w-full max-w-full grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
             {PLAN_OFFERS_VAULT.map(renderOffer)}
           </div>
         </div>
@@ -245,6 +255,7 @@ export function PublicPlanOfferCards({
         busyPlan={busyPlan}
         purchasedSlugs={purchasedSet}
         accessTier={accessTier}
+        moneyMasteryActive={moneyMasteryActive}
         onClose={() => setVaultPackOffer(null)}
         onDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}
@@ -256,6 +267,7 @@ export function PublicPlanOfferCards({
         busyPlan={busyPlan}
         purchasedSlugs={purchasedSet}
         accessTier={accessTier}
+        moneyMasteryActive={moneyMasteryActive}
         onClose={() => setTradingModuleOffer(null)}
         onDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}

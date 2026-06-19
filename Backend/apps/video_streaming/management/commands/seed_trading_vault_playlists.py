@@ -46,7 +46,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         publish = bool(options["publish"])
         videos_created = 0
+        videos_updated = 0
         submodule_playlists = 0
+        submodule_playlists_updated = 0
         module_playlists = 0
 
         video_by_slug: dict[str, StreamVideo] = {}
@@ -54,6 +56,12 @@ class Command(BaseCommand):
         for submodule_slug, (title, filename) in sorted(TRADING_SUBMODULES.items()):
             video_title = f"{title} ({filename})"
             video = StreamVideo.objects.filter(title=video_title).first()
+            if not video:
+                video = (
+                    StreamVideo.objects.filter(title__endswith=f"({filename})")
+                    .order_by("id")
+                    .first()
+                )
             if not video:
                 video = StreamVideo.objects.create(
                     title=video_title,
@@ -65,6 +73,11 @@ class Command(BaseCommand):
                     show_in_membership=False,
                 )
                 videos_created += 1
+            elif video.title != video_title:
+                video.title = video_title
+                video.description = f"Trading vault lesson source file: {filename}"
+                video.save(update_fields=["title", "description", "updated_at"])
+                videos_updated += 1
             video_by_slug[submodule_slug] = video
 
             playlist = StreamPlaylist.objects.filter(vault_plan_slug=submodule_slug).first()
@@ -81,6 +94,11 @@ class Command(BaseCommand):
                     is_coming_soon=not publish,
                 )
                 submodule_playlists += 1
+            elif playlist.title != title:
+                playlist.title = title
+                playlist.description = f"Single lesson — {filename}"
+                playlist.save(update_fields=["title", "description", "updated_at"])
+                submodule_playlists_updated += 1
             StreamPlaylistItem.objects.get_or_create(
                 playlist=playlist,
                 stream_video=video,
@@ -121,7 +139,10 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"Trading vault seed complete. videos_created={videos_created} "
-                f"submodule_playlists={submodule_playlists} module_playlists={module_playlists} "
+                f"videos_updated={videos_updated} "
+                f"submodule_playlists={submodule_playlists} "
+                f"submodule_playlists_updated={submodule_playlists_updated} "
+                f"module_playlists={module_playlists} "
                 f"publish={publish}"
             )
         )

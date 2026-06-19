@@ -9,6 +9,7 @@ import {
   hasPendingCheckoutIntent,
   resumePendingCheckoutAfterAuth,
 } from "@/lib/post-auth-checkout";
+import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 
 /** Sends users who already have a session to the app so browser Back from `/` does not land on auth screens. */
@@ -41,7 +42,11 @@ export default function RedirectWhenAuthed() {
           if (cancelled) return;
           if (checkout.status === "checkout") return;
           if (checkout.status === "already_unlocked") {
-            router.replace(safeNext);
+            await navigateToAlreadyUnlockedProgram({
+              playlistId,
+              plan,
+              postAuthNext: safeNext,
+            });
             return;
           }
           return;

@@ -27,6 +27,7 @@ type Props = {
   busyPlan: CheckoutOfferKey | null;
   purchasedSlugs: ReadonlySet<string>;
   accessTier: string | null;
+  moneyMasteryActive?: boolean;
   onClose: () => void;
   onDetails: (offer: PlanOfferDef) => void;
   onUnlock: (offer: PlanOfferDef) => void;
@@ -39,6 +40,7 @@ export function PackVaultOfferModal({
   busyPlan,
   purchasedSlugs,
   accessTier,
+  moneyMasteryActive = false,
   onClose,
   onDetails,
   onUnlock,
@@ -70,7 +72,7 @@ export function PackVaultOfferModal({
   const alaCarteTotal = vaultPackAlaCarteTotal(packKey);
 
   const handlePrimary = (offer: PlanOfferDef) => {
-    if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier)) {
+    if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
       if (isVaultPackKey(offer.plan)) {
         return;
       }
@@ -80,7 +82,7 @@ export function PackVaultOfferModal({
     onUnlock(offer);
   };
 
-  const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier);
+  const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier, moneyMasteryActive);
   const isTradingPack = packKey === "trading_technical_analysis";
 
   const handleModuleOpen = (offer: PlanOfferDef) => {
@@ -166,7 +168,7 @@ export function PackVaultOfferModal({
               cardKind="pack"
               cardStats={resolveOfferCardStats(packOffer, "pack")}
               busy={busyPlan === packOffer.plan}
-              actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier)}
+              actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
               onDetails={() => onDetails(packOffer)}
               onOpen={() => handlePrimary(packOffer)}
             />
@@ -196,10 +198,10 @@ export function PackVaultOfferModal({
                   busy={busyPlan === offer.plan}
                   actionLabel={
                     isTradingPack
-                      ? isVaultOfferUnlocked(offer, purchasedSlugs, accessTier)
+                      ? isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)
                         ? "View lessons"
                         : "Browse lessons"
-                      : resolveOfferActionLabel(offer, purchasedSlugs, accessTier)
+                      : resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)
                   }
                   onDetails={() => onDetails(offer)}
                   onOpen={() => handleModuleOpen(offer)}

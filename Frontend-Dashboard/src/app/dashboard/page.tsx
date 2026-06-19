@@ -13,7 +13,9 @@ import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
 import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
+import { DashboardMediaWarmup } from "@/components/dashboard/DashboardMediaWarmup";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
+import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
 import LetterGlitch from "@/components/LetterGlitch";
@@ -23,12 +25,17 @@ import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { GoalsPanel } from "@/components/ui/GoalsPanel";
 import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
-import { SyndicateAiChallengePanel } from "@/components/SyndicateAiChallengePanel";
 import { MembershipContentHub } from "@/components/membership/MembershipContentHub";
 import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
 import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
+import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeLoadingShell";
 import { SupportSection } from "@/components/dashboard/SupportSection";
+import {
+  resetDashboardDocumentScroll,
+  resetDashboardShellScroll
+} from "@/lib/dashboardShellScroll";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
+import { PlanCheckoutSync } from "@/components/programs/PlanCheckoutSync";
 import { fetchMyCertificates } from "@/lib/certificates-api";
 import { fetchBillingPurchaseHistory, type StreamPlaylistPurchaseHistoryItem } from "@/lib/streaming-api";
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
@@ -44,11 +51,13 @@ import {
   writeDashboardProfileDisplayName
 } from "@/lib/dashboardProfileStorage";
 import { DASHBOARD_SHELL_NAV_EVENT, type DashboardShellNavEventDetail } from "@/lib/dashboardShellNavEvent";
+import { useUnlockedDashboardPrograms } from "@/hooks/useUnlockedDashboardPrograms";
 import {
   fetchKingProgramSelection,
   fetchPortalIdentity,
   getAuthorizationHeader,
   hasSimpleAuthSessionClient,
+  readKingProgramSelectionCache,
   resolveClientApiUrl,
   submitKingProgramSelection,
   STORAGE_SIMPLE_AUTH,
@@ -150,6 +159,14 @@ function QuickAccessGridFallback() {
 const QuickAccessGrid = dynamic(
   () => import("@/features/productivity/control-center/QuickAccessGrid").then((mod) => mod.QuickAccessGrid),
   { ssr: false, loading: () => <QuickAccessGridFallback /> }
+);
+
+const SyndicateAiChallengePanel = dynamic(
+  () =>
+    import("@/components/SyndicateAiChallengePanel").then((mod) => ({
+      default: mod.SyndicateAiChallengePanel,
+    })),
+  { ssr: false, loading: () => <SyndicateModeLoadingShell /> }
 );
 
 function cn(...parts: Array<string | false | null | undefined>) {
@@ -741,7 +758,6 @@ function MonkIcon({ kind }: { kind: MonkChallenge["key"] }) {
 function SyndicateModeSection() {
   return (
     <section
-      data-anim="in"
       className={cn(
         "syndicate-mode-section mt-0 flex min-h-0 w-full min-w-0 flex-col",
         "data-[mission-detail-open]:min-h-0 data-[mission-detail-open]:h-full data-[mission-detail-open]:flex-1"
@@ -1871,6 +1887,9 @@ export default function Page() {
     [portalUser]
   );
 
+  const unlockedProgramsEnabled = !!portalUser && authChecked && !isNavLocked("dashboard");
+  const { programs: unlockedDashboardPrograms } = useUnlockedDashboardPrograms(unlockedProgramsEnabled);
+
   const applyNavKey = useCallback(
     (key: string) => {
       if (key === "affiliate") {
@@ -1885,9 +1904,7 @@ export default function Page() {
         if (currentKey === key) {
           setNavKeyState(key);
           requestAnimationFrame(() => {
-            window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-            const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
-            if (shell) shell.scrollTop = 0;
+            resetDashboardShellScroll(rootRef.current);
           });
           return;
         }
@@ -1900,7 +1917,7 @@ export default function Page() {
         const href = qs ? `${pathname}?${qs}` : pathname;
         const currentHref = `${window.location.pathname}${window.location.search}`;
         if (currentHref !== href) {
-          window.history.pushState({ dashboardSection: key }, "", href);
+          window.history.replaceState({ dashboardSection: key }, "", href);
         }
         return;
       }
@@ -1980,6 +1997,7 @@ export default function Page() {
       /* ignore */
     }
     document.cookie = "simple_auth_session=; path=/; max-age=0; samesite=lax";
+    clearDashboardPublicBackSeed();
     window.location.replace("/");
   }, []);
 
@@ -2049,14 +2067,20 @@ export default function Page() {
       setKingSelectionError("");
       return;
     }
-    setKingSelectionLoading(true);
+    const cached = readKingProgramSelectionCache();
+    if (cached) {
+      setKingSelectionState(cached);
+      setKingSelectionLoading(false);
+    } else {
+      setKingSelectionLoading(true);
+    }
     setKingSelectionError("");
     void (async () => {
       try {
-        const state = await fetchKingProgramSelection();
+        const state = await fetchKingProgramSelection({ refresh: true });
         if (!cancelled) setKingSelectionState(state);
       } catch (e) {
-        if (!cancelled) {
+        if (!cancelled && !cached) {
           setKingSelectionError(e instanceof Error ? e.message : "Could not load The Knight program selector.");
         }
       } finally {
@@ -2172,10 +2196,15 @@ export default function Page() {
     }
   }, [nav]);
 
-  /** Browser back/forward: keep shell in sync with ?section=. */
+  /** Browser back/forward: sync section from URL; leaving dashboard goes to public home. */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const syncFromUrl = () => {
+      const path = window.location.pathname;
+      if (!path.startsWith("/dashboard")) {
+        router.replace("/");
+        return;
+      }
       const section = new URLSearchParams(window.location.search).get("section");
       if (section === "affiliate") {
         router.replace("/affiliate-portal");
@@ -2272,28 +2301,51 @@ export default function Page() {
     el.scrollTop = 0;
   }, [selectedNavKey, sidebarOpen]);
 
+  /** Pin document scroll on mount so a prior page scroll cannot offset the dashboard shell. */
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    resetDashboardShellScroll(rootRef.current);
+  }, []);
+
   /** Bounded shell sections: reset scroll so the sticky top bar stays visible on section change. */
   useLayoutEffect(() => {
     if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
-    if (shell) shell.scrollTop = 0;
+    resetDashboardShellScroll(rootRef.current);
   }, [selectedNavKey]);
 
-  /** Bounded shell (non–Syndicate Mode): lock document scroll on mobile so only the main panel scrolls. */
+  /** Bounded shell: lock document scroll so only the main gold-frame panel scrolls. */
   useEffect(() => {
-    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || selectedNavKey === "monk" || typeof window === "undefined") {
-      return;
-    }
-    const mq = window.matchMedia("(max-width: 1023px)");
-    if (!mq.matches) return;
-    const prevBody = document.body.style.overflow;
-    const prevHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
+
+    const html = document.documentElement;
+    const body = document.body;
+    html.classList.add("dashboard-shell-scroll-lock");
+    body.classList.add("dashboard-shell-scroll-lock");
+    resetDashboardShellScroll(rootRef.current);
+
+    const prevRestoration = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+
+    const pinDocumentScroll = () => {
+      if (
+        window.scrollY !== 0 ||
+        document.documentElement.scrollTop !== 0 ||
+        document.body.scrollTop !== 0
+      ) {
+        resetDashboardDocumentScroll();
+      }
+    };
+
+    window.addEventListener("scroll", pinDocumentScroll, { passive: true });
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", pinDocumentScroll);
+
     return () => {
-      document.body.style.overflow = prevBody;
-      document.documentElement.style.overflow = prevHtml;
+      window.removeEventListener("scroll", pinDocumentScroll);
+      vv?.removeEventListener("resize", pinDocumentScroll);
+      html.classList.remove("dashboard-shell-scroll-lock");
+      body.classList.remove("dashboard-shell-scroll-lock");
+      history.scrollRestoration = prevRestoration;
     };
   }, [selectedNavKey]);
 
@@ -2308,6 +2360,7 @@ export default function Page() {
   /** Overlay menu open: lock scroll so the page feels fixed behind the panel. */
   useEffect(() => {
     if (!isOverlaySidebarBp || !sidebarOpen) return;
+    resetDashboardDocumentScroll();
     const prevBody = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const root = rootRef.current;
@@ -2328,9 +2381,7 @@ export default function Page() {
         setSidebarOpen(false);
       }
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-        const shell = rootRef.current?.querySelector<HTMLElement>("[data-main-shell-scroll]");
-        if (shell) shell.scrollTop = 0;
+        resetDashboardShellScroll(rootRef.current);
       });
     },
     [isOverlaySidebarBp, isCompactMobileUi]
@@ -2425,10 +2476,7 @@ export default function Page() {
     [courses]
   );
 
-  const dashboardCoursesForSnapshots = useMemo(
-    () => courses.map((c) => ({ id: c.id, title: c.title, meta: c.meta, statusText: c.statusText, imageSrc: c.imageSrc })),
-    [courses]
-  );
+  const dashboardCoursesForSnapshots = useMemo(() => unlockedDashboardPrograms, [unlockedDashboardPrograms]);
 
   const handleChromaCourseSelect = useCallback(
     (id: string) => {
@@ -2468,7 +2516,7 @@ export default function Page() {
     if (!rootRef.current) return;
 
     const ctx = gsap.context(() => {
-      gsap.set("[data-anim='in']", { opacity: 0, y: 10 });
+      gsap.set("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])", { opacity: 0, y: 10 });
       gsap.set("[data-anim='left']", { opacity: 0, x: -18 });
       gsap.set("[data-anim='right']", { opacity: 0, x: 18 });
       /* Main column content must never be hidden by intro tweens (video has no data-anim). */
@@ -2480,7 +2528,7 @@ export default function Page() {
       });
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
-      tl.to("[data-anim='in']", { opacity: 1, y: 0, stagger: 0.06 }, 0)
+      tl.to("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])", { opacity: 1, y: 0, stagger: 0.06 }, 0)
         .to("[data-anim='left']", { opacity: 1, x: 0, stagger: 0.05 }, 0.05)
         .to("[data-anim='right']", { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
 
@@ -2838,8 +2886,8 @@ export default function Page() {
       className={cn(
         "dashboard-hamburger-chrome relative min-h-screen hud-void hud-scanlines hud-noise overflow-x-hidden lg:h-screen",
         usesBoundedMobileShell
-          ? "flex w-full flex-col overflow-hidden no-scrollbar max-lg:h-[100svh] max-lg:max-h-[100svh] min-h-0 lg:h-screen lg:max-h-screen"
-          : "w-screen overflow-y-auto lg:h-screen lg:overflow-hidden",
+          ? "flex w-full max-w-full flex-col overflow-x-clip overflow-y-hidden no-scrollbar max-lg:h-[100dvh] max-lg:max-h-[100dvh] min-h-0 lg:h-screen lg:max-h-screen"
+          : "w-full max-w-full overflow-x-clip overflow-y-auto lg:h-screen lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
         isIpadProPortraitUi && "dashboard-ipad-pro-ui",
@@ -2848,6 +2896,9 @@ export default function Page() {
       )}
     >
       <PlaylistCheckoutSync />
+      <PlanCheckoutSync />
+      <DashboardMediaWarmup />
+      <DashboardBackToPublic />
       {portalUser?.king_program_selection_required ? (
         <KingProgramUnlockOverlay
           state={kingSelectionState}
@@ -2871,7 +2922,7 @@ export default function Page() {
             ref={topbarRef}
             data-anim="in"
             className={cn(
-              "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-[12vh]",
+              "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke-strong premium-navbar dashboard-shell-surface-strong relative overflow-visible border fluid-nav-pl fluid-nav-pr fluid-nav-py max-lg:min-h-0",
               "grid max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-lg:items-center max-lg:gap-x-2 max-lg:gap-y-2",
               "max-lg:grid-rows-[auto_auto]",
         isMobileNavUi && isIpadProPortraitUi && "dashboard-ipad-pro-nav max-lg:!py-2 max-lg:gap-y-1",
@@ -3345,7 +3396,7 @@ export default function Page() {
             data-dashboard-main-shell
             data-dashboard-video-shell
             className={cn(
-              "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative grid min-h-0 w-full min-w-0 max-w-none grid-cols-1 grid-rows-1 self-stretch overflow-hidden border border-[color:var(--gold-neon-border-mid)] bg-transparent fluid-section-p",
+              "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative grid min-h-0 w-full min-w-0 max-w-full grid-cols-1 grid-rows-1 self-stretch overflow-hidden border border-[color:var(--gold-neon-border-mid)] bg-transparent",
               "col-span-12",
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
               isOverlaySidebarBp &&
@@ -3358,7 +3409,9 @@ export default function Page() {
               selectedNavKey === "monk" && "syndicate-main-shell min-h-0 flex-1",
               selectedNavKey === "monk"
                 ? "px-0 pt-1 pb-0 sm:pt-1.5 sm:pb-0"
-                : "fluid-section-p"
+                : usesBoundedShellChrome
+                  ? "max-lg:p-0 max-lg:pt-1 lg:fluid-section-p"
+                  : "fluid-section-p"
             )}
           >
             <DashboardMainVideoBackground opacity={0.9} />
@@ -3501,7 +3554,7 @@ export default function Page() {
                   <>
                     <section
                       aria-label="Featured instructor programs"
-                      className="mb-6 w-full shrink-0 scroll-mt-2 md:mb-8"
+                      className="mb-3 w-full max-w-full shrink-0 scroll-mt-2 md:mb-8 max-lg:overflow-hidden"
                     >
                       <InstructorSlideshow showPanelBackgroundVideo={false} />
                     </section>

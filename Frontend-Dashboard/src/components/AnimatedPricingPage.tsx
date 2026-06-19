@@ -6,6 +6,7 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
+import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
 import { MobileReadMoreText } from '@/components/MobileReadMoreText'
@@ -406,12 +407,10 @@ export function PricingPage({
         postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
       })
       if (result.status === 'already_unlocked') {
-        const target = plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs'
-        if (typeof window !== 'undefined') {
-          window.location.assign(target)
-        } else {
-          router.push(target)
-        }
+        await navigateToAlreadyUnlockedProgram({
+          plan,
+          postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+        })
         return
       }
       if (result.status === 'error') {

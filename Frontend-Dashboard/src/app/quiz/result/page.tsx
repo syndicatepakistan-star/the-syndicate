@@ -25,6 +25,7 @@ import {
 import {
   courseActionButtonTheme,
   resolveCourseNeonTheme,
+  resolveWeaponNeonTheme,
   type CourseNeonTheme,
 } from "@/lib/quizResultCourseNeon";
 
@@ -182,12 +183,13 @@ function renderNeonCourseLine(
   displayLabel: string,
   courseValue: string,
   category: ArchetypeMapLineCategory,
-  loginEmail: string
+  loginEmail: string,
+  rowThemeOverride?: CourseNeonTheme
 ) {
-  const rowTheme = resolveCourseNeonTheme(displayLabel);
+  const rowTheme = rowThemeOverride ?? resolveCourseNeonTheme(displayLabel);
   const isFree =
     category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
-  const btnTheme = courseActionButtonTheme(displayLabel, isFree);
+  const btnTheme = courseActionButtonTheme(displayLabel, isFree, rowThemeOverride);
   return (
     <p
       key={key}
@@ -204,15 +206,16 @@ function renderExecutionStackCourseLine(
   rawCourse: string,
   courseValue: string,
   category: ArchetypeMapLineCategory,
-  loginEmail: string
+  loginEmail: string,
+  rowThemeOverride?: CourseNeonTheme
 ) {
   const access = parseStackCourseAccess(rawCourse);
-  const rowTheme = resolveCourseNeonTheme(courseValue);
+  const rowTheme = rowThemeOverride ?? resolveCourseNeonTheme(courseValue);
   const isFree =
     access === "free" ||
     category === "free_psychology" ||
     isFreeTicketPsychologyCourse(courseValue);
-  const btnTheme = courseActionButtonTheme(courseValue, isFree);
+  const btnTheme = courseActionButtonTheme(courseValue, isFree, rowThemeOverride);
   return (
     <p
       key={key}
@@ -231,6 +234,7 @@ function renderExecutionStackSectionContent(
   loginEmail: string
 ) {
   let stackCategory: ExecutionStackLineCategory = "other";
+  let weaponRowIndex = 0;
   return normalizeExecutionStackLines(content).map((line, idx) => {
     const headerCategory = classifyExecutionStackLine(line);
     if (headerCategory) {
@@ -256,24 +260,30 @@ function renderExecutionStackSectionContent(
       const rawCourse = line.replace("• Course:", "").trim();
       const courseValue = parseStackCourseTitle(rawCourse);
       const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
+      const weaponTheme =
+        stackCategory === "weapon" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
       return renderExecutionStackCourseLine(
         `${sectionTitle}-${idx}`,
         rawCourse,
         courseValue,
         actionCategory,
-        loginEmail
+        loginEmail,
+        weaponTheme
       );
     }
     if (line.startsWith("• ")) {
       const rawCourse = line.replace("• ", "").trim();
       const courseValue = parseStackCourseTitle(rawCourse);
       const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
+      const weaponTheme =
+        stackCategory === "weapon" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
       return renderExecutionStackCourseLine(
         `${sectionTitle}-${idx}`,
         rawCourse,
         courseValue,
         actionCategory,
-        loginEmail
+        loginEmail,
+        weaponTheme
       );
     }
     const keyPrefixes = ["Why:"];
@@ -300,6 +310,7 @@ function renderArchetypeMapSectionContent(
   loginEmail: string
 ) {
   let category: ArchetypeMapLineCategory = "other";
+  let weaponRowIndex = 0;
   return content.map((line, idx) => {
     const headerCategory = classifyArchetypeMapLine(line);
     if (headerCategory) {
@@ -312,12 +323,15 @@ function renderArchetypeMapSectionContent(
     }
     if (line.startsWith("• ")) {
       const courseValue = line.replace("• ", "").trim();
+      const weaponTheme =
+        category === "business" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
       return renderNeonCourseLine(
         `${sectionTitle}-${idx}`,
         courseValue,
         courseValue,
         category,
-        loginEmail
+        loginEmail,
+        weaponTheme
       );
     }
     return (

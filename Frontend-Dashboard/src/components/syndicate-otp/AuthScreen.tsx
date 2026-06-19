@@ -25,6 +25,7 @@ import {
   hasPendingCheckoutIntent,
   resumePendingCheckoutAfterAuth,
 } from "@/lib/post-auth-checkout";
+import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import {
   resolvePostOtpAppRedirect,
   syndicateOtpLoginHref,
@@ -56,6 +57,8 @@ type ApiPayload = {
   signup_token?: string;
   checkout_url?: string;
   session_id?: string;
+  is_unlocked?: boolean;
+  already_purchased?: boolean;
   otp_required?: boolean;
   email?: string;
   code?: string;
@@ -700,6 +703,17 @@ export default function AuthScreen({
           ...affiliateCheckoutFields(),
         };
         const checkout = await postJson("/api/auth/checkout/create-session/", checkoutPayload);
+        if (
+          checkout.response.ok &&
+          (checkout.data.is_unlocked || checkout.data.already_purchased)
+        ) {
+          await navigateToAlreadyUnlockedProgram({
+            playlistId: prefilledPlaylistId,
+            plan: normalizedPlan,
+            postAuthNext: normalizedPostLoginNext || "/dashboard?section=programs",
+          });
+          return;
+        }
         if (!checkout.response.ok) {
           throw new Error(checkout.data.error || "Could not create checkout session.");
         }
@@ -789,7 +803,11 @@ export default function AuthScreen({
           });
           if (resumed.status === "checkout") return;
           if (resumed.status === "already_unlocked") {
-            window.location.replace(nextUrl);
+            await navigateToAlreadyUnlockedProgram({
+              playlistId: prefilledPlaylistId,
+              plan: normalizedPlan,
+              postAuthNext: normalizedPostLoginNext || "/dashboard?section=programs",
+            });
             return;
           }
           if (resumed.status === "error") {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.contrib.auth.models import AbstractBaseUser
 
+from apps.portal.commercial_access import user_has_active_knight_subscription, user_has_money_mastery
 from apps.portal.models import KingProgramSelection, UserDashboardEntitlement
 
 
@@ -40,16 +41,17 @@ def king_selection_completed(user: AbstractBaseUser) -> bool:
 
 
 def king_selection_required(user: AbstractBaseUser) -> bool:
-    return user_entitlement_tier(user) == UserDashboardEntitlement.AccessTier.KING and not king_selection_completed(user)
+    """Knight-only buyers pick 5 standalone programs; Money Mastery skips this gate."""
+    if not user_has_active_knight_subscription(user):
+        return False
+    if user_has_money_mastery(user):
+        return False
+    return not king_selection_completed(user)
 
 
 def user_has_knight_tier_access(user: AbstractBaseUser) -> bool:
-    """The Knight (king tier) unlocks Syndicate Mode and the Membership section."""
-    tier = user_entitlement_tier(user)
-    return tier in (
-        UserDashboardEntitlement.AccessTier.KING,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    """The Knight unlocks Syndicate Mode and the Membership section while subscription is active."""
+    return user_has_active_knight_subscription(user)
 
 
 def king_allowed_course_ids(user: AbstractBaseUser) -> set[int]:

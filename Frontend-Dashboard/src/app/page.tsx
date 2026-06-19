@@ -169,45 +169,47 @@ export default async function Home() {
         </div>
         <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
       </section>
-      <section className="relative flex h-auto min-h-0 w-full min-w-0 items-start overflow-hidden bg-[#050508] px-0 py-4 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#050508]">
+      <section className="home-mobile-vh-section relative flex h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-3 sm:h-[100dvh] sm:min-h-[100dvh] sm:items-center sm:py-0">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <ProgramsSectionBackground />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-black/45 max-sm:block sm:bg-black/72" />
+        <div className="pointer-events-none absolute inset-0 hidden bg-black/72 sm:block" />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08] max-sm:hidden"
           style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }}
         />
 
-        <div className="relative z-10 h-full w-full px-0 pt-6 sm:pt-10 md:pt-12">
-          <h2 className="mb-3 mt-2 text-center text-2xl font-black uppercase sm:mb-12 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
+        <div className="relative z-10 flex min-h-0 w-full max-w-full flex-1 flex-col px-0 pt-2 sm:pt-10 md:pt-12">
+          <h2 className="mb-2 shrink-0 text-center text-xl font-black uppercase sm:mb-12 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
             <span className={publicHeadingLightning('amber')}>
               SYNDICATE ELITE PROGRAMS
             </span>
           </h2>
-          <HomeDomeGallerySection
-            images={programGalleryImages}
-            fit={0.58}
-            minRadius={260}
-            segments={18}
-            dragSensitivity={14}
-            dragDampening={3.6}
-            maxVerticalRotationDeg={32}
-            grayscale={false}
-            autoRotateSpeedDeg={2.4}
-            tileInsetPx={12}
-            navigateOnClick
-          />
+          <div className="min-h-0 w-full max-w-full flex-1 overflow-hidden">
+            <HomeDomeGallerySection
+              images={programGalleryImages}
+              fit={0.58}
+              minRadius={260}
+              segments={18}
+              dragSensitivity={14}
+              dragDampening={3.6}
+              maxVerticalRotationDeg={32}
+              grayscale={false}
+              autoRotateSpeedDeg={2.4}
+              tileInsetPx={12}
+              navigateOnClick
+            />
+          </div>
         </div>
       </section>
 
-      <section className="relative h-auto min-h-0 w-full min-w-0 overflow-hidden bg-black py-8 sm:h-[100dvh] sm:min-h-[100dvh] sm:py-0">
+      <section className="home-mobile-vh-section relative flex h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full min-w-0 flex-col overflow-hidden bg-black py-4 sm:py-0">
         <div className="pointer-events-none absolute inset-0">
           <DeferredMp4Background src="/assets/video.mp4" className="h-full w-full object-cover opacity-24" />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-black/68" />
-        <div className="relative z-10 mx-auto flex h-auto w-full max-w-[1700px] flex-col justify-start px-4 py-0 sm:h-full sm:justify-center sm:px-6 sm:py-12 md:px-8">
-          <div className="space-y-4 sm:space-y-5">
+        <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col justify-start overflow-y-auto overflow-x-clip px-3 py-0 sm:h-full sm:justify-center sm:overflow-visible sm:px-6 sm:py-12 md:px-8">
+          <div className="w-full max-w-full space-y-3 sm:space-y-5">
             <h3
               className={`${publicHeadingLightning('amber')} mb-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-4 sm:text-3xl md:text-4xl`}
             >

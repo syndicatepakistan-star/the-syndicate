@@ -25,6 +25,7 @@ type Props = {
   busyPlan: CheckoutOfferKey | null;
   purchasedSlugs: ReadonlySet<string>;
   accessTier: string | null;
+  moneyMasteryActive?: boolean;
   onClose: () => void;
   onDetails: (offer: PlanOfferDef) => void;
   onUnlock: (offer: PlanOfferDef) => void;
@@ -36,6 +37,7 @@ export function TradingModuleVaultModal({
   busyPlan,
   purchasedSlugs,
   accessTier,
+  moneyMasteryActive = false,
   onClose,
   onDetails,
   onUnlock,
@@ -65,10 +67,10 @@ export function TradingModuleVaultModal({
   const lessons = tradingSubmoduleOffersForModule(moduleSlug);
   const moduleStats = resolveOfferCardStats(moduleOffer, "module");
   const submoduleCount = moduleStats?.mode === "module" ? moduleStats.lessonCount : lessons.length;
-  const moduleUnlocked = isVaultOfferUnlocked(moduleOffer, purchasedSlugs, accessTier);
+  const moduleUnlocked = isVaultOfferUnlocked(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive);
 
   const handlePrimary = (offer: PlanOfferDef) => {
-    if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier)) {
+    if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
       onOpenUnlocked(offer);
       return;
     }
@@ -143,7 +145,7 @@ export function TradingModuleVaultModal({
               cardKind="module"
               cardStats={moduleStats}
               busy={busyPlan === moduleOffer.plan}
-              actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier)}
+              actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
               onDetails={() => onDetails(moduleOffer)}
               onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
             />
@@ -171,7 +173,7 @@ export function TradingModuleVaultModal({
                   cardKind="module"
                   cardStats={resolveOfferCardStats(offer, "module")}
                   busy={busyPlan === offer.plan}
-                  actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier)}
+                  actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)}
                   onDetails={() => onDetails(offer)}
                   onOpen={() => handlePrimary(offer)}
                 />

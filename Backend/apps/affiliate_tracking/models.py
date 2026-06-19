@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
+from .withdrawal_status import WITHDRAWAL_STATUS_CHOICES, ensure_withdrawal_transferred_fields
+
 
 class ApiToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="affiliate_api_tokens")
@@ -99,6 +101,7 @@ class SaleEvent(models.Model):
     # Gross checkout amount paid by the buyer (optional for legacy rows).
     purchase_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     subscription_name = models.CharField(max_length=280, blank=True, default="")
+    stripe_checkout_session_id = models.CharField(max_length=255, blank=True, default="", db_index=True)
     currency = models.CharField(max_length=8, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -106,6 +109,13 @@ class SaleEvent(models.Model):
         indexes = [
             models.Index(fields=["referral", "visitor_id"]),
             models.Index(fields=["referral", "created_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["referral", "stripe_checkout_session_id"],
+                condition=~models.Q(stripe_checkout_session_id=""),
+                name="affiliate_sale_unique_stripe_checkout_session",
+            ),
         ]
 
 
@@ -120,15 +130,16 @@ class WithdrawalRequest(models.Model):
     branch_name = models.CharField(max_length=160, blank=True, default="")
     requested_amount = models.DecimalField(max_digits=12, decimal_places=2)
     earnings_snapshot = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=24, default="pending")
+    status = models.CharField(max_length=24, choices=WITHDRAWAL_STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
     transferred_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Set automatically when status changes to complete (admin wire sent).",
+        help_text="Set automatically when status is marked transferred / paid (admin wire sent).",
     )
 
     def save(self, *args, **kwargs):
+        old_status = None
         if self.pk:
             prev = (
                 WithdrawalRequest.objects.filter(pk=self.pk)
@@ -136,12 +147,14 @@ class WithdrawalRequest(models.Model):
                 .first()
             )
             if prev is not None:
-                old_status = (prev[0] or "").strip().lower()
-                new_status = (self.status or "").strip().lower()
-                if new_status == "complete" and old_status != "complete" and not self.transferred_at:
-                    from django.utils import timezone
-
-                    self.transferred_at = timezone.now()
+                old_status = prev[0]
+                if not self.transferred_at and prev[1]:
+                    self.transferred_at = prev[1]
+        self.status, self.transferred_at = ensure_withdrawal_transferred_fields(
+            status=self.status,
+            transferred_at=self.transferred_at,
+            old_status=old_status,
+        )
         super().save(*args, **kwargs)
 
     class Meta:

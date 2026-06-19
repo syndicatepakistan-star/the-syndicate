@@ -152,7 +152,7 @@ class StreamVideoPlaybackFileView(APIView):
         storage_key = (getattr(video.original_video, "name", None) or "").strip()
         if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket and storage_key:
             return streaming_s3_original_response(request, bucket=bucket, key=storage_key)
-        return file_response_for_local_original(video)
+        return file_response_for_local_original(video, request)
 
     def head(self, request, video_id: int, *args, **kwargs):
         _, video = self._user_video_for_playback_token(request, video_id)
@@ -272,11 +272,9 @@ class StreamPlaylistDetailView(generics.RetrieveAPIView):
                 unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
                 qs = qs.filter(Q(price__lte=0) | Q(id__in=unlocked_ids))
             else:
-                try:
-                    ent = user.dashboard_entitlement
-                except UserDashboardEntitlement.DoesNotExist:
-                    ent = None
-                if ent is not None and ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+                from apps.portal.commercial_access import user_has_active_knight_subscription, user_has_money_mastery
+
+                if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
                     unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
                     qs = qs.filter(Q(price__lte=0) | Q(id__in=unlocked_ids))
         return (
@@ -319,7 +317,17 @@ def vault_playlist_map_view(request):
             )
         )
     )
-    rows = StreamPlaylistListSerializer(qs, many=True, context={"request": request}).data
+    user = getattr(request, "user", None)
+    if user is not None and getattr(user, "is_authenticated", False):
+        reconcile_dashboard_entitlement_from_plan_purchases(user)
+        unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
+    else:
+        unlocked_ids = set()
+    rows = StreamPlaylistListSerializer(
+        qs,
+        many=True,
+        context={"request": request, "unlocked_playlist_ids": unlocked_ids},
+    ).data
     mapping = {}
     for row in rows:
         slug = str(row.get("vault_plan_slug") or "").strip().lower()
@@ -536,6 +544,12 @@ class StreamPlaylistCheckoutSuccessView(APIView):
             return Response({"detail": "Invalid playlist metadata."}, status=status.HTTP_400_BAD_REQUEST)
         playlist = get_object_or_404(StreamPlaylist, pk=int(playlist_id_raw))
 
+        already_purchased = StreamPlaylistPurchase.objects.filter(
+            user=request.user,
+            playlist=playlist,
+            status=StreamPlaylistPurchase.Status.PAID,
+        ).exists()
+
         amount_total = getattr(session, "amount_total", None)
         amount_paid = Decimal(str(amount_total or 0)) / Decimal("100")
         currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
@@ -574,7 +588,12 @@ class StreamPlaylistCheckoutSuccessView(APIView):
             except Exception:
                 logger.exception("Playlist checkout succeeded but affiliate sale attribution failed")
         return Response(
-            {"message": "Playlist unlocked successfully.", "playlist_id": playlist.id, "is_unlocked": True},
+            {
+                "message": "Playlist unlocked successfully.",
+                "playlist_id": playlist.id,
+                "is_unlocked": True,
+                "already_purchased": already_purchased,
+            },
             status=status.HTTP_200_OK,
         )
 

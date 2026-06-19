@@ -46,6 +46,10 @@ import {
   resolveDashboardAvatarDisplayUrl
 } from "@/lib/dashboardProfileStorage";
 import { syndicateUserStorageKey as ls } from "@/lib/syndicateStorageKeys";
+import {
+  resetDashboardShellScroll,
+  scrollIntoDashboardMainShell
+} from "@/lib/dashboardShellScroll";
 import { SyndicateBonusMissionAlert } from "@/components/dashboard/SyndicateBonusMissionAlert";
 import { MegaMissionCompromisedFrame } from "@/components/dashboard/MegaMissionCompromisedFrame";
 import { MegaMissionEmergencyAlert } from "@/components/dashboard/MegaMissionEmergencyAlert";
@@ -822,17 +826,7 @@ function SyndicateHelpAnchoredPopover({
 
 /** Reset in-shell scroll only — avoid scrollIntoView / window scroll (breaks Syndicate layout). */
 function resetSyndicateMissionScroll() {
-  if (typeof document === "undefined") return;
-  const inSyndicate = document.documentElement.classList.contains("syndicate-mode-active");
-  if (!inSyndicate) {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  }
-  document.querySelectorAll("[data-main-shell-scroll], [data-syndicate-mission-scroll]").forEach((el) => {
-    const node = el as HTMLElement;
-    node.scrollTop = 0;
-  });
+  resetDashboardShellScroll();
 }
 
 function setSyndicateMissionDetailLayoutOpen(open: boolean) {
@@ -2269,47 +2263,21 @@ export function SyndicateAiChallengePanel() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        let res = await fetchSyndicateProgress();
-        if (cancelled) return;
-        applySyncedStateFromServer(res.state ?? {});
-        if (Object.keys(res.state ?? {}).length === 0) {
-          const local = collectSyncedState();
-          if (Object.keys(local).length > 0) {
-            res = await patchSyndicateProgress(local);
-            applySyncedStateFromServer(res.state ?? {});
-          }
-        }
-        if (!cancelled) {
-          setStreak(res.streak_count);
-          setLastActivityIso(res.last_activity_date);
-          setStreakBeforeBreakHint(streakBeforeBreakHintForProgress(res.streak_count, res.state));
-        }
-      } catch {
-        /* offline / network — keep namespaced localStorage */
-      }
-      if (cancelled) return;
-      setMounted(true);
-      setPointsTotal(loadTotalPoints());
-      setDoneIds(loadDoneIds());
-      setMissionReminders(loadMissionReminders());
-      setMissionStartMap(loadMissionStartTimes());
-      setMissionScores(loadMissionScores());
-      setMissionAwardedMap(loadMissionAwardedPoints());
-      setMissionCompletionLog(loadMissionCompletionLog());
-      backfillPointsHistoryFromCompletionLogIfEmpty();
-      setMissionMissedLog(loadMissionMissedLog());
-      setRedeemedRewards(loadRedeemedRewards());
-      setPoundsBalance(loadPoundsBalance());
-      if (typeof window !== "undefined") {
-        refreshFromShellProfile();
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    setMounted(true);
+    setPointsTotal(loadTotalPoints());
+    setDoneIds(loadDoneIds());
+    setMissionReminders(loadMissionReminders());
+    setMissionStartMap(loadMissionStartTimes());
+    setMissionScores(loadMissionScores());
+    setMissionAwardedMap(loadMissionAwardedPoints());
+    setMissionCompletionLog(loadMissionCompletionLog());
+    backfillPointsHistoryFromCompletionLogIfEmpty();
+    setMissionMissedLog(loadMissionMissedLog());
+    setRedeemedRewards(loadRedeemedRewards());
+    setPoundsBalance(loadPoundsBalance());
+    if (typeof window !== "undefined") {
+      refreshFromShellProfile();
+    }
   }, [refreshFromShellProfile]);
 
   useEffect(() => {
@@ -2340,7 +2308,6 @@ export function SyndicateAiChallengePanel() {
       }
     };
     const t = window.setInterval(() => void pull(), 120_000);
-    void pull();
     const onVis = () => {
       if (document.visibilityState === "visible") void pull();
     };
@@ -2500,7 +2467,7 @@ export function SyndicateAiChallengePanel() {
     setShowStatsProfile(false);
     setSyndicateView("dashboard");
     window.setTimeout(() => {
-      bonusMissionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollIntoDashboardMainShell(bonusMissionSectionRef.current, { behavior: "smooth", block: "start" });
     }, 200);
   }, []);
 
@@ -2880,35 +2847,68 @@ export function SyndicateAiChallengePanel() {
     [completedAgentTodayCount, completedCustomTodayCount]
   );
 
+  const applyProgressFromServer = useCallback(async () => {
+    try {
+      let res = await fetchSyndicateProgress();
+      applySyncedStateFromServer(res.state ?? {});
+      if (Object.keys(res.state ?? {}).length === 0) {
+        const local = collectSyncedState();
+        if (Object.keys(local).length > 0) {
+          res = await patchSyndicateProgress(local);
+          applySyncedStateFromServer(res.state ?? {});
+        }
+      }
+      setStreak(res.streak_count);
+      setLastActivityIso(res.last_activity_date);
+      setStreakBeforeBreakHint(streakBeforeBreakHintForProgress(res.streak_count, res.state));
+      setPointsTotal(loadTotalPoints());
+      setDoneIds(loadDoneIds());
+      setMissionReminders(loadMissionReminders());
+      setMissionCompletionLog(loadMissionCompletionLog());
+      backfillPointsHistoryFromCompletionLogIfEmpty();
+    } catch {
+      /* offline / network — keep namespaced localStorage */
+    }
+  }, []);
+
   const loadFast = useCallback(async () => {
     setError(null);
     setBusy("load");
-    try {
-      const device = getDeviceId();
-      const tokenBefore = getSyndicateAuthToken();
-      const td = await fetchChallengesTodayUntilComplete(device, {
-        onPartial: (partial) => {
-          const list = partial.results ?? [];
-          setRows(list);
-          setDailyBatchStreaming(partial.generating === true && partial.batch_complete === false);
-          if (list.length > 0) setBusy(null);
-        }
-      });
-      setDailyBatchStreaming(false);
-      const list = td.results ?? [];
-      setRows(list);
-      if (list.length > 0) {
-        setBusy(null);
-      }
+    const device = getDeviceId();
+    const tokenBefore = getSyndicateAuthToken();
 
+    const onPartialChallenges = (partial: Awaited<ReturnType<typeof fetchChallengesTodayUntilComplete>>) => {
+      const list = partial.results ?? [];
+      setRows(list);
+      setDailyBatchStreaming(partial.generating === true && partial.batch_complete === false);
+      if (list.length > 0) setBusy(null);
+    };
+
+    const loadMindsetAndAdmin = async () => {
       const [stRes, at] = await Promise.all([
         fetch(`${API_BASE}/mindset/status/`, { headers: getSyndicateAuthHeaders(false) }),
-        fetchAdminTasksActive(device).catch(() => ({ results: [] as AdminTaskRow[] } as const))
+        fetchAdminTasksActive(device).catch(() => ({ results: [] as AdminTaskRow[] } as const)),
       ]);
       ensureSyndicateSessionOrRedirect(stRes, !!tokenBefore);
-      const st = await stRes.json();
+      const st = (await stRes.json()) as { ready?: boolean };
       if ("unauthorized" in at && at.unauthorized) adminTasksPollPausedRef.current = true;
       setAdminTasks(at.results ?? []);
+      return st;
+    };
+
+    try {
+      const [td, st] = await Promise.all([
+        fetchChallengesTodayUntilComplete(device, {
+          onPartial: onPartialChallenges,
+          returnEarlyWhenPartial: true,
+        }),
+        Promise.all([applyProgressFromServer(), loadMindsetAndAdmin()]).then(([, mindset]) => mindset),
+      ]);
+
+      setDailyBatchStreaming(td.generating === true && td.batch_complete === false);
+      const list = td.results ?? [];
+      setRows(list);
+      if (list.length > 0) setBusy(null);
 
       if (!st.ready) {
         setError(
@@ -2929,7 +2929,7 @@ export function SyndicateAiChallengePanel() {
     } finally {
       setBusy(null);
     }
-  }, []);
+  }, [applyProgressFromServer]);
 
   useEffect(() => {
     if (initialLoadOnceRef.current) return;
@@ -3254,7 +3254,7 @@ export function SyndicateAiChallengePanel() {
     if (typeof document !== "undefined" && scrollTargetId) {
       const el = document.getElementById(scrollTargetId);
       if (el instanceof HTMLElement) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        scrollIntoDashboardMainShell(el, { behavior: "smooth", block: "center" });
       }
     }
   }
@@ -3679,7 +3679,7 @@ export function SyndicateAiChallengePanel() {
   const openStreakRestoreSection = useCallback(() => {
     setShowStatsProfile(true);
     window.setTimeout(() => {
-      streakRestoreSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollIntoDashboardMainShell(streakRestoreSectionRef.current, { behavior: "smooth", block: "start" });
     }, 160);
   }, []);
   const selectedAlreadyDone = selected ? doneIds.has(selected.id) : false;

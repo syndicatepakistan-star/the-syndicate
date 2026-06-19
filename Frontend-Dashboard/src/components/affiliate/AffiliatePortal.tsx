@@ -10,11 +10,13 @@ import {
   requestAffiliateWithdrawal
 } from "@/lib/affiliateApi";
 import type { AffiliateStats, RecentReferralItem, ReferralLeadEvent, WithdrawalStatementItem } from "@/lib/affiliateTypes";
+import { formatAffiliateSubscriptionLabels } from "@/lib/affiliateSubscriptionLabel";
+import {
+  formatWithdrawalTransferredDate,
+  WITHDRAWAL_REFUNDED_STATUSES,
+} from "@/lib/affiliateWithdrawalStatus";
 
 type ToastTone = "good" | "warn" | "bad" | "info";
-
-/** Withdrawal rows that no longer reserve balance (excluded from statement total). */
-const WITHDRAWAL_REFUNDED_STATUSES = new Set(["rejected", "cancelled", "denied", "refunded", "failed"]);
 
 /** Expected payout date = request date + this many calendar days. */
 const PAYOUT_EXPECTED_DAYS = 10;
@@ -26,7 +28,6 @@ function getExpectedPayoutDate(from = new Date()): Date {
   return d;
 }
 
-const WITHDRAWAL_COMPLETE_STATUS = "complete";
 
 function formatTransferredDate(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -722,10 +723,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
       const product = linkDisp
         ? `Withdrawal · ${(w.status || "pending").toUpperCase()} — ${linkDisp}`
         : `Withdrawal · ${(w.status || "pending").toUpperCase()}`;
-      const transferred =
-        st === WITHDRAWAL_COMPLETE_STATUS && w.transferred_at
-          ? formatTransferredDate(w.transferred_at)
-          : "—";
+      const transferred = formatWithdrawalTransferredDate(w.status, w.transferred_at, formatTransferredDate);
       return {
         key: String(w.id),
         email: (w.account_name && w.account_name.trim()) || "—",
@@ -1087,7 +1085,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                     <span className="text-violet-200/95">status</span>
                     <span className="text-white/55"> tracks ops → wire; </span>
                     <span className="text-emerald-200/95">transferred</span>
-                    <span className="text-white/55"> date appears when admin marks complete.</span>
+                    <span className="text-white/55"> date appears when admin marks transferred.</span>
                   </p>
                 </div>
 
@@ -1197,7 +1195,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                   const purchaseCurrency = r.purchase_currency || (r as RecentReferralItem & { currency?: string | null }).currency || "usd";
                   const paidLine = formatPaidDisplay(purchaseCurrency, purchaseAmountRaw);
                   const subscriptionLabel =
-                    (r.subscription_name && r.subscription_name.trim()) ||
+                    formatAffiliateSubscriptionLabels(r.subscription_name, r.subscription_names) ||
                     purchaseProgram ||
                     purchaseTier ||
                     null;

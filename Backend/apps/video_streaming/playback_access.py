@@ -9,6 +9,7 @@ import logging
 from django.conf import settings
 from django.core.cache import cache
 
+from apps.portal.commercial_access import user_has_active_knight_subscription, user_has_money_mastery
 from apps.portal.king_access import king_allowed_playlist_ids, king_selection_completed, user_entitlement_tier
 from apps.portal.models import UserDashboardEntitlement
 from apps.video_streaming.entitlements import user_stream_playlists_unlocked_by_entitlement
@@ -47,11 +48,7 @@ def stream_playlist_accessible_for_playback(user, playlist: StreamPlaylist) -> b
         return True
     if not user_stream_playlists_unlocked_by_entitlement(user):
         return False
-    try:
-        ent = user.dashboard_entitlement
-    except UserDashboardEntitlement.DoesNotExist:
-        return False
-    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+    if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
         paid_ids = set(
             StreamPlaylistPurchase.objects.filter(
                 user=user,
@@ -104,24 +101,19 @@ def _user_can_play_programs_stream_video_eval(user, video: StreamVideo) -> bool:
     if not user_stream_playlists_unlocked_by_entitlement(user):
         return False
 
-    try:
-        ent = user.dashboard_entitlement
-    except UserDashboardEntitlement.DoesNotExist:
+    if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
+        king_ids = king_allowed_playlist_ids(user)
+        all_paid_ids = set(
+            StreamPlaylistPurchase.objects.filter(user=user, status=StreamPlaylistPurchase.Status.PAID).values_list(
+                "playlist_id", flat=True
+            )
+        )
+        for pid in playlist_ids:
+            if pid in king_ids or pid in all_paid_ids:
+                return True
         return False
 
-    if ent.access_tier != UserDashboardEntitlement.AccessTier.KING:
-        return True
-
-    king_ids = king_allowed_playlist_ids(user)
-    all_paid_ids = set(
-        StreamPlaylistPurchase.objects.filter(user=user, status=StreamPlaylistPurchase.Status.PAID).values_list(
-            "playlist_id", flat=True
-        )
-    )
-    for pid in playlist_ids:
-        if pid in king_ids or pid in all_paid_ids:
-            return True
-    return False
+    return True
 
 
 def user_can_play_programs_stream_video(user, video: StreamVideo) -> bool:

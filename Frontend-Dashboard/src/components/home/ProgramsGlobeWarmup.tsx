@@ -7,9 +7,13 @@ type ProgramsGlobeWarmupProps = {
   imageSrcs: readonly string[];
 };
 
-/** Preloads programs-section MP4 + globe tiles in parallel on first paint (no <link preload> — avoids unused-preload warnings). */
+let programsSectionWarmStarted = false;
+
+/** Preloads programs-section MP4 + globe tiles once per session (avoids repeat work on home revisit). */
 export function ProgramsGlobeWarmup({ imageSrcs }: ProgramsGlobeWarmupProps) {
   useLayoutEffect(() => {
+    if (programsSectionWarmStarted) return;
+    programsSectionWarmStarted = true;
     void warmProgramsSectionAssets(imageSrcs);
   }, [imageSrcs]);
 

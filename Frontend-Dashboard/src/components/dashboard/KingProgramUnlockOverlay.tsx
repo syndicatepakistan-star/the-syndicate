@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Crown, Lock } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
+import { filterKnightSelectablePlaylists } from "@/lib/knightProgramSelection";
+import { warmImage } from "@/lib/mediaWarmCache";
 import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import type { KingProgramSelectionState } from "@/lib/portal-api";
 
@@ -47,11 +49,98 @@ const ROW_THEMES = [
   },
 ] as const;
 
+/** Rows visible in the scroll panel without scrolling — load these thumbnails first. */
+const PRIORITY_THUMB_COUNT = 6;
+
+function KnightRowThumb({
+  src,
+  fallback,
+  eager,
+  thumbBorder,
+}: {
+  src: string | undefined;
+  fallback: string | undefined;
+  eager: boolean;
+  thumbBorder: string;
+}) {
+  const hostRef = useRef<HTMLSpanElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(eager);
+  const resolved = src ?? fallback;
+
+  useEffect(() => {
+    if (shouldLoad) return;
+    const host = hostRef.current;
+    if (!host) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "160px 0px", threshold: 0.01 }
+    );
+
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  return (
+    <span
+      ref={hostRef}
+      className={cn(
+        "relative h-12 w-[4.25rem] shrink-0 overflow-hidden rounded-md border bg-black/55 sm:h-14 sm:w-[5.25rem]",
+        thumbBorder
+      )}
+    >
+      {shouldLoad && resolved ? (
+        <img
+          src={resolved}
+          alt=""
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={eager ? "high" : "auto"}
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (fallback && img.src !== fallback && !img.dataset.fallbackApplied) {
+              img.dataset.fallbackApplied = "1";
+              img.src = fallback;
+              return;
+            }
+            img.style.display = "none";
+          }}
+          className="h-full w-full object-cover object-center [image-rendering:high-quality]"
+        />
+      ) : (
+        <span
+          className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40"
+          aria-hidden
+        />
+      )}
+    </span>
+  );
+}
+
 export default function KingProgramUnlockOverlay({ state, loading, error, onSubmit }: Props) {
   const required = state?.required_count ?? 5;
   const [selected, setSelected] = useState<Choice[]>(() => state?.selected_items ?? []);
   useEffect(() => {
-    setSelected(state?.selected_items ?? []);
+    if (!state) {
+      setSelected([]);
+      return;
+    }
+    const validKeys = new Set<string>();
+    for (const course of state.courses ?? []) {
+      validKeys.add(`course:${course.id}`);
+    }
+    for (const playlist of filterKnightSelectablePlaylists(state.playlists ?? [])) {
+      validKeys.add(`playlist:${playlist.id}`);
+    }
+    const next = (state.selected_items ?? []).filter((item) =>
+      validKeys.has(`${item.program_type}:${item.id}`)
+    );
+    setSelected(next);
   }, [state]);
 
   const selectedCount = selected.length;
@@ -59,20 +148,39 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
   const isOver = selectedCount > required;
 
   const rows = useMemo(() => {
-    const courses = (state?.courses ?? []).map((c) => ({
-      program_type: "course" as const,
-      id: c.id,
-      title: c.title,
-      thumbnail_url: c.thumbnail_url ?? null,
-    }));
-    const playlists = (state?.playlists ?? []).map((p) => ({
+    const playlists = filterKnightSelectablePlaylists(state?.playlists ?? []).map((p) => ({
       program_type: "playlist" as const,
       id: p.id,
       title: p.title,
       thumbnail_url: p.thumbnail_url ?? null,
+      vault_plan_slug: p.vault_plan_slug ?? null,
     }));
-    return [...courses, ...playlists];
+    return playlists;
   }, [state]);
+
+  const thumbUrls = useMemo(
+    () =>
+      rows.map((row) => {
+        const playlistMeta = {
+          id: row.id,
+          title: row.title,
+          vault_plan_slug: row.vault_plan_slug,
+        };
+        const thumbSrc = resolveProgramPlaylistThumbnail(
+          playlistMeta,
+          resolveDjangoMediaUrl(row.thumbnail_url)
+        );
+        const thumbFallback = resolveProgramPlaylistThumbnail(playlistMeta, null);
+        return thumbSrc ?? thumbFallback ?? null;
+      }),
+    [rows]
+  );
+
+  useEffect(() => {
+    const priority = thumbUrls.slice(0, PRIORITY_THUMB_COUNT).filter((url): url is string => Boolean(url));
+    if (!priority.length) return;
+    void Promise.all(priority.map((url) => warmImage(url)));
+  }, [thumbUrls]);
 
   const keyOf = (item: Choice) => `${item.program_type}:${item.id}`;
   const selectedSet = useMemo(() => new Set(selected.map(keyOf)), [selected]);
@@ -104,8 +212,9 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
             <div>
               <h2 className="text-lg font-black uppercase tracking-[0.12em] text-amber-100">The Knight unlock step</h2>
               <p className="mt-1 text-sm text-white/75">
-                Pick exactly {required} programs to unlock your full dashboard, membership, goals and milestones, and
-                Syndicate Mode access.
+                Pick exactly {required} standalone programs from the library — individual psychology and business
+                courses only (no vault packs, mid-ticket modules, or Money Mastery). This unlocks your full dashboard,
+                membership, goals and milestones, and Syndicate Mode access.
               </p>
             </div>
           </div>
@@ -120,12 +229,17 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
               const choice: Choice = { program_type: row.program_type, id: row.id };
               const checked = selectedSet.has(keyOf(choice));
               const theme = ROW_THEMES[idx % ROW_THEMES.length];
-              const playlistMeta = { id: row.id, title: row.title };
+              const playlistMeta = {
+                id: row.id,
+                title: row.title,
+                vault_plan_slug: row.vault_plan_slug,
+              };
               const thumbSrc = resolveProgramPlaylistThumbnail(
                 playlistMeta,
                 resolveDjangoMediaUrl(row.thumbnail_url)
               );
               const thumbFallback = resolveProgramPlaylistThumbnail(playlistMeta, null);
+              const eagerThumb = idx < PRIORITY_THUMB_COUNT;
               return (
                 <label
                   key={`${row.program_type}-${row.id}`}
@@ -140,43 +254,23 @@ export default function KingProgramUnlockOverlay({ state, loading, error, onSubm
                     onChange={() => toggle(choice)}
                     className="h-4 w-4 accent-amber-400"
                   />
-                  <span
-                    className={cn(
-                      "relative h-12 w-[4.25rem] shrink-0 overflow-hidden rounded-md border bg-black/55 sm:h-14 sm:w-[5.25rem]",
-                      theme.thumbBorder
-                    )}
-                  >
-                    {thumbSrc || thumbFallback ? (
-                      <img
-                        src={thumbSrc ?? thumbFallback}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          if (thumbFallback && img.src !== thumbFallback && !img.dataset.fallbackApplied) {
-                            img.dataset.fallbackApplied = "1";
-                            img.src = thumbFallback;
-                            return;
-                          }
-                          img.style.display = "none";
-                        }}
-                        className="h-full w-full object-cover object-center [image-rendering:high-quality]"
-                      />
-                    ) : (
-                      <span
-                        className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40"
-                        aria-hidden
-                      />
-                    )}
-                  </span>
+                  <KnightRowThumb
+                    src={thumbSrc}
+                    fallback={thumbFallback}
+                    eager={eagerThumb}
+                    thumbBorder={theme.thumbBorder}
+                  />
                   <span className="truncate text-[16px] font-semibold leading-tight">{row.title}</span>
                 </label>
               );
             })}
           </div>
 
-          {error ? <div className="mt-4 rounded-md border border-rose-500/45 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{error}</div> : null}
+          {error ? (
+            <div className="mt-4 rounded-md border border-rose-500/45 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+              {error}
+            </div>
+          ) : null}
 
           <div className="mt-5 flex items-center justify-end">
             <button

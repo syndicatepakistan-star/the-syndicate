@@ -79,6 +79,11 @@ TRADING_COURSE_SLUGS_TITLES: dict[str, str] = {
 
 _VAULT_COURSE_SLUG_RE = re.compile(r"^(agentic_ai_c|ai_content_c)(\d{2})$")
 
+_INDEXED_PACK_BY_COURSE_PREFIX: dict[str, tuple[str, tuple[str, ...]]] = {
+  "agentic_ai_c": ("agentic_ai", AGENTIC_AI_COURSE_TITLES),
+  "ai_content_c": ("ai_content_automation", AI_CONTENT_COURSE_TITLES),
+}
+
 
 def _indexed_course_titles(prefix: str, titles: tuple[str, ...]) -> dict[str, str]:
   out: dict[str, str] = {}
@@ -109,11 +114,9 @@ def vault_pack_for_module_slug(plan: str) -> str | None:
   m = _VAULT_COURSE_SLUG_RE.match(plan)
   if not m:
     return None
-  prefix = m.group(1)
-  if prefix == "agentic_ai":
-    return "agentic_ai"
-  if prefix == "ai_content":
-    return "ai_content_automation"
+  pack_entry = _INDEXED_PACK_BY_COURSE_PREFIX.get(m.group(1))
+  if pack_entry:
+    return pack_entry[0]
   return None
 
 
@@ -137,11 +140,12 @@ def vault_course_product_title(plan: str) -> str | None:
   m = _VAULT_COURSE_SLUG_RE.match(plan)
   if not m:
     return None
-  prefix, num = m.group(1), int(m.group(2))
-  if prefix == "agentic_ai" and 1 <= num <= len(AGENTIC_AI_COURSE_TITLES):
-    return f"{AGENTIC_AI_COURSE_TITLES[num - 1]} — lifetime access"
-  if prefix == "ai_content" and 1 <= num <= len(AI_CONTENT_COURSE_TITLES):
-    return f"{AI_CONTENT_COURSE_TITLES[num - 1]} — lifetime access"
+  prefix_key, num = m.group(1), int(m.group(2))
+  pack_entry = _INDEXED_PACK_BY_COURSE_PREFIX.get(prefix_key)
+  if pack_entry:
+    titles = pack_entry[1]
+    if 1 <= num <= len(titles):
+      return f"{titles[num - 1]} — lifetime access"
   return None
 
 
@@ -152,9 +156,10 @@ def vault_course_billing_title(plan: str) -> str | None:
   m = _VAULT_COURSE_SLUG_RE.match(plan)
   if not m:
     return None
-  prefix, num = m.group(1), int(m.group(2))
-  if prefix == "agentic_ai" and 1 <= num <= len(AGENTIC_AI_COURSE_TITLES):
-    return AGENTIC_AI_COURSE_TITLES[num - 1]
-  if prefix == "ai_content" and 1 <= num <= len(AI_CONTENT_COURSE_TITLES):
-    return AI_CONTENT_COURSE_TITLES[num - 1]
+  prefix_key, num = m.group(1), int(m.group(2))
+  pack_entry = _INDEXED_PACK_BY_COURSE_PREFIX.get(prefix_key)
+  if pack_entry:
+    titles = pack_entry[1]
+    if 1 <= num <= len(titles):
+      return titles[num - 1]
   return None

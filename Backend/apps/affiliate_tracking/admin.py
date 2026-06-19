@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import AffiliateProfile, AffiliateWithdrawalAccount, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
+from .withdrawal_status import ensure_withdrawal_transferred_fields
 
 
 def _all_model_field_names(model) -> tuple[str, ...]:
@@ -52,8 +53,49 @@ class EmailOTPAdmin(AllFieldsListDisplayAdmin):
 
 
 @admin.register(WithdrawalRequest)
-class WithdrawalRequestAdmin(AllFieldsListDisplayAdmin):
-    search_fields = ("profile__display_name", "section_referral__referral_id", "account_name", "iban")
+class WithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "profile",
+        "section_referral",
+        "requested_amount",
+        "earnings_snapshot",
+        "status",
+        "account_name",
+        "bank_name",
+        "created_at",
+        "transferred_at",
+    )
+    search_fields = (
+        "profile__display_name",
+        "profile__user__email",
+        "section_referral__referral_id",
+        "account_name",
+        "iban",
+    )
+    list_filter = ("status", "created_at", "transferred_at")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at",)
+    list_editable = ("status",)
+    actions = ("mark_as_transferred",)
+
+    @admin.action(description="Mark selected as transferred (wire sent)")
+    def mark_as_transferred(self, request, queryset):
+        for withdrawal in queryset:
+            withdrawal.status = "transferred"
+            withdrawal.status, withdrawal.transferred_at = ensure_withdrawal_transferred_fields(
+                status=withdrawal.status,
+                transferred_at=withdrawal.transferred_at,
+            )
+            withdrawal.save()
+
+    def save_model(self, request, obj, form, change):
+        obj.status, obj.transferred_at = ensure_withdrawal_transferred_fields(
+            status=obj.status,
+            transferred_at=obj.transferred_at,
+            old_status=form.initial.get("status") if change else None,
+        )
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(AffiliateWithdrawalAccount)

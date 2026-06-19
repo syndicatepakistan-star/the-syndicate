@@ -8,7 +8,10 @@ class PendingSignup(models.Model):
   username = models.CharField(max_length=150)
   email = models.EmailField(unique=True)
   password_hash = models.CharField(max_length=128)
-  is_paid = models.BooleanField(default=False)
+  is_paid = models.BooleanField(
+    default=False,
+    help_text="Legacy Stripe flag — row is removed once the user verifies OTP or completes checkout.",
+  )
   stripe_checkout_session_id = models.CharField(max_length=255, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser
 
 from apps.courses.models import Course, CourseEnrollment, Video
+from apps.portal.commercial_access import user_has_money_mastery
 from apps.portal.king_access import king_allowed_course_ids, king_selection_completed, user_entitlement_tier
 from apps.portal.models import UserDashboardEntitlement
 
@@ -28,12 +29,9 @@ def _user_is_playlist_only_buyer(user: AbstractBaseUser) -> bool:
         return False
     if _user_has_full_course_access(user):
         return False
-    try:
-        ent = user.dashboard_entitlement
-        tier = ent.access_tier
-    except UserDashboardEntitlement.DoesNotExist:
-        tier = UserDashboardEntitlement.AccessTier.NONE
-    if tier != UserDashboardEntitlement.AccessTier.NONE:
+    from apps.portal.commercial_access import user_has_active_knight_subscription
+
+    if user_has_active_knight_subscription(user):
         return False
     from apps.video_streaming.models import StreamPlaylistPurchase
 
@@ -44,13 +42,7 @@ def _user_is_playlist_only_buyer(user: AbstractBaseUser) -> bool:
 
 
 def _user_has_full_course_access(user: AbstractBaseUser) -> bool:
-    if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
-        return True
-    tier = user_entitlement_tier(user)
-    return tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    return user_has_money_mastery(user)
 
 
 def user_can_access_course(user: AbstractBaseUser, course: Course) -> bool:
@@ -65,7 +57,9 @@ def user_can_access_course(user: AbstractBaseUser, course: Course) -> bool:
     if _user_is_playlist_only_buyer(user):
         return CourseEnrollment.objects.filter(user=user, course=course).exists()
     tier = user_entitlement_tier(user)
-    if tier == UserDashboardEntitlement.AccessTier.KING:
+    from apps.portal.commercial_access import user_has_active_knight_subscription
+
+    if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
         if not king_selection_completed(user):
             return False
         return course.id in king_allowed_course_ids(user)

@@ -36,6 +36,12 @@ from apps.quiz_funnel.logic import (
   map_weapon_to_playlist_title,
   normalize_free_ticket_title,
 )
+from accounts.checkout_ownership import already_owned_checkout_response, user_owns_checkout_selection
+from accounts.stripe_checkout_helpers import (
+  build_checkout_line_items,
+  checkout_session_is_paid,
+  checkout_session_mode,
+)
 from accounts.vault_plan_catalog import (
   is_vault_course_plan_slug,
   vault_course_billing_title,
@@ -47,6 +53,12 @@ from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import LoginOTP, PendingSignup, ReturningCheckout, SignupOTP
+from .pending_signup import (
+  abandoned_pending_signup_queryset,
+  complete_pending_signup,
+  purge_stale_pending_signups,
+  user_registered_for_email,
+)
 from .syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
 
 logger = logging.getLogger(__name__)
@@ -481,10 +493,13 @@ def _record_checkout_affiliate_sale(session, session_meta: dict, email: str, pai
     logger.exception("Checkout succeeded but affiliate sale attribution failed")
 
 
-def _apply_purchased_plan(user: User, plan: str) -> None:
-  from apps.portal.entitlements import apply_purchased_plan
+def _apply_purchased_plan(user: User, plan: str, session=None) -> None:
+  from apps.portal.entitlements import apply_purchased_plan, apply_purchased_plan_from_checkout
 
-  apply_purchased_plan(user, plan)
+  if session is not None:
+    apply_purchased_plan_from_checkout(user, plan, session)
+  else:
+    apply_purchased_plan(user, plan)
 
 
 def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
@@ -533,7 +548,7 @@ def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, pai
   plan_sel = (plan_sel or "").strip().lower()
   if plan_sel in _PLAN_ENTITLEMENT_SLUGS:
     try:
-      _apply_purchased_plan(user, plan_sel)
+      _apply_purchased_plan(user, plan_sel, session=session)
     except Exception:
       logger.exception("Checkout succeeded but plan entitlement update failed for user_id=%s plan=%s", user.id, plan_sel)
   try:
@@ -642,10 +657,8 @@ def _create_and_email_signup_otp(email: str):
   except PendingSignup.DoesNotExist:
     return _json_error("No pending signup for this email.", status=404)
 
-  if pending_signup.is_paid:
-    return _json_error("Checkout already completed for this email.", status=400)
-
-  if User.objects.filter(email=email).exists():
+  if user_registered_for_email(email):
+    complete_pending_signup(pending_signup)
     return _json_error("Email already registered. Please log in.", status=400)
 
   otp_code = _generate_otp()
@@ -703,10 +716,10 @@ def signup_view(request):
       "stripe_checkout_session_id": "",
     },
   )
-  if not created and pending.is_paid:
-    return _json_error("This email is already registered. Please log in instead.")
-
-  if not created and not pending.is_paid:
+  if not created:
+    if user_registered_for_email(email):
+      complete_pending_signup(pending)
+      return _json_error("This email is already registered. Please log in instead.")
     pending.stripe_checkout_session_id = ""
     pending.save(update_fields=["stripe_checkout_session_id", "updated_at"])
 
@@ -776,8 +789,9 @@ def verify_signup_otp_view(request):
   except PendingSignup.DoesNotExist:
     return _json_error("No pending signup for this email.", status=404)
 
-  if pending_signup.is_paid:
-    return _json_error("Checkout already completed for this email.", status=400)
+  if user_registered_for_email(email):
+    complete_pending_signup(pending_signup)
+    return _json_error("Email already registered. Please log in.", status=400)
 
   try:
     signup_otp = SignupOTP.objects.get(email=email)
@@ -806,8 +820,7 @@ def verify_signup_otp_view(request):
     password=pending_signup.password_hash,
   )
   user.save()
-  pending_signup.is_paid = True
-  pending_signup.save(update_fields=["is_paid", "updated_at"])
+  complete_pending_signup(pending_signup)
 
   auth_token, _ = Token.objects.get_or_create(user=user)
   af_profile = ensure_affiliate_profile_for_existing_user(user)
@@ -851,7 +864,10 @@ def _checkout_success_redirect_path(plan_slug: str = "", playlist_id: str = "") 
     or plan.startswith("trading_")
     or is_vault_course_plan_slug(plan)
   ):
-    return "/dashboard?section=programs"
+    qs = f"section=programs&plan_checkout=success"
+    if plan:
+      qs += f"&plan={plan}"
+    return f"/dashboard?{qs}"
   raw = (getattr(settings, "POST_LOGIN_REDIRECT_URL", "") or "").strip()
   if raw.startswith("/") and not raw.startswith("//"):
     return raw.split("#")[0] or "/dashboard?section=programs"
@@ -903,36 +919,13 @@ def create_checkout_session_view(request):
         return _json_error("Playlist not found.", status=404)
       if selected_playlist.price <= 0:
         return _json_error("Playlist price must be greater than 0.", status=400)
-      if StreamPlaylistPurchase.objects.filter(
-        user=checkout_user,
-        playlist=selected_playlist,
-        status=StreamPlaylistPurchase.Status.PAID,
-      ).exists():
-        return JsonResponse(
-          {
-            "is_unlocked": True,
-            "playlist_id": selected_playlist.id,
-            "message": "Playlist already unlocked.",
-            "already_purchased": True,
-          },
-          status=200,
-        )
+      if user_owns_checkout_selection(checkout_user, playlist=selected_playlist):
+        return already_owned_checkout_response(playlist=selected_playlist)
       metadata["playlist_id"] = str(selected_playlist.id)
     plan_raw = str(payload.get("selected_plan", "")).strip().lower()
     if plan_raw:
-      if UserPlanPurchase.objects.filter(
-        user=checkout_user,
-        plan_slug=plan_raw,
-        status=UserPlanPurchase.Status.PAID,
-      ).exists():
-        return JsonResponse(
-          {
-            "is_unlocked": True,
-            "message": "Plan already active for this account.",
-            "already_purchased": True,
-          },
-          status=200,
-        )
+      if user_owns_checkout_selection(checkout_user, plan_raw=plan_raw):
+        return already_owned_checkout_response(plan_raw=plan_raw)
       metadata["selected_plan"] = plan_raw
     meta_affiliate_id = str(payload.get("affiliate_id", "")).strip()
     meta_visitor_id = str(payload.get("visitor_id", "")).strip()
@@ -964,19 +957,15 @@ def create_checkout_session_view(request):
 
     def _session_create_logged_in(pm_types: list[str]):
       return stripe.checkout.Session.create(
-        mode="payment",
+        mode=checkout_session_mode(plan_raw),
         customer_email=checkout_email,
         payment_method_types=pm_types,
-        line_items=[
-          {
-            "price_data": {
-              "currency": settings.DEFAULT_CURRENCY,
-              "product_data": {"name": product_name},
-              "unit_amount": unit_amount,
-            },
-            "quantity": 1,
-          }
-        ],
+        line_items=build_checkout_line_items(
+          plan_raw=plan_raw,
+          product_name=product_name,
+          unit_amount=unit_amount,
+          currency=settings.DEFAULT_CURRENCY,
+        ),
         success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{frontend_base}/login",
         custom_text={
@@ -1029,8 +1018,11 @@ def create_checkout_session_view(request):
       return _json_error("Checkout link not found.", status=404)
 
   if pending_signup is not None:
-    if pending_signup.is_paid:
-      return _json_error("Checkout already completed for this account.", status=400)
+    if user_registered_for_email(pending_signup.email):
+      return _json_error(
+        "Account is verified. Sign in and complete checkout from the dashboard or programs page.",
+        status=400,
+      )
     checkout_email = pending_signup.email
     metadata = {
       "signup_token": str(pending_signup.token),
@@ -1076,6 +1068,14 @@ def create_checkout_session_view(request):
   if meta_visitor_id:
     metadata["visitor_id"] = meta_visitor_id
 
+  existing_user = _canonical_user_for_email(checkout_email)
+  if existing_user is not None and user_owns_checkout_selection(
+    existing_user,
+    plan_raw=plan_payload,
+    playlist=selected_playlist,
+  ):
+    return already_owned_checkout_response(plan_raw=plan_payload, playlist=selected_playlist)
+
   explicit_amount = _parse_pence_from_amount_payload(payload.get("selected_amount"))
   if (
     pending_signup is not None
@@ -1114,19 +1114,15 @@ def create_checkout_session_view(request):
 
   def _session_create(pm_types: list[str]):
     return stripe.checkout.Session.create(
-      mode="payment",
+      mode=checkout_session_mode(plan_payload),
       customer_email=checkout_email,
       payment_method_types=pm_types,
-      line_items=[
-        {
-          "price_data": {
-            "currency": settings.DEFAULT_CURRENCY,
-            "product_data": {"name": product_name},
-            "unit_amount": unit_amount,
-          },
-          "quantity": 1,
-        }
-      ],
+      line_items=build_checkout_line_items(
+        plan_raw=plan_payload,
+        product_name=product_name,
+        unit_amount=unit_amount,
+        currency=settings.DEFAULT_CURRENCY,
+      ),
       success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
       cancel_url=f"{frontend_base}/signup",
       custom_text={
@@ -1192,7 +1188,7 @@ def checkout_success_view(request):
   except Exception:
     return _json_error("Invalid checkout session.", status=400)
 
-  if session.payment_status != "paid":
+  if not checkout_session_is_paid(session):
     return _json_error("Payment not completed.", status=400)
   paid_currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
   paid_minor_total = int(getattr(session, "amount_total", 0) or 0)
@@ -1241,6 +1237,12 @@ def checkout_success_view(request):
     stripe_checkout_session_id=session.id,
   ).first()
   session_meta = _session_metadata_dict(session)
+  if pending_signup is None:
+    signup_token_raw = str(session_meta.get("signup_token", "") or "").strip()
+    if signup_token_raw:
+      parsed_token = _parse_signup_token(signup_token_raw)
+      if parsed_token:
+        pending_signup = PendingSignup.objects.filter(token=parsed_token).first()
   if pending_signup is not None:
     existing_user = User.objects.filter(email=pending_signup.email).first()
     if existing_user is not None:
@@ -1257,8 +1259,7 @@ def checkout_success_view(request):
         password=pending_signup.password_hash,
       )
       user.save()
-    pending_signup.is_paid = True
-    pending_signup.save(update_fields=["is_paid", "updated_at"])
+    complete_pending_signup(pending_signup)
     playlist_id = str(session_meta.get("playlist_id", "")).strip()
     if playlist_id.isdigit():
       playlist = StreamPlaylist.objects.filter(id=int(playlist_id)).first()
@@ -1355,7 +1356,7 @@ def checkout_success_view(request):
 
   uid_raw = str(session_meta.get("user_id", "")).strip()
   checkout_kind = str(session_meta.get("checkout_kind", "")).strip().lower()
-  if uid_raw.isdigit() and checkout_kind == "logged_in":
+  if uid_raw.isdigit() and checkout_kind in ("logged_in", ""):
     try:
       user = User.objects.get(pk=int(uid_raw))
     except User.DoesNotExist:
@@ -1388,6 +1389,8 @@ def checkout_success_view(request):
     auth_token, _ = Token.objects.get_or_create(user=user)
     referral_ids = _safe_affiliate_referral_ids(user)
     _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
+    sid = str(getattr(session, "id", "") or "").strip()
+    was_recorded = bool(sid) and UserPlanPurchase.objects.filter(stripe_checkout_session_id=sid).exists()
     return JsonResponse(
       {
         "message": "Payment successful.",
@@ -1399,8 +1402,37 @@ def checkout_success_view(request):
         "amount_paid": paid_amount,
         "currency": paid_currency,
         "affiliate_attribution": _affiliate_attribution_payload(session_meta),
+        "selected_plan": plan_sel or None,
+        "playlist_id": int(playlist_id) if playlist_id.isdigit() else None,
+        "already_purchased": was_recorded,
       },
       status=200,
+    )
+
+  from accounts.checkout_fulfillment import (
+    checkout_success_json_response,
+    fulfill_checkout_session_for_user,
+    resolve_checkout_user_from_metadata,
+  )
+
+  fallback_user = resolve_checkout_user_from_metadata(session_meta)
+  if fallback_user is not None:
+    plan_sel, playlist_id, was_recorded = fulfill_checkout_session_for_user(
+      fallback_user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+    )
+    return checkout_success_json_response(
+      fallback_user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+      plan_sel=plan_sel,
+      playlist_id=playlist_id,
+      was_already_recorded=was_recorded,
     )
 
   return _json_error("Checkout record not found for this payment.", status=404)
@@ -1496,3 +1528,86 @@ def verify_login_otp_view(request):
     },
     status=200,
   )
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook_view(request):
+  """Extend Knight membership on Stripe subscription renewals."""
+  secret = (getattr(settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
+  if not secret:
+    return JsonResponse({"error": "Webhook not configured."}, status=400)
+  if not settings.STRIPE_SECRET_KEY:
+    return JsonResponse({"error": "Stripe not configured."}, status=400)
+
+  stripe.api_key = settings.STRIPE_SECRET_KEY
+  payload = request.body
+  sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+  try:
+    event = stripe.Webhook.construct_event(payload, sig_header, secret)
+  except ValueError:
+    return JsonResponse({"error": "Invalid payload."}, status=400)
+  except stripe.error.SignatureVerificationError:
+    return JsonResponse({"error": "Invalid signature."}, status=400)
+
+  from apps.portal.commercial_access import activate_knight_subscription, default_knight_expiry_from_now
+  from datetime import datetime, timezone as dt_timezone
+
+  def _expires_from_period_end(raw_ts):
+    if not raw_ts:
+      return default_knight_expiry_from_now()
+    return datetime.fromtimestamp(int(raw_ts), tz=dt_timezone.utc)
+
+  def _extend_knight_by_subscription_id(sub_id: str, period_end_ts=None) -> None:
+    sub_id = (sub_id or "").strip()
+    if not sub_id:
+      return
+    ent = UserDashboardEntitlement.objects.filter(stripe_knight_subscription_id=sub_id).select_related("user").first()
+    if ent is None:
+      return
+    activate_knight_subscription(
+      ent.user,
+      _expires_from_period_end(period_end_ts),
+      stripe_subscription_id=sub_id,
+    )
+
+  event_type = event.get("type", "")
+  data_object = event.get("data", {}).get("object", {})
+
+  if event_type == "checkout.session.completed":
+    mode = str(data_object.get("mode", "") or "").lower()
+    if mode == "subscription":
+      meta = data_object.get("metadata") or {}
+      plan_sel = str(meta.get("selected_plan", "") or "").strip().lower()
+      if plan_sel in ("king", "knight"):
+        uid_raw = str(meta.get("user_id", "") or "").strip()
+        sub_id = str(data_object.get("subscription", "") or "").strip()
+        if uid_raw.isdigit():
+          try:
+            user = User.objects.get(pk=int(uid_raw))
+          except User.DoesNotExist:
+            user = None
+          if user is not None:
+            try:
+              sub = stripe.Subscription.retrieve(sub_id) if sub_id else None
+              period_end = getattr(sub, "current_period_end", None) if sub else None
+            except Exception:
+              period_end = None
+            activate_knight_subscription(
+              user,
+              _expires_from_period_end(period_end),
+              stripe_subscription_id=sub_id,
+            )
+
+  if event_type in ("invoice.paid", "customer.subscription.updated"):
+    sub_id = str(data_object.get("subscription") or data_object.get("id") or "").strip()
+    period_end = data_object.get("current_period_end")
+    if event_type == "invoice.paid" and not period_end and sub_id:
+      try:
+        sub = stripe.Subscription.retrieve(sub_id)
+        period_end = getattr(sub, "current_period_end", None)
+      except Exception:
+        period_end = None
+    _extend_knight_by_subscription_id(sub_id, period_end)
+
+  return JsonResponse({"received": True}, status=200)

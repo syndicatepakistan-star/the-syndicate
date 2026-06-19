@@ -110,6 +110,7 @@ export type RecommendationsSnapshot = {
 
 export type DashboardSnapshots = {
   programs: ProgramSnapshot[];
+  programStats: { unlocked: number; inProgress: number };
   syndicate: SyndicateSnapshot;
   affiliate: AffiliateSnapshot;
   coreIntegrity: CoreIntegritySnapshot;

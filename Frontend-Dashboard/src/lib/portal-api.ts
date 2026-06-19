@@ -30,6 +30,12 @@ export type PortalUser = {
   permissions: string[];
   /** `none` | `money_mastery` | `king` | `full` (staff) — drives dashboard locks + course access. */
   access_tier?: string;
+  /** Lifetime Money Mastery — all programs/vault modules (stacks with Knight). */
+  money_mastery_active?: boolean;
+  /** Active monthly Knight — Syndicate Mode + Membership. */
+  knight_subscription_active?: boolean;
+  /** ISO timestamp when Knight membership ends. */
+  knight_subscription_expires_at?: string | null;
   /** When true, that shell section is read-only / blocked for Money Mastery buyers. */
   dashboard_nav_locks?: { monk?: boolean; resources?: boolean; goals?: boolean; dashboard?: boolean };
   /** The Knight onboarding gate: must pick exactly 5 programs before full unlock. */
@@ -42,6 +48,7 @@ export type KingProgramChoiceOption = {
   id: number;
   title: string;
   thumbnail_url?: string | null;
+  vault_plan_slug?: string | null;
 };
 
 export type KingProgramSelectionState = {
@@ -393,6 +400,12 @@ export async function fetchPortalIdentity(): Promise<PortalUser | null> {
     roles: Array.isArray(data.roles) ? data.roles : [],
     permissions: Array.isArray(data.permissions) ? data.permissions : [],
     access_tier: data.access_tier,
+    money_mastery_active: !!data.money_mastery_active,
+    knight_subscription_active: !!data.knight_subscription_active,
+    knight_subscription_expires_at:
+      typeof data.knight_subscription_expires_at === "string"
+        ? data.knight_subscription_expires_at
+        : null,
     dashboard_nav_locks: data.dashboard_nav_locks,
     king_program_selection_required: !!data.king_program_selection_required,
     king_program_selection_completed: !!data.king_program_selection_completed,
@@ -516,7 +529,13 @@ export async function portalFetch<T>(
   }
 }
 
-export async function fetchKingProgramSelection(): Promise<KingProgramSelectionState> {
+export async function fetchKingProgramSelection(options?: {
+  refresh?: boolean;
+}): Promise<KingProgramSelectionState> {
+  if (!options?.refresh) {
+    const cached = readKingProgramSelectionCache();
+    if (cached) return cached;
+  }
   const res = await portalFetch<KingProgramSelectionState>("/api/portal/king-program-selection/");
   if (!res.ok) {
     const detail =
@@ -525,7 +544,44 @@ export async function fetchKingProgramSelection(): Promise<KingProgramSelectionS
         : "Could not load Knight selection.";
     throw new Error(detail);
   }
+  writeKingProgramSelectionCache(res.data);
   return res.data;
+}
+
+const KING_SELECTION_CACHE_KEY = "portal:king-program-selection:v1";
+let kingSelectionMemoryCache: KingProgramSelectionState | null = null;
+
+export function readKingProgramSelectionCache(): KingProgramSelectionState | null {
+  if (kingSelectionMemoryCache) return kingSelectionMemoryCache;
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(KING_SELECTION_CACHE_KEY);
+    if (!raw) return null;
+    kingSelectionMemoryCache = JSON.parse(raw) as KingProgramSelectionState;
+    return kingSelectionMemoryCache;
+  } catch {
+    return null;
+  }
+}
+
+function writeKingProgramSelectionCache(state: KingProgramSelectionState) {
+  kingSelectionMemoryCache = state;
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(KING_SELECTION_CACHE_KEY, JSON.stringify(state));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+export function clearKingProgramSelectionCache() {
+  kingSelectionMemoryCache = null;
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(KING_SELECTION_CACHE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function submitKingProgramSelection(payload: {
@@ -543,5 +599,6 @@ export async function submitKingProgramSelection(payload: {
         : "Could not save Knight selection.";
     throw new Error(detail);
   }
+  clearKingProgramSelectionCache();
   return res.data;
 }

@@ -5,6 +5,7 @@ Dashboard / playlist entitlement helpers shared by streaming views and playback 
 from __future__ import annotations
 
 from apps.portal.king_access import king_allowed_playlist_ids, king_selection_completed
+from apps.portal.commercial_access import user_has_active_knight_subscription, user_has_money_mastery
 from apps.portal.models import UserDashboardEntitlement
 
 
@@ -21,12 +22,11 @@ def user_stream_playlists_unlocked_by_entitlement(user) -> bool:
         ent = user.dashboard_entitlement
     except UserDashboardEntitlement.DoesNotExist:
         return False
-    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+    if user_has_money_mastery(user):
+        return True
+    if user_has_active_knight_subscription(user):
         return king_selection_completed(user) and bool(king_allowed_playlist_ids(user))
-    return ent.access_tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    return False
 
 
 def unlocked_stream_playlist_ids_for_user(user) -> set[int]:
@@ -54,7 +54,11 @@ def unlocked_stream_playlist_ids_for_user(user) -> set[int]:
             ent = user.dashboard_entitlement
         except UserDashboardEntitlement.DoesNotExist:
             ent = None
-        if ent is not None and ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+        if user_has_money_mastery(user):
+            unlocked_ids |= set(
+                StreamPlaylist.objects.filter(is_published=True).values_list("id", flat=True)
+            )
+        elif ent is not None and user_has_active_knight_subscription(user):
             unlocked_ids |= king_allowed_playlist_ids(user)
         else:
             unlocked_ids |= set(
@@ -115,9 +119,8 @@ def playlist_included_by_entitlement(user, playlist_id: int) -> bool:
         ent = user.dashboard_entitlement
     except UserDashboardEntitlement.DoesNotExist:
         return False
-    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING:
+    if user_has_money_mastery(user):
+        return True
+    if ent.access_tier == UserDashboardEntitlement.AccessTier.KING and user_has_active_knight_subscription(user):
         return king_selection_completed(user) and int(playlist_id) in king_allowed_playlist_ids(user)
-    return ent.access_tier in (
-        UserDashboardEntitlement.AccessTier.MONEY_MASTERY,
-        UserDashboardEntitlement.AccessTier.FULL,
-    )
+    return False

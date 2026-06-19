@@ -1,7 +1,7 @@
 "use client";
 
-import { startTransition, useLayoutEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useLayoutEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { trackClickFireAndForget } from "@/lib/affiliateApi";
 import {
   resolveAffiliateDestination,
@@ -35,7 +35,6 @@ function getVisitorIdForAffiliate(affiliateId: string): string {
 
 export function ReferralLanding() {
   const params = useParams<{ affiliateId: string }>();
-  const router = useRouter();
   const search = useSearchParams();
   const affiliateId = decodeURIComponent(params?.affiliateId ?? "");
   const offer = search.get("offer") ?? "affiliate-offer";
@@ -54,14 +53,11 @@ export function ReferralLanding() {
     });
     const destination = resolveAffiliateDestination(offer);
 
-    // Start tracking without waiting for response (keepalive survives navigation).
     trackClickFireAndForget(affiliateId, vid);
 
-    // Navigate in the same frame / transition so UI does not wait on the track API.
-    startTransition(() => {
-      router.replace(destination);
-    });
-  }, [affiliateId, offer, program, router, tier]);
+    // Hard replace avoids an extra client render pass before home (faster on mobile).
+    window.location.replace(destination);
+  }, [affiliateId, offer, program, tier]);
 
   return null;
 }

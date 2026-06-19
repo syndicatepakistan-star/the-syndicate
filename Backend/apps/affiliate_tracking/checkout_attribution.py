@@ -6,6 +6,7 @@ import logging
 from decimal import Decimal, InvalidOperation
 
 from apps.affiliate_tracking.models import ClickEvent, LeadEvent, SaleEvent, SectionReferral
+from apps.affiliate_tracking.subscription_labels import display_subscription_name
 from apps.affiliate_tracking.views import (
     DEFAULT_LEAD_LABELS,
     LEAD_KIND_AUTH,
@@ -53,6 +54,8 @@ def record_sale_from_checkout_metadata(
         return False
 
     marker = f"{_SESSION_PREFIX}{sid}"
+    if sid and SaleEvent.objects.filter(referral=referral, stripe_checkout_session_id=sid).exists():
+        return False
     if SaleEvent.objects.filter(referral=referral, subscription_name__startswith=marker).exists():
         return False
 
@@ -65,7 +68,8 @@ def record_sale_from_checkout_metadata(
     )
 
     plan_part = (plan_label or "checkout-purchase").strip()
-    subscription_name = f"{marker}|{plan_part}"[:280]
+    subscription_name = display_subscription_name(plan_part) or plan_part
+    subscription_name = subscription_name[:280]
     commission_amount = _commission_amount_for_purchase(amount)
     cur = (currency or "usd").strip().lower()[:8] or "usd"
 
@@ -76,6 +80,7 @@ def record_sale_from_checkout_metadata(
         amount=commission_amount,
         purchase_amount=amount,
         subscription_name=subscription_name,
+        stripe_checkout_session_id=sid,
         currency=cur,
     )
     referral.profile.points_total += int(amount) * SALE_POINTS_PER_DOLLAR

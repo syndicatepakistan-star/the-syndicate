@@ -167,6 +167,23 @@ class UserDashboardEntitlement(models.Model):
         default=AccessTier.NONE,
         db_index=True,
     )
+    money_mastery_lifetime = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Lifetime Money Mastery — all programs and vault modules.",
+    )
+    king_subscription_expires_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="When The Knight monthly membership ends (Syndicate Mode + Membership).",
+    )
+    stripe_knight_subscription_id = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        db_index=True,
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

@@ -14,6 +14,8 @@ import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards
 import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
 import { isVaultCourseSlug, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
+import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
+import { resetDashboardShellScroll } from "@/lib/dashboardShellScroll";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
@@ -29,6 +31,8 @@ import {
   ProgramUnlockCelebration,
   PROGRAM_UNLOCK_CELEBRATION_KEY,
 } from "@/components/programs/ProgramUnlockCelebration";
+import { clearUnlockCelebrationStorage, resolvePlaylistIdForPlan } from "@/lib/programUnlockFlow";
+import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
@@ -235,6 +239,7 @@ export function ProgramsCourseSection({
   const [playlistsError, setPlaylistsError] = useState<string | null>(null);
   const [staff, setStaff] = useState(false);
   const [accessTier, setAccessTier] = useState<string | null>(null);
+  const [moneyMasteryActive, setMoneyMasteryActive] = useState(false);
   const [secureView, setSecureView] = useState<"grid" | "detail">("grid");
   const [detailCourseId, setDetailCourseId] = useState<number | null>(null);
   const [detailPlaylistId, setDetailPlaylistId] = useState<number | null>(null);
@@ -284,6 +289,7 @@ export function ProgramsCourseSection({
         if (!cancelled) {
           setStaff(!!identity?.is_staff);
           setAccessTier(identity?.access_tier ?? null);
+          setMoneyMasteryActive(!!identity?.money_mastery_active);
         }
         clearStreamPlaylistsCache();
         await reloadApiCourses();
@@ -298,68 +304,106 @@ export function ProgramsCourseSection({
   }, [reloadApiCourses, reloadStreamPlaylists]);
 
   const effectiveStreamPlaylists = useMemo(() => {
-    if (!hasMoneyMasteryAccess(accessTier)) return streamPlaylists;
+    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return streamPlaylists;
     return streamPlaylists.map((pl) => ({ ...pl, is_unlocked: true }));
-  }, [streamPlaylists, accessTier]);
+  }, [streamPlaylists, accessTier, moneyMasteryActive]);
 
   const effectiveApiCourses = useMemo(() => {
-    if (!hasMoneyMasteryAccess(accessTier)) return apiCourses;
+    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return apiCourses;
     return apiCourses.map((c) => (c.can_access === false ? { ...c, can_access: true } : c));
-  }, [apiCourses, accessTier]);
+  }, [apiCourses, accessTier, moneyMasteryActive]);
 
-  const queueUnlockCelebration = useCallback((playlistId: number) => {
-    if (!Number.isFinite(playlistId) || playlistId <= 0) return;
-    if (unlockCelebrationStartedRef.current) return;
-    unlockCelebrationStartedRef.current = true;
-    setUnlockCelebrationId(playlistId);
-    setHighlightProgramId(playlistId);
-    try {
-      window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, String(playlistId));
-    } catch {
-      // Ignore storage exceptions.
-    }
-  }, []);
+  const openUnlockedPlaylistDirect = useCallback(
+    (playlistId: number) => {
+      if (!Number.isFinite(playlistId) || playlistId <= 0) return;
+      unlockCelebrationStartedRef.current = true;
+      setUnlockCelebrationId(null);
+      clearUnlockCelebrationStorage();
+      setHighlightProgramId(playlistId);
+      void reloadStreamPlaylists({ forceRefresh: true }).then(() => {
+        openStreamPlaylistRef.current(playlistId);
+      });
+    },
+    [reloadStreamPlaylists]
+  );
+
+  const queueUnlockCelebration = useCallback(
+    (playlistId: number, skipAnimation = false) => {
+      if (!Number.isFinite(playlistId) || playlistId <= 0) return;
+      if (skipAnimation) {
+        openUnlockedPlaylistDirect(playlistId);
+        return;
+      }
+      if (unlockCelebrationStartedRef.current) return;
+      unlockCelebrationStartedRef.current = true;
+      setUnlockCelebrationId(playlistId);
+      setHighlightProgramId(playlistId);
+      try {
+        window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, String(playlistId));
+      } catch {
+        // Ignore storage exceptions.
+      }
+    },
+    [openUnlockedPlaylistDirect]
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refreshFromCheckout = () => {
       clearStreamPlaylistsCache();
+      clearVaultPlaylistMapCache();
       void reloadStreamPlaylists({ forceRefresh: true });
       void reloadApiCourses();
       try {
         window.sessionStorage.removeItem("playlist_checkout_confirmed");
+        window.sessionStorage.removeItem("plan_checkout_confirmed");
       } catch {
         // Ignore storage exceptions.
       }
     };
-    const onConfirmed = (e: Event) => {
+    const onPlaylistConfirmed = (e: Event) => {
+      refreshFromCheckout();
+      const detail = (e as CustomEvent<{ playlistId?: number; skipCelebration?: boolean }>).detail;
+      if (detail?.playlistId) {
+        queueUnlockCelebration(detail.playlistId, detail.skipCelebration === true);
+      }
+    };
+    const onPlanConfirmed = (e: Event) => {
       refreshFromCheckout();
       const detail = (e as CustomEvent<{ playlistId?: number }>).detail;
       if (detail?.playlistId) {
         queueUnlockCelebration(detail.playlistId);
       }
     };
+
     const params = new URLSearchParams(window.location.search);
     if (params.get("playlist_checkout") === "success") {
       const t = window.setTimeout(refreshFromCheckout, 900);
-      window.addEventListener("playlist-checkout-confirmed", onConfirmed);
+      window.addEventListener("playlist-checkout-confirmed", onPlaylistConfirmed);
       return () => {
         window.clearTimeout(t);
-        window.removeEventListener("playlist-checkout-confirmed", onConfirmed);
+        window.removeEventListener("playlist-checkout-confirmed", onPlaylistConfirmed);
       };
     }
+
     try {
-      if (window.sessionStorage.getItem("playlist_checkout_confirmed") === "1") {
+      if (
+        window.sessionStorage.getItem("playlist_checkout_confirmed") === "1" ||
+        window.sessionStorage.getItem("plan_checkout_confirmed") === "1"
+      ) {
         refreshFromCheckout();
       }
     } catch {
       // Ignore storage exceptions.
     }
-    window.addEventListener("playlist-checkout-confirmed", onConfirmed);
+
+    window.addEventListener("playlist-checkout-confirmed", onPlaylistConfirmed);
+    window.addEventListener("plan-checkout-confirmed", onPlanConfirmed);
     return () => {
-      window.removeEventListener("playlist-checkout-confirmed", onConfirmed);
+      window.removeEventListener("playlist-checkout-confirmed", onPlaylistConfirmed);
+      window.removeEventListener("plan-checkout-confirmed", onPlanConfirmed);
     };
-  }, [reloadStreamPlaylists, queueUnlockCelebration]);
+  }, [reloadStreamPlaylists, reloadApiCourses, queueUnlockCelebration]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -487,10 +531,7 @@ export function ProgramsCourseSection({
   };
 
   const resetProgramsViewportScroll = () => {
-    if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    const shell = document.querySelector<HTMLElement>("[data-main-shell-scroll]");
-    if (shell) shell.scrollTop = 0;
+    resetDashboardShellScroll();
   };
 
   const openStreamPlaylist = (id: number) => {
@@ -526,6 +567,7 @@ export function ProgramsCourseSection({
       });
       if (checkout.is_unlocked) {
         await reloadStreamPlaylists({ forceRefresh: true });
+        openStreamPlaylist(playlistId);
         return;
       }
       if (checkout.checkout_url) {
@@ -557,7 +599,10 @@ export function ProgramsCourseSection({
       }
       if (result.status === "already_unlocked") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
-        toast.success(result.message || "Money Mastery already active. All programs are unlocked.");
+        await navigateToAlreadyUnlockedProgram({
+          plan: "bundle",
+          postAuthNext: "/dashboard?section=programs",
+        });
         return;
       }
       if (result.status === "error") {
@@ -584,7 +629,8 @@ export function ProgramsCourseSection({
   const visibleApiCourses = useMemo(
     () =>
       effectiveApiCourses.filter(
-        (course) => !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title })
+        (course) =>
+          !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title, vault_plan_slug: null })
       ),
     [effectiveApiCourses]
   );
@@ -604,7 +650,15 @@ export function ProgramsCourseSection({
   const searchablePlaylists = useMemo(
     () => {
       const filtered = effectiveStreamPlaylists.filter((playlist) => {
-        if (isHiddenProgramPlaylist(playlist.id, { slug: playlist.slug, title: playlist.title })) return false;
+        if (
+          isHiddenProgramPlaylist(playlist.id, {
+            slug: playlist.slug,
+            title: playlist.title,
+            vault_plan_slug: playlist.vault_plan_slug,
+          })
+        ) {
+          return false;
+        }
         return normalizedPlaylistTitleQuery.length === 0
           ? true
           : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery);
@@ -644,20 +698,27 @@ export function ProgramsCourseSection({
     async (plan: CheckoutOfferKey) => {
       if (plan === "bundle" || plan === "king") {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
+        const message =
+          plan === "bundle"
+            ? "Money Mastery already active. All programs are unlocked."
+            : "The Knight plan is already active for this account.";
+        toast.success(message);
+        return;
       }
       const offer = isVaultCourseSlug(plan)
         ? vaultCourseBySlug(plan)
         : planOfferByKey(plan as PlanOfferKey);
       const label = offer?.title ?? "This offer";
-      const message =
-        plan === "bundle"
-          ? "Money Mastery already active. All programs are unlocked."
-          : plan === "king"
-            ? "The Knight plan is already active for this account."
-            : `${label} is already active on this account.`;
-      toast.success(message);
+      const playlistId = await resolvePlaylistIdForPlan(plan);
+      if (playlistId) {
+        openUnlockedPlaylistDirect(playlistId);
+        toast.success(`${label} is already active — opening now.`);
+        return;
+      }
+      await Promise.all([reloadApiCourses(), reloadStreamPlaylists({ forceRefresh: true })]);
+      toast.success(`${label} is already active on this account.`);
     },
-    [reloadApiCourses, reloadStreamPlaylists]
+    [openUnlockedPlaylistDirect, reloadApiCourses, reloadStreamPlaylists]
   );
 
   useEffect(() => {
@@ -852,30 +913,32 @@ export function ProgramsCourseSection({
   };
 
   return (
+    <div className="dashboard-mobile-section-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip">
     <>
       {showSecureBlock ? (
-        <div className="mb-8 space-y-5 max-lg:pb-6">
+        <div className="mb-4 w-full max-w-full space-y-3 max-lg:pb-3 sm:mb-8 sm:space-y-5 sm:pb-6">
           {!inProgramLessonView ? (
-            <div className="space-y-8 pb-2 sm:space-y-10 sm:pb-3">
-              <div className="w-full text-left">
+            <div className="w-full max-w-full space-y-4 pb-1 sm:space-y-10 sm:pb-3">
+              <div className="w-full max-w-full text-left">
                 <div
                   className={cn(
                     DASHBOARD_HEADING_LIGHTNING,
-                    "text-[18px] font-black uppercase tracking-[0.16em] sm:text-[24px]"
+                    "text-[15px] font-black uppercase tracking-[0.14em] sm:text-[24px] sm:tracking-[0.16em]"
                   )}
                 >
                   Programs
                 </div>
-                <p className="mt-2 max-w-4xl text-[17px] leading-relaxed text-white/82 sm:text-[24px] sm:leading-[1.35]">
+                <p className="mt-1.5 max-w-4xl text-[13px] leading-snug text-white/82 sm:mt-2 sm:text-[24px] sm:leading-[1.35]">
                   {useApiProgramBrowser
                     ? "Browse all playlists here, and open courses for lesson playlists and progress."
                     : "When published programs are available from the API, you can open any course, watch lessons, and track your learning flow from one place."}
                 </p>
               </div>
               {secureView === "grid" ? (
-                <div className="w-full space-y-6 sm:space-y-8">
+                <div className="w-full max-w-full space-y-4 sm:space-y-8">
                   <PublicPlanOfferCards
                     checkoutReturnPath="/dashboard?section=programs"
+                    embedded
                     size="large"
                     onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                     onCheckoutError={setCheckoutError}
@@ -1251,5 +1314,6 @@ export function ProgramsCourseSection({
         />
       ) : null}
     </>
+    </div>
   );
 }

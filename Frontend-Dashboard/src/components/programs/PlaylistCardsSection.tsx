@@ -189,13 +189,11 @@ export function PlaylistCardsSection({
   const visiblePlaylists = useMemo(
     () =>
       playlists.filter((pl) => {
+        const meta = { slug: pl.slug, title: pl.title, vault_plan_slug: pl.vault_plan_slug };
         if (pl.is_coming_soon) {
-          return (
-            isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title }) ||
-            highlightPlaylistId === pl.id
-          );
+          return isPublicProgramsLibraryPlaylist(pl.id, meta) || highlightPlaylistId === pl.id;
         }
-        if (isPublicProgramsLibraryPlaylist(pl.id, { slug: pl.slug, title: pl.title })) {
+        if (isPublicProgramsLibraryPlaylist(pl.id, meta)) {
           return true;
         }
         return highlightPlaylistId === pl.id;

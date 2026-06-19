@@ -40,6 +40,7 @@ const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
 /** Mid-ticket Syndicate Elite pack deep links for weapon business models. */
 const MID_TICKET_PACK_BY_COURSE: Record<string, GlobePackKey> = {
   "trading advanced technical analysis": "trading_technical_analysis",
+  "ai content automation": "ai_content_automation",
 };
 
 /** Stable DOM ids for Section C unlock CTAs (analytics / testing hooks). */
@@ -49,6 +50,7 @@ export const QUIZ_STACK_UNLOCK_BUTTON_IDS: Record<string, string> = {
   "business warfare": "quiz-unlock-protocol-business-warfare",
   "mastering risk and uncertainty": "quiz-unlock-protocol-mastering-risk-uncertainty",
   "trading advanced technical analysis": "quiz-unlock-weapon-trading-technical-analysis",
+  "ai content automation": "quiz-unlock-weapon-ai-content-automation",
 };
 
 const KNOWN_FREE_STACK_COURSES = new Set(["zero to 1 million", "9 to 5 exit strategy"]);

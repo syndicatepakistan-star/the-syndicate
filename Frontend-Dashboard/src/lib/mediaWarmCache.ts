@@ -32,11 +32,15 @@ export const MARKETING_IMAGE_URLS = ["/assets/logo.webp"] as const;
 
 export const PROGRAMS_SECTION_VIDEO = "/assets/v.mp4";
 
+export const DASHBOARD_SHELL_VIDEO = "/assets/dashboard/bg.mp4";
+
 export const MARKETING_VIDEO_URLS = [
 
   "/assets/bg-video.mp4",
 
   PROGRAMS_SECTION_VIDEO,
+
+  DASHBOARD_SHELL_VIDEO,
 
   "/assets/video.mp4",
 
@@ -62,9 +66,14 @@ export function warmGlobeGalleryImages(urls?: readonly string[]): Promise<void> 
 export function warmProgramsSectionAssets(globeUrls?: readonly string[]): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   const globeList = globeUrls?.length ? globeUrls : [];
-  return Promise.all([warmVideo(PROGRAMS_SECTION_VIDEO), warmGlobeGalleryImages(globeList)]).then(
-    () => undefined
-  );
+  const globeWarm =
+    globeList.length === 0 || globeList.every((src) => isImageWarm(src))
+      ? Promise.resolve()
+      : warmGlobeGalleryImages(globeList);
+  const videoWarm = isVideoWarm(PROGRAMS_SECTION_VIDEO)
+    ? Promise.resolve()
+    : warmVideo(PROGRAMS_SECTION_VIDEO);
+  return Promise.all([videoWarm, globeWarm]).then(() => undefined);
 }
 
 

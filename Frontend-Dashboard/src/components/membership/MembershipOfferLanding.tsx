@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
+import { fetchPortalIdentity } from "@/lib/portal-api";
+import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
@@ -225,6 +227,18 @@ export function MembershipOfferLanding({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [knightRemaining, setKnightRemaining] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchPortalIdentity().then((user) => {
+      if (cancelled || !user?.knight_subscription_active) return;
+      setKnightRemaining(formatKnightSubscriptionRemaining(user.knight_subscription_expires_at));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const unlockMembership = useCallback(async () => {
     setError(null);
@@ -287,6 +301,11 @@ export function MembershipOfferLanding({
                 <p className="mt-5 max-w-2xl font-mono text-base leading-relaxed text-zinc-100/85 sm:text-lg">
                   {HERO_INTRO}
                 </p>
+                {knightRemaining ? (
+                  <p className="mt-3 font-mono text-sm uppercase tracking-wider text-amber-200/90">
+                    Knight membership active — {knightRemaining}
+                  </p>
+                ) : null}
                 <MembershipHeroOffer
                   busy={busy}
                   error={error}

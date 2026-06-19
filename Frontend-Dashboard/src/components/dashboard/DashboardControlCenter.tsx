@@ -638,7 +638,8 @@ function HeroStatusPanel({
   onVideoBackdrop?: boolean;
 }) {
   const s = snapshots;
-  const ongoingPrograms = s.programs.length;
+  const activePrograms = s.programStats?.unlocked ?? s.programs.length;
+  const ongoingPrograms = s.programStats?.inProgress ?? s.programs.filter((p) => p.progressPct > 0).length;
   const completedMissionCount = s.syndicate.completedMissionsCount ?? 0;
   const pendingMissionCount = s.syndicate.pendingMissionsCount ?? (s.syndicate.activeLiveMissionCount ?? (s.syndicate.activeMissionTitle ? 1 : 0));
   const totalMissionPoints = s.syndicate.missionPointsTotal ?? 0;
@@ -725,9 +726,15 @@ function HeroStatusPanel({
                   className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(34,211,238,0.55), 0 0 40px rgba(6,182,212,0.25)" }}
                 >
-                  {ongoingPrograms}
+                  {activePrograms}
                 </div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-cyan-200/78">Ongoing</div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-cyan-200/78">
+                  {ongoingPrograms > 0
+                    ? `${ongoingPrograms} in progress`
+                    : activePrograms > 0
+                      ? "Unlocked"
+                      : "None yet"}
+                </div>
               </div>
             </button>
             <button
@@ -1301,11 +1308,11 @@ export default function DashboardControlCenter({
       {/* Reminders surface inside Syndicate Mode only (not on main dashboard overview). */}
       <div
         className={cn(
-          "relative w-full max-w-none space-y-5 rounded-lg transition-[box-shadow] duration-700 md:space-y-6 lg:space-y-7",
+          "relative w-full max-w-full space-y-5 rounded-lg transition-[box-shadow] duration-700 md:space-y-6 lg:space-y-7",
           integrityHigh && "dashboard-integrity-pulse"
         )}
       >
-        <div className="ghost-muted w-full min-w-0 max-w-none space-y-5 md:space-y-6 lg:space-y-7">
+        <div className="ghost-muted dashboard-mobile-section-root w-full min-w-0 max-w-full space-y-4 overflow-x-clip md:space-y-6 lg:space-y-7">
           {showHeroStatusPanel ? (
             <HeroStatusPanel
               themeMode={themeMode}

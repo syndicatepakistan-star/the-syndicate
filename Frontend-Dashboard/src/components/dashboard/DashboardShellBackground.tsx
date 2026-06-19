@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { isVideoWarm, warmVideo } from "@/lib/mediaWarmCache";
 
 export const DASHBOARD_MAIN_BG_VIDEO = "/assets/dashboard/bg.mp4";
 
@@ -17,6 +18,7 @@ export function DashboardShellBackground({
   opacity = 0.2,
 }: DashboardShellBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -24,28 +26,25 @@ export function DashboardShellBackground({
     el.muted = true;
     el.defaultMuted = true;
     el.setAttribute("playsinline", "");
-    const play = () => {
-      void el.play().catch(() => {});
+
+    const startOnce = () => {
+      if (startedRef.current && !el.paused) return;
+      startedRef.current = true;
+      void el.play().catch(() => {
+        startedRef.current = false;
+      });
     };
-    play();
-    const onReady = () => play();
-    el.addEventListener("loadeddata", onReady);
-    el.addEventListener("canplay", onReady);
-    const shell = el.closest("[data-dashboard-video-shell]");
-    const observer =
-      shell && typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver(
-            (entries) => {
-              if (entries[0]?.isIntersecting) play();
-            },
-            { threshold: 0.05 }
-          )
-        : null;
-    if (observer && shell) observer.observe(shell);
+
+    void warmVideo(DASHBOARD_MAIN_BG_VIDEO).finally(startOnce);
+
+    if (isVideoWarm(DASHBOARD_MAIN_BG_VIDEO) && el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      startOnce();
+      return;
+    }
+
+    el.addEventListener("canplay", startOnce, { once: true });
     return () => {
-      el.removeEventListener("loadeddata", onReady);
-      el.removeEventListener("canplay", onReady);
-      observer?.disconnect();
+      el.removeEventListener("canplay", startOnce);
     };
   }, []);
 

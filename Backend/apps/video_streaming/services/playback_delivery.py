@@ -302,14 +302,59 @@ def build_stream_playback_api_payload(
     }
 
 
-def file_response_for_local_original(video: StreamVideo):
-    """Stream original file from configured storage (development / disk)."""
+def _parse_byte_range(range_header: str | None, file_size: int) -> tuple[int, int] | None:
+    """Return inclusive (start, end) for the first Range unit, or None for full file."""
+    if not range_header or file_size <= 0:
+        return None
+    trimmed = range_header.strip()
+    if not trimmed.lower().startswith("bytes="):
+        return None
+    try:
+        _, inner = trimmed.split("=", 1)
+    except ValueError:
+        return None
+    first = inner.strip().split(",", 1)[0].strip()
+    if not first:
+        return None
+    if "-" not in first:
+        return None
+    start_s, end_s = first.split("-", 1)
+    try:
+        if start_s == "":
+            suffix = int(end_s)
+            if suffix <= 0:
+                return None
+            start = max(0, file_size - suffix)
+            end = file_size - 1
+        else:
+            start = int(start_s)
+            end = int(end_s) if end_s != "" else file_size - 1
+    except ValueError:
+        return None
+    if start < 0 or end < start:
+        return None
+    end = min(end, file_size - 1)
+    return start, end
+
+
+def file_response_for_local_original(video: StreamVideo, request=None):
+    """Stream original file from configured storage (development / disk) with HTTP Range."""
     if not video.original_video or not video.original_video.name:
         raise Http404()
     name_lower = (video.original_video.name or "").lower()
     ctype, _ = mimetypes.guess_type(video.original_video.name)
     if not ctype:
         ctype = "video/mp4" if name_lower.endswith(".mp4") else "application/octet-stream"
+    try:
+        size = int(video.original_video.size)
+    except (FileNotFoundError, OSError, ValueError, TypeError):
+        raise Http404()
+
+    range_header = None
+    if request is not None:
+        range_header = (request.headers.get("Range") or request.META.get("HTTP_RANGE") or "").strip() or None
+
+    byte_range = _parse_byte_range(range_header, size)
     try:
         fh = video.original_video.open("rb")
     except FileNotFoundError:
@@ -318,6 +363,33 @@ def file_response_for_local_original(video: StreamVideo):
         logger.exception("Could not open original_video for video_id=%s", video.pk)
         raise Http404()
 
+    if byte_range:
+        start, end = byte_range
+        length = end - start + 1
+        fh.seek(start)
+
+        def iterator():
+            remaining = length
+            chunk_size = s3_proxy_read_chunk_bytes()
+            try:
+                while remaining > 0:
+                    chunk = fh.read(min(chunk_size, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    yield chunk
+            finally:
+                fh.close()
+
+        resp = StreamingHttpResponse(iterator(), status=206, content_type=ctype)
+        resp["Content-Range"] = f"bytes {start}-{end}/{size}"
+        resp["Content-Length"] = str(length)
+        resp["Accept-Ranges"] = "bytes"
+        resp["Cache-Control"] = "private, no-store"
+        return resp
+
     resp = FileResponse(fh, content_type=ctype)
+    resp["Accept-Ranges"] = "bytes"
+    resp["Content-Length"] = str(max(0, size))
     resp["Cache-Control"] = "private, no-store"
     return resp

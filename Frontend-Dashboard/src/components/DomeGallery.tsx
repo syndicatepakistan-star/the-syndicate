@@ -249,7 +249,7 @@ export default function DomeGallery({
     })
     const fallback = window.setTimeout(() => {
       if (!cancelled) setTilesReady(true)
-    }, compactViewport ? 380 : 1400)
+    }, compactViewport ? 120 : 900)
     return () => {
       cancelled = true
       window.clearTimeout(fallback)

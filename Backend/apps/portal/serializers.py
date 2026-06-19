@@ -3,6 +3,11 @@ from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from apps.portal.commercial_access import (
+    refresh_knight_subscription,
+    user_has_active_knight_subscription,
+    user_has_money_mastery,
+)
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_selection_completed, king_selection_required, king_selection_total_selected
 from apps.portal.models import Mission, Note, PortalPermission, PortalRole, Reminder, SocialLink, UserDashboardEntitlement
@@ -29,6 +34,9 @@ class UserMeSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     access_tier = serializers.SerializerMethodField()
+    money_mastery_active = serializers.SerializerMethodField()
+    knight_subscription_active = serializers.SerializerMethodField()
+    knight_subscription_expires_at = serializers.SerializerMethodField()
     dashboard_nav_locks = serializers.SerializerMethodField()
     king_program_selection_required = serializers.SerializerMethodField()
     king_program_selection_completed = serializers.SerializerMethodField()
@@ -46,6 +54,9 @@ class UserMeSerializer(serializers.ModelSerializer):
             "roles",
             "permissions",
             "access_tier",
+            "money_mastery_active",
+            "knight_subscription_active",
+            "knight_subscription_expires_at",
             "dashboard_nav_locks",
             "king_program_selection_required",
             "king_program_selection_completed",
@@ -69,7 +80,26 @@ class UserMeSerializer(serializers.ModelSerializer):
         return ent.access_tier
 
     def get_access_tier(self, obj: User) -> str:
+        refresh_knight_subscription(obj)
         return self._effective_access_tier(obj)
+
+    def get_money_mastery_active(self, obj: User) -> bool:
+        refresh_knight_subscription(obj)
+        return user_has_money_mastery(obj)
+
+    def get_knight_subscription_active(self, obj: User) -> bool:
+        refresh_knight_subscription(obj)
+        return user_has_active_knight_subscription(obj)
+
+    def get_knight_subscription_expires_at(self, obj: User):
+        refresh_knight_subscription(obj)
+        try:
+            expires = obj.dashboard_entitlement.king_subscription_expires_at
+        except UserDashboardEntitlement.DoesNotExist:
+            return None
+        if expires is None:
+            return None
+        return expires.isoformat()
 
     def _stored_entitlement_tier(self, obj: User) -> str:
         """DB tier for commercial locks — not upgraded to `full` for staff (Money Mastery must still lock King-only areas)."""
@@ -79,11 +109,11 @@ class UserMeSerializer(serializers.ModelSerializer):
             return UserDashboardEntitlement.AccessTier.NONE
 
     def get_dashboard_nav_locks(self, obj: User) -> dict[str, bool]:
-        tier = self._stored_entitlement_tier(obj)
-        # True = locked. Knight unlocks Syndicate Mode + Membership; Money Mastery unlocks programs + goals.
-        if tier in (UserDashboardEntitlement.AccessTier.KING, UserDashboardEntitlement.AccessTier.FULL):
+        refresh_knight_subscription(obj)
+        # True = locked. Active Knight unlocks Syndicate Mode + Membership; Money Mastery unlocks programs + goals.
+        if user_has_active_knight_subscription(obj):
             return {"monk": False, "resources": False, "goals": False, "dashboard": False}
-        if tier == UserDashboardEntitlement.AccessTier.MONEY_MASTERY:
+        if user_has_money_mastery(obj):
             return {"monk": True, "resources": True, "goals": False, "dashboard": False}
         from apps.courses.access import _user_is_playlist_only_buyer
 

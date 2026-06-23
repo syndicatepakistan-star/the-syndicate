@@ -4,7 +4,8 @@ import { TRADING_PACK_DESCRIPTION } from "@/components/programs/tradingVaultCopy
 import {
   comparePriceForUnit,
   distributeDollarPrices,
-  VAULT_ALACARTE_TOTAL_USD,
+  VAULT_ALACARTE_AGENTIC_USD,
+  VAULT_ALACARTE_AI_CONTENT_USD,
 } from "@/lib/packPricing";
 import {
   allTradingSubmoduleOffers,
@@ -74,7 +75,7 @@ function mapVaultCourses(rows: VaultCourseRow[], packPlan: VaultPackKey): PlanOf
   );
 }
 
-const AGENTIC_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_TOTAL_USD, 26);
+const AGENTIC_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_AGENTIC_USD, 26);
 
 const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Build a Blog Writing Agent With N8N", "blog writing n8n.jpg"],
@@ -114,7 +115,7 @@ const AGENTIC_ROWS: VaultCourseRow[] = [
   };
 });
 
-const AI_CONTENT_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_TOTAL_USD, 29);
+const AI_CONTENT_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_AI_CONTENT_USD, 29);
 
 const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Beginners Guide to Faceless YouTube in 2026 (3 hours)", "faceless youtube.jpg"],

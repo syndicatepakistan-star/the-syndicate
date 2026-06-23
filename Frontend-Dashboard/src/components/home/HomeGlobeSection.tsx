@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { HomeDomeGallerySection } from "@/components/home/HomeBelowFoldSections";
+import { useMatchMedia } from "@/hooks/useMatchMedia";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 import { warmProgramsSectionAssets } from "@/lib/mediaWarmCache";
-import { GLOBE_GALLERY_IMAGE_URLS } from "@/lib/programPlaylistThumbnails";
+import {
+  filterCuratedGlobeTilesForMobile,
+  GLOBE_GALLERY_IMAGE_URLS,
+  MOBILE_GLOBE_GALLERY_IMAGE_URLS,
+  MOBILE_GLOBE_TILE_COUNT,
+} from "@/lib/programPlaylistThumbnails";
 
 type DomeProps = ComponentProps<typeof HomeDomeGallerySection>;
 
@@ -32,6 +38,20 @@ function GlobeSkeleton() {
 export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
   const hostRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState(false);
+  const isMobile = useMatchMedia("(max-width: 767px)");
+
+  const globeImages = useMemo(() => {
+    if (!isMobile) return images;
+    const pool = images ?? [];
+    const mobileSrc = new Set(MOBILE_GLOBE_GALLERY_IMAGE_URLS);
+    const filtered = pool.filter((item) => {
+      const src = typeof item === "string" ? item : item.src;
+      return mobileSrc.has(src);
+    });
+    return filtered.length > 0 ? filtered : filterCuratedGlobeTilesForMobile();
+  }, [images, isMobile]);
+
+  const warmUrls = isMobile ? MOBILE_GLOBE_GALLERY_IMAGE_URLS : GLOBE_GALLERY_IMAGE_URLS;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -43,17 +63,18 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
         setActive(true);
         observer.disconnect();
       },
-      { rootMargin: "240px 0px", threshold: 0.01 },
+      { rootMargin: isMobile ? "180px 0px" : "240px 0px", threshold: 0.01 },
     );
 
     observer.observe(host);
     return () => observer.disconnect();
-  }, [active]);
+  }, [active, isMobile]);
 
   useEffect(() => {
     if (!active) return;
-    const priority = GLOBE_GALLERY_IMAGE_URLS.slice(0, 12);
-    void warmProgramsSectionAssets(priority);
+    void warmProgramsSectionAssets(warmUrls);
+    if (isMobile) return;
+
     // Prefetch below-fold bundles while globe warms so pricing/paywall load in parallel.
     void import("@/components/AnimatedPricingPage");
     void import("@/components/PaywallSnapshotsSection");
@@ -64,13 +85,13 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
       usedIdle = true;
       idleHandle = ric(
         () => {
-          void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(12));
+          void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(MOBILE_GLOBE_TILE_COUNT));
         },
         { timeout: 4000 },
       );
     } else {
       idleHandle = window.setTimeout(() => {
-        void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(12));
+        void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(MOBILE_GLOBE_TILE_COUNT));
       }, 1200);
     }
     return () => {
@@ -78,7 +99,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
       if (usedIdle) window.cancelIdleCallback(idleHandle);
       else window.clearTimeout(idleHandle);
     };
-  }, [active]);
+  }, [active, isMobile, warmUrls]);
 
   return (
     <section
@@ -109,18 +130,18 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
         <div className="min-h-0 w-full max-w-full flex-1 overflow-hidden">
           {active ? (
             <HomeDomeGallerySection
-              images={images}
-              fit={0.58}
-              minRadius={260}
-              segments={18}
-              dragSensitivity={14}
-              dragDampening={3.6}
-              maxVerticalRotationDeg={32}
+              images={globeImages}
+              fit={isMobile ? 0.54 : 0.58}
+              minRadius={isMobile ? 220 : 260}
+              segments={isMobile ? MOBILE_GLOBE_TILE_COUNT : 18}
+              dragSensitivity={isMobile ? 12 : 14}
+              dragDampening={isMobile ? 4.2 : 3.6}
+              maxVerticalRotationDeg={isMobile ? 28 : 32}
               grayscale={false}
-              autoRotateSpeedDeg={2.4}
-              tileInsetPx={12}
+              autoRotateSpeedDeg={isMobile ? 1.1 : 2.4}
+              tileInsetPx={isMobile ? 10 : 12}
               navigateOnClick
-              eagerImages
+              eagerImages={!isMobile}
             />
           ) : (
             <GlobeSkeleton />

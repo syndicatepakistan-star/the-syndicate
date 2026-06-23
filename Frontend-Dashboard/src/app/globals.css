@@ -12016,9 +12016,9 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
-    height: clamp(520px, 68dvh, 640px);
-    min-height: clamp(500px, 66dvh, 620px);
-    max-height: clamp(540px, 70dvh, 660px);
+    height: clamp(480px, 62dvh, 580px);
+    min-height: clamp(460px, 60dvh, 560px);
+    max-height: clamp(500px, 64dvh, 600px);
   }
 
   .home-social-clips-section {
@@ -12030,9 +12030,25 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 
   /* Homepage scroll perf — skip paint for off-screen bands; lighter card effects on phones */
+  .home-page-root {
+    overscroll-behavior-y: none;
+  }
+
   .home-page-root .home-lazy-section {
     content-visibility: auto;
-    contain-intrinsic-size: auto 520px;
+    contain-intrinsic-size: auto 480px;
+  }
+
+  .home-page-root .home-social-clips-lazy {
+    contain-intrinsic-size: auto min(420px, 58vh);
+  }
+
+  #programsGlobeSection {
+    scroll-margin-top: 12px;
+  }
+
+  .home-social-clips-section {
+    scroll-margin-top: 8px;
   }
 
   .home-page-root .hero-logo-pulse::before {
@@ -12046,6 +12062,14 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
   .home-social-clips-section .lightning-glow-card {
     box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  #heroSection .featured-logos-marquee-track {
+    animation-duration: calc(var(--duration, 34s) * 1.15);
+  }
+
+  #heroSection .featured-logos-marquee-track article {
+    backdrop-filter: none;
   }
 
   .home-mobile-vh-section {

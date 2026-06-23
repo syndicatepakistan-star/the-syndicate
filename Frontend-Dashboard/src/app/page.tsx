@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import { unstable_cache } from 'next/cache'
-import FeaturedLogosStrip from '@/components/FeaturedLogosStrip'
 import {
   HomeBottomSections,
   HomeCertificatesSection,
@@ -8,30 +7,13 @@ import {
   HomePaywallSection,
   HomePricingSection,
 } from '@/components/home/HomeBelowFoldSections'
+import { HeroFeaturedLogosStrip } from '@/components/home/HeroFeaturedLogosStrip'
 import { HomeGlobeSection } from '@/components/home/HomeGlobeSection'
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import { HomeSocialClipsSection } from '@/components/home/HomeSocialClipsSection'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { NavApp } from '@/components/NavApp'
 import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
-
-const FEATURED_LOGOS = [
-  {
-    src: '/assets/press-forbes.png',
-    alt: 'Forbes logo',
-    href: 'https://forbes.ge/en/how-the-syndicate-uses-mastery-and-empowerment-to-redefine-business/',
-  },
-  {
-    src: '/assets/press-luxury.png',
-    alt: 'LLM logo',
-    href: 'https://www.luxurylifestylemag.co.uk/money/how-the-syndicate-empowers-individuals-to-master-power-money-and-influence-in-the-money-mastery-course/',
-  },
-  {
-    src: '/assets/press-gq.png',
-    alt: 'GQ logo',
-    href: 'https://gq.co.za/wealth/2025-02-10-how-the-syndicate-can-disrupt-the-traditional-model-of-influence-and-education-in-the-digital-age/',
-  },
-]
 
 const getLinkedProgramGalleryImages = unstable_cache(
   async () => getCuratedGlobeGalleryImages(),
@@ -92,7 +74,7 @@ export default async function Home() {
           </div>
         </div>
         <div className="absolute bottom-4 left-1/2 z-20 w-full max-w-[1180px] -translate-x-1/2 px-3 sm:bottom-6 sm:px-4">
-          <FeaturedLogosStrip logos={FEATURED_LOGOS} speedSeconds={34} compact />
+          <HeroFeaturedLogosStrip speedSeconds={34} compact />
         </div>
         <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
       </section>

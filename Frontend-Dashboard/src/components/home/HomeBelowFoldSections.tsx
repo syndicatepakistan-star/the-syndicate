@@ -36,7 +36,7 @@ type DomeGalleryProps = ComponentProps<typeof DomeGallery>;
 export function HomeDomeGallerySection(props: DomeGalleryProps) {
   return (
     <div className="h-full min-h-0 w-full max-w-full overflow-hidden rounded-none bg-transparent">
-      <DomeGallery {...props} eagerImages />
+      <DomeGallery {...props} />
     </div>
   );
 }

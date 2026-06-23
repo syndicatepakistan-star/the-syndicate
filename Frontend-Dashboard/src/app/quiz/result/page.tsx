@@ -136,7 +136,12 @@ function getCleanReportLines(report: string) {
     .filter((line) => !line.startsWith("Selected Archetype:"))
     .filter((line) => !line.startsWith("Recommended Track:"))
     .filter((line) => !/project\s+obsidian/i.test(line))
-    .filter((line) => !line.includes("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN"));
+    .filter((line) => !line.includes("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN"))
+    .filter(
+      (line) =>
+        !line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER") &&
+        !line.startsWith("THE SYNDICATE DIAGNOSIS: DOSSIER"),
+    );
   return normalizeQuizReportLines(lines);
 }
 
@@ -351,7 +356,6 @@ function renderArchetypeMapSectionContent(
 
 function renderStyledReport(report: string, loginEmail: string) {
   const lines = getCleanReportLines(report);
-  const reportTitle = lines.find((line) => line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER"));
   const sectionTitles = lines.filter((line) => line.startsWith("Section "));
   const visibleSectionTitles = sectionTitles.filter(
     (title) => !title.toLowerCase().includes("section e")
@@ -384,9 +388,6 @@ function renderStyledReport(report: string, loginEmail: string) {
 
   return (
     <>
-      {reportTitle ? (
-        <h2 className="result-heading public-heading-lightning public-heading-lightning--violet">{reportTitle}</h2>
-      ) : null}
       <div className="result-report-layout">
         <nav className="result-section-sidebar" aria-label="Report sections">
           {sections.map((section) => {
@@ -513,9 +514,9 @@ export default function ResultPage() {
         <section className="card">
           <BrandHeader subtitle="No profile found yet. Complete the audit to generate your diagnosis." />
           <h2>Audit result not found</h2>
-          <p>Complete the Sovereign Entity Audit first.</p>
+          <p>Complete The Syndicate Diagnosis first.</p>
           <Link href="/quiz/questions">
-            <button className="btn btn-primary">Begin Audit</button>
+            <button className="btn btn-primary">Start Diagnosis</button>
           </Link>
         </section>
       </main>
@@ -931,6 +932,7 @@ export default function ResultPage() {
           (line) =>
             line.trim() &&
             !line.startsWith("THE SOVEREIGN ENTITY AUDIT: DOSSIER") &&
+            !line.startsWith("THE SYNDICATE DIAGNOSIS: DOSSIER") &&
             !/^Section E:/i.test(line.trim()) &&
             !line.startsWith("Business Models:") &&
             !line.startsWith("Psychology (Paid") &&
@@ -960,34 +962,6 @@ export default function ResultPage() {
     <main className="page-wrap result-page-wrap">
       <section className="card result-page-shell">
         <BrandHeader subtitle="Your strategic report is ready." />
-        <div className="result-summary-panel hud-frame">
-          <div className="result-hud-topbar">
-            <span className="hud-chip">MISSION REPORT</span>
-          </div>
-          <h2 className="section-title public-heading-lightning public-heading-lightning--violet">TACTICAL DIAGNOSIS BOARD</h2>
-          <div className="result-summary-grid">
-            <div className="summary-item">
-              <p className="summary-label">Combat Score</p>
-              <p className="summary-value">{result.score} / 170</p>
-            </div>
-            <div className="summary-item">
-              <p className="summary-label">Current Rank</p>
-              <p className="summary-value">{result.designation || result.category}</p>
-            </div>
-            <div className="summary-item">
-              <p className="summary-label">Operator Archetype</p>
-              <p className="summary-value">{result.archetype}</p>
-            </div>
-            <div className="summary-item">
-              <p className="summary-label">Critical Weakness</p>
-              <p className="summary-value">{result.fatal_flaw}</p>
-            </div>
-          </div>
-          <p className="section-subtitle">
-            <strong>About The Syndicate:</strong> The Syndicate is built to convert raw hustle into a
-            disciplined execution stack through skills, psychology, and strategic operating rules.
-          </p>
-        </div>
         {renderStyledReport(result.ai_report ?? "", quizEmail)}
 
         <div className="result-actions-footer">

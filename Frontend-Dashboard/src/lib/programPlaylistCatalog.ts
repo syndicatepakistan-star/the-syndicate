@@ -113,7 +113,7 @@ export function resolveProgramPlaylistTitle(playlist: ProgramPlaylistLike): stri
   const id = catalog?.id ?? playlist.id;
   const fromApi = playlist.title?.trim();
   const catalogTitle = catalog?.title?.trim();
-  return getProgramDisplayTitle(id, fromApi ?? catalogTitle);
+  return getProgramDisplayTitle(id, fromApi ?? catalogTitle, playlist.slug);
 }
 
 export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike): string {
@@ -152,7 +152,7 @@ export function resolveProgramPlaylistThumbnail(
   }
   const catalog = findProgramCatalogEntry(playlist);
   const thumbId = catalog?.id ?? playlist.id;
-  const staticThumb = getProgramPlaylistThumbnail(thumbId);
+  const staticThumb = getProgramPlaylistThumbnail(thumbId, playlist.slug);
   if (staticThumb) return staticThumb;
   const cover = (djangoCover ?? "").trim();
   return cover || undefined;

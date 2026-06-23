@@ -3,8 +3,8 @@ import LetterGlitch from "@/components/quiz-funnel/LetterGlitch";
 import "./quiz-funnel.css";
 
 export const metadata: Metadata = {
-  title: "THE SYNDICATE",
-  description: "Syndicate sovereign entity audit funnel.",
+  title: "THE SYNDICATE DIAGNOSIS",
+  description: "The Syndicate Diagnosis quiz funnel.",
 };
 
 export default function QuizLayout({ children }: { children: React.ReactNode }) {

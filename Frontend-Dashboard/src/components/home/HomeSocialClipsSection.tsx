@@ -191,6 +191,8 @@ function MarqueeRow({
   );
 }
 
+const MOBILE_SOCIAL_CLIP_COUNT = 5;
+
 function HomeSocialClipsContent() {
   const isMobile = useMatchMedia("(max-width: 767px)");
   const { hostRef, inView: sectionInView } = useInViewRef<HTMLElement>({ rootMargin: "80px 0px", threshold: 0.05 });
@@ -200,14 +202,14 @@ function HomeSocialClipsContent() {
     alt: card.alt,
     href: card.href,
     approxViewsLabel: card.approxViewsLabel,
-  }));
+  })).slice(0, isMobile ? MOBILE_SOCIAL_CLIP_COUNT : undefined);
 
   const informativeItems: MarqueeItem[] = TIKTOK_MOST_INFORMATIVE.map((card) => ({
     videoId: card.videoId,
     src: card.posterSrc,
     alt: card.alt,
     href: card.href,
-  }));
+  })).slice(0, isMobile ? MOBILE_SOCIAL_CLIP_COUNT : undefined);
 
   return (
     <section
@@ -234,8 +236,8 @@ function HomeSocialClipsContent() {
           </h3>
           <MarqueeRow
             items={mostViewedItems}
-            duration={isMobile ? "110s" : "92s"}
-            eagerCount={isMobile ? 2 : 4}
+            duration={isMobile ? "140s" : "92s"}
+            eagerCount={isMobile ? 3 : 4}
             animate={sectionInView}
             liteMobile={isMobile}
           />
@@ -248,8 +250,8 @@ function HomeSocialClipsContent() {
           <MarqueeRow
             items={informativeItems}
             reverse
-            duration={isMobile ? "120s" : "100s"}
-            eagerCount={isMobile ? 2 : 3}
+            duration={isMobile ? "150s" : "100s"}
+            eagerCount={isMobile ? 3 : 3}
             informativeZoom
             animate={sectionInView}
             liteMobile={isMobile}
@@ -264,10 +266,10 @@ function HomeSocialClipsContent() {
 export function HomeSocialClipsSection() {
   return (
     <LazyWhenVisible
-      className="w-full min-w-0 bg-black home-lazy-section"
-      minHeight="min(520px, 72vh)"
-      rootMargin="240px 0px"
-      placeholder={<HomeSectionPlaceholder minHeight="min(520px, 72vh)" titleWidth="11rem" />}
+      className="w-full min-w-0 bg-black home-lazy-section home-social-clips-lazy"
+      minHeight="min(420px, 58vh)"
+      rootMargin="320px 0px"
+      placeholder={<HomeSectionPlaceholder minHeight="min(420px, 58vh)" titleWidth="11rem" />}
     >
       <HomeSocialClipsContent />
     </LazyWhenVisible>

@@ -279,11 +279,17 @@ export default function DomeGallery({
       if (layoutModeRef.current !== layoutMode) {
         layoutModeRef.current = layoutMode
         setCompactViewport(isMobile)
-        const nextSegments = isMobile ? Math.max(12, Math.round(segments * 0.62)) : segments
+      }
+      const poolLen = images.length
+      const mobileSegments =
+        poolLen > 0 && poolLen <= 12
+          ? Math.max(6, Math.min(8, poolLen))
+          : Math.max(12, Math.round(segments * 0.62))
+      const nextSegments = isMobile ? mobileSegments : segments
+      if (activeSegmentsRef.current !== nextSegments) {
         activeSegmentsRef.current = nextSegments
         setActiveSegments(nextSegments)
       }
-      const nextSegments = activeSegmentsRef.current
       const minDim = Math.min(w, h)
       const maxDim = Math.max(w, h)
       const aspect = w / h
@@ -325,7 +331,7 @@ export default function DomeGallery({
     })
     ro.observe(root)
     return () => ro.disconnect()
-  }, [fit, fitBasis, minRadius, maxRadius, padFactor, overlayBlurColor, grayscale, imageBorderRadius, openedImageBorderRadius, tileInsetPx])
+  }, [fit, fitBasis, minRadius, maxRadius, padFactor, overlayBlurColor, grayscale, imageBorderRadius, openedImageBorderRadius, tileInsetPx, images.length, segments])
 
   const stopInertia = useCallback(() => {
     if (inertiaRAF.current) {

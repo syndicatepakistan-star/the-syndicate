@@ -7,8 +7,11 @@ export function distributeDollarPrices(total: number, count: number): number[] {
 }
 
 export const VAULT_PACK_CHECKOUT_USD = 150;
-export const VAULT_PACK_COMPARE_USD = 200;
-export const VAULT_ALACARTE_TOTAL_USD = 200;
+export const VAULT_PACK_COMPARE_USD = 250;
+export const VAULT_ALACARTE_AGENTIC_USD = 230;
+export const VAULT_ALACARTE_AI_CONTENT_USD = 250;
+/** @deprecated Use pack-specific totals above. */
+export const VAULT_ALACARTE_TOTAL_USD = 240;
 
 export const LEVEL1_CATEGORY_CHECKOUT_USD = 150;
 export const LEVEL1_PROGRAMS_PER_CATEGORY = 11;

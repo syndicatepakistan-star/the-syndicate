@@ -2,14 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { HeroGlitchBackground } from "@/components/home/HeroGlitchBackground";
+import { useMatchMedia } from "@/hooks/useMatchMedia";
 import { hasHeroGlitchSnapshot } from "@/lib/heroGlitchSnapshot";
 import type { ComponentProps } from "react";
 
 type Props = ComponentProps<typeof HeroGlitchBackground>;
 
 /** Hero matrix background + placeholder fade once canvas is ready. */
-export function HeroGlitchShell({ className, ...glitchProps }: Props) {
+export function HeroGlitchShell({ className, glitchSpeed, smooth, ...glitchProps }: Props) {
   const placeholderRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMatchMedia("(max-width: 767px)");
 
   useEffect(() => {
     const host = placeholderRef.current?.parentElement;
@@ -49,7 +51,12 @@ export function HeroGlitchShell({ className, ...glitchProps }: Props) {
   return (
     <>
       <div ref={placeholderRef} className="hero-glitch-placeholder absolute inset-0 z-0" aria-hidden />
-      <HeroGlitchBackground {...glitchProps} className={className} />
+      <HeroGlitchBackground
+        {...glitchProps}
+        glitchSpeed={isMobile ? Math.max(glitchSpeed ?? 70, 110) : glitchSpeed}
+        smooth={isMobile ? false : smooth}
+        className={className}
+      />
     </>
   );
 }

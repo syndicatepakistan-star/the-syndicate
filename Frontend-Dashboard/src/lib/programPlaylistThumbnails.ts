@@ -7,6 +7,11 @@ import {
 } from "@/components/programs/offerPlanThumbnails";
 import { isVaultCourseSlug, VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
 import { allTradingSubmoduleOffers } from "@/components/programs/tradingVaultCatalog";
+import {
+  LEVEL1_SLUG_THUMBNAILS,
+  LEVEL1_SLUG_TITLE_OVERRIDES,
+  PUBLIC_LEVEL1_PLAYLIST_SLUGS,
+} from "@/lib/level1ProgramCatalog";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
 const COURSE_IMAGES = "/assets/programs/cources%20imnages";
@@ -253,6 +258,52 @@ export const GLOBE_GALLERY_IMAGE_URLS: readonly string[] = [
   ...new Set(CURATED_GLOBE_TILES.map((tile) => tile.src)),
 ];
 
+/** Mobile globe — mid-ticket packs only (no vault sub-modules). */
+export const MOBILE_GLOBE_PACK_KEYS: readonly GlobePackKey[] = [
+  "bundle",
+  "king",
+  "agentic_ai",
+  "ai_content_automation",
+  "trading_technical_analysis",
+];
+
+/** Mobile globe — curated Business Psychology highlights. */
+export const MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS: readonly number[] = [2, 3, 12, 6];
+
+/** Mobile globe — curated Business Model highlights. */
+export const MOBILE_GLOBE_BUSINESS_PROGRAM_IDS: readonly number[] = [20, 14, 24];
+
+export const MOBILE_GLOBE_TILE_COUNT =
+  MOBILE_GLOBE_PACK_KEYS.length +
+  MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS.length +
+  MOBILE_GLOBE_BUSINESS_PROGRAM_IDS.length;
+
+/** Pick the 12 mobile globe tiles (packs + psychology + business models). */
+export function filterCuratedGlobeTilesForMobile(
+  tiles: readonly CuratedGlobeTile[] = CURATED_GLOBE_TILES,
+): CuratedGlobeTile[] {
+  const byPack = (packKey: GlobePackKey) => tiles.find((tile) => tile.packKey === packKey);
+  const byProgram = (programId: number) => tiles.find((tile) => tile.programId === programId);
+
+  const packs = MOBILE_GLOBE_PACK_KEYS.map(byPack).filter(Boolean) as CuratedGlobeTile[];
+  const psychology = MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS.map(byProgram).filter(
+    Boolean,
+  ) as CuratedGlobeTile[];
+  const business = MOBILE_GLOBE_BUSINESS_PROGRAM_IDS.map(byProgram).filter(
+    Boolean,
+  ) as CuratedGlobeTile[];
+
+  return [...packs, ...psychology, ...business];
+}
+
+export const MOBILE_GLOBE_GALLERY_IMAGE_URLS: readonly string[] = [
+  ...new Set(filterCuratedGlobeTilesForMobile().map((tile) => tile.src)),
+];
+
+export function getMobileGlobeGalleryImages(): CuratedGlobeTile[] {
+  return shuffleGlobeTiles(filterCuratedGlobeTilesForMobile());
+}
+
 /** Shuffle tile positions on the globe without changing src/href/id bindings. */
 function shuffleGlobeTiles<T>(tiles: readonly T[]): T[] {
   const arr = [...tiles];
@@ -272,11 +323,23 @@ export function getCuratedGlobeGalleryImages(): CuratedGlobeTile[] {
   return shuffleGlobeTiles(CURATED_GLOBE_TILES);
 }
 
-export function getProgramPlaylistThumbnail(programId: number): string | undefined {
+export function getGlobeGalleryImagesForViewport(mobile: boolean): CuratedGlobeTile[] {
+  return mobile ? getMobileGlobeGalleryImages() : getCuratedGlobeGalleryImages();
+}
+
+export function getProgramPlaylistThumbnail(programId: number, slug?: string | null): string | undefined {
+  const key = slug?.trim().toLowerCase();
+  if (key && LEVEL1_SLUG_THUMBNAILS[key]) return LEVEL1_SLUG_THUMBNAILS[key];
   return PROGRAM_PLAYLIST_THUMBNAILS[programId];
 }
 
-export function getProgramDisplayTitle(programId: number, fallback?: string | null): string {
+export function getProgramDisplayTitle(
+  programId: number,
+  fallback?: string | null,
+  slug?: string | null
+): string {
+  const key = slug?.trim().toLowerCase();
+  if (key && LEVEL1_SLUG_TITLE_OVERRIDES[key]) return LEVEL1_SLUG_TITLE_OVERRIDES[key];
   return PROGRAM_DISPLAY_TITLE_OVERRIDES[programId] ?? fallback?.trim() ?? "Syndicate Program";
 }
 
@@ -294,8 +357,9 @@ export function isHiddenProgramPlaylist(
   meta?: ProgramPlaylistVisibilityMeta
 ): boolean {
   if (isVaultSubmoduleStreamPlaylist(meta?.vault_plan_slug)) return true;
-  if (HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId)) return true;
   const slug = meta?.slug?.trim().toLowerCase();
+  if (slug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug)) return false;
+  if (HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId)) return true;
   if (slug && HIDDEN_PROGRAM_PLAYLIST_SLUGS.has(slug)) return true;
   if (PUBLIC_PROGRAMS_PAGE_IDS.has(programId)) return false;
   const title = meta?.title ? normalizeProgramTitle(meta.title) : "";
@@ -321,5 +385,7 @@ export function isPublicProgramsLibraryPlaylist(
   meta?: ProgramPlaylistVisibilityMeta
 ): boolean {
   if (isHiddenProgramPlaylist(programId, meta)) return false;
+  const slug = meta?.slug?.trim().toLowerCase();
+  if (slug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug)) return true;
   return PUBLIC_PROGRAMS_PAGE_IDS.has(programId);
 }

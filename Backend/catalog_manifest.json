@@ -1,0 +1,1074 @@
+[
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-01",
+    "parent_slug": "",
+    "title": "The 9 to 5 Exit Strategy",
+    "playlist_id": 282,
+    "r2_hint": "Business Psychology/9 to 5 Exit/Lesson 1 - 9 to 5 Exit Strategy/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-02",
+    "parent_slug": "",
+    "title": "Zero to One Million",
+    "playlist_id": 283,
+    "r2_hint": "Business Psychology/Zero to 1 Million/Lesson 1 - Zero to One Million/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-03",
+    "parent_slug": "",
+    "title": "Hustle Hard",
+    "playlist_id": 284,
+    "r2_hint": "Business Psychology/Hustle Hard/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-04",
+    "parent_slug": "",
+    "title": "Mastering Consistency",
+    "playlist_id": 285,
+    "r2_hint": "Business Psychology/Mastering Consistency/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-05",
+    "parent_slug": "",
+    "title": "The Secret To Transformation",
+    "playlist_id": 286,
+    "r2_hint": "Business Psychology/Secret To Transformation/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-06",
+    "parent_slug": "",
+    "title": "The Compound Effect",
+    "playlist_id": 287,
+    "r2_hint": "Business Psychology/Compound Effect/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-07",
+    "parent_slug": "",
+    "title": "The Micro Business Protocol",
+    "playlist_id": 288,
+    "r2_hint": "Business Psychology/Micro Business Protocol/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-08",
+    "parent_slug": "",
+    "title": "Mastering Risk and Uncertainty",
+    "playlist_id": 289,
+    "r2_hint": "Business Psychology/Risk and Uncertainty/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-09",
+    "parent_slug": "",
+    "title": "Business Warfare",
+    "playlist_id": 290,
+    "r2_hint": "Business Psychology/Business Warfare/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-10",
+    "parent_slug": "",
+    "title": "Syndicate 13 Business Rules",
+    "playlist_id": 291,
+    "r2_hint": "Business Psychology/13 Business Rules/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_psychology",
+    "catalog_slug": "level1-psych-11",
+    "parent_slug": "",
+    "title": "Syndicate Money Philosophy",
+    "playlist_id": 292,
+    "r2_hint": "Business Psychology/Money Philosophy/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-01",
+    "parent_slug": "",
+    "title": "N8N AI Automation",
+    "playlist_id": 293,
+    "r2_hint": "Business Models/N8N AI Automation/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-02",
+    "parent_slug": "",
+    "title": "AI Automations",
+    "playlist_id": 294,
+    "r2_hint": "Business Models/Ai Automation/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-03",
+    "parent_slug": "",
+    "title": "App Building (using Flutter)",
+    "playlist_id": 295,
+    "r2_hint": "Business Models/App Building Flutter/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-04",
+    "parent_slug": "",
+    "title": "Building Apps using React JS",
+    "playlist_id": 296,
+    "r2_hint": "Business Models/React JS/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-05",
+    "parent_slug": "",
+    "title": "Book Publishing On Amazon (KINDLE)",
+    "playlist_id": 297,
+    "r2_hint": "Business Models/Amazon KDP/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-06",
+    "parent_slug": "",
+    "title": "Building Games Using Unreal Engine",
+    "playlist_id": 298,
+    "r2_hint": "Business Models/Unreal Engine/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-07",
+    "parent_slug": "",
+    "title": "Framer Crash Course",
+    "playlist_id": 299,
+    "r2_hint": "Business Models/Framer Crash Course/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-08",
+    "parent_slug": "",
+    "title": "Graphics Design Using Canva",
+    "playlist_id": 300,
+    "r2_hint": "Business Models/Canva/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-09",
+    "parent_slug": "",
+    "title": "Print On Demand Clothing",
+    "playlist_id": 301,
+    "r2_hint": "Business Models/Print On Demand/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-10",
+    "parent_slug": "",
+    "title": "Python Programming",
+    "playlist_id": 302,
+    "r2_hint": "Business Models/Python Programming/Intro/index.m3u8"
+  },
+  {
+    "kind": "level1_business_model",
+    "catalog_slug": "level1-model-11",
+    "parent_slug": "",
+    "title": "WordPress Blog",
+    "playlist_id": 303,
+    "r2_hint": "Business Models/WordPress Blog/Intro/index.m3u8"
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c01",
+    "parent_slug": "agentic_ai",
+    "title": "Build a Blog Writing Agent With N8N",
+    "playlist_id": 304,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c02",
+    "parent_slug": "agentic_ai",
+    "title": "Build a WhatsApp Agent with n8n",
+    "playlist_id": 305,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c03",
+    "parent_slug": "agentic_ai",
+    "title": "Build Apps With secret Claude Code Skill",
+    "playlist_id": 306,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c04",
+    "parent_slug": "agentic_ai",
+    "title": "Claude Code + Consensus = INSANE $50k+ App Ideas",
+    "playlist_id": 307,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c05",
+    "parent_slug": "agentic_ai",
+    "title": "Claude Code is Better at n8n",
+    "playlist_id": 308,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c06",
+    "parent_slug": "agentic_ai",
+    "title": "Claude Code just changed Memory Forever",
+    "playlist_id": 309,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c07",
+    "parent_slug": "agentic_ai",
+    "title": "Claude Cowork Automations",
+    "playlist_id": 310,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c08",
+    "parent_slug": "agentic_ai",
+    "title": "Scrap Any Website with N8N",
+    "playlist_id": 311,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c09",
+    "parent_slug": "agentic_ai",
+    "title": "Set up Google Credentials in n8n",
+    "playlist_id": 312,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c10",
+    "parent_slug": "agentic_ai",
+    "title": "Google Antigravity FULL COURSE 2 HOURS",
+    "playlist_id": 313,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c11",
+    "parent_slug": "agentic_ai",
+    "title": "n8n Tutorial 37 Tips and Tricks (n8n Masterclass)",
+    "playlist_id": 314,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c12",
+    "parent_slug": "agentic_ai",
+    "title": "CLAUDE CODE ADVANCED COURSE \u2014 3 HOURS",
+    "playlist_id": 315,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c13",
+    "parent_slug": "agentic_ai",
+    "title": "CLAUDE CODE FULL COURSE 4 HOURS \u2014 Build & Sell (2026)",
+    "playlist_id": 316,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c14",
+    "parent_slug": "agentic_ai",
+    "title": "4 Claude Code Hacks To Make Any Website Look 10 by 10",
+    "playlist_id": 317,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c15",
+    "parent_slug": "agentic_ai",
+    "title": "12 Ways to Fix Context in Claude Code",
+    "playlist_id": 318,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c16",
+    "parent_slug": "agentic_ai",
+    "title": "27 Claude Code TIPS",
+    "playlist_id": 319,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c17",
+    "parent_slug": "agentic_ai",
+    "title": "Automated Faceless Shorts with AI",
+    "playlist_id": 320,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c18",
+    "parent_slug": "agentic_ai",
+    "title": "Claude Cowork just changed Marketing Forever",
+    "playlist_id": 321,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c19",
+    "parent_slug": "agentic_ai",
+    "title": "From Zero to RAG Agent",
+    "playlist_id": 322,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c20",
+    "parent_slug": "agentic_ai",
+    "title": "Insane Youtube Automation!",
+    "playlist_id": 323,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c21",
+    "parent_slug": "agentic_ai",
+    "title": "n8n Blogging Automation: Generate SEO Blogs in Minutes",
+    "playlist_id": 324,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c22",
+    "parent_slug": "agentic_ai",
+    "title": "n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)",
+    "playlist_id": 325,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c23",
+    "parent_slug": "agentic_ai",
+    "title": "Never label gmail emails again",
+    "playlist_id": 326,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c24",
+    "parent_slug": "agentic_ai",
+    "title": "Stop Learning n8n in 2026...Learn THIS Instead",
+    "playlist_id": 327,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c25",
+    "parent_slug": "agentic_ai",
+    "title": "VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity",
+    "playlist_id": 328,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "agentic_ai_c26",
+    "parent_slug": "agentic_ai",
+    "title": "Agentic Workflow for Businesses",
+    "playlist_id": 329,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c01",
+    "parent_slug": "ai_content_automation",
+    "title": "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
+    "playlist_id": 330,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c02",
+    "parent_slug": "ai_content_automation",
+    "title": "New YouTube Policy ENDS Those Faceless YouTube Channels",
+    "playlist_id": 331,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c03",
+    "parent_slug": "ai_content_automation",
+    "title": "How to Start YouTube Automation in 2026 (Step By Step) NO FACE | FREE COURSE",
+    "playlist_id": 332,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c04",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Build Faceless YouTube Channels Using Just ONE AI Tool (Genspark AI)",
+    "playlist_id": 333,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c05",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Built a VIRAL AI Movie Channel Using Only AI Tools",
+    "playlist_id": 334,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c06",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Create Viral High RPM Finance Videos Using AI (Full Blueprint)",
+    "playlist_id": 335,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c07",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Make VIRAL 3D Animated Videos Using FREE AI Tools (FULL COURSE)",
+    "playlist_id": 336,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c08",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Built a Viral AI Influencer Like Aitana Lopez (AI Instagram Model)",
+    "playlist_id": 337,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c09",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Made a VIRAL AI Documentary Channel Using FREE Tools (FULL COURSE)",
+    "playlist_id": 338,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c10",
+    "parent_slug": "ai_content_automation",
+    "title": "This Is How I Built a VIRAL Philosophy Channel Using FREE AI Tools (FULL COURSE)",
+    "playlist_id": 339,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c11",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Used AI to Build a VIRAL Prehistoric Faceless Channel (Full Course)",
+    "playlist_id": 340,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c12",
+    "parent_slug": "ai_content_automation",
+    "title": "I Cloned a VIRAL 3D Documentary Channel Using AI (Full Course)",
+    "playlist_id": 341,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c13",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Make VIRAL Geography Shorts Using Only AI (FULL GUIDE)",
+    "playlist_id": 342,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c14",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Built a Viral Universe Documentary Channel Using Only AI (Step by Step!)",
+    "playlist_id": 343,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c15",
+    "parent_slug": "ai_content_automation",
+    "title": "I Studied 5,000 Faceless YouTube Videos \u2014 Here's How To ACTUALLY Go Viral",
+    "playlist_id": 344,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c16",
+    "parent_slug": "ai_content_automation",
+    "title": "50 Easy Faceless Niches Explained in 19 Minutes",
+    "playlist_id": 345,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c17",
+    "parent_slug": "ai_content_automation",
+    "title": "Create 1,000 YouTube Shorts in 13 Minutes Using FREE AI \u2014 Free Auto Shorts in Bulk",
+    "playlist_id": 346,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c18",
+    "parent_slug": "ai_content_automation",
+    "title": "I Studied 70+ Faceless Channels To Crack The NEW Algorithm",
+    "playlist_id": 347,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c19",
+    "parent_slug": "ai_content_automation",
+    "title": "WARNING: These Faceless YouTube Niches Are Now BANNED",
+    "playlist_id": 348,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c20",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Write Faceless YouTube Scripts That Get 100s Of Millions Of Views",
+    "playlist_id": 349,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c21",
+    "parent_slug": "ai_content_automation",
+    "title": "The Smart Way to Build a Faceless Finance Channel (Nick Invests EXPOSED!)",
+    "playlist_id": 350,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c22",
+    "parent_slug": "ai_content_automation",
+    "title": "I Found a New YouTube Shorts Niche That No One Is Doing Yet (And It's Exploding)",
+    "playlist_id": 351,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c23",
+    "parent_slug": "ai_content_automation",
+    "title": "How I create Motion Graphics videos in MINUTES with AI",
+    "playlist_id": 352,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c24",
+    "parent_slug": "ai_content_automation",
+    "title": "This Viral Faceless Stickman POV Niche Is Dominating Youtube (Full Guide)",
+    "playlist_id": 353,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c25",
+    "parent_slug": "ai_content_automation",
+    "title": "The Secret NotebookLM Workflow Every YouTuber Needs!",
+    "playlist_id": 354,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c26",
+    "parent_slug": "ai_content_automation",
+    "title": "How to create viral 3D documentary videos using ai (FERN 3D STYLE)",
+    "playlist_id": 355,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c27",
+    "parent_slug": "ai_content_automation",
+    "title": "How I Make VIRAL Life Advice Videos Using Only FREE AI Tools (FULL COURSE)",
+    "playlist_id": 356,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c28",
+    "parent_slug": "ai_content_automation",
+    "title": "Create Viral inspirational finance Videos with Free AI Tools",
+    "playlist_id": 357,
+    "r2_hint": ""
+  },
+  {
+    "kind": "vault_lesson",
+    "catalog_slug": "ai_content_c29",
+    "parent_slug": "ai_content_automation",
+    "title": "Clone ANY YouTube Channel With AI (NotebookLM Hack) | Automation 2.0",
+    "playlist_id": 358,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_module",
+    "catalog_slug": "trading_master_secrets",
+    "parent_slug": "",
+    "title": "Secrets of a Master Trader",
+    "playlist_id": 412,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_module",
+    "catalog_slug": "trading_master_setups",
+    "parent_slug": "",
+    "title": "Setups of a Master Trader",
+    "playlist_id": 413,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_module",
+    "catalog_slug": "trading_master_strategies",
+    "parent_slug": "",
+    "title": "Strategies of a Master Trader",
+    "playlist_id": 414,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_01",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 1 \u2014 Introduction",
+    "playlist_id": 359,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_02",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 2 \u2014 Bull and Bear Flags",
+    "playlist_id": 360,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_03",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 3 \u2014 Falling Wedges",
+    "playlist_id": 361,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_04",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 4 \u2014 Rising Wedges",
+    "playlist_id": 362,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_05",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 5 \u2014 Moving Averages Strategies",
+    "playlist_id": 363,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_06",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 6 \u2014 Parallels and Channels",
+    "playlist_id": 364,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_07",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 7 \u2014 Final Protocol",
+    "playlist_id": 365,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_08",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 8 \u2014 Retrace to the Scene of Crime",
+    "playlist_id": 366,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_09",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 9 \u2014 Risk Management",
+    "playlist_id": 367,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_scalpel_10",
+    "parent_slug": "trading_scalpel_protocol",
+    "title": "Chapter 10 \u2014 Final Execution",
+    "playlist_id": 368,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_module",
+    "catalog_slug": "trading_scalpel_protocol",
+    "parent_slug": "",
+    "title": "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
+    "playlist_id": 415,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_01",
+    "parent_slug": "trading_master_secrets",
+    "title": "The Confirmation Signal",
+    "playlist_id": 369,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_02",
+    "parent_slug": "trading_master_secrets",
+    "title": "Drawing Proper Trendlines",
+    "playlist_id": 370,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_03",
+    "parent_slug": "trading_master_secrets",
+    "title": "Scene of the Crime Retrace",
+    "playlist_id": 371,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_04",
+    "parent_slug": "trading_master_secrets",
+    "title": "Measured Move",
+    "playlist_id": 372,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_05",
+    "parent_slug": "trading_master_secrets",
+    "title": "Three Tail Theory",
+    "playlist_id": 373,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_06",
+    "parent_slug": "trading_master_secrets",
+    "title": "Trading Parallels",
+    "playlist_id": 374,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_07",
+    "parent_slug": "trading_master_secrets",
+    "title": "Major vs Minor Support and Resistance",
+    "playlist_id": 375,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_08",
+    "parent_slug": "trading_master_secrets",
+    "title": "Multi-Hit Methodology",
+    "playlist_id": 376,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_09",
+    "parent_slug": "trading_master_secrets",
+    "title": "Trading the Hit and Kiss of a Level",
+    "playlist_id": 377,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_10",
+    "parent_slug": "trading_master_secrets",
+    "title": "Macro Versus Micro Patterns",
+    "playlist_id": 378,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_11",
+    "parent_slug": "trading_master_secrets",
+    "title": "Bull and Bear Flag Flips",
+    "playlist_id": 379,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_12",
+    "parent_slug": "trading_master_secrets",
+    "title": "Trading RSI Divergences",
+    "playlist_id": 380,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_13",
+    "parent_slug": "trading_master_secrets",
+    "title": "Time Counts",
+    "playlist_id": 381,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_14",
+    "parent_slug": "trading_master_secrets",
+    "title": "The Biggest Moves Come from Failed Moves",
+    "playlist_id": 382,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_15",
+    "parent_slug": "trading_master_secrets",
+    "title": "Time Value of a Level",
+    "playlist_id": 383,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_16",
+    "parent_slug": "trading_master_secrets",
+    "title": "Fine-Tuning Entry Points",
+    "playlist_id": 384,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_secrets_17",
+    "parent_slug": "trading_master_secrets",
+    "title": "Goals and Expectations",
+    "playlist_id": 385,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_01",
+    "parent_slug": "trading_master_setups",
+    "title": "Introduction",
+    "playlist_id": 386,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_02",
+    "parent_slug": "trading_master_setups",
+    "title": "Setups of a Master Trader",
+    "playlist_id": 387,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_03",
+    "parent_slug": "trading_master_setups",
+    "title": "Bull and Bear Flag Setups",
+    "playlist_id": 388,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_04",
+    "parent_slug": "trading_master_setups",
+    "title": "Cup and Handle Setups",
+    "playlist_id": 389,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_05",
+    "parent_slug": "trading_master_setups",
+    "title": "Mature Versus Immature Patterns and Setups",
+    "playlist_id": 390,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_06",
+    "parent_slug": "trading_master_setups",
+    "title": "Megaphone and Consolidation Patterns",
+    "playlist_id": 391,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_07",
+    "parent_slug": "trading_master_setups",
+    "title": "Downsloping and Upsloping Channels",
+    "playlist_id": 392,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_08",
+    "parent_slug": "trading_master_setups",
+    "title": "Double Tops and Double Bottoms",
+    "playlist_id": 393,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_09",
+    "parent_slug": "trading_master_setups",
+    "title": "Triple Tops and Beyond",
+    "playlist_id": 394,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_10",
+    "parent_slug": "trading_master_setups",
+    "title": "The M-A Pattern",
+    "playlist_id": 395,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_11",
+    "parent_slug": "trading_master_setups",
+    "title": "The W-V Pattern",
+    "playlist_id": 396,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_12",
+    "parent_slug": "trading_master_setups",
+    "title": "Gaps and Gap Fills",
+    "playlist_id": 397,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_13",
+    "parent_slug": "trading_master_setups",
+    "title": "The Power of the Move",
+    "playlist_id": 398,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_14",
+    "parent_slug": "trading_master_setups",
+    "title": "Trading the Golden and Death Cross Setup",
+    "playlist_id": 399,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_15",
+    "parent_slug": "trading_master_setups",
+    "title": "Trading Doji Candle Setups",
+    "playlist_id": 400,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_16",
+    "parent_slug": "trading_master_setups",
+    "title": "Topping and Bottoming Tail Setups",
+    "playlist_id": 401,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_17",
+    "parent_slug": "trading_master_setups",
+    "title": "Engulfing Candle Setups",
+    "playlist_id": 402,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_setups_18",
+    "parent_slug": "trading_master_setups",
+    "title": "Wise Words for Master Setups",
+    "playlist_id": 403,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_01",
+    "parent_slug": "trading_master_strategies",
+    "title": "Strategies of a Master Trader",
+    "playlist_id": 404,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_02",
+    "parent_slug": "trading_master_strategies",
+    "title": "The Keys to Building Wealth",
+    "playlist_id": 405,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_03",
+    "parent_slug": "trading_master_strategies",
+    "title": "Favorite Trading Indicators",
+    "playlist_id": 406,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_04",
+    "parent_slug": "trading_master_strategies",
+    "title": "Charting Strategies for Indicators",
+    "playlist_id": 407,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_05",
+    "parent_slug": "trading_master_strategies",
+    "title": "Support & Resistance Strategies",
+    "playlist_id": 408,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_06",
+    "parent_slug": "trading_master_strategies",
+    "title": "Candlestick Trading Strategies",
+    "playlist_id": 409,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_07",
+    "parent_slug": "trading_master_strategies",
+    "title": "Risk vs Rewards & Rules to Trade",
+    "playlist_id": 410,
+    "r2_hint": ""
+  },
+  {
+    "kind": "trading_lesson",
+    "catalog_slug": "trading_strategies_08",
+    "parent_slug": "trading_master_strategies",
+    "title": "Extract the Market Capital",
+    "playlist_id": 411,
+    "r2_hint": ""
+  }
+]

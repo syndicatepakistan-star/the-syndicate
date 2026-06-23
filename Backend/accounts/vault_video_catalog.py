@@ -69,7 +69,11 @@ AI_CONTENT_THUMB_FILES: tuple[str, ...] = (
     "clone any channel.jpg",
 )
 
-VAULT_R2_PREFIX = "stream_videos/vault"
+from accounts.r2_path_catalog import (
+    agentic_hls_candidates,
+    ai_content_hls_candidates,
+    trading_hls_candidates,
+)
 
 LEGACY_MID_TICKET_PLAYLIST_SLUGS: frozenset[str] = frozenset(
     {
@@ -112,20 +116,17 @@ def vault_r2_key_candidates(
     *,
     pack_folder: str,
     slug: str,
+    title: str | None = None,
+    lesson_index: int = 0,
     source_filename: str | None = None,
     thumb_filename: str | None = None,
 ) -> tuple[str, ...]:
     """
-    Ordered R2 object keys to probe when linking StreamVideo.original_video.
-
-    Convention:
-    - ``stream_videos/vault/{pack}/{slug}.mp4`` for indexed courses
-    - ``stream_videos/vault/{pack}/{source_filename}`` for trading catalog filenames
-    - ``stream_videos/vault/{pack}/{thumb_stem}.mp4`` from pack thumbnail basename
-    - bare ``{source_filename}`` for legacy uploads at bucket root
+    Ordered R2 keys: HLS manifest first (syn-bucket layout), then legacy MP4 paths.
     """
     pack = (pack_folder or "").strip().strip("/")
     slug_key = (slug or "").strip().lower()
+    lesson_title = (title or "").strip()
     candidates: list[str] = []
     seen: set[str] = set()
 
@@ -136,17 +137,24 @@ def vault_r2_key_candidates(
         seen.add(key)
         candidates.append(key)
 
+    if pack == "agentic_ai" and lesson_title:
+        for key in agentic_hls_candidates(lesson_title):
+            add(key)
+    elif pack == "ai_content" and lesson_title:
+        for key in ai_content_hls_candidates(lesson_title, lesson_index):
+            add(key)
+
     if pack and slug_key:
-        add(f"{VAULT_R2_PREFIX}/{pack}/{slug_key}.mp4")
+        add(f"stream_videos/vault/{pack}/{slug_key}.mp4")
     if pack and source_filename:
-        add(f"{VAULT_R2_PREFIX}/{pack}/{source_filename}")
+        add(f"stream_videos/vault/{pack}/{source_filename}")
     if pack and thumb_filename:
-        add(f"{VAULT_R2_PREFIX}/{pack}/{_thumb_to_mp4(thumb_filename)}")
+        add(f"stream_videos/vault/{pack}/{_thumb_to_mp4(thumb_filename)}")
     if source_filename:
         add(source_filename)
         add(f"stream_videos/originals/{source_filename}")
     if slug_key:
-        add(f"{VAULT_R2_PREFIX}/{slug_key}.mp4")
+        add(f"stream_videos/vault/{slug_key}.mp4")
     return tuple(candidates)
 
 
@@ -155,8 +163,22 @@ def trading_r2_key_candidates(submodule_slug: str) -> tuple[str, ...]:
     if not row:
         return ()
     _title, filename = row
-    return vault_r2_key_candidates(
+    candidates: list[str] = []
+    seen: set[str] = set()
+
+    def add(key: str) -> None:
+        key = (key or "").strip().lstrip("/")
+        if not key or key in seen:
+            return
+        seen.add(key)
+        candidates.append(key)
+
+    for key in trading_hls_candidates(submodule_slug):
+        add(key)
+    for key in vault_r2_key_candidates(
         pack_folder="trading",
         slug=submodule_slug,
         source_filename=filename,
-    )
+    ):
+        add(key)
+    return tuple(candidates)

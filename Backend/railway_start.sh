@@ -43,10 +43,8 @@ run_bootstrap_tasks() {
   fi
 
   if [ "${AUTO_ENSURE_VAULT_PLAYLIST_STUBS:-true}" = "true" ]; then
-    echo "railway_start: seed_vault_playlists"
-    "$PYTHON" manage.py seed_vault_playlists --publish || true
-    echo "railway_start: ensure_vault_playlist_stubs"
-    "$PYTHON" manage.py ensure_vault_playlist_stubs --publish || true
+    echo "railway_start: seed_syndicate_catalog"
+    "$PYTHON" manage.py seed_syndicate_catalog --publish || true
   fi
 }
 

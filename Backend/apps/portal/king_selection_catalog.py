@@ -10,41 +10,15 @@ from __future__ import annotations
 
 from django.db.models import QuerySet
 
+from accounts.level1_program_catalog import KNIGHT_SELECTABLE_LEVEL1_SLUGS
 from apps.courses.models import Course
 from apps.video_streaming.models import StreamPlaylist
 
-# Standalone programs on /programs (not vault pack rows).
-KNIGHT_SELECTABLE_PLAYLIST_IDS: frozenset[int] = frozenset(
-    {
-        # Business Psychology
-        1,
-        2,
-        3,
-        6,
-        9,
-        12,
-        30,
-        31,
-        99,
-        # Business Model
-        13,
-        14,
-        16,
-        17,
-        19,
-        20,
-        21,
-        23,
-        24,
-        25,
-        28,
-    }
-)
 
 def knight_selectable_playlists_qs() -> QuerySet[StreamPlaylist]:
     return (
         StreamPlaylist.objects.filter(
-            id__in=KNIGHT_SELECTABLE_PLAYLIST_IDS,
+            slug__in=KNIGHT_SELECTABLE_LEVEL1_SLUGS,
             is_published=True,
             is_coming_soon=False,
             vault_plan_slug="",
@@ -59,4 +33,4 @@ def knight_selectable_courses_qs() -> QuerySet[Course]:
 
 
 def knight_playlist_id_is_selectable(playlist_id: int) -> bool:
-    return int(playlist_id) in KNIGHT_SELECTABLE_PLAYLIST_IDS
+    return knight_selectable_playlists_qs().filter(pk=int(playlist_id)).exists()

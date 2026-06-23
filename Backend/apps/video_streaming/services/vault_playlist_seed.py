@@ -161,9 +161,15 @@ def seed_indexed_pack(
     stats: VaultSeedStats,
 ) -> None:
     for plan_slug, title, thumb in rows:
+        try:
+            lesson_index = int(plan_slug.split("_c")[-1])
+        except ValueError:
+            lesson_index = 0
         r2_candidates = vault_r2_key_candidates(
             pack_folder=pack_folder,
             slug=plan_slug,
+            title=title,
+            lesson_index=lesson_index,
             thumb_filename=thumb,
         )
         video = ensure_lesson_video(

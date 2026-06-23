@@ -91,7 +91,7 @@ def generate_ai_report(
     api_key = (getattr(settings, "OPENAI_API_KEY", None) or "").strip()
     if not api_key:
         base = (
-            f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
+            f"THE SYNDICATE DIAGNOSIS: DOSSIER {user_id}\n\n"
             "Section A: THE DESIGNATION\n"
             f"STATUS: {designation}\n"
             f"ARCHETYPE: {archetype}\n"
@@ -127,7 +127,7 @@ def generate_ai_report(
         "Do NOT write Section C — it is added automatically after generation.\n"
         "Do NOT write Section E.\n"
         "Keep Section A to 2-4 short sentences.\n\n"
-        f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
+        f"THE SYNDICATE DIAGNOSIS: DOSSIER {user_id}\n\n"
         "Section A: THE DESIGNATION\n"
         f"STATUS: {designation}\n"
         f"ARCHETYPE: {archetype}\n"

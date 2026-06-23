@@ -8,7 +8,8 @@ builder = "NIXPACKS"
 [deploy]
 # Auto start (clear Custom Start Command in Railway UI for this service).
 startCommand = "sh railway_start.sh"
-# Migrations + collectstatic before each deploy.
+# Migrations + collectstatic before each deploy (start only runs gunicorn).
 releaseCommand = "sh railway_start.sh --release"
-healthcheckPath = "/admin/login/"
-healthcheckTimeout = 120
+# Lightweight JSON endpoint — /admin/login/ is slower and needs staticfiles.
+healthcheckPath = "/api/health/"
+healthcheckTimeout = 300

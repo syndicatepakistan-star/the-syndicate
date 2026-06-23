@@ -48,25 +48,37 @@ run_bootstrap_tasks() {
   fi
 }
 
-# Nixpacks build already installs requirements; use same Python for optional refresh.
-if [ "${RAILWAY_START_PIP_INSTALL:-true}" = "true" ]; then
-  echo "railway_start: installing requirements ($PYTHON)"
-  "$PYTHON" -m pip install -r requirements.txt -q
-fi
+maybe_pip_install() {
+  # Nixpacks already installs requirements at build time; skip on start unless forced.
+  if [ "${RAILWAY_START_PIP_INSTALL:-false}" = "true" ]; then
+    echo "railway_start: installing requirements ($PYTHON)"
+    "$PYTHON" -m pip install -r requirements.txt -q
+  fi
+}
 
 if [ -z "${DATABASE_URL:-}" ] && [ -z "${DATABASE_PRIVATE_URL:-}" ] && [ -z "${DATABASE_PUBLIC_URL:-}" ] && [ -z "${PGHOST:-}" ]; then
   echo "railway_start: WARNING: no Postgres env; Django may use SQLite for migrate."
 fi
 
-run_bootstrap_tasks
-
 if [ "${MODE}" = "--release" ]; then
+  maybe_pip_install
+  run_bootstrap_tasks
+  echo "railway_start: ensure_superuser"
+  "$PYTHON" manage.py ensure_superuser
   echo "railway_start: release mode complete"
   exit 0
 fi
 
-echo "railway_start: ensure_superuser"
-"$PYTHON" manage.py ensure_superuser
+# Start mode: releaseCommand already ran migrate/static/seed — bind gunicorn quickly for healthcheck.
+export SKIP_WSGI_MIGRATE=true
+export SKIP_WSGI_COLLECTSTATIC=true
+
+if [ "${RAILWAY_FORCE_START_BOOTSTRAP:-false}" = "true" ]; then
+  maybe_pip_install
+  run_bootstrap_tasks
+  echo "railway_start: ensure_superuser"
+  "$PYTHON" manage.py ensure_superuser
+fi
 
 echo "railway_start: gunicorn"
 exec "$PYTHON" -m gunicorn syndicate_backend.wsgi:application \

@@ -11031,6 +11031,24 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   filter: blur(8px);
 }
 
+/* Featured press logos — seamless infinite loop (hero + footer) */
+@keyframes featured-logos-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.featured-logos-marquee-track {
+  display: flex;
+  width: max-content;
+  flex-shrink: 0;
+  animation: featured-logos-marquee var(--duration, 34s) linear infinite;
+  will-change: transform;
+}
+
 .methods-fade-up {
   animation: methods-fade-up 0.7s ease both;
 }

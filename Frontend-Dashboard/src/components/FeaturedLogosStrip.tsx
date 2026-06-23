@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
 
 type FeaturedLogo = {
@@ -17,12 +17,20 @@ type FeaturedLogosStripProps = {
 }
 
 export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact = false, className }: FeaturedLogosStripProps) {
-  const safeLogos = logos.filter((logo) => logo.src.trim().length > 0 && logo.alt.trim().length > 0)
-  const trackLogos = [...safeLogos, ...safeLogos]
+  const safeLogos = useMemo(
+    () => logos.filter((logo) => logo.src.trim().length > 0 && logo.alt.trim().length > 0),
+    [logos],
+  )
+  // Triple each half so ultra-wide hero/footer never shows an empty gap before the loop resets.
+  const trackLogos = useMemo(() => {
+    const half = [...safeLogos, ...safeLogos, ...safeLogos]
+    return [...half, ...half]
+  }, [safeLogos])
   const stripRef = useRef<HTMLDivElement | null>(null)
   const itemRefs = useRef<Array<HTMLElement | null>>([])
   const centerGap = compact ? 'min(400px, 68vw)' : 'min(400px, 42vw)'
   const centerBlurWidth = compact ? 'clamp(54px, 9vw, 90px)' : 'clamp(72px, 8vw, 124px)'
+  const itemGap = compact ? '1.25rem' : '2rem'
 
   useEffect(() => {
     const root = stripRef.current
@@ -62,6 +70,8 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
     }
   }, [compact, trackLogos.length])
 
+  if (safeLogos.length === 0) return null
+
   return (
     <section
       className={[
@@ -89,10 +99,13 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
         <div className="logos-side-fade logos-side-fade-right" />
         <div
           className={[
-            'animate-marquee flex w-max items-center',
-            compact ? 'gap-4 py-1.5 sm:gap-5 sm:py-2' : 'gap-6 py-4 sm:gap-9 sm:py-5',
+            'featured-logos-marquee-track items-center',
+            compact ? 'py-1.5 sm:py-2' : 'py-4 sm:py-5',
           ].join(' ')}
-          style={{ ['--duration' as string]: `${speedSeconds}s`, ['--gap' as string]: compact ? '1.25rem' : '2rem' }}
+          style={{
+            ['--duration' as string]: `${speedSeconds}s`,
+            gap: itemGap,
+          }}
         >
           {trackLogos.map((logo, index) => (
             <article
@@ -101,7 +114,7 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
                 itemRefs.current[index] = el
               }}
               className={[
-                'flex items-center justify-center rounded-xl border border-amber-300/45 bg-[#030811]/78 shadow-[0_0_20px_rgba(251,191,36,0.08)] backdrop-blur-[2px] transition-transform duration-300 ease-out',
+                'flex shrink-0 items-center justify-center rounded-xl border border-amber-300/45 bg-[#030811]/78 shadow-[0_0_20px_rgba(251,191,36,0.08)] backdrop-blur-[2px] transition-transform duration-300 ease-out',
                 compact ? 'px-3 py-1 sm:px-3.5 sm:py-1.5' : 'px-4 py-2.5 sm:px-5 sm:py-3',
               ].join(' ')}
               style={compact

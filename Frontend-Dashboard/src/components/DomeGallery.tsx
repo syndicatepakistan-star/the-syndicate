@@ -524,7 +524,7 @@ export default function DomeGallery({
       }
       overlay.addEventListener('transitionend', onFirstEnd)
     }
-  }, [clickHref, enlargeTransitionMs, grayscale, isGlobeInteractionTarget, lockScroll, navigateOnClick, navigateToHref, openedImageBorderRadius, openedImageHeight, openedImageWidth, unlockScroll])
+  }, [clickHref, enlargeTransitionMs, grayscale, lockScroll, navigateOnClick, navigateToHref, openedImageBorderRadius, openedImageHeight, openedImageWidth, unlockScroll])
 
   const isGlobeInteractionTarget = useCallback((target: EventTarget | null) => {
     const el = target as Element | null
@@ -578,10 +578,6 @@ export default function DomeGallery({
         } else if (pointerTypeRef.current === 'touch' && movedRef.current) {
           evt.preventDefault()
         }
-
-        const dxTotal = evt.clientX - startPosRef.current.x
-        const dyTotal = evt.clientY - startPosRef.current.y
-        if (!movedRef.current && dxTotal * dxTotal + dyTotal * dyTotal > 16) movedRef.current = true
 
         const dragSens = dragSensitivity * mobileMotionRef.current.dragMul
         const vertLimit = mobileMotionRef.current.verticalLimitDeg

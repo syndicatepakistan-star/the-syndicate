@@ -18,6 +18,7 @@ type Props = {
   /** Overrides openLabel (e.g. Open when already purchased). */
   actionLabel?: string;
   highlighted?: boolean;
+  comingSoon?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -153,6 +154,7 @@ export function PlanOfferCard({
   busy = false,
   actionLabel,
   highlighted = false,
+  comingSoon = false,
   onDetails,
   onOpen,
 }: Props) {
@@ -280,6 +282,13 @@ export function PlanOfferCard({
                 )}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
+              {comingSoon ? (
+                <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-3 text-center">
+                  <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-[clamp(1rem,3.8vw,1.35rem)] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-[1.15rem]">
+                    Coming Soon
+                  </span>
+                </span>
+              ) : null}
             </div>
 
             <div className={cn("absolute z-[4]", isLarge ? "right-4 top-4" : isModule ? "right-2 top-2" : "right-2 top-2")}>
@@ -375,10 +384,12 @@ export function PlanOfferCard({
                 </button>
                 <button
                   type="button"
-                  disabled={busy}
+                  disabled={busy || comingSoon}
                   onClick={onOpen}
                   className={cn(
-                    "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition disabled:cursor-wait disabled:opacity-65",
+                    "min-w-0 rounded-xl border px-1.5 py-1.5 font-black uppercase tracking-[0.09em] transition disabled:opacity-65",
+                    busy && !comingSoon && "disabled:cursor-wait",
+                    comingSoon && "disabled:cursor-not-allowed",
                     theme.openBtn,
                     isLarge &&
                       isPack &&

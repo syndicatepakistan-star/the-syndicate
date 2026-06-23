@@ -92,20 +92,20 @@ def generate_ai_report(
     if not api_key:
         base = (
             f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
-            "Section A: The Designation\n"
+            "Section A: THE DESIGNATION\n"
             f"STATUS: {designation}\n"
             f"ARCHETYPE: {archetype}\n"
             "ANALYSIS: You have real potential, but your current habits are misaligned with how you think and move. "
             "You are working hard without a stack that matches your archetype. You need a clear plan built for operators at your level.\n\n"
-            "Section B: The Virus (Psychological Flaw)\n"
+            "Section B: THE VIRUS (Psychological Flaw)\n"
             f"DETECTED VIRUS: {fatal_flaw}\n"
             f"THE STING: {_virus_sting_copy(fatal_flaw)}\n"
             f"THE REALITY: {_virus_reality_copy(fatal_flaw)}\n"
             f"URGENCY OVERRIDE: {_virus_urgency_copy()}\n\n"
-            "Section D: Final Directive\n"
+            "Section D: FINAL DIRECTIVE\n"
             "WARNING: Time is running out — every week you delay, the gap between you and disciplined operators widens.\n"
             "Most people read this and do nothing. Do not be one of them.\n"
-            "Your free access window closes in 48 hours. Claim your plan now or stay stuck where you are."
+            "Your free access window closes in 48 hours. Unlock the Syndicate secret techniques now or stay stuck where you are."
         )
         return compose_full_report(base, archetype)
 
@@ -128,19 +128,19 @@ def generate_ai_report(
         "Do NOT write Section E.\n"
         "Keep Section A to 2-4 short sentences.\n\n"
         f"THE SOVEREIGN ENTITY AUDIT: DOSSIER {user_id}\n\n"
-        "Section A: The Designation\n"
+        "Section A: THE DESIGNATION\n"
         f"STATUS: {designation}\n"
         f"ARCHETYPE: {archetype}\n"
         "ANALYSIS: (Write 2-4 simple sentences about their level and what it means in plain English.)\n\n"
-        "Section B: The Virus (Psychological Flaw)\n"
+        "Section B: THE VIRUS (Psychological Flaw)\n"
         f"DETECTED VIRUS: {fatal_flaw}\n"
         "THE STING: (Write 2-3 powerful sentences — name what this virus costs them in time, money, and momentum. Direct Syndicate tone.)\n"
         "THE REALITY: (Write 2-3 powerful sentences — what keeps repeating if they refuse to change. No soft language.)\n"
         "URGENCY OVERRIDE: (One strong sentence — why they must act within the next 30 days.)\n\n"
-        "Section D: Final Directive\n"
+        "Section D: FINAL DIRECTIVE\n"
         "WARNING: (One simple sentence about urgency.)\n"
         "(One simple sentence — most people do nothing; they should not.)\n"
-        "Your free access window closes in 48 hours. Claim your plan now or stay stuck where you are."
+        "Your free access window closes in 48 hours. Unlock the Syndicate secret techniques now or stay stuck where you are."
     )
 
     response = client.responses.create(

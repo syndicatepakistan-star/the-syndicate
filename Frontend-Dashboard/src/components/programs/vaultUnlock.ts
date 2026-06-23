@@ -1,4 +1,9 @@
-import type { CheckoutOfferKey, PlanOfferDef, VaultPackKey } from "@/components/programs/planOfferCatalog";
+import {
+  isPlanOfferComingSoon,
+  type CheckoutOfferKey,
+  type PlanOfferDef,
+  type VaultPackKey,
+} from "@/components/programs/planOfferCatalog";
 import { vaultCoursesForPack, vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
 import {
   isTradingModuleSlug,
@@ -69,11 +74,14 @@ export function isVaultPackFullyUnlocked(
 }
 
 export function resolveOfferActionLabel(
-  offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan" | "openLabel">,
+  offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan" | "openLabel" | "isComingSoon">,
   purchasedSlugs: ReadonlySet<string>,
   accessTier: string | undefined | null,
   moneyMasteryActive?: boolean | null,
 ): string {
+  if (isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
+    return "Coming Soon";
+  }
   return isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive) ? "Open" : offer.openLabel;
 }
 

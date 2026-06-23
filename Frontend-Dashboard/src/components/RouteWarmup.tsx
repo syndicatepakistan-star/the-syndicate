@@ -40,7 +40,9 @@ export default function RouteWarmup() {
 
   useEffect(() => {
 
-    scheduleMarketingMediaWarmup();
+    const isHome = typeof window !== "undefined" && window.location.pathname === "/";
+
+    scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
 
 
 

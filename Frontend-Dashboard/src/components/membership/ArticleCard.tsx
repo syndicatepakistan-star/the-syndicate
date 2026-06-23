@@ -63,10 +63,9 @@ export function ArticleCard({ article, featured, index = 0, onOpenPdf, onOpenWeb
 
   return (
     <motion.article
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.35) }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.2) }}
       className={cx(
         "group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-2xl border bg-black/70 text-left transition duration-300 sm:min-h-[310px]",
         "border-cyan-300/34 shadow-[0_0_0_1px_rgba(0,0,0,0.45),0_0_28px_rgba(34,211,238,0.14),0_18px_42px_rgba(0,0,0,0.5)] before:absolute before:inset-0 before:bg-[radial-gradient(120%_90%_at_0%_0%,rgba(34,211,238,0.2),transparent_48%),radial-gradient(120%_90%_at_100%_100%,rgba(34,211,238,0.14),transparent_52%)] before:content-['']",

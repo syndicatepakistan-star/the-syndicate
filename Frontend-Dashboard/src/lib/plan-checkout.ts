@@ -1,4 +1,7 @@
-import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
+import {
+  isKnightCheckoutBlocked,
+  type CheckoutOfferKey,
+} from "@/components/programs/planOfferCatalog";
 import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import {
@@ -166,7 +169,14 @@ function shouldRetryViaAuth(status: number, message: string): boolean {
   return lower.includes("signup token") || lower.includes("not authenticated") || lower.includes("authentication");
 }
 
+const KNIGHT_COMING_SOON_MESSAGE =
+  "The Knight membership is coming soon and is not available for purchase yet.";
+
 export async function startPlanCheckout(params: PlanCheckoutParams): Promise<StartPlanCheckoutResult> {
+  if (isKnightCheckoutBlocked(params.plan)) {
+    return { status: "error", message: KNIGHT_COMING_SOON_MESSAGE };
+  }
+
   const authHeader = getAuthorizationHeader();
   if (!authHeader) {
     if (hasSimpleAuthSessionClient()) {

@@ -181,7 +181,7 @@ export function MembershipVideoGallery({
               {filteredVideos.map((v, i) => {
                 const slot = getVideoGridSlot(i, v);
                 return (
-                  <div key={v.id} className={slot.cell}>
+                  <div key={v.id} className={cx(slot.cell, "min-h-0 [contain:layout]")}>
                     <VideoCard
                       video={v}
                       onPlay={onPlay}

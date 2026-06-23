@@ -11,6 +11,7 @@ import {
   PLAN_OFFERS,
   PLAN_OFFERS_PRIMARY,
   PLAN_OFFERS_VAULT,
+  isPlanOfferComingSoon,
   type CheckoutOfferKey,
   type PlanOfferDef,
 } from "@/components/programs/planOfferCatalog";
@@ -139,6 +140,9 @@ export function PublicPlanOfferCards({
 
   const joinOffer = useCallback(
     async (offer: PlanOfferDef) => {
+      if (isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+        return;
+      }
       if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
         void openUnlocked(offer);
         return;
@@ -184,6 +188,8 @@ export function PublicPlanOfferCards({
     const showOpenOnParent =
       offer.openAction === "vault_picker" &&
       (packUnlocked || isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive));
+    const comingSoon =
+      isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
 
     return (
       <PlanOfferCard
@@ -194,11 +200,13 @@ export function PublicPlanOfferCards({
         cardStats={vaultPack ? resolveOfferCardStats(offer, "pack") : undefined}
         busy={busyPlan === offer.plan}
         highlighted={highlightedPack === offer.plan}
+        comingSoon={comingSoon}
         actionLabel={
           showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
         }
         onDetails={() => setDetailOffer(offer)}
         onOpen={() => {
+          if (comingSoon) return;
           if (offer.openAction === "vault_picker") {
             setVaultPackOffer(offer);
             return;

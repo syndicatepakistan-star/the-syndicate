@@ -32,6 +32,18 @@ export type CheckoutOfferKey =
 
 export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple" | "red" | "orange" | "blue";
 
+/** Flip to false when The Knight checkout should go live. */
+export const KNIGHT_PLAN_COMING_SOON = true;
+
+export function isKnightPlanSlug(plan: string): boolean {
+  const p = plan.trim().toLowerCase();
+  return p === "king" || p === "knight";
+}
+
+export function isKnightCheckoutBlocked(plan: string): boolean {
+  return KNIGHT_PLAN_COMING_SOON && isKnightPlanSlug(plan);
+}
+
 export type PlanOfferDef = {
   plan: CheckoutOfferKey;
   title: string;
@@ -57,9 +69,16 @@ export type PlanOfferDef = {
   detailFeatures: readonly string[];
   /** When false, checkout records billing only — no program entitlements yet. */
   grantsEntitlement?: boolean;
+  /** When true, purchase CTAs are disabled and checkout is blocked. */
+  isComingSoon?: boolean;
   /** Optional CSS object-position for cover art (e.g. tall PNGs with title text). */
   imageObjectPosition?: string;
 };
+
+export function isPlanOfferComingSoon(offer: Pick<PlanOfferDef, "plan" | "isComingSoon">): boolean {
+  if (offer.isComingSoon) return true;
+  return KNIGHT_PLAN_COMING_SOON && isKnightPlanSlug(String(offer.plan));
+}
 
 /** Row 1 — Money Mastery + The Knight */
 export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
@@ -98,8 +117,9 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/mo",
     checkoutAmount: "19.99",
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: "Coming Soon",
     openHref: "/membership",
+    isComingSoon: true,
     accent: "cyan",
     detailTitle: "The Knight",
     detailDescription:
@@ -125,17 +145,17 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageSrc: OFFER_PLAN_THUMB_AGENTIC_AI,
     teaser:
       "Manual workflows are wage labour disguised as entrepreneurship — stop babysitting tasks agents should execute. Agentic AI installs autonomous n8n pipelines, Claude Code systems, MCP servers, and RAG stacks that compound leverage while you architect the empire.",
-    displayPrice: "$199",
-    comparePrice: "$349",
+    displayPrice: "$150",
+    comparePrice: "$200",
     billingLabel: "/lifetime",
-    checkoutAmount: "199",
+    checkoutAmount: "150",
     billing: "monthly",
     openLabel: "Unlock",
     openAction: "vault_picker",
     accent: "pink",
     detailTitle: "AGENTIC AI",
     detailDescription:
-      "Agentic AI is not a single course — it is a vault of autonomous systems. Buy once for $199 and unlock every module below: n8n agents, Claude Code doctrine, MCP workflows, RAG pipelines, and business automations built for operators who refuse manual execution. Dashboard access records immediately; full library entitlement activates as each protocol deploys. Deploy à la carte at $19 each if you prefer surgical strikes over total vault capture.",
+      "Agentic AI is not a single course — it is a vault of autonomous systems. Buy once for $150 and unlock every module below: n8n agents, Claude Code doctrine, MCP workflows, RAG pipelines, and business automations built for operators who refuse manual execution. Dashboard access records immediately; full library entitlement activates as each protocol deploys. Deploy à la carte across the vault (about $200 if bought separately) if you prefer surgical strikes over total vault capture.",
     detailFeatures: [
       "Build a Blog Writing Agent With N8N",
       "Build a WhatsApp Agent with n8n",
@@ -172,17 +192,17 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageSrc: OFFER_PLAN_THUMB_AI_CONTENT_AUTOMATION,
     teaser:
       "Publishing without a machine behind you is invisible labour — this vault wires faceless YouTube, viral Shorts, documentary channels, and finance niches into AI pipelines that scale while you stay off camera. One checkout. Total content warfare capability.",
-    displayPrice: "$149",
-    comparePrice: "$249",
+    displayPrice: "$150",
+    comparePrice: "$200",
     billingLabel: "/lifetime",
-    checkoutAmount: "149",
+    checkoutAmount: "150",
     billing: "monthly",
     openLabel: "Unlock",
     openAction: "vault_picker",
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
     detailDescription:
-      "AI Content Automation is the faceless operator's arsenal. Buy the full vault for $149 and unlock every module below — YouTube automation, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and bulk publishing blueprints. No vanity access: every purchase records to your dashboard with controlled entitlement as modules go live. Prefer precision? Deploy individual protocols at $15 each.",
+      "AI Content Automation is the faceless operator's arsenal. Buy the full vault for $150 and unlock every module below — YouTube automation, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and bulk publishing blueprints. No vanity access: every purchase records to your dashboard with controlled entitlement as modules go live. Prefer precision? Deploy individual protocols à la carte (about $200 if bought separately).",
     detailFeatures: [
       "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
       "New YouTube Policy ENDS Those Faceless YouTube Channels",
@@ -222,10 +242,10 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageSrc: OFFER_PLAN_THUMB_TRADING,
     teaser:
       "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. This protocol is your definitive strategic weapon — master-level technical analysis, high-leverage indicators, and cold, mathematical execution across stocks and crypto.",
-    displayPrice: "$99",
-    comparePrice: "$199",
+    displayPrice: "$150",
+    comparePrice: "$200",
     billingLabel: "/lifetime",
-    checkoutAmount: "99",
+    checkoutAmount: "150",
     billing: "monthly",
     openLabel: "Unlock",
     openAction: "vault_picker",
@@ -233,7 +253,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageObjectPosition: "center center",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",
     detailDescription:
-      "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. If you are trading based on hype, hope, or uncalculated intuition, you are not an investor—you are liquidity. The elite do not guess; they execute proven, probabilistic trading strategies that extract capital regardless of economic conditions. You lack the systematic leverage to read the charts and command the market. This protocol is your definitive strategic weapon. It is the ultimate roadmap to strip away emotion, deploy master-level technical analysis, and architect a system for compounding wealth across stocks and crypto. We eliminate the theoretical noise and amateur gambling psychology to deliver the raw, operational mechanics of a professional trading matrix. This is a comprehensive, three-part masterclass in trading architecture. You will master the logic of advanced technical analysis, deploy high-leverage indicators, and command advanced candlestick strategies. Furthermore, you will weaponize complex chart setups—from mature candlestick patterns to confirmation signals and RSI divergences. By internalizing multi-hit methodology, time counts, and flawless entry-point fine-tuning, you are not just learning to trade. You are engineering a ruthless, self-sustaining system that executes your financial will with cold, mathematical precision. Unlock the full stack for $99 — Scalpel Protocol, Master Trader strategies, setups, and classified execution secrets — or buy individual edges at $35 each.",
+      "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. If you are trading based on hype, hope, or uncalculated intuition, you are not an investor—you are liquidity. The elite do not guess; they execute proven, probabilistic trading strategies that extract capital regardless of economic conditions. You lack the systematic leverage to read the charts and command the market. This protocol is your definitive strategic weapon. It is the ultimate roadmap to strip away emotion, deploy master-level technical analysis, and architect a system for compounding wealth across stocks and crypto. We eliminate the theoretical noise and amateur gambling psychology to deliver the raw, operational mechanics of a professional trading matrix. This is a comprehensive, three-part masterclass in trading architecture. You will master the logic of advanced technical analysis, deploy high-leverage indicators, and command advanced candlestick strategies. Furthermore, you will weaponize complex chart setups—from mature candlestick patterns to confirmation signals and RSI divergences. By internalizing multi-hit methodology, time counts, and flawless entry-point fine-tuning, you are not just learning to trade. You are engineering a ruthless, self-sustaining system that executes your financial will with cold, mathematical precision. Unlock the full stack for $150 — Scalpel Protocol, Master Trader strategies, setups, and classified execution secrets — or buy individual modules at $50 each (about $200 if bought separately).",
     detailFeatures: [
       "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
       "Strategies of a Master Trader",

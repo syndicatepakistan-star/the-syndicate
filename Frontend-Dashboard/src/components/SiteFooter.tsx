@@ -22,7 +22,7 @@ export default function SiteFooter({
 }: SiteFooterProps = {}) {
   return (
     <footer
-      className="relative min-h-[clamp(260px,34vh,300px)] w-full overflow-hidden border-t bg-[#02050b] px-[clamp(1rem,3vw,2rem)] py-[clamp(2rem,5vw,3.75rem)]"
+      className="site-footer-root relative min-h-[clamp(260px,34vh,300px)] w-full overflow-hidden border-t bg-[#02050b] px-[clamp(1rem,3vw,2rem)] py-[clamp(2rem,5vw,3.75rem)]"
       style={{
         borderColor: 'rgba(251, 191, 36, 0.6)',
         boxShadow: 'inset 0 1px 0 rgba(251, 191, 36, 0.28), 0 -8px 30px rgba(251, 191, 36, 0.12)',
@@ -40,7 +40,7 @@ export default function SiteFooter({
         />
         <div className="absolute inset-0 bg-black/62" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-[min(1700px,97vw)] flex-col gap-[clamp(1.7rem,4vw,3.25rem)]">
+      <div className="site-footer-inner relative z-10 mx-auto flex w-full max-w-[min(1700px,97vw)] flex-col gap-[clamp(1.7rem,4vw,3.25rem)]">
         {/* Logo + slogan + quick links: one row on md, vertically centered to the same row height (footer vh band). */}
         <div className="grid grid-cols-1 items-center justify-items-center gap-[clamp(0.6rem,1.2vw,1.15rem)] md:grid-cols-[auto_auto_minmax(0,1fr)] md:items-center md:justify-items-stretch md:gap-x-0 md:gap-y-[clamp(1rem,3vw,2.25rem)]">
           <div className="justify-self-center md:min-w-0 md:justify-self-start md:self-center md:pr-1">
@@ -54,7 +54,7 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className="flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.35rem,1.2vw,0.85rem)] py-[clamp(0.35rem,1.2vw,0.75rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
+          <div className="site-footer-slogan flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.35rem,1.2vw,0.85rem)] py-[clamp(0.35rem,1.2vw,0.75rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
             <NeonTypingBadge
               phrases={['HONOUR · MONEY · POWER · FREEDOM']}
               typingSpeed={sloganTypingSpeed ?? 24}

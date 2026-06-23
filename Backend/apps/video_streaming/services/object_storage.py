@@ -5,10 +5,15 @@ S3-compatible client (R2, Railway buckets, AWS S3) shared by uploads and signed 
 from __future__ import annotations
 
 import os
+import logging
 
 import boto3
 from botocore.config import Config as BotoConfig
+from botocore.exceptions import ClientError
 from django.conf import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 def s3_client():
@@ -59,3 +64,24 @@ def bucket_object_exists(object_key: str) -> bool:
         return True
     except Exception:
         return True
+
+
+def get_s3_object_text(*, bucket: str, key: str, max_bytes: int = 2 * 1024 * 1024) -> str | None:
+    """Read a small text object (e.g. m3u8 manifest) from the bucket."""
+    client = s3_client()
+    if client is None or not bucket or not key:
+        return None
+    try:
+        obj = client.get_object(Bucket=bucket, Key=key)
+        body = obj.get("Body")
+        if body is None:
+            return None
+        raw = body.read(max_bytes + 1)
+        if len(raw) > max_bytes:
+            logger.warning("S3 object %s exceeds max_bytes=%s", key, max_bytes)
+        return raw.decode("utf-8", errors="replace")
+    except ClientError:
+        return None
+    except Exception:
+        logger.exception("get_s3_object_text failed key=%s", key)
+        return None

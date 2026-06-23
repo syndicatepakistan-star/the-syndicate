@@ -112,3 +112,44 @@ NEXT_PUBLIC_SYNDICATE_API_URL=https://YOUR-API.up.railway.app/api
 ## Local testing
 
 Same rules apply: large files through `127.0.0.1:8000` proxy are slow. For local dev with R2, either enable presigned + CORS with `http://localhost:3000`, or test with a small faststart MP4 (&lt; 50MB).
+
+## HLS playback (m3u8 + segments)
+
+Admin can link either a single MP4 **or** an HLS package per Stream video.
+
+### Admin examples
+
+| Format | Paste in **R2 bucket URL or object key** | R2 layout |
+|--------|------------------------------------------|-----------|
+| MP4 | `test/lesson.mp4` | One object |
+| HLS | `test/my-video/index.m3u8` | `index.m3u8` + `segment_000.ts` … in the **same folder prefix** |
+
+On save, Django stores the key on `original_video.name`, sets `playback_kind` to `mp4` or `hls`, and validates the manifest + first segment exist.
+
+### How HLS playback works
+
+1. `GET /api/streaming/videos/stream/<id>/` returns `playback_type: "hls"` and `playback_url` pointing at the signed manifest proxy.
+2. The proxy rewrites segment URIs in the m3u8 to signed same-origin URLs under `/api/streaming/videos/playback/<id>/media/<segment>.ts`.
+3. Frontend uses **hls.js** (not native `<video src>` alone) for HLS; MP4 rows are unchanged.
+
+HLS always uses the Django proxy (presigned direct R2 is disabled for manifests/segments so segment auth stays consistent).
+
+### HLS CORS
+
+HLS is proxied through the API, so R2 CORS is **not** required for segment fetches when using proxy mode. If you later serve segments directly from R2, add your origins:
+
+```json
+"AllowedOrigins": [
+  "https://the-syndicate.com",
+  "https://YOUR-FRONTEND.up.railway.app",
+  "http://localhost:3000"
+]
+```
+
+### HLS diagnosis
+
+| Symptom | Likely cause |
+|--------|----------------|
+| Admin save fails on m3u8 | Manifest or first segment missing in bucket; wrong key |
+| Stream API `playback_type: "hls"` but player errors | Token expired — refresh; check Network for 404 on `/media/segment_*.ts` |
+| MP4 still works, HLS does not | Folder layout: segments must live beside `index.m3u8` (relative paths in playlist) |

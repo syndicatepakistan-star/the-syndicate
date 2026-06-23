@@ -20,7 +20,9 @@ from django.http import FileResponse, Http404, HttpResponse, StreamingHttpRespon
 from django.urls import reverse
 
 from apps.video_streaming.models import StreamVideo
+from apps.video_streaming.services.hls_playback import hls_manifest_http_response
 from apps.video_streaming.services.object_storage import s3_client
+from apps.video_streaming.services.playback_kinds import detect_playback_kind
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +110,19 @@ def _guess_video_content_type(file_key: str) -> str:
         return "video/mp4"
     if lower.endswith(".webm"):
         return "video/webm"
+    if lower.endswith(".m3u8"):
+        return "application/vnd.apple.mpegurl"
+    if lower.endswith(".ts"):
+        return "video/mp2t"
     return "application/octet-stream"
+
+
+def video_playback_kind(video: StreamVideo) -> str:
+    stored = (getattr(video, "playback_kind", None) or "").strip().lower()
+    if stored in ("mp4", "hls"):
+        return stored
+    key = (getattr(video.original_video, "name", None) or "").strip()
+    return detect_playback_kind(key)
 
 
 def _first_bytes_range_for_s3(range_header: str | None) -> str | None:
@@ -254,8 +268,11 @@ def build_playback_url_for_video(
         return None, None
     ttl = playback_ttl_seconds()
     exp = int(time.time()) + ttl
+    kind = video_playback_kind(video)
     bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
     use_presign = bool(getattr(settings, "STREAM_PLAYBACK_USE_S3_PRESIGNED_GET", False))
+    if kind == "hls":
+        use_presign = False
     if use_presign and getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
         url = presigned_get_object_url(bucket=bucket, key=key, expires_in=ttl)
         if url:
@@ -265,7 +282,8 @@ def build_playback_url_for_video(
     from urllib.parse import urlencode
 
     qs = urlencode({"token": token, "expires": str(exp)})
-    return request.build_absolute_uri(f"{rel}?{qs}"), exp
+    # Relative path: browser loads via frontend same-origin /api/streaming proxy (required for hls.js).
+    return f"{rel}?{qs}", exp
 
 
 def build_stream_playback_api_payload(
@@ -279,6 +297,7 @@ def build_stream_playback_api_payload(
     base: dict = {
         "id": video.id,
         "status": video.status,
+        "playback_type": video_playback_kind(video),
         "playback_url": None,
         "playback_expires_at": None,
     }
@@ -297,6 +316,7 @@ def build_stream_playback_api_payload(
     return {
         "id": video.id,
         "status": video.status,
+        "playback_type": video_playback_kind(video),
         "playback_url": url,
         "playback_expires_at": exp,
     }

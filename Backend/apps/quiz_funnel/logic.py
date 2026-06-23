@@ -624,7 +624,7 @@ def build_section_c_report(archetype: str) -> str:
     """Deterministic Section C — full Weapon / Shield / Protocol stacks per archetype."""
     weapons = _weapon_courses_for_archetype(archetype)
     lines = [
-        "Section C: The Syndicate Execution Stack",
+        "Section C: THE SYNDICATE DIAGNOSIS",
         f"Based on your {archetype} archetype, The Syndicate recommends these courses:",
         "",
         "1. THE WEAPON (Primary Business Models):",

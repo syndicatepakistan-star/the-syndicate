@@ -20,6 +20,7 @@ import {
   PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
   PUBLIC_PSYCHOLOGY_PROGRAM_ORDER,
 } from "@/lib/programPlaylistThumbnails";
+import { STREAM_PLAYLIST_CATEGORY_LABELS } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
@@ -94,11 +95,6 @@ type Props = {
   className?: string;
   /** Scroll to and open details for this playlist when arriving from a deep link. */
   highlightPlaylistId?: number;
-};
-
-const CATEGORY_LABELS: Record<"business_model" | "business_psychology", string> = {
-  business_model: "Business Model",
-  business_psychology: "Business Psychology",
 };
 
 function sortPlaylistsByOrder(
@@ -485,10 +481,10 @@ export function PlaylistCardsSection({
           <div className="mx-auto w-full max-w-[1800px] overflow-visible xl:hidden">
             <div className="mb-3 grid grid-cols-2 gap-3">
               <div className="text-center font-mono text-[12px] font-extrabold uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7)] sm:text-[13px]">
-                {CATEGORY_LABELS.business_psychology}
+                {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
               </div>
               <div className="text-center font-mono text-[12px] font-extrabold uppercase tracking-[0.16em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7)] sm:text-[13px]">
-                {CATEGORY_LABELS.business_model}
+                {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
               </div>
             </div>
             <div className="relative space-y-4 overflow-visible">
@@ -508,7 +504,7 @@ export function PlaylistCardsSection({
           <div className="mx-auto hidden max-w-[1800px] grid-cols-1 gap-6 overflow-visible xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-start">
             <div className="space-y-3 overflow-visible">
               <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
-                {CATEGORY_LABELS.business_psychology}
+                {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
               <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">
@@ -523,7 +519,7 @@ export function PlaylistCardsSection({
 
             <div className="space-y-3 overflow-visible">
               <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
-                {CATEGORY_LABELS.business_model}
+                {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
               <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">

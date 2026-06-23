@@ -1,5 +1,6 @@
 import { fetchCoursesList, type CourseDto } from "@/lib/courses-api";
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
+import { streamPlaylistCategoryLabel } from "@/lib/streamPlaylistCategoryLabels";
 import {
   HIDDEN_PROGRAM_PLAYLIST_IDS,
   HIDDEN_PROGRAM_PLAYLIST_SLUGS,
@@ -106,7 +107,7 @@ function mapPlaylistToCourse(playlist: StreamPlaylistListItem): DashboardCourseL
   return {
     id: `playlist:${playlist.id}`,
     title,
-    meta: playlist.category === "business_model" ? "Business Model" : "Business Psychology",
+    meta: streamPlaylistCategoryLabel(playlist.category),
     statusText: playlist.is_unlocked ? "Unlocked" : "Locked",
     imageSrc: playlist.cover_image_url ?? undefined,
     progressPct,

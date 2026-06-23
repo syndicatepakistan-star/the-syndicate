@@ -365,11 +365,11 @@ export function warmHomeMedia(): Promise<void> {
 
 /**
 
- * Stage media warming: logo + programs band in parallel; remaining videos when idle.
+ * Stage media warming: logo first; programs band deferred on home (globe section warms it).
 
  */
 
-export function scheduleMarketingMediaWarmup(): void {
+export function scheduleMarketingMediaWarmup(options?: { deferProgramsBand?: boolean }): void {
 
   if (typeof window === "undefined" || stagedWarmupStarted) return;
 
@@ -379,7 +379,9 @@ export function scheduleMarketingMediaWarmup(): void {
 
   void warmImage(MARKETING_IMAGE_URLS[0]);
 
-  void warmVideo(PROGRAMS_SECTION_VIDEO);
+  if (!options?.deferProgramsBand) {
+    void warmVideo(PROGRAMS_SECTION_VIDEO);
+  }
 
 
 
@@ -399,7 +401,7 @@ export function scheduleMarketingMediaWarmup(): void {
 
     }, 2500);
 
-  }, 900);
+  }, options?.deferProgramsBand ? 1800 : 900);
 
 }
 

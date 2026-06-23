@@ -190,10 +190,9 @@ export function VideoCard({ video, onPlay, index = 0, visual = "landscape", fram
 
   return (
     <motion.article
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.35) }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.2) }}
       className={cx(
         "group relative flex min-h-0 flex-col rounded-xl border bg-black/45 p-[clamp(0.65rem,1.2vw+0.35rem,1rem)] text-left transition duration-200",
         "hover:-translate-y-0.5",

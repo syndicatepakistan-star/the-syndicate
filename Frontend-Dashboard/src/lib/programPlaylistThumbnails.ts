@@ -22,8 +22,6 @@ export const HIDDEN_PROGRAM_PLAYLIST_IDS = new Set<number>([
   10, // The Business of Empire Building
   11, // The Art Of Business Persuasion
   15, // Faceless YouTube AI Content Creator Course (legacy — use ai_content_automation pack)
-  16, // AI Automations (legacy — use agentic_ai pack)
-  17, // N8N / How To Build AI Agents (legacy — use agentic_ai pack)
   18, // Crypto Trading (legacy — use trading_technical_analysis pack)
   22, // Block Chain and Smart Contract Building with Solidity
   26, // Prompt Engineering
@@ -37,8 +35,6 @@ export const HIDDEN_PROGRAM_PLAYLIST_SLUGS = new Set<string>([
   "the-business-of-empire-building",
   "the-art-of-business-persuasion",
   "faceless-youtube-ai-content-creator-course",
-  "ai-automations",
-  "how-to-build-ai-agents",
   "crypto-trading-with-technical-analysis-course",
   "the-1-minute-scalpel",
   "block-chain-and-smart-contract-building-with-solidity",
@@ -74,6 +70,8 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
   // Business Model
   13, // WordPress Blog
   14, // Framer Crash Course
+  16, // AI Automations
+  17, // N8N AI Automation
   19, // Print On Demand
   20, // Building Games Using Unreal Engine
   21, // App Building (using Flutter)
@@ -84,7 +82,8 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
 ]);
 
 export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
-  17: "N8N Ai Automation",
+  16: "AI Automations",
+  17: "N8N AI Automation",
   19: "Print On Demand",
   25: "Amazon KDP",
   31: "Micro Business Protocols",
@@ -97,7 +96,7 @@ export const PUBLIC_PSYCHOLOGY_PROGRAM_ORDER: readonly number[] = [
 
 /** Display order on /programs (Business Model column). */
 export const PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER: readonly number[] = [
-  21, 28, 25, 20, 14, 23, 19, 24, 13,
+  17, 16, 21, 28, 25, 20, 14, 23, 19, 24, 13,
 ];
 
 /**
@@ -120,7 +119,7 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   13: courseThumb("wordpress-blog.png"),
   14: courseThumb("framer.png"),
   15: courseThumb("faceless youtube.jpeg"),
-  16: courseThumb("automaton-name-change.png"),
+  16: courseThumb("ai automations.png"),
   17: courseThumb("N8N Ai.jpg"),
   18: courseThumb("trading with technical analysis.png"),
   19: courseThumb("print on demand.png"),
@@ -298,6 +297,7 @@ export function isHiddenProgramPlaylist(
   if (HIDDEN_PROGRAM_PLAYLIST_IDS.has(programId)) return true;
   const slug = meta?.slug?.trim().toLowerCase();
   if (slug && HIDDEN_PROGRAM_PLAYLIST_SLUGS.has(slug)) return true;
+  if (PUBLIC_PROGRAMS_PAGE_IDS.has(programId)) return false;
   const title = meta?.title ? normalizeProgramTitle(meta.title) : "";
   if (!title) return false;
   if (title.includes("critical thinking")) return true;

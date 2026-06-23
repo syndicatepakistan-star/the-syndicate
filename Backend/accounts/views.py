@@ -399,6 +399,7 @@ def _parse_pence_from_amount_payload(raw) -> int | None:
 
 
 _PLAN_ENTITLEMENT_SLUGS = frozenset({"bundle", "king", "pawn", "knight"})
+_KNIGHT_PLAN_CHECKOUT_BLOCKED = True
 _PLAN_RECORDABLE_SLUGS = frozenset(
   {
     "bundle",
@@ -421,6 +422,13 @@ def _is_recordable_plan_slug(plan: str) -> bool:
   if plan in _PLAN_RECORDABLE_SLUGS:
     return True
   return is_vault_course_plan_slug(plan)
+
+
+def _knight_plan_checkout_blocked(plan_raw: str) -> bool:
+  if not _KNIGHT_PLAN_CHECKOUT_BLOCKED:
+    return False
+  p = (plan_raw or "").strip().lower()
+  return p in ("king", "knight")
 
 
 _PLAN_PRODUCT_TITLES = {
@@ -924,6 +932,11 @@ def create_checkout_session_view(request):
       metadata["playlist_id"] = str(selected_playlist.id)
     plan_raw = str(payload.get("selected_plan", "")).strip().lower()
     if plan_raw:
+      if _knight_plan_checkout_blocked(plan_raw):
+        return _json_error(
+          "The Knight membership is coming soon and is not available for purchase yet.",
+          status=403,
+        )
       if user_owns_checkout_selection(checkout_user, plan_raw=plan_raw):
         return already_owned_checkout_response(plan_raw=plan_raw)
       metadata["selected_plan"] = plan_raw
@@ -1041,6 +1054,11 @@ def create_checkout_session_view(request):
 
   plan_payload = str(payload.get("selected_plan", "")).strip().lower()
   if plan_payload:
+    if _knight_plan_checkout_blocked(plan_payload):
+      return _json_error(
+        "The Knight membership is coming soon and is not available for purchase yet.",
+        status=403,
+      )
     metadata["selected_plan"] = plan_payload
 
   selected_playlist = None

@@ -35,8 +35,10 @@ import { clearUnlockCelebrationStorage, resolvePlaylistIdForPlan } from "@/lib/p
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
-import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
+import { STREAM_PLAYLIST_CATEGORY_LABELS } from "@/lib/streamPlaylistCategoryLabels";
+import { useTabResume } from "@/hooks/useTabResume";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -157,11 +159,6 @@ const PLAYLIST_CARD_THEMES = [
 type PlaylistCategory = "all" | "business_model" | "business_psychology";
 
 const DEFAULT_PLAYLIST_CATEGORY: PlaylistCategory = "all";
-
-const PLAYLIST_CATEGORY_LABELS: Record<Exclude<PlaylistCategory, "all">, string> = {
-  business_model: "Business Model",
-  business_psychology: "Business Psychology",
-};
 
 function parsePrice(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
@@ -302,6 +299,21 @@ export function ProgramsCourseSection({
       cancelled = true;
     };
   }, [reloadApiCourses, reloadStreamPlaylists]);
+
+  const refreshAfterTabResume = useCallback(() => {
+    if (!hasSimpleAuthSessionClient()) return;
+    purgeExpiredStreamPlaybackCache();
+    void fetchPortalIdentity().then((identity) => {
+      setStaff(!!identity?.is_staff);
+      setAccessTier(identity?.access_tier ?? null);
+      setMoneyMasteryActive(!!identity?.money_mastery_active);
+    });
+    clearStreamPlaylistsCache();
+    void reloadStreamPlaylists({ forceRefresh: true });
+    void reloadApiCourses();
+  }, [reloadApiCourses, reloadStreamPlaylists]);
+
+  useTabResume(refreshAfterTabResume);
 
   const effectiveStreamPlaylists = useMemo(() => {
     if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return streamPlaylists;
@@ -965,7 +977,7 @@ export function ProgramsCourseSection({
                                   : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
                               )}
                             >
-                              Business Psychology
+                              {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
                             </button>
                             <button
                               type="button"
@@ -1059,10 +1071,10 @@ export function ProgramsCourseSection({
                     <div className="space-y-3 xl:hidden">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex min-h-[2.8rem] items-center justify-center text-center font-mono text-[13px] font-extrabold uppercase leading-tight tracking-[0.18em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_24px_rgba(232,121,249,0.8)] sm:min-h-[3rem] sm:text-[14px]">
-                          {PLAYLIST_CATEGORY_LABELS.business_psychology}
+                          {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
                         </div>
                         <div className="flex min-h-[2.8rem] items-center justify-center text-center font-mono text-[13px] font-extrabold uppercase leading-tight tracking-[0.18em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_24px_rgba(103,232,249,0.8)] sm:min-h-[3rem] sm:text-[14px]">
-                          {PLAYLIST_CATEGORY_LABELS.business_model}
+                          {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
                         </div>
                       </div>
                       <div className="space-y-4">
@@ -1094,7 +1106,7 @@ export function ProgramsCourseSection({
                     {visibleBusinessPsychologyPlaylists.length > 0 ? (
                       <div className="space-y-3">
                         <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
-                          {PLAYLIST_CATEGORY_LABELS.business_psychology}
+                          {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
                         </div>
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
                         <div
@@ -1118,7 +1130,7 @@ export function ProgramsCourseSection({
                     {visibleBusinessModelPlaylists.length > 0 ? (
                       <div className="space-y-3">
                         <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
-                          {PLAYLIST_CATEGORY_LABELS.business_model}
+                          {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
                         </div>
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
                         <div

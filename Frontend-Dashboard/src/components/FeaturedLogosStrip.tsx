@@ -18,9 +18,7 @@ type FeaturedLogosStripProps = {
 
 export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact = false, className }: FeaturedLogosStripProps) {
   const safeLogos = logos.filter((logo) => logo.src.trim().length > 0 && logo.alt.trim().length > 0)
-  const groupRepeatCount = 3
-  const baseGroup = Array.from({ length: groupRepeatCount }, () => safeLogos).flat()
-  const trackLogos = [...baseGroup, ...baseGroup]
+  const trackLogos = [...safeLogos, ...safeLogos]
   const stripRef = useRef<HTMLDivElement | null>(null)
   const itemRefs = useRef<Array<HTMLElement | null>>([])
   const centerGap = compact ? 'min(400px, 68vw)' : 'min(400px, 42vw)'

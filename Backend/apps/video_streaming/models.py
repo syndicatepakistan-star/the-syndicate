@@ -27,7 +27,7 @@ def stream_playlist_cover_upload_to(instance: "StreamPlaylist", filename: str) -
 
 class StreamVideo(models.Model):
     """
-    Admin-uploaded MP4 stored in private object storage (or local media in dev).
+    Admin-linked private bucket media (MP4 or HLS package).
     Playback uses short-lived signed URLs to the Django playback proxy (never a raw storage URL in the browser).
     """
 
@@ -35,6 +35,10 @@ class StreamVideo(models.Model):
         PROCESSING = "processing", "Processing"
         READY = "ready", "Ready"
         FAILED = "failed", "Failed"
+
+    class PlaybackKind(models.TextChoices):
+        MP4 = "mp4", "MP4 file"
+        HLS = "hls", "HLS package (m3u8 + segments)"
 
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -54,13 +58,23 @@ class StreamVideo(models.Model):
         upload_to=stream_video_original_upload_to,
         max_length=2048,
         blank=True,
-        help_text="Original MP4 (or other supported format). Stored privately; served only via signed playback URLs.",
+        help_text=(
+            "Private bucket object key: MP4 file (e.g. test/lesson.mp4) or HLS manifest "
+            "(e.g. test/my-video/index.m3u8). Served only via signed playback URLs."
+        ),
+    )
+    playback_kind = models.CharField(
+        max_length=8,
+        choices=PlaybackKind.choices,
+        default=PlaybackKind.MP4,
+        db_index=True,
+        help_text="Auto-set from the linked bucket key (.mp4 vs .m3u8).",
     )
     hls_path = models.URLField(
         max_length=2048,
         blank=True,
         default="",
-        help_text="Legacy field from the old HLS pipeline; unused. Left blank for new uploads.",
+        help_text="Legacy field. For HLS rows, stores the manifest object key mirror (optional).",
     )
     status = models.CharField(
         max_length=16,
@@ -126,7 +140,7 @@ class StreamPlaylist(models.Model):
 
     class Category(models.TextChoices):
         BUSINESS_MODEL = "business_model", "Business Model"
-        BUSINESS_PSYCHOLOGY = "business_psychology", "Business Psychology"
+        BUSINESS_PSYCHOLOGY = "business_psychology", "Business Behaviour Psychology"
 
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=280, unique=True, db_index=True)

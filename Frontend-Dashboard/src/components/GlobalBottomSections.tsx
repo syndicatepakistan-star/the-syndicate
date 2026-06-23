@@ -53,7 +53,7 @@ export default function GlobalBottomSections() {
 
   return (
     <>
-      <section id="joinNowSection" className={sectionLayoutClass}>
+      <section id="joinNowSection" className={`${sectionLayoutClass} marketing-join-section`}>
         <div className="pointer-events-none absolute inset-0">
           <ViewportDecorVideo src="/assets/v.mp4" className="h-full w-full object-cover opacity-55" />
           <div className="absolute inset-0 bg-black/72" />
@@ -88,7 +88,7 @@ export default function GlobalBottomSections() {
             </div>
           )}
           {isProgramsPage ? (
-            <h2 className="mx-auto mt-3 max-w-[30ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
+            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[30ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
               <span className="block">
                 IF YOU WANT
                 <span className="hamburger-attract mx-2 inline-block text-amber-200 drop-shadow-[0_0_30px_rgba(251,191,36,0.9)]">FREEDOM</span>
@@ -101,7 +101,7 @@ export default function GlobalBottomSections() {
               </span>
             </h2>
           ) : (
-            <h2 className="mx-auto mt-3 max-w-[26ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
+            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[26ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
               <span className="block">IF YOU WANT TO</span>
               <span className="mt-1.5 block">
                 <span className="hamburger-attract mx-2 inline-block text-amber-200 drop-shadow-[0_0_30px_rgba(251,191,36,0.9)]">{actionWord}</span>

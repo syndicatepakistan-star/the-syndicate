@@ -1,0 +1,236 @@
+/**
+ * Dell Vostro / 1080p laptop band — 1400–1679 CSS px width.
+ * Typical: 1920×1080 @ 125% Windows scaling → ~1536×864.
+ *
+ * Excludes: phone (≤767), tablet/iPad (≤1366), large desktop (≥1680 @ 100%).
+ * All rules live inside this single media query so other breakpoints stay untouched.
+ */
+@media (min-width: 1400px) and (max-width: 1679px) {
+  :root {
+    --fluid-page-px: clamp(0.6rem, 0.95vw + 0.32rem, 1.05rem);
+    --fluid-section-p: clamp(0.62rem, 1.25vw + 0.28rem, 1.28rem);
+    --fluid-shell-p: clamp(0.58rem, 1.2vw + 0.22rem, 1.38rem);
+    --fluid-main-grid-gap: clamp(0.48rem, 0.75vw + 0.18rem, 0.78rem);
+    --fluid-main-grid-pt: 8px;
+    --fluid-nav-py: clamp(0.42rem, 0.85vw + 0.18rem, 0.78rem);
+    --fluid-nav-pl: clamp(0.42rem, 0.9vw + 0.15rem, 1.1rem);
+    --fluid-nav-pr: clamp(0.48rem, 0.95vw + 0.18rem, 1.15rem);
+    --fluid-hero-title: clamp(0.95rem, 1.9vw + 0.32rem, 1.75rem);
+    --fluid-path-section-heading: clamp(1.05rem, 0.75vw + 0.72rem, 1.55rem);
+    --fluid-instructor-title: clamp(1.05rem, 1.65vw + 0.55rem, 1.55rem);
+    --fluid-instructor-media-minh: clamp(12rem, 26vh + 1rem, 18rem);
+    --laptop-public-hero: clamp(2.65rem, 4.35vw, 5.15rem);
+    --laptop-join-headline: clamp(2.15rem, 3.8vw, 3.65rem);
+  }
+
+  /* ── Dashboard shell + sidebar ─────────────────────────────────────────── */
+  .dashboard-hamburger-chrome .sidebar-nav-dock {
+    --sidebar-nav-label-size: clamp(0.54rem, 0.14vw + 0.44rem, 0.78rem);
+    --sidebar-nav-label-tracking: 0.055em;
+    --sidebar-nav-section-px: clamp(0.44rem, 0.65vw + 0.16rem, 0.78rem);
+    --sidebar-nav-section-pt: clamp(0.42rem, 0.75vw + 0.15rem, 0.82rem);
+    --sidebar-nav-section-pb: clamp(0.14rem, 0.28vw + 0.06rem, 0.28rem);
+    --sidebar-nav-item-px: clamp(0.28rem, 0.45vw + 0.08rem, 0.62rem);
+    --sidebar-nav-item-py: clamp(0.28rem, 0.48vw + 0.08rem, 0.48rem);
+    --sidebar-nav-icon-frame: clamp(16px, 0.35rem + 0.85vw, 22px);
+    --sidebar-nav-icon-svg: clamp(9px, 0.16rem + 0.72vw, 13px);
+    --sidebar-nav-list-gap: clamp(0.18rem, 0.35vw + 0.06rem, 0.32rem);
+    --sidebar-nav-accent-w: clamp(16px, 1.6vw + 6px, 30px);
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock .sidebar-nav-item {
+    min-height: clamp(1.95rem, 3.1vh, 2.35rem);
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock .sidebar-nav-item.cut-frame-sm {
+    clip-path: none;
+    border-radius: 8px;
+    overflow: visible;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock.cut-frame {
+    clip-path: none;
+    border-radius: 10px;
+  }
+
+  .dashboard-hamburger-chrome .sidebar-nav-dock .sidebar-nav-label {
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-hamburger-chrome .premium-navbar .fluid-logo-min-h,
+  .dashboard-hamburger-chrome .premium-navbar img.hamburger-attract {
+    max-height: clamp(2rem, 3.8vw, 2.85rem);
+  }
+
+  .dashboard-hamburger-chrome .dashboard-main-content-shell .dashboard-main-scroll {
+    padding-left: var(--fluid-section-p);
+    padding-right: clamp(0.45rem, 0.85vw, 0.75rem);
+  }
+
+  .dashboard-hamburger-chrome .dashboard-hero-neon-panel {
+    padding: clamp(0.85rem, 1.4vw + 0.35rem, 1.35rem) !important;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-mobile-section-root {
+    gap: clamp(0.85rem, 1.4vw, 1.15rem);
+  }
+
+  /* ── Public marketing surfaces ─────────────────────────────────────────── */
+  .what-you-get-page,
+  .membership-marketing-page,
+  .mobile-viewport-contain,
+  .our-methods-page {
+    overflow-x: clip;
+  }
+
+  .what-you-get-page .what-you-get-hero {
+    padding-top: clamp(6.5rem, 11vh, 7.75rem);
+    padding-bottom: clamp(2.5rem, 5vh, 3.25rem);
+  }
+
+  .what-you-get-page .what-you-get-hero-inner {
+    max-width: min(100%, 93vw);
+  }
+
+  .what-you-get-page .what-you-get-hero-copy {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .what-you-get-page .what-you-get-hero-title {
+    font-size: var(--laptop-public-hero) !important;
+    line-height: 0.98;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
+  }
+
+  .what-you-get-page .what-you-get-hero-lede {
+    font-size: clamp(1rem, 1.35vw + 0.45rem, 1.15rem);
+    max-width: min(42rem, 92%);
+  }
+
+  .our-methods-page .our-methods-hero-title {
+    font-size: clamp(2.15rem, 4.2vw, 4.35rem) !important;
+  }
+
+  .marketing-join-section {
+    height: auto !important;
+    min-height: min(100dvh, 900px) !important;
+    padding-block: clamp(2.5rem, 7vh, 4rem) !important;
+  }
+
+  .marketing-join-headline {
+    font-size: var(--laptop-join-headline) !important;
+    line-height: 1.06 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .marketing-join-section .max-w-\[min\(1700px\,98vw\)\],
+  .marketing-join-section .max-w-\[min\(1600px\,96vw\)\] {
+    max-width: min(100%, 93vw);
+  }
+
+  .hero-slogan-badge .neon-badge-text,
+  .footer-typing.hero-slogan-badge .neon-badge-text {
+    font-size: clamp(0.66rem, 1.35vw, 1.05rem) !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .marketing-slogan-oneline .neon-badge-text {
+    font-size: clamp(0.62rem, 1.1vw, 0.95rem) !important;
+    letter-spacing: clamp(0.08em, 0.35vw, 0.14em) !important;
+  }
+
+  /* Footer: pull slogan left offset in on laptop band */
+  .site-footer-root .site-footer-slogan {
+    margin-left: clamp(1.5rem, 4.5vw, 3.5rem) !important;
+  }
+
+  .site-footer-root .site-footer-inner {
+    max-width: min(100%, 93vw);
+    gap: clamp(1.25rem, 2.8vw, 2rem);
+  }
+
+  .site-footer-root {
+    min-height: clamp(220px, 28vh, 270px);
+    padding-block: clamp(1.75rem, 3.5vw, 2.5rem);
+  }
+
+  /* Home globe + shorter laptop viewport height */
+  .home-globe-section {
+    height: clamp(500px, 70dvh, 760px);
+    min-height: clamp(480px, 66dvh, 720px);
+    max-height: clamp(540px, 74dvh, 800px);
+  }
+
+  #heroSection {
+    height: min(100dvh, 920px);
+    min-height: min(100dvh, 920px);
+  }
+
+  /* Syndicate OTP / login private funnel */
+  #syndicate-otp-mount .login-container {
+    padding: clamp(0.85rem, 2vw, 1.5rem);
+  }
+
+  #syndicate-otp-mount .login-box {
+    width: min(92vw, clamp(17rem, 34vw, 26rem));
+    padding: clamp(1.15rem, 2.2vw, 1.85rem) clamp(0.95rem, 2.2vw, 1.65rem);
+  }
+
+  #syndicate-otp-mount .glitch {
+    font-size: clamp(1.2rem, 2.2vw + 0.5rem, 2.35rem);
+    letter-spacing: clamp(0.1em, 0.06em + 0.65vw, 0.28em);
+  }
+
+  /* Quiz funnel */
+  .quiz-funnel-root .page-wrap {
+    padding: clamp(1rem, 2.2vw, 1.5rem);
+  }
+
+  .quiz-funnel-root .card,
+  .quiz-funnel-root .card-landing,
+  .quiz-funnel-root .card-quiz {
+    max-width: min(100%, 40rem);
+    padding: clamp(1.35rem, 2.4vw, 1.85rem);
+  }
+
+  .quiz-funnel-root .brand-title {
+    font-size: clamp(1.65rem, 2.8vw, 2.15rem);
+    line-height: 1.15;
+  }
+
+  .quiz-funnel-root .section-title,
+  .quiz-funnel-root .question-title {
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+    line-height: 1.25;
+  }
+
+  .quiz-funnel-root .brand-logo {
+    width: clamp(9.5rem, 18vw, 12.5rem);
+  }
+}
+
+/* Shorter laptop viewport (taskbar + browser chrome on 1080p) */
+@media (min-width: 1400px) and (max-width: 1679px) and (max-height: 980px) {
+  .what-you-get-page .what-you-get-hero {
+    min-height: auto;
+    padding-top: clamp(5.75rem, 10vh, 6.75rem);
+  }
+
+  .dashboard-hamburger-chrome.lg\:h-screen {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .site-footer-root {
+    min-height: clamp(200px, 26vh, 250px);
+  }
+
+  .marketing-join-section {
+    min-height: min(100dvh, 860px) !important;
+  }
+}

@@ -66,7 +66,7 @@ const METHOD_TIMELINE = [
 
 export default function OurMethodsPage() {
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-x-clip bg-[#04060c]">
+    <div className="our-methods-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <ViewportDecorVideo
           src="/assets/video.mp4"
@@ -89,7 +89,7 @@ export default function OurMethodsPage() {
             <div className="grid gap-9 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
               <div>
                 <h1
-                  className={`${publicHeadingLightning('cyan')} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
+                  className={`our-methods-hero-title ${publicHeadingLightning('cyan')} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
                 >
                   Control The Operating System
                 </h1>

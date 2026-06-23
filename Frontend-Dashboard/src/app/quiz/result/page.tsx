@@ -23,6 +23,10 @@ import {
   type ExecutionStackLineCategory,
 } from "@/lib/quizArchetypeCourseLinks";
 import {
+  formatQuizSectionTitle,
+  normalizeQuizReportLines,
+} from "@/lib/quizResultReportFormat";
+import {
   courseActionButtonTheme,
   resolveCourseNeonTheme,
   resolveWeaponNeonTheme,
@@ -99,11 +103,13 @@ function parseQuizSectionMeta(title: string) {
   }
   const letter = match[1].toUpperCase();
   const rest = match[2]?.trim() ?? "";
+  const formatted = formatQuizSectionTitle(`Section ${letter}: ${rest || " "}`);
+  const titleBody = formatted.replace(/^Section\s+[A-Z]:\s*/i, "").trim();
   return {
     id: `quiz-result-section-${letter.toLowerCase()}`,
     letter,
     shortLabel: `Section ${letter}`,
-    fullTitle: rest,
+    fullTitle: titleBody,
   };
 }
 
@@ -114,7 +120,7 @@ function scrollToQuizSection(sectionId: string) {
 }
 
 function getCleanReportLines(report: string) {
-  return report
+  const lines = report
     .split("\n")
     .filter((line) => line.trim() !== "")
     .filter((line) => !line.startsWith("Section E:"))
@@ -131,6 +137,7 @@ function getCleanReportLines(report: string) {
     .filter((line) => !line.startsWith("Recommended Track:"))
     .filter((line) => !/project\s+obsidian/i.test(line))
     .filter((line) => !line.includes("THE SOVEREIGN ENTITY AUDIT: PROJECT OBSIDIAN"));
+  return normalizeQuizReportLines(lines);
 }
 
 function renderCourseActionButton(
@@ -411,7 +418,7 @@ function renderStyledReport(report: string, loginEmail: string) {
             id={meta.id}
             className={`section-card scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
           >
-            <h3 className="result-subheading">{section.title}</h3>
+            <h3 className="result-subheading">{formatQuizSectionTitle(section.title)}</h3>
             {isArchetypeCourseMapSection(section.title)
               ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
               : isExecutionStackSection(section.title)
@@ -932,7 +939,7 @@ export default function ResultPage() {
       const normalizedBody = isExecutionStackSection(title)
         ? normalizeExecutionStackLines(sectionBody)
         : sectionBody;
-      drawSectionCard(title, normalizedBody);
+      drawSectionCard(formatQuizSectionTitle(title), normalizedBody);
     });
 
     const filename = "Syndicate Diagnosis Report.pdf";

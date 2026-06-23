@@ -177,12 +177,12 @@ export default function WhatYouGetPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-black">
+    <div className="what-you-get-page relative min-h-screen w-full min-w-0 overflow-x-clip bg-black">
       <NavApp />
 
       <main className="relative z-10">
         {/* Hero — unchanged structure vs. prior What You Get */}
-        <section className="relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
+        <section className="what-you-get-hero relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
             <ViewportDecorVideo
               src="/assets/bg-video.mp4"
@@ -194,7 +194,7 @@ export default function WhatYouGetPage() {
             <div className="absolute inset-0 bg-black/32" aria-hidden />
           </div>
           <div className="relative z-10">
-          <div className="mx-auto flex w-full max-w-[min(1650px,96vw)] flex-col">
+          <div className="mx-auto flex w-full max-w-[min(1650px,96vw)] flex-col what-you-get-hero-inner">
             <div className="flex justify-center pb-6 pt-2 sm:pb-8 sm:pt-4">
               <NeonTypingBadge
                 phrases={['HONOUR · MONEY · POWER · FREEDOM']}
@@ -205,15 +205,15 @@ export default function WhatYouGetPage() {
                 className="footer-typing hero-slogan-badge mx-auto"
               />
             </div>
-            <div>
-              <h1 className="hamburger-attract text-6xl font-black leading-[0.98] text-zinc-100 sm:text-7xl md:text-8xl lg:text-[6.8rem]">
+            <div className="what-you-get-hero-copy min-w-0">
+              <h1 className="what-you-get-hero-title hamburger-attract text-6xl font-black leading-[0.98] text-zinc-100 sm:text-7xl md:text-8xl lg:text-[6.8rem]">
                 Access to a powerful
                 <br />
                 network
                 <br />
                 and alliance.
               </h1>
-              <p className="mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
+              <p className="what-you-get-hero-lede mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
                 {ALLIANCE_HERO_LEDE}
               </p>
             </div>

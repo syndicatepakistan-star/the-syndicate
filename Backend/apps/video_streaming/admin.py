@@ -17,8 +17,10 @@ from apps.video_streaming.models import (
     StreamVideo,
 )
 from apps.video_streaming.services.bucket_reference import normalize_bucket_object_key
+from apps.video_streaming.services.hls_playback import validate_hls_manifest_in_bucket
 from apps.video_streaming.services.image_upload import save_image_field_on_instance
 from apps.video_streaming.services.object_storage import bucket_object_exists
+from apps.video_streaming.services.playback_kinds import detect_playback_kind
 
 logger = logging.getLogger(__name__)
 
@@ -149,15 +151,16 @@ class StreamVideoAdminForm(forms.ModelForm):
         required=False,
         label="R2 bucket URL or object key",
         help_text=(
-            "Upload the MP4 in Cloudflare R2 first, then paste either the object key "
-            "(e.g. bg.mp4 or stream_videos/originals/my-video.mp4) or the full R2/S3 URL from the dashboard. "
-            "Click Save — playback uses your private bucket via signed API URLs (not this raw link in the app)."
+            "Upload media in Cloudflare R2 first, then paste either the object key or full R2/S3 URL. "
+            "MP4 example: test/lesson.mp4 — single file playback. "
+            "HLS example: test/my-video/index.m3u8 — folder with index.m3u8 + segment_*.ts in the same prefix. "
+            "Click Save — playback uses signed API URLs (not this raw link in the app)."
         ),
     )
 
     class Meta:
         model = StreamVideo
-        exclude = ("original_video",)
+        exclude = ("original_video", "playback_kind")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -177,16 +180,23 @@ class StreamVideoAdminForm(forms.ModelForm):
             )
         cleaned["bucket_video_url_or_key"] = raw_ref
         cleaned["_resolved_bucket_key"] = selected_key
-        if selected_key and not bucket_object_exists(selected_key):
-            raise ValidationError(
-                {
-                    "bucket_video_url_or_key": (
-                        f"Object “{selected_key}” was not found in bucket "
-                        f"“{bucket or '(not configured)'}”. "
-                        "Upload the MP4 to R2 first, then paste the exact object key (e.g. bg.mp4)."
-                    )
-                }
-            )
+        if selected_key:
+            kind = detect_playback_kind(selected_key)
+            cleaned["_playback_kind"] = kind
+            if kind == "hls":
+                ok, err = validate_hls_manifest_in_bucket(selected_key)
+                if not ok:
+                    raise ValidationError({"bucket_video_url_or_key": err or "HLS manifest validation failed."})
+            elif not bucket_object_exists(selected_key):
+                raise ValidationError(
+                    {
+                        "bucket_video_url_or_key": (
+                            f"Object “{selected_key}” was not found in bucket "
+                            f"“{bucket or '(not configured)'}”. "
+                            "Upload the MP4 to R2 first, then paste the exact object key (e.g. test/lesson.mp4)."
+                        )
+                    }
+                )
         existing_key = ""
         if self.instance and self.instance.pk:
             existing_key = (getattr(self.instance.original_video, "name", None) or "").strip()
@@ -194,7 +204,7 @@ class StreamVideoAdminForm(forms.ModelForm):
             raise ValidationError(
                 {
                     "bucket_video_url_or_key": (
-                        "Paste the R2 object key (or URL) after uploading the MP4 to your bucket."
+                        "Paste the R2 object key (or URL) after uploading an MP4 or HLS manifest to your bucket."
                     )
                 }
             )
@@ -207,6 +217,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "status",
+        "playback_kind",
         "transcode_progress",
         "transcode_message",
         "player_layout",
@@ -219,6 +230,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
     readonly_fields = (
         "resolved_storage_key_display",
+        "playback_kind",
         "hls_path",
         "status",
         "transcode_progress",
@@ -238,11 +250,12 @@ class StreamVideoAdmin(admin.ModelAdmin):
                 "resolved_storage_key_display",
             ),
             "description": (
-                "Upload the MP4 in Cloudflare R2, then paste the object key or R2 URL and Save. "
-                "Fast-start MP4s seek sooner: ffmpeg -i input.mp4 -c copy -movflags +faststart output.mp4"
+                "Upload MP4 or HLS package in Cloudflare R2, then paste the object key or R2 URL and Save. "
+                "MP4: test/lesson.mp4 (fast-start: ffmpeg -i input.mp4 -c copy -movflags +faststart output.mp4). "
+                "HLS: test/my-folder/index.m3u8 with segment_*.ts in the same folder."
             ),
         }),
-        ("Pipeline", {"fields": ("status", "transcode_progress", "transcode_message", "hls_path", "last_error", "created_at")}),
+        ("Pipeline", {"fields": ("status", "playback_kind", "transcode_progress", "transcode_message", "hls_path", "last_error", "created_at")}),
     )
 
     @admin.display(description="Resolved storage key (used for playback)")
@@ -257,13 +270,16 @@ class StreamVideoAdmin(admin.ModelAdmin):
             selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
 
         pending_bucket_key = ""
+        playback_kind = StreamVideo.PlaybackKind.MP4
         if selected_key:
             obj._skip_auto_ready = True
+            playback_kind = detect_playback_kind(selected_key)
             obj.status = StreamVideo.Status.READY
             obj.transcode_progress = 100
             obj.transcode_message = "Linked to bucket object. Ready for playback."
             obj.last_error = ""
-            obj.hls_path = ""
+            obj.hls_path = selected_key if playback_kind == "hls" else ""
+            obj.playback_kind = playback_kind
             pending_bucket_key = selected_key
             obj.original_video = None
 
@@ -277,13 +293,15 @@ class StreamVideoAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         if pending_bucket_key:
+            kind = detect_playback_kind(pending_bucket_key)
             StreamVideo.objects.filter(pk=obj.pk).update(
                 original_video=pending_bucket_key,
+                playback_kind=kind,
                 status=StreamVideo.Status.READY,
                 transcode_progress=100,
                 transcode_message="Linked to bucket object. Ready for playback.",
                 last_error="",
-                hls_path="",
+                hls_path=pending_bucket_key if kind == "hls" else "",
             )
             obj.refresh_from_db()
 

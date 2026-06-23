@@ -41,6 +41,7 @@ import { fetchBillingPurchaseHistory, type StreamPlaylistPurchaseHistoryItem } f
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
 import {
   DEFAULT_DASHBOARD_PROFILE_AVATAR,
+  DEFAULT_DASHBOARD_PROFILE_NAME,
   notifyDashboardProfileUpdated,
   PROFILE_AVATAR_STORAGE_KEY,
   PROFILE_DISPLAY_NAME_KEY,
@@ -1932,9 +1933,11 @@ export default function Page() {
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string>("/assets/a.webp");
-  const [profileName, setProfileName] = useState(() =>
-    typeof window === "undefined" ? "Member" : readDashboardProfileDisplayName()
-  );
+  const [profileName, setProfileName] = useState(DEFAULT_DASHBOARD_PROFILE_NAME);
+
+  useEffect(() => {
+    setProfileName(readDashboardProfileDisplayName());
+  }, []);
 
   const persistProfileName = useCallback((name: string) => {
     const trimmed = name.trim() || "Member";

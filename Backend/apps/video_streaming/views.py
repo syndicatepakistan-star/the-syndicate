@@ -39,6 +39,11 @@ from apps.video_streaming.services.playback_delivery import (
     head_s3_original,
     streaming_s3_original_response,
     verify_playback_token,
+    video_playback_kind,
+)
+from apps.video_streaming.services.hls_playback import (
+    hls_manifest_http_response,
+    resolve_hls_segment_storage_key,
 )
 from apps.video_streaming.models import (
     StreamPlaylist,
@@ -112,11 +117,11 @@ class StreamVideoStreamView(APIView):
 
 class StreamVideoPlaybackFileView(APIView):
     """
-    `<video src>` playback: signed query token from `build_playback_url_for_video`.
+    `<video src>` / hls.js manifest URL: signed query token from `build_playback_url_for_video`.
 
     Re-validates token + entitlements on every GET/HEAD (including each HTTP Range for MP4 seeking).
-    With S3 storage, bytes are proxied through Django (no direct presigned storage URL in the browser).
-    """
+    For HLS, returns a rewritten m3u8 with signed segment proxy URLs.
+  """
 
     permission_classes = [AllowAny]
 
@@ -144,20 +149,46 @@ class StreamVideoPlaybackFileView(APIView):
         else:
             if not user_can_play_programs_stream_video(user, video):
                 raise Http404()
-        return user, video
+        return user, video, token, claims
 
     def get(self, request, video_id: int, *args, **kwargs):
-        _, video = self._user_video_for_playback_token(request, video_id)
+        _, video, token, claims = self._user_video_for_playback_token(request, video_id)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         storage_key = (getattr(video.original_video, "name", None) or "").strip()
+        kind = video_playback_kind(video)
+        if kind == "hls" and storage_key.lower().endswith(".m3u8"):
+            if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
+                return hls_manifest_http_response(
+                    request,
+                    bucket=bucket,
+                    manifest_key=storage_key,
+                    video_id=video_id,
+                    token=token,
+                    exp=int(claims["exp"]),
+                )
+            logger.error(
+                "HLS playback unavailable: USE_S3_OBJECT_STORAGE is off or bucket unset (video_id=%s)",
+                video_id,
+            )
+            return HttpResponse(
+                "HLS playback requires R2/S3 credentials on the backend (USE_S3_OBJECT_STORAGE).",
+                status=503,
+                content_type="text/plain",
+            )
         if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket and storage_key:
             return streaming_s3_original_response(request, bucket=bucket, key=storage_key)
         return file_response_for_local_original(video, request)
 
     def head(self, request, video_id: int, *args, **kwargs):
-        _, video = self._user_video_for_playback_token(request, video_id)
+        _, video, _token, _claims = self._user_video_for_playback_token(request, video_id)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         storage_key = (getattr(video.original_video, "name", None) or "").strip()
+        kind = video_playback_kind(video)
+        if kind == "hls" and storage_key.lower().endswith(".m3u8"):
+            resp = HttpResponse(status=200)
+            resp["Content-Type"] = "application/vnd.apple.mpegurl"
+            resp["Cache-Control"] = "private, no-store"
+            return resp
         if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket and storage_key:
             return head_s3_original(bucket=bucket, key=storage_key)
         if not video.original_video or not video.original_video.name:
@@ -176,6 +207,72 @@ class StreamVideoPlaybackFileView(APIView):
         resp["Accept-Ranges"] = "bytes"
         resp["Cache-Control"] = "private, no-store"
         return resp
+
+
+class StreamVideoPlaybackHlsMediaView(APIView):
+    """Signed proxy for individual HLS segments (.ts, init mp4, nested playlists)."""
+
+    permission_classes = [AllowAny]
+
+    def _authorized_video(self, request, video_id: int) -> StreamVideo:
+        token = (request.query_params.get("token") or "").strip()
+        if not token:
+            raise Http404()
+        claims = verify_playback_token(token=token, video_id=video_id)
+        if not claims:
+            raise Http404()
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        try:
+            user = User.objects.get(pk=int(claims["u"]))
+        except (User.DoesNotExist, TypeError, ValueError, KeyError):
+            raise Http404()
+
+        video = get_object_or_404(StreamVideo, pk=video_id)
+        mode = str(claims.get("m") or "programs").strip() or "programs"
+        if mode == "membership":
+            if not user_can_play_membership_stream_video(user, video):
+                raise Http404()
+        else:
+            if not user_can_play_programs_stream_video(user, video):
+                raise Http404()
+        if video_playback_kind(video) != "hls":
+            raise Http404()
+        return video
+
+    def get(self, request, video_id: int, media_path: str, *args, **kwargs):
+        video = self._authorized_video(request, video_id)
+        manifest_key = (getattr(video.original_video, "name", None) or "").strip()
+        if not manifest_key.lower().endswith(".m3u8"):
+            raise Http404()
+        try:
+            segment_key = resolve_hls_segment_storage_key(manifest_key, media_path)
+        except ValueError:
+            raise Http404() from None
+        if not segment_key:
+            raise Http404()
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
+        if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
+            return streaming_s3_original_response(request, bucket=bucket, key=segment_key)
+        raise Http404()
+
+    def head(self, request, video_id: int, media_path: str, *args, **kwargs):
+        video = self._authorized_video(request, video_id)
+        manifest_key = (getattr(video.original_video, "name", None) or "").strip()
+        if not manifest_key.lower().endswith(".m3u8"):
+            raise Http404()
+        try:
+            segment_key = resolve_hls_segment_storage_key(manifest_key, media_path)
+        except ValueError:
+            raise Http404() from None
+        if not segment_key:
+            raise Http404()
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
+        if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
+            return head_s3_original(bucket=bucket, key=segment_key)
+        raise Http404()
 
 
 class StreamPlaylistListView(generics.ListAPIView):

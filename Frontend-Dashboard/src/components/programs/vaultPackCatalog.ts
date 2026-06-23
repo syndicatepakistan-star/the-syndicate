@@ -2,6 +2,11 @@ import type { CheckoutOfferKey, PlanOfferAccent, PlanOfferDef, VaultPackKey } fr
 import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
 import { TRADING_PACK_DESCRIPTION } from "@/components/programs/tradingVaultCopy";
 import {
+  comparePriceForUnit,
+  distributeDollarPrices,
+  VAULT_ALACARTE_TOTAL_USD,
+} from "@/lib/packPricing";
+import {
   allTradingSubmoduleOffers,
   tradingSubmoduleOfferBySlug,
 } from "@/components/programs/tradingVaultCatalog";
@@ -69,6 +74,8 @@ function mapVaultCourses(rows: VaultCourseRow[], packPlan: VaultPackKey): PlanOf
   );
 }
 
+const AGENTIC_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_TOTAL_USD, 26);
+
 const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Build a Blog Writing Agent With N8N", "blog writing n8n.jpg"],
   ["Build a WhatsApp Agent with n8n", "whatsapp agent.jpg"],
@@ -96,13 +103,18 @@ const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Stop Learning n8n in 2026...Learn THIS Instead", "stop n8n.jpg"],
   ["VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity", "vibe coding.jpg"],
   ["Agentic Workflow for Businesses", "agentic workflow.jpg"],
-].map(([title, image], i) => ({
-  title,
-  image: packThumb("agentic ai", image),
-  slug: slugIndex("agentic_ai", i + 1),
-  unitPrice: 19,
-  comparePrice: 29,
-}));
+].map(([title, image], i) => {
+  const unitPrice = AGENTIC_UNIT_PRICES[i] ?? 8;
+  return {
+    title,
+    image: packThumb("agentic ai", image),
+    slug: slugIndex("agentic_ai", i + 1),
+    unitPrice,
+    comparePrice: comparePriceForUnit(unitPrice),
+  };
+});
+
+const AI_CONTENT_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_TOTAL_USD, 29);
 
 const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Beginners Guide to Faceless YouTube in 2026 (3 hours)", "faceless youtube.jpg"],
@@ -134,42 +146,48 @@ const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["How I Make VIRAL Life Advice Videos Using Only FREE AI Tools (FULL COURSE)", "life advice.jpg"],
   ["Create Viral inspirational finance Videos with Free AI Tools", "inspirational finance.jpg"],
   ["Clone ANY YouTube Channel With AI (NotebookLM Hack) | Automation 2.0", "clone any channel.jpg"],
-].map(([title, image], i) => ({
-  title,
-  image: packThumb("ai content automation", image),
-  slug: slugIndex("ai_content", i + 1),
-  unitPrice: 15,
-  comparePrice: 24,
-}));
+].map(([title, image], i) => {
+  const unitPrice = AI_CONTENT_UNIT_PRICES[i] ?? 7;
+  return {
+    title,
+    image: packThumb("ai content automation", image),
+    slug: slugIndex("ai_content", i + 1),
+    unitPrice,
+    comparePrice: comparePriceForUnit(unitPrice),
+  };
+});
+
+const TRADING_MODULE_UNIT = 50;
+const TRADING_MODULE_COMPARE = 65;
 
 const TRADING_ROWS: VaultCourseRow[] = [
   {
     title: "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
     image: packThumb("trading", "1- min.jpg"),
     slug: "trading_scalpel_protocol",
-    unitPrice: 35,
-    comparePrice: 49,
+    unitPrice: TRADING_MODULE_UNIT,
+    comparePrice: TRADING_MODULE_COMPARE,
   },
   {
     title: "Strategies of a Master Trader",
     image: packThumb("trading", "strategies.jpg"),
     slug: "trading_master_strategies",
-    unitPrice: 35,
-    comparePrice: 49,
+    unitPrice: TRADING_MODULE_UNIT,
+    comparePrice: TRADING_MODULE_COMPARE,
   },
   {
     title: "Setups of a Master Trader",
     image: packThumb("trading", "setup.jpg"),
     slug: "trading_master_setups",
-    unitPrice: 35,
-    comparePrice: 49,
+    unitPrice: TRADING_MODULE_UNIT,
+    comparePrice: TRADING_MODULE_COMPARE,
   },
   {
     title: "Secrets of a Master Trader",
     image: packThumb("trading", "secrets.jpg"),
     slug: "trading_master_secrets",
-    unitPrice: 35,
-    comparePrice: 49,
+    unitPrice: TRADING_MODULE_UNIT,
+    comparePrice: TRADING_MODULE_COMPARE,
   },
 ];
 
@@ -186,7 +204,7 @@ export const VAULT_PACK_MODAL_COPY: Record<
   agentic_ai: {
     title: "Agentic AI",
     subtitle:
-      "This is not a course drop — it is an autonomous systems vault. Unlock the full protocol stack for $199 or deploy individual modules at $19 each. Every purchase records to your command dashboard; curriculum activates as the vault deploys.",
+      "This is not a course drop — it is an autonomous systems vault. Unlock the full protocol stack for $150 or deploy individual modules à la carte (about $200 if bought separately). Every purchase records to your command dashboard; curriculum activates as the vault deploys.",
     borderClass: "border-fuchsia-400/45 shadow-[0_0_56px_rgba(236,72,153,0.35)]",
     labelClass: "text-fuchsia-300/85",
     closeBtnClass: "border-fuchsia-400/35 text-fuchsia-100 hover:border-fuchsia-300/60",
@@ -194,7 +212,7 @@ export const VAULT_PACK_MODAL_COPY: Record<
   ai_content_automation: {
     title: "AI Content Automation",
     subtitle:
-      "Content without a machine behind it is manual labour — this vault wires faceless YouTube, Shorts, documentaries, and finance niches into AI pipelines that scale. Full pack $149 or modules at $15 each. One checkout. Controlled entitlement under your Syndicate identity.",
+      "Content without a machine behind it is manual labour — this vault wires faceless YouTube, Shorts, documentaries, and finance niches into AI pipelines that scale. Full pack $150 or modules à la carte (about $200 separately). One checkout. Controlled entitlement under your Syndicate identity.",
     borderClass: "border-emerald-400/45 shadow-[0_0_56px_rgba(52,211,153,0.35)]",
     labelClass: "text-emerald-300/85",
     closeBtnClass: "border-emerald-400/35 text-emerald-100 hover:border-emerald-300/60",

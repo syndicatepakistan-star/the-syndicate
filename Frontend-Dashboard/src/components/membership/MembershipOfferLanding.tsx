@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
+import { KNIGHT_PLAN_COMING_SOON } from "@/components/programs/planOfferCatalog";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
@@ -115,6 +116,7 @@ function MembershipHeroOffer({
   onUnlock,
   className,
   publicMarketing = false,
+  comingSoon = false,
 }: {
   busy: boolean;
   error: string | null;
@@ -122,6 +124,7 @@ function MembershipHeroOffer({
   className?: string;
   /** Strong bounce + glow on /membership public page */
   publicMarketing?: boolean;
+  comingSoon?: boolean;
 }) {
   return (
     <div className={cn("mt-6 w-full max-w-3xl space-y-4", className)}>
@@ -145,11 +148,16 @@ function MembershipHeroOffer({
         <div
           className={cn(
             "membership-unlock-cta-shell min-h-[3.25rem] w-full",
-            publicMarketing && "membership-unlock-cta-shell--public"
+            publicMarketing && !comingSoon && "membership-unlock-cta-shell--public"
           )}
         >
-          <button type="button" disabled={busy} onClick={onUnlock} className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem] w-full")}>
-            {busy ? "Opening checkout…" : "Unlock membership"}
+          <button
+            type="button"
+            disabled={busy || comingSoon}
+            onClick={onUnlock}
+            className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem] w-full", comingSoon && "cursor-not-allowed opacity-70")}
+          >
+            {comingSoon ? "Coming Soon" : busy ? "Opening checkout…" : "Unlock membership"}
           </button>
         </div>
       </div>
@@ -228,11 +236,15 @@ export function MembershipOfferLanding({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [knightRemaining, setKnightRemaining] = useState<string | null>(null);
+  const [knightActive, setKnightActive] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void fetchPortalIdentity().then((user) => {
-      if (cancelled || !user?.knight_subscription_active) return;
+      if (cancelled) return;
+      const active = !!user?.knight_subscription_active;
+      setKnightActive(active);
+      if (!active) return;
       setKnightRemaining(formatKnightSubscriptionRemaining(user.knight_subscription_expires_at));
     });
     return () => {
@@ -240,7 +252,10 @@ export function MembershipOfferLanding({
     };
   }, []);
 
+  const knightCheckoutComingSoon = KNIGHT_PLAN_COMING_SOON && !knightActive;
+
   const unlockMembership = useCallback(async () => {
+    if (knightCheckoutComingSoon) return;
     setError(null);
     setBusy(true);
     try {
@@ -265,7 +280,7 @@ export function MembershipOfferLanding({
     } finally {
       setBusy(false);
     }
-  }, [checkoutReturnPath, router]);
+  }, [checkoutReturnPath, knightCheckoutComingSoon, router]);
 
   const accentFrame = (accent: (typeof MEMBERSHIP_PILLARS)[number]["accent"]) =>
     accent === "cyan" ? "cyan" : accent === "violet" ? "violet" : "amber";
@@ -294,7 +309,7 @@ export function MembershipOfferLanding({
       <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
           <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-7 sm:p-10 lg:p-14">
             <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-              <div className="min-w-0">
+              <div className="order-1 min-w-0">
                 <h1 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
                   Enter The Knight Tier
                 </h1>
@@ -310,11 +325,12 @@ export function MembershipOfferLanding({
                   busy={busy}
                   error={error}
                   onUnlock={() => void unlockMembership()}
+                  comingSoon={knightCheckoutComingSoon}
                   publicMarketing
                 />
               </div>
               <div
-                className="relative isolate shrink-0 lg:sticky lg:top-[7rem] lg:self-start [filter:drop-shadow(0_0_20px_rgba(34,211,238,0.75))_drop-shadow(0_0_44px_rgba(168,85,247,0.55))_drop-shadow(0_0_72px_rgba(251,191,36,0.28))]"
+                className="relative order-2 isolate mx-auto w-full max-w-[min(100%,26rem)] shrink-0 [contain:layout] lg:mx-0 lg:max-w-none lg:justify-self-end [filter:drop-shadow(0_0_20px_rgba(34,211,238,0.75))_drop-shadow(0_0_44px_rgba(168,85,247,0.55))_drop-shadow(0_0_72px_rgba(251,191,36,0.28))]"
               >
                 <span
                   className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[72%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.55)_0%,rgba(168,85,247,0.38)_38%,rgba(251,191,36,0.12)_62%,transparent_78%)] blur-[42px] sm:blur-[52px]"
@@ -325,14 +341,18 @@ export function MembershipOfferLanding({
                   aria-hidden
                 />
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" className="relative z-[1]" innerClassName="p-2">
-                <div className="relative aspect-[4/5] w-full max-h-[min(60vh,540px)] overflow-hidden">
+                <div className="relative aspect-[4/5] w-full max-h-[min(60vh,540px)] min-h-[280px] overflow-hidden sm:min-h-[320px]">
                   <span
                     className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_38%,rgba(56,189,248,0.22),rgba(168,85,247,0.14)_48%,transparent_72%)]"
                     aria-hidden
                   />
-                  <img
+                  <Image
                     src={OFFER_PLAN_THUMB_THE_KNIGHT}
                     alt="The Knight membership tier"
+                    width={800}
+                    height={1000}
+                    priority
+                    sizes="(max-width: 1024px) min(100vw, 26rem), 36vw"
                     className="relative z-[1] h-full w-full object-cover object-[center_22%]"
                   />
                   <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

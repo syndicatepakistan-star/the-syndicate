@@ -6,6 +6,7 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
+import { isKnightCheckoutBlocked } from '@/components/programs/planOfferCatalog'
 import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
@@ -148,6 +149,7 @@ function TierCard({
   const isLifetime = tier.billingMode === 'lifetime'
   const activeBilling: BillingKey = isLifetime ? 'monthly' : billing
   const isBundle = planKey === 'bundle'
+  const knightComingSoon = isKnightCheckoutBlocked(planKey)
   const hudThemeByPlan: Record<
     PlanKey,
     {
@@ -288,6 +290,13 @@ function TierCard({
               aria-hidden
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden />
+            {knightComingSoon ? (
+              <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-3 text-center">
+                <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-base">
+                  Coming Soon
+                </span>
+              </span>
+            ) : null}
           </div>
         )}
 
@@ -367,12 +376,14 @@ function TierCard({
 
           <button
             type="button"
+            disabled={knightComingSoon}
             onClick={() => onJoin?.(planKey, activeBilling, tier.price[activeBilling])}
             className={cn(
               'hamburger-attract mt-6 w-full shrink-0 rounded-2xl border border-[#bd9b4f]/70 bg-[linear-gradient(180deg,rgba(189,155,79,0.18)_0%,rgba(0,0,0,0.22)_100%)] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#f6e7bf] shadow-[0_0_0_1px_rgba(189,155,79,0.55),0_0_20px_rgba(189,155,79,0.38),inset_0_0_16px_rgba(189,155,79,0.12)] transition-all hover:scale-[1.02] hover:shadow-[0_0_0_1px_rgba(189,155,79,0.72),0_0_30px_rgba(189,155,79,0.52),inset_0_0_18px_rgba(189,155,79,0.18)] active:scale-[0.99]',
+              knightComingSoon && 'cursor-not-allowed opacity-60 hover:scale-100',
             )}
           >
-            {tier.cta}
+            {knightComingSoon ? 'Coming Soon' : tier.cta}
           </button>
         </div>
       </div>
@@ -395,6 +406,10 @@ export function PricingPage({
   const handleJoinPlan = async (plan: PlanKey, selectedBilling: BillingKey, rawAmount: string) => {
     if (redirectingPlan) return
     if (plan !== 'bundle' && plan !== 'king') return
+    if (isKnightCheckoutBlocked(plan)) {
+      setCheckoutError('The Knight membership is coming soon and is not available for purchase yet.')
+      return
+    }
     const amount = rawAmount.replace(/[^0-9.]/g, '')
     setRedirectingPlan(plan)
     setCheckoutError('')

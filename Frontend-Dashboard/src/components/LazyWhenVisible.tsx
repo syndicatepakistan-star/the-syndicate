@@ -4,17 +4,23 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type LazyWhenVisibleProps = {
   children: ReactNode;
+  /** Shown until the section mounts (avoids empty black gaps while scrolling) */
+  placeholder?: ReactNode;
   /** Reserve space before mount to limit layout shift */
   minHeight?: string;
   rootMargin?: string;
   className?: string;
 };
 
-/** Mount children only when near the viewport — defers heavy JS without changing UI once visible. */
+/**
+ * Mount children when near the viewport.
+ * Once visible, children stay mounted (fast scroll up/down does not unmount).
+ */
 export function LazyWhenVisible({
   children,
+  placeholder = null,
   minHeight,
-  rootMargin = "280px 0px",
+  rootMargin = "200px 0px",
   className,
 }: LazyWhenVisibleProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -40,8 +46,12 @@ export function LazyWhenVisible({
   }, [visible, rootMargin]);
 
   return (
-    <div ref={hostRef} className={className} style={minHeight ? { minHeight } : undefined}>
-      {visible ? children : null}
+    <div
+      ref={hostRef}
+      className={className}
+      style={minHeight ? { minHeight, containIntrinsicSize: minHeight } : undefined}
+    >
+      {visible ? children : placeholder}
     </div>
   );
 }

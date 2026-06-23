@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import { isPlanOfferComingSoon } from "@/components/programs/planOfferCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 
 type Props = {
@@ -115,6 +116,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
   const theme = DETAIL_THEMES[offer.accent];
   const isPackDetail = isVaultPackKey(offer.plan);
   const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
+  const comingSoon = isPlanOfferComingSoon(offer);
 
   return createPortal(
     <div
@@ -154,9 +156,15 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
                   : cn("bg-black/60", theme.featureBorder, theme.title)
               )}
             >
-              {isPackDetail ? "Full pack" : "Module"}
+              {comingSoon ? "Coming soon" : isPackDetail ? "Full pack" : "Module"}
             </span>
           </div>
+
+          {comingSoon ? (
+            <p className="mt-4 rounded-xl border border-amber-300/50 bg-amber-950/30 px-4 py-3 font-mono text-[12px] uppercase tracking-[0.12em] text-amber-100/95">
+              The Knight is not available for purchase yet. Check back soon.
+            </p>
+          ) : null}
 
           <h2
             id="plan-offer-detail-title"

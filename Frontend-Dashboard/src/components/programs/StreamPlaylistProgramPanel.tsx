@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
 import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
+import { useTabResume } from "@/hooks/useTabResume";
 import {
   fetchStreamPlaylistDetail,
   getCachedStreamVideoPlayback,
   prefetchStreamVideoPlaybacks,
   prefetchStreamPlaylistExperience,
+  purgeExpiredStreamPlaybackCache,
   warmStreamVideoMedia,
   type StreamPayload,
   type StreamPlaylistDetail,
@@ -310,6 +312,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     void loadPlaylist();
   }, [loadPlaylist]);
 
+  useTabResume(() => {
+    purgeExpiredStreamPlaybackCache();
+  });
+
   const items = useMemo(() => {
     if (!playlist?.items?.length) return [];
     return [...playlist.items].sort((a, b) => a.order - b.order || a.id - b.id);
@@ -320,6 +326,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const {
     playback: activePlaybackFromHook,
     srcRevision: activeSrcRevision,
+    refreshPlaybackNow,
+    ensureFreshPlayback,
   } = useStreamPlaybackRefresh(activeVideo?.id, { enabled: Boolean(activeVideo?.id) });
 
   useEffect(() => {
@@ -663,9 +671,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </div>
           ) : (
             <StreamHtmlVideoPlayer
-              key={activeVideo.id}
               sessionKey={activeVideo.id}
               src={playbackUrl}
+              playbackType={activePlayback?.playback_type ?? "mp4"}
               srcRevision={activeSrcRevision}
               className={playerShell}
               playerLayout={activeVideo.player_layout ?? "auto"}
@@ -676,6 +684,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               startAtSeconds={resumeStartSeconds}
               onSeekSegment={handleSeekSegment}
               seekRequest={seekRequest}
+              onNeedFreshSrc={() => void refreshPlaybackNow({ force: true })}
+              onEnsurePlayback={() => ensureFreshPlayback()}
             />
           )}
           {activeProgress?.durationSeconds ? (

@@ -22,13 +22,40 @@ export type StreamVideoListItem = {
 
 export type StreamVideoDetail = StreamVideoListItem;
 
+export type StreamPlaybackType = "mp4" | "hls";
+
 export type StreamPayload = {
   id: number;
   status: string;
+  /** ``mp4`` for single-file playback; ``hls`` for m3u8 + segments. Omitted on older API → treat as mp4. */
+  playback_type?: StreamPlaybackType;
   playback_url: string | null;
   /** Unix epoch seconds when ``playback_url`` expires (for client-side refresh). */
   playback_expires_at?: number | null;
 };
+
+/** Same-origin playback URL for Next `/api/streaming` proxy (hls.js requires this on localhost). */
+export function resolveStreamPlaybackUrl(playbackUrl: string | null | undefined): string | null {
+  if (!playbackUrl) return null;
+  const raw = playbackUrl.trim();
+  if (!raw) return null;
+  if (raw.startsWith("/api/streaming/")) return raw;
+  try {
+    const u = new URL(raw, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    if (u.pathname.startsWith("/api/streaming/")) {
+      return `${u.pathname}${u.search}`;
+    }
+  } catch {
+    // keep raw below
+  }
+  return raw;
+}
+
+function normalizeStreamPayload(payload: StreamPayload): StreamPayload {
+  const url = resolveStreamPlaybackUrl(payload.playback_url);
+  if (url === payload.playback_url) return payload;
+  return { ...payload, playback_url: url };
+}
 
 /** Parsed from admin `description` when section title lines are used (see API / admin help). */
 export type StreamPlaylistDescriptionSections = {
@@ -82,6 +109,8 @@ export type StreamPlaylistPurchaseHistoryItem = {
 const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYBACK_CACHE_TTL_MS = 45 * 60 * 1000;
+/** Client treats URL as stale this many ms before server expiry (matches useStreamPlaybackRefresh buffer). */
+const PLAYBACK_EXPIRY_BUFFER_MS = 90 * 1000;
 const WARM_VIDEO_POOL_LIMIT = 22;
 const preloadedStreamVideoUrls = new Set<string>();
 const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
@@ -120,6 +149,36 @@ function errMessage(status: number, data: unknown, fallback: string): string {
 
 function isFresh(ts: number, ttlMs: number): boolean {
   return Date.now() - ts < ttlMs;
+}
+
+function isStreamPlaybackPayloadValid(payload: StreamPayload): boolean {
+  const exp = payload.playback_expires_at;
+  if (typeof exp === "number" && Number.isFinite(exp) && exp > 0) {
+    return Date.now() < exp * 1000 - PLAYBACK_EXPIRY_BUFFER_MS;
+  }
+  return true;
+}
+
+function isStreamPlaybackCacheEntryValid(entry: { at: number; data: StreamPayload }): boolean {
+  if (!isFresh(entry.at, PLAYBACK_CACHE_TTL_MS)) return false;
+  if (entry.data.status === "ready" && entry.data.playback_url) {
+    return isStreamPlaybackPayloadValid(entry.data);
+  }
+  return true;
+}
+
+/** Drop expired signed playback URLs (background tabs miss refresh timers). */
+export function purgeExpiredStreamPlaybackCache(): void {
+  for (const [key, entry] of playbackCache.entries()) {
+    if (!isStreamPlaybackCacheEntryValid(entry)) {
+      playbackCache.delete(key);
+    }
+  }
+}
+
+export function isStreamPlaybackUrlStale(payload: StreamPayload | null | undefined): boolean {
+  if (!payload?.playback_url) return true;
+  return !isStreamPlaybackPayloadValid(payload);
 }
 
 function readPlaylistsSessionCache(): StreamPlaylistListItem[] | null {
@@ -359,7 +418,7 @@ export function getCachedStreamVideoPlayback(
 ): StreamPayload | null {
   const ctx = options?.context === "membership" ? "membership" : "programs";
   const cached = playbackCache.get(playbackCacheKey(id, ctx));
-  if (!cached || !isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) return null;
+  if (!cached || !isStreamPlaybackCacheEntryValid(cached)) return null;
   return cached.data;
 }
 
@@ -370,7 +429,7 @@ export async function fetchStreamVideoPlayback(
   const ctx = options?.context === "membership" ? "membership" : "programs";
   const cacheKey = playbackCacheKey(id, ctx);
   const cached = playbackCache.get(cacheKey);
-  if (!options?.forceRefresh && cached && isFresh(cached.at, PLAYBACK_CACHE_TTL_MS)) {
+  if (!options?.forceRefresh && cached && isStreamPlaybackCacheEntryValid(cached)) {
     return cached.data;
   }
   const path =
@@ -387,7 +446,7 @@ export async function fetchStreamVideoPlayback(
       )
     );
   }
-  const payload = res.data as StreamPayload;
+  const payload = normalizeStreamPayload(res.data as StreamPayload);
   playbackCache.set(cacheKey, { at: Date.now(), data: payload });
   return payload;
 }
@@ -483,6 +542,7 @@ export function warmStreamVideoMedia(urls: string[], options?: { priority?: bool
   const unique = [...new Set(urls.map((raw) => (raw || "").trim()).filter(Boolean))];
   for (const [index, url] of unique.entries()) {
     if (!url || preloadedStreamVideoUrls.has(url)) continue;
+    if (/\.m3u8(\?|$)/i.test(url)) continue;
     const shouldWarm = options?.priority === true || index === 0;
     if (!shouldWarm) continue;
     preloadedStreamVideoUrls.add(url);

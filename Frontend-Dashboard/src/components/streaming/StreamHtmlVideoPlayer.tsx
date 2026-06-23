@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Hls from "hls.js";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import type { StreamPlaybackType } from "@/lib/streaming-api";
 import {
   clearPlaybackByteLengthCache,
   prefetchPlaybackNearTime,
@@ -11,8 +13,10 @@ import {
 export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
 
 type Props = {
-  /** Absolute playback URL (S3 presigned GET or signed Django proxy URL). */
+  /** Absolute playback URL (signed Django proxy or presigned GET). */
   src: string;
+  /** MP4 single-file vs HLS manifest URL. */
+  playbackType?: StreamPlaybackType;
   /** Stable id for the current video session (resets player when changed). */
   sessionKey?: string | number;
   /** Increment when ``src`` is rotated in-place (preserves watch position). */
@@ -28,10 +32,22 @@ type Props = {
   startAtSeconds?: number;
   onSeekSegment?: (payload: { from: number; to: number; duration: number }) => void;
   seekRequest?: { id: number; seconds: number; autoplay?: boolean } | null;
+  /** Request a new signed playback URL (e.g. after HLS segment auth expires). */
+  onNeedFreshSrc?: () => void;
+  /** Refresh signed URL if expired (e.g. user presses play after a long pause). */
+  onEnsurePlayback?: () => void | Promise<void>;
 };
 
 function lateResumeKey(src: string, startSeconds: number): string {
   return `${src}::${Number(startSeconds).toFixed(3)}`;
+}
+
+function resolveResumeSeconds(video: HTMLVideoElement, startAtSeconds: number): number {
+  const fromVideo = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const fromStart = Number(startAtSeconds || 0);
+  if (fromVideo > 1) return fromVideo;
+  if (fromStart > 1) return fromStart;
+  return 0;
 }
 
 function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string): void {
@@ -58,11 +74,12 @@ function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string): void {
 }
 
 /**
- * HTML5 MP4 playback for signed URLs (no HLS / MSE).
+ * Secure stream playback: native MP4 or hls.js for HLS manifests.
  * Binds listeners once per session; loads or hot-swaps `src` when the signed URL rotates.
  */
 export default function StreamHtmlVideoPlayer({
   src,
+  playbackType = "mp4",
   sessionKey = "default",
   srcRevision = 0,
   className,
@@ -74,7 +91,9 @@ export default function StreamHtmlVideoPlayer({
   onPlaybackEnded,
   startAtSeconds = 0,
   onSeekSegment,
-  seekRequest = null
+  seekRequest = null,
+  onNeedFreshSrc,
+  onEnsurePlayback,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
@@ -89,11 +108,67 @@ export default function StreamHtmlVideoPlayer({
   const lastSeekStartRef = useRef(0);
   const srcRef = useRef(src);
   const seekPrefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Prevents duplicate resume seeks (metadata handler + late hydration effect). */
   const lateResumeAppliedKeyRef = useRef("");
   const appliedSrcRef = useRef<string | null>(null);
   const appliedRevisionRef = useRef(-1);
+  const srcRevisionRef = useRef(srcRevision);
   const initialResumeDoneRef = useRef(false);
+  const hlsRef = useRef<Hls | null>(null);
+  const hlsNetworkRetriesRef = useRef(0);
+  const freshSrcCooldownRef = useRef(0);
+  const onNeedFreshSrcRef = useRef(onNeedFreshSrc);
+  const onEnsurePlaybackRef = useRef(onEnsurePlayback);
+  const isHls = playbackType === "hls";
+
+  onNeedFreshSrcRef.current = onNeedFreshSrc;
+  onEnsurePlaybackRef.current = onEnsurePlayback;
+
+  const loadHlsSource = useCallback(
+    (url: string, opts?: { isHotSwap?: boolean }) => {
+      const video = videoRef.current;
+      const hls = hlsRef.current;
+      if (!video || !hls || !url) return;
+      if (appliedSrcRef.current === url && appliedRevisionRef.current === srcRevisionRef.current) return;
+
+      const isHotSwap = opts?.isHotSwap ?? appliedSrcRef.current !== null;
+      const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current);
+      const resumeFromStart = !isHotSwap ? Number(startAtSecondsRef.current || 0) : 0;
+      const wasPaused = video.paused;
+      const savedRate = video.playbackRate;
+
+      appliedSrcRef.current = url;
+      appliedRevisionRef.current = srcRevisionRef.current;
+      setPlaybackError(null);
+      hlsNetworkRetriesRef.current = 0;
+
+      const onManifestParsed = () => {
+        const duration = Number(video.duration || 0);
+        const startPos = resumeAt > 0 ? Math.max(0, resumeAt - 0.25) : -1;
+        if (startPos > 0 && Number.isFinite(duration) && duration > 0) {
+          suppressNextSeekEventRef.current = true;
+          if (resumeFromStart > 0) {
+            initialResumeDoneRef.current = true;
+            lateResumeAppliedKeyRef.current = lateResumeKey(url, resumeFromStart);
+          }
+        }
+        video.playbackRate = savedRate;
+        hls.startLoad(startPos);
+        if (!wasPaused) {
+          void video.play().catch(() => undefined);
+        }
+      };
+
+      hls.off(Hls.Events.MANIFEST_PARSED);
+      hls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      hls.stopLoad();
+      hls.loadSource(url);
+
+      if (!isHotSwap) {
+        lateResumeAppliedKeyRef.current = "";
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     onMetadataRef.current = onMetadata;
@@ -104,6 +179,7 @@ export default function StreamHtmlVideoPlayer({
   onPlaybackEndedRef.current = onPlaybackEnded;
   onSeekSegmentRef.current = onSeekSegment;
   srcRef.current = src;
+  srcRevisionRef.current = srcRevision;
 
   useEffect(() => {
     setMeasured(null);
@@ -113,6 +189,8 @@ export default function StreamHtmlVideoPlayer({
     appliedRevisionRef.current = -1;
     lateResumeAppliedKeyRef.current = "";
     initialResumeDoneRef.current = false;
+    hlsNetworkRetriesRef.current = 0;
+    freshSrcCooldownRef.current = 0;
     if (seekPrefetchTimerRef.current) {
       clearTimeout(seekPrefetchTimerRef.current);
       seekPrefetchTimerRef.current = null;
@@ -151,7 +229,7 @@ export default function StreamHtmlVideoPlayer({
       if (!initialResumeDoneRef.current && start > 0 && Number.isFinite(video.duration) && video.duration > 0) {
         initialResumeDoneRef.current = true;
         const target = Math.min(Math.max(0, start), Math.max(0, video.duration - 0.05));
-        if (target > 0) {
+        if (target > 0 && !isHls) {
           prefetchPlaybackNearTime(srcRef.current, target, video.duration);
           suppressNextSeekEventRef.current = true;
           video.currentTime = target;
@@ -173,7 +251,7 @@ export default function StreamHtmlVideoPlayer({
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       const target = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const playbackUrl = srcRef.current;
-      if (playbackUrl && duration > 0 && target > 0) {
+      if (!isHls && playbackUrl && duration > 0 && target > 0) {
         if (seekPrefetchTimerRef.current) clearTimeout(seekPrefetchTimerRef.current);
         seekPrefetchTimerRef.current = setTimeout(() => {
           prefetchPlaybackNearTime(playbackUrl, target, duration);
@@ -183,6 +261,24 @@ export default function StreamHtmlVideoPlayer({
     const onWaiting = () => setBuffering(true);
     const onCanPlay = () => setBuffering(false);
     const onPlaying = () => setBuffering(false);
+    const onPlay = () => {
+      void (async () => {
+        await onEnsurePlaybackRef.current?.();
+        if (!isHls) return;
+        const hls = hlsRef.current;
+        if (!hls || !video) return;
+        const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current);
+        if (resumeAt > 1 && video.currentTime < 2) {
+          const duration = Number(video.duration || 0);
+          hls.startLoad(Math.max(0, resumeAt - 0.25));
+          if (Number.isFinite(duration) && duration > 0) {
+            suppressNextSeekEventRef.current = true;
+            video.currentTime = Math.min(resumeAt, Math.max(0, duration - 0.05));
+          }
+          void video.play().catch(() => undefined);
+        }
+      })();
+    };
     const onSeeked = () => {
       const to = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
@@ -200,8 +296,9 @@ export default function StreamHtmlVideoPlayer({
     };
     const onError = () => {
       const code = video.error?.code;
-      const hint =
-        code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+      const hint = isHls
+        ? "HLS stream failed — check manifest and segments in R2, or refresh when the signed URL expires."
+        : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
           ? "Format not supported — use H.264/AAC in an MP4 with faststart."
           : "Stream failed — large files often need direct R2 playback (presigned GET + bucket CORS).";
       setPlaybackError(hint);
@@ -216,6 +313,7 @@ export default function StreamHtmlVideoPlayer({
     video.addEventListener("waiting", onWaiting);
     video.addEventListener("canplay", onCanPlay);
     video.addEventListener("playing", onPlaying);
+    video.addEventListener("play", onPlay);
 
     return () => {
       video.removeEventListener("loadedmetadata", emitMetadata);
@@ -226,13 +324,18 @@ export default function StreamHtmlVideoPlayer({
       video.removeEventListener("waiting", onWaiting);
       video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("play", onPlay);
       video.removeEventListener("error", onError);
     };
-  }, [sessionKey, src]);
+  }, [sessionKey, src, isHls]);
 
   useEffect(() => {
     const video = videoRef.current;
     return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
       if (!video) return;
       video.removeAttribute("src");
       video.load();
@@ -241,17 +344,99 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
+    if (!video || !isHls) return;
+
+    if (!Hls.isSupported()) {
+      if (!video.canPlayType("application/vnd.apple.mpegurl")) {
+        setPlaybackError("HLS is not supported in this browser.");
+      }
+      return;
+    }
+
+    const hls = new Hls({
+      autoStartLoad: false,
+      enableWorker: true,
+      lowLatencyMode: false,
+      maxBufferHole: 0.6,
+      startFragPrefetch: true,
+    });
+    hlsRef.current = hls;
+    hls.attachMedia(video);
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      const videoEl = videoRef.current;
+      if (!data.fatal) return;
+
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+        hlsNetworkRetriesRef.current += 1;
+        if (hlsNetworkRetriesRef.current <= 3) {
+          hls.recoverMediaError();
+          return;
+        }
+      }
+
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        const resumeAt = videoEl
+          ? resolveResumeSeconds(videoEl, startAtSecondsRef.current)
+          : Number(startAtSecondsRef.current || 0);
+        hlsNetworkRetriesRef.current += 1;
+        if (hlsNetworkRetriesRef.current <= 2 && resumeAt > 0) {
+          hls.startLoad(Math.max(0, resumeAt - 0.25));
+          return;
+        }
+        const now = Date.now();
+        if (hlsNetworkRetriesRef.current <= 4 && now - freshSrcCooldownRef.current > 8000) {
+          freshSrcCooldownRef.current = now;
+          setBuffering(true);
+          onNeedFreshSrcRef.current?.();
+          return;
+        }
+      }
+
+      const detail =
+        data.type === Hls.ErrorTypes.NETWORK_ERROR
+          ? "Network error loading HLS — confirm R2 credentials on the backend and refresh."
+          : data.type === Hls.ErrorTypes.MEDIA_ERROR
+            ? "Media error — check segment files in R2 match the manifest."
+            : "HLS playback error — try refreshing the page.";
+      setPlaybackError(detail);
+      hls.destroy();
+      hlsRef.current = null;
+    });
+    hls.on(Hls.Events.FRAG_LOADED, () => {
+      hlsNetworkRetriesRef.current = 0;
+      setBuffering(false);
+    });
+
+    if (srcRef.current) {
+      loadHlsSource(srcRef.current, { isHotSwap: false });
+    }
+
+    return () => {
+      hls.destroy();
+      hlsRef.current = null;
+    };
+  }, [sessionKey, isHls, loadHlsSource]);
+
+  useEffect(() => {
+    if (!isHls || !src) return;
+    if (!hlsRef.current) return;
+    if (appliedSrcRef.current === src && appliedRevisionRef.current === srcRevision) return;
+    loadHlsSource(src, { isHotSwap: true });
+  }, [src, srcRevision, isHls, loadHlsSource]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src || isHls) return;
     if (appliedSrcRef.current === src && appliedRevisionRef.current === srcRevision) return;
 
-    const isHotSwap = srcRevision > 0 && appliedSrcRef.current !== null;
+    const isHotSwap = appliedSrcRef.current !== null;
     appliedSrcRef.current = src;
     appliedRevisionRef.current = srcRevision;
 
     if (isHotSwap) {
       setPlaybackError(null);
       suppressNextSeekEventRef.current = true;
-      const savedTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const savedTime = resolveResumeSeconds(video, startAtSecondsRef.current);
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       if (savedTime > 0 && duration > 0) {
         prefetchPlaybackNearTime(src, savedTime, duration);
@@ -266,7 +451,7 @@ export default function StreamHtmlVideoPlayer({
     warmPlaybackHeader(src);
     video.src = src;
     video.load();
-  }, [src, srcRevision, sessionKey]);
+  }, [src, srcRevision, sessionKey, isHls]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -294,13 +479,9 @@ export default function StreamHtmlVideoPlayer({
     };
   }, [seekRequest]);
 
-  /**
-   * When `startAtSeconds` arrives after `loadedmetadata`, seek once if still near the start
-   * and we have not already applied the same resume key (avoids double-seek stutter).
-   */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
+    if (!video || !src || isHls) return;
     const start = Number(startAtSeconds || 0);
     if (!(start > 0)) return;
     const dur = Number(video.duration || 0);
@@ -325,7 +506,7 @@ export default function StreamHtmlVideoPlayer({
     suppressNextSeekEventRef.current = true;
     video.currentTime = target;
     lateResumeAppliedKeyRef.current = key;
-  }, [startAtSeconds, src]);
+  }, [startAtSeconds, src, isHls]);
 
   return (
     <div
@@ -363,7 +544,7 @@ export default function StreamHtmlVideoPlayer({
         ref={videoRef}
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
-        preload="metadata"
+        preload={isHls ? "auto" : "metadata"}
         playsInline
         controlsList="nodownload"
         disablePictureInPicture

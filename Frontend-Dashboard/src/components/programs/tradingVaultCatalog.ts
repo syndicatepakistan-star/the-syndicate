@@ -4,6 +4,9 @@ import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultPackCa
 
 const PACKS_BASE = "/assets/programs/packs courses";
 
+const TRADING_LESSON_UNIT = 3;
+const TRADING_LESSON_COMPARE = 5;
+
 function tradingRootThumb(filename: string): string {
   return `${PACKS_BASE}/trading/${encodeURIComponent(filename)}`;
 }
@@ -106,8 +109,8 @@ function indexedSubmodules(
     filename: row.filename,
     image: row.image,
     parentModule: parent,
-    unitPrice: 9,
-    comparePrice: 14,
+    unitPrice: TRADING_LESSON_UNIT,
+    comparePrice: TRADING_LESSON_COMPARE,
   }));
 }
 

@@ -37,6 +37,8 @@ export function StreamVideoProgramPanel({
     playback,
     srcRevision,
     loading: playbackLoading,
+    refreshPlaybackNow,
+    ensureFreshPlayback,
   } = useStreamPlaybackRefresh(streamVideoId, { context: playbackContext });
 
   useEffect(() => {
@@ -132,11 +134,14 @@ export function StreamVideoProgramPanel({
             <StreamHtmlVideoPlayer
               sessionKey={streamVideoId}
               src={playbackUrl ?? ""}
+              playbackType={playback.playback_type ?? "mp4"}
               srcRevision={srcRevision}
               className={playerShell}
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}
               sourceHeight={detail.source_height ?? null}
+              onNeedFreshSrc={() => void refreshPlaybackNow({ force: true })}
+              onEnsurePlayback={() => ensureFreshPlayback()}
             />
           )}
         </div>

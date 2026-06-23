@@ -17,7 +17,7 @@ export default function StreamVideoDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(true);
 
-  const { playback, srcRevision, loading: playbackLoading } = useStreamPlaybackRefresh(videoId, {
+  const { playback, srcRevision, loading: playbackLoading, refreshPlaybackNow, ensureFreshPlayback } = useStreamPlaybackRefresh(videoId, {
     enabled: videoId != null,
   });
 
@@ -90,11 +90,14 @@ export default function StreamVideoDetailPage() {
             <StreamHtmlVideoPlayer
               sessionKey={detail.id}
               src={playbackUrl}
+              playbackType={playback.playback_type ?? "mp4"}
               srcRevision={srcRevision}
               className="rounded-[inherit]"
               playerLayout={detail.player_layout ?? "auto"}
               sourceWidth={detail.source_width ?? null}
               sourceHeight={detail.source_height ?? null}
+              onNeedFreshSrc={() => void refreshPlaybackNow({ force: true })}
+              onEnsurePlayback={() => ensureFreshPlayback()}
             />
           </div>
         )}

@@ -4,6 +4,10 @@ export default {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      screens: {
+        /** Dell Vostro 1080p @ ~125% Windows scale (~1536px) — does not affect mobile, iPad, or ≥1680 desktops */
+        laptop: { min: "1400px", max: "1679px" },
+      },
       keyframes: {
         "hud-bob": {
           "0%, 100%": { transform: "translateY(0)" },

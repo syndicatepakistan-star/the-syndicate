@@ -1,6 +1,6 @@
 /**
  * Home “MOST INFORMATIVE” marquee: curated @followthesyndicate clips with local posters
- * (`/public/assets/most-informative/01.png` … `13.png`), order-matched to TikTok URLs.
+ * under `/public/assets/most-informative/` (02, 03, 06–13).
  */
 export type TikTokMostInformativeCard = {
   videoId: string;
@@ -12,12 +12,6 @@ export type TikTokMostInformativeCard = {
 
 export const TIKTOK_MOST_INFORMATIVE: TikTokMostInformativeCard[] = [
   {
-    videoId: '7482097612296899873',
-    href: 'https://www.tiktok.com/@followthesyndicate/video/7482097612296899873',
-    alt: 'How long will you continue like this — THE SYNDICATE on TikTok',
-    posterSrc: '/assets/most-informative/01.png',
-  },
-  {
     videoId: '7481728237614271777',
     href: 'https://www.tiktok.com/@followthesyndicate/video/7481728237614271777',
     alt: 'You are failing in life because you are not hungry enough — THE SYNDICATE on TikTok',
@@ -28,18 +22,6 @@ export const TIKTOK_MOST_INFORMATIVE: TikTokMostInformativeCard[] = [
     href: 'https://www.tiktok.com/@followthesyndicate/video/7489441529648499990',
     alt: 'The art of emotional detachment in high-stakes business — THE SYNDICATE on TikTok',
     posterSrc: '/assets/most-informative/03.png',
-  },
-  {
-    videoId: '7489440632956587286',
-    href: 'https://www.tiktok.com/@followthesyndicate/video/7489440632956587286',
-    alt: 'Become a master at decision making — THE SYNDICATE on TikTok',
-    posterSrc: '/assets/most-informative/04.png',
-  },
-  {
-    videoId: '7489428695791209751',
-    href: 'https://www.tiktok.com/@followthesyndicate/video/7489428695791209751',
-    alt: 'Make money your slave — THE SYNDICATE on TikTok',
-    posterSrc: '/assets/most-informative/05.png',
   },
   {
     videoId: '7481358452506365216',

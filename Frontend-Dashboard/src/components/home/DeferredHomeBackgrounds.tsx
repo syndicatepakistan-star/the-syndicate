@@ -90,3 +90,35 @@ export function DeferredMp4Background({ src, className, priority = false }: Defe
     />
   );
 }
+
+/** MP4 backdrop only when the host enters (or nears) the viewport. */
+export function IntersectionDeferredMp4({ src, className }: { src: string; className?: string }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || show) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShow(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "80px 0px", threshold: 0.01 },
+    );
+
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [show]);
+
+  return (
+    <div ref={hostRef} className="absolute inset-0" aria-hidden>
+      {show ? (
+        <ViewportDecorVideo src={src} className={className ?? "h-full w-full object-cover"} fill />
+      ) : null}
+    </div>
+  );
+}

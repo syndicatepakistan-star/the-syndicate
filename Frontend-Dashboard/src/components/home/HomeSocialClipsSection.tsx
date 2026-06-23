@@ -5,6 +5,8 @@ import { type CSSProperties } from "react";
 import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import { HomeSectionPlaceholder } from "@/components/home/HomeSectionPlaceholder";
 import { IntersectionDeferredMp4 } from "@/components/home/DeferredHomeBackgrounds";
+import { useInViewRef } from "@/hooks/useInViewRef";
+import { useMatchMedia } from "@/hooks/useMatchMedia";
 import { TIKTOK_MOST_INFORMATIVE } from "@/data/tiktok-most-informative";
 import { TIKTOK_MOST_VIEWED } from "@/data/tiktok-most-viewed";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
@@ -75,15 +77,16 @@ type Theme = (typeof SOCIAL_CARD_BORDER_THEMES)[number];
 function SocialClipCard({
   image,
   theme,
-  index,
   eager,
   informativeZoom,
+  liteMobile,
 }: {
   image: MarqueeItem;
   theme: Theme;
   index: number;
   eager: boolean;
   informativeZoom?: boolean;
+  liteMobile?: boolean;
 }) {
   return (
     <a
@@ -104,7 +107,11 @@ function SocialClipCard({
       }
     >
       <span
-        className={`pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`}
+        className={
+          liteMobile
+            ? `pointer-events-none absolute -inset-4 z-0 opacity-60 ${theme.bgGlow}`
+            : `pointer-events-none absolute -inset-7 z-0 blur-3xl opacity-85 transition-opacity duration-300 group-hover:opacity-100 ${theme.bgGlow}`
+        }
       />
       <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,12,22,0.2),rgba(2,4,12,0.62))]" />
       <span
@@ -139,12 +146,16 @@ function MarqueeRow({
   duration,
   eagerCount,
   informativeZoom,
+  animate,
+  liteMobile,
 }: {
   items: MarqueeItem[];
   reverse?: boolean;
   duration: string;
   eagerCount: number;
   informativeZoom?: boolean;
+  animate: boolean;
+  liteMobile?: boolean;
 }) {
   const track = [...items, ...items];
 
@@ -154,7 +165,11 @@ function MarqueeRow({
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black via-black/55 to-transparent sm:w-16" />
       <div
         className={`${reverse ? "animate-marquee-reverse" : "animate-marquee"} flex w-max items-center gap-2 sm:gap-3`}
-        style={{ ["--duration" as string]: duration, ["--gap" as string]: "1rem" }}
+        style={{
+          ["--duration" as string]: duration,
+          ["--gap" as string]: "1rem",
+          animationPlayState: animate ? "running" : "paused",
+        }}
       >
         {track.map((image, index) => {
           const theme = SOCIAL_CARD_BORDER_THEMES[index % SOCIAL_CARD_BORDER_THEMES.length];
@@ -167,6 +182,7 @@ function MarqueeRow({
               index={index}
               eager={eager}
               informativeZoom={informativeZoom}
+              liteMobile={liteMobile}
             />
           );
         })}
@@ -176,6 +192,8 @@ function MarqueeRow({
 }
 
 function HomeSocialClipsContent() {
+  const isMobile = useMatchMedia("(max-width: 767px)");
+  const { hostRef, inView: sectionInView } = useInViewRef<HTMLElement>({ rootMargin: "80px 0px", threshold: 0.05 });
   const mostViewedItems: MarqueeItem[] = TIKTOK_MOST_VIEWED.map((card) => ({
     videoId: card.videoId,
     src: card.posterSrc,
@@ -192,9 +210,19 @@ function HomeSocialClipsContent() {
   }));
 
   return (
-    <section className="home-social-clips-section relative flex w-full min-w-0 flex-col overflow-hidden bg-black py-3 sm:py-8">
+    <section
+      ref={hostRef}
+      className="home-social-clips-section relative flex w-full min-w-0 flex-col overflow-hidden bg-black py-3 sm:py-8"
+    >
       <div className="pointer-events-none absolute inset-0">
-        <IntersectionDeferredMp4 src="/assets/video.mp4" className="h-full w-full object-cover opacity-24" />
+        {isMobile ? (
+          <div
+            className="h-full w-full bg-[radial-gradient(ellipse_at_center,rgba(30,20,50,0.45),#000_72%)]"
+            aria-hidden
+          />
+        ) : (
+          <IntersectionDeferredMp4 src="/assets/video.mp4" className="h-full w-full object-cover opacity-24" />
+        )}
       </div>
       <div className="pointer-events-none absolute inset-0 bg-black/68" />
       <div className="relative z-10 mx-auto flex w-full max-w-full flex-col justify-start overflow-x-clip px-3 py-0 sm:px-6 md:px-8">
@@ -204,7 +232,13 @@ function HomeSocialClipsContent() {
           >
             MOST VIEWED
           </h3>
-          <MarqueeRow items={mostViewedItems} duration="92s" eagerCount={4} />
+          <MarqueeRow
+            items={mostViewedItems}
+            duration={isMobile ? "110s" : "92s"}
+            eagerCount={isMobile ? 2 : 4}
+            animate={sectionInView}
+            liteMobile={isMobile}
+          />
 
           <h3
             className={`${publicHeadingLightning("amber")} mb-2 mt-3 px-1 text-center text-2xl font-black uppercase tracking-[0.16em] sm:mb-3 sm:mt-5 sm:text-3xl md:text-4xl`}
@@ -214,9 +248,11 @@ function HomeSocialClipsContent() {
           <MarqueeRow
             items={informativeItems}
             reverse
-            duration="100s"
-            eagerCount={3}
+            duration={isMobile ? "120s" : "100s"}
+            eagerCount={isMobile ? 2 : 3}
             informativeZoom
+            animate={sectionInView}
+            liteMobile={isMobile}
           />
         </div>
       </div>
@@ -228,7 +264,7 @@ function HomeSocialClipsContent() {
 export function HomeSocialClipsSection() {
   return (
     <LazyWhenVisible
-      className="w-full min-w-0 bg-black"
+      className="w-full min-w-0 bg-black home-lazy-section"
       minHeight="min(520px, 72vh)"
       rootMargin="240px 0px"
       placeholder={<HomeSectionPlaceholder minHeight="min(520px, 72vh)" titleWidth="11rem" />}

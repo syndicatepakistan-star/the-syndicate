@@ -70,7 +70,7 @@ def unlocked_stream_playlist_ids_for_user(user) -> set[int]:
 
 
 def user_can_access_stream_playlist(user, playlist) -> bool:
-    """Whether the user may view/issue certificates for this published playlist."""
+    """Whether the user may view/issue certificates for this playlist."""
     from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
     from apps.video_streaming.vault_entitlements import user_can_access_vault_playlist
 
@@ -79,6 +79,8 @@ def user_can_access_stream_playlist(user, playlist) -> bool:
     if not isinstance(playlist, StreamPlaylist):
         return False
     if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
+        return True
+    if user_can_access_vault_playlist(user, playlist):
         return True
     if not playlist.is_published:
         return False
@@ -89,8 +91,6 @@ def user_can_access_stream_playlist(user, playlist) -> bool:
         playlist=playlist,
         status=StreamPlaylistPurchase.Status.PAID,
     ).exists():
-        return True
-    if user_can_access_vault_playlist(user, playlist):
         return True
     return playlist_included_by_entitlement(user, playlist.id)
 

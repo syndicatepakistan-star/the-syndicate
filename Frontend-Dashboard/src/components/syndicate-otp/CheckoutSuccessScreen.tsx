@@ -10,13 +10,14 @@ import { syndicateOtpSignupHref } from "@/lib/syndicate-otp-paths";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 import { getAffiliateAttribution, saveAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead, trackSale } from "@/lib/affiliateApi";
-import { PROGRAM_UNLOCK_CELEBRATION_KEY } from "@/components/programs/ProgramUnlockCelebration";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
 import {
+  buildDashboardPackHref,
   clearVaultPlaylistMapCache,
   fetchVaultPlaylistMap,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
+import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 
 const SYNDICATE_URL =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "https://the-syndicate.com/";
@@ -262,31 +263,23 @@ export default function CheckoutSuccessScreen({
         if (purchasedPlan && typeof window !== "undefined") {
           clearVaultPlaylistMapCache();
           clearUnlockCelebrationStorage();
-          try {
-            const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-            const playlistId = vaultPlaylistIdForPlan(purchasedPlan, map);
-            if (playlistId) {
-              window.sessionStorage.setItem(
-                PROGRAM_UNLOCK_CELEBRATION_KEY,
-                String(playlistId),
-              );
-              nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
-            } else {
+          if (isVaultPackKey(purchasedPlan)) {
+            nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
+          } else {
+            try {
+              const map = await fetchVaultPlaylistMap({ forceRefresh: true });
+              const playlistId = vaultPlaylistIdForPlan(purchasedPlan, map);
+              if (playlistId) {
+                nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
+              } else {
+                nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
+              }
+            } catch {
               nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
             }
-          } catch {
-            nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
           }
         } else if (typeof data.playlist_id === "number" && data.playlist_id > 0) {
           clearUnlockCelebrationStorage();
-          try {
-            window.sessionStorage.setItem(
-              PROGRAM_UNLOCK_CELEBRATION_KEY,
-              String(data.playlist_id),
-            );
-          } catch {
-            // Ignore storage exceptions.
-          }
           nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${data.playlist_id}`;
         }
 

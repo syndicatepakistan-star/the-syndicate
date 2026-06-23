@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import { PROGRAM_UNLOCK_CELEBRATION_KEY } from "@/components/programs/ProgramUnlockCelebration";
+import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
 
 export function PlaylistCheckoutSync() {
   useEffect(() => {
@@ -18,19 +17,13 @@ export function PlaylistCheckoutSync() {
       let playlistId =
         (params.get("playlist_id") || "").trim() ||
         (params.get("playlist") || "").trim();
-      let skipCelebration = false;
       try {
         const result = await confirmPlaylistCheckoutSuccess(sessionId);
         confirmed = true;
         playlistId = String(result.playlist_id || playlistId || "").trim();
-        skipCelebration = result.already_purchased === true;
+        clearUnlockCelebrationStorage();
         try {
           window.sessionStorage.setItem("playlist_checkout_confirmed", "1");
-          if (skipCelebration) {
-            clearUnlockCelebrationStorage();
-          } else if (playlistId) {
-            window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, playlistId);
-          }
         } catch {
           // Ignore storage exceptions.
         }
@@ -38,7 +31,7 @@ export function PlaylistCheckoutSync() {
           new CustomEvent("playlist-checkout-confirmed", {
             detail: {
               playlistId: playlistId ? Number(playlistId) : undefined,
-              skipCelebration,
+              skipCelebration: true,
             },
           })
         );

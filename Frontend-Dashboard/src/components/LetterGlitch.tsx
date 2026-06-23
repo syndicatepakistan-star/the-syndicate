@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useScrollPauseRef } from '@/hooks/useScrollPauseRef'
 import {
   captureHeroGlitchState,
   restoreHeroGlitchState,
@@ -28,6 +29,40 @@ const CHAR_HEIGHT = 20
 const UPDATE_RATIO = 0.05
 const SMOOTH_STEP = 0.05
 
+type GridMetrics = {
+  charWidth: number
+  charHeight: number
+  fontSize: number
+  dprCap: number
+  glitchSpeedMul: number
+  smoothEnabled: boolean
+  updateRatio: number
+}
+
+function readGridMetrics(): GridMetrics {
+  if (typeof window === 'undefined') {
+    return {
+      charWidth: CHAR_WIDTH,
+      charHeight: CHAR_HEIGHT,
+      fontSize: FONT_SIZE,
+      dprCap: 2,
+      glitchSpeedMul: 1,
+      smoothEnabled: true,
+      updateRatio: UPDATE_RATIO,
+    }
+  }
+  const mobile = window.matchMedia('(max-width: 767px)').matches
+  return {
+    charWidth: mobile ? 14 : CHAR_WIDTH,
+    charHeight: mobile ? 26 : CHAR_HEIGHT,
+    fontSize: mobile ? 14 : FONT_SIZE,
+    dprCap: mobile ? 1.25 : 2,
+    glitchSpeedMul: mobile ? 2.5 : 1,
+    smoothEnabled: !mobile,
+    updateRatio: mobile ? 0.032 : UPDATE_RATIO,
+  }
+}
+
 export default function LetterGlitch({
   glitchColors = DEFAULT_COLORS,
   glitchSpeed = 50,
@@ -48,6 +83,8 @@ export default function LetterGlitch({
   const containerSizeRef = useRef({ width: 0, height: 0 })
   const pausedRef = useRef(false)
   const inViewRef = useRef(true)
+  const gridMetricsRef = useRef<GridMetrics>(readGridMetrics())
+  const scrollingRef = useScrollPauseRef(200)
 
   const lettersAndSymbols = useMemo(() => Array.from(characters), [characters])
 
@@ -73,8 +110,9 @@ export default function LetterGlitch({
   const getRandomColor = () => rgbColorPool[Math.floor(Math.random() * rgbColorPool.length)]?.hex ?? DEFAULT_COLORS[0]
 
   const calculateGrid = (width: number, height: number) => {
-    const columns = Math.ceil(width / CHAR_WIDTH)
-    const rows = Math.ceil(height / CHAR_HEIGHT)
+    const { charWidth, charHeight } = gridMetricsRef.current
+    const columns = Math.ceil(width / charWidth)
+    const rows = Math.ceil(height / charHeight)
     return { columns, rows }
   }
 
@@ -84,13 +122,14 @@ export default function LetterGlitch({
     if (!ctx || !canvas || lettersRef.current.length === 0) return
 
     const { width, height } = containerSizeRef.current
+    const { charWidth, charHeight, fontSize } = gridMetricsRef.current
     ctx.clearRect(0, 0, width, height)
-    ctx.font = `${FONT_SIZE}px monospace`
+    ctx.font = `${fontSize}px monospace`
     ctx.textBaseline = 'top'
 
     lettersRef.current.forEach((letter, index) => {
-      const x = (index % gridRef.current.columns) * CHAR_WIDTH
-      const y = Math.floor(index / gridRef.current.columns) * CHAR_HEIGHT
+      const x = (index % gridRef.current.columns) * charWidth
+      const y = Math.floor(index / gridRef.current.columns) * charHeight
       ctx.fillStyle = letter.color
       ctx.fillText(letter.char, x, y)
     })
@@ -118,7 +157,9 @@ export default function LetterGlitch({
     const rect = parent.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) return
 
-    const dpr = window.devicePixelRatio || 1
+    gridMetricsRef.current = readGridMetrics()
+    const rawDpr = window.devicePixelRatio || 1
+    const dpr = Math.min(rawDpr, gridMetricsRef.current.dprCap)
     const restored = restoreHeroGlitchState(canvas, dpr)
     if (restored && Math.abs(restored.cssWidth - rect.width) < 2 && Math.abs(restored.cssHeight - rect.height) < 2) {
       contextRef.current = canvas.getContext('2d')
@@ -159,7 +200,7 @@ export default function LetterGlitch({
     const letters = lettersRef.current
     if (letters.length === 0) return
 
-    const updateCount = Math.max(1, Math.floor(letters.length * UPDATE_RATIO))
+    const updateCount = Math.max(1, Math.floor(letters.length * gridMetricsRef.current.updateRatio))
     for (let i = 0; i < updateCount; i++) {
       const index = Math.floor(Math.random() * letters.length)
       const nextColor = getRandomColor()
@@ -223,20 +264,23 @@ export default function LetterGlitch({
             ([entry]) => {
               inViewRef.current = entry.isIntersecting
             },
-            { rootMargin: '80px 0px', threshold: 0.02 },
+            { rootMargin: '0px 0px', threshold: 0.02 },
           )
         : null
     visibilityObserver?.observe(canvas)
 
     const animate = (time: number) => {
-      const active = !pausedRef.current && inViewRef.current
+      const metrics = gridMetricsRef.current
+      const active = !pausedRef.current && inViewRef.current && !scrollingRef.current
       if (active) {
-        if (time - lastGlitchTimeRef.current >= glitchSpeed) {
+        const tickMs = glitchSpeed * metrics.glitchSpeedMul
+        if (time - lastGlitchTimeRef.current >= tickMs) {
           updateLetters()
           drawLetters()
           lastGlitchTimeRef.current = time
+        } else if (smooth && metrics.smoothEnabled) {
+          handleSmoothTransitions()
         }
-        if (smooth) handleSmoothTransitions()
       }
       animationRef.current = window.requestAnimationFrame(animate)
     }

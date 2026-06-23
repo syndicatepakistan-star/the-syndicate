@@ -34,7 +34,7 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
 
   useEffect(() => {
     const root = stripRef.current
-    if (!root) return
+    if (!root || compact) return
 
     const updateScales = () => {
       const rect = root.getBoundingClientRect()

@@ -364,15 +364,14 @@ class StreamPlaylistDetailView(generics.RetrieveAPIView):
         qs = StreamPlaylist.objects.all()
         user = self.request.user
         if not getattr(user, "is_staff", False):
-            qs = qs.filter(is_published=True)
+            unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
+            qs = qs.filter(Q(is_published=True) | Q(id__in=unlocked_ids))
             if not user_stream_playlists_unlocked_by_entitlement(user):
-                unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
                 qs = qs.filter(Q(price__lte=0) | Q(id__in=unlocked_ids))
             else:
                 from apps.portal.commercial_access import user_has_active_knight_subscription, user_has_money_mastery
 
                 if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
-                    unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
                     qs = qs.filter(Q(price__lte=0) | Q(id__in=unlocked_ids))
         return (
             qs.annotate(video_count=Count("items", distinct=True))
@@ -402,11 +401,21 @@ def vault_playlist_map_view(request):
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
 
+    user = getattr(request, "user", None)
+    authenticated = user is not None and getattr(user, "is_authenticated", False)
+    if authenticated:
+        reconcile_dashboard_entitlement_from_plan_purchases(user)
+        unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
+    else:
+        unlocked_ids = set()
+
+    qs = StreamPlaylist.objects.exclude(vault_plan_slug="").order_by("vault_plan_slug")
+    if authenticated and unlocked_ids:
+        qs = qs.filter(Q(is_published=True) | Q(id__in=unlocked_ids))
+    else:
+        qs = qs.filter(is_published=True)
     qs = (
-        StreamPlaylist.objects.filter(is_published=True)
-        .exclude(vault_plan_slug="")
-        .order_by("vault_plan_slug")
-        .annotate(video_count=Count("items", distinct=True))
+        qs.annotate(video_count=Count("items", distinct=True))
         .prefetch_related(
             Prefetch(
                 "items",
@@ -414,12 +423,6 @@ def vault_playlist_map_view(request):
             )
         )
     )
-    user = getattr(request, "user", None)
-    if user is not None and getattr(user, "is_authenticated", False):
-        reconcile_dashboard_entitlement_from_plan_purchases(user)
-        unlocked_ids = unlocked_stream_playlist_ids_for_user(user)
-    else:
-        unlocked_ids = set()
     rows = StreamPlaylistListSerializer(
         qs,
         many=True,

@@ -70,6 +70,7 @@ export function PublicPlanOfferCards({
   const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
   const [accessTier, setAccessTier] = useState<string | null>(null);
   const [moneyMasteryActive, setMoneyMasteryActive] = useState(false);
+  const packModalOpenedRef = useRef(false);
   const isLarge = size === "large";
 
   const reloadUnlockState = useCallback(async () => {
@@ -90,7 +91,20 @@ export function PublicPlanOfferCards({
   }, [reloadUnlockState]);
 
   useEffect(() => {
+    const onCheckoutConfirmed = () => {
+      void reloadUnlockState();
+    };
+    window.addEventListener("plan-checkout-confirmed", onCheckoutConfirmed);
+    window.addEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
+    return () => {
+      window.removeEventListener("plan-checkout-confirmed", onCheckoutConfirmed);
+      window.removeEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
+    };
+  }, [reloadUnlockState]);
+
+  useEffect(() => {
     highlightHandledRef.current = false;
+    packModalOpenedRef.current = false;
   }, [highlightPack]);
 
   useEffect(() => {
@@ -104,6 +118,14 @@ export function PublicPlanOfferCards({
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
+  }, [highlightPack]);
+
+  useEffect(() => {
+    if (!highlightPack || packModalOpenedRef.current) return;
+    const offer = PLAN_OFFERS.find((item) => item.plan === highlightPack);
+    if (!offer || offer.openAction !== "vault_picker") return;
+    packModalOpenedRef.current = true;
+    setVaultPackOffer(offer);
   }, [highlightPack]);
 
   const purchasedSet = useMemo(() => purchasedSlugs, [purchasedSlugs]);
@@ -123,6 +145,10 @@ export function PublicPlanOfferCards({
 
   const openUnlocked = useCallback(
     async (offer: PlanOfferDef) => {
+      if (isVaultPackKey(offer.plan)) {
+        setVaultPackOffer(offer);
+        return;
+      }
       try {
         const map = await fetchVaultPlaylistMap();
         const href = buildVaultModulePlaylistHref(offer.plan, map, checkoutReturnPath);

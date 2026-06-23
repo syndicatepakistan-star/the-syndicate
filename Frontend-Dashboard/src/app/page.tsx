@@ -43,7 +43,7 @@ export default async function Home() {
   const programGalleryImages = await getLinkedProgramGalleryImages()
 
   return (
-    <div className="home-page-root min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
+    <div className="home-page-root min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
       <NavApp />
       <section
         id="heroSection"

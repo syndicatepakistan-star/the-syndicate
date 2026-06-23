@@ -166,6 +166,7 @@ export default function DomeGallery({
   const inertiaRAF = useRef<number | null>(null)
   const autoRotateRAF = useRef<number | null>(null)
   const autoRotateLastTs = useRef<number | null>(null)
+  const globeInViewRef = useRef(true)
   const pointerTypeRef = useRef<'mouse' | 'pen' | 'touch'>('mouse')
   const tapTargetRef = useRef<HTMLElement | null>(null)
   const openingRef = useRef(false)
@@ -188,7 +189,7 @@ export default function DomeGallery({
     compactViewportRef.current = compactViewport
     mobileMotionRef.current = compactViewport
       ? {
-          autoMul: 3.4,
+          autoMul: 1.15,
           dragMul: 0.36,
           inertiaVelMul: 115,
           inertiaDivisor: 135,
@@ -334,7 +335,25 @@ export default function DomeGallery({
   }, [])
 
   useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        globeInViewRef.current = Boolean(entry?.isIntersecting)
+      },
+      { rootMargin: '40px 0px', threshold: 0.04 },
+    )
+    observer.observe(root)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     const run = (ts: number) => {
+      if (!globeInViewRef.current) {
+        autoRotateLastTs.current = null
+        autoRotateRAF.current = requestAnimationFrame(run)
+        return
+      }
       if (autoRotateLastTs.current == null) {
         autoRotateLastTs.current = ts
       }

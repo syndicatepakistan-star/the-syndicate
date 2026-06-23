@@ -72,9 +72,9 @@ def vault_unlocked_playlist_ids_for_user(user) -> set[int]:
         return set()
 
     unlocked: set[int] = set()
-    for playlist_id, module_slug in StreamPlaylist.objects.filter(
-        is_published=True,
-    ).exclude(vault_plan_slug="").values_list("id", "vault_plan_slug"):
+    for playlist_id, module_slug in StreamPlaylist.objects.exclude(
+        vault_plan_slug=""
+    ).values_list("id", "vault_plan_slug"):
         if user_has_vault_module_access(user, module_slug, purchased):
             unlocked.add(int(playlist_id))
     return unlocked

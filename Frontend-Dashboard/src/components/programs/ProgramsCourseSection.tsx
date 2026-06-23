@@ -12,7 +12,7 @@ import {
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
-import { isVaultCourseSlug, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
+import { isVaultCourseSlug, isVaultPackKey, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { resetDashboardShellScroll } from "@/lib/dashboardShellScroll";
@@ -23,14 +23,10 @@ import {
   resolveProgramPlaylistDescription,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
-import { isHiddenProgramPlaylist } from "@/lib/programPlaylistThumbnails";
+import { GLOBE_PACK_KEYS, isHiddenProgramPlaylist, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
-import {
-  ProgramUnlockCelebration,
-  PROGRAM_UNLOCK_CELEBRATION_KEY,
-} from "@/components/programs/ProgramUnlockCelebration";
 import { clearUnlockCelebrationStorage, resolvePlaylistIdForPlan } from "@/lib/programUnlockFlow";
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
@@ -248,9 +244,8 @@ export function ProgramsCourseSection({
   const [playlistDescriptionModal, setPlaylistDescriptionModal] = useState<StreamPlaylistListItem | null>(null);
   const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
   const [highlightProgramId, setHighlightProgramId] = useState<number | null>(null);
+  const [highlightPack, setHighlightPack] = useState<GlobePackKey | undefined>(undefined);
   const highlightHandledRef = useRef(false);
-  const [unlockCelebrationId, setUnlockCelebrationId] = useState<number | null>(null);
-  const unlockCelebrationStartedRef = useRef(false);
   const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
 
   const reloadApiCourses = useCallback(async () => {
@@ -328,8 +323,6 @@ export function ProgramsCourseSection({
   const openUnlockedPlaylistDirect = useCallback(
     (playlistId: number) => {
       if (!Number.isFinite(playlistId) || playlistId <= 0) return;
-      unlockCelebrationStartedRef.current = true;
-      setUnlockCelebrationId(null);
       clearUnlockCelebrationStorage();
       setHighlightProgramId(playlistId);
       void reloadStreamPlaylists({ forceRefresh: true }).then(() => {
@@ -337,26 +330,6 @@ export function ProgramsCourseSection({
       });
     },
     [reloadStreamPlaylists]
-  );
-
-  const queueUnlockCelebration = useCallback(
-    (playlistId: number, skipAnimation = false) => {
-      if (!Number.isFinite(playlistId) || playlistId <= 0) return;
-      if (skipAnimation) {
-        openUnlockedPlaylistDirect(playlistId);
-        return;
-      }
-      if (unlockCelebrationStartedRef.current) return;
-      unlockCelebrationStartedRef.current = true;
-      setUnlockCelebrationId(playlistId);
-      setHighlightProgramId(playlistId);
-      try {
-        window.sessionStorage.setItem(PROGRAM_UNLOCK_CELEBRATION_KEY, String(playlistId));
-      } catch {
-        // Ignore storage exceptions.
-      }
-    },
-    [openUnlockedPlaylistDirect]
   );
 
   useEffect(() => {
@@ -375,16 +348,24 @@ export function ProgramsCourseSection({
     };
     const onPlaylistConfirmed = (e: Event) => {
       refreshFromCheckout();
-      const detail = (e as CustomEvent<{ playlistId?: number; skipCelebration?: boolean }>).detail;
+      const detail = (e as CustomEvent<{ playlistId?: number }>).detail;
       if (detail?.playlistId) {
-        queueUnlockCelebration(detail.playlistId, detail.skipCelebration === true);
+        openUnlockedPlaylistDirect(detail.playlistId);
       }
     };
     const onPlanConfirmed = (e: Event) => {
       refreshFromCheckout();
-      const detail = (e as CustomEvent<{ playlistId?: number }>).detail;
+      const detail = (e as CustomEvent<{ plan?: string; playlistId?: number }>).detail;
+      const plan = (detail?.plan || "").trim().toLowerCase();
+      if (plan && isVaultPackKey(plan)) {
+        if (GLOBE_PACK_KEYS.has(plan as GlobePackKey)) {
+          setHighlightPack(plan as GlobePackKey);
+        }
+        toast.success("Pack unlocked — choose a module below.");
+        return;
+      }
       if (detail?.playlistId) {
-        queueUnlockCelebration(detail.playlistId);
+        openUnlockedPlaylistDirect(detail.playlistId);
       }
     };
 
@@ -415,56 +396,15 @@ export function ProgramsCourseSection({
       window.removeEventListener("playlist-checkout-confirmed", onPlaylistConfirmed);
       window.removeEventListener("plan-checkout-confirmed", onPlanConfirmed);
     };
-  }, [reloadStreamPlaylists, reloadApiCourses, queueUnlockCelebration]);
+  }, [openUnlockedPlaylistDirect, reloadStreamPlaylists, reloadApiCourses]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = window.sessionStorage.getItem(PROGRAM_UNLOCK_CELEBRATION_KEY);
-      if (stored && /^\d+$/.test(stored)) {
-        queueUnlockCelebration(Number(stored));
-      }
-    } catch {
-      // Ignore storage exceptions.
+    const pack = (new URLSearchParams(window.location.search).get("pack") || "").trim();
+    if (GLOBE_PACK_KEYS.has(pack as GlobePackKey)) {
+      setHighlightPack(pack as GlobePackKey);
     }
-  }, [queueUnlockCelebration]);
-
-  useEffect(() => {
-    if (!unlockCelebrationId) return;
-    const target = streamPlaylists.find((pl) => pl.id === unlockCelebrationId);
-    if (!target?.is_unlocked) return;
-    setHighlightedPlaylistId(unlockCelebrationId);
-    scrollToProgramLibrary("dashboard");
-    const cancelScroll = focusProgramCardWithRetries(unlockCelebrationId, undefined, {
-      delays: [0, 120, 400, 900, 1400, 2200],
-    });
-    return () => cancelScroll();
-  }, [unlockCelebrationId, streamPlaylists]);
-
-  const completeUnlockCelebration = useCallback(() => {
-    const playlistId = unlockCelebrationId;
-    setUnlockCelebrationId(null);
-    try {
-      window.sessionStorage.removeItem(PROGRAM_UNLOCK_CELEBRATION_KEY);
-    } catch {
-      // Ignore storage exceptions.
-    }
-    if (playlistId) {
-      openStreamPlaylistRef.current(playlistId);
-      toast.success("Program unlocked — you can access it now.");
-    }
-  }, [unlockCelebrationId]);
-
-  const unlockCelebrationPlaylist = useMemo(
-    () =>
-      unlockCelebrationId != null
-        ? streamPlaylists.find((pl) => pl.id === unlockCelebrationId)
-        : undefined,
-    [unlockCelebrationId, streamPlaylists]
-  );
-
-  const showUnlockCelebration =
-    unlockCelebrationPlaylist != null && unlockCelebrationPlaylist.is_unlocked;
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -717,6 +657,12 @@ export function ProgramsCourseSection({
         toast.success(message);
         return;
       }
+      if (isVaultPackKey(plan)) {
+        await Promise.all([reloadApiCourses(), reloadStreamPlaylists({ forceRefresh: true })]);
+        setHighlightPack(plan);
+        toast.success("Pack already active — choose a module below.");
+        return;
+      }
       const offer = isVaultCourseSlug(plan)
         ? vaultCourseBySlug(plan)
         : planOfferByKey(plan as PlanOfferKey);
@@ -742,13 +688,12 @@ export function ProgramsCourseSection({
     const target = streamPlaylists.find((pl) => pl.id === playlistIdFromUrl);
     if (!target) return;
     if (target.is_coming_soon || !target.is_unlocked) return;
-    if (unlockCelebrationId === playlistIdFromUrl) return;
     if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
     void prefetchStreamPlaylistExperience(playlistIdFromUrl);
-  }, [streamPlaylists, detailPlaylistId, secureView, unlockCelebrationId]);
+  }, [streamPlaylists, detailPlaylistId, secureView]);
 
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;
@@ -952,6 +897,7 @@ export function ProgramsCourseSection({
                     checkoutReturnPath="/dashboard?section=programs"
                     embedded
                     size="large"
+                    highlightPack={highlightPack}
                     onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                     onCheckoutError={setCheckoutError}
                   />
@@ -1319,12 +1265,6 @@ export function ProgramsCourseSection({
         playlist={playlistDescriptionModal}
         onClose={() => setPlaylistDescriptionModal(null)}
       />
-      {showUnlockCelebration && unlockCelebrationPlaylist ? (
-        <ProgramUnlockCelebration
-          programTitle={resolveProgramPlaylistTitle(unlockCelebrationPlaylist)}
-          onComplete={completeUnlockCelebration}
-        />
-      ) : null}
     </>
     </div>
   );

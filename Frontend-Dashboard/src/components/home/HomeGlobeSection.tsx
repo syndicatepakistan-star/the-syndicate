@@ -84,7 +84,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
     <section
       ref={hostRef}
       id="programsGlobeSection"
-      className="home-globe-section relative flex w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-1 sm:items-center sm:py-0"
+      className="home-globe-section home-lazy-section relative flex w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-1 sm:items-center sm:py-0"
     >
       <div
         className="pointer-events-none absolute inset-0"

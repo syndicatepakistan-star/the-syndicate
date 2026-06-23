@@ -123,3 +123,20 @@ class VaultPlaylistDetailAccessTests(TestCase):
         self._purchase_plan("trading_scalpel_protocol")
         unlocked = vault_unlocked_playlist_ids_for_user(self.user)
         self.assertIn(self.playlist.id, unlocked)
+
+    def test_full_pack_unlocks_unpublished_vault_playlist(self):
+        self._purchase_plan("agentic_ai")
+        unpublished = StreamPlaylist.objects.create(
+            title="Agentic stub",
+            slug="agentic-stub-unpublished",
+            vault_plan_slug="agentic_ai_c02",
+            category=StreamPlaylist.Category.BUSINESS_MODEL,
+            price=Decimal("19.00"),
+            rating=Decimal("4.5"),
+            is_published=False,
+            is_coming_soon=True,
+        )
+        unlocked = vault_unlocked_playlist_ids_for_user(self.user)
+        self.assertIn(unpublished.id, unlocked)
+        res = self.client.get(f"/api/streaming/playlists/{unpublished.id}/")
+        self.assertEqual(res.status_code, 200, res.content)

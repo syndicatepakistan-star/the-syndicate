@@ -443,8 +443,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
-# Explicit root for WhiteNoise (avoids edge cases where auto-detection disagrees with STATIC_ROOT).
-WHITENOISE_ROOT = str(STATIC_ROOT)
+# Do not set WHITENOISE_ROOT to STATIC_ROOT — that serves files at `/`, not under STATIC_URL.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",

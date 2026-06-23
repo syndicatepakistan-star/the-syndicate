@@ -44,7 +44,7 @@ export function HomeDomeGallerySection(props: DomeGalleryProps) {
 export function HomePricingSection() {
   return (
     <LazyWhenVisible
-      className="bg-black"
+      className="home-lazy-section bg-black"
       rootMargin="480px 0px"
       minHeight="60dvh"
       placeholder={<PricingPageSkeleton />}
@@ -57,6 +57,7 @@ export function HomePricingSection() {
 export function HomePaywallSection() {
   return (
     <LazyWhenVisible
+      className="home-lazy-section"
       minHeight="80dvh"
       rootMargin="320px 0px"
       placeholder={<HomeSectionPlaceholder minHeight="80dvh" titleWidth="16rem" />}

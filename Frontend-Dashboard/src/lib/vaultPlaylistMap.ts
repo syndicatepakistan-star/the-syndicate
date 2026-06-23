@@ -1,6 +1,6 @@
 import { resolveClientApiUrl, resolvePortalProxyUrl } from "@/lib/portal-api";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
-import { vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
+import { isVaultPackKey, vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
 import {
   isTradingModuleSlug,
   tradingParentModuleForSlug,
@@ -106,12 +106,22 @@ export function vaultPlaylistIdForPlan(
   return null;
 }
 
+export function buildDashboardPackHref(packSlug: string): string {
+  const pack = packSlug.trim().toLowerCase();
+  return `/dashboard?section=programs&pack=${encodeURIComponent(pack)}`;
+}
+
+/** After checkout or Open: full packs open the vault picker; modules open their playlist. */
 export function buildVaultModulePlaylistHref(
   planSlug: string,
   map: ReadonlyMap<string, VaultPlaylistMapEntry>,
   fallbackPath = "/dashboard?section=programs"
 ): string {
-  const playlistId = vaultPlaylistIdForPlan(planSlug, map);
+  const key = planSlug.trim().toLowerCase();
+  if (isVaultPackKey(key)) {
+    return buildDashboardPackHref(key);
+  }
+  const playlistId = vaultPlaylistIdForPlan(key, map);
   if (!playlistId) return fallbackPath;
   return `/dashboard?section=programs&playlist=${playlistId}`;
 }

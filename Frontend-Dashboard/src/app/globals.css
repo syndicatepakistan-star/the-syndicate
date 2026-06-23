@@ -12029,6 +12029,25 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     padding-bottom: 0.35rem;
   }
 
+  /* Homepage scroll perf — skip paint for off-screen bands; lighter card effects on phones */
+  .home-page-root .home-lazy-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 520px;
+  }
+
+  .home-page-root .hero-logo-pulse::before {
+    animation: none;
+    opacity: 0.35;
+  }
+
+  .home-page-root .hero-logo-pulse img {
+    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.4));
+  }
+
+  .home-social-clips-section .lightning-glow-card {
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+  }
+
   .home-mobile-vh-section {
     min-height: 100dvh;
     min-height: 100svh;

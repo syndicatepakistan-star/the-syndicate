@@ -40,11 +40,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         publish = bool(options["publish"])
         created = 0
+        updated = 0
         skipped = 0
 
         for module_slug, title in sorted(VAULT_COURSE_TITLES.items()):
             slug = module_slug.strip().lower()
-            if StreamPlaylist.objects.filter(vault_plan_slug=slug).exists():
+            existing = StreamPlaylist.objects.filter(vault_plan_slug=slug).first()
+            if existing:
+                if publish and not existing.is_published:
+                    existing.is_published = True
+                    existing.is_coming_soon = not existing.items.exists()
+                    existing.save(update_fields=["is_published", "is_coming_soon", "updated_at"])
+                    updated += 1
                 skipped += 1
                 continue
 
@@ -71,6 +78,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Done. created={created} skipped_existing={skipped} publish={publish}"
+                f"Done. created={created} updated={updated} skipped_existing={skipped} publish={publish}"
             )
         )

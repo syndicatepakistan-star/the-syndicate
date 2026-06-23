@@ -1,9 +1,13 @@
-import { PROGRAM_UNLOCK_CELEBRATION_KEY } from "@/components/programs/ProgramUnlockCelebration";
 import {
+  buildDashboardPackHref,
   buildVaultModulePlaylistHref,
   fetchVaultPlaylistMap,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
+import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+
+/** @deprecated Unlock celebration removed; kept for clearing legacy session keys. */
+export const PROGRAM_UNLOCK_CELEBRATION_KEY = "program_unlock_celebration_id";
 
 export function buildDashboardPlaylistPath(playlistId: number): string {
   return `/dashboard?section=programs&playlist=${playlistId}`;
@@ -56,11 +60,14 @@ export function normalizePostAuthPath(raw: string | undefined): string {
 export async function resolveAlreadyUnlockedRedirect(
   intent: { playlistId?: string; plan?: string; postAuthNext?: string }
 ): Promise<string> {
+  const plan = (intent.plan || "").trim().toLowerCase();
+  if (plan && isVaultPackKey(plan)) {
+    return buildDashboardPackHref(plan);
+  }
   const playlistRaw = (intent.playlistId || "").trim();
   if (playlistRaw && /^\d+$/.test(playlistRaw)) {
     return buildDashboardPlaylistPath(Number(playlistRaw));
   }
-  const plan = (intent.plan || "").trim();
   const fallback = normalizePostAuthPath(intent.postAuthNext);
   if (plan) {
     return resolveDashboardPathForPlan(plan, fallback);

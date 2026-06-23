@@ -45,6 +45,8 @@ run_bootstrap_tasks() {
   if [ "${AUTO_ENSURE_VAULT_PLAYLIST_STUBS:-true}" = "true" ]; then
     echo "railway_start: seed_vault_playlists"
     "$PYTHON" manage.py seed_vault_playlists --publish || true
+    echo "railway_start: ensure_vault_playlist_stubs"
+    "$PYTHON" manage.py ensure_vault_playlist_stubs --publish || true
   fi
 }
 
@@ -69,9 +71,13 @@ if [ "${MODE}" = "--release" ]; then
   exit 0
 fi
 
-# Start mode: releaseCommand already ran migrate/static/seed — bind gunicorn quickly for healthcheck.
+# Start mode: release DB tasks may run separately; always verify static files exist
+# before gunicorn --preload (WhiteNoise indexes STATIC_ROOT at worker import).
 export SKIP_WSGI_MIGRATE=true
 export SKIP_WSGI_COLLECTSTATIC=true
+
+echo "railway_start: ensure_staticfiles (before gunicorn)"
+"$PYTHON" manage.py ensure_staticfiles --verbosity 1
 
 if [ "${RAILWAY_FORCE_START_BOOTSTRAP:-false}" = "true" ]; then
   maybe_pip_install

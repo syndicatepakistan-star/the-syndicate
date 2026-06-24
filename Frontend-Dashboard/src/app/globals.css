@@ -6943,7 +6943,37 @@ body.syndicate-mode-active::-webkit-scrollbar {
   background: transparent !important;
 }
 
-/* Bounded dashboard sections — document must not scroll (only the gold-frame panel does). */
+/* Lesson view: lock outer shell on all breakpoints; only .programs-lesson-scroll moves. */
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-lesson-shell) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
 html.dashboard-shell-scroll-lock,
 body.dashboard-shell-scroll-lock {
   overflow: hidden !important;
@@ -11661,8 +11691,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 @media (max-width: 1023px) {
-  .dashboard-hamburger-chrome.syndicate-mood-context [data-dashboard-video-shell] > [data-dashboard-video-scroll],
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll] {
+  .dashboard-hamburger-chrome.syndicate-mood-context [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]),
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]) {
     flex: 1 1 0% !important;
     max-height: 100% !important;
     overflow-y: auto !important;
@@ -12102,30 +12132,30 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     padding-bottom: max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) !important;
   }
 
-  /* Playlist lesson: scroll inside the panel, not the whole shell (keeps top navbar visible). */
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-main-shell-scroll][data-programs-lesson-active] {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
     touch-action: pan-x pan-y;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-playlist-lesson-root {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
     flex: 1 1 auto;
     min-height: 0;
     max-height: 100%;
     overflow: hidden;
   }
 
-  @media (min-width: 1024px) {
-    .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-main-shell-scroll][data-programs-lesson-active] {
-      overflow-y: auto !important;
-      overscroll-behavior-y: contain !important;
-    }
-
-    .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-playlist-lesson-root {
-      overflow: visible;
-      max-height: none;
-    }
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root {

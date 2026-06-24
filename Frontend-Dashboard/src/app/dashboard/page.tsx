@@ -2527,8 +2527,10 @@ export default function Page() {
 
     const ctx = gsap.context(() => {
       gsap.set("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])", { opacity: 0, y: 10 });
-      gsap.set("[data-anim='left']", { opacity: 0, x: -18 });
-      gsap.set("[data-anim='right']", { opacity: 0, x: 18 });
+      const leftAnim = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
+      const rightAnim = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
+      if (leftAnim.length) gsap.set(leftAnim, { opacity: 0, x: -18 });
+      if (rightAnim.length) gsap.set(rightAnim, { opacity: 0, x: 18 });
       /* Main column content must never be hidden by intro tweens (video has no data-anim). */
       gsap.set("[data-dashboard-video-scroll], [data-dashboard-video-scroll] *", {
         opacity: 1,
@@ -2538,9 +2540,18 @@ export default function Page() {
       });
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
-      tl.to("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])", { opacity: 1, y: 0, stagger: 0.06 }, 0)
-        .to("[data-anim='left']", { opacity: 1, x: 0, stagger: 0.05 }, 0.05)
-        .to("[data-anim='right']", { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
+      const inTargets = gsap.utils.toArray<HTMLElement>("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])");
+      const leftTargets = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
+      const rightTargets = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
+      if (inTargets.length) {
+        tl.to(inTargets, { opacity: 1, y: 0, stagger: 0.06 }, 0);
+      }
+      if (leftTargets.length) {
+        tl.to(leftTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.05);
+      }
+      if (rightTargets.length) {
+        tl.to(rightTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
+      }
 
       if (ringOuterRef.current) {
         gsap.to(ringOuterRef.current, {

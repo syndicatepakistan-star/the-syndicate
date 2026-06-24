@@ -394,7 +394,7 @@ export default function StreamHtmlVideoPlayer({
 
       const detail =
         data.type === Hls.ErrorTypes.NETWORK_ERROR
-          ? "Network error loading HLS — confirm R2 credentials on the backend and refresh."
+          ? "Network error loading HLS — check the video R2 path in admin (index.m3u8 + segments) and that R2 credentials are set on the backend."
           : data.type === Hls.ErrorTypes.MEDIA_ERROR
             ? "Media error — check segment files in R2 match the manifest."
             : "HLS playback error — try refreshing the page.";

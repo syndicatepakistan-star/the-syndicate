@@ -180,7 +180,7 @@ class StreamVideoPlaybackFileView(APIView):
             raise Http404()
         authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
         if not authorized:
-            raise Http404()
+            return HttpResponse("Playback not authorized.", status=403, content_type="text/plain")
         video, claims = authorized
         return None, video, token, claims
 
@@ -253,7 +253,7 @@ class StreamVideoPlaybackHlsMediaView(APIView):
             raise Http404()
         authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
         if not authorized:
-            raise Http404()
+            return HttpResponse("Playback not authorized.", status=403, content_type="text/plain")
         video, _claims = authorized
         if video_playback_kind(video) != "hls":
             raise Http404()

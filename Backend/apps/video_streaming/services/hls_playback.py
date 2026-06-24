@@ -118,19 +118,60 @@ def resolve_hls_segment_storage_key(manifest_key: str, media_path: str) -> str:
     return resolve_hls_relative_key(manifest_key, safe)
 
 
+def _manifest_key_candidates(manifest_key: str) -> tuple[str, ...]:
+    """Try exact admin key plus common HLS layout variants."""
+    key = (manifest_key or "").strip().lstrip("/")
+    if not key:
+        return ()
+    seen: set[str] = set()
+    out: list[str] = []
+
+    def add(candidate: str) -> None:
+        c = candidate.strip().lstrip("/")
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+
+    add(key)
+    if not key.lower().endswith(".m3u8"):
+        add(f"{key}/index.m3u8")
+        add(f"{key}/index.M3U8")
+    if key.lower().endswith("index.m3u8"):
+        add(key[:-10] + "index.M3U8")
+    return tuple(out)
+
+
 def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
     ttl = _hls_manifest_body_cache_ttl()
-    cache_key = _hls_manifest_body_cache_key(bucket=bucket, manifest_key=manifest_key)
-    if ttl:
-        cached = cache.get(cache_key)
-        if isinstance(cached, str) and cached.strip():
-            return cached
-    text = get_s3_object_text(bucket=bucket, key=manifest_key)
-    if text is None:
-        raise Http404()
-    if ttl and text.strip():
-        cache.set(cache_key, text, timeout=ttl)
-    return text
+    candidates = _manifest_key_candidates(manifest_key)
+    if not candidates:
+        raise Http404("HLS manifest key is empty.")
+
+    for candidate in candidates:
+        cache_key = _hls_manifest_body_cache_key(bucket=bucket, manifest_key=candidate)
+        if ttl:
+            cached = cache.get(cache_key)
+            if isinstance(cached, str) and cached.strip():
+                return cached
+
+    last_error: str | None = None
+    for candidate in candidates:
+        text = get_s3_object_text(bucket=bucket, key=candidate)
+        if text and text.strip():
+            if ttl:
+                cache.set(_hls_manifest_body_cache_key(bucket=bucket, manifest_key=candidate), text, timeout=ttl)
+            if candidate != candidates[0]:
+                logger.info("HLS manifest resolved via fallback key %s (requested %s)", candidate, manifest_key)
+            return text
+        last_error = candidate
+
+    logger.warning(
+        "HLS manifest missing in bucket=%s tried=%s (admin original_video=%s)",
+        bucket,
+        list(candidates),
+        manifest_key,
+    )
+    raise Http404(f"HLS manifest not found in storage (tried: {', '.join(candidates)}).")
 
 
 def hls_manifest_http_response(

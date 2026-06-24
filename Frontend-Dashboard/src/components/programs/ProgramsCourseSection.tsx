@@ -889,7 +889,14 @@ export function ProgramsCourseSection({
     <div className="dashboard-mobile-section-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip">
     <>
       {showSecureBlock ? (
-        <div className="mb-4 w-full max-w-full space-y-3 max-lg:pb-3 sm:mb-8 sm:space-y-5 sm:pb-6">
+        <div
+          className={cn(
+            "w-full max-w-full",
+            inProgramLessonView
+              ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+              : "mb-4 space-y-3 max-lg:pb-3 sm:mb-8 sm:space-y-5 sm:pb-6"
+          )}
+        >
           {!inProgramLessonView ? (
             <div className="w-full max-w-full space-y-4 pb-1 sm:space-y-10 sm:pb-3">
               <div className="w-full max-w-full text-left">
@@ -1008,15 +1015,38 @@ export function ProgramsCourseSection({
           ) : null}
 
           {hasCatalogItems && secureView === "detail" ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={backToProgramGrid}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-[12px] font-bold uppercase tracking-[0.14em] text-white/80 transition hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold)]"
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden />
-                Programs
-              </button>
+            <div className="programs-lesson-shell flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+              <div className="programs-lesson-nav shrink-0 pt-3 sm:pt-4 md:pt-5">
+                <button
+                  type="button"
+                  onClick={backToProgramGrid}
+                  className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-[12px] font-bold uppercase tracking-[0.14em] text-white/80 transition hover:border-[color:var(--gold-neon-border-mid)] hover:text-[color:var(--gold)]"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
+                  Programs
+                </button>
+              </div>
+              <div className="programs-lesson-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 pr-0.5">
+                {inCourseDetail && detailCourseId !== null ? (
+                  <CourseVideoPlaylist
+                    courseId={detailCourseId}
+                    courseTitle={
+                      activeDetailCourse
+                        ? resolveProgramPlaylistTitle(activeDetailCourse)
+                        : "Program"
+                    }
+                    courseDescription={
+                      activeDetailCourse
+                        ? resolveProgramPlaylistDescription(activeDetailCourse)
+                        : ""
+                    }
+                    autoAdvance
+                  />
+                ) : null}
+                {inPlaylistDetail && detailPlaylistId !== null ? (
+                  <StreamPlaylistProgramPanel playlistId={detailPlaylistId} />
+                ) : null}
+              </div>
             </div>
           ) : null}
 
@@ -1222,25 +1252,6 @@ export function ProgramsCourseSection({
             </div>
           ) : null}
 
-          {inCourseDetail && detailCourseId !== null ? (
-            <CourseVideoPlaylist
-              courseId={detailCourseId}
-              courseTitle={
-                activeDetailCourse
-                  ? resolveProgramPlaylistTitle(activeDetailCourse)
-                  : "Program"
-              }
-              courseDescription={
-                activeDetailCourse
-                  ? resolveProgramPlaylistDescription(activeDetailCourse)
-                  : ""
-              }
-              autoAdvance
-            />
-          ) : null}
-          {inPlaylistDetail && detailPlaylistId !== null ? (
-            <StreamPlaylistProgramPanel playlistId={detailPlaylistId} />
-          ) : null}
         </div>
       ) : null}
 

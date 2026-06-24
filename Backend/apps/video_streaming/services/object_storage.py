@@ -95,7 +95,9 @@ def get_s3_object_text(*, bucket: str, key: str, max_bytes: int = 2 * 1024 * 102
         if len(raw) > max_bytes:
             logger.warning("S3 object %s exceeds max_bytes=%s", key, max_bytes)
         return raw.decode("utf-8", errors="replace")
-    except ClientError:
+    except ClientError as exc:
+        code = (exc.response.get("Error") or {}).get("Code", "")
+        logger.warning("get_s3_object_text ClientError key=%s code=%s", key, code)
         return None
     except Exception:
         logger.exception("get_s3_object_text failed key=%s", key)

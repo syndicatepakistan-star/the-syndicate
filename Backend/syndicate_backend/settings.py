@@ -248,6 +248,14 @@ STREAM_PLAYBACK_USE_S3_PRESIGNED_GET = (os.environ.get("STREAM_PLAYBACK_USE_S3_P
     "yes",
     "on",
 )
+# HLS: cache index.m3u8 bodies from R2 (seconds). 0 = disable.
+STREAM_HLS_MANIFEST_CACHE_SECONDS = int(
+    (os.environ.get("STREAM_HLS_MANIFEST_CACHE_SECONDS") or "120").strip() or "120"
+)
+# Parallel S3 connections for segment proxying.
+STREAM_S3_MAX_POOL_CONNECTIONS = int(
+    (os.environ.get("STREAM_S3_MAX_POOL_CONNECTIONS") or "32").strip() or "32"
+)
 
 
 # Application definition

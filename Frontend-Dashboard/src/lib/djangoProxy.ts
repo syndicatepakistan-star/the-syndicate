@@ -19,6 +19,19 @@ const STRIP_UPSTREAM_RESPONSE_HEADERS = new Set([
   "content-length",
 ]);
 
+/** HLS segment/init paths must not get APPEND_SLASH (breaks Django media_path route). */
+function isStreamingHlsMediaSubpath(subpath: string): boolean {
+  return /(?:^|\/)streaming\/videos\/playback\/\d+\/media\//i.test(subpath);
+}
+
+function djangoApiPathForSubpath(subpath: string): string {
+  const clean = subpath.replace(/^\/+|\/+$/g, "");
+  if (isStreamingHlsMediaSubpath(clean)) {
+    return `/api/${clean}`;
+  }
+  return `/api/${clean}/`;
+}
+
 async function proxyToDjangoApi(
   request: Request,
   apiPathSegments: string[],
@@ -36,7 +49,7 @@ async function proxyToDjangoApi(
 
   const subpath = apiPathSegments.filter(Boolean).join("/");
   const incoming = new URL(request.url);
-  const target = new URL(`/api/${subpath}/`, origin);
+  const target = new URL(djangoApiPathForSubpath(subpath), origin);
   target.search = incoming.search;
 
   const headers = new Headers();

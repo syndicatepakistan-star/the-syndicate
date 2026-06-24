@@ -113,6 +113,7 @@ export default function StreamHtmlVideoPlayer({
   const srcRevisionRef = useRef(srcRevision);
   const initialResumeDoneRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
+  const hlsManifestParsedRef = useRef<(() => void) | null>(null);
   const hlsNetworkRetriesRef = useRef(0);
   const freshSrcCooldownRef = useRef(0);
   const onNeedFreshSrcRef = useRef(onNeedFreshSrc);
@@ -149,6 +150,7 @@ export default function StreamHtmlVideoPlayer({
       hlsNetworkRetriesRef.current = 0;
 
       const onManifestParsed = () => {
+        hlsManifestParsedRef.current = null;
         const duration = Number(video.duration || 0);
         const startPos = resumeAt > 0 ? Math.max(0, resumeAt - 0.25) : -1;
         if (startPos > 0 && Number.isFinite(duration) && duration > 0) {
@@ -165,7 +167,10 @@ export default function StreamHtmlVideoPlayer({
         }
       };
 
-      hls.off(Hls.Events.MANIFEST_PARSED);
+      if (hlsManifestParsedRef.current) {
+        hls.off(Hls.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
+      }
+      hlsManifestParsedRef.current = onManifestParsed;
       hls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
       hls.loadSource(manifestUrl);
 
@@ -197,6 +202,7 @@ export default function StreamHtmlVideoPlayer({
     initialResumeDoneRef.current = false;
     hlsNetworkRetriesRef.current = 0;
     freshSrcCooldownRef.current = 0;
+    hlsManifestParsedRef.current = null;
     if (seekPrefetchTimerRef.current) {
       clearTimeout(seekPrefetchTimerRef.current);
       seekPrefetchTimerRef.current = null;
@@ -365,9 +371,6 @@ export default function StreamHtmlVideoPlayer({
       lowLatencyMode: false,
       maxBufferHole: 0.6,
       startFragPrefetch: true,
-      xhrSetup: (xhr) => {
-        xhr.withCredentials = true;
-      },
     });
     hlsRef.current = hls;
     hls.attachMedia(video);
@@ -416,15 +419,15 @@ export default function StreamHtmlVideoPlayer({
       setBuffering(false);
     });
 
-    if (srcRef.current) {
-      loadHlsSource(srcRef.current, { isHotSwap: false });
-    }
-
     return () => {
+      if (hlsManifestParsedRef.current && hlsRef.current) {
+        hlsRef.current.off(Hls.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
+        hlsManifestParsedRef.current = null;
+      }
       hls.destroy();
       hlsRef.current = null;
     };
-  }, [sessionKey, isHls, loadHlsSource]);
+  }, [sessionKey, isHls]);
 
   useEffect(() => {
     if (!isHls || !src) return;

@@ -630,7 +630,7 @@ export async function prefetchStreamPlaylistExperience(
   }
 }
 
-/** Warm MP4 header bytes or HLS manifest (first segment list) before the player mounts. */
+/** Warm MP4 header bytes only — do not prefetch HLS manifests (races hls.js xhr → 0 kB / no segments). */
 export function warmStreamVideoMedia(urls: string[], options?: { priority?: boolean }): void {
   if (typeof window === "undefined") return;
   const unique = [...new Set(urls.map((raw) => (raw || "").trim()).filter(Boolean))];
@@ -638,14 +638,11 @@ export function warmStreamVideoMedia(urls: string[], options?: { priority?: bool
     if (!url || preloadedStreamVideoUrls.has(url)) continue;
     const shouldWarm = options?.priority === true || index === 0;
     if (!shouldWarm) continue;
-    preloadedStreamVideoUrls.add(url);
     if (isHlsManifestWarmUrl(url)) {
-      const warmUrl = resolveStreamPlaybackUrl(url) ?? url;
-      void fetch(warmUrl, { credentials: "include", cache: "force-cache" }).catch(() => {
-        preloadedStreamVideoUrls.delete(url);
-      });
+      // hls.js must own the manifest request; a parallel fetch here breaks playback.
       continue;
     }
+    preloadedStreamVideoUrls.add(url);
     warmPlaybackHeader(url);
   }
   while (preloadedStreamVideoUrls.size > WARM_VIDEO_POOL_LIMIT) {

@@ -1,10 +1,22 @@
 from django.test import RequestFactory, SimpleTestCase, override_settings
 from django.urls import reverse
 
-from apps.video_streaming.services.hls_playback import rewrite_hls_manifest_text
+from apps.video_streaming.services.hls_playback import (
+    _hls_manifest_body_cache_key,
+    rewrite_hls_manifest_text,
+)
 
 
 class HlsManifestRewriteTests(SimpleTestCase):
+    def test_manifest_cache_key_is_memcached_safe(self):
+        key = _hls_manifest_body_cache_key(
+            bucket="syn-bucket",
+            manifest_key="Business Models/Unreal Engine/index.m3u8",
+        )
+        self.assertTrue(key.startswith("hls_b:"))
+        self.assertNotIn(" ", key)
+        self.assertNotIn("/", key[len("hls_b:") :])
+
     def test_rewrite_segment_uris_to_signed_proxy(self):
         rf = RequestFactory()
         request = rf.get("/")

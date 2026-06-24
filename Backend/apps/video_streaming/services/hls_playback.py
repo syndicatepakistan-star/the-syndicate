@@ -4,6 +4,7 @@ HLS manifest rewrite and segment delivery through the signed playback proxy.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from functools import lru_cache
@@ -33,7 +34,30 @@ def _hls_manifest_body_cache_ttl() -> int:
 
 
 def _hls_manifest_body_cache_key(*, bucket: str, manifest_key: str) -> str:
-    return f"hls_body:{bucket}:{manifest_key}"
+    """Memcached-safe key (no spaces/slashes from R2 object paths)."""
+    raw = f"{bucket}:{manifest_key}".encode("utf-8")
+    digest = hashlib.sha256(raw).hexdigest()
+    return f"hls_b:{digest}"
+
+
+def _cache_get_manifest(cache_key: str) -> str | None:
+    try:
+        cached = cache.get(cache_key)
+    except Exception:
+        logger.debug("HLS manifest cache get failed for key %s", cache_key, exc_info=True)
+        return None
+    if isinstance(cached, str) and cached.strip():
+        return cached
+    return None
+
+
+def _cache_set_manifest(cache_key: str, text: str, *, ttl: int) -> None:
+    if ttl <= 0:
+        return
+    try:
+        cache.set(cache_key, text, timeout=ttl)
+    except Exception:
+        logger.debug("HLS manifest cache set failed for key %s", cache_key, exc_info=True)
 
 
 @lru_cache(maxsize=256)
@@ -150,8 +174,8 @@ def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
     for candidate in candidates:
         cache_key = _hls_manifest_body_cache_key(bucket=bucket, manifest_key=candidate)
         if ttl:
-            cached = cache.get(cache_key)
-            if isinstance(cached, str) and cached.strip():
+            cached = _cache_get_manifest(cache_key)
+            if cached:
                 return cached
 
     last_error: str | None = None
@@ -159,7 +183,11 @@ def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
         text = get_s3_object_text(bucket=bucket, key=candidate)
         if text and text.strip():
             if ttl:
-                cache.set(_hls_manifest_body_cache_key(bucket=bucket, manifest_key=candidate), text, timeout=ttl)
+                _cache_set_manifest(
+                    _hls_manifest_body_cache_key(bucket=bucket, manifest_key=candidate),
+                    text,
+                    ttl=ttl,
+                )
             if candidate != candidates[0]:
                 logger.info("HLS manifest resolved via fallback key %s (requested %s)", candidate, manifest_key)
             return text

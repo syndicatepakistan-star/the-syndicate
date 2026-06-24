@@ -107,17 +107,26 @@ function normalizeDjangoApiPath(apiPath: string): string {
   return query ? `${withSlash}?${query}` : withSlash;
 }
 
+function isStreamingHlsMediaPath(pathOnly: string): boolean {
+  return /\/videos\/playback\/\d+\/media\//i.test(pathOnly);
+}
+
 /**
  * Same-origin API paths for Next route handlers. Next.js 308-strips trailing slashes on POST
  * (checkout breaks when the body is lost on redirect) — never use a trailing slash here.
+ * HLS media segment URLs must also stay slash-free (Django media_path includes the filename).
+ * Other streaming GETs rely on next.config rewrites to append the Django trailing slash.
  */
 function toSameOriginProxyUrl(apiPath: string): string {
   const raw = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
   const qIdx = raw.indexOf("?");
-  const pathOnly = (qIdx === -1 ? raw : raw.slice(0, qIdx)).replace(/\/+$/, "");
+  let pathOnly = (qIdx === -1 ? raw : raw.slice(0, qIdx)).replace(/\/+$/, "");
   const query = qIdx === -1 ? "" : raw.slice(qIdx + 1);
 
   if (pathOnly.startsWith("/api/streaming/") || pathOnly.startsWith("/api/auth/")) {
+    if (isStreamingHlsMediaPath(pathOnly)) {
+      return query ? `${pathOnly}?${query}` : pathOnly;
+    }
     return query ? `${pathOnly}?${query}` : pathOnly;
   }
 

@@ -115,10 +115,15 @@ const nextConfig = {
           source: "/api/videos/:path*",
           destination: `${backendOrigin}/api/videos/:path*`
         },
-        // HLS segment URLs end in .ts — do NOT append a trailing slash (breaks media_path matching).
+        // HLS segment/init files — never append trailing slash (breaks media_path matching).
+        {
+          source: "/api/streaming/videos/playback/:video_id/media/:path*",
+          destination: `${backendOrigin}/api/streaming/videos/playback/:video_id/media/:path*`,
+        },
+        // Django APPEND_SLASH — proxy adds trailing slash for JSON API routes (not .ts segments).
         {
           source: "/api/streaming/:path*",
-          destination: `${backendOrigin}/api/streaming/:path*`
+          destination: `${backendOrigin}/api/streaming/:path*/`,
         },
         // Uploaded course covers & video thumbnails (Django MEDIA_URL)
         {

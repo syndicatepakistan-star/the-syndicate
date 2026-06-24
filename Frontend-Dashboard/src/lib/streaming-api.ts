@@ -292,7 +292,7 @@ export async function fetchPublicStreamPlaylists(): Promise<StreamPlaylistListIt
   const url =
     direct ||
     (typeof window !== "undefined"
-      ? "/api/streaming/public-playlists/"
+      ? "/api/streaming/public-playlists"
       : resolveClientApiUrl("/api/streaming/public-playlists/"));
   const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
   const txt = await res.text();

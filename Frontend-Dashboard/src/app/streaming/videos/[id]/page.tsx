@@ -90,7 +90,7 @@ export default function StreamVideoDetailPage() {
             <StreamHtmlVideoPlayer
               sessionKey={detail.id}
               src={playbackUrl}
-              playbackType={playback.playback_type ?? "mp4"}
+              playbackType={playback.playback_type}
               srcRevision={srcRevision}
               className="rounded-[inherit]"
               playerLayout={detail.player_layout ?? "auto"}

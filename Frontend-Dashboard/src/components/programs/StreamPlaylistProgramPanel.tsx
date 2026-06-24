@@ -688,7 +688,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             <StreamHtmlVideoPlayer
               sessionKey={activeVideo.id}
               src={playbackUrl}
-              playbackType={activePlayback?.playback_type ?? "mp4"}
+              playbackType={activePlayback?.playback_type}
               srcRevision={activeSrcRevision}
               className={playerShell}
               playerLayout={activeVideo.player_layout ?? "auto"}

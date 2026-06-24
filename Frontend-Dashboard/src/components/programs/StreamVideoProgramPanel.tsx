@@ -134,7 +134,7 @@ export function StreamVideoProgramPanel({
             <StreamHtmlVideoPlayer
               sessionKey={streamVideoId}
               src={playbackUrl ?? ""}
-              playbackType={playback.playback_type ?? "mp4"}
+              playbackType={playback.playback_type}
               srcRevision={srcRevision}
               className={playerShell}
               playerLayout={detail.player_layout ?? "auto"}

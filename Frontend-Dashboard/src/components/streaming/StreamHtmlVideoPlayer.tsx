@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import type { StreamPlaybackType } from "@/lib/streaming-api";
-import { resolveStreamPlaybackUrl } from "@/lib/streaming-api";
+import { resolveStreamPlaybackUrl, type StreamPlaybackType } from "@/lib/streaming-api";
 import {
   clearPlaybackByteLengthCache,
   prefetchPlaybackNearTime,
@@ -18,7 +17,6 @@ type Props = {
   src: string;
   /** MP4 single-file vs HLS manifest URL. */
   playbackType?: StreamPlaybackType;
-  /** Stable id for the current video session (resets player when changed). */
   sessionKey?: string | number;
   /** Increment when ``src`` is rotated in-place (preserves watch position). */
   srcRevision?: number;
@@ -80,7 +78,7 @@ function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string): void {
  */
 export default function StreamHtmlVideoPlayer({
   src,
-  playbackType = "mp4",
+  playbackType,
   sessionKey = "default",
   srcRevision = 0,
   className,
@@ -119,7 +117,12 @@ export default function StreamHtmlVideoPlayer({
   const freshSrcCooldownRef = useRef(0);
   const onNeedFreshSrcRef = useRef(onNeedFreshSrc);
   const onEnsurePlaybackRef = useRef(onEnsurePlayback);
-  const isHls = playbackType === "hls";
+  const isHls = useMemo(() => {
+    if (playbackType === "hls") return true;
+    if (playbackType === "mp4") return false;
+    const pathOnly = (src || "").split("?")[0]?.replace(/\/+$/, "") ?? "";
+    return /\/api\/streaming\/videos\/playback\/\d+$/i.test(pathOnly);
+  }, [playbackType, src]);
 
   onNeedFreshSrcRef.current = onNeedFreshSrc;
   onEnsurePlaybackRef.current = onEnsurePlayback;

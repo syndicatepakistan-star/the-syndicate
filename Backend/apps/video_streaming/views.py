@@ -31,7 +31,7 @@ from apps.video_streaming.entitlements import (
 from apps.video_streaming.playback_access import (
     user_can_play_programs_stream_video,
 )
-from apps.video_streaming.services.object_storage import s3_client
+from apps.video_streaming.services.object_storage import get_s3_object_text, s3_client
 from apps.video_streaming.services.playback_delivery import (
     build_stream_playback_api_payload,
     build_stream_playback_batch_payloads,
@@ -43,6 +43,7 @@ from apps.video_streaming.services.playback_delivery import (
 from apps.video_streaming.services.hls_playback import (
     hls_manifest_http_response,
     resolve_hls_segment_storage_key,
+    rewrite_hls_manifest_text,
 )
 from apps.video_streaming.services.playback_token_auth import authorize_stream_video_for_playback_token
 from apps.video_streaming.models import (
@@ -261,7 +262,15 @@ class StreamVideoPlaybackHlsMediaView(APIView):
 
     def get(self, request, video_id: int, media_path: str, *args, **kwargs):
         media_path = (media_path or "").rstrip("/")
-        video = self._authorized_video(request, video_id)
+        token = (request.query_params.get("token") or "").strip()
+        if not token:
+            raise Http404()
+        authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
+        if not authorized:
+            raise Http404("Playback not authorized.")
+        video, claims = authorized
+        if video_playback_kind(video) != "hls":
+            raise Http404()
         manifest_key = (getattr(video.original_video, "name", None) or "").strip()
         if not manifest_key.lower().endswith(".m3u8"):
             raise Http404()
@@ -272,15 +281,30 @@ class StreamVideoPlaybackHlsMediaView(APIView):
         if not segment_key:
             raise Http404()
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
-        if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
-            immutable = segment_key.lower().endswith((".ts", ".m4s", ".mp4"))
-            return streaming_s3_original_response(
-                request,
-                bucket=bucket,
-                key=segment_key,
-                cache_private_immutable=immutable,
+        if not (getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket):
+            raise Http404()
+        if segment_key.lower().endswith(".m3u8"):
+            body = get_s3_object_text(bucket=bucket, key=segment_key)
+            if not body or not body.strip():
+                raise Http404()
+            rewritten = rewrite_hls_manifest_text(
+                body,
+                manifest_key=segment_key,
+                request=request,
+                video_id=video_id,
+                token=token,
+                exp=int(claims["exp"]),
             )
-        raise Http404()
+            resp = HttpResponse(rewritten, content_type="application/vnd.apple.mpegurl")
+            resp["Cache-Control"] = "private, max-age=15"
+            return resp
+        immutable = segment_key.lower().endswith((".ts", ".m4s", ".mp4"))
+        return streaming_s3_original_response(
+            request,
+            bucket=bucket,
+            key=segment_key,
+            cache_private_immutable=immutable,
+        )
 
     def head(self, request, video_id: int, media_path: str, *args, **kwargs):
         media_path = (media_path or "").rstrip("/")

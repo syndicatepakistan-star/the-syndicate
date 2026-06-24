@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { StreamPlaybackType } from "@/lib/streaming-api";
+import { resolveStreamPlaybackUrl } from "@/lib/streaming-api";
 import {
   clearPlaybackByteLengthCache,
   prefetchPlaybackNearTime,
@@ -161,7 +162,7 @@ export default function StreamHtmlVideoPlayer({
       hls.off(Hls.Events.MANIFEST_PARSED);
       hls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
       hls.stopLoad();
-      hls.loadSource(url);
+      hls.loadSource(resolveStreamPlaybackUrl(url) ?? url);
 
       if (!isHotSwap) {
         lateResumeAppliedKeyRef.current = "";

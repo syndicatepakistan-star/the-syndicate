@@ -34,21 +34,38 @@ export type StreamPayload = {
   playback_expires_at?: number | null;
 };
 
+/** Next.js 308-strips `/playback/285/?token=` — hls.js breaks on that redirect. */
+function stripStreamingPathTrailingSlash(pathAndQuery: string): string {
+  const qIdx = pathAndQuery.indexOf("?");
+  const pathOnly = (qIdx === -1 ? pathAndQuery : pathAndQuery.slice(0, qIdx)).replace(/\/+$/, "");
+  const query = qIdx === -1 ? "" : pathAndQuery.slice(qIdx);
+  return query ? `${pathOnly}${query}` : pathOnly;
+}
+
 /** Same-origin playback URL for Next `/api/streaming` proxy (hls.js requires this on localhost). */
 export function resolveStreamPlaybackUrl(playbackUrl: string | null | undefined): string | null {
   if (!playbackUrl) return null;
   const raw = playbackUrl.trim();
   if (!raw) return null;
-  if (raw.startsWith("/api/streaming/")) return raw;
+  if (raw.startsWith("/api/streaming/")) {
+    return stripStreamingPathTrailingSlash(raw);
+  }
   try {
     const u = new URL(raw, typeof window !== "undefined" ? window.location.origin : "http://localhost");
     if (u.pathname.startsWith("/api/streaming/")) {
-      return `${u.pathname}${u.search}`;
+      return stripStreamingPathTrailingSlash(`${u.pathname}${u.search}`);
     }
   } catch {
     // keep raw below
   }
   return raw;
+}
+
+/** HLS manifest URL — proxy path has no `.m3u8` suffix (Django serves rewritten playlist). */
+function isHlsManifestWarmUrl(url: string): boolean {
+  const pathOnly = url.split("?")[0]?.replace(/\/+$/, "") ?? "";
+  if (/\.m3u8$/i.test(pathOnly)) return true;
+  return /\/api\/streaming\/videos\/playback\/\d+$/i.test(pathOnly);
 }
 
 function normalizeStreamPayload(payload: StreamPayload): StreamPayload {
@@ -622,8 +639,9 @@ export function warmStreamVideoMedia(urls: string[], options?: { priority?: bool
     const shouldWarm = options?.priority === true || index === 0;
     if (!shouldWarm) continue;
     preloadedStreamVideoUrls.add(url);
-    if (/\.m3u8(\?|$)/i.test(url)) {
-      void fetch(url, { credentials: "include", cache: "force-cache" }).catch(() => {
+    if (isHlsManifestWarmUrl(url)) {
+      const warmUrl = resolveStreamPlaybackUrl(url) ?? url;
+      void fetch(warmUrl, { credentials: "include", cache: "force-cache" }).catch(() => {
         preloadedStreamVideoUrls.delete(url);
       });
       continue;

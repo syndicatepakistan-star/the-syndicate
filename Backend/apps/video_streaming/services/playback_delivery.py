@@ -289,11 +289,11 @@ def build_playback_url_for_video(
         if url:
             return url, exp
     token = build_playback_token(user_id=user_id, video_id=video.pk, exp=exp, access_mode=access_mode)
-    rel = reverse("streaming-video-playback-file", kwargs={"video_id": video.pk})
+    rel = reverse("streaming-video-playback-file", kwargs={"video_id": video.pk}).rstrip("/")
     from urllib.parse import urlencode
 
     qs = urlencode({"token": token, "expires": str(exp)})
-    # Relative path: browser loads via frontend same-origin /api/streaming proxy (required for hls.js).
+    # No trailing slash before ? — Next.js 308 on /playback/285/?token= breaks hls.js.
     return f"{rel}?{qs}", exp
 
 

@@ -118,10 +118,10 @@ export default function StreamHtmlVideoPlayer({
   const onNeedFreshSrcRef = useRef(onNeedFreshSrc);
   const onEnsurePlaybackRef = useRef(onEnsurePlayback);
   const isHls = useMemo(() => {
-    if (playbackType === "hls") return true;
     if (playbackType === "mp4") return false;
-    const pathOnly = (src || "").split("?")[0]?.replace(/\/+$/, "") ?? "";
-    return /\/api\/streaming\/videos\/playback\/\d+$/i.test(pathOnly);
+    if (playbackType === "hls") return true;
+    // Signed proxy manifests are HLS unless API explicitly marked mp4.
+    return /\/api\/streaming\/videos\/playback\/\d+(\?|$)/i.test(src || "");
   }, [playbackType, src]);
 
   onNeedFreshSrcRef.current = onNeedFreshSrc;
@@ -132,7 +132,10 @@ export default function StreamHtmlVideoPlayer({
       const video = videoRef.current;
       const hls = hlsRef.current;
       if (!video || !hls || !url) return;
-      if (appliedSrcRef.current === url && appliedRevisionRef.current === srcRevisionRef.current) return;
+      const manifestUrl = resolveStreamPlaybackUrl(url) ?? url;
+      if (appliedSrcRef.current === manifestUrl && appliedRevisionRef.current === srcRevisionRef.current) {
+        return;
+      }
 
       const isHotSwap = opts?.isHotSwap ?? appliedSrcRef.current !== null;
       const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current);
@@ -140,7 +143,7 @@ export default function StreamHtmlVideoPlayer({
       const wasPaused = video.paused;
       const savedRate = video.playbackRate;
 
-      appliedSrcRef.current = url;
+      appliedSrcRef.current = manifestUrl;
       appliedRevisionRef.current = srcRevisionRef.current;
       setPlaybackError(null);
       hlsNetworkRetriesRef.current = 0;
@@ -164,8 +167,7 @@ export default function StreamHtmlVideoPlayer({
 
       hls.off(Hls.Events.MANIFEST_PARSED);
       hls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      hls.stopLoad();
-      hls.loadSource(resolveStreamPlaybackUrl(url) ?? url);
+      hls.loadSource(manifestUrl);
 
       if (!isHotSwap) {
         lateResumeAppliedKeyRef.current = "";
@@ -426,9 +428,28 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     if (!isHls || !src) return;
-    if (!hlsRef.current) return;
-    if (appliedSrcRef.current === src && appliedRevisionRef.current === srcRevision) return;
-    loadHlsSource(src, { isHotSwap: true });
+
+    let cancelled = false;
+    const ensureLoaded = () => {
+      if (cancelled) return;
+      const hls = hlsRef.current;
+      if (!hls) {
+        window.requestAnimationFrame(ensureLoaded);
+        return;
+      }
+      const normalized = resolveStreamPlaybackUrl(src) ?? src;
+      if (
+        appliedSrcRef.current === normalized &&
+        appliedRevisionRef.current === srcRevision
+      ) {
+        return;
+      }
+      loadHlsSource(src, { isHotSwap: appliedSrcRef.current !== null });
+    };
+    ensureLoaded();
+    return () => {
+      cancelled = true;
+    };
   }, [src, srcRevision, isHls, loadHlsSource]);
 
   useEffect(() => {

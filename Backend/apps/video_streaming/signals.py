@@ -172,13 +172,26 @@ def _stream_video_delete_bucket_objects(sender, instance: StreamVideo, **kwargs)
             # Thumbnails live on Cloudinary when USE_CLOUDINARY; only delete video objects from S3.
             from django.conf import settings as django_settings
 
+            from apps.video_streaming.services.r2_catalog_protection import (
+                is_protected_r2_catalog_key,
+                r2_keys_safe_to_delete_on_video_row_removal,
+            )
+
             thumb_keys = [] if getattr(django_settings, "USE_CLOUDINARY", False) else [thumbnail_key]
-            keys = [k for k in [original_key, *thumb_keys] if k]
+            candidate_keys = [original_key, *thumb_keys]
+            keys = r2_keys_safe_to_delete_on_video_row_removal(*candidate_keys)
+            if original_key and is_protected_r2_catalog_key(original_key):
+                logger.info(
+                    "Skipped R2 delete for protected catalog key on StreamVideo %s: %s",
+                    instance.pk,
+                    original_key,
+                )
             if keys:
                 client.delete_objects(
                     Bucket=bucket,
                     Delete={"Objects": [{"Key": k} for k in keys], "Quiet": True},
                 )
+            # Internal transcode output only — never user lesson folders under Business Models/, etc.
             _delete_s3_prefix(client, bucket, hls_prefix)
         except Exception:
             logger.exception("Failed deleting bucket objects for StreamVideo %s", instance.pk)

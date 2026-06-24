@@ -15,20 +15,35 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+_s3_client_instance = None
+
 
 def s3_client():
+    """Re-use one boto3 client per process (connection pool for parallel segment GETs)."""
+    global _s3_client_instance
     if not getattr(settings, "USE_S3_OBJECT_STORAGE", False):
         return None
+    if _s3_client_instance is not None:
+        return _s3_client_instance
     endpoint = (getattr(settings, "AWS_S3_ENDPOINT_URL", None) or "").strip() or None
     region = (getattr(settings, "AWS_S3_REGION_NAME", None) or "auto").strip()
-    return boto3.client(
+    try:
+        pool = int(getattr(settings, "STREAM_S3_MAX_POOL_CONNECTIONS", 32))
+    except (TypeError, ValueError):
+        pool = 32
+    pool = max(8, min(pool, 64))
+    _s3_client_instance = boto3.client(
         "s3",
         endpoint_url=endpoint,
         region_name=region,
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        config=BotoConfig(retries={"max_attempts": 8, "mode": "adaptive"}),
+        config=BotoConfig(
+            retries={"max_attempts": 8, "mode": "adaptive"},
+            max_pool_connections=pool,
+        ),
     )
+    return _s3_client_instance
 
 
 def bucket_object_exists(object_key: str) -> bool:

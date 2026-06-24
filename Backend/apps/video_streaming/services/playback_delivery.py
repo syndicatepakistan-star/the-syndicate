@@ -168,7 +168,13 @@ def head_s3_original(*, bucket: str, key: str) -> HttpResponse:
     return resp
 
 
-def streaming_s3_original_response(request, *, bucket: str, key: str) -> HttpResponse | StreamingHttpResponse:
+def streaming_s3_original_response(
+    request,
+    *,
+    bucket: str,
+    key: str,
+    cache_private_immutable: bool = False,
+) -> HttpResponse | StreamingHttpResponse:
     """
     Stream object bytes through Django with Range support (HTML5 video seeking).
 
@@ -243,7 +249,10 @@ def streaming_s3_original_response(request, *, bucket: str, key: str) -> HttpRes
     resp = StreamingHttpResponse(iterator(), status=status, content_type=ctype)
     resp["Accept-Ranges"] = "bytes"
     resp["Content-Length"] = str(content_length)
-    resp["Cache-Control"] = "private, no-store"
+    if cache_private_immutable:
+        resp["Cache-Control"] = "private, max-age=86400, immutable"
+    else:
+        resp["Cache-Control"] = "private, no-store"
     if status == 206 and content_range_hdr:
         resp["Content-Range"] = content_range_hdr
     return resp
@@ -320,6 +329,25 @@ def build_stream_playback_api_payload(
         "playback_url": url,
         "playback_expires_at": exp,
     }
+
+
+def build_stream_playback_batch_payloads(
+    request,
+    *,
+    user_id: int,
+    videos: list[StreamVideo],
+    access_mode: str = "programs",
+) -> dict[int, dict]:
+    """Build playback JSON payloads for many videos (one DB round-trip for the rows)."""
+    out: dict[int, dict] = {}
+    for video in videos:
+        out[int(video.pk)] = build_stream_playback_api_payload(
+            request,
+            user_id=user_id,
+            video=video,
+            access_mode=access_mode,
+        )
+    return out
 
 
 def _parse_byte_range(range_header: str | None, file_size: int) -> tuple[int, int] | None:

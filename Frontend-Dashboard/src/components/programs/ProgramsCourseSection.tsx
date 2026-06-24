@@ -695,6 +695,22 @@ export function ProgramsCourseSection({
     void prefetchStreamPlaylistExperience(playlistIdFromUrl);
   }, [streamPlaylists, detailPlaylistId, secureView]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const shell = document.querySelector<HTMLElement>("[data-main-shell-scroll]");
+    if (!shell) return;
+    const active = inPlaylistDetail || inCourseDetail;
+    if (active) {
+      shell.setAttribute("data-programs-lesson-active", "");
+      resetDashboardShellScroll();
+    } else {
+      shell.removeAttribute("data-programs-lesson-active");
+    }
+    return () => {
+      shell.removeAttribute("data-programs-lesson-active");
+    };
+  }, [inPlaylistDetail, inCourseDetail]);
+
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;
     const grad = PROGRAM_CARD_BACKGROUNDS[i % PROGRAM_CARD_BACKGROUNDS.length];

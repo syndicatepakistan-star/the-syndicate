@@ -12102,6 +12102,32 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     padding-bottom: max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) !important;
   }
 
+  /* Playlist lesson: scroll inside the panel, not the whole shell (keeps top navbar visible). */
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-main-shell-scroll][data-programs-lesson-active] {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: pan-x pan-y;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-playlist-lesson-root {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  @media (min-width: 1024px) {
+    .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-main-shell-scroll][data-programs-lesson-active] {
+      overflow-y: auto !important;
+      overscroll-behavior-y: contain !important;
+    }
+
+    .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-playlist-lesson-root {
+      overflow: visible;
+      max-height: none;
+    }
+  }
+
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root {
     min-width: 0;
     width: 100%;

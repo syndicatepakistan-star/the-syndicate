@@ -78,13 +78,13 @@ LEVEL1_BUSINESS_MODEL_PROGRAMS: tuple[Level1ProgramRow, ...] = (
     _model(1, "N8N AI Automation", "N8N AI Automation", "Intro"),
     _model(2, "AI Automations", "Ai Automation", "Intro"),
     _model(3, "App Building (using Flutter)", "App Building Flutter", "Intro"),
-    _model(4, "Building Apps using React JS", "React JS", "Intro"),
-    _model(5, "Book Publishing On Amazon (KINDLE)", "Amazon KDP", "Intro"),
-    _model(6, "Building Games Using Unreal Engine", "Unreal Engine", "Intro"),
+    _model(4, "Building Apps using React JS", "React", ""),
+    _model(5, "Book Publishing On Amazon (KINDLE)", "Amazon KDP", ""),
+    _model(6, "Building Games Using Unreal Engine", "Unreal Engine", ""),
     _model(7, "Framer Crash Course", "Framer Crash Course", "Intro"),
     _model(8, "Graphics Design Using Canva", "Canva", "Intro"),
     _model(9, "Print On Demand Clothing", "Print On Demand", "Intro"),
-    _model(10, "Python Programming", "Python Programming", "Intro"),
+    _model(10, "Python Programming", "Python", ""),
     _model(11, "WordPress Blog", "WordPress Blog", "Intro"),
 )
 

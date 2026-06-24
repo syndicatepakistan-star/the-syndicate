@@ -32,6 +32,7 @@ import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeL
 import { SupportSection } from "@/components/dashboard/SupportSection";
 import {
   resetDashboardDocumentScroll,
+  resetDashboardMainShellScroll,
   resetDashboardShellScroll
 } from "@/lib/dashboardShellScroll";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
@@ -2341,11 +2342,17 @@ export default function Page() {
 
     window.addEventListener("scroll", pinDocumentScroll, { passive: true });
     const vv = window.visualViewport;
-    vv?.addEventListener("resize", pinDocumentScroll);
+    const onViewportChange = () => {
+      pinDocumentScroll();
+      resetDashboardMainShellScroll(rootRef.current);
+    };
+    vv?.addEventListener("resize", onViewportChange);
+    vv?.addEventListener("scroll", onViewportChange);
 
     return () => {
       window.removeEventListener("scroll", pinDocumentScroll);
-      vv?.removeEventListener("resize", pinDocumentScroll);
+      vv?.removeEventListener("resize", onViewportChange);
+      vv?.removeEventListener("scroll", onViewportChange);
       html.classList.remove("dashboard-shell-scroll-lock");
       body.classList.remove("dashboard-shell-scroll-lock");
       history.scrollRestoration = prevRestoration;
@@ -2887,10 +2894,10 @@ export default function Page() {
       ref={rootRef}
       data-dashboard-bounded-shell={usesBoundedShellChrome ? "" : undefined}
       className={cn(
-        "dashboard-hamburger-chrome relative min-h-screen hud-void hud-scanlines hud-noise overflow-x-hidden lg:h-screen",
+        "dashboard-hamburger-chrome relative hud-void hud-scanlines hud-noise overflow-x-hidden lg:h-screen",
         usesBoundedMobileShell
-          ? "flex w-full max-w-full flex-col overflow-x-clip overflow-y-hidden no-scrollbar max-lg:h-[100dvh] max-lg:max-h-[100dvh] min-h-0 lg:h-screen lg:max-h-screen"
-          : "w-full max-w-full overflow-x-clip overflow-y-auto lg:h-screen lg:overflow-hidden",
+          ? "flex w-full max-w-full flex-col overflow-x-clip overflow-y-hidden no-scrollbar h-[100dvh] max-h-[100dvh] min-h-0 lg:h-screen lg:max-h-screen"
+          : "min-h-screen w-full max-w-full overflow-x-clip overflow-y-auto lg:overflow-hidden",
         themeMode === "danger" && "theme-danger",
         themeMode === "cyberpunk" && "theme-cyberpunk",
         isIpadProPortraitUi && "dashboard-ipad-pro-ui",
@@ -2919,8 +2926,8 @@ export default function Page() {
             : "min-h-screen fluid-page-pb lg:h-full lg:min-h-0",
         )}
       >
-        {/* Sticky shell has no GSAP transform; inner bar uses data-anim (transform breaks sticky on same node). */}
-        <div className="sticky top-0 z-[60] w-full max-w-full shrink-0 max-lg:pt-[env(safe-area-inset-top,0px)]">
+        {/* Navbar stays in the fixed shell row — never scrolls with lesson content. */}
+        <div className="z-[60] w-full max-w-full shrink-0 max-lg:pt-[env(safe-area-inset-top,0px)]">
           <div
             ref={topbarRef}
             data-anim="in"

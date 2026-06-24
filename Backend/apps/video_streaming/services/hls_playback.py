@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import lru_cache
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import Http404, HttpResponse
 from django.urls import reverse
 
@@ -22,6 +24,28 @@ from apps.video_streaming.services.playback_kinds import (
 logger = logging.getLogger(__name__)
 
 
+def _hls_manifest_body_cache_ttl() -> int:
+    try:
+        raw = int(getattr(settings, "STREAM_HLS_MANIFEST_CACHE_SECONDS", 120))
+    except (TypeError, ValueError):
+        raw = 120
+    return max(0, min(raw, 600))
+
+
+def _hls_manifest_body_cache_key(*, bucket: str, manifest_key: str) -> str:
+    return f"hls_body:{bucket}:{manifest_key}"
+
+
+@lru_cache(maxsize=256)
+def _hls_media_proxy_prefix(video_id: int) -> str:
+    """Cached route prefix — avoids reverse() per manifest segment line."""
+    rel = reverse(
+        "streaming-video-playback-hls-media",
+        kwargs={"video_id": int(video_id), "media_path": "_"},
+    )
+    return rel[: -len("_")]
+
+
 def build_hls_media_proxy_url(
     request,
     *,
@@ -30,14 +54,10 @@ def build_hls_media_proxy_url(
     token: str,
     exp: int,
 ) -> str:
+    del request  # same-origin relative URLs; kept for call-site compatibility
     safe_path = validate_hls_media_path(relative_path)
-    rel = reverse(
-        "streaming-video-playback-hls-media",
-        kwargs={"video_id": int(video_id), "media_path": safe_path},
-    )
     qs = urlencode({"token": token, "expires": str(int(exp))})
-    # Relative URL so hls.js resolves segments on the frontend origin (Next /api/streaming proxy).
-    return f"{rel}?{qs}"
+    return f"{_hls_media_proxy_prefix(int(video_id))}{safe_path}?{qs}"
 
 
 def rewrite_hls_manifest_text(
@@ -99,9 +119,17 @@ def resolve_hls_segment_storage_key(manifest_key: str, media_path: str) -> str:
 
 
 def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
+    ttl = _hls_manifest_body_cache_ttl()
+    cache_key = _hls_manifest_body_cache_key(bucket=bucket, manifest_key=manifest_key)
+    if ttl:
+        cached = cache.get(cache_key)
+        if isinstance(cached, str) and cached.strip():
+            return cached
     text = get_s3_object_text(bucket=bucket, key=manifest_key)
     if text is None:
         raise Http404()
+    if ttl and text.strip():
+        cache.set(cache_key, text, timeout=ttl)
     return text
 
 
@@ -124,7 +152,7 @@ def hls_manifest_http_response(
         exp=exp,
     )
     resp = HttpResponse(rewritten, content_type="application/vnd.apple.mpegurl")
-    resp["Cache-Control"] = "private, no-store"
+    resp["Cache-Control"] = "private, max-age=15"
     return resp
 
 

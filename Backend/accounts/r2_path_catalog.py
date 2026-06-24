@@ -5,7 +5,7 @@ Bucket layout (syn-bucket):
   Agentic AI/{title}/{inner}/index.m3u8
   Ai Content Automation/{title}/{inner}/index.m3u8
   Business Psychology/{program}/{lesson}/index.m3u8
-  Business Models/{program}/{lesson}/index.m3u8
+  Business Models/{program}/{lesson}/index.m3u8  (Amazon KDP: no lesson subfolder)
   Trading with Advanced Technical Analysis/{module}/{chapter}/index.m3u8
 """
 
@@ -66,6 +66,10 @@ def hls_manifest_candidates(*path_parts: str) -> tuple[str, ...]:
     add(_join(base, "index.m3u8"))
     add(_join(base, "index.M3U8"))
     return tuple(candidates)
+
+
+def level1_hls_manifest_key(row: Level1ProgramRow) -> str:
+    return _join(row.r2_root, row.r2_outer_folder, row.r2_lesson_folder, "index.m3u8")
 
 
 def level1_hls_candidates(row: Level1ProgramRow) -> tuple[str, ...]:

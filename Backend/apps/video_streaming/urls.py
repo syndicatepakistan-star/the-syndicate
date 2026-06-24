@@ -30,6 +30,7 @@ urlpatterns = [
         views.StreamVideoPlaybackHlsMediaView.as_view(),
         name="streaming-video-playback-hls-media",
     ),
+    path("videos/stream/batch/", views.StreamVideoStreamBatchView.as_view(), name="streaming-videos-stream-batch"),
     path("videos/stream/<int:pk>/", views.StreamVideoStreamView.as_view(), name="streaming-videos-stream"),
     path("videos/<int:pk>/", views.StreamVideoDetailView.as_view(), name="streaming-videos-detail"),
     path("videos/", views.StreamVideoListView.as_view(), name="streaming-videos-list"),

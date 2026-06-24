@@ -18,6 +18,7 @@ from accounts.r2_path_catalog import (
     ai_content_hls_candidates,
     all_hls_candidates_for_plan_slug,
     level1_hls_candidates,
+    level1_hls_manifest_key,
     trading_hls_candidates,
 )
 from accounts.trading_vault_catalog import TRADING_MODULE_TITLES, TRADING_SUBMODULES, TRADING_SUBMODULE_PARENT
@@ -124,7 +125,7 @@ def seed_level1_playlists(
                 playlist.is_published = True
             playlist.save()
 
-        r2_hint = "/".join([row.r2_root, row.r2_outer_folder, row.r2_lesson_folder, "index.m3u8"])
+        r2_hint = level1_hls_manifest_key(row)
         _append_manifest(
             stats.manifest,
             kind="level1_psychology" if row.category == StreamPlaylist.Category.BUSINESS_PSYCHOLOGY else "level1_business_model",
@@ -169,7 +170,7 @@ def build_manifest_from_db() -> list[dict]:
                 catalog_slug=row.catalog_slug,
                 title=pl.title,
                 playlist_id=pl.id,
-                r2_hint="/".join([row.r2_root, row.r2_outer_folder, row.r2_lesson_folder, "index.m3u8"]),
+                r2_hint=level1_hls_manifest_key(row),
             )
     for slug in sorted(StreamPlaylist.objects.exclude(vault_plan_slug="").values_list("vault_plan_slug", flat=True)):
         pl = StreamPlaylist.objects.filter(vault_plan_slug=slug).first()

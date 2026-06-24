@@ -29,22 +29,22 @@ from apps.video_streaming.entitlements import (
     user_stream_playlists_unlocked_by_entitlement,
 )
 from apps.video_streaming.playback_access import (
-    user_can_play_membership_stream_video,
     user_can_play_programs_stream_video,
 )
 from apps.video_streaming.services.object_storage import s3_client
 from apps.video_streaming.services.playback_delivery import (
     build_stream_playback_api_payload,
+    build_stream_playback_batch_payloads,
     file_response_for_local_original,
     head_s3_original,
     streaming_s3_original_response,
-    verify_playback_token,
     video_playback_kind,
 )
 from apps.video_streaming.services.hls_playback import (
     hls_manifest_http_response,
     resolve_hls_segment_storage_key,
 )
+from apps.video_streaming.services.playback_token_auth import authorize_stream_video_for_playback_token
 from apps.video_streaming.models import (
     StreamPlaylist,
     StreamPlaylistCertificate,
@@ -115,6 +115,55 @@ class StreamVideoStreamView(APIView):
         return Response(StreamVideoStreamSerializer(payload).data, status=status.HTTP_200_OK)
 
 
+class StreamVideoStreamBatchView(APIView):
+    """
+    POST /api/streaming/videos/stream/batch/
+
+    Return signed playback URLs for many videos in one request (playlist warm-up).
+    Skips videos the caller cannot access.
+    """
+
+    permission_classes = [IsAuthenticated]
+    MAX_BATCH = 24
+
+    def post(self, request, *args, **kwargs):
+        raw_ids = request.data.get("video_ids") if isinstance(request.data, dict) else None
+        if not isinstance(raw_ids, list):
+            return Response({"detail": "video_ids must be a list of integers."}, status=status.HTTP_400_BAD_REQUEST)
+
+        video_ids: list[int] = []
+        for raw in raw_ids[: self.MAX_BATCH]:
+            try:
+                vid = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if vid > 0 and vid not in video_ids:
+                video_ids.append(vid)
+
+        if not video_ids:
+            return Response({"playbacks": {}}, status=status.HTTP_200_OK)
+
+        videos = list(StreamVideo.objects.filter(pk__in=video_ids))
+        by_id = {int(v.pk): v for v in videos}
+        allowed: list[StreamVideo] = []
+        for vid in video_ids:
+            video = by_id.get(vid)
+            if video is None:
+                continue
+            if not user_can_play_programs_stream_video(request.user, video):
+                continue
+            allowed.append(video)
+
+        payloads = build_stream_playback_batch_payloads(
+            request,
+            user_id=request.user.id,
+            videos=allowed,
+            access_mode="programs",
+        )
+        playbacks = {str(vid): StreamVideoStreamSerializer(payload).data for vid, payload in payloads.items()}
+        return Response({"playbacks": playbacks}, status=status.HTTP_200_OK)
+
+
 class StreamVideoPlaybackFileView(APIView):
     """
     `<video src>` / hls.js manifest URL: signed query token from `build_playback_url_for_video`.
@@ -129,30 +178,14 @@ class StreamVideoPlaybackFileView(APIView):
         token = (request.query_params.get("token") or "").strip()
         if not token:
             raise Http404()
-        claims = verify_playback_token(token=token, video_id=video_id)
-        if not claims:
+        authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
+        if not authorized:
             raise Http404()
-
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-        try:
-            user = User.objects.get(pk=int(claims["u"]))
-        except (User.DoesNotExist, TypeError, ValueError, KeyError):
-            raise Http404()
-
-        video = get_object_or_404(StreamVideo, pk=video_id)
-        mode = str(claims.get("m") or "programs").strip() or "programs"
-        if mode == "membership":
-            if not user_can_play_membership_stream_video(user, video):
-                raise Http404()
-        else:
-            if not user_can_play_programs_stream_video(user, video):
-                raise Http404()
-        return user, video, token, claims
+        video, claims = authorized
+        return None, video, token, claims
 
     def get(self, request, video_id: int, *args, **kwargs):
-        _, video, token, claims = self._user_video_for_playback_token(request, video_id)
+        _user, video, token, claims = self._user_video_for_playback_token(request, video_id)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         storage_key = (getattr(video.original_video, "name", None) or "").strip()
         kind = video_playback_kind(video)
@@ -180,7 +213,7 @@ class StreamVideoPlaybackFileView(APIView):
         return file_response_for_local_original(video, request)
 
     def head(self, request, video_id: int, *args, **kwargs):
-        _, video, _token, _claims = self._user_video_for_playback_token(request, video_id)
+        _user, video, _token, _claims = self._user_video_for_playback_token(request, video_id)
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         storage_key = (getattr(video.original_video, "name", None) or "").strip()
         kind = video_playback_kind(video)
@@ -218,26 +251,10 @@ class StreamVideoPlaybackHlsMediaView(APIView):
         token = (request.query_params.get("token") or "").strip()
         if not token:
             raise Http404()
-        claims = verify_playback_token(token=token, video_id=video_id)
-        if not claims:
+        authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
+        if not authorized:
             raise Http404()
-
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-        try:
-            user = User.objects.get(pk=int(claims["u"]))
-        except (User.DoesNotExist, TypeError, ValueError, KeyError):
-            raise Http404()
-
-        video = get_object_or_404(StreamVideo, pk=video_id)
-        mode = str(claims.get("m") or "programs").strip() or "programs"
-        if mode == "membership":
-            if not user_can_play_membership_stream_video(user, video):
-                raise Http404()
-        else:
-            if not user_can_play_programs_stream_video(user, video):
-                raise Http404()
+        video, _claims = authorized
         if video_playback_kind(video) != "hls":
             raise Http404()
         return video
@@ -255,7 +272,13 @@ class StreamVideoPlaybackHlsMediaView(APIView):
             raise Http404()
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         if getattr(settings, "USE_S3_OBJECT_STORAGE", False) and bucket:
-            return streaming_s3_original_response(request, bucket=bucket, key=segment_key)
+            immutable = segment_key.lower().endswith((".ts", ".m4s", ".mp4"))
+            return streaming_s3_original_response(
+                request,
+                bucket=bucket,
+                key=segment_key,
+                cache_private_immutable=immutable,
+            )
         raise Http404()
 
     def head(self, request, video_id: int, media_path: str, *args, **kwargs):

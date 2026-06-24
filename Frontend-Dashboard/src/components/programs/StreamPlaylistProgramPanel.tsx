@@ -219,21 +219,36 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       if (firstUrl) warmStreamVideoMedia([firstUrl], { priority: true });
 
       if (videoIds.length > 0) {
-        void prefetchStreamVideoPlaybacks(videoIds, {
-          priorityId: videoIds[0],
-          concurrency: 8,
+        const priorityId = videoIds[0]!;
+        const eagerIds = videoIds.slice(0, 3);
+        void prefetchStreamVideoPlaybacks(eagerIds, {
+          priorityId,
+          concurrency: 3,
         }).then((prefetched) => {
           setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
           warmStreamVideoMedia(
-            videoIds
-              .slice(0, 5)
+            eagerIds
               .map(
                 (id) =>
                   prefetched[id]?.playback_url ?? getCachedStreamVideoPlayback(id)?.playback_url ?? null
               )
-              .filter((url): url is string => Boolean(url))
+              .filter((url): url is string => Boolean(url)),
+            { priority: true }
           );
         });
+        const restIds = videoIds.slice(3);
+        if (restIds.length > 0) {
+          const warmRest = () => {
+            void prefetchStreamVideoPlaybacks(restIds, { concurrency: 4 }).then((prefetched) => {
+              setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
+            });
+          };
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(warmRest, { timeout: 4000 });
+          } else {
+            window.setTimeout(warmRest, 1200);
+          }
+        }
       }
     } catch (e) {
       setPlaylist(null);
@@ -394,10 +409,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     const videoIds = items.map((row) => row.stream_video.id).filter(Boolean);
     const priorityId = videoIds[activeIdx] ?? videoIds[0];
 
+    const neighborIds = videoIds.slice(Math.max(0, activeIdx - 1), activeIdx + 3);
     void (async () => {
-      const prefetched = await prefetchStreamVideoPlaybacks(videoIds, {
+      const prefetched = await prefetchStreamVideoPlaybacks(neighborIds, {
         priorityId,
-        concurrency: 8,
+        concurrency: 3,
       });
       setPlaybackCache((prev) => {
         const next = { ...prev };
@@ -412,9 +428,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         return changed ? next : prev;
       });
 
-      const warmUrls = videoIds
-        .slice(Math.max(0, activeIdx - 1), activeIdx + 4)
-        .map((id) => prefetched[id]?.playback_url)
+      const warmUrls = neighborIds
+        .map((id) => prefetched[id]?.playback_url ?? playbackCache[id]?.playback_url)
         .filter((url): url is string => Boolean(url));
       warmStreamVideoMedia(warmUrls, { priority: true });
     })();
@@ -641,14 +656,14 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }
 
   const playbackUrl = activePlayback?.playback_url ?? null;
-  /** Show player as soon as a ready URL exists; background refresh must not block cached switches. */
-  const ready = progressHydrated && activePlayback?.status === "ready" && !!playbackUrl;
+  /** Mount player as soon as a signed URL exists; resume position hydrates separately. */
+  const ready = activePlayback?.status === "ready" && !!playbackUrl;
   const playlistPrice = parsePlaylistNumber(playlist.price);
   const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
 
   return (
-    <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-10">
-      <div className="min-w-0 space-y-5">
+    <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-visible">
+      <div className="min-w-0 shrink-0 space-y-4 lg:shrink lg:space-y-5">
         <div className="space-y-2">
           {!ready ? (
             <div
@@ -774,7 +789,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
       <aside
         aria-label="Playlist"
-        className="flex min-h-0 flex-col rounded-xl border border-white/12 bg-black/40 p-3 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)]"
+        className="flex min-h-0 max-h-[min(46vh,420px)] min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-3 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start"
       >
         <div className="border-b border-white/10 px-1 pb-3">
           <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
@@ -814,7 +829,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </button>
           ) : null}
         </div>
-        <ul className="mt-3 flex max-h-[min(52vh,560px)] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-none lg:flex-1">
+        <ul className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
           {items.map((row, i) => {
             const v = row.stream_video;
             const on = i === activeIdx;

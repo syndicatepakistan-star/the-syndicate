@@ -44,3 +44,38 @@ def normalize_bucket_object_key(reference: str, *, bucket_name: str = "") -> str
         return path
 
     return ref.lstrip("/")
+
+
+def bucket_key_resolution_candidates(reference: str, *, bucket_name: str = "") -> tuple[str, ...]:
+    """Return normalized key plus common Level-1 / vault prefix variants for admin linking."""
+    primary = normalize_bucket_object_key(reference, bucket_name=bucket_name)
+    if not primary:
+        return ()
+    seen: set[str] = set()
+    out: list[str] = []
+
+    def add(key: str) -> None:
+        k = (key or "").strip().lstrip("/")
+        if k and k not in seen:
+            seen.add(k)
+            out.append(k)
+
+    add(primary)
+    lower = primary.lower()
+    if not lower.startswith("business models/") and not lower.startswith("business psychology/"):
+        add(f"Business Models/{primary}")
+        add(f"Business Psychology/{primary}")
+    return tuple(out)
+
+
+def resolve_bucket_object_key(reference: str, *, bucket_name: str = "") -> str:
+    """Pick the first candidate key that exists in the bucket, else the normalized primary."""
+    from apps.video_streaming.services.object_storage import bucket_object_exists
+
+    candidates = bucket_key_resolution_candidates(reference, bucket_name=bucket_name)
+    if not candidates:
+        return ""
+    for key in candidates:
+        if bucket_object_exists(key):
+            return key
+    return candidates[0]

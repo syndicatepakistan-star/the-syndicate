@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Any
 
 from django.db import transaction
+from django.utils import timezone
 
 from accounts.level1_program_catalog import (
     LEVEL1_ALL_PROGRAMS,
@@ -45,9 +47,91 @@ from apps.video_streaming.services.vault_playlist_seed import (
 class CatalogSeedStats:
     purged_playlists: int = 0
     purged_videos: int = 0
+    purchases_restored: int = 0
     level1_playlists: int = 0
     vault_stats: VaultSeedStats | None = None
     manifest: list[dict] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class PaidPurchaseSnapshot:
+    user_id: int
+    playlist_slug: str
+    amount_paid: Decimal
+    currency: str
+    paid_at: Any
+    stripe_session_id: str
+    stripe_checkout_session_id: str
+
+
+def snapshot_paid_playlist_purchases() -> list[PaidPurchaseSnapshot]:
+    """Capture paid purchases by stable playlist slug before catalog purge."""
+    rows: list[PaidPurchaseSnapshot] = []
+    qs = (
+        StreamPlaylistPurchase.objects.filter(status=StreamPlaylistPurchase.Status.PAID)
+        .select_related("playlist")
+        .exclude(stripe_session_id__startswith="quiz_ticket_")
+    )
+    for purchase in qs:
+        slug = (getattr(purchase.playlist, "slug", None) or "").strip()
+        if not slug:
+            continue
+        rows.append(
+            PaidPurchaseSnapshot(
+                user_id=int(purchase.user_id),
+                playlist_slug=slug,
+                amount_paid=purchase.amount_paid or Decimal("0"),
+                currency=(purchase.currency or "").strip() or "usd",
+                paid_at=purchase.paid_at,
+                stripe_session_id=(purchase.stripe_session_id or "").strip(),
+                stripe_checkout_session_id=(purchase.stripe_checkout_session_id or "").strip(),
+            )
+        )
+    return rows
+
+
+def restore_paid_playlist_purchases(snapshots: list[PaidPurchaseSnapshot]) -> int:
+    """Re-link paid purchases to playlists recreated with the same slug."""
+    restored = 0
+    for row in snapshots:
+        playlist = StreamPlaylist.objects.filter(slug=row.playlist_slug).first()
+        if playlist is None:
+            continue
+        paid_at = row.paid_at or timezone.now()
+        purchase, created = StreamPlaylistPurchase.objects.get_or_create(
+            user_id=row.user_id,
+            playlist=playlist,
+            defaults={
+                "status": StreamPlaylistPurchase.Status.PAID,
+                "stripe_session_id": row.stripe_session_id,
+                "stripe_checkout_session_id": row.stripe_checkout_session_id,
+                "amount_paid": row.amount_paid,
+                "currency": row.currency,
+                "paid_at": paid_at,
+            },
+        )
+        if not created and purchase.status != StreamPlaylistPurchase.Status.PAID:
+            purchase.status = StreamPlaylistPurchase.Status.PAID
+            purchase.amount_paid = row.amount_paid
+            purchase.currency = row.currency
+            purchase.paid_at = paid_at
+            if row.stripe_session_id:
+                purchase.stripe_session_id = row.stripe_session_id
+            if row.stripe_checkout_session_id:
+                purchase.stripe_checkout_session_id = row.stripe_checkout_session_id
+            purchase.save(
+                update_fields=[
+                    "status",
+                    "amount_paid",
+                    "currency",
+                    "paid_at",
+                    "stripe_session_id",
+                    "stripe_checkout_session_id",
+                    "updated_at",
+                ]
+            )
+        restored += 1
+    return restored
 
 
 def distribute_level1_prices(total: Decimal, count: int) -> list[Decimal]:
@@ -213,7 +297,9 @@ def seed_syndicate_catalog(
     playlists_only: bool = True,
 ) -> CatalogSeedStats:
     stats = CatalogSeedStats(vault_stats=VaultSeedStats())
+    purchase_snapshots: list[PaidPurchaseSnapshot] = []
     if purge_first:
+        purchase_snapshots = snapshot_paid_playlist_purchases()
         purge_stream_catalog()
 
     create_videos = not playlists_only
@@ -229,6 +315,9 @@ def seed_syndicate_catalog(
     else:
         vault_stats = seed_all_vault_playlists(publish=publish, link_r2=link_r2, retire_legacy=False)
     stats.vault_stats = vault_stats
+
+    if purchase_snapshots:
+        stats.purchases_restored = restore_paid_playlist_purchases(purchase_snapshots)
 
     for entry in build_manifest_from_db():
         if not any(e.get("catalog_slug") == entry.get("catalog_slug") for e in stats.manifest):

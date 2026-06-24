@@ -662,7 +662,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
 
   return (
-    <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-visible">
+    <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-hidden lg:min-h-0">
       <div className="min-w-0 shrink-0 space-y-4 lg:shrink lg:space-y-5">
         <div className="space-y-2">
           {!ready ? (

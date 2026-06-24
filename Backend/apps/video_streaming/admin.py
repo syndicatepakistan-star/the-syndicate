@@ -16,7 +16,11 @@ from apps.video_streaming.models import (
     StreamPlaylistPurchase,
     StreamVideo,
 )
-from apps.video_streaming.services.bucket_reference import normalize_bucket_object_key
+from apps.video_streaming.services.bucket_reference import (
+    bucket_key_resolution_candidates,
+    normalize_bucket_object_key,
+    resolve_bucket_object_key,
+)
 from apps.video_streaming.services.hls_playback import validate_hls_manifest_in_bucket
 from apps.video_streaming.services.image_upload import save_image_field_on_instance
 from apps.video_streaming.services.object_storage import bucket_object_exists
@@ -173,7 +177,7 @@ class StreamVideoAdminForm(forms.ModelForm):
         cleaned = super().clean()
         bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
         raw_ref = (cleaned.get("bucket_video_url_or_key") or "").strip()
-        selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
+        selected_key = resolve_bucket_object_key(raw_ref, bucket_name=bucket) if raw_ref else ""
         if raw_ref and not selected_key:
             raise ValidationError(
                 {"bucket_video_url_or_key": "Could not parse a storage object key from that URL or path."}
@@ -267,7 +271,7 @@ class StreamVideoAdmin(admin.ModelAdmin):
         raw_ref = (form.cleaned_data.get("bucket_video_url_or_key") or "").strip()
         selected_key = (form.cleaned_data.get("_resolved_bucket_key") or "").strip()
         if not selected_key and raw_ref:
-            selected_key = normalize_bucket_object_key(raw_ref, bucket_name=bucket)
+            selected_key = resolve_bucket_object_key(raw_ref, bucket_name=bucket)
 
         pending_bucket_key = ""
         playback_kind = StreamVideo.PlaybackKind.MP4

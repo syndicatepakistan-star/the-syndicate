@@ -6974,6 +6974,33 @@ body.syndicate-mode-active::-webkit-scrollbar {
   min-height: 0;
   overflow: hidden;
 }
+
+/* Desktop: lock outer main scroll during lesson view (checkout return was scrolling the grid up). */
+@media (min-width: 1024px) {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
 html.dashboard-shell-scroll-lock,
 body.dashboard-shell-scroll-lock {
   overflow: hidden !important;

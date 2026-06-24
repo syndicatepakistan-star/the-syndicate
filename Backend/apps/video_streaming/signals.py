@@ -5,6 +5,7 @@ import logging
 
 from apps.video_streaming.models import StreamPlaylistItem, StreamVideo, stream_playlist_cover_upload_to
 from apps.video_streaming.services.image_upload import copy_image_field_to_field
+from apps.video_streaming.services.playback_kinds import detect_playback_kind
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +40,16 @@ def _stream_video_mark_ready_after_upload(sender, instance: StreamVideo, created
 
     def _mark_ready(vid: int) -> None:
         try:
+            row = StreamVideo.objects.filter(pk=vid).only("original_video").first()
+            key = (getattr(row.original_video, "name", None) or "").strip() if row else ""
+            kind = detect_playback_kind(key) if key else "mp4"
             StreamVideo.objects.filter(pk=vid).update(
                 status=StreamVideo.Status.READY,
+                playback_kind=StreamVideo.PlaybackKind.HLS if kind == "hls" else StreamVideo.PlaybackKind.MP4,
                 transcode_progress=100,
                 transcode_message="Upload complete. Ready for playback.",
                 last_error="",
-                hls_path="",
+                hls_path=key if kind == "hls" else "",
             )
         except Exception:
             logger.exception("Could not mark StreamVideo %s ready after upload", vid)

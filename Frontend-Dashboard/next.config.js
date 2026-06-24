@@ -115,10 +115,10 @@ const nextConfig = {
           source: "/api/videos/:path*",
           destination: `${backendOrigin}/api/videos/:path*`
         },
-        // HLS manifests + segments — proxy straight to Django (trailing slash for APPEND_SLASH).
+        // HLS segment URLs end in .ts — do NOT append a trailing slash (breaks media_path matching).
         {
           source: "/api/streaming/:path*",
-          destination: `${backendOrigin}/api/streaming/:path*/`
+          destination: `${backendOrigin}/api/streaming/:path*`
         },
         // Uploaded course covers & video thumbnails (Django MEDIA_URL)
         {

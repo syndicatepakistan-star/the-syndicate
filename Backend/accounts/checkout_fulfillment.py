@@ -47,10 +47,21 @@ def resolve_checkout_user_from_metadata(session_meta: dict) -> User | None:
     return User.objects.filter(email__iexact=pending.email).first()
 
 
-def _apply_playlist_purchase(user: User, session, playlist_id: str) -> None:
-    if not playlist_id.isdigit():
-        return
-    playlist = StreamPlaylist.objects.filter(id=int(playlist_id)).first()
+def resolve_playlist_from_checkout_metadata(session_meta: dict) -> StreamPlaylist | None:
+    """Resolve playlist from Stripe metadata — slug is stable across catalog re-seeds."""
+    slug = str(session_meta.get("playlist_slug", "") or "").strip()
+    if slug:
+        playlist = StreamPlaylist.objects.filter(slug=slug).first()
+        if playlist is not None:
+            return playlist
+    playlist_id = str(session_meta.get("playlist_id", "") or "").strip()
+    if playlist_id.isdigit():
+        return StreamPlaylist.objects.filter(pk=int(playlist_id)).first()
+    return None
+
+
+def _apply_playlist_purchase(user: User, session, session_meta: dict) -> None:
+    playlist = resolve_playlist_from_checkout_metadata(session_meta)
     if playlist is None:
         return
     purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
@@ -100,19 +111,21 @@ def fulfill_checkout_session_for_user(
 
     sid = str(getattr(session, "id", "") or "").strip()
     playlist_id = str(session_meta.get("playlist_id", "") or "").strip()
+    playlist_slug = str(session_meta.get("playlist_slug", "") or "").strip()
     plan_sel = str(session_meta.get("selected_plan", "") or "").strip().lower()
 
     was_recorded = bool(sid) and UserPlanPurchase.objects.filter(stripe_checkout_session_id=sid).exists()
     playlist_paid = False
-    if playlist_id.isdigit():
+    resolved_playlist = resolve_playlist_from_checkout_metadata(session_meta)
+    if resolved_playlist is not None:
         playlist_paid = StreamPlaylistPurchase.objects.filter(
             user=user,
-            playlist_id=int(playlist_id),
+            playlist=resolved_playlist,
             status=StreamPlaylistPurchase.Status.PAID,
         ).exists()
 
-    if playlist_id.isdigit() and not playlist_paid:
-        _apply_playlist_purchase(user, session, playlist_id)
+    if resolved_playlist is not None and not playlist_paid:
+        _apply_playlist_purchase(user, session, session_meta)
     if plan_sel:
         _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     elif not was_recorded and sid:

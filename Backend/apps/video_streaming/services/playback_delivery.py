@@ -118,10 +118,12 @@ def _guess_video_content_type(file_key: str) -> str:
 
 
 def video_playback_kind(video: StreamVideo) -> str:
+    key = (getattr(video.original_video, "name", None) or "").strip()
+    if key.lower().endswith(".m3u8"):
+        return "hls"
     stored = (getattr(video, "playback_kind", None) or "").strip().lower()
     if stored in ("mp4", "hls"):
         return stored
-    key = (getattr(video.original_video, "name", None) or "").strip()
     return detect_playback_kind(key)
 
 

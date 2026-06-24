@@ -253,13 +253,14 @@ class StreamVideoPlaybackHlsMediaView(APIView):
             raise Http404()
         authorized = authorize_stream_video_for_playback_token(token=token, video_id=video_id)
         if not authorized:
-            return HttpResponse("Playback not authorized.", status=403, content_type="text/plain")
+            raise Http404("Playback not authorized.")
         video, _claims = authorized
         if video_playback_kind(video) != "hls":
             raise Http404()
         return video
 
     def get(self, request, video_id: int, media_path: str, *args, **kwargs):
+        media_path = (media_path or "").rstrip("/")
         video = self._authorized_video(request, video_id)
         manifest_key = (getattr(video.original_video, "name", None) or "").strip()
         if not manifest_key.lower().endswith(".m3u8"):
@@ -282,6 +283,7 @@ class StreamVideoPlaybackHlsMediaView(APIView):
         raise Http404()
 
     def head(self, request, video_id: int, media_path: str, *args, **kwargs):
+        media_path = (media_path or "").rstrip("/")
         video = self._authorized_video(request, video_id)
         manifest_key = (getattr(video.original_video, "name", None) or "").strip()
         if not manifest_key.lower().endswith(".m3u8"):
@@ -560,6 +562,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
         session_metadata = {
             "checkout_kind": "playlist_unlock",
             "playlist_id": str(playlist.id),
+            "playlist_slug": (playlist.slug or "").strip(),
             "user_id": str(request.user.id),
         }
         if meta_affiliate_id:
@@ -663,9 +666,14 @@ class StreamPlaylistCheckoutSuccessView(APIView):
             return Response({"detail": "Checkout session belongs to another user."}, status=status.HTTP_403_FORBIDDEN)
 
         playlist_id_raw = str(metadata.get("playlist_id", "")).strip()
-        if not playlist_id_raw.isdigit():
+        playlist_slug = str(metadata.get("playlist_slug", "")).strip()
+        playlist = None
+        if playlist_slug:
+            playlist = StreamPlaylist.objects.filter(slug=playlist_slug).first()
+        if playlist is None and playlist_id_raw.isdigit():
+            playlist = StreamPlaylist.objects.filter(pk=int(playlist_id_raw)).first()
+        if playlist is None:
             return Response({"detail": "Invalid playlist metadata."}, status=status.HTTP_400_BAD_REQUEST)
-        playlist = get_object_or_404(StreamPlaylist, pk=int(playlist_id_raw))
 
         already_purchased = StreamPlaylistPurchase.objects.filter(
             user=request.user,

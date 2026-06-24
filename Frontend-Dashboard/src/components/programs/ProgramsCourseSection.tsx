@@ -246,6 +246,7 @@ export function ProgramsCourseSection({
   const [highlightProgramId, setHighlightProgramId] = useState<number | null>(null);
   const [highlightPack, setHighlightPack] = useState<GlobePackKey | undefined>(undefined);
   const highlightHandledRef = useRef(false);
+  const skipHighlightScrollRef = useRef(false);
   const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
 
   const reloadApiCourses = useCallback(async () => {
@@ -323,8 +324,8 @@ export function ProgramsCourseSection({
   const openUnlockedPlaylistDirect = useCallback(
     (playlistId: number) => {
       if (!Number.isFinite(playlistId) || playlistId <= 0) return;
+      skipHighlightScrollRef.current = true;
       clearUnlockCelebrationStorage();
-      setHighlightProgramId(playlistId);
       void reloadStreamPlaylists({ forceRefresh: true }).then(() => {
         openStreamPlaylistRef.current(playlistId);
       });
@@ -428,6 +429,15 @@ export function ProgramsCourseSection({
     const target = streamPlaylists.find((pl) => pl.id === highlightProgramId);
     if (!target) return;
     if (highlightHandledRef.current) return;
+    if (skipHighlightScrollRef.current) {
+      skipHighlightScrollRef.current = false;
+      highlightHandledRef.current = true;
+      return;
+    }
+    if (secureView === "detail" && detailPlaylistId === highlightProgramId) {
+      highlightHandledRef.current = true;
+      return;
+    }
     highlightHandledRef.current = true;
     setHighlightedPlaylistId(target.id);
     scrollToProgramLibrary("dashboard");
@@ -439,7 +449,7 @@ export function ProgramsCourseSection({
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
-  }, [highlightProgramId, streamPlaylists]);
+  }, [highlightProgramId, streamPlaylists, secureView, detailPlaylistId]);
 
   useEffect(() => {
     if (apiCourses.length === 0) {
@@ -703,6 +713,10 @@ export function ProgramsCourseSection({
     if (active) {
       shell.setAttribute("data-programs-lesson-active", "");
       resetDashboardShellScroll();
+      requestAnimationFrame(() => {
+        resetDashboardShellScroll();
+        document.querySelector<HTMLElement>(".programs-lesson-scroll")?.scrollTo({ top: 0, behavior: "auto" });
+      });
     } else {
       shell.removeAttribute("data-programs-lesson-active");
     }

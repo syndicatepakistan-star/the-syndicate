@@ -22,6 +22,7 @@ from accounts.vault_video_catalog import (
 )
 from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamVideo
 from apps.video_streaming.services.object_storage import bucket_object_exists
+from apps.video_streaming.services.playback_kinds import detect_playback_kind
 
 
 @dataclass
@@ -50,13 +51,15 @@ def link_bucket_key_if_exists(video: StreamVideo, candidates: tuple[str, ...]) -
     for key in candidates:
         if not bucket_object_exists(key):
             continue
+        kind = detect_playback_kind(key)
         StreamVideo.objects.filter(pk=video.pk).update(
             original_video=key,
+            playback_kind=StreamVideo.PlaybackKind.HLS if kind == "hls" else StreamVideo.PlaybackKind.MP4,
             status=StreamVideo.Status.READY,
             transcode_progress=100,
             transcode_message="Linked to bucket object. Ready for playback.",
             last_error="",
-            hls_path="",
+            hls_path=key if kind == "hls" else "",
         )
         video.refresh_from_db()
         return key

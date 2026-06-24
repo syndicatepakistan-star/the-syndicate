@@ -313,7 +313,11 @@ def _ensure_quiz_ticket_user_and_enrollment(email: str, selected_ticket_title: s
     ).exclude(playlist_id__in=playlist_ids).delete()
   if str(user.username).startswith("quiz_ticket_"):
     CourseEnrollment.objects.filter(user=user).exclude(course_id__in=[c.id for c in courses]).delete()
-    StreamPlaylistPurchase.objects.filter(user=user).exclude(playlist_id__in=playlist_ids).delete()
+    # Only drop synthetic quiz-ticket rows — never Stripe playlist purchases.
+    StreamPlaylistPurchase.objects.filter(
+      user=user,
+      stripe_session_id__startswith="quiz_ticket_",
+    ).exclude(playlist_id__in=playlist_ids).delete()
   for course in courses:
     CourseEnrollment.objects.get_or_create(user=user, course=course)
   for playlist in playlists:

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
+import { resetDashboardShellScroll } from "@/lib/dashboardShellScroll";
 import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
 
 export function PlaylistCheckoutSync() {
@@ -49,6 +50,8 @@ export function PlaylistCheckoutSync() {
           clean.searchParams.set("playlist", playlistId);
         }
         window.history.replaceState({}, "", clean.toString());
+        resetDashboardShellScroll();
+        requestAnimationFrame(() => resetDashboardShellScroll());
       }
     })();
     return () => {

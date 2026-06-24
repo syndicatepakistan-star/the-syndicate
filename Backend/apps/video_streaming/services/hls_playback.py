@@ -78,10 +78,20 @@ def build_hls_media_proxy_url(
     token: str,
     exp: int,
 ) -> str:
-    del request  # same-origin relative URLs; kept for call-site compatibility
     safe_path = validate_hls_media_path(relative_path)
     qs = urlencode({"token": token, "expires": str(int(exp))})
-    return f"{_hls_media_proxy_prefix(int(video_id))}{safe_path}?{qs}"
+    rel = f"{_hls_media_proxy_prefix(int(video_id))}{safe_path}"
+    # Absolute same-origin URLs — hls.js (especially with workers) resolves root-relative
+    # `/api/...` segment lines unreliably; FRONTEND_BASE_URL is the public site origin.
+    frontend = (getattr(settings, "FRONTEND_BASE_URL", "") or "").strip().rstrip("/")
+    if frontend.startswith("http"):
+        return f"{frontend}{rel}?{qs}"
+    if request is not None:
+        try:
+            return f"{request.build_absolute_uri(rel)}?{qs}"
+        except Exception:
+            pass
+    return f"{rel}?{qs}"
 
 
 def rewrite_hls_manifest_text(

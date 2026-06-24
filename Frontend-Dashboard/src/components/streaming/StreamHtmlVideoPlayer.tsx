@@ -154,9 +154,9 @@ export default function StreamHtmlVideoPlayer({
             initialResumeDoneRef.current = true;
             lateResumeAppliedKeyRef.current = lateResumeKey(url, resumeFromStart);
           }
+          hls.startLoad(startPos);
         }
         video.playbackRate = savedRate;
-        hls.startLoad(startPos);
         if (!wasPaused) {
           void video.play().catch(() => undefined);
         }
@@ -358,11 +358,14 @@ export default function StreamHtmlVideoPlayer({
     }
 
     const hls = new Hls({
-      autoStartLoad: false,
-      enableWorker: true,
+      autoStartLoad: true,
+      enableWorker: false,
       lowLatencyMode: false,
       maxBufferHole: 0.6,
       startFragPrefetch: true,
+      xhrSetup: (xhr) => {
+        xhr.withCredentials = true;
+      },
     });
     hlsRef.current = hls;
     hls.attachMedia(video);

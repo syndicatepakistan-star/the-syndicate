@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { KNIGHT_PLAN_COMING_SOON } from "@/components/programs/planOfferCatalog";
+import { KNIGHT_PLAN_COMING_SOON, KNIGHT_EXECUTION_COPY, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
@@ -21,7 +21,7 @@ const MEMBERSHIP_CHANNELS = [
   {
     step: "01",
     title: "Course Command",
-    tagline: "Choose your 5 programs from the vault.",
+    tagline: "Choose 4–5 programs from the selection catalog.",
     border: "border-rose-500/90",
     glow: "shadow-[0_0_0_2px_rgba(244,63,94,0.82),0_0_48px_rgba(225,29,72,0.74),0_0_92px_rgba(136,19,55,0.58)]",
     bg: "bg-[linear-gradient(132deg,rgba(244,63,94,0.72),rgba(190,24,93,0.66),rgba(136,19,55,0.62))]",
@@ -69,7 +69,7 @@ const MEMBERSHIP_PILLARS = [
     id: "curriculum",
     title: "Your Curriculum",
     summary: "Select programs on your terms — not a fixed funnel.",
-    body: "The Knight tier opens the catalog so you choose four to five tracks that match your operator profile. Structure without surrendering control.",
+    body: "The Knight tier opens the selection catalog so you hand-pick four to five courses that match your operator profile. Structure without surrendering control.",
     image: "/assets/pawn.png",
     imageAlt: "The Pawn — your curriculum",
     accent: "cyan" as const,
@@ -78,7 +78,7 @@ const MEMBERSHIP_PILLARS = [
     id: "dashboard",
     title: "Inside The Dashboard",
     summary: "Goals, missions, and the full deck in one shell.",
-    body: "Membership is not a PDF library. It is a live command surface — Syndicate Mode, milestones, and weekly drops wired into the same neon rig you train in.",
+    body: "This is not passive education — it is a controlled environment built for action, discipline, and execution. Syndicate Mode, milestones, weekly drops, and member intelligence wired into the same command surface you train in.",
     image: "/assets/pawn.png",
     imageAlt: "Cyber dashboard sentinel",
     accent: "violet" as const,
@@ -97,11 +97,9 @@ const MEMBERSHIP_PILLARS = [
 const HERO_INTRO =
   "Breach the paywall and run the full Syndicate rig — your curriculum, your rhythm, your command surface inside the dashboard.";
 
-const HERO_OFFER_COPY =
-  "Money Mastery is the runway. The Knight is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.";
+const HERO_OFFER_COPY = KNIGHT_SUBSCRIPTION_COPY;
 
-const HERO_OFFER_DETAIL =
-  "Pick four to five programs from the vault. Unlock Syndicate Mode missions, the member article and video hub, weekly drops, and the complete goals stack. One tier. Full uplink. No partial access.";
+const HERO_OFFER_DETAIL = `${KNIGHT_EXECUTION_COPY.join(" ")} You will gain access to hand-picked courses, exclusive weekly content drops, full dashboard access, membership articles and briefings, the exclusive membership section, goals and milestones, Syndicate Challenges Mode, founder Q&A intelligence sessions, and opportunities to receive investment for your business venture.`;
 
 const CYBER_UNLOCK_CTA = cn(
   "membership-unlock-cta relative z-[1] w-full rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",

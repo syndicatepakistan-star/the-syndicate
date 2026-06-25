@@ -6,7 +6,7 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
-import { isKnightCheckoutBlocked } from '@/components/programs/planOfferCatalog'
+import { isKnightCheckoutBlocked, HOME_ELITE_OFFERS_PARAGRAPHS, KNIGHT_MEMBERSHIP_FEATURES, MONEY_MASTERY_FOUNDATION_COPY, MONEY_MASTERY_LIFETIME_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from '@/components/programs/planOfferCatalog'
 import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
@@ -34,15 +34,7 @@ interface PricingTier {
   billingMode?: 'lifetime' | 'recurring'
 }
 
-const ELITE_OFFERS_PARAGRAPHS = [
-  'Two paths. One objective. Total transformation.',
-  'Enter the Syndicate through the gate designed for your level of ambition.',
-  'Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.',
-  'Or choose The Knight — a personalised path for operators who want control over their own arsenal. Select your chosen programmes, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.',
-  'This is not passive education.',
-  'This is a controlled environment built for action, discipline, and execution.',
-  'Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and opportunity.',
-] as const
+const ELITE_OFFERS_PARAGRAPHS = HOME_ELITE_OFFERS_PARAGRAPHS
 
 const ELITE_OFFERS_BODY_CLASS =
   'font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg'
@@ -57,14 +49,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
     oldPrice: { monthly: '$555', yearly: '$5,550' },
     badge: 'MONEY MASTERY',
     title: 'MONEY MASTERY',
-    description:
-      'You will access everything with full lifetime coverage across the complete Syndicate ecosystem.',
-    features: [
-      'You will access everything',
-      'All programs lifetime',
-      'Complete Access of Dashboard',
-      'Quick Access to all social apps',
-    ],
+    description: MONEY_MASTERY_FOUNDATION_COPY,
+    features: [...MONEY_MASTERY_LIFETIME_FEATURES],
     accent: 'gold',
     icon: <Shield className="h-4 w-4" />,
     cta: 'Get Full Bundle',
@@ -115,17 +101,8 @@ const pricingData: Record<PlanKey, PricingTier> = {
     oldPrice: { monthly: '$99.99', yearly: '$999.90' },
     badge: 'THE KNIGHT',
     title: 'The Knight',
-    description:
-      'Your membership, your curriculum: hand-pick 4–5 courses, then stay inside weekly drops, the dashboard, articles, and Syndicate Mode challenges.',
-    features: [
-      'Select 4–5 courses yourself from the catalog',
-      'Weekly content and member drops',
-      'Full dashboard access',
-      'Membership articles and briefings',
-      'Exclusive Membership Section',
-      'Goals & Milestone section',
-      'Syndicate Challenges Mode',
-    ],
+    description: KNIGHT_SUBSCRIPTION_COPY,
+    features: [...KNIGHT_MEMBERSHIP_FEATURES],
     accent: 'gold',
     icon: <Crown className="h-4 w-4" />,
     cta: 'Join The Knight',

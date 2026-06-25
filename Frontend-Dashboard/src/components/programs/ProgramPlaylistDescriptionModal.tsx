@@ -9,13 +9,26 @@ import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "
 
 export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
 
-/** Overrides Thryon / display fonts from global CSS for this dialog subtree. */
-const READABLE_FONT_STACK = `Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
-
 type Props = {
   playlist: StreamPlaylistListItem | null;
   onClose: () => void;
 };
+
+function stripLessonPrefix(line: string): string {
+  return line
+    .replace(/^\s*(?:Lesson|Module|Chapter)\s+\d+(?:\.\d+)?\s*:\s*/i, "")
+    .replace(/^\s*Final\s+Lecture\s*:\s*/i, "")
+    .trim();
+}
+
+function isTopLevelSectionHeading(line: string): boolean {
+  const t = line.trim().toLowerCase();
+  return t === "the hook" || t === "the core protocol" || t === "what you will learn";
+}
+
+function isLessonListLine(line: string): boolean {
+  return /^\s*(?:Lesson|Module|Chapter)\s+\d+(?:\.\d+)?\s*:/i.test(line) || /^\s*Final\s+Lecture\s*:/i.test(line);
+}
 
 function isAllCapsHeadingLine(line: string): boolean {
   const t = line.trim();
@@ -164,23 +177,29 @@ function parseDescriptionToBlocks(text: string): ReactNode {
   const out: ReactNode[] = [];
   let para: string[] = [];
   let bulletBuf: string[] = [];
+  let inLearnSection = false;
   let k = 0;
+
+  const listClass =
+    "my-1 list-disc space-y-2.5 pl-5 text-[15px] leading-relaxed text-white/90 marker:text-white/35 sm:text-[16px]";
 
   const flushBulletList = () => {
     if (bulletBuf.length === 0) return;
     out.push(
-      <ul
-        key={`ul-${k++}`}
-        className="my-1 list-disc space-y-2.5 pl-5 text-[15px] leading-relaxed text-white/90 marker:text-[#e8c547] sm:text-[16px]"
-      >
+      <ul key={`ul-${k++}`} className={listClass}>
         {bulletBuf.map((item, i) => (
           <li key={i} className="pl-1">
             {item}
           </li>
         ))}
-      </ul>
+      </ul>,
     );
     bulletBuf = [];
+  };
+
+  const pushLearnLine = (rawLine: string) => {
+    const cleaned = stripLessonPrefix(rawLine);
+    if (cleaned) bulletBuf.push(cleaned);
   };
 
   const flushPara = () => {
@@ -188,6 +207,15 @@ function parseDescriptionToBlocks(text: string): ReactNode {
     const content = para.join("\n").trimEnd();
     para = [];
     if (!content) return;
+
+    if (inLearnSection) {
+      for (const row of content.split("\n")) {
+        const trimmed = row.trim();
+        if (trimmed) pushLearnLine(trimmed);
+      }
+      flushBulletList();
+      return;
+    }
 
     const commaList = tryCommaTopicList(content, k);
     if (commaList) {
@@ -208,21 +236,18 @@ function parseDescriptionToBlocks(text: string): ReactNode {
         className="text-[15px] font-normal leading-[1.85] tracking-normal text-white/90 antialiased sm:text-[16px] sm:leading-[1.9]"
       >
         {content}
-      </p>
+      </p>,
     );
   };
 
-  const pushHeading = (title: string, variant: "large" | "medium" | "small") => {
-    const cls =
-      variant === "large"
-        ? "text-[1.125rem] font-bold leading-snug text-[#f5c814] sm:text-[1.35rem]"
-        : variant === "medium"
-          ? "text-[1.05rem] font-bold leading-snug text-[#e8c547] sm:text-[1.2rem]"
-          : "text-[0.98rem] font-bold leading-snug text-[#fde68a] sm:text-[1.05rem]";
+  const pushSectionHeading = (title: string) => {
     out.push(
-      <h3 key={`h-${k++}`} className={cls}>
+      <h3
+        key={`h-${k++}`}
+        className="text-[1.125rem] font-bold leading-snug text-[#f5c814] sm:text-[1.35rem]"
+      >
         {title}
-      </h3>
+      </h3>,
     );
   };
 
@@ -230,13 +255,40 @@ function parseDescriptionToBlocks(text: string): ReactNode {
   const bulletLine = /^\s*[-*•·]\s+(.+)$/;
 
   for (const line of lines) {
+    const trimmed = line.trim();
+    if (isTopLevelSectionHeading(trimmed)) {
+      flushPara();
+      flushBulletList();
+      inLearnSection = trimmed.toLowerCase() === "what you will learn";
+      pushSectionHeading(trimmed);
+      continue;
+    }
+
+    if (inLearnSection) {
+      if (!trimmed) {
+        flushBulletList();
+        continue;
+      }
+      if (bulletLine.test(line)) {
+        const bulletM = line.match(bulletLine);
+        if (bulletM) pushLearnLine(bulletM[1]);
+        continue;
+      }
+      if (isLessonListLine(line)) {
+        pushLearnLine(trimmed);
+        continue;
+      }
+      pushLearnLine(trimmed);
+      continue;
+    }
+
     const bulletM = line.match(bulletLine);
     if (bulletM) {
       flushPara();
-      bulletBuf.push(bulletM[1].trim());
+      bulletBuf.push(stripLessonPrefix(bulletM[1]));
       continue;
     }
-    if (bulletBuf.length && line.trim() !== "") {
+    if (bulletBuf.length && trimmed !== "") {
       flushBulletList();
     }
 
@@ -244,23 +296,20 @@ function parseDescriptionToBlocks(text: string): ReactNode {
     if (md) {
       flushPara();
       flushBulletList();
-      const level = md[1].length;
-      const title = md[2].trim();
-      pushHeading(title, level === 1 ? "large" : level === 2 ? "medium" : "small");
+      pushSectionHeading(md[2].trim());
       continue;
     }
-    if (line.trim() === "") {
+    if (trimmed === "") {
       flushPara();
       flushBulletList();
       continue;
     }
 
     const hb = splitInlineHeadingBody(line);
-    if (hb) {
+    if (hb && !inLearnSection) {
       flushPara();
       flushBulletList();
-      pushHeading(hb.head, "large");
-      para.push(hb.body);
+      para.push(`${hb.head}: ${hb.body}`);
       flushPara();
       continue;
     }
@@ -268,33 +317,26 @@ function parseDescriptionToBlocks(text: string): ReactNode {
     if (isBracketHeadingLine(line)) {
       flushPara();
       flushBulletList();
-      pushHeading(line.trim(), "small");
+      para.push(trimmed);
       continue;
     }
     const colonInner = colonHeadingInner(line);
     if (colonInner) {
       flushPara();
       flushBulletList();
-      pushHeading(colonInner, "medium");
+      para.push(trimmed);
       continue;
     }
     if (isAllCapsHeadingLine(line)) {
       flushPara();
       flushBulletList();
-      out.push(
-        <h3
-          key={`ac-${k++}`}
-          className="text-[1rem] font-bold uppercase leading-snug tracking-[0.04em] text-[#f5c814] sm:text-[1.1rem] sm:tracking-[0.05em]"
-        >
-          {line.trim()}
-        </h3>
-      );
+      para.push(trimmed);
       continue;
     }
     if (isLikelyTitleCaseHeading(line)) {
       flushPara();
       flushBulletList();
-      pushHeading(line.trim(), "medium");
+      para.push(trimmed);
       continue;
     }
     para.push(line);
@@ -308,10 +350,27 @@ function parseDescriptionToBlocks(text: string): ReactNode {
   );
 }
 
+function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSections | null {
+  const t = body.replace(/\r\n/g, "\n").trim();
+  if (!t) return null;
+  const hookMatch = t.match(
+    /(?:^|\n)\s*The Hook\s*\n+([\s\S]*?)(?=\n\s*The Core Protocol\s*\n)/i,
+  );
+  const coreMatch = t.match(
+    /(?:^|\n)\s*The Core Protocol\s*\n+([\s\S]*?)(?=\n\s*What You Will Learn\s*\n)/i,
+  );
+  const learnMatch = t.match(/(?:^|\n)\s*What You Will Learn\s*\n+([\s\S]*)$/i);
+  const hook = hookMatch?.[1]?.trim() ?? "";
+  const core = coreMatch?.[1]?.trim() ?? "";
+  const learn = learnMatch?.[1]?.trim() ?? "";
+  if (!hook && !core && !learn) return null;
+  return { hook, core_protocol: core, what_you_will_learn: learn };
+}
+
 const STRUCTURED_HEADINGS: { key: keyof StreamPlaylistDescriptionSections; label: string }[] = [
   { key: "hook", label: "The Hook" },
   { key: "core_protocol", label: "The core protocol" },
-  { key: "what_you_will_learn", label: "What you will learn" }
+  { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
 function pickStructuredSections(playlist: StreamPlaylistListItem): StreamPlaylistDescriptionSections | null {
@@ -358,7 +417,7 @@ function parseWhatYouWillLearnBlocks(raw: string): LearnBlock[] {
       const subheading = tail ? `${label}: ${tail}` : label;
       cur = { subheading, items: [] };
     } else {
-      const item = trimmed.replace(/^\s*[-*•·]\s+/, "").trim();
+      const item = stripLessonPrefix(trimmed.replace(/^\s*[-*•·]\s+/, "").trim());
       if (item) cur.items.push(item);
     }
   }
@@ -385,7 +444,7 @@ function WhatYouWillLearnBody({ text }: { text: string }) {
   if (blocks.length === 0) return null;
 
   const listClass =
-    "my-1 list-disc space-y-2.5 pl-5 text-left text-[15px] leading-relaxed text-white/95 marker:text-white/40 sm:text-[16px]";
+    "my-1 list-disc space-y-2.5 pl-5 text-left text-[15px] leading-relaxed text-white/95 marker:text-white/35 sm:text-[16px]";
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7">
@@ -394,15 +453,15 @@ function WhatYouWillLearnBody({ text }: { text: string }) {
         return (
           <div key={bi} className="min-w-0">
             {block.subheading ? (
-              <h4 className="mb-2.5 text-left text-[13px] font-bold uppercase tracking-[0.14em] text-sky-300/95 [text-shadow:0_0_18px_rgba(125,211,252,0.22)] sm:mb-3 sm:text-[14px] sm:tracking-[0.16em]">
-                {block.subheading}
-              </h4>
+              <p className="mb-2.5 text-left text-[15px] font-semibold leading-relaxed text-white/95 sm:text-[16px]">
+                {stripLessonPrefix(block.subheading)}
+              </p>
             ) : null}
             {block.items.length > 0 ? (
               <ul className={listClass}>
                 {block.items.map((item, ii) => (
                   <li key={ii} className="pl-1">
-                    {item}
+                    {stripLessonPrefix(item)}
                   </li>
                 ))}
               </ul>
@@ -467,10 +526,10 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
   );
 
   const body = (displayPlaylist?.description || "").trim();
-  const structured = useMemo(
-    () => (displayPlaylist ? pickStructuredSections(displayPlaylist) : null),
-    [displayPlaylist]
-  );
+  const structured = useMemo(() => {
+    if (!displayPlaylist || !body) return null;
+    return parseBodyStructuredSections(body) ?? pickStructuredSections(displayPlaylist);
+  }, [displayPlaylist, body]);
   const blocks = useMemo(() => {
     if (structured) return null;
     return body ? parseDescriptionToBlocks(body) : null;
@@ -478,17 +537,12 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
 
   if (!displayPlaylist || typeof document === "undefined") return null;
 
-  const readableShell = {
-    fontFamily: READABLE_FONT_STACK,
-  } as const;
-
   const tree = (
     <div
-      className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-8"
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-8 font-[family-name:var(--font-body)]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="program-desc-modal-title"
-      style={readableShell}
     >
       <button
         type="button"
@@ -500,9 +554,8 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
         className={cn(
           "relative z-[1] flex max-h-[min(90vh,820px)] w-full max-w-[min(96vw,960px)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50 sm:max-w-[min(94vw,1040px)]",
           "bg-[linear-gradient(180deg,rgba(18,18,18,0.98),rgba(6,6,8,0.99))] shadow-[0_0_40px_rgba(245,200,20,0.25),0_24px_80px_rgba(0,0,0,0.85)]",
-          "[&_h3]:scroll-mt-4"
+          "[&_h3]:scroll-mt-4 font-[family-name:var(--font-body)]",
         )}
-        style={readableShell}
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-10 sm:py-6">
           <h2
@@ -520,10 +573,7 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
             <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
-        <div
-          className="min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 sm:py-9 [&_strong]:font-semibold [&_strong]:text-[#fde68a]"
-          style={readableShell}
-        >
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 sm:py-9 [&_strong]:font-semibold [&_strong]:text-white/95">
           {structured ? (
             <div className="max-w-none pb-1">
               <StructuredPlaylistDescription sections={structured} />

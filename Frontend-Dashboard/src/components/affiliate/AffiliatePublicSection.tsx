@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useState, type CSSProperties } from 'react'
 import { HelpCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { MobileReadMoreText } from '@/components/MobileReadMoreText'
 
 const VIMEO_EMBED =
   'https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1'
@@ -14,16 +13,26 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
-const AFFILIATE_BODY_PARAGRAPHS = [
-  'The Affiliate Programme is not a simple referral system. It is your entry point into a controlled growth channel where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.',
-  'Access is secured through the same elite verification system used across The Syndicate. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that ownership begins with control.',
+const AFFILIATE_INTRO_PARAGRAPHS = [
+  'The Affiliate Programme is not a simple referral system. It is your entry point into the Syndicate Money and Power Strcuture - where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command Centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.',
+  'Access is secured through the same elite verification system used across The Syndicate Platform. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that business mastery begins with control.',
 ] as const
 
-const AFFILIATE_BODY_PRIMARY_CLASS =
-  'mx-auto max-w-none font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 sm:text-base md:mx-0 md:text-lg'
+const AFFILIATE_HOW_TO_STEPS = [
+  'Enter the Affiliate Programme through the dedicated portal. Access the Affiliate login.',
+  'Verify your identity through the secure one-time code.',
+  'Enter your private affiliate command centre.',
+  'Deploy your referral link. Monitor the entire chain — attention, conversions, revenue, and earned commissions.',
+] as const
 
-const AFFILIATE_BODY_SECONDARY_CLASS =
-  'mx-auto max-w-none font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-[0.95rem] md:mx-0 md:text-base lg:text-lg'
+const AFFILIATE_BODY_CLASS =
+  'w-full font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 text-justify hyphens-auto sm:text-base md:text-lg'
+
+const AFFILIATE_HOW_TO_HEADING_CLASS =
+  'w-full font-mono text-[clamp(0.88rem,1vw,1rem)] font-black uppercase tracking-[0.14em] text-fuchsia-200/95 text-justify sm:text-[0.95rem] md:text-base'
+
+const AFFILIATE_HOW_TO_LIST_CLASS =
+  'mt-3 w-full list-decimal space-y-2.5 pl-5 font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 text-justify hyphens-auto marker:text-fuchsia-300/90 sm:text-[0.95rem] md:text-base'
 
 const AFFILIATE_NOTCH_CLIP =
   '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
@@ -91,7 +100,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             />
             <div
               className={cn(
-                'relative flex h-full min-h-[inherit] flex-col overflow-hidden rounded-3xl border border-cyan-400/38 bg-[linear-gradient(168deg,rgba(0,0,0,0.4)_0%,rgba(0,0,0,0.4)_50%,rgba(0,0,0,0.4)_100%)] px-6 py-8 text-center shadow-[0_0_0_1px_rgba(34,211,238,0.42),0_0_32px_rgba(34,211,238,0.32),0_0_64px_rgba(217,70,239,0.16),inset_0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-sm sm:px-9 sm:py-10 md:px-10 md:py-12 md:text-left lg:px-12 lg:py-14',
+                'relative flex h-full min-h-[inherit] flex-col overflow-hidden rounded-3xl border border-cyan-400/38 bg-[linear-gradient(168deg,rgba(0,0,0,0.4)_0%,rgba(0,0,0,0.4)_50%,rgba(0,0,0,0.4)_100%)] px-6 py-8 shadow-[0_0_0_1px_rgba(34,211,238,0.42),0_0_32px_rgba(34,211,238,0.32),0_0_64px_rgba(217,70,239,0.16),inset_0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-sm sm:px-9 sm:py-10 md:px-10 md:py-12 lg:px-12 lg:py-14',
                 AFFILIATE_NOTCH_CLIP,
               )}
             >
@@ -102,8 +111,8 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     'polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)',
                 }}
               />
-              <div className="relative z-[1] flex flex-1 flex-col">
-                <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start md:gap-4">
+                <div className="relative z-[1] flex flex-1 flex-col text-left">
+                <div className="flex flex-wrap items-center gap-3 md:gap-4">
                   <h2
                     id="affiliate-program-heading"
                     className="public-heading-lightning public-heading-lightning--gold font-display text-[clamp(2.25rem,5vw,3.5rem)] font-black uppercase tracking-[0.12em] sm:text-5xl md:text-6xl md:tracking-[0.14em] lg:text-7xl xl:text-8xl"
@@ -122,13 +131,23 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     <span className="sr-only">How affiliate login works</span>
                   </button>
                 </div>
-                <MobileReadMoreText
-                  paragraphs={[...AFFILIATE_BODY_PARAGRAPHS]}
-                  previewSentences={3}
-                  className="mt-5"
-                  paragraphClassNames={[AFFILIATE_BODY_PRIMARY_CLASS, AFFILIATE_BODY_SECONDARY_CLASS]}
-                />
-                <div className="mt-7 flex justify-center md:justify-start">
+                <div className="mt-5 w-full space-y-4">
+                  <p className="sr-only">How affiliate login works</p>
+                  {AFFILIATE_INTRO_PARAGRAPHS.map((paragraph, index) => (
+                    <p key={paragraph.slice(0, 24)} className={cn(AFFILIATE_BODY_CLASS, index > 0 && 'text-slate-300/95')}>
+                      {paragraph}
+                    </p>
+                  ))}
+                  <div id="affiliate-how-to-use" className="pt-2">
+                    <p className={AFFILIATE_HOW_TO_HEADING_CLASS}>How to use it</p>
+                    <ol className={AFFILIATE_HOW_TO_LIST_CLASS}>
+                      {AFFILIATE_HOW_TO_STEPS.map((step) => (
+                        <li key={step.slice(0, 28)}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                </div>
+                <div className="mt-7 flex justify-start">
                   <Link
                     href="/affiliate"
                     className="hamburger-attract inline-flex min-h-[52px] items-center justify-center rounded-xl border border-cyan-400/60 bg-[linear-gradient(180deg,rgba(34,211,238,0.14)_0%,rgba(0,0,0,0.45)_55%,rgba(88,28,135,0.12)_100%)] px-8 py-3.5 text-sm font-black uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_0_1px_rgba(34,211,238,0.5),0_0_22px_rgba(34,211,238,0.38),0_0_40px_rgba(217,70,239,0.12),inset_0_0_16px_rgba(34,211,238,0.1)] transition hover:border-fuchsia-300/55 hover:shadow-[0_0_28px_rgba(217,70,239,0.32),0_0_36px_rgba(34,211,238,0.28)] sm:text-base sm:tracking-[0.18em]"
@@ -175,16 +194,18 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             animate={{ opacity: 1, y: 0 }}
             className="mx-1 rounded-xl border border-cyan-400/35 bg-[#060912]/95 p-5 text-[16px] leading-relaxed text-slate-200 shadow-[0_0_32px_rgba(34,211,238,0.18),0_0_48px_rgba(217,70,239,0.08)] backdrop-blur-sm sm:mx-2 sm:text-[17px] md:mx-0 md:p-6 md:text-lg"
           >
-            <p className="font-semibold uppercase tracking-[0.14em] text-cyan-200/95">How to use it</p>
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-justify marker:text-fuchsia-300/90 md:text-left">
-              <li>Enter the Affiliate Programme through the dedicated portal. Access the Affiliate login.</li>
-              <li>Verify your identity through the secure one-time code.</li>
-              <li>Enter your private affiliate command centre.</li>
-              <li>Deploy your referral link. Monitor the entire chain — attention, conversions, revenue, and earned commissions.</li>
+            <p className="font-semibold uppercase tracking-[0.14em] text-cyan-200/95">How affiliate login works</p>
+            <div className="mt-3 space-y-3 text-justify font-mono text-sm uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-base">
+              {AFFILIATE_INTRO_PARAGRAPHS.map((paragraph) => (
+                <p key={`help-${paragraph.slice(0, 24)}`}>{paragraph}</p>
+              ))}
+            </div>
+            <p className="mt-5 font-semibold uppercase tracking-[0.14em] text-fuchsia-200/95">How to use it</p>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-justify font-mono text-sm uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 marker:text-fuchsia-300/90 sm:text-base">
+              {AFFILIATE_HOW_TO_STEPS.map((step) => (
+                <li key={`help-step-${step.slice(0, 28)}`}>{step}</li>
+              ))}
             </ol>
-            <p className="mt-3 text-justify text-slate-400 md:text-left">
-              Your affiliate identity is separate from the member experience. The member system remains protected through its own secure access pathway. Two systems. Two purposes. One Syndicate ecosystem.
-            </p>
           </motion.div>
         ) : null}
       </div>

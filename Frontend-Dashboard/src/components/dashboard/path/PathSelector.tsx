@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { GoalId } from "./goalPathData";
-import { GOAL_OPTIONS, PATH_CARD_SKIN, PATH_GOAL_INTRO } from "./goalPathData";
+import { GOAL_OPTIONS, PATH_CARD_SKIN, PATH_GOAL_INTRO, PATH_SECTION_INTRO } from "./goalPathData";
 import { cn } from "../dashboardPrimitives";
 
 export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelect: (g: GoalId) => void }) {
@@ -11,10 +11,13 @@ export function PathSelector({ selected, onSelect }: { selected: GoalId; onSelec
       <div className="public-heading-lightning public-heading-lightning--amber font-mono fluid-path-section-heading font-black uppercase tracking-[0.22em] sm:tracking-[0.24em]">
         Your Path
       </div>
-      <p className="mt-2 max-w-2xl text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/68 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">
+      <p className="mt-2 max-w-3xl text-[clamp(0.85rem,0.55vw+0.68rem,1.1rem)] leading-relaxed text-white/68 sm:text-[clamp(0.92rem,0.5vw+0.72rem,1.15rem)]">
+        {PATH_SECTION_INTRO}
+      </p>
+      <p className="mt-2 max-w-3xl text-[clamp(0.82rem,0.5vw+0.66rem,1.05rem)] leading-relaxed text-white/55 sm:text-[clamp(0.88rem,0.45vw+0.7rem,1.1rem)]">
         {PATH_GOAL_INTRO[selected].path}
       </p>
-      <div className="mt-[clamp(0.85rem,2vw+0.25rem,1.25rem)] grid grid-cols-1 fluid-path-grid-gap min-[480px]:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-[clamp(0.85rem,2vw+0.25rem,1.25rem)] grid grid-cols-1 fluid-path-grid-gap min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
         {GOAL_OPTIONS.map((g) => {
           const on = selected === g.id;
           const skin = PATH_CARD_SKIN[g.id];

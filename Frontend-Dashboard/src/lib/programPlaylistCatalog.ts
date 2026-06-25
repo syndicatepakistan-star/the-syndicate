@@ -1,4 +1,5 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
+import { curatedBusinessPsychologyDescription } from "@/data/businessPsychologyProgramDescriptions";
 import { vaultCourseByTitle } from "@/components/programs/vaultPackCatalog";
 import {
   getProgramDisplayTitle,
@@ -117,8 +118,13 @@ export function resolveProgramPlaylistTitle(playlist: ProgramPlaylistLike): stri
 }
 
 export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike): string {
-  const fromApi = (playlist.description ?? "").trim();
   const catalog = findProgramCatalogEntry(playlist);
+  const curated = curatedBusinessPsychologyDescription(
+    catalog?.slug ?? playlist.slug ?? null,
+    catalog?.title ?? playlist.title ?? null,
+  );
+  if (curated) return curated;
+  const fromApi = (playlist.description ?? "").trim();
   if (isSubstantialProgramDescription(fromApi)) return fromApi;
   if (catalog?.description?.trim()) return catalog.description.trim();
   return fromApi;

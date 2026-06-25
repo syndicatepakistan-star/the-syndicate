@@ -14,7 +14,34 @@ import { vaultCoursesForPack } from "@/components/programs/vaultPackCatalog";
 import { resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
 import { planOfferDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
-export type GoalId = "web_dev" | "digital_marketing" | "youtube" | "money_online" | "ai_automation";
+export type GoalId =
+  | "elite_trading"
+  | "business_model"
+  | "business_psychology"
+  | "ai_content"
+  | "agentic_ai"
+  | "money_mastery"
+  | "make_money_online";
+
+/** @deprecated — migrated in GoalPathSystem localStorage reader */
+export type LegacyGoalId =
+  | "web_dev"
+  | "digital_marketing"
+  | "youtube"
+  | "money_online"
+  | "ai_automation";
+
+export const LEGACY_GOAL_ID_MAP: Record<LegacyGoalId, GoalId> = {
+  web_dev: "elite_trading",
+  digital_marketing: "ai_content",
+  youtube: "agentic_ai",
+  money_online: "money_mastery",
+  ai_automation: "make_money_online",
+};
+
+/** Shared YOUR PATH intro — /programs and dashboard programs. */
+export const PATH_SECTION_INTRO =
+  "Chart business warfare, understand business behavioral phycology, master risk, master trading technical analysis and learn business discipline — master the Syndicate hidden techniques to bend reality to your will. The Syndicate protocols are designed to build elite business operators. Choose any of these specialized pathways to mastery:";
 
 /** Visual channel for opportunity cards (Our Methods timeline family). */
 export type OpportunityTone = "amber" | "rose" | "fuchsia" | "cyan" | "blue";
@@ -50,12 +77,25 @@ export type CourseRec = {
 /** Carousel / step count (fixed stages; content comes from program pool). */
 export const GOAL_PATH_STAGE_COUNT = 6;
 
+export function normalizeGoalId(value: string | undefined | null): GoalId {
+  const raw = String(value ?? "").trim();
+  if (raw && raw in ROADMAPS) return raw as GoalId;
+  if (raw && raw in LEGACY_GOAL_ID_MAP) return LEGACY_GOAL_ID_MAP[raw as LegacyGoalId];
+  return "elite_trading";
+}
+
 export const GOAL_OPTIONS: { id: GoalId; label: string; short: string }[] = [
-  { id: "web_dev", label: "Trader", short: "Trade" },
-  { id: "digital_marketing", label: "Content Automation", short: "Content" },
-  { id: "youtube", label: "Ai Agents", short: "Agents" },
-  { id: "money_online", label: "Money Mastery", short: "Vault" },
-  { id: "ai_automation", label: "Make Money Online", short: "MMO" },
+  { id: "elite_trading", label: "Elite Technical Trading", short: "Trading" },
+  { id: "business_model", label: "Business Model Mastery", short: "Models" },
+  {
+    id: "business_psychology",
+    label: "Business Behavioural Phsycology Mastery",
+    short: "Psychology",
+  },
+  { id: "ai_content", label: "AI Content Automation", short: "Content" },
+  { id: "agentic_ai", label: "Agentic Ai", short: "Agents" },
+  { id: "money_mastery", label: "Money Mastery", short: "Vault" },
+  { id: "make_money_online", label: "Make Money Online MMO", short: "MMO" },
 ];
 
 /** Path + Next Opportunities copy — matches Syndicate Elite / affiliate operator tone. */
@@ -63,30 +103,40 @@ export const PATH_GOAL_INTRO: Record<
   GoalId,
   { path: string; opportunities: string }
 > = {
-  web_dev: {
-    path: "Chart warfare, risk rails, and capital discipline — trading vault protocols stacked with psychology programs that harden operators.",
+  elite_trading: {
+    path: "Elite technical trading — chart warfare, scalpel protocols, and master trader modules from the Trading vault.",
     opportunities:
-      "Deploy the Trading vault, individual chart protocols, and risk programs — asymmetric edges without retail noise.",
+      "Deploy Trading vault sub-modules only — Scalpel Protocol, Strategies, Setups, and Secrets of a Master Trader.",
   },
-  digital_marketing: {
-    path: "Faceless content machines and AI publishing pipelines — the Content Automation vault plus library programs that scale off-camera.",
+  business_model: {
+    path: "Business model mastery — eleven build-and-launch programs for apps, automation, publishing, and digital products.",
     opportunities:
-      "Unlock the AI Content vault, viral Shorts modules, and supporting library tracks — publish at scale while you stay invisible.",
+      "Flutter, N8N, AI Automations, Python, WordPress, Unreal Engine, Framer, Amazon KDP, Print On Demand, React, and Canva.",
   },
-  youtube: {
-    path: "Autonomous agents and workflow systems — Agentic AI vault modules wired to N8N and AI Automations in the library.",
+  business_psychology: {
+    path: "Business behavioural phsycology — discipline, risk doctrine, and Syndicate mindset protocols that harden elite operators.",
     opportunities:
-      "Stack the Agentic AI vault, n8n agent modules, and automation programs — stop babysitting tasks agents should execute.",
+      "Zero to One Million, 9 to 5 Exit, Hustle Hard, Syndicate 13 Rules, Money Philosophy, Compound Effect, Consistency, Risk, Micro Business, Transformation, and Business Warfare.",
   },
-  money_online: {
-    path: "Total ecosystem command — Money Mastery and The Knight elite offers plus the Business Psychology library that compounds mindset into capital.",
+  ai_content: {
+    path: "AI content automation — the full faceless YouTube and AI publishing vault as one controlled entitlement.",
     opportunities:
-      "Capture full vault access or advance through psychology programs — ownership over rented progress, one protocol at a time.",
+      "Unlock the AI Content Automation pack — faceless channels, Shorts factories, and viral content machines in one vault.",
   },
-  ai_automation: {
-    path: "Digital income architecture — Print On Demand, KDP, dev stacks, and publishing programs from the Business Model library.",
+  agentic_ai: {
+    path: "Agentic AI — autonomous n8n agents, Claude Code systems, and workflow stacks from the Agentic vault.",
     opportunities:
-      "Build online revenue rails through curated MMO programs — launch assets, code products, and publishing machines without guesswork.",
+      "Deploy Agentic AI sub-modules — WhatsApp agents, RAG pipelines, MCP servers, and business automations à la carte.",
+  },
+  money_mastery: {
+    path: "Money Mastery — total Syndicate ecosystem command across every vault, elite offer, and library program.",
+    opportunities:
+      "Money Mastery foundation, The Knight, all vault packs, and the full program library — ownership over rented progress.",
+  },
+  make_money_online: {
+    path: "Make money online — publishing rails, design tools, and income packs wired for fast digital deployment.",
+    opportunities:
+      "Print On Demand, Canva, Amazon KDP, Trading pack, Agentic AI pack, AI Content Automation pack, and more MMO rails.",
   },
 };
 
@@ -100,8 +150,7 @@ type PathItemRef =
  * Titles are matched loosely against live playlist/course API names.
  */
 export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
-  web_dev: [
-    { type: "pack", plan: "trading_technical_analysis" },
+  elite_trading: [
     {
       type: "module",
       pack: "trading_technical_analysis",
@@ -110,41 +159,36 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "module", pack: "trading_technical_analysis", title: "Strategies of a Master Trader" },
     { type: "module", pack: "trading_technical_analysis", title: "Setups of a Master Trader" },
     { type: "module", pack: "trading_technical_analysis", title: "Secrets of a Master Trader" },
-    { type: "program", title: "Mastering Risk and Uncertainty" },
-    { type: "program", title: "The Micro Business Protocol" },
   ],
-  digital_marketing: [
-    { type: "pack", plan: "ai_content_automation" },
-    {
-      type: "module",
-      pack: "ai_content_automation",
-      title: "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
-    },
-    {
-      type: "module",
-      pack: "ai_content_automation",
-      title: "How I Create Viral High RPM Finance Videos Using AI (Full Blueprint)",
-    },
-    {
-      type: "module",
-      pack: "ai_content_automation",
-      title: "Create 1,000 YouTube Shorts in 13 Minutes Using FREE AI — Free Auto Shorts in Bulk",
-    },
-    {
-      type: "module",
-      pack: "ai_content_automation",
-      title: "I Studied 5,000 Faceless YouTube Videos — Here's How To ACTUALLY Go Viral",
-    },
+  business_model: [
+    { type: "program", title: "App Building (using Flutter)" },
+    { type: "program", title: "N8N Ai Automation" },
+    { type: "program", title: "AI Automations" },
+    { type: "program", title: "Python Programming" },
+    { type: "program", title: "WordPress Blog" },
+    { type: "program", title: "Building Games Using Unreal Engine" },
+    { type: "program", title: "Framer Crash Course" },
+    { type: "program", title: "Book Publishing On Amazon (KINDLE)" },
     { type: "program", title: "Print On Demand" },
+    { type: "program", title: "Building Apps using React JS" },
     { type: "program", title: "Graphics Design Using Canva" },
-    {
-      type: "module",
-      pack: "ai_content_automation",
-      title: "Clone ANY YouTube Channel With AI (NotebookLM Hack) | Automation 2.0",
-    },
   ],
-  youtube: [
-    { type: "pack", plan: "agentic_ai" },
+  business_psychology: [
+    { type: "program", title: "Zero to One Million" },
+    { type: "program", title: "The 9 to 5 Exit Strategy" },
+    { type: "program", title: "Hustle Hard" },
+    { type: "program", title: "Syndicate 13 Business Rules" },
+    { type: "program", title: "Syndicate Money Philosophy" },
+    { type: "program", title: "The Compound Effect" },
+    { type: "program", title: "Mastering Consistency" },
+    { type: "program", title: "Mastering Risk and Uncertainty" },
+    { type: "program", title: "Micro Business Protocol" },
+    { type: "program", title: "The Secret To Transformation" },
+    { type: "program", title: "Business Warfare" },
+  ],
+  ai_content: [{ type: "pack", plan: "ai_content_automation" }],
+  agentic_ai: [
+    { type: "module", pack: "agentic_ai", title: "Build a Blog Writing Agent With N8N" },
     { type: "module", pack: "agentic_ai", title: "Build a WhatsApp Agent with n8n" },
     { type: "module", pack: "agentic_ai", title: "From Zero to RAG Agent" },
     {
@@ -153,49 +197,66 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
       title: "CLAUDE CODE FULL COURSE 4 HOURS — Build & Sell (2026)",
     },
     { type: "module", pack: "agentic_ai", title: "Agentic Workflow for Businesses" },
-    { type: "program", title: "N8N Ai Automation" },
-    { type: "program", title: "AI Automations" },
-    { type: "module", pack: "agentic_ai", title: "n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)" },
+    {
+      type: "module",
+      pack: "agentic_ai",
+      title: "n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)",
+    },
+    { type: "module", pack: "agentic_ai", title: "Google Antigravity FULL COURSE 2 HOURS" },
+    { type: "module", pack: "agentic_ai", title: "VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity" },
+    { type: "module", pack: "agentic_ai", title: "Scrap Any Website with N8N" },
+    { type: "module", pack: "agentic_ai", title: "Claude Cowork Automations" },
   ],
-  money_online: [
+  money_mastery: [
     { type: "pack", plan: "bundle" },
     { type: "pack", plan: "king" },
+    { type: "pack", plan: "agentic_ai" },
+    { type: "pack", plan: "ai_content_automation" },
+    { type: "pack", plan: "trading_technical_analysis" },
+    { type: "program", title: "Zero to One Million" },
     { type: "program", title: "Hustle Hard" },
     { type: "program", title: "Mastering Consistency" },
-    { type: "program", title: "Zero to One Million" },
     { type: "program", title: "The Compound Effect" },
-    { type: "program", title: "The 9 to 5 Exit Strategy" },
-    { type: "program", title: "Mastering Risk and Uncertainty" },
-    { type: "program", title: "The Micro Business Protocol" },
-    { type: "program", title: "The Secret To Transformation" },
-  ],
-  ai_automation: [
-    { type: "program", title: "Print On Demand" },
-    { type: "program", title: "Amazon KDP" },
-    { type: "program", title: "WordPress Blog" },
-    { type: "program", title: "Framer Crash Course" },
-    { type: "program", title: "App Building (using Flutter)" },
-    { type: "program", title: "Building Apps using React JS" },
     { type: "program", title: "Python Programming" },
-    { type: "program", title: "Building Games Using Unreal Engine" },
+    { type: "program", title: "App Building (using Flutter)" },
+    { type: "program", title: "Print On Demand" },
+    { type: "program", title: "Business Warfare" },
+    { type: "program", title: "AI Automations" },
+    { type: "program", title: "Framer Crash Course" },
+  ],
+  make_money_online: [
+    { type: "program", title: "Print On Demand" },
+    { type: "program", title: "Graphics Design Using Canva" },
+    { type: "program", title: "Book Publishing On Amazon (KINDLE)" },
+    { type: "pack", plan: "trading_technical_analysis" },
+    { type: "pack", plan: "agentic_ai" },
+    { type: "pack", plan: "ai_content_automation" },
+    { type: "program", title: "Affiliate Marketing" },
+    { type: "program", title: "WordPress Blog" },
   ],
 };
 
 /** @deprecated Use PATH_CATALOG — program titles only. */
 export const PATH_PROGRAM_TITLES = {
-  web_dev: PATH_CATALOG.web_dev
+  elite_trading: PATH_CATALOG.elite_trading
     .filter((item): item is { type: "program"; title: string } => item.type === "program")
     .map((item) => item.title),
-  digital_marketing: PATH_CATALOG.digital_marketing
+  business_model: PATH_CATALOG.business_model
     .filter((item): item is { type: "program"; title: string } => item.type === "program")
     .map((item) => item.title),
-  youtube: PATH_CATALOG.youtube
+  business_psychology: PATH_CATALOG.business_psychology
     .filter((item): item is { type: "program"; title: string } => item.type === "program")
     .map((item) => item.title),
-  money_online: PATH_CATALOG.money_online
+  ai_content: PATH_CATALOG.ai_content
     .filter((item): item is { type: "program"; title: string } => item.type === "program")
     .map((item) => item.title),
-  ai_automation: PATH_CATALOG.ai_automation
+  agentic_ai: PATH_CATALOG.agentic_ai
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  money_mastery: PATH_CATALOG.money_mastery
+    .filter((item): item is { type: "program"; title: string } => item.type === "program")
+    .map((item) => item.title),
+  make_money_online: PATH_CATALOG.make_money_online
     .filter((item): item is { type: "program"; title: string } => item.type === "program")
     .map((item) => item.title),
 } satisfies Record<GoalId, readonly string[]>;
@@ -205,7 +266,7 @@ export const PATH_CARD_SKIN: Record<
   GoalId,
   { active: string; idle: string; subOn: string; subOff: string }
 > = {
-  web_dev: {
+  elite_trading: {
     active:
       "z-[1] border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/22 to-black/92 text-amber-50 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_32px_rgba(251,191,36,0.35),0_0_72px_rgba(245,158,11,0.15),inset_0_1px_0_rgba(255,255,255,0.1)]",
     idle:
@@ -213,7 +274,23 @@ export const PATH_CARD_SKIN: Record<
     subOn: "text-amber-200/90 [text-shadow:0_0_12px_rgba(251,191,36,0.35)]",
     subOff: "text-amber-200/55",
   },
-  digital_marketing: {
+  business_model: {
+    active:
+      "z-[1] border-2 border-sky-400/70 bg-gradient-to-br from-sky-500/20 to-black/92 text-sky-50 shadow-[0_0_0_1px_rgba(56,189,248,0.45),0_0_32px_rgba(56,189,248,0.32),0_0_72px_rgba(14,165,233,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-sky-400/32 bg-gradient-to-br from-sky-950/22 to-black/60 text-sky-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-sky-400/55 hover:shadow-[0_0_28px_rgba(56,189,248,0.22)]",
+    subOn: "text-sky-200/90 [text-shadow:0_0_12px_rgba(56,189,248,0.35)]",
+    subOff: "text-sky-200/55",
+  },
+  business_psychology: {
+    active:
+      "z-[1] border-2 border-orange-400/70 bg-gradient-to-br from-orange-500/20 to-black/92 text-orange-50 shadow-[0_0_0_1px_rgba(251,146,60,0.45),0_0_32px_rgba(251,146,60,0.32),0_0_72px_rgba(249,115,22,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    idle:
+      "border-2 border-orange-400/32 bg-gradient-to-br from-orange-950/22 to-black/60 text-orange-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-orange-400/55 hover:shadow-[0_0_28px_rgba(251,146,60,0.2)]",
+    subOn: "text-orange-200/90 [text-shadow:0_0_12px_rgba(251,146,60,0.35)]",
+    subOff: "text-orange-200/55",
+  },
+  ai_content: {
     active:
       "z-[1] border-2 border-cyan-400/70 bg-gradient-to-br from-cyan-500/20 to-black/92 text-cyan-50 shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_32px_rgba(34,211,238,0.32),0_0_72px_rgba(6,182,212,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
     idle:
@@ -221,7 +298,7 @@ export const PATH_CARD_SKIN: Record<
     subOn: "text-cyan-200/90 [text-shadow:0_0_12px_rgba(34,211,238,0.35)]",
     subOff: "text-cyan-200/55",
   },
-  youtube: {
+  agentic_ai: {
     active:
       "z-[1] border-2 border-violet-400/70 bg-gradient-to-br from-violet-500/22 to-black/92 text-violet-50 shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_0_32px_rgba(167,139,250,0.32),0_0_72px_rgba(139,92,246,0.16),inset_0_1px_0_rgba(255,255,255,0.1)]",
     idle:
@@ -229,7 +306,7 @@ export const PATH_CARD_SKIN: Record<
     subOn: "text-violet-200/90 [text-shadow:0_0_12px_rgba(196,181,253,0.4)]",
     subOff: "text-violet-200/55",
   },
-  money_online: {
+  money_mastery: {
     active:
       "z-[1] border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-500/20 to-black/92 text-emerald-50 shadow-[0_0_0_1px_rgba(52,211,153,0.45),0_0_32px_rgba(52,211,153,0.3),0_0_72px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
     idle:
@@ -237,7 +314,7 @@ export const PATH_CARD_SKIN: Record<
     subOn: "text-emerald-200/90 [text-shadow:0_0_12px_rgba(52,211,153,0.35)]",
     subOff: "text-emerald-200/55",
   },
-  ai_automation: {
+  make_money_online: {
     active:
       "z-[1] border-2 border-rose-400/70 bg-gradient-to-br from-rose-500/20 to-black/92 text-rose-50 shadow-[0_0_0_1px_rgba(251,113,133,0.45),0_0_32px_rgba(251,113,133,0.3),0_0_72px_rgba(244,63,94,0.14),inset_0_1px_0_rgba(255,255,255,0.1)]",
     idle:
@@ -286,11 +363,13 @@ function titleMatches(courseTitle: string, canonical: string): boolean {
 }
 
 const PATH_EARNING_HINTS: Record<GoalId, string> = {
-  web_dev: "Asymmetric edge: chart discipline compounds when retail noise fades",
-  digital_marketing: "Invisible leverage: machines publish while influence scales off-camera",
-  youtube: "Autonomous systems: agents execute while you architect the empire",
-  money_online: "Total ownership: psychology + vault access under one Syndicate identity",
-  ai_automation: "Digital rails: launch assets that earn without trading hours for output",
+  elite_trading: "Asymmetric edge: chart discipline compounds when retail noise fades",
+  business_model: "Asset architecture: build products and systems that earn without trading hours",
+  business_psychology: "Operator mindset: discipline and risk doctrine convert psychology into capital",
+  ai_content: "Invisible leverage: machines publish while influence scales off-camera",
+  agentic_ai: "Autonomous systems: agents execute while you architect the empire",
+  money_mastery: "Total ownership: every vault, elite offer, and library protocol under one identity",
+  make_money_online: "Digital rails: launch income assets through publishing, design, and elite packs",
 };
 
 const PACK_TONE: Partial<Record<PlanOfferKey, OpportunityTone>> = {

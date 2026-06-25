@@ -17,7 +17,7 @@ const SHOWCASE = [
     width: 1024,
     height: 335,
     accent: "cyan" as const satisfies ShowcaseAccent,
-    title: "Affiliate dashboard — revenue on glass",
+    title: "Affiliate dashboard",
     body: "Your dashboard is your operational command centre. Every critical metric is visible: referral performance, lead activity, conversion movement, revenue generation, earnings status. No hidden layers. No confusing reports. Everything you need to understand your position is placed directly in front of you.",
   },
   {
@@ -25,7 +25,7 @@ const SHOWCASE = [
     width: 1024,
     height: 512,
     accent: "violet" as const satisfies ShowcaseAccent,
-    title: "Referrals board — every dossier tagged",
+    title: "Referrals board",
     body: "Every referral becomes a tracked record. Review who entered through your network, who completed registration, who converted into a buyer, what revenue was generated, and what commission belongs to you. The referrals board is your evidence layer — a complete record of your influence and execution.",
   },
   {
@@ -34,7 +34,7 @@ const SHOWCASE = [
     height: 388,
     accent: "amber" as const satisfies ShowcaseAccent,
     title: "Paged lead feed — subscription + earning split",
-    body: "Growth creates volume. As your network expands, your lead feed becomes your operational archive. Every entry shows activity status, conversion stage, purchase movement, and commission outcome. Clear visibility. Clean intelligence. The system scales with your ambition.",
+    body: "Growth creates volume. As your network expands, your lead feed becomes your wealth system. Every entry shows activity status, conversion stage, purchase movement, and commission outcome. Clear visibility. Clean intelligence. The system scales with your ambition.",
   },
   {
     src: "/assets/affiliate-page/04-conversion-formula.png",
@@ -43,16 +43,23 @@ const SHOWCASE = [
     accent: "cyan" as const satisfies ShowcaseAccent,
     title: "Conversion formula — numbers on the table",
     body: "Real operators understand numbers. The conversion system reveals the mechanics behind your performance: traffic, engagement, conversion, revenue. No mystery calculations. The formula is visible because control requires understanding.",
+    extraLines: [
+      "Money Mastery Referrals - 30% commission",
+      "All other referrals – 15% commission",
+    ],
   },
   {
     src: "/assets/affiliate-page/05-withdraw-airlock.png",
     width: 894,
     height: 730,
     accent: "violet" as const satisfies ShowcaseAccent,
-    title: "Withdraw rails — bank fields under lock",
-    body: "Your earnings remain protected behind controlled withdrawal access. The system manages available balance, withdrawal limits, payment information, and processing status. Your results are tracked. Your withdrawals are controlled. When the threshold is reached, the value you created becomes accessible.",
+    title: "Withdraw rails",
+    body: "Your earnings remain protected behind controlled withdrawal access. The system manages available balance, withdrawal limits, payment information, and processing status. Your results are tracked. Your withdrawals are controlled. When the threshold is reached, the value you created becomes accessible immediately.",
   },
 ] as const;
+
+const AFFILIATE_PAGE_BODY_CLASS =
+  "w-full text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/92 text-justify hyphens-auto sm:text-lg";
 
 type ShowcaseLayout = "wide" | "standard" | "tall";
 
@@ -122,14 +129,14 @@ export default function AffiliateMarketingPage() {
             className="min-h-[clamp(18rem,52vh,34rem)]"
             innerClassName="cyber-frame-mobile-pad p-[clamp(1.25rem,4vw,3rem)]"
           >
-            <div className="mx-auto max-w-[min(56rem,100%)] text-center">
+            <div className="mx-auto w-full max-w-[min(56rem,100%)] text-left">
               <h1
                 className={`font-heading public-heading-lightning public-heading-lightning--cyan marketing-card-title-oneline text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
               >
                 Turn attention into withdrawals
               </h1>
-              <p className="mx-auto mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">
-                Attention is only valuable when it creates movement. Deploy your Syndicate referral link and transform your audience into a measurable growth engine. Every journey is tracked: clicks, leads, purchases, commissions. You do not guess. You do not hope. You operate through data. The Affiliate Programme gives you visibility into the entire chain, allowing you to refine your strategy, strengthen your influence, and build a revenue stream based on execution.
+              <p className={cx("mx-auto mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl", AFFILIATE_PAGE_BODY_CLASS)}>
+                Attention is only valuable when it creates movement. Deploy your Syndicate referral link and transform your audience into a measurable growth engine. Every journey is tracked: clicks, leads, purchases, commissions. You don&apos;t guess. You don&apos;t hope. You operate through data. The Affiliate Programme gives you visibility into the entire chain, allowing you to refine your strategy, strengthen your influence, and build a revenue stream based on execution.
               </p>
             </div>
           </CyberChamferFrame>
@@ -168,9 +175,16 @@ export default function AffiliateMarketingPage() {
                     {block.title}
                   </h2>
                   <CyberInsetPanel variant={block.accent === "amber" ? "amber" : block.accent === "violet" ? "violet" : "cyan"}>
-                    <p className="text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/92 sm:text-lg">
-                      {block.body}
-                    </p>
+                    <p className={AFFILIATE_PAGE_BODY_CLASS}>{block.body}</p>
+                    {"extraLines" in block && block.extraLines?.length ? (
+                      <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+                        {block.extraLines.map((line) => (
+                          <p key={line} className={cx(AFFILIATE_PAGE_BODY_CLASS, "font-semibold text-cyan-100/95")}>
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
                   </CyberInsetPanel>
                 </div>
 

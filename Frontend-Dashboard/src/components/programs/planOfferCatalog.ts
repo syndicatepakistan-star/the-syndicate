@@ -80,14 +80,59 @@ export function isPlanOfferComingSoon(offer: Pick<PlanOfferDef, "plan" | "isComi
   return KNIGHT_PLAN_COMING_SOON && isKnightPlanSlug(String(offer.plan));
 }
 
+export const MONEY_MASTERY_FOUNDATION_COPY =
+  "Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.";
+
+export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
+  "Access to Syndicate Dashboard",
+  "Access to Syndicate Affiliate Opportunities",
+  "11 Business Model Programs (Learn 11 different business models – choose whichever models suit you best to start your business journey with the best odds of winning)",
+  "11 Business Behavioral Phycology Programs (Master business behavioral phycology and become an elite business operator - with the Syndicate secret behavioral correction techniques and strategies – take the way you think about business to an elite level)",
+  "26 Videos – Agentic Ai Pack",
+  "29 Videos – Ai Content Automation Pack",
+  "56 Lessons – Advanced Candlestick Technical Analysis Pack (4 video packs)",
+  "Total Videos: 133 Individual Video Lessons",
+];
+
+export const KNIGHT_SUBSCRIPTION_COPY =
+  "The Knight Membership Subscription — An elite membership path for business operators who want control over their own destiny. Select your chosen programs, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.";
+
+export const KNIGHT_EXECUTION_COPY: readonly string[] = [
+  "This is not passive education.",
+  "This is a controlled environment built for action, discipline, and execution.",
+  "Every lesson, every strategy, every decision moves you closer to mastering the systems that shape wealth, influence, and power.",
+];
+
+export const KNIGHT_MEMBERSHIP_FEATURES: readonly string[] = [
+  "Hand Pick 4–5 courses yourself from the selection catalog",
+  "Exclusive Weekly content drops",
+  "Full dashboard access",
+  "Exclusive Membership articles and briefings",
+  "Exclusive Membership Section",
+  "Goals & Milestone section",
+  "Syndicate Challenges Mode",
+  "Exclusive access to Q&A business intelligence and advice sessions with the founder",
+  "Exclusive opportunities to receive investment for your business venture",
+];
+
+/** Home page Syndicate Elite Offers intro block (read-more paragraphs). */
+export const HOME_ELITE_OFFERS_PARAGRAPHS: readonly string[] = [
+  MONEY_MASTERY_FOUNDATION_COPY,
+  "You will gain lifetime access to:",
+  ...MONEY_MASTERY_LIFETIME_FEATURES,
+  `Or choose ${KNIGHT_SUBSCRIPTION_COPY}`,
+  ...KNIGHT_EXECUTION_COPY,
+  "You will gain access to:",
+  ...KNIGHT_MEMBERSHIP_FEATURES,
+];
+
 /** Row 1 — Money Mastery + The Knight */
 export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
   {
     plan: "bundle",
     title: "Money Mastery Bundle",
     imageSrc: OFFER_PLAN_THUMB_MONEY_MASTERY,
-    teaser:
-      "The linear economy was designed to keep you purchasing forever — one course, one playlist, one dead end. Money Mastery ends that cycle. One vault. One checkout. Full lifetime command of the complete Syndicate arsenal.",
+    teaser: MONEY_MASTERY_FOUNDATION_COPY,
     displayPrice: "$333",
     comparePrice: "$555",
     billingLabel: "/lifetime",
@@ -96,22 +141,15 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     openLabel: "Unlock",
     accent: "amber",
     detailTitle: "MONEY MASTERY",
-    detailDescription:
-      "This is not à la carte consumption — it is total ecosystem ownership. Money Mastery grants lifetime command across every Syndicate program, every protocol, and every future drop inside the dashboard. No hidden tiers. No monthly rent on your own progress. One checkout records under your identity; your command surface stays unlocked as the vault expands.",
-    detailFeatures: [
-      "You will access everything",
-      "All programs lifetime",
-      "Complete Access of Dashboard",
-      "Quick Access to all social apps",
-    ],
+    detailDescription: MONEY_MASTERY_FOUNDATION_COPY,
+    detailFeatures: MONEY_MASTERY_LIFETIME_FEATURES,
     grantsEntitlement: true,
   },
   {
     plan: "king",
     title: "The Knight",
     imageSrc: OFFER_PLAN_THUMB_THE_KNIGHT,
-    teaser:
-      "The Knight is not a PDF drop — it is your live operating tier inside The Syndicate. Hand-pick your curriculum, enter Syndicate Mode, run the goals deck, and stay inside weekly drops and member intelligence. One subscription. One command surface.",
+    teaser: KNIGHT_SUBSCRIPTION_COPY,
     displayPrice: "$19.99",
     comparePrice: "$99.99",
     billingLabel: "/mo",
@@ -122,17 +160,8 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     isComingSoon: true,
     accent: "cyan",
     detailTitle: "The Knight",
-    detailDescription:
-      "Membership is leverage, not content hoarding. The Knight tier puts you inside the live command surface: select 4–5 courses from the catalog, access weekly member drops, run Syndicate Mode challenges, and operate the full goals and milestone deck. Your dashboard becomes the centre of execution — not a shelf of unfinished playlists.",
-    detailFeatures: [
-      "Select 4–5 courses yourself from the catalog",
-      "Weekly content and member drops",
-      "Full dashboard access",
-      "Membership articles and briefings",
-      "Exclusive Membership Section",
-      "Goals & Milestone section",
-      "Syndicate Challenges Mode",
-    ],
+    detailDescription: `${KNIGHT_SUBSCRIPTION_COPY} ${KNIGHT_EXECUTION_COPY.join(" ")}`,
+    detailFeatures: KNIGHT_MEMBERSHIP_FEATURES,
     grantsEntitlement: true,
   },
 ] as const;

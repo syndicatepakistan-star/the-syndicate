@@ -6,7 +6,7 @@ import type { DashboardCourseLike } from "../useDashboardSnapshots";
 import { DASHBOARD_PANEL_NEON, getInstructorSlideNeonTheme, neonAccentStyleVars } from "@/data/instructorSlideNeonThemes";
 import { type ThemeMode } from "../dashboardPrimitives";
 import type { GoalId } from "./goalPathData";
-import { ROADMAPS } from "./goalPathData";
+import { normalizeGoalId, ROADMAPS } from "./goalPathData";
 import { PathSelector } from "./PathSelector";
 import { CourseFlow, type OpportunityCardFrame, type OpportunityContentMode } from "./CourseFlow";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
@@ -19,16 +19,25 @@ type Persisted = {
 };
 
 function readPersist(): Persisted {
-  if (typeof window === "undefined") return { goal: "web_dev", stepByGoal: {} };
+  if (typeof window === "undefined") return { goal: "elite_trading", stepByGoal: {} };
   try {
     const raw = window.localStorage.getItem(LS_KEY);
-    if (!raw) return { goal: "web_dev", stepByGoal: {} };
-    const j = JSON.parse(raw) as Partial<Persisted>;
-    const goal = (j.goal as GoalId) ?? "web_dev";
-    if (!ROADMAPS[goal]) return { goal: "web_dev", stepByGoal: {} };
-    return { goal, stepByGoal: typeof j.stepByGoal === "object" && j.stepByGoal ? j.stepByGoal : {} };
+    if (!raw) return { goal: "elite_trading", stepByGoal: {} };
+    const j = JSON.parse(raw) as Partial<Persisted> & { goal?: string };
+    const goal = normalizeGoalId(j.goal);
+    if (!ROADMAPS[goal]) return { goal: "elite_trading", stepByGoal: {} };
+    const stepByGoal =
+      typeof j.stepByGoal === "object" && j.stepByGoal
+        ? Object.fromEntries(
+            Object.entries(j.stepByGoal).map(([key, value]) => [
+              normalizeGoalId(key),
+              typeof value === "number" ? value : 0,
+            ]),
+          )
+        : {};
+    return { goal, stepByGoal };
   } catch {
-    return { goal: "web_dev", stepByGoal: {} };
+    return { goal: "elite_trading", stepByGoal: {} };
   }
 }
 

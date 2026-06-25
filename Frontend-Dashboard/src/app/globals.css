@@ -6944,7 +6944,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
 }
 
 /* Lesson view: lock outer shell on all breakpoints; only .programs-lesson-scroll moves. */
-.dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
   display: flex !important;
   flex-direction: column !important;
   flex: 1 1 0% !important;
@@ -6954,6 +6955,18 @@ body.syndicate-mode-active::-webkit-scrollbar {
   overscroll-behavior: none !important;
 }
 
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-chrome {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.45) 72%, rgba(0, 0, 0, 0) 100%);
+}
+
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-chrome {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.45) 72%, rgba(0, 0, 0, 0) 100%);
+}
+
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
   flex: 1 1 auto;
   min-height: 0;
@@ -6961,7 +6974,15 @@ body.syndicate-mode-active::-webkit-scrollbar {
   overflow: hidden;
 }
 
-.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -6969,15 +6990,17 @@ body.syndicate-mode-active::-webkit-scrollbar {
   -webkit-overflow-scrolling: touch;
 }
 
-.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-lesson-shell) {
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-lesson-shell),
+.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-grid-shell) {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Desktop: lock outer main scroll during lesson view (checkout return was scrolling the grid up). */
+/* Desktop: lock outer main scroll during lesson/grid view (checkout return was scrolling the grid up). */
 @media (min-width: 1024px) {
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 0% !important;
@@ -6987,14 +7010,16 @@ body.syndicate-mode-active::-webkit-scrollbar {
     overscroll-behavior: none !important;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell,
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
     flex: 1 1 auto;
     min-height: 0;
     max-height: 100%;
     overflow: hidden;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -11718,8 +11743,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 @media (max-width: 1023px) {
-  .dashboard-hamburger-chrome.syndicate-mood-context [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]),
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]) {
+  .dashboard-hamburger-chrome.syndicate-mood-context [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]):not([data-programs-grid-active]),
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll]:not([data-programs-lesson-active]):not([data-programs-grid-active]) {
     flex: 1 1 0% !important;
     max-height: 100% !important;
     overflow-y: auto !important;
@@ -12159,7 +12184,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     padding-bottom: max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) !important;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active] {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 0% !important;
@@ -12170,14 +12196,16 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     touch-action: pan-x pan-y;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell,
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
     flex: 1 1 auto;
     min-height: 0;
     max-height: 100%;
     overflow: hidden;
   }
 
-  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll {
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;

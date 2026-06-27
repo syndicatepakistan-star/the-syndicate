@@ -1,23 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { LazyVaultModuleCell } from "@/components/programs/LazyVaultModuleCell";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import {
-  ReadMoreText,
   VAULT_MODAL_BODY_CLASS,
   VAULT_MODAL_HEADER_CLASS,
   VAULT_MODAL_OVERLAY_CLASS,
   VAULT_MODAL_PANEL_CLASS,
 } from "@/components/programs/ReadMoreText";
+import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { resolveVaultPackStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
+import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import {
   isVaultPackKey,
   VAULT_PACK_MODAL_COPY,
-  vaultCoursesForPack,
+  vaultDisplayGroupsForPack,
   vaultPackAlaCarteTotal,
+  vaultPackDisplayOfferCount,
+  type VaultPackDisplayGroup,
 } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
@@ -30,6 +35,7 @@ type Props = {
   moneyMasteryActive?: boolean;
   onClose: () => void;
   onDetails: (offer: PlanOfferDef) => void;
+  onModuleDetails?: (offer: PlanOfferDef) => void;
   onUnlock: (offer: PlanOfferDef) => void;
   onOpenUnlocked: (offer: PlanOfferDef) => void;
   onExploreTradingModule?: (offer: PlanOfferDef) => void;
@@ -43,9 +49,9 @@ export function PackVaultOfferModal({
   moneyMasteryActive = false,
   onClose,
   onDetails,
+  onModuleDetails,
   onUnlock,
   onOpenUnlocked,
-  onExploreTradingModule,
 }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -64,33 +70,113 @@ export function PackVaultOfferModal({
     };
   }, [packOffer, onClose]);
 
-  if (!packOffer || !isVaultPackKey(packOffer.plan) || typeof document === "undefined") return null;
+  const packKey = packOffer?.plan;
+  const packStructuredDescription = useMemo(
+    () => (packKey && isVaultPackKey(packKey) ? resolveVaultPackStructuredDescription(packKey) : ""),
+    [packKey],
+  );
+  const displayGroups = useMemo(
+    () => (packKey && isVaultPackKey(packKey) ? vaultDisplayGroupsForPack(packKey) : []),
+    [packKey],
+  );
+  const displayOfferCount = useMemo(
+    () => (packKey && isVaultPackKey(packKey) ? vaultPackDisplayOfferCount(packKey) : 0),
+    [packKey],
+  );
 
-  const packKey = packOffer.plan;
-  const copy = VAULT_PACK_MODAL_COPY[packKey];
-  const courses = vaultCoursesForPack(packKey);
-  const alaCarteTotal = vaultPackAlaCarteTotal(packKey);
-
-  const handlePrimary = (offer: PlanOfferDef) => {
-    if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
-      if (isVaultPackKey(offer.plan)) {
+  const handleModuleOpen = useCallback(
+    (offer: PlanOfferDef) => {
+      if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
+        onOpenUnlocked(offer);
         return;
       }
-      onOpenUnlocked(offer);
-      return;
-    }
-    onUnlock(offer);
+      onUnlock(offer);
+    },
+    [accessTier, moneyMasteryActive, onOpenUnlocked, onUnlock, purchasedSlugs],
+  );
+
+  const handleModuleDetails = useCallback(
+    (offer: PlanOfferDef) => {
+      (onModuleDetails ?? onDetails)(offer);
+    },
+    [onDetails, onModuleDetails],
+  );
+
+  if (!packOffer || !isVaultPackKey(packOffer.plan) || typeof document === "undefined") return null;
+
+  const copy = VAULT_PACK_MODAL_COPY[packOffer.plan];
+  const alaCarteTotal = vaultPackAlaCarteTotal(packOffer.plan);
+  const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier, moneyMasteryActive);
+  const isTradingPack = packOffer.plan === "trading_technical_analysis";
+
+  const renderOfferCard = (offer: PlanOfferDef) => {
+    const isLesson = isTradingSubmoduleSlug(offer.plan);
+    return (
+      <PlanOfferCard
+        offer={offer}
+        size="module"
+        cardKind="module"
+        cardStats={isLesson ? undefined : resolveOfferCardStats(offer, "module")}
+        busy={busyPlan === offer.plan}
+        actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)}
+        onDetails={() => handleModuleDetails(offer)}
+        onOpen={() => handleModuleOpen(offer)}
+      />
+    );
   };
 
-  const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier, moneyMasteryActive);
-  const isTradingPack = packKey === "trading_technical_analysis";
-
-  const handleModuleOpen = (offer: PlanOfferDef) => {
-    if (isTradingPack) {
-      onExploreTradingModule?.(offer);
-      return;
+  const renderGroup = (group: VaultPackDisplayGroup, groupIndex: number) => {
+    if (!group.parent) {
+      const offer = group.offers[0];
+      if (!offer) return null;
+      return (
+        <LazyVaultModuleCell key={offer.plan} minHeight="clamp(13rem,30vw,17rem)">
+          {renderOfferCard(offer)}
+        </LazyVaultModuleCell>
+      );
     }
-    handlePrimary(offer);
+
+    const parent = group.parent;
+    const sectionId = `vault-module-section-${parent.plan}`;
+
+    return (
+      <section key={parent.plan} id={sectionId} className="scroll-mt-6 space-y-4">
+        <LazyVaultModuleCell minHeight="clamp(14rem,32vw,18rem)">
+          <PlanOfferCard
+            offer={parent}
+            size="module"
+            cardKind="module"
+            cardStats={resolveOfferCardStats(parent, "module")}
+            busy={busyPlan === parent.plan}
+            actionLabel={resolveOfferActionLabel(parent, purchasedSlugs, accessTier, moneyMasteryActive)}
+            onDetails={() => handleModuleDetails(parent)}
+            onOpen={() => handleModuleOpen(parent)}
+          />
+        </LazyVaultModuleCell>
+
+        {group.offers.length > 0 ? (
+          <>
+            <div className="flex items-center gap-3 px-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <p className="shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-white/42">
+                {group.offers.length} items
+              </p>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            </div>
+            <div className="vault-modules-grid">
+              {group.offers.map((offer, lessonIndex) => (
+                <LazyVaultModuleCell
+                  key={offer.plan}
+                  minHeight={lessonIndex < 4 ? "clamp(11rem,26vw,14rem)" : "clamp(10rem,24vw,13rem)"}
+                >
+                  {renderOfferCard(offer)}
+                </LazyVaultModuleCell>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </section>
+    );
   };
 
   return createPortal(
@@ -114,7 +200,7 @@ export function PackVaultOfferModal({
                 onClick={onClose}
                 className={cn(
                   "mb-2 inline-flex items-center gap-1.5 rounded-lg border bg-black/60 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.12em] transition",
-                  copy.closeBtnClass
+                  copy.closeBtnClass,
                 )}
               >
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
@@ -132,31 +218,33 @@ export function PackVaultOfferModal({
               onClick={onClose}
               className={cn(
                 "sticky top-0 shrink-0 rounded-lg border bg-black/80 p-2 transition",
-                copy.closeBtnClass
+                copy.closeBtnClass,
               )}
               aria-label="Close vault offers"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <ReadMoreText
-            text={copy.subtitle}
-            maxLines={6}
-            className="mt-2 max-w-3xl"
-            textClassName="font-mono text-[12px] text-white/72 sm:text-[13px]"
-          />
+          <div className="mt-4 max-w-3xl font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody text={packStructuredDescription} compact />
+          </div>
           {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-            <p className="mt-2 max-w-3xl font-mono text-[11px] text-white/50 sm:text-[12px]">
-              Full pack {packOffer.displayPrice} — individual total ${alaCarteTotal} if bought separately.
+            <p className="mt-4 max-w-3xl font-mono text-[11px] text-white/50 sm:text-[12px]">
+              One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
+              separately).
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-4 max-w-3xl font-mono text-[11px] text-white/50 sm:text-[12px]">
+              One-time purchase — lifetime access recorded to your dashboard after checkout.
+            </p>
+          )}
         </div>
 
         <div className={VAULT_MODAL_BODY_CLASS}>
           <section
             className={cn(
               "mx-auto mb-8 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
-              copy.borderClass
+              copy.borderClass,
             )}
           >
             <p className={cn("mb-4 text-center font-mono text-[11px] uppercase tracking-[0.2em]", copy.labelClass)}>
@@ -169,8 +257,10 @@ export function PackVaultOfferModal({
               cardStats={resolveOfferCardStats(packOffer, "pack")}
               busy={busyPlan === packOffer.plan}
               actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => onDetails(packOffer)}
-              onOpen={() => handlePrimary(packOffer)}
+              onDetails={() => overlayRef.current?.scrollTo({ top: 0, behavior: "auto" })}
+              onOpen={() => {
+                if (!packUnlocked) onUnlock(packOffer);
+              }}
             />
             {packUnlocked ? (
               <p className="mt-3 text-center font-mono text-[11px] text-emerald-300/90">
@@ -182,36 +272,17 @@ export function PackVaultOfferModal({
           <div className="mb-5 flex items-center gap-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="shrink-0 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
-              Individual modules ({courses.length})
+              {isTradingPack ? "Modules" : "Individual modules"} ({displayOfferCount})
             </p>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          <div className="vault-modules-grid">
-            {courses.map((offer) => (
-              <div key={offer.plan} className="vault-module-cell">
-                <PlanOfferCard
-                  offer={offer}
-                  size="module"
-                  cardKind="module"
-                  cardStats={resolveOfferCardStats(offer, "module")}
-                  busy={busyPlan === offer.plan}
-                  actionLabel={
-                    isTradingPack
-                      ? isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)
-                        ? "View lessons"
-                        : "Browse lessons"
-                      : resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)
-                  }
-                  onDetails={() => onDetails(offer)}
-                  onOpen={() => handleModuleOpen(offer)}
-                />
-              </div>
-            ))}
+          <div className={isTradingPack ? "space-y-8" : "vault-modules-grid"}>
+            {displayGroups.map((group, index) => renderGroup(group, index))}
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

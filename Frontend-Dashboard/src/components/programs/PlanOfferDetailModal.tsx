@@ -7,6 +7,8 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { isPlanOfferComingSoon } from "@/components/programs/planOfferCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
 
 type Props = {
   offer: PlanOfferDef | null;
@@ -117,6 +119,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
   const isPackDetail = isVaultPackKey(offer.plan);
   const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
   const comingSoon = isPlanOfferComingSoon(offer);
+  const structuredDescription = resolveOfferStructuredDescription(offer);
 
   return createPortal(
     <div
@@ -186,12 +189,15 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             >
               {offer.displayPrice}
             </span>
-            <span className="pb-1 font-mono text-sm text-white/55 sm:text-base">{offer.billingLabel}</span>
+            <span className="pb-1 font-mono text-sm text-white/55 sm:text-base">
+              {offer.billingLabel}
+              {offer.billingLabel.includes("lifetime") ? "" : " · one-time"}
+            </span>
           </div>
 
-          <p className="mt-5 font-mono text-[13px] leading-relaxed text-white/78 sm:text-[15px]">
-            {offer.detailDescription}
-          </p>
+          <div className="mt-6 font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody text={structuredDescription} />
+          </div>
 
           <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
             {isPackDetail ? "Included modules" : "What you get"}

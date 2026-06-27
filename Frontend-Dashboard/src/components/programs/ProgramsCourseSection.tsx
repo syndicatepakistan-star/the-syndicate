@@ -29,9 +29,17 @@ import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylist
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
+  normalizeLevel1ProgramPlaylists,
   resolveProgramPlaylistDescription,
+  resolveProgramPlaylistHighlightId,
+  resolveProgramPlaylistHighlightSlug,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
+import {
+  PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
+  PUBLIC_PSYCHOLOGY_SLUG_ORDER,
+  LEVEL1_CANONICAL_TITLES,
+} from "@/lib/level1ProgramCatalog";
 import { GLOBE_PACK_KEYS, isHiddenProgramPlaylist, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
@@ -321,8 +329,9 @@ export function ProgramsCourseSection({
   useTabResume(refreshAfterTabResume);
 
   const effectiveStreamPlaylists = useMemo(() => {
-    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return streamPlaylists;
-    return streamPlaylists.map((pl) => ({ ...pl, is_unlocked: true }));
+    const normalized = normalizeLevel1ProgramPlaylists(streamPlaylists);
+    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return normalized;
+    return normalized.map((pl) => ({ ...pl, is_unlocked: true }));
   }, [streamPlaylists, accessTier, moneyMasteryActive]);
 
   const effectiveApiCourses = useMemo(() => {
@@ -420,11 +429,20 @@ export function ProgramsCourseSection({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = new URLSearchParams(window.location.search).get("program");
+    const params = new URLSearchParams(window.location.search);
+    const slug = (params.get("slug") || "").trim().toLowerCase();
+    if (slug) {
+      const resolved = resolveProgramPlaylistHighlightSlug(streamPlaylists, slug);
+      if (resolved) {
+        setHighlightProgramId(resolved);
+        return;
+      }
+    }
+    const raw = params.get("program");
     if (!raw || !/^\d+$/.test(raw)) return;
     const id = Number(raw);
     if (Number.isFinite(id) && id > 0) setHighlightProgramId(id);
-  }, []);
+  }, [streamPlaylists]);
 
   useEffect(() => {
     if (!highlightProgramId) return;
@@ -437,7 +455,9 @@ export function ProgramsCourseSection({
 
   useEffect(() => {
     if (!highlightProgramId || streamPlaylists.length === 0) return;
-    const target = streamPlaylists.find((pl) => pl.id === highlightProgramId);
+    const resolvedId = resolveProgramPlaylistHighlightId(streamPlaylists, highlightProgramId);
+    if (!resolvedId) return;
+    const target = effectiveStreamPlaylists.find((pl) => pl.id === resolvedId);
     if (!target) return;
     if (highlightHandledRef.current) return;
     if (skipHighlightScrollRef.current) {
@@ -445,14 +465,14 @@ export function ProgramsCourseSection({
       highlightHandledRef.current = true;
       return;
     }
-    if (secureView === "detail" && detailPlaylistId === highlightProgramId) {
+    if (secureView === "detail" && detailPlaylistId === resolvedId) {
       highlightHandledRef.current = true;
       return;
     }
     highlightHandledRef.current = true;
-    setHighlightedPlaylistId(target.id);
+    setHighlightedPlaylistId(resolvedId);
     scrollToProgramLibrary("dashboard");
-    const cancelScroll = focusProgramCardWithRetries(target.id, undefined, {
+    const cancelScroll = focusProgramCardWithRetries(resolvedId, undefined, {
       delays: [0, 120, 400, 900, 1400, 2200, 3200],
     });
     const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
@@ -460,7 +480,7 @@ export function ProgramsCourseSection({
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
-  }, [highlightProgramId, streamPlaylists, secureView, detailPlaylistId]);
+  }, [highlightProgramId, streamPlaylists, effectiveStreamPlaylists, secureView, detailPlaylistId]);
 
   useEffect(() => {
     if (apiCourses.length === 0) {
@@ -602,13 +622,32 @@ export function ProgramsCourseSection({
     }
   };
 
+  const level1TitleNorms = useMemo(
+    () => new Set(Object.values(LEVEL1_CANONICAL_TITLES).map((t) => t.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim())),
+    [],
+  );
+
+  const isLevel1DuplicateCourse = useCallback(
+    (title: string) => {
+      const norm = title.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+      if (!norm) return false;
+      if (level1TitleNorms.has(norm)) return true;
+      for (const canonical of level1TitleNorms) {
+        if (norm.includes(canonical) || canonical.includes(norm)) return true;
+      }
+      return false;
+    },
+    [level1TitleNorms],
+  );
+
   const visibleApiCourses = useMemo(
     () =>
       effectiveApiCourses.filter(
         (course) =>
-          !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title, vault_plan_slug: null })
+          !isHiddenProgramPlaylist(course.id, { slug: course.slug, title: course.title, vault_plan_slug: null }) &&
+          !isLevel1DuplicateCourse(course.title ?? ""),
       ),
-    [effectiveApiCourses]
+    [effectiveApiCourses, isLevel1DuplicateCourse],
   );
 
   const activeDetailCourse =
@@ -625,38 +664,46 @@ export function ProgramsCourseSection({
   const inCourseDetail = detailCourseId !== null;
 
   const normalizedPlaylistTitleQuery = playlistTitleQuery.trim().toLowerCase();
-  const searchablePlaylists = useMemo(
-    () => {
-      const filtered = effectiveStreamPlaylists.filter((playlist) => {
-        if (
-          isHiddenProgramPlaylist(playlist.id, {
-            slug: playlist.slug,
-            title: playlist.title,
-            vault_plan_slug: playlist.vault_plan_slug,
-          })
-        ) {
-          return false;
-        }
-        return normalizedPlaylistTitleQuery.length === 0
-          ? true
-          : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery);
-      });
-      return [...filtered].sort((a, b) => {
+  const sortPlaylistsBySlugOrder = useCallback(
+    (items: StreamPlaylistListItem[], order: readonly string[]) => {
+      const rank = new Map(order.map((slug, index) => [slug, index]));
+      return [...items].sort((a, b) => {
+        const aRank = rank.get(a.slug?.trim().toLowerCase() ?? "") ?? 999;
+        const bRank = rank.get(b.slug?.trim().toLowerCase() ?? "") ?? 999;
+        if (aRank !== bRank) return aRank - bRank;
         const aUnlocked = !!a.is_unlocked;
         const bUnlocked = !!b.is_unlocked;
         if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
         return a.title.localeCompare(b.title);
       });
     },
-    [effectiveStreamPlaylists, normalizedPlaylistTitleQuery]
+    [],
   );
+
+  const searchablePlaylists = useMemo(() => {
+    const filtered = effectiveStreamPlaylists.filter((playlist) => {
+      return normalizedPlaylistTitleQuery.length === 0
+        ? true
+        : playlist.title.toLowerCase().includes(normalizedPlaylistTitleQuery);
+    });
+    return filtered;
+  }, [effectiveStreamPlaylists, normalizedPlaylistTitleQuery]);
+
   const businessModelPlaylists = useMemo(
-    () => searchablePlaylists.filter((playlist) => playlist.category === "business_model"),
-    [searchablePlaylists]
+    () =>
+      sortPlaylistsBySlugOrder(
+        searchablePlaylists.filter((playlist) => playlist.category === "business_model"),
+        PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
+      ),
+    [searchablePlaylists, sortPlaylistsBySlugOrder],
   );
   const businessPsychologyPlaylists = useMemo(
-    () => searchablePlaylists.filter((playlist) => playlist.category !== "business_model"),
-    [searchablePlaylists]
+    () =>
+      sortPlaylistsBySlugOrder(
+        searchablePlaylists.filter((playlist) => playlist.category !== "business_model"),
+        PUBLIC_PSYCHOLOGY_SLUG_ORDER,
+      ),
+    [searchablePlaylists, sortPlaylistsBySlugOrder],
   );
   const visibleBusinessModelPlaylists = playlistCategoryFilter === "business_psychology" ? [] : businessModelPlaylists;
   const visibleBusinessPsychologyPlaylists = playlistCategoryFilter === "business_model" ? [] : businessPsychologyPlaylists;
@@ -1181,9 +1228,9 @@ export function ProgramsCourseSection({
                     onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                     onCheckoutError={setCheckoutError}
                   />
-                  {streamPlaylists.length > 0 ? (
+                  {effectiveStreamPlaylists.length > 0 ? (
                     <PublicGoalPathSection
-                      playlists={streamPlaylists}
+                      playlists={effectiveStreamPlaylists}
                       libraryTarget="dashboard"
                       className="relative w-full max-w-none px-0 pb-2 pt-2 sm:pb-4 sm:pt-3"
                     />
@@ -1294,9 +1341,9 @@ export function ProgramsCourseSection({
                     onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                     onCheckoutError={setCheckoutError}
                   />
-                  {streamPlaylists.length > 0 ? (
+                  {effectiveStreamPlaylists.length > 0 ? (
                     <PublicGoalPathSection
-                      playlists={streamPlaylists}
+                      playlists={effectiveStreamPlaylists}
                       libraryTarget="dashboard"
                       className="relative w-full max-w-none px-0 pb-2 pt-4 sm:pb-5 sm:pt-5"
                     />

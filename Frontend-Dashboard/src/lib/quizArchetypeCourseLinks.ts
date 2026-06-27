@@ -1,17 +1,27 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
-import { planOfferDeepLink, programPlaylistDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import {
+  LEVEL1_CANONICAL_TITLES,
+  LEVEL1_SLUG_TITLE_OVERRIDES,
+  LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
+} from "@/lib/level1ProgramCatalog";
+import {
+  planOfferDeepLink,
+  programPlaylistDeepLink,
+  programSlugDeepLink,
+  type GlobePackKey,
+} from "@/lib/programPlaylistThumbnails";
 
 type CatalogEntry = { id: number; title: string };
 
 const CATALOG = catalogEntries as CatalogEntry[];
 
-/** Quiz funnel catalog title → published StreamPlaylist title (mirrors logic.py). */
-const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
+/** Quiz funnel catalog title → canonical Level 1 program title. */
+const QUIZ_COURSE_TO_CANONICAL_TITLE: Record<string, string> = {
   // Business models (WEAPON_TO_PLAYLIST)
   "ai automation": "AI Automations",
   "ai content automation": "Faceless YouTube AI Content Creator Course",
-  "n8n ai automation": "AI Automations",
-  "building ai agents with claude and anti gravity": "How To Build A.I Agents",
+  "n8n ai automation": "N8N AI Automation",
+  "building ai agents with claude and anti gravity": "N8N AI Automation",
   "app building using flutter": "App Building (using Flutter)",
   "python full course": "Python Programming",
   "amazon kdp": "Book Publishing On Amazon (KINDLE)",
@@ -24,8 +34,8 @@ const QUIZ_COURSE_TO_PLAYLIST_TITLE: Record<string, string> = {
   "trading advanced technical analysis": "Crypto Trading with Technical Analysis Course",
   // Psychology (PSYCHOLOGY_TO_PLAYLIST)
   "business warfare": "Business Warfare",
-  "the micro business protocol": "Micro Business Protocols",
-  "micro business protocols": "Micro Business Protocols",
+  "the micro business protocol": "The Micro Business Protocol",
+  "micro business protocols": "The Micro Business Protocol",
   "money philosophy": "Syndicate Money Philosophy",
   "13 syndicate business rule": "Syndicate 13 Business Rules",
   "zero to 1 million": "Zero to One Million",
@@ -69,13 +79,46 @@ function normalizeTitle(value: string): string {
     .trim();
 }
 
+const CANONICAL_TITLE_TO_SLUG = new Map<string, string>();
+for (const [slug, title] of Object.entries(LEVEL1_CANONICAL_TITLES)) {
+  CANONICAL_TITLE_TO_SLUG.set(normalizeTitle(title), slug);
+}
+for (const [slug, title] of Object.entries(LEVEL1_SLUG_TITLE_OVERRIDES)) {
+  CANONICAL_TITLE_TO_SLUG.set(normalizeTitle(title), slug);
+}
+
 const PLAYLIST_TITLE_TO_ID = new Map(
-  CATALOG.map((entry) => [normalizeTitle(entry.title), entry.id] as const)
+  CATALOG.map((entry) => [normalizeTitle(entry.title), entry.id] as const),
 );
 
-export function resolveQuizCatalogCourseProgramId(courseName: string): number | undefined {
+export function resolveQuizCatalogCourseSlug(courseName: string): string | undefined {
   const key = courseName.trim().toLowerCase();
-  const mappedTitle = QUIZ_COURSE_TO_PLAYLIST_TITLE[key];
+  const mappedTitle = QUIZ_COURSE_TO_CANONICAL_TITLE[key];
+  if (mappedTitle) {
+    const slug = CANONICAL_TITLE_TO_SLUG.get(normalizeTitle(mappedTitle));
+    if (slug) return slug;
+  }
+  const direct = CANONICAL_TITLE_TO_SLUG.get(normalizeTitle(courseName));
+  if (direct) return direct;
+  for (const [titleNorm, slug] of CANONICAL_TITLE_TO_SLUG.entries()) {
+    const queryNorm = normalizeTitle(courseName);
+    if (titleNorm === queryNorm || titleNorm.includes(queryNorm) || queryNorm.includes(titleNorm)) {
+      return slug;
+    }
+  }
+  return undefined;
+}
+
+export function resolveQuizCatalogCourseProgramId(courseName: string): number | undefined {
+  const slug = resolveQuizCatalogCourseSlug(courseName);
+  if (slug) {
+    const legacyId = Number(
+      Object.entries(LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG).find(([, value]) => value === slug)?.[0],
+    );
+    if (Number.isFinite(legacyId)) return legacyId;
+  }
+  const key = courseName.trim().toLowerCase();
+  const mappedTitle = QUIZ_COURSE_TO_CANONICAL_TITLE[key];
   if (mappedTitle) {
     const id = PLAYLIST_TITLE_TO_ID.get(normalizeTitle(mappedTitle));
     if (id) return id;
@@ -96,6 +139,8 @@ export function buildUnlockNowProgramsHref(courseName: string): string | undefin
   const titleKey = normalizeTitle(parseStackCourseTitle(courseName));
   const pack = MID_TICKET_PACK_BY_COURSE[titleKey];
   if (pack) return planOfferDeepLink(pack);
+  const slug = resolveQuizCatalogCourseSlug(courseName);
+  if (slug) return programSlugDeepLink(slug);
   const programId = resolveQuizCatalogCourseProgramId(courseName);
   if (!programId) return undefined;
   return programPlaylistDeepLink(programId);

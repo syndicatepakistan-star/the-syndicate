@@ -269,8 +269,8 @@ export function PlanOfferCard({
               <img
                 src={offer.imageSrc}
                 alt={offer.title}
-                loading={offer.plan === "bundle" ? "eager" : "lazy"}
-                fetchPriority={offer.plan === "bundle" ? "high" : undefined}
+                loading={isModule || offer.plan !== "bundle" ? "lazy" : "eager"}
+                fetchPriority={offer.plan === "bundle" ? "high" : "low"}
                 decoding="async"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
@@ -298,10 +298,7 @@ export function PlanOfferCard({
                   theme.priceBadge,
                   isLarge ? "text-[13px] sm:text-[16px]" : isModule ? "text-[10px] sm:text-[11px]" : "text-[10px] sm:text-[12px]"
                 )}
-                style={{
-                  fontFamily: "Inter, Arial, Helvetica, sans-serif",
-                  fontFeatureSettings: '"tnum" 1, "lnum" 1',
-                }}
+                style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
                 {offer.displayPrice}
               </span>

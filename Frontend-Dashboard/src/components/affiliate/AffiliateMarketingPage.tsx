@@ -1,13 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { NavApp } from "@/components/NavApp";
-import SiteFooter from "@/components/SiteFooter";
+import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import { CyberChamferFrame, CyberInsetPanel, cx } from "@/components/cyber/CyberChamferFrames";
 import type { CyberFrameAccent } from "@/components/cyber/CyberChamferFrames";
 import { AFFILIATE_LOGIN_HREF } from "@/lib/affiliateSession";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
+
+const SiteFooter = dynamic(() => import("@/components/SiteFooter"), {
+  loading: () => <footer className="min-h-[clamp(200px,28vh,260px)] bg-[#02050b]" aria-hidden />,
+});
 
 type ShowcaseAccent = Extract<CyberFrameAccent, "cyan" | "violet" | "amber">;
 
@@ -59,7 +65,7 @@ const SHOWCASE = [
 ] as const;
 
 const AFFILIATE_PAGE_BODY_CLASS =
-  "w-full text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/92 text-justify hyphens-auto sm:text-lg";
+  "w-full font-[family-name:var(--font-body)] text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed tracking-normal text-zinc-100/92 text-left hyphens-auto sm:text-lg md:text-justify";
 
 type ShowcaseLayout = "wide" | "standard" | "tall";
 
@@ -70,51 +76,188 @@ function showcaseLayout(width: number, height: number): ShowcaseLayout {
   return "standard";
 }
 
-/** Min height for the image frame — taller on laptop+ so UI screenshots stay readable. */
 function showcaseFrameMinHeight(layout: ShowcaseLayout): string {
   switch (layout) {
     case "wide":
-      return "min-h-[clamp(11rem,34vh,16rem)] md:min-h-[clamp(13rem,38vh,20rem)] lg:min-h-[clamp(15rem,40vh,22rem)] xl:min-h-[clamp(16rem,42vh,24rem)]";
+      return "min-h-[clamp(9rem,28vh,12rem)] md:min-h-[clamp(13rem,38vh,20rem)] lg:min-h-[clamp(15rem,40vh,22rem)] xl:min-h-[clamp(16rem,42vh,24rem)]";
     case "tall":
-      return "min-h-[clamp(16rem,52vh,28rem)] md:min-h-[clamp(22rem,58vh,38rem)] lg:min-h-[clamp(28rem,68vh,46rem)] xl:min-h-[clamp(32rem,72vh,52rem)]";
+      return "min-h-[clamp(12rem,40vh,20rem)] md:min-h-[clamp(22rem,58vh,38rem)] lg:min-h-[clamp(28rem,68vh,46rem)] xl:min-h-[clamp(32rem,72vh,52rem)]";
     default:
-      return "min-h-[clamp(13rem,42vh,22rem)] md:min-h-[clamp(18rem,50vh,30rem)] lg:min-h-[clamp(22rem,58vh,38rem)] xl:min-h-[clamp(24rem,62vh,42rem)]";
+      return "min-h-[clamp(10rem,34vh,16rem)] md:min-h-[clamp(18rem,50vh,30rem)] lg:min-h-[clamp(22rem,58vh,38rem)] xl:min-h-[clamp(24rem,62vh,42rem)]";
   }
 }
 
 function showcaseImageMaxHeight(layout: ShowcaseLayout): string {
   switch (layout) {
     case "wide":
-      return "max-h-[clamp(11rem,40vw,22rem)] md:max-h-[clamp(13rem,44vh,28rem)] lg:max-h-[clamp(15rem,46vh,30rem)] xl:max-h-[clamp(16rem,48vh,32rem)]";
+      return "max-h-[clamp(9rem,34vw,16rem)] md:max-h-[clamp(13rem,44vh,28rem)] lg:max-h-[clamp(15rem,46vh,30rem)] xl:max-h-[clamp(16rem,48vh,32rem)]";
     case "tall":
-      return "max-h-[clamp(16rem,54vw,30rem)] md:max-h-[clamp(22rem,62vh,42rem)] lg:max-h-[clamp(30rem,72vh,50rem)] xl:max-h-[clamp(34rem,76vh,56rem)]";
+      return "max-h-[clamp(12rem,44vw,22rem)] md:max-h-[clamp(22rem,62vh,42rem)] lg:max-h-[clamp(30rem,72vh,50rem)] xl:max-h-[clamp(34rem,76vh,56rem)]";
     default:
-      return "max-h-[clamp(13rem,46vw,26rem)] md:max-h-[clamp(18rem,54vh,36rem)] lg:max-h-[clamp(24rem,64vh,44rem)] xl:max-h-[clamp(26rem,68vh,48rem)]";
+      return "max-h-[clamp(10rem,40vw,20rem)] md:max-h-[clamp(18rem,54vh,36rem)] lg:max-h-[clamp(24rem,64vh,44rem)] xl:max-h-[clamp(26rem,68vh,48rem)]";
   }
+}
+
+function showcaseLazyMinHeight(layout: ShowcaseLayout): string {
+  switch (layout) {
+    case "wide":
+      return "clamp(14rem,34vh,18rem)";
+    case "tall":
+      return "clamp(20rem,48vh,32rem)";
+    default:
+      return "clamp(16rem,40vh,26rem)";
+  }
+}
+
+/** Defers heavy background MP4 until the browser is idle — hero paints with CSS only first. */
+function AffiliateDeferredBackdrop() {
+  const [videoReady, setVideoReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setVideoReady(true);
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(enable, { timeout: 2200 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+    const timer = window.setTimeout(enable, 900);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {videoReady ? (
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+        >
+          <source src="/assets/video.mp4" type="video/mp4" />
+        </video>
+      ) : null}
+      <div className="absolute left-[-10%] top-[8%] h-[min(400px,70vw)] w-[min(400px,70vw)] rounded-full bg-cyan-400/18 blur-[clamp(80px,18vw,140px)]" />
+      <div className="absolute right-[-12%] top-[14%] h-[min(440px,72vw)] w-[min(440px,72vw)] rounded-full bg-violet-500/20 blur-[clamp(90px,20vw,150px)]" />
+      <div className="absolute left-[36%] top-[54%] h-[min(500px,80vw)] w-[min(500px,80vw)] rounded-full bg-rose-500/10 blur-[clamp(100px,22vw,160px)]" />
+      <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(34,211,238,0.24)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.2)_1px,transparent_1px),linear-gradient(rgba(167,139,250,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(167,139,250,0.14)_1px,transparent_1px)] [background-size:74px_74px,74px_74px,18px_18px,18px_18px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_0%,rgba(56,189,248,0.1),transparent_58%),radial-gradient(ellipse_90%_80%_at_50%_100%,rgba(244,63,94,0.11),transparent_60%)]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/74 via-[#05040c]/88 to-[#020208]/96" />
+    </div>
+  );
+}
+
+type ShowcaseBlockProps = (typeof SHOWCASE)[number] & { index: number };
+
+function AffiliateShowcaseBlock({ index, width, height, accent, title, body, src, ...rest }: ShowcaseBlockProps) {
+  const layout = showcaseLayout(width, height);
+  const extraLines = "extraLines" in rest ? rest.extraLines : undefined;
+
+  const inner = (
+    <CyberChamferFrame
+      accent={accent}
+      chamfer={22}
+      className="mx-auto w-full min-w-0"
+      innerClassName="cyber-frame-mobile-pad p-[clamp(1rem,3.5vw,2.5rem)]"
+    >
+      <div
+        className={cx(
+          "grid min-w-0 items-center gap-[clamp(1.25rem,4vw,3rem)]",
+          "grid-cols-1",
+          "lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.28fr)] xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.38fr)] lg:gap-[clamp(1.5rem,3vw,3rem)]",
+          index % 2 === 1 && "lg:[direction:rtl]",
+        )}
+      >
+        <div
+          className={cx(
+            "order-2 min-w-0 space-y-[clamp(0.65rem,2vw,1rem)] text-left lg:order-none",
+            index % 2 === 1 && "lg:[direction:ltr]",
+          )}
+        >
+          <h2
+            className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]`}
+          >
+            {title}
+          </h2>
+          <CyberInsetPanel variant={accent === "amber" ? "amber" : accent === "violet" ? "violet" : "cyan"}>
+            <p className={AFFILIATE_PAGE_BODY_CLASS}>{body}</p>
+            {extraLines?.length ? (
+              <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+                {extraLines.map((line) => (
+                  <p key={line} className={cx(AFFILIATE_PAGE_BODY_CLASS, "font-semibold text-cyan-100/95")}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ) : null}
+          </CyberInsetPanel>
+        </div>
+
+        <div className={cx("order-1 min-w-0 w-full lg:order-none", index % 2 === 1 && "lg:[direction:ltr]")}>
+          <CyberChamferFrame
+            accent="video"
+            chamfer={16}
+            decorSize="compact"
+            className="w-full min-w-0"
+            innerClassName="p-[clamp(0.35rem,1.2vw,0.65rem)]"
+          >
+            <div
+              className={cx(
+                "relative flex w-full min-w-0 items-center justify-center overflow-hidden bg-[#050510] p-[clamp(0.25rem,1vw,0.5rem)]",
+                showcaseFrameMinHeight(layout),
+              )}
+              style={{ aspectRatio: `${width} / ${height}` }}
+            >
+              <Image
+                src={src}
+                alt={title}
+                width={width}
+                height={height}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, (max-width: 1536px) 56vw, 52rem"
+                className={cx(
+                  "h-auto w-full max-w-full object-contain object-center",
+                  showcaseImageMaxHeight(layout),
+                )}
+                priority={index === 0}
+                loading={index === 0 ? undefined : "lazy"}
+              />
+            </div>
+          </CyberChamferFrame>
+        </div>
+      </div>
+    </CyberChamferFrame>
+  );
+
+  if (index === 0) return inner;
+
+  return (
+    <LazyWhenVisible minHeight={showcaseLazyMinHeight(layout)} rootMargin="280px 0px">
+      {inner}
+    </LazyWhenVisible>
+  );
 }
 
 export default function AffiliateMarketingPage() {
   return (
-    <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c]">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <video className="absolute inset-0 h-full w-full object-cover opacity-25" autoPlay muted loop playsInline>
-          <source src="/assets/video.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute left-[-10%] top-[8%] h-[min(400px,70vw)] w-[min(400px,70vw)] rounded-full bg-cyan-400/18 blur-[clamp(80px,18vw,140px)]" />
-        <div className="absolute right-[-12%] top-[14%] h-[min(440px,72vw)] w-[min(440px,72vw)] rounded-full bg-violet-500/20 blur-[clamp(90px,20vw,150px)]" />
-        <div className="absolute left-[36%] top-[54%] h-[min(500px,80vw)] w-[min(500px,80vw)] rounded-full bg-rose-500/10 blur-[clamp(100px,22vw,160px)]" />
-        <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(34,211,238,0.24)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.2)_1px,transparent_1px),linear-gradient(rgba(167,139,250,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(167,139,250,0.14)_1px,transparent_1px)] [background-size:74px_74px,74px_74px,18px_18px,18px_18px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_0%,rgba(56,189,248,0.1),transparent_58%),radial-gradient(ellipse_90%_80%_at_50%_100%,rgba(244,63,94,0.11),transparent_60%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/74 via-[#05040c]/88 to-[#020208]/96" />
-      </div>
+    <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] font-[family-name:var(--font-body)]">
+      <AffiliateDeferredBackdrop />
 
       <NavApp />
 
-      <div className="affiliate-page-login-fab pointer-events-none fixed left-[max(0.75rem,env(safe-area-inset-left))] top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem))] z-[55] sm:left-5">
+      <div className="affiliate-page-login-fab pointer-events-none fixed left-[max(0.75rem,env(safe-area-inset-left))] top-[max(4.25rem,calc(env(safe-area-inset-top)+3.5rem))] z-[55] max-sm:top-[max(3.75rem,calc(env(safe-area-inset-top)+3rem))] sm:left-5">
         <Link
           href={AFFILIATE_LOGIN_HREF}
           prefetch
-          className="affiliate-page-login-fab__btn cta-nav-button pointer-events-auto whitespace-nowrap text-xs font-semibold sm:text-sm"
+          className="affiliate-page-login-fab__btn cta-nav-button pointer-events-auto whitespace-nowrap px-3 py-2 text-[11px] font-semibold sm:px-4 sm:text-sm"
         >
           Affiliate login
         </Link>
@@ -126,7 +269,7 @@ export default function AffiliateMarketingPage() {
             accent="hero"
             chamfer={24}
             hideOuterRing
-            className="min-h-[clamp(18rem,52vh,34rem)]"
+            className="min-h-[clamp(14rem,42vh,28rem)] sm:min-h-[clamp(18rem,52vh,34rem)]"
             innerClassName="cyber-frame-mobile-pad p-[clamp(1.25rem,4vw,3rem)]"
           >
             <div className="mx-auto w-full max-w-[min(56rem,100%)] text-left">
@@ -145,114 +288,39 @@ export default function AffiliateMarketingPage() {
 
       <div className="relative z-10 space-y-[clamp(1.75rem,5vw,3rem)] px-[clamp(0.75rem,3vw,2.2rem)] pb-[clamp(2.5rem,8vw,5rem)]">
         <div className="mx-auto w-full max-w-[min(96rem,100%)] space-y-[clamp(1.75rem,5vw,3rem)]">
-          {SHOWCASE.map((block, i) => {
-            const layout = showcaseLayout(block.width, block.height);
-            return (
-            <CyberChamferFrame
-              key={block.src}
-              accent={block.accent}
-              chamfer={22}
-              className="mx-auto w-full min-w-0"
-              innerClassName="cyber-frame-mobile-pad p-[clamp(1rem,3.5vw,2.5rem)]"
-            >
-              <div
-                className={cx(
-                  "grid min-w-0 items-center gap-[clamp(1.25rem,4vw,3rem)]",
-                  "grid-cols-1",
-                  "lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.28fr)] xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.38fr)] lg:gap-[clamp(1.5rem,3vw,3rem)]",
-                  i % 2 === 1 && "lg:[direction:rtl]",
-                )}
-              >
-                <div
-                  className={cx(
-                    "order-2 min-w-0 space-y-[clamp(0.65rem,2vw,1rem)] text-left lg:order-none",
-                    i % 2 === 1 && "lg:[direction:ltr]",
-                  )}
-                >
-                  <h2
-                    className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4.2vw,2.35rem)] font-black uppercase leading-tight tracking-[0.06em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:tracking-[0.08em]`}
-                  >
-                    {block.title}
-                  </h2>
-                  <CyberInsetPanel variant={block.accent === "amber" ? "amber" : block.accent === "violet" ? "violet" : "cyan"}>
-                    <p className={AFFILIATE_PAGE_BODY_CLASS}>{block.body}</p>
-                    {"extraLines" in block && block.extraLines?.length ? (
-                      <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-                        {block.extraLines.map((line) => (
-                          <p key={line} className={cx(AFFILIATE_PAGE_BODY_CLASS, "font-semibold text-cyan-100/95")}>
-                            {line}
-                          </p>
-                        ))}
-                      </div>
-                    ) : null}
-                  </CyberInsetPanel>
-                </div>
+          {SHOWCASE.map((block, i) => (
+            <AffiliateShowcaseBlock key={block.src} {...block} index={i} />
+          ))}
+        </div>
 
-                <div
-                  className={cx(
-                    "order-1 min-w-0 w-full lg:order-none",
-                    i % 2 === 1 && "lg:[direction:ltr]",
-                  )}
-                >
-                  <CyberChamferFrame
-                    accent="video"
-                    chamfer={16}
-                    decorSize="compact"
-                    className="w-full min-w-0"
-                    innerClassName="p-[clamp(0.35rem,1.2vw,0.65rem)]"
-                  >
-                    <div
-                      className={cx(
-                        "relative flex w-full min-w-0 items-center justify-center overflow-hidden bg-[#050510] p-[clamp(0.25rem,1vw,0.5rem)]",
-                        showcaseFrameMinHeight(layout),
-                      )}
-                      style={{ aspectRatio: `${block.width} / ${block.height}` }}
-                    >
-                      <Image
-                        src={block.src}
-                        alt={block.title}
-                        width={block.width}
-                        height={block.height}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, (max-width: 1536px) 56vw, 52rem"
-                        className={cx(
-                          "h-auto w-full max-w-full object-contain object-center",
-                          showcaseImageMaxHeight(layout),
-                        )}
-                        priority={i === 0}
-                      />
-                    </div>
-                  </CyberChamferFrame>
-                </div>
+        <LazyWhenVisible minHeight="clamp(14rem,36vh,20rem)" rootMargin="200px 0px">
+          <div className="mx-auto w-full max-w-[min(96rem,100%)]">
+            <CyberChamferFrame
+              accent="amber"
+              chamfer={20}
+              innerClassName="cyber-frame-mobile-pad px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.75rem,5vw,3rem)] text-center"
+            >
+              <h2
+                className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]`}
+              >
+                Already cleared as a partner?
+              </h2>
+              <p className="mx-auto mt-[clamp(0.75rem,2.5vw,1rem)] max-w-2xl text-left text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed tracking-normal text-zinc-100/88 sm:text-lg md:text-center">
+                Your access is already prepared. Verify your identity. Enter your secure code. Enter your affiliate command centre. Your network is waiting. Your commissions are waiting. The next move is yours.
+              </p>
+              <div className="mt-[clamp(1.25rem,4vw,2rem)] flex flex-wrap justify-center gap-3">
+                <Link href={AFFILIATE_LOGIN_HREF} prefetch className="cta-nav-button text-sm font-semibold">
+                  Affiliate login
+                </Link>
               </div>
             </CyberChamferFrame>
-            );
-          })}
-        </div>
-
-        <div className="mx-auto w-full max-w-[min(96rem,100%)]">
-          <CyberChamferFrame
-            accent="amber"
-            chamfer={20}
-            innerClassName="cyber-frame-mobile-pad px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.75rem,5vw,3rem)] text-center"
-          >
-            <h2
-              className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(1.35rem,4vw,2rem)] font-black uppercase tracking-[0.1em] text-amber-100 sm:tracking-[0.12em]`}
-            >
-              Already cleared as a partner?
-            </h2>
-            <p className="mx-auto mt-[clamp(0.75rem,2.5vw,1rem)] max-w-2xl text-[clamp(0.9rem,2.2vw,1.05rem)] leading-relaxed text-zinc-100/88 sm:text-lg">
-              Your access is already prepared. Verify your identity. Enter your secure code. Enter your affiliate command centre. Your network is waiting. Your commissions are waiting. The next move is yours.
-            </p>
-            <div className="mt-[clamp(1.25rem,4vw,2rem)] flex flex-wrap justify-center gap-3">
-              <Link href={AFFILIATE_LOGIN_HREF} prefetch className="cta-nav-button text-sm font-semibold">
-                Affiliate login
-              </Link>
-            </div>
-          </CyberChamferFrame>
-        </div>
+          </div>
+        </LazyWhenVisible>
       </div>
 
-      <SiteFooter />
+      <LazyWhenVisible minHeight="clamp(200px,28vh,260px)" rootMargin="120px 0px">
+        <SiteFooter />
+      </LazyWhenVisible>
     </div>
   );
 }

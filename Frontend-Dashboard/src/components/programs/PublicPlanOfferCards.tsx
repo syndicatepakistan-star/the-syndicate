@@ -230,11 +230,21 @@ export function PublicPlanOfferCards({
         actionLabel={
           showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
         }
-        onDetails={() => setDetailOffer(offer)}
+        onDetails={() => {
+          if (offer.openAction === "vault_picker") {
+            setVaultPackOffer(offer);
+            return;
+          }
+          setDetailOffer(offer);
+        }}
         onOpen={() => {
           if (comingSoon) return;
           if (offer.openAction === "vault_picker") {
-            setVaultPackOffer(offer);
+            if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+              setVaultPackOffer(offer);
+              return;
+            }
+            void joinOffer(offer);
             return;
           }
           if (offer.openHref) {
@@ -292,6 +302,7 @@ export function PublicPlanOfferCards({
         moneyMasteryActive={moneyMasteryActive}
         onClose={() => setVaultPackOffer(null)}
         onDetails={setDetailOffer}
+        onModuleDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}
         onOpenUnlocked={openUnlocked}
         onExploreTradingModule={(offer) => setTradingModuleOffer(offer)}

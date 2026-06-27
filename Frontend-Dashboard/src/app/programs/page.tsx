@@ -5,10 +5,11 @@ import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySec
 import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
 import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
+import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 
 export default async function ProgramsPage() {
-  const playlists = await fetchPublicPlaylistsServer()
+  const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
     <div className="mobile-viewport-contain relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

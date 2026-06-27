@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type CSSProperties } from 'react'
 import { HelpCircle } from 'lucide-react'
-import { motion } from 'framer-motion'
 
 const VIMEO_EMBED =
   'https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1'
@@ -14,7 +13,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 const AFFILIATE_INTRO_PARAGRAPHS = [
-  'The Affiliate Programme is not a simple referral system. It is your entry point into the Syndicate Money and Power Strcuture - where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command Centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.',
+  'The Affiliate Programme is not a simple referral system. It is your entry point into the Syndicate Money and Power Structure — where attention becomes leverage and influence becomes measurable results. Every click, every lead, every purchase connected through your network is tracked through your unique referral identity. Your dashboard becomes your command centre — a live intelligence system showing exactly what moves, what converts, and what produces. No empty promises. No vanity numbers. Only real performance data, clear commission tracking, and the tools required to expand your reach.',
   'Access is secured through the same elite verification system used across The Syndicate Platform. Once approved: enter the email connected to your affiliate profile, receive your one-time access code, and unlock your private affiliate command dashboard. Inside, you gain access to your referral assets, performance intelligence, commission records, and withdrawal controls — all built for operators who understand that business mastery begins with control.',
 ] as const
 
@@ -26,13 +25,13 @@ const AFFILIATE_HOW_TO_STEPS = [
 ] as const
 
 const AFFILIATE_BODY_CLASS =
-  'w-full font-mono text-[clamp(0.92rem,1.1vw,1.05rem)] font-semibold uppercase leading-relaxed tracking-[0.1em] text-cyan-100/92 text-justify hyphens-auto sm:text-base md:text-lg'
+  'w-full font-[family-name:var(--font-body)] text-[clamp(0.9rem,2.2vw,1.05rem)] font-medium leading-relaxed tracking-normal text-cyan-100/92 text-left hyphens-auto sm:text-base md:text-lg md:text-justify'
 
 const AFFILIATE_HOW_TO_HEADING_CLASS =
-  'w-full font-mono text-[clamp(0.88rem,1vw,1rem)] font-black uppercase tracking-[0.14em] text-fuchsia-200/95 text-justify sm:text-[0.95rem] md:text-base'
+  'w-full font-[family-name:var(--font-heading)] text-[clamp(0.95rem,2.4vw,1.1rem)] font-bold uppercase tracking-[0.08em] text-fuchsia-200/95 text-left sm:tracking-[0.1em]'
 
 const AFFILIATE_HOW_TO_LIST_CLASS =
-  'mt-3 w-full list-decimal space-y-2.5 pl-5 font-mono text-[clamp(0.86rem,1vw,0.98rem)] font-medium uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 text-justify hyphens-auto marker:text-fuchsia-300/90 sm:text-[0.95rem] md:text-base'
+  'mt-3 w-full list-decimal space-y-2.5 pl-5 font-[family-name:var(--font-body)] text-[clamp(0.88rem,2.1vw,1rem)] font-medium leading-relaxed tracking-normal text-slate-300/95 text-left hyphens-auto marker:text-fuchsia-300/90 sm:text-[0.95rem] md:text-base'
 
 const AFFILIATE_NOTCH_CLIP =
   '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
@@ -46,7 +45,7 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
       className={cn(
         'relative left-1/2 z-[2] flex w-[100vw] min-w-[100vw] max-w-none -translate-x-1/2 flex-col overflow-hidden bg-black',
         'shadow-[0_0_48px_rgba(251,191,36,0.08)]',
-        'px-[clamp(1.25rem,5vw,3.75rem)] pt-4 pb-3 sm:pt-5 sm:pb-4 md:pt-6 md:pb-5',
+        'px-[clamp(1rem,4vw,3.75rem)] pt-4 pb-3 sm:pt-5 sm:pb-4 md:pt-6 md:pb-5',
         className,
       )}
       aria-labelledby="affiliate-program-heading"
@@ -162,51 +161,45 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
 
         {/* Coin — wheel spin on Y axis + neon rim glow */}
         <div
-          className="hamburger-attract relative flex min-h-[clamp(14rem,34vh,22rem)] w-full min-w-0 flex-1 items-center justify-center self-center md:min-h-[min(420px,52vh)] md:max-w-[44vw] md:flex-[1] lg:max-w-[42vw] [perspective:1100px]"
+          className="relative flex min-h-[clamp(12rem,30vh,18rem)] w-full min-w-0 flex-1 items-center justify-center self-center md:min-h-[min(420px,52vh)] md:max-w-[44vw] md:flex-[1] lg:max-w-[42vw] max-md:mt-2"
           aria-hidden
         >
           <div className="absolute inset-0 blur-3xl md:scale-125">
             <div className="mx-auto h-[clamp(16rem,38vw,22rem)] w-[clamp(16rem,38vw,22rem)] rounded-full bg-gradient-to-br from-amber-400/35 via-amber-500/20 to-amber-600/10 sm:h-[clamp(18rem,42vw,24rem)] sm:w-[clamp(18rem,42vw,24rem)] md:h-[clamp(20rem,36vw,26rem)] md:w-[clamp(20rem,36vw,26rem)] lg:h-[clamp(22rem,34vw,28rem)] lg:w-[clamp(22rem,34vw,28rem)]" />
           </div>
-          <motion.div
-            className="relative rounded-full border border-amber-300/70 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_20px_rgba(251,191,36,0.32),0_0_48px_rgba(251,191,36,0.4),0_24px_56px_rgba(0,0,0,0.88)] ring-2 ring-amber-300/70 ring-offset-[6px] ring-offset-[#070510]/90 md:ring-offset-8"
-            style={{ transformStyle: 'preserve-3d' }}
-            animate={{ rotateY: [0, 360] }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
-          >
+          <div className="relative rounded-full border border-amber-300/70 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_20px_rgba(251,191,36,0.32),0_0_48px_rgba(251,191,36,0.4),0_24px_56px_rgba(0,0,0,0.88)] ring-2 ring-amber-300/70 ring-offset-[4px] ring-offset-[#070510]/90 md:ring-offset-8">
             <Image
               src="/assets/coin-gold.png"
               alt=""
               width={640}
               height={640}
-              className="relative h-[clamp(15rem,36vw,20rem)] w-[clamp(15rem,36vw,20rem)] object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.92)] sm:h-[clamp(17rem,40vw,22rem)] sm:w-[clamp(17rem,40vw,22rem)] md:h-[clamp(19rem,34vw,24rem)] md:w-[clamp(19rem,34vw,24rem)] lg:h-[clamp(21rem,32vw,26rem)] lg:w-[clamp(21rem,32vw,26rem)] xl:h-[28rem] xl:w-[28rem]"
-              sizes="(max-width: 640px) 320px, (max-width: 1024px) 420px, (max-width: 1280px) 480px, 560px"
+              loading="lazy"
+              className="relative h-[clamp(12rem,32vw,17rem)] w-[clamp(12rem,32vw,17rem)] object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.92)] sm:h-[clamp(15rem,36vw,20rem)] sm:w-[clamp(15rem,36vw,20rem)] md:h-[clamp(19rem,34vw,24rem)] md:w-[clamp(19rem,34vw,24rem)] lg:h-[clamp(21rem,32vw,26rem)] lg:w-[clamp(21rem,32vw,26rem)] xl:h-[28rem] xl:w-[28rem]"
+              sizes="(max-width: 640px) 260px, (max-width: 1024px) 360px, 480px"
             />
-          </motion.div>
+          </div>
         </div>
       </div>
 
       <div className="relative z-10 mx-auto mt-4 w-full max-w-[min(1720px,calc(100vw-2.5rem))] md:mt-0">
         {helpOpen ? (
-          <motion.div
+          <div
             id="affiliate-how-panel"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
             className="mx-1 rounded-xl border border-cyan-400/35 bg-[#060912]/95 p-5 text-[16px] leading-relaxed text-slate-200 shadow-[0_0_32px_rgba(34,211,238,0.18),0_0_48px_rgba(217,70,239,0.08)] backdrop-blur-sm sm:mx-2 sm:text-[17px] md:mx-0 md:p-6 md:text-lg"
           >
             <p className="font-semibold uppercase tracking-[0.14em] text-cyan-200/95">How affiliate login works</p>
-            <div className="mt-3 space-y-3 text-justify font-mono text-sm uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 sm:text-base">
+            <div className="mt-3 space-y-3 text-left font-[family-name:var(--font-body)] text-sm leading-relaxed tracking-normal text-slate-300/95 sm:text-base">
               {AFFILIATE_INTRO_PARAGRAPHS.map((paragraph) => (
                 <p key={`help-${paragraph.slice(0, 24)}`}>{paragraph}</p>
               ))}
             </div>
             <p className="mt-5 font-semibold uppercase tracking-[0.14em] text-fuchsia-200/95">How to use it</p>
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-justify font-mono text-sm uppercase leading-relaxed tracking-[0.1em] text-slate-300/95 marker:text-fuchsia-300/90 sm:text-base">
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-left font-[family-name:var(--font-body)] text-sm leading-relaxed tracking-normal text-slate-300/95 marker:text-fuchsia-300/90 sm:text-base">
               {AFFILIATE_HOW_TO_STEPS.map((step) => (
                 <li key={`help-step-${step.slice(0, 28)}`}>{step}</li>
               ))}
             </ol>
-          </motion.div>
+          </div>
         ) : null}
       </div>
     </section>

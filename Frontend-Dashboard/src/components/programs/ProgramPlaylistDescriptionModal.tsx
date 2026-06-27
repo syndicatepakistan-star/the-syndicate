@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
+import { stripLessonPrefix } from "@/lib/descriptionText";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
@@ -13,13 +14,6 @@ type Props = {
   playlist: StreamPlaylistListItem | null;
   onClose: () => void;
 };
-
-function stripLessonPrefix(line: string): string {
-  return line
-    .replace(/^\s*(?:Lesson|Module|Chapter)\s+\d+(?:\.\d+)?\s*:\s*/i, "")
-    .replace(/^\s*Final\s+Lecture\s*:\s*/i, "")
-    .trim();
-}
 
 function isTopLevelSectionHeading(line: string): boolean {
   const t = line.trim().toLowerCase();
@@ -385,7 +379,7 @@ function pickStructuredSections(playlist: StreamPlaylistListItem): StreamPlaylis
 
 /** "Module 12" / "chapter 3: Title" on their own line → subheading; other lines → bullets under current block. */
 const MODULE_OR_CHAPTER_LINE =
-  /^\s*(module|chapter)\s+(\d+)\s*(?:[:.)-]\s*)?(.*)$/i;
+  /^\s*(?:module|chapter)\s+(\d+)\s*(?:[:.)-]\s*)?(.*)$/i;
 
 type LearnBlock = { subheading: string | null; items: string[] };
 
@@ -409,12 +403,8 @@ function parseWhatYouWillLearnBlocks(raw: string): LearnBlock[] {
     const m = trimmed.match(MODULE_OR_CHAPTER_LINE);
     if (m) {
       flush();
-      const kindRaw = m[1] ?? "";
-      const kind = kindRaw.charAt(0).toUpperCase() + kindRaw.slice(1).toLowerCase();
-      const num = m[2] ?? "";
-      const tail = (m[3] ?? "").trim();
-      const label = `${kind} ${num}`;
-      const subheading = tail ? `${label}: ${tail}` : label;
+      const tail = (m[2] ?? "").trim();
+      const subheading = tail ? stripLessonPrefix(tail) : null;
       cur = { subheading, items: [] };
     } else {
       const item = stripLessonPrefix(trimmed.replace(/^\s*[-*•·]\s+/, "").trim());
@@ -428,7 +418,7 @@ function parseWhatYouWillLearnBlocks(raw: string): LearnBlock[] {
   /** No module/chapter lines: one block — comma-split or single paragraph as flat list. */
   const flat = t
     .split("\n")
-    .map((l) => l.replace(/^\s*[-*•·]\s+/, "").trim())
+    .map((l) => stripLessonPrefix(l.replace(/^\s*[-*•·]\s+/, "").trim()))
     .filter(Boolean);
   if (flat.length > 1) return [{ subheading: null, items: flat }];
   const one = flat[0] ?? t;

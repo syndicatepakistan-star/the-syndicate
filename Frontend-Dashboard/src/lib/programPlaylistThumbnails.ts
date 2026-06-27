@@ -8,6 +8,7 @@ import {
 import { isVaultCourseSlug, VAULT_PACK_COURSES } from "@/components/programs/vaultPackCatalog";
 import { allTradingSubmoduleOffers } from "@/components/programs/tradingVaultCatalog";
 import {
+  LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
   LEVEL1_SLUG_THUMBNAILS,
   LEVEL1_SLUG_TITLE_OVERRIDES,
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
@@ -62,17 +63,19 @@ export function isVaultSubmoduleStreamPlaylist(vaultPlanSlug?: string | null): b
 
 /** Public /programs library — Business Psychology + Business Model (packs shown separately). */
 export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
-  // Business Psychology
+  // Business Psychology (11)
   1, // The 9 to 5 Exit Strategy
   2, // Zero to One Million
   3, // Hustle Hard
   6, // Mastering Consistency
+  7, // Syndicate 13 Business Rules
+  8, // Syndicate Money Philosophy
   9, // The Secret To Transformation
   12, // The Compound Effect
-  30, // The Micro Business Protocol
-  31, // Mastering Risk and Uncertainty
+  30, // Mastering Risk and Uncertainty
+  31, // Micro Business Protocols
   99, // Business Warfare
-  // Business Model
+  // Business Model (11)
   13, // WordPress Blog
   14, // Framer Crash Course
   16, // AI Automations
@@ -91,12 +94,13 @@ export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
   17: "N8N AI Automation",
   19: "Print On Demand",
   25: "Amazon KDP",
+  30: "Mastering Risk and Uncertainty",
   31: "Micro Business Protocols",
 };
 
-/** Display order on /programs (Business Psychology column). */
+/** Display order on /programs (Business Psychology column) — legacy ids for globe/deep links. */
 export const PUBLIC_PSYCHOLOGY_PROGRAM_ORDER: readonly number[] = [
-  3, 6, 31, 30, 99, 1, 12, 2, 9,
+  3, 6, 30, 31, 99, 7, 8, 1, 12, 2, 9,
 ];
 
 /** Display order on /programs (Business Model column). */
@@ -163,8 +167,15 @@ export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefin
   return VAULT_MODULE_THUMBNAILS[key];
 }
 
+/** Deep link from homepage globe → public programs library card (stable level1 slug when mapped). */
+export function programSlugDeepLink(slug: string): string {
+  return `/programs?slug=${encodeURIComponent(slug)}#programs-library`;
+}
+
 /** Deep link from homepage globe → public programs library card. */
 export function programPlaylistDeepLink(programId: number): string {
+  const slug = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[programId];
+  if (slug) return programSlugDeepLink(slug);
   return `/programs?program=${programId}#programs-library`;
 }
 

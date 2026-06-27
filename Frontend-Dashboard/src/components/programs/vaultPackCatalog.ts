@@ -9,7 +9,10 @@ import {
 } from "@/lib/packPricing";
 import {
   allTradingSubmoduleOffers,
+  isTradingModuleSlug,
   tradingSubmoduleOfferBySlug,
+  tradingSubmoduleOffersForModule,
+  type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
 
 const PACKS_BASE = "/assets/programs/packs courses";
@@ -229,6 +232,31 @@ export const VAULT_PACK_MODAL_COPY: Record<
 
 export function vaultCoursesForPack(pack: VaultPackKey): readonly PlanOfferDef[] {
   return VAULT_PACK_COURSES[pack] ?? [];
+}
+
+/** Grouped rows for vault detail modal — trading pack expands every lesson inline. */
+export type VaultPackDisplayGroup = {
+  parent?: PlanOfferDef;
+  offers: readonly PlanOfferDef[];
+};
+
+export function vaultDisplayGroupsForPack(pack: VaultPackKey): readonly VaultPackDisplayGroup[] {
+  const parents = vaultCoursesForPack(pack);
+  if (pack !== "trading_technical_analysis") {
+    return parents.map((offer) => ({ offers: [offer] as const }));
+  }
+  return parents.map((parent) => {
+    const moduleSlug = parent.plan as TradingModuleSlug;
+    const lessons = isTradingModuleSlug(moduleSlug)
+      ? tradingSubmoduleOffersForModule(moduleSlug)
+      : [];
+    return { parent, offers: lessons };
+  });
+}
+
+/** Total purchasable rows shown in the vault detail modal (modules + nested lessons). */
+export function vaultPackDisplayOfferCount(pack: VaultPackKey): number {
+  return vaultDisplayGroupsForPack(pack).reduce((sum, group) => sum + group.offers.length, 0);
 }
 
 export function isVaultPackKey(plan: string): plan is VaultPackKey {

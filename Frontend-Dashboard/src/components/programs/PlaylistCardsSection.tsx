@@ -12,14 +12,17 @@ import {
 import { focusProgramCardWithRetries } from "@/lib/programCardScroll";
 import {
   fillMissingPublicProgramPlaylists,
+  normalizeLevel1ProgramPlaylists,
+  resolveProgramPlaylistHighlightId,
   resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
 import {
-  isPublicProgramsLibraryPlaylist,
-  PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
-  PUBLIC_PSYCHOLOGY_PROGRAM_ORDER,
-} from "@/lib/programPlaylistThumbnails";
+  PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
+  PUBLIC_LEVEL1_PLAYLIST_SLUGS,
+  PUBLIC_PSYCHOLOGY_SLUG_ORDER,
+} from "@/lib/level1ProgramCatalog";
+import { programPlaylistDeepLink, programSlugDeepLink } from "@/lib/programPlaylistThumbnails";
 import { STREAM_PLAYLIST_CATEGORY_LABELS } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -27,6 +30,14 @@ import { formatPrice } from "@/lib/currency";
 import { buildPlaylistCheckoutAuthHref } from "@/lib/plan-checkout";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
+
+function playlistProgramsReturnHref(pl: StreamPlaylistListItem): string {
+  const slug = pl.slug?.trim();
+  if (slug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug)) {
+    return programSlugDeepLink(slug);
+  }
+  return programPlaylistDeepLink(pl.id);
+}
 
 const PROGRAM_CARD_BACKGROUNDS: readonly string[] = [
   "from-amber-600/85 via-orange-900/50 to-black",
@@ -97,14 +108,16 @@ type Props = {
   highlightPlaylistId?: number;
 };
 
-function sortPlaylistsByOrder(
+function sortPlaylistsBySlugOrder(
   playlists: StreamPlaylistListItem[],
-  order: readonly number[]
+  order: readonly string[],
 ): StreamPlaylistListItem[] {
-  const rank = new Map(order.map((id, index) => [id, index]));
-  return [...playlists].sort(
-    (a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999)
-  );
+  const rank = new Map(order.map((slug, index) => [slug, index]));
+  return [...playlists].sort((a, b) => {
+    const aRank = rank.get(a.slug?.trim().toLowerCase() ?? "") ?? 999;
+    const bRank = rank.get(b.slug?.trim().toLowerCase() ?? "") ?? 999;
+    return aRank - bRank;
+  });
 }
 
 export function PlaylistCardsSection({
@@ -183,34 +196,24 @@ export function PlaylistCardsSection({
   }, []);
 
   const visiblePlaylists = useMemo(
-    () =>
-      playlists.filter((pl) => {
-        const meta = { slug: pl.slug, title: pl.title, vault_plan_slug: pl.vault_plan_slug };
-        if (pl.is_coming_soon) {
-          return isPublicProgramsLibraryPlaylist(pl.id, meta) || highlightPlaylistId === pl.id;
-        }
-        if (isPublicProgramsLibraryPlaylist(pl.id, meta)) {
-          return true;
-        }
-        return highlightPlaylistId === pl.id;
-      }),
-    [playlists, highlightPlaylistId]
+    () => normalizeLevel1ProgramPlaylists(playlists),
+    [playlists],
   );
   const businessPsychologyPlaylists = useMemo(
     () =>
-      sortPlaylistsByOrder(
+      sortPlaylistsBySlugOrder(
         visiblePlaylists.filter((pl) => pl.category !== "business_model"),
-        PUBLIC_PSYCHOLOGY_PROGRAM_ORDER
+        PUBLIC_PSYCHOLOGY_SLUG_ORDER,
       ),
-    [visiblePlaylists]
+    [visiblePlaylists],
   );
   const businessModelPlaylists = useMemo(
     () =>
-      sortPlaylistsByOrder(
+      sortPlaylistsBySlugOrder(
         visiblePlaylists.filter((pl) => pl.category === "business_model"),
-        PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER
+        PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
       ),
-    [visiblePlaylists]
+    [visiblePlaylists],
   );
   const mobilePairedRows = useMemo(() => {
     const maxLen = Math.max(businessPsychologyPlaylists.length, businessModelPlaylists.length);
@@ -227,7 +230,9 @@ export function PlaylistCardsSection({
 
   useEffect(() => {
     if (!highlightPlaylistId || !visiblePlaylists.length) return;
-    const target = visiblePlaylists.find((pl) => pl.id === highlightPlaylistId);
+    const resolved =
+      resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId;
+    const target = visiblePlaylists.find((pl) => pl.id === resolved);
     if (!target) return;
     if (highlightHandledRef.current) return;
 
@@ -241,7 +246,7 @@ export function PlaylistCardsSection({
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
-  }, [highlightPlaylistId, visiblePlaylists]);
+  }, [highlightPlaylistId, visiblePlaylists, playlists]);
 
   useEffect(() => {
     // Warm first visible cover images so public route transitions feel snappier.
@@ -368,9 +373,12 @@ export function PlaylistCardsSection({
             <div className="absolute right-3 top-3 z-[4]">
               <span
                 className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
-                style={{ fontFamily: "Inter, Arial, Helvetica, sans-serif", fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+                style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
                 {formatPrice(price)}
+                <span className="ml-1 text-[9px] font-bold uppercase tracking-[0.08em] text-emerald-200/80 sm:text-[10px]">
+                  lifetime
+                </span>
               </span>
             </div>
             <div
@@ -403,7 +411,7 @@ export function PlaylistCardsSection({
                       }
                       if (!hasSimpleAuthSessionClient()) {
                         window.location.assign(
-                          buildPlaylistCheckoutAuthHref(pl.id, `/programs?program=${pl.id}#programs-library`),
+                          buildPlaylistCheckoutAuthHref(pl.id, playlistProgramsReturnHref(pl)),
                         );
                         return;
                       }
@@ -424,7 +432,7 @@ export function PlaylistCardsSection({
                           return;
                         }
                         window.location.assign(
-                          buildPlaylistCheckoutAuthHref(pl.id, `/programs?program=${pl.id}#programs-library`),
+                          buildPlaylistCheckoutAuthHref(pl.id, playlistProgramsReturnHref(pl)),
                         );
                       } catch (e) {
                         setError(e instanceof Error ? e.message : "Could not start checkout.");

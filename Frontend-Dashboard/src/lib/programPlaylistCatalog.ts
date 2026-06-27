@@ -1,13 +1,21 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
 import { curatedBusinessPsychologyDescription } from "@/data/businessPsychologyProgramDescriptions";
+import { curatedBusinessModelDescription } from "@/data/businessModelProgramDescriptions";
 import { vaultCourseByTitle } from "@/components/programs/vaultPackCatalog";
 import {
   getProgramDisplayTitle,
   getProgramPlaylistThumbnail,
   getVaultModuleThumbnail,
-  PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
-  PUBLIC_PROGRAMS_PAGE_IDS,
+  isHiddenProgramPlaylist,
+  isVaultSubmoduleStreamPlaylist,
 } from "@/lib/programPlaylistThumbnails";
+import {
+  LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
+  LEVEL1_CANONICAL_TITLES,
+  LEVEL1_SLUG_DISPLAY_ORDER,
+  PUBLIC_LEVEL1_PLAYLIST_SLUGS,
+} from "@/lib/level1ProgramCatalog";
+import { cleanProgramDescription } from "@/lib/descriptionText";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export type ProgramPlaylistCatalogEntry = {
@@ -119,15 +127,28 @@ export function resolveProgramPlaylistTitle(playlist: ProgramPlaylistLike): stri
 
 export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike): string {
   const catalog = findProgramCatalogEntry(playlist);
-  const curated = curatedBusinessPsychologyDescription(
-    catalog?.slug ?? playlist.slug ?? null,
-    catalog?.title ?? playlist.title ?? null,
-  );
-  if (curated) return curated;
+  const slug = catalog?.slug ?? playlist.slug ?? null;
+  const title = catalog?.title ?? playlist.title ?? null;
+  const psychology = curatedBusinessPsychologyDescription(slug, title);
+  if (psychology) return finalizeProgramDescription(psychology);
+  const businessModel = curatedBusinessModelDescription(slug, title);
+  if (businessModel) return finalizeProgramDescription(businessModel);
   const fromApi = (playlist.description ?? "").trim();
-  if (isSubstantialProgramDescription(fromApi)) return fromApi;
-  if (catalog?.description?.trim()) return catalog.description.trim();
-  return fromApi;
+  if (isSubstantialProgramDescription(fromApi)) return finalizeProgramDescription(fromApi);
+  if (catalog?.description?.trim()) return finalizeProgramDescription(catalog.description.trim());
+  return finalizeProgramDescription(fromApi);
+}
+
+/** Fix legacy mojibake where em dashes were stored as ù. */
+function sanitizeLegacyDescriptionEncoding(text: string): string {
+  return text
+    .replace(/ù/g, "—")
+    .replace(/Æ/g, "'")
+    .replace(/û/g, "—");
+}
+
+function finalizeProgramDescription(text: string): string {
+  return cleanProgramDescription(sanitizeLegacyDescriptionEncoding(text));
 }
 
 export function resolveProgramPlaylistSummary(playlist: ProgramPlaylistLike): string {
@@ -173,43 +194,152 @@ export function enrichProgramPlaylist<T extends ProgramPlaylistLike>(playlist: T
   };
 }
 
-function publicPlaylistCategory(id: number): StreamPlaylistListItem["category"] {
-  return PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER.includes(id) ? "business_model" : "business_psychology";
+function level1SlugCategory(slug: string): StreamPlaylistListItem["category"] {
+  return slug.includes("model") ? "business_model" : "business_psychology";
 }
 
-/** Ensure allowlisted public programs render even when the API omits them. */
-export function fillMissingPublicProgramPlaylists(
-  playlists: StreamPlaylistListItem[]
-): StreamPlaylistListItem[] {
-  const byId = new Map(playlists.map((playlist) => [playlist.id, playlist]));
-  const merged = [...playlists];
+function titleMatchesCanonical(playlistTitle: string, slug: string): boolean {
+  const canonical = LEVEL1_CANONICAL_TITLES[slug];
+  if (!canonical) return false;
+  const a = normalizeTitle(playlistTitle);
+  const b = normalizeTitle(canonical);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  const aTokens = a.split(" ").filter((t) => t.length > 2);
+  const bTokens = b.split(" ").filter((t) => t.length > 2);
+  if (aTokens.length === 0 || bTokens.length === 0) return false;
+  const overlap = bTokens.filter((t) => aTokens.includes(t)).length;
+  return overlap / bTokens.length >= 0.72;
+}
 
-  for (const id of PUBLIC_PROGRAMS_PAGE_IDS) {
-    if (byId.has(id)) continue;
-    const entry = BY_ID.get(id);
-    if (!entry) continue;
-    merged.push({
-      id: entry.id,
-      title: getProgramDisplayTitle(entry.id, entry.title),
-      slug: entry.slug,
-      category: publicPlaylistCategory(entry.id),
-      description: entry.description,
-      price:
-        entry.id === 99
-          ? "49.00"
-          : entry.id === 31
-            ? "39.00"
-            : entry.id === 30
-              ? "40.00"
-              : "40.00",
-      rating: "4.0",
-      cover_image_url: null,
-      video_count: 0,
-      is_published: true,
-      is_coming_soon: entry.id === 99,
-      created_at: "1970-01-01T00:00:00.000Z",
-    });
+function stubPlaylistForLevel1Slug(slug: string): StreamPlaylistListItem | null {
+  const legacyId = Number(
+    Object.entries(LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG).find(([, value]) => value === slug)?.[0],
+  );
+  if (!Number.isFinite(legacyId)) return null;
+  const entry = BY_ID.get(legacyId);
+  if (!entry) return null;
+  return {
+    id: entry.id,
+    title: getProgramDisplayTitle(entry.id, entry.title, slug),
+    slug,
+    category: level1SlugCategory(slug),
+    description: entry.description,
+    price:
+      entry.id === 99
+        ? "49.00"
+        : entry.id === 31
+          ? "39.00"
+          : entry.id === 30
+            ? "40.00"
+            : "40.00",
+    rating: "4.0",
+    cover_image_url: null,
+    video_count: 0,
+    is_published: true,
+    is_coming_soon: entry.id === 99,
+    created_at: "1970-01-01T00:00:00.000Z",
+  };
+}
+
+function findPlaylistForLevel1Slug(
+  slug: string,
+  pool: StreamPlaylistListItem[],
+  usedIds: Set<number>,
+): StreamPlaylistListItem | undefined {
+  const bySlug = pool.find((pl) => !usedIds.has(pl.id) && pl.slug?.trim().toLowerCase() === slug);
+  if (bySlug) return bySlug;
+
+  const byTitle = pool.find(
+    (pl) => !usedIds.has(pl.id) && pl.title && titleMatchesCanonical(pl.title, slug),
+  );
+  if (byTitle) return byTitle;
+
+  return pool.find((pl) => {
+    if (usedIds.has(pl.id)) return false;
+    return LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[pl.id] === slug;
+  });
+}
+
+/**
+ * One card per Level 1 program (11 psychology + 11 business model).
+ * Deduplicates legacy numeric ids vs seeded level1-* slugs from the API.
+ */
+export function normalizeLevel1ProgramPlaylists(
+  playlists: StreamPlaylistListItem[],
+): StreamPlaylistListItem[] {
+  const pool = playlists.filter((pl) => {
+    if (isVaultSubmoduleStreamPlaylist(pl.vault_plan_slug)) return false;
+    if (
+      isHiddenProgramPlaylist(pl.id, {
+        slug: pl.slug,
+        title: pl.title,
+        vault_plan_slug: pl.vault_plan_slug,
+      })
+    ) {
+      return false;
+    }
+    const slug = pl.slug?.trim().toLowerCase();
+    if (slug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug)) return true;
+    if (LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[pl.id]) return true;
+    return Object.keys(LEVEL1_CANONICAL_TITLES).some((key) =>
+      titleMatchesCanonical(pl.title ?? "", key),
+    );
+  });
+
+  const usedIds = new Set<number>();
+  const out: StreamPlaylistListItem[] = [];
+
+  for (const slug of LEVEL1_SLUG_DISPLAY_ORDER) {
+    const match = findPlaylistForLevel1Slug(slug, pool, usedIds);
+    let row: StreamPlaylistListItem;
+    if (match) {
+      usedIds.add(match.id);
+      row = {
+        ...match,
+        slug,
+        category: level1SlugCategory(slug),
+        title: getProgramDisplayTitle(match.id, match.title, slug),
+      };
+    } else {
+      const stub = stubPlaylistForLevel1Slug(slug);
+      if (!stub) continue;
+      row = stub;
+    }
+    out.push(enrichProgramPlaylist(row));
   }
 
-  return merged;
+  return out;
+}
+
+/** Map legacy ?program= id or direct API id → playlist id for highlight / checkout. */
+export function resolveProgramPlaylistHighlightId(
+  playlists: StreamPlaylistListItem[],
+  requestedId: number,
+): number | undefined {
+  const normalized = normalizeLevel1ProgramPlaylists(playlists);
+  const direct = normalized.find((pl) => pl.id === requestedId);
+  if (direct) return direct.id;
+  const slug = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[requestedId];
+  if (!slug) return undefined;
+  return normalized.find((pl) => pl.slug?.trim().toLowerCase() === slug)?.id;
+}
+
+/** Resolve ?slug=level1-psych-03 → playlist id for card highlight. */
+export function resolveProgramPlaylistHighlightSlug(
+  playlists: StreamPlaylistListItem[],
+  slug: string,
+): number | undefined {
+  const normalized = normalizeLevel1ProgramPlaylists(playlists);
+  const key = slug.trim().toLowerCase();
+  if (!key) return undefined;
+  return normalized.find((pl) => pl.slug?.trim().toLowerCase() === key)?.id;
+}
+
+/** @deprecated Use normalizeLevel1ProgramPlaylists */
+export function fillMissingPublicProgramPlaylists(
+  playlists: StreamPlaylistListItem[],
+): StreamPlaylistListItem[] {
+  return normalizeLevel1ProgramPlaylists(playlists);
 }

@@ -265,11 +265,26 @@ const BY_TITLE = new Map<string, string>(
   }),
 );
 
+const LEVEL1_SLUG_TO_DESCRIPTION_KEY: Record<string, keyof typeof BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS> = {
+  "level1-psych-01": "the-9-to-5-exit-strategy",
+  "level1-psych-02": "zero-to-one-million",
+  "level1-psych-03": "hustle-hard",
+  "level1-psych-04": "mastering-consistency",
+  "level1-psych-05": "the-secret-to-transformation",
+  "level1-psych-06": "the-compound-effect",
+  "level1-psych-07": "the-micro-business-protocol",
+  "level1-psych-08": "mastering-risk-and-uncertainty",
+};
+
 export function curatedBusinessPsychologyDescription(
   slug: string | null | undefined,
   title: string | null | undefined,
 ): string | undefined {
   const slugKey = slug?.trim().toLowerCase();
+  if (slugKey && LEVEL1_SLUG_TO_DESCRIPTION_KEY[slugKey]) {
+    const descKey = LEVEL1_SLUG_TO_DESCRIPTION_KEY[slugKey];
+    return BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS[descKey];
+  }
   if (slugKey && BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS[slugKey]) {
     return BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS[slugKey];
   }

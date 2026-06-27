@@ -11,6 +11,8 @@ import {
   VAULT_MODAL_OVERLAY_CLASS,
   VAULT_MODAL_PANEL_CLASS,
 } from "@/components/programs/ReadMoreText";
+import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { resolveVaultModuleStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
 import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { VAULT_PACK_MODAL_COPY } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
@@ -123,9 +125,15 @@ export function TradingModuleVaultModal({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-2 max-w-2xl font-mono text-[12px] leading-relaxed text-white/72 sm:text-[13px]">
-            {submoduleCount} lessons inside this module. Unlock the full module for {moduleOffer.displayPrice} or buy
-            individual lessons at $9 each.
+          <div className="mt-4 max-w-3xl font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody
+              text={resolveVaultModuleStructuredDescription(moduleOffer.title, "trading_technical_analysis")}
+              compact
+            />
+          </div>
+          <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-white/60 sm:text-[12px]">
+            One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $9
+            each. Lifetime access recorded to your dashboard after checkout.
           </p>
         </div>
 

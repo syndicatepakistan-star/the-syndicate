@@ -58,7 +58,7 @@ export type PlanOfferDef = {
   openLabel: string;
   /** When set, Open navigates here instead of starting Stripe checkout. */
   openHref?: string;
-  /** When set to vault_picker, Open shows sub-program cards instead of checkout. */
+  /** When set to vault_picker, Details opens the vault browser; Unlock starts checkout. */
   openAction?: "vault_picker";
   /** Parent vault pack when this row is an individual course offer. */
   vaultPackPlan?: VaultPackKey;

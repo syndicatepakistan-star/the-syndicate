@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { stripLessonPrefix } from "@/lib/descriptionText";
+import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type StructuredDescriptionSections = {
   hook: string;
@@ -81,12 +82,13 @@ function parseWhatYouWillLearnBlocks(raw: string): LearnBlock[] {
   return [{ subheading: null, items: [one] }];
 }
 
-function WhatYouWillLearnBody({ text }: { text: string }) {
+function WhatYouWillLearnBody({ text, prominent }: { text: string; prominent?: boolean }) {
   const blocks = parseWhatYouWillLearnBlocks(text);
   if (blocks.length === 0) return null;
 
-  const listClass =
-    "my-1 list-disc space-y-2.5 pl-5 text-left text-[15px] leading-relaxed text-white/95 marker:text-white/35 sm:text-[16px] font-[family-name:var(--font-body)]";
+  const listClass = prominent
+    ? "my-1 list-disc space-y-3 pl-5 text-left text-[17px] leading-relaxed text-white/95 marker:text-white/35 sm:text-[18px] font-[family-name:var(--font-body)]"
+    : "my-1 list-disc space-y-2.5 pl-5 text-left text-[15px] leading-relaxed text-white/95 marker:text-white/35 sm:text-[16px] font-[family-name:var(--font-body)]";
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7">
@@ -95,7 +97,12 @@ function WhatYouWillLearnBody({ text }: { text: string }) {
         return (
           <div key={bi} className="min-w-0">
             {block.subheading ? (
-              <p className="mb-2.5 text-left text-[15px] font-semibold leading-relaxed text-white/95 sm:text-[16px] font-[family-name:var(--font-body)]">
+              <p
+                className={cn(
+                  "mb-2.5 text-left font-semibold leading-relaxed text-white/95 font-[family-name:var(--font-body)]",
+                  prominent ? "text-[17px] sm:text-[18px]" : "text-[15px] sm:text-[16px]",
+                )}
+              >
                 {stripLessonPrefix(block.subheading)}
               </p>
             ) : null}
@@ -115,14 +122,24 @@ function WhatYouWillLearnBody({ text }: { text: string }) {
   );
 }
 
-function ParagraphBody({ text, compact }: { text: string; compact?: boolean }) {
+function ParagraphBody({
+  text,
+  compact,
+  prominent,
+}: {
+  text: string;
+  compact?: boolean;
+  prominent?: boolean;
+}) {
   const paragraphs = text
     .split(/\n\s*\n/)
     .map((p) => p.replace(/\s+/g, " ").trim())
     .filter(Boolean);
-  const bodyClass = compact
-    ? "text-left text-[12px] leading-relaxed text-white/78 sm:text-[13px] font-[family-name:var(--font-body)]"
-    : "text-left text-[15px] leading-[1.85] text-white/95 sm:text-[16px] sm:leading-[1.9] font-[family-name:var(--font-body)]";
+  const bodyClass = prominent
+    ? "text-left text-[17px] leading-[1.85] text-white/95 sm:text-[18px] sm:leading-[1.9] font-[family-name:var(--font-body)]"
+    : compact
+      ? "text-left text-[12px] leading-relaxed text-white/78 sm:text-[13px] font-[family-name:var(--font-body)]"
+      : "text-left text-[15px] leading-[1.85] text-white/95 sm:text-[16px] sm:leading-[1.9] font-[family-name:var(--font-body)]";
 
   if (paragraphs.length === 0) {
     return <p className={bodyClass}>{text}</p>;
@@ -142,13 +159,17 @@ function ParagraphBody({ text, compact }: { text: string; compact?: boolean }) {
 function StructuredSectionsView({
   sections,
   compact,
+  prominent,
 }: {
   sections: StructuredDescriptionSections;
   compact?: boolean;
+  prominent?: boolean;
 }) {
-  const headingClass = compact
-    ? "border-b border-[#f5c814]/25 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] text-[#f5c814] sm:text-[12px]"
-    : "border-b border-[#f5c814]/25 pb-2 text-left text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.15rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
+  const headingClass = prominent
+    ? "border-b border-[#f5c814]/25 pb-2.5 text-left text-[1.2rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.35rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
+    : compact
+      ? "border-b border-[#f5c814]/25 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] text-[#f5c814] sm:text-[12px]"
+      : "border-b border-[#f5c814]/25 pb-2 text-left text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.15rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
 
   return (
     <div
@@ -163,7 +184,11 @@ function StructuredSectionsView({
           <section key={key} className="scroll-mt-4">
             <h3 className={headingClass}>{label}</h3>
             <div className="mt-3 sm:mt-4">
-              {isLearn ? <WhatYouWillLearnBody text={text} /> : <ParagraphBody text={text} compact={compact} />}
+              {isLearn ? (
+                <WhatYouWillLearnBody text={text} prominent={prominent} />
+              ) : (
+                <ParagraphBody text={text} compact={compact} prominent={prominent} />
+              )}
             </div>
           </section>
         );
@@ -174,23 +199,25 @@ function StructuredSectionsView({
 
 type Props = {
   text: string;
-  /** Tighter typography for vault modal headers. */
+  /** Tighter typography for small vault headers. */
   compact?: boolean;
+  /** Large readable copy for program / vault modals. */
+  prominent?: boolean;
   className?: string;
 };
 
-export function StructuredDescriptionBody({ text, compact, className }: Props) {
+export function StructuredDescriptionBody({ text, compact, prominent, className }: Props) {
   const sections = useMemo(() => parseStructuredDescriptionSections(text), [text]);
   if (!sections) {
     return (
       <div className={className}>
-        <ParagraphBody text={text} compact={compact} />
+        <ParagraphBody text={text} compact={compact} prominent={prominent} />
       </div>
     );
   }
   return (
     <div className={className}>
-      <StructuredSectionsView sections={sections} compact={compact} />
+      <StructuredSectionsView sections={sections} compact={compact} prominent={prominent} />
     </div>
   );
 }

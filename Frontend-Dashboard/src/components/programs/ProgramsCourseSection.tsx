@@ -938,7 +938,7 @@ export function ProgramsCourseSection({
               </div>
               {!comingSoon ? (
                 <ProgramCardStatsLines
-                  stats={streamPlaylistCardStats(pl.video_count)}
+                  stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
                   size="stream"
                   className="shrink-0"
                 />

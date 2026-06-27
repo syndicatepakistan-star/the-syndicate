@@ -73,6 +73,17 @@ export function isVaultPackFullyUnlocked(
   return courses.length > 0 && courses.every((c) => userHasVaultPlanAccess(c.plan, purchasedSlugs, accessTier, moneyMasteryActive, pack));
 }
 
+/** Full pack slug purchased, Money Mastery, or explicit pack entitlement — not à-la-carte module-only ownership. */
+export function isVaultParentPackOpenable(
+  pack: VaultPackKey,
+  purchasedSlugs: ReadonlySet<string>,
+  accessTier: string | undefined | null,
+  moneyMasteryActive?: boolean | null,
+): boolean {
+  if (hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return true;
+  return purchasedSlugs.has(pack);
+}
+
 export function resolveOfferActionLabel(
   offer: Pick<PlanOfferDef, "plan" | "vaultPackPlan" | "openLabel" | "isComingSoon">,
   purchasedSlugs: ReadonlySet<string>,

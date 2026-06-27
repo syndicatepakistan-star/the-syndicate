@@ -8,9 +8,9 @@ import { LazyVaultModuleCell } from "@/components/programs/LazyVaultModuleCell";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import {
   VAULT_MODAL_BODY_CLASS,
-  VAULT_MODAL_HEADER_CLASS,
   VAULT_MODAL_OVERLAY_CLASS,
   VAULT_MODAL_PANEL_CLASS,
+  VAULT_MODAL_TOP_BAR_CLASS,
 } from "@/components/programs/ReadMoreText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveVaultPackStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
@@ -53,7 +53,7 @@ export function PackVaultOfferModal({
   onUnlock,
   onOpenUnlocked,
 }: Props) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!packOffer) return;
@@ -63,7 +63,7 @@ export function PackVaultOfferModal({
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    overlayRef.current?.scrollTo({ top: 0 });
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
@@ -125,7 +125,7 @@ export function PackVaultOfferModal({
     );
   };
 
-  const renderGroup = (group: VaultPackDisplayGroup, groupIndex: number) => {
+  const renderGroup = (group: VaultPackDisplayGroup) => {
     if (!group.parent) {
       const offer = group.offers[0];
       if (!offer) return null;
@@ -181,7 +181,6 @@ export function PackVaultOfferModal({
 
   return createPortal(
     <div
-      ref={overlayRef}
       className={VAULT_MODAL_OVERLAY_CLASS}
       role="dialog"
       aria-modal="true"
@@ -192,7 +191,7 @@ export function PackVaultOfferModal({
         className={cn(VAULT_MODAL_PANEL_CLASS, copy.borderClass)}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={VAULT_MODAL_HEADER_CLASS}>
+        <div className={VAULT_MODAL_TOP_BAR_CLASS}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1 pr-2">
               <button
@@ -208,7 +207,7 @@ export function PackVaultOfferModal({
               </button>
               <h2
                 id="vault-pack-modal-title"
-                className="text-[clamp(1.05rem,3.2vw,1.5rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
+                className="text-[clamp(1.15rem,3.5vw,1.75rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
               >
                 {copy.title}
               </h2>
@@ -217,7 +216,7 @@ export function PackVaultOfferModal({
               type="button"
               onClick={onClose}
               className={cn(
-                "sticky top-0 shrink-0 rounded-lg border bg-black/80 p-2 transition",
+                "shrink-0 rounded-lg border bg-black/80 p-2 transition",
                 copy.closeBtnClass,
               )}
               aria-label="Close vault offers"
@@ -225,25 +224,26 @@ export function PackVaultOfferModal({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-4 max-w-3xl font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody text={packStructuredDescription} compact />
-          </div>
-          {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-            <p className="mt-4 max-w-3xl font-mono text-[11px] text-white/50 sm:text-[12px]">
-              One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
-              separately).
-            </p>
-          ) : (
-            <p className="mt-4 max-w-3xl font-mono text-[11px] text-white/50 sm:text-[12px]">
-              One-time purchase — lifetime access recorded to your dashboard after checkout.
-            </p>
-          )}
         </div>
 
-        <div className={VAULT_MODAL_BODY_CLASS}>
+        <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
+          <div className="mx-auto w-full max-w-none font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody text={packStructuredDescription} prominent className="w-full" />
+            {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
+              <p className="mt-5 font-mono text-[12px] text-white/55 sm:text-[13px]">
+                One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
+                separately).
+              </p>
+            ) : (
+              <p className="mt-5 font-mono text-[12px] text-white/55 sm:text-[13px]">
+                One-time purchase — lifetime access recorded to your dashboard after checkout.
+              </p>
+            )}
+          </div>
+
           <section
             className={cn(
-              "mx-auto mb-8 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
+              "mx-auto mt-8 w-full max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
               copy.borderClass,
             )}
           >
@@ -257,9 +257,10 @@ export function PackVaultOfferModal({
               cardStats={resolveOfferCardStats(packOffer, "pack")}
               busy={busyPlan === packOffer.plan}
               actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => overlayRef.current?.scrollTo({ top: 0, behavior: "auto" })}
+              onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
               onOpen={() => {
-                if (!packUnlocked) onUnlock(packOffer);
+                if (packUnlocked) onOpenUnlocked(packOffer);
+                else onUnlock(packOffer);
               }}
             />
             {packUnlocked ? (
@@ -269,7 +270,7 @@ export function PackVaultOfferModal({
             ) : null}
           </section>
 
-          <div className="mb-5 flex items-center gap-4">
+          <div className="mb-5 mt-8 flex items-center gap-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="shrink-0 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
               {isTradingPack ? "Modules" : "Individual modules"} ({displayOfferCount})
@@ -277,8 +278,8 @@ export function PackVaultOfferModal({
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          <div className={isTradingPack ? "space-y-8" : "vault-modules-grid"}>
-            {displayGroups.map((group, index) => renderGroup(group, index))}
+          <div className={isTradingPack ? "space-y-8 pb-2" : "vault-modules-grid pb-2"}>
+            {displayGroups.map((group) => renderGroup(group))}
           </div>
         </div>
       </div>

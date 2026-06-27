@@ -18,7 +18,7 @@ import {
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import {
   isVaultOfferUnlocked,
-  isVaultPackFullyUnlocked,
+  isVaultParentPackOpenable,
   resolveOfferActionLabel,
 } from "@/components/programs/vaultUnlock";
 import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
@@ -210,10 +210,9 @@ export function PublicPlanOfferCards({
 
   const renderOffer = (offer: PlanOfferDef) => {
     const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
-    const packUnlocked = vaultPack ? isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier, moneyMasteryActive) : false;
-    const showOpenOnParent =
-      offer.openAction === "vault_picker" &&
-      (packUnlocked || isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive));
+    const parentPackOpenable =
+      vaultPack != null &&
+      isVaultParentPackOpenable(vaultPack, purchasedSet, accessTier, moneyMasteryActive);
     const comingSoon =
       isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
 
@@ -228,7 +227,11 @@ export function PublicPlanOfferCards({
         highlighted={highlightedPack === offer.plan}
         comingSoon={comingSoon}
         actionLabel={
-          showOpenOnParent ? "Open" : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
+          offer.openAction === "vault_picker" && vaultPack
+            ? parentPackOpenable
+              ? "Open"
+              : offer.openLabel
+            : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
         }
         onDetails={() => {
           if (offer.openAction === "vault_picker") {
@@ -239,8 +242,8 @@ export function PublicPlanOfferCards({
         }}
         onOpen={() => {
           if (comingSoon) return;
-          if (offer.openAction === "vault_picker") {
-            if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+          if (offer.openAction === "vault_picker" && vaultPack) {
+            if (parentPackOpenable) {
               setVaultPackOffer(offer);
               return;
             }

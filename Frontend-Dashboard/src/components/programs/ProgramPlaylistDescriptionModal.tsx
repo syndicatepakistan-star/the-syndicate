@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import { stripLessonPrefix } from "@/lib/descriptionText";
+import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
@@ -542,7 +543,7 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
       />
       <div
         className={cn(
-          "relative z-[1] flex max-h-[min(90vh,820px)] w-full max-w-[min(96vw,960px)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50 sm:max-w-[min(94vw,1040px)]",
+          "relative z-[1] flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50",
           "bg-[linear-gradient(180deg,rgba(18,18,18,0.98),rgba(6,6,8,0.99))] shadow-[0_0_40px_rgba(245,200,20,0.25),0_24px_80px_rgba(0,0,0,0.85)]",
           "[&_h3]:scroll-mt-4 font-[family-name:var(--font-body)]",
         )}
@@ -563,15 +564,15 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
             <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 sm:py-9 [&_strong]:font-semibold [&_strong]:text-white/95">
-          {structured ? (
-            <div className="max-w-none pb-1">
-              <StructuredPlaylistDescription sections={structured} />
+        <div className="vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-10 sm:py-9 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [&_strong]:font-semibold [&_strong]:text-white/95">
+          {structured || body ? (
+            <div className="w-full max-w-none pb-2">
+              <StructuredDescriptionBody text={body} prominent />
             </div>
           ) : blocks ? (
-            <div className="max-w-none pb-1">{blocks}</div>
+            <div className="w-full max-w-none pb-2">{blocks}</div>
           ) : (
-            <p className="text-[15px] leading-relaxed text-white/55 sm:text-[16px]">
+            <p className="text-[17px] leading-relaxed text-white/55 sm:text-[18px]">
               No description has been added for this program yet. In Django admin, use section lines{" "}
               <span className="font-semibold text-white/70">The Hook</span>,{" "}
               <span className="font-semibold text-white/70">The core protocol</span>, and{" "}

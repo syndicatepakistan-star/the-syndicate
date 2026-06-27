@@ -73,7 +73,7 @@ export function ProgramOpportunityCardContent({
   const kindBadge = isPack ? "Vault pack" : isModule ? "Vault module" : null;
 
   const cardStats = playlist
-    ? streamPlaylistCardStats(playlist.video_count)
+    ? streamPlaylistCardStats(playlist.video_count, { slug: playlist.slug, title: playlist.title })
     : planOffer
       ? resolveOfferCardStats(planOffer, isPack ? "pack" : isModule ? "module" : undefined)
       : undefined;

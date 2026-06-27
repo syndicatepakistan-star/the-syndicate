@@ -7,9 +7,9 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import {
   VAULT_MODAL_BODY_CLASS,
-  VAULT_MODAL_HEADER_CLASS,
   VAULT_MODAL_OVERLAY_CLASS,
   VAULT_MODAL_PANEL_CLASS,
+  VAULT_MODAL_TOP_BAR_CLASS,
 } from "@/components/programs/ReadMoreText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveVaultModuleStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
@@ -45,7 +45,7 @@ export function TradingModuleVaultModal({
   onUnlock,
   onOpenUnlocked,
 }: Props) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!moduleOffer) return;
@@ -55,7 +55,7 @@ export function TradingModuleVaultModal({
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    overlayRef.current?.scrollTo({ top: 0 });
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
@@ -81,7 +81,6 @@ export function TradingModuleVaultModal({
 
   return createPortal(
     <div
-      ref={overlayRef}
       className={cn(VAULT_MODAL_OVERLAY_CLASS, "z-[116]")}
       role="dialog"
       aria-modal="true"
@@ -92,7 +91,7 @@ export function TradingModuleVaultModal({
         className={cn(VAULT_MODAL_PANEL_CLASS, copy.borderClass)}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={VAULT_MODAL_HEADER_CLASS}>
+        <div className={VAULT_MODAL_TOP_BAR_CLASS}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1 pr-2">
               <button
@@ -108,7 +107,7 @@ export function TradingModuleVaultModal({
               </button>
               <h2
                 id="trading-module-modal-title"
-                className="text-[clamp(1.05rem,3.2vw,1.5rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
+                className="text-[clamp(1.15rem,3.5vw,1.75rem)] font-black uppercase leading-tight tracking-[0.06em] text-white"
               >
                 {moduleOffer.title}
               </h2>
@@ -117,7 +116,7 @@ export function TradingModuleVaultModal({
               type="button"
               onClick={onClose}
               className={cn(
-                "sticky top-0 shrink-0 rounded-lg border bg-black/80 p-2 transition",
+                "shrink-0 rounded-lg border bg-black/80 p-2 transition",
                 copy.closeBtnClass
               )}
               aria-label="Close module lessons"
@@ -125,22 +124,23 @@ export function TradingModuleVaultModal({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-4 max-w-3xl font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody
-              text={resolveVaultModuleStructuredDescription(moduleOffer.title, "trading_technical_analysis")}
-              compact
-            />
-          </div>
-          <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-white/60 sm:text-[12px]">
-            One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $9
-            each. Lifetime access recorded to your dashboard after checkout.
-          </p>
         </div>
 
-        <div className={VAULT_MODAL_BODY_CLASS}>
+        <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
+          <div className="w-full max-w-none font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody
+              text={resolveVaultModuleStructuredDescription(moduleOffer.title, "trading_technical_analysis")}
+              prominent
+            />
+            <p className="mt-5 font-mono text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
+              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $9
+              each. Lifetime access recorded to your dashboard after checkout.
+            </p>
+          </div>
+
           <section
             className={cn(
-              "mx-auto mb-8 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
+              "mx-auto mb-8 mt-8 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
               copy.borderClass
             )}
           >
@@ -172,7 +172,7 @@ export function TradingModuleVaultModal({
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          <div className="vault-modules-grid">
+          <div className="vault-modules-grid pb-2">
             {lessons.map((offer) => (
               <div key={offer.plan} className="vault-module-cell">
                 <PlanOfferCard

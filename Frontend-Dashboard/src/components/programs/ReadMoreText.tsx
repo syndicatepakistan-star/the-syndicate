@@ -60,15 +60,17 @@ export function ReadMoreText({
   );
 }
 
-/** Shared layout classes for vault picker modals — header stays visible, body scrolls. */
+/** Shared layout classes for vault picker modals — single inner scroll region. */
 export const VAULT_MODAL_OVERLAY_CLASS =
-  "fixed inset-0 z-[115] flex items-start justify-center overflow-y-auto overscroll-contain bg-black/90 px-3 pb-6 pt-5 backdrop-blur-sm sm:px-6 sm:pb-8 sm:pt-8 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]";
+  "fixed inset-0 z-[115] flex items-center justify-center overflow-hidden bg-black/90 p-3 backdrop-blur-sm sm:p-6";
 
 export const VAULT_MODAL_PANEL_CLASS =
-  "relative flex max-h-[min(calc(100dvh-2.5rem),920px)] w-full max-w-[90rem] flex-col overflow-hidden rounded-2xl border-2 bg-[#04060d]";
+  "relative flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 bg-[#04060d]";
 
-export const VAULT_MODAL_HEADER_CLASS =
-  "sticky top-0 z-20 shrink-0 border-b border-white/10 bg-[#04060d]/98 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4";
+export const VAULT_MODAL_TOP_BAR_CLASS =
+  "shrink-0 border-b border-white/10 bg-[#04060d] px-4 py-3 sm:px-6 sm:py-4";
+
+export const VAULT_MODAL_HEADER_CLASS = VAULT_MODAL_TOP_BAR_CLASS;
 
 export const VAULT_MODAL_BODY_CLASS =
-  "min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 sm:px-6 sm:py-7 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]";
+  "vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-7 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]";

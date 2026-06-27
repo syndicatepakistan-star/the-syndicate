@@ -131,8 +131,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
     >
       <div
         className={cn(
-          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative w-full overflow-hidden rounded-2xl border-2 bg-black",
-          isPackDetail ? "max-w-5xl" : "max-w-2xl",
+          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative w-full overflow-hidden rounded-2xl border-2 bg-black max-w-[min(96vw,80rem)]",
           theme.modal
         )}
         onClick={(e) => e.stopPropagation()}
@@ -149,7 +148,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
           <X className="h-4 w-4" />
         </button>
 
-        <div className="max-h-[min(88dvh,760px)] overflow-y-auto px-6 py-8 sm:px-10 sm:py-10">
+        <div className="vault-modal-scroll max-h-[min(95dvh,960px)] overflow-y-auto overscroll-contain px-6 py-8 sm:px-10 sm:py-10 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]">
           <div className="flex flex-wrap items-center gap-3">
             <span
               className={cn(
@@ -195,8 +194,8 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             </span>
           </div>
 
-          <div className="mt-6 font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody text={structuredDescription} />
+          <div className="mt-6 w-full font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody text={structuredDescription} prominent />
           </div>
 
           <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">

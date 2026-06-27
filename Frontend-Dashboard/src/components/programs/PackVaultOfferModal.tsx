@@ -19,6 +19,7 @@ import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planO
 import {
   isVaultPackKey,
   VAULT_PACK_MODAL_COPY,
+  vaultCoursesForPack,
   vaultDisplayGroupsForPack,
   vaultPackAlaCarteTotal,
   vaultPackDisplayOfferCount,
@@ -52,6 +53,7 @@ export function PackVaultOfferModal({
   onModuleDetails,
   onUnlock,
   onOpenUnlocked,
+  onExploreTradingModule,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -79,10 +81,11 @@ export function PackVaultOfferModal({
     () => (packKey && isVaultPackKey(packKey) ? vaultDisplayGroupsForPack(packKey) : []),
     [packKey],
   );
-  const displayOfferCount = useMemo(
-    () => (packKey && isVaultPackKey(packKey) ? vaultPackDisplayOfferCount(packKey) : 0),
-    [packKey],
-  );
+  const displayOfferCount = useMemo(() => {
+    if (!packKey || !isVaultPackKey(packKey)) return 0;
+    if (packKey === "trading_technical_analysis") return vaultCoursesForPack(packKey).length;
+    return vaultPackDisplayOfferCount(packKey);
+  }, [packKey]);
 
   const handleModuleOpen = useCallback(
     (offer: PlanOfferDef) => {
@@ -126,6 +129,27 @@ export function PackVaultOfferModal({
   };
 
   const renderGroup = (group: VaultPackDisplayGroup) => {
+    if (isTradingPack && group.parent) {
+      const parent = group.parent;
+      return (
+        <LazyVaultModuleCell key={parent.plan} minHeight="clamp(14rem,32vw,18rem)">
+          <PlanOfferCard
+            offer={parent}
+            size="module"
+            cardKind="module"
+            cardStats={resolveOfferCardStats(parent, "module")}
+            busy={busyPlan === parent.plan}
+            actionLabel={resolveOfferActionLabel(parent, purchasedSlugs, accessTier, moneyMasteryActive)}
+            onDetails={() => {
+              if (onExploreTradingModule) onExploreTradingModule(parent);
+              else handleModuleDetails(parent);
+            }}
+            onOpen={() => handleModuleOpen(parent)}
+          />
+        </LazyVaultModuleCell>
+      );
+    }
+
     if (!group.parent) {
       const offer = group.offers[0];
       if (!offer) return null;

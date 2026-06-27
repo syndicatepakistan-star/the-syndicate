@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { isPlanOfferComingSoon } from "@/components/programs/planOfferCatalog";
+import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
@@ -117,6 +118,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
 
   const theme = DETAIL_THEMES[offer.accent];
   const isPackDetail = isVaultPackKey(offer.plan);
+  const isTradingLesson = isTradingSubmoduleSlug(offer.plan);
   const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
   const comingSoon = isPlanOfferComingSoon(offer);
   const structuredDescription = resolveOfferStructuredDescription(offer);
@@ -158,7 +160,7 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
                   : cn("bg-black/60", theme.featureBorder, theme.title)
               )}
             >
-              {comingSoon ? "Coming soon" : isPackDetail ? "Full pack" : "Module"}
+              {comingSoon ? "Coming soon" : isPackDetail ? "Full pack" : isTradingLesson ? "Lesson" : "Module"}
             </span>
           </div>
 
@@ -198,30 +200,34 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             <StructuredDescriptionBody text={structuredDescription} prominent />
           </div>
 
-          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
-            {isPackDetail ? "Included modules" : "What you get"}
-          </p>
+          {!isTradingLesson ? (
+            <>
+              <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
+                {isPackDetail ? "Included modules" : "What you get"}
+              </p>
 
-          <ul
-            className={cn("mt-3", featureColumns ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "space-y-3")}
-            role="list"
-          >
-            {offer.detailFeatures.map((feature) => (
-              <li key={feature}>
-                <div
-                  className={cn(
-                    "plan-offer-detail__feature flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
-                    theme.featureBorder
-                  )}
-                >
-                  <OfferDetailCheck accent={offer.accent} />
-                  <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
-                    {feature}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+              <ul
+                className={cn("mt-3", featureColumns ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "space-y-3")}
+                role="list"
+              >
+                {offer.detailFeatures.map((feature) => (
+                  <li key={feature}>
+                    <div
+                      className={cn(
+                        "plan-offer-detail__feature flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
+                        theme.featureBorder
+                      )}
+                    >
+                      <OfferDetailCheck accent={offer.accent} />
+                      <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
+                        {feature}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </div>
       </div>
     </div>,

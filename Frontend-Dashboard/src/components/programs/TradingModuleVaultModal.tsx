@@ -133,7 +133,7 @@ export function TradingModuleVaultModal({
               prominent
             />
             <p className="mt-5 font-mono text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
-              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $9
+              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $3
               each. Lifetime access recorded to your dashboard after checkout.
             </p>
           </div>
@@ -154,7 +154,7 @@ export function TradingModuleVaultModal({
               cardStats={moduleStats}
               busy={busyPlan === moduleOffer.plan}
               actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => onDetails(moduleOffer)}
+              onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
               onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
             />
             {moduleUnlocked ? (

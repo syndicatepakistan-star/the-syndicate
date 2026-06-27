@@ -249,6 +249,54 @@ The Seven Questions
 The 7-Dial Safe: Engineering, Timing, Monopoly, People, Distribution, Durability, and Secrets
 The Blueprint (Conclusion)
 The 10-step master plan to move from Zero to One Million`,
+
+  "business-warfare": `The Hook
+Markets do not reward the polite. They reward the operator who can absorb pressure, read hostile intent, and execute while everyone else is negotiating with their emotions. Business Warfare is not about aggression for its own sake — it is about installing the psychological armor required to compete when margins shrink, competitors copy your moves, and the environment turns hostile. Amateurs panic, pivot randomly, and bleed capital. Syndicate operators treat competition as intelligence warfare: calm under fire, decisive under uncertainty, and impossible to shake when the chart or the client turns against them.
+
+The Core Protocol
+This protocol rewires how you respond to stress, conflict, and competitive pressure. You will learn to separate signal from noise when markets move against you, when a launch underperforms, or when a rival undercuts your offer. The framework installs emotional discipline as an operational asset — not a personality trait. You audit fear as data, convert setbacks into tactical intelligence, and execute from a position of controlled aggression rather than reactive desperation. Business is not a debate club. It is a contest for territory, attention, and capital. This course gives you the mindset to win it without burning out or self-sabotaging under pressure.
+
+What You Will Learn
+Emotional control under market and competitive pressure
+Decisive execution when outcomes are uncertain
+Reading hostile environments without panic responses
+Competitive intelligence and strategic positioning
+Turning setbacks into actionable battlefield data
+Maintaining operational tempo when others freeze
+Building psychological resilience as a revenue asset
+The Syndicate standard for steady leadership under fire`,
+
+  "syndicate-13-business-rules": `The Hook
+Most entrepreneurs fail not because they lack talent, but because they violate rules they never learned — or worse, rules they knew and ignored. The Syndicate 13 Business Rules is the non-negotiable operating code for building wealth without self-destruction. These are not motivational quotes pasted on a wall. They are hard constraints distilled from real operators who survived market cycles, bad partners, cash-flow collapses, and the seductive trap of looking successful while bleeding internally. If your business feels chaotic, your decisions feel emotional, or your growth keeps resetting to zero, you are not missing a tactic. You are missing a constitution.
+
+The Core Protocol
+This curriculum installs thirteen permanent business laws that govern how Syndicate operators allocate time, capital, attention, and trust. Each rule is a filter: it tells you what to pursue, what to reject, and what to never compromise regardless of short-term upside. You will learn why amateur operators chase volume while elites protect margin, why visibility without systems is a liability, and why certain shortcuts guarantee long-term fragility. The protocol is designed to be referenced for life — a decision framework you run before every major move, partnership, hire, or expansion. Master these rules and you stop repeating expensive mistakes. Ignore them and the market will teach you the same lessons at a higher price.
+
+What You Will Learn
+The thirteen non-negotiable Syndicate business laws
+Decision filters for capital, time, and attention allocation
+Why margin protection beats vanity growth
+Partnership, hiring, and trust standards that prevent collapse
+Systems thinking over heroics and hustle theatre
+Long-term sovereignty vs. short-term ego wins
+How elite operators audit themselves before scaling
+Building a business constitution that survives pressure cycles`,
+
+  "syndicate-money-philosophy": `The Hook
+Money is not morality, luck, or a personality test — it is a language. Most people were trained to feel guilty wanting it, confused earning it, and reckless spending it. That confusion is why they stay trapped in cycles of feast, famine, and financial anxiety no matter how hard they work. Syndicate Money Philosophy dismantles the amateur relationship with wealth and replaces it with a cold, precise framework: money as stored leverage, deployed intentionally, compounded relentlessly, and never worshipped or feared. Until you fix how you think about money, every tactic you learn will underperform because your operating system will sabotage the execution.
+
+The Core Protocol
+This protocol separates wealth creation from social performance. You will learn how operators allocate capital toward assets, systems, and asymmetric bets while amateurs allocate toward status, comfort, and consumption disguised as investment. The curriculum covers the psychology of scarcity and abundance, the discipline of delayed gratification, and the Syndicate principle that cash flow without control is just a faster way to go broke. You are not learning to "manifest" wealth. You are learning to command it — earn with intention, deploy with structure, and compound with patience. This is the philosophical foundation every other Syndicate program assumes you already understand.
+
+What You Will Learn
+Money as leverage, not identity or status
+Scarcity vs. abundance psychology in real business decisions
+Capital allocation: assets, systems, and asymmetric bets
+The amateur traps of consumption disguised as investment
+Delayed gratification as a compounding weapon
+Cash-flow discipline without fear-based hoarding
+How elite operators think about risk, reward, and reserves
+Building a personal money philosophy that supports empire growth`,
 };
 
 const BY_TITLE = new Map<string, string>(
@@ -262,6 +310,9 @@ const BY_TITLE = new Map<string, string>(
     "the 9 to 5 exit strategy": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["the-9-to-5-exit-strategy"],
     "hustle hard": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["hustle-hard"],
     "zero to one million": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["zero-to-one-million"],
+    "business warfare": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["business-warfare"],
+    "syndicate 13 business rules": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["syndicate-13-business-rules"],
+    "syndicate money philosophy": BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS["syndicate-money-philosophy"],
   }),
 );
 
@@ -274,6 +325,9 @@ const LEVEL1_SLUG_TO_DESCRIPTION_KEY: Record<string, keyof typeof BUSINESS_PSYCH
   "level1-psych-06": "the-compound-effect",
   "level1-psych-07": "the-micro-business-protocol",
   "level1-psych-08": "mastering-risk-and-uncertainty",
+  "level1-psych-09": "business-warfare",
+  "level1-psych-10": "syndicate-13-business-rules",
+  "level1-psych-11": "syndicate-money-philosophy",
 };
 
 export function curatedBusinessPsychologyDescription(

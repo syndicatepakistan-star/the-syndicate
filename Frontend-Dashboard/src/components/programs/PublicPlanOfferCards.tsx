@@ -15,6 +15,7 @@ import {
   type CheckoutOfferKey,
   type PlanOfferDef,
 } from "@/components/programs/planOfferCatalog";
+import { isTradingModuleSlug } from "@/components/programs/tradingVaultCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import {
   isVaultOfferUnlocked,
@@ -305,7 +306,13 @@ export function PublicPlanOfferCards({
         moneyMasteryActive={moneyMasteryActive}
         onClose={() => setVaultPackOffer(null)}
         onDetails={setDetailOffer}
-        onModuleDetails={setDetailOffer}
+        onModuleDetails={(offer) => {
+          if (isTradingModuleSlug(offer.plan)) {
+            setTradingModuleOffer(offer);
+            return;
+          }
+          setDetailOffer(offer);
+        }}
         onUnlock={(offer) => void joinOffer(offer)}
         onOpenUnlocked={openUnlocked}
         onExploreTradingModule={(offer) => setTradingModuleOffer(offer)}

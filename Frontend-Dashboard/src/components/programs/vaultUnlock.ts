@@ -1,5 +1,7 @@
 import {
+  isKnightPlanSlug,
   isPlanOfferComingSoon,
+  KNIGHT_PLAN_COMING_SOON,
   type CheckoutOfferKey,
   type PlanOfferDef,
   type VaultPackKey,
@@ -35,6 +37,15 @@ export function isVaultOfferUnlocked(
   return userHasVaultPlanAccess(String(offer.plan), purchasedSlugs, accessTier, moneyMasteryActive, offer.vaultPackPlan);
 }
 
+/** The Knight is monthly membership only — never unlocked by Money Mastery. */
+export function isKnightPlanUnlocked(
+  purchasedSlugs: ReadonlySet<string>,
+  knightSubscriptionActive?: boolean | null,
+): boolean {
+  if (knightSubscriptionActive) return true;
+  return purchasedSlugs.has("king") || purchasedSlugs.has("knight");
+}
+
 /** Check unlock for a raw plan slug (pack, module, or lesson). */
 export function userHasVaultPlanAccess(
   planRaw: string,
@@ -43,10 +54,14 @@ export function userHasVaultPlanAccess(
   moneyMasteryActive?: boolean | null,
   vaultPackPlan?: VaultPackKey,
 ): boolean {
-  if (hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return true;
-
   const plan = (planRaw || "").trim().toLowerCase();
   if (!plan) return false;
+
+  if (isKnightPlanSlug(plan)) {
+    return purchasedSlugs.has(plan) || purchasedSlugs.has(plan === "king" ? "knight" : "king");
+  }
+
+  if (hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return true;
   if (purchasedSlugs.has(plan)) return true;
 
   const pack = vaultPackPlan ?? vaultPackForPlanSlug(plan);
@@ -89,7 +104,13 @@ export function resolveOfferActionLabel(
   purchasedSlugs: ReadonlySet<string>,
   accessTier: string | undefined | null,
   moneyMasteryActive?: boolean | null,
+  knightSubscriptionActive?: boolean | null,
 ): string {
+  const plan = String(offer.plan);
+  if (isKnightPlanSlug(plan)) {
+    if (KNIGHT_PLAN_COMING_SOON) return "Coming Soon";
+    return isKnightPlanUnlocked(purchasedSlugs, knightSubscriptionActive) ? "Open" : offer.openLabel;
+  }
   if (isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
     return "Coming Soon";
   }

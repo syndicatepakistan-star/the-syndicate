@@ -12,6 +12,7 @@ import {
   PLAN_OFFERS_PRIMARY,
   PLAN_OFFERS_VAULT,
   isPlanOfferComingSoon,
+  isKnightPlanSlug,
   type CheckoutOfferKey,
   type PlanOfferDef,
 } from "@/components/programs/planOfferCatalog";
@@ -80,6 +81,7 @@ export function PublicPlanOfferCards({
   const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
   const [accessTier, setAccessTier] = useState<string | null>(null);
   const [moneyMasteryActive, setMoneyMasteryActive] = useState(false);
+  const [knightSubscriptionActive, setKnightSubscriptionActive] = useState(false);
   const packModalOpenedRef = useRef(false);
   const isLarge = size === "large";
 
@@ -88,12 +90,14 @@ export function PublicPlanOfferCards({
       setPurchasedSlugs(new Set());
       setAccessTier(null);
       setMoneyMasteryActive(false);
+      setKnightSubscriptionActive(false);
       return;
     }
     const [slugs, identity] = await Promise.all([fetchPurchasedPlanSlugs(), fetchPortalIdentity()]);
     setPurchasedSlugs(new Set(slugs));
     setAccessTier(identity?.access_tier ?? null);
     setMoneyMasteryActive(!!identity?.money_mastery_active);
+    setKnightSubscriptionActive(!!identity?.knight_subscription_active);
   }, []);
 
   useEffect(() => {
@@ -191,7 +195,12 @@ export function PublicPlanOfferCards({
 
   const joinOffer = useCallback(
     async (offer: PlanOfferDef) => {
-      if (isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+      if (isKnightPlanSlug(String(offer.plan))) {
+        if (isPlanOfferComingSoon(offer)) return;
+      } else if (
+        isPlanOfferComingSoon(offer) &&
+        !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)
+      ) {
         return;
       }
       if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
@@ -239,8 +248,10 @@ export function PublicPlanOfferCards({
       vaultPack != null &&
       (isVaultParentPackOpenable(vaultPack, purchasedSet, accessTier, moneyMasteryActive) ||
         isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier, moneyMasteryActive));
-    const comingSoon =
-      isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
+    const comingSoon = isKnightPlanSlug(String(offer.plan))
+      ? isPlanOfferComingSoon(offer)
+      : isPlanOfferComingSoon(offer) &&
+        !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
 
     return (
       <PlanOfferCard
@@ -257,7 +268,13 @@ export function PublicPlanOfferCards({
             ? packPlaylistOpenable
               ? "Open"
               : offer.openLabel
-            : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
+            : resolveOfferActionLabel(
+                offer,
+                purchasedSet,
+                accessTier,
+                moneyMasteryActive,
+                knightSubscriptionActive,
+              )
         }
         onDetails={() => {
           if (offer.openAction === "vault_picker") {

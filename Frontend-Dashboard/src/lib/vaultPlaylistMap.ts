@@ -152,6 +152,20 @@ export function buildDashboardPackHref(packSlug: string): string {
   return `/dashboard?section=programs&pack=${encodeURIComponent(pack)}`;
 }
 
+export function parseDashboardPlaylistId(href: string): number | null {
+  try {
+    const url = href.startsWith("http")
+      ? new URL(href)
+      : new URL(href, "https://the-syndicate.com");
+    const raw = (url.searchParams.get("playlist") || "").trim();
+    if (!raw || !/^\d+$/.test(raw)) return null;
+    const id = Number(raw);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Pack-level playlist for OPEN / post-checkout (not agentic_ai_c01-style submodule rows). */
 export function vaultDefaultPlaylistIdForPack(
   packSlug: string,

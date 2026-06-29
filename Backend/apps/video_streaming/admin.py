@@ -79,9 +79,10 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
             {
                 "fields": ("title", "slug", "vault_plan_slug", "category", "price", "rating", "cover_image"),
                 "description": (
-                    "Set vault_plan_slug to link a mid-ticket module (e.g. agentic_ai_c01, ai_content_c05, "
-                    "trading_scalpel_protocol). One playlist per module slug. Pack purchases unlock all "
-                    "modules in that pack in the UI; each module still needs its playlist for playback."
+                    "Pack playlists: agentic_ai, ai_content_automation, trading_technical_analysis. "
+                    "Module playlists: agentic_ai_c01, ai_content_c02, trading_scalpel_protocol, etc. "
+                    "One vault_plan_slug per playlist (hyphens are auto-converted to underscores). "
+                    "Pack purchases unlock all modules in that pack; each module still needs its own playlist for playback."
                 ),
             },
         ),

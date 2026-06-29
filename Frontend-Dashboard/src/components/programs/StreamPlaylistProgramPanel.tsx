@@ -7,9 +7,9 @@ import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import { useTabResume } from "@/hooks/useTabResume";
 import {
   fetchStreamPlaylistDetail,
+  fetchStreamVideoPlayback,
   getCachedStreamVideoPlayback,
   prefetchStreamVideoPlaybacks,
-  prefetchStreamPlaylistExperience,
   purgeExpiredStreamPlaybackCache,
   warmStreamVideoMedia,
   type StreamPayload,
@@ -195,7 +195,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const loadPlaylist = useCallback(async () => {
     setLoading(true);
     setErr(null);
-    void prefetchStreamPlaylistExperience(playlistId);
     try {
       const p = await fetchStreamPlaylistDetail(playlistId);
       setPlaylist(p);
@@ -215,15 +214,25 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       }
       setPlaybackCache(seededCache);
 
-      const firstUrl = videoIds[0] != null ? seededCache[videoIds[0]]?.playback_url : null;
-      if (firstUrl) warmStreamVideoMedia([firstUrl], { priority: true });
-
       if (videoIds.length > 0) {
         const priorityId = videoIds[0]!;
-        const eagerIds = videoIds.slice(0, 3);
+        const eagerCount = videoIds.length > 12 ? 1 : Math.min(3, videoIds.length);
+        const eagerIds = videoIds.slice(0, eagerCount);
+
+        try {
+          const firstPb =
+            seededCache[priorityId] ??
+            (await fetchStreamVideoPlayback(priorityId, { context: "programs" }));
+          setPlaybackCache((prev) => ({ ...prev, [priorityId]: firstPb }));
+          if (firstPb.playback_url) warmStreamVideoMedia([firstPb.playback_url], { priority: true });
+        } catch {
+          // Panel still mounts; hook retries playback.
+        }
+
         void prefetchStreamVideoPlaybacks(eagerIds, {
+          context: "programs",
           priorityId,
-          concurrency: 3,
+          concurrency: eagerCount,
         }).then((prefetched) => {
           setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
           warmStreamVideoMedia(
@@ -236,10 +245,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             { priority: true }
           );
         });
-        const restIds = videoIds.slice(3);
+
+        const restIds = videoIds.slice(eagerCount);
         if (restIds.length > 0) {
           const warmRest = () => {
-            void prefetchStreamVideoPlaybacks(restIds, { concurrency: 4 }).then((prefetched) => {
+            void prefetchStreamVideoPlaybacks(restIds, { context: "programs", concurrency: 3 }).then((prefetched) => {
               setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
             });
           };
@@ -670,18 +680,16 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               className={`flex aspect-video max-h-[min(58vh,640px)] w-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-white/65 sm:max-h-[min(62vh,720px)] ${playerShell}`}
             >
               <span className="rounded-full border border-violet-400/35 bg-violet-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-violet-100/90">
-                {!progressHydrated
-                  ? "Loading progress…"
-                  : activePlayback?.status === "processing"
-                    ? "Processing"
-                    : activePlayback?.status ?? "…"}
+                {activePlayback?.status === "processing"
+                  ? "Processing"
+                  : activePlayback?.status === "ready"
+                    ? "Loading video…"
+                    : activePlayback?.status ?? "Loading video…"}
               </span>
               <p>
-                {!progressHydrated
-                  ? "Restoring your watch position from this device."
-                  : activePlayback?.status === "processing"
-                    ? "This episode is still being prepared."
-                    : "Choose another episode or refresh when the video is ready."}
+                {activePlayback?.status === "processing"
+                  ? "This episode is still being prepared."
+                  : "Fetching a secure playback link for this episode."}
               </p>
             </div>
           ) : (

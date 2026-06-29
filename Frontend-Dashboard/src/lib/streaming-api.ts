@@ -594,7 +594,8 @@ export async function prefetchStreamPlaylistExperience(
       }
     }
 
-    const eagerIds = ids.slice(0, 3);
+    const eagerCount = ids.length > 12 ? 1 : Math.min(3, ids.length);
+    const eagerIds = ids.slice(0, eagerCount);
     const prefetched = await prefetchStreamVideoPlaybacks(eagerIds, {
       context: options?.context,
       priorityId,
@@ -611,7 +612,7 @@ export async function prefetchStreamPlaylistExperience(
       { priority: true }
     );
 
-    const restIds = ids.slice(3);
+    const restIds = ids.slice(eagerCount);
     if (restIds.length > 0) {
       const warmRest = () => {
         void prefetchStreamVideoPlaybacks(restIds, {

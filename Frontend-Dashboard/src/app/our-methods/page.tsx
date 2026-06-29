@@ -197,6 +197,7 @@ export default function OurMethodsPage() {
               title={block.title}
               summary={block.summary}
               paragraphs={block.paragraphs}
+              copyLayout={block.copyLayout}
               image={block.image}
               imageAlt={block.imageAlt}
               videoSrc={block.videoSrc}

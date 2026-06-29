@@ -15,6 +15,7 @@ export type MethodSplitCardProps = {
   title: string;
   summary: string;
   paragraphs: [string, string];
+  copyLayout?: "dual" | "single";
   image?: string;
   imageAlt: string;
   videoSrc?: string;
@@ -42,6 +43,7 @@ export function MethodSplitCard({
   title,
   summary,
   paragraphs,
+  copyLayout = "dual",
   image,
   imageAlt,
   videoSrc,
@@ -64,21 +66,25 @@ export function MethodSplitCard({
         <div className="flex min-w-0 flex-col justify-center">
           <h2 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline mt-1 ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
 
-          {moneyPowerTitle ? (
-            <CyberInsetPanel variant="blood" className="mt-4">
-              <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{summary}</p>
-            </CyberInsetPanel>
-          ) : (
-            <p className="mt-3 text-lg leading-relaxed text-zinc-100/88 sm:text-xl">{summary}</p>
-          )}
+          {summary.trim() ? (
+            moneyPowerTitle ? (
+              <CyberInsetPanel variant="blood" className="mt-4">
+                <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{summary}</p>
+              </CyberInsetPanel>
+            ) : (
+              <p className="mt-3 text-lg leading-relaxed text-zinc-100/88 sm:text-xl">{summary}</p>
+            )
+          ) : null}
 
           <div className="mt-5 grid gap-3 sm:gap-4">
             <CyberInsetPanel variant={moneyPowerTitle ? "toxic" : "cyan"} className="cyber-inset-mobile-pad">
               <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">{paragraphs[0]}</p>
             </CyberInsetPanel>
-            <CyberInsetPanel variant={moneyPowerTitle ? "void" : "violet"} plasmaBar={moneyPowerTitle} className="cyber-inset-mobile-pad">
-              <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">{paragraphs[1]}</p>
-            </CyberInsetPanel>
+            {copyLayout !== "single" && paragraphs[1]?.trim() ? (
+              <CyberInsetPanel variant={moneyPowerTitle ? "void" : "violet"} plasmaBar={moneyPowerTitle} className="cyber-inset-mobile-pad">
+                <p className="text-base leading-relaxed text-zinc-100/90 sm:text-lg">{paragraphs[1]}</p>
+              </CyberInsetPanel>
+            ) : null}
           </div>
 
           {footerEmphasis ? (

@@ -6,6 +6,8 @@ export type OurMethodsBlock = {
   title: string;
   summary: string;
   paragraphs: [string, string];
+  /** When single, only the first inset panel is shown (no duplicate second box). */
+  copyLayout?: "dual" | "single";
   image?: string;
   imageAlt: string;
   videoSrc?: string;
@@ -82,12 +84,13 @@ export const OUR_METHODS_BLOCKS: OurMethodsBlock[] = [
   {
     id: "techniques",
     title: "THE SYNDICATE TECHNIQUES",
-    summary:
-      "Immersive elite training — techniques you can implement from the first video.",
-    paragraphs: pairParagraphs(techniques, [
-      "The Syndicate brings clarity to the complicated dynamics of wealth and power accumulation. Through immersive, elite training programmes that — if implemented correctly — allow participants to learn the secrets to master money and power and to bend reality to their will.",
-      "Our special methods are designed to naturally absorb this information and put it into practice straight away. Every lesson delivers techniques that can be implemented immediately, from the very first video.",
-    ]),
+    summary: "",
+    copyLayout: "single",
+    paragraphs: [
+      techniques[0] ??
+        "The Syndicate brings clarity to the complicated dynamics of wealth and power accumulation. Through immersive, elite training programmes that — if implemented correctly — allow participants to learn the secrets to master money and power and to bend reality to their will. Our special methods are designed to naturally absorb this information and put it into practice straight away. Every lesson delivers techniques that can be implemented immediately, from the very first video.",
+      "",
+    ],
     image: "/assets/our-2.jpg",
     imageAlt: "Syndicate techniques in motion",
     accent: "amber",

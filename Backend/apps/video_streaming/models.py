@@ -208,14 +208,22 @@ class StreamPlaylist(models.Model):
         from accounts.vault_plan_catalog import VAULT_PACK_SLUGS, is_vault_course_plan_slug
 
         super().clean()
-        slug = (self.vault_plan_slug or "").strip().lower()
+        slug = (self.vault_plan_slug or "").strip().lower().replace("-", "_")
         if not slug:
+            self.vault_plan_slug = ""
             return
+        self.vault_plan_slug = slug
         if slug in VAULT_PACK_SLUGS:
             return
         if not is_vault_course_plan_slug(slug):
+            pack_hint = ", ".join(sorted(VAULT_PACK_SLUGS))
             raise ValidationError(
-                {"vault_plan_slug": f"Unknown vault module slug: {slug}. Sync with vault_plan_catalog.py."}
+                {
+                    "vault_plan_slug": (
+                        f"Unknown vault slug: {slug}. Use a pack slug ({pack_hint}) "
+                        f"or a module slug (e.g. agentic_ai_c01, ai_content_c02, trading_scalpel_protocol)."
+                    )
+                }
             )
 
     def save(self, *args, **kwargs):

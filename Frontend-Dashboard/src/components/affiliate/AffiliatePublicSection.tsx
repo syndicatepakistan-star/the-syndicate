@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { HelpCircle } from 'lucide-react'
 
 const VIMEO_EMBED =
@@ -38,6 +38,15 @@ const AFFILIATE_NOTCH_CLIP =
 
 export function AffiliatePublicSection({ className }: { className?: string }) {
   const [helpOpen, setHelpOpen] = useState(false)
+
+  useEffect(() => {
+    if (!helpOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setHelpOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [helpOpen])
 
   return (
     <section
@@ -124,27 +133,37 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-fuchsia-400/50 bg-black/70 text-fuchsia-100 shadow-[0_0_18px_rgba(217,70,239,0.4),0_0_26px_rgba(34,211,238,0.12)] transition hover:border-cyan-300/75 hover:text-cyan-50 hover:shadow-[0_0_26px_rgba(34,211,238,0.45)] md:h-11 md:w-11"
                     aria-expanded={helpOpen}
                     aria-controls="affiliate-how-panel"
-                    title="How it works"
+                    aria-label={helpOpen ? 'Hide how to use affiliate login' : 'Show how to use affiliate login'}
                   >
                     <HelpCircle className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
-                    <span className="sr-only">How affiliate login works</span>
                   </button>
                 </div>
                 <div className="mt-5 w-full space-y-4">
-                  <p className="sr-only">How affiliate login works</p>
                   {AFFILIATE_INTRO_PARAGRAPHS.map((paragraph, index) => (
                     <p key={paragraph.slice(0, 24)} className={cn(AFFILIATE_BODY_CLASS, index > 0 && 'text-slate-300/95')}>
                       {paragraph}
                     </p>
                   ))}
-                  <div id="affiliate-how-to-use" className="pt-2">
-                    <p className={AFFILIATE_HOW_TO_HEADING_CLASS}>How to use it</p>
-                    <ol className={AFFILIATE_HOW_TO_LIST_CLASS}>
-                      {AFFILIATE_HOW_TO_STEPS.map((step) => (
-                        <li key={step.slice(0, 28)}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
+                  {helpOpen ? (
+                    <div
+                      id="affiliate-how-panel"
+                      className="rounded-xl border border-fuchsia-500/25 bg-black/90 px-4 py-5 shadow-[inset_0_0_32px_rgba(0,0,0,0.65),0_0_24px_rgba(217,70,239,0.12)] sm:px-5 sm:py-6"
+                      role="region"
+                      aria-labelledby="affiliate-how-to-use-heading"
+                    >
+                      <p id="affiliate-how-to-use-heading" className={AFFILIATE_HOW_TO_HEADING_CLASS}>
+                        How to use it
+                      </p>
+                      <ol className={AFFILIATE_HOW_TO_LIST_CLASS}>
+                        {AFFILIATE_HOW_TO_STEPS.map((step, index) => (
+                          <li key={step.slice(0, 28)}>
+                            <span className="sr-only">Step {index + 1}. </span>
+                            {step}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="mt-7 flex justify-start">
                   <Link
@@ -179,28 +198,6 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
             />
           </div>
         </div>
-      </div>
-
-      <div className="relative z-10 mx-auto mt-4 w-full max-w-[min(1720px,calc(100vw-2.5rem))] md:mt-0">
-        {helpOpen ? (
-          <div
-            id="affiliate-how-panel"
-            className="mx-1 rounded-xl border border-cyan-400/35 bg-[#060912]/95 p-5 text-[16px] leading-relaxed text-slate-200 shadow-[0_0_32px_rgba(34,211,238,0.18),0_0_48px_rgba(217,70,239,0.08)] backdrop-blur-sm sm:mx-2 sm:text-[17px] md:mx-0 md:p-6 md:text-lg"
-          >
-            <p className="font-semibold uppercase tracking-[0.14em] text-cyan-200/95">How affiliate login works</p>
-            <div className="mt-3 space-y-3 text-left font-[family-name:var(--font-body)] text-sm leading-relaxed tracking-normal text-slate-300/95 sm:text-base">
-              {AFFILIATE_INTRO_PARAGRAPHS.map((paragraph) => (
-                <p key={`help-${paragraph.slice(0, 24)}`}>{paragraph}</p>
-              ))}
-            </div>
-            <p className="mt-5 font-semibold uppercase tracking-[0.14em] text-fuchsia-200/95">How to use it</p>
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-left font-[family-name:var(--font-body)] text-sm leading-relaxed tracking-normal text-slate-300/95 marker:text-fuchsia-300/90 sm:text-base">
-              {AFFILIATE_HOW_TO_STEPS.map((step) => (
-                <li key={`help-step-${step.slice(0, 28)}`}>{step}</li>
-              ))}
-            </ol>
-          </div>
-        ) : null}
       </div>
     </section>
   )

@@ -522,11 +522,12 @@ export function ProgramsCourseSection({
   }, [apiCourses, detailCourseId]);
 
   useEffect(() => {
-    if (streamPlaylists.length === 0) {
-      setDetailPlaylistId(null);
-    } else if (detailPlaylistId !== null && !streamPlaylists.some((p) => p.id === detailPlaylistId)) {
-      setDetailPlaylistId(null);
-    }
+    if (streamPlaylists.length === 0) return;
+    if (detailPlaylistId === null) return;
+    if (streamPlaylists.some((p) => p.id === detailPlaylistId)) return;
+    const urlPlaylist = new URLSearchParams(window.location.search).get("playlist");
+    if (urlPlaylist && Number(urlPlaylist) === detailPlaylistId) return;
+    setDetailPlaylistId(null);
   }, [streamPlaylists, detailPlaylistId]);
 
   useEffect(() => {
@@ -551,13 +552,12 @@ export function ProgramsCourseSection({
     setDetailCourseId(null);
     setDetailPlaylistId(id);
     setSecureView("detail");
-    void prefetchStreamPlaylistExperience(id);
+    void prefetchStreamPlaylistExperience(id, { context: "programs" });
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("section", "programs");
       url.searchParams.set("playlist", String(id));
       window.history.replaceState({}, "", url.toString());
-      requestAnimationFrame(resetProgramsViewportScroll);
     }
   };
   openStreamPlaylistRef.current = openStreamPlaylist;
@@ -776,29 +776,41 @@ export function ProgramsCourseSection({
     [openUnlockedPlaylistDirect, reloadApiCourses, reloadStreamPlaylists]
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = new URLSearchParams(window.location.search).get("playlist");
-    if (!raw || !/^\d+$/.test(raw)) return;
-    const playlistIdFromUrl = Number(raw);
-    if (!Number.isFinite(playlistIdFromUrl)) return;
-    const target = streamPlaylists.find((pl) => pl.id === playlistIdFromUrl);
-    if (!target) {
-      if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
-      setDetailCourseId(null);
-      setDetailPlaylistId(playlistIdFromUrl);
-      setSecureView("detail");
-      void prefetchStreamPlaylistExperience(playlistIdFromUrl);
-      return;
-    }
-    if (target.is_coming_soon) return;
-    if (!target.is_unlocked) return;
+  const streamPlaylistsRef = useRef(streamPlaylists);
+  streamPlaylistsRef.current = streamPlaylists;
+
+  const openPlaylistFromUrl = useCallback((playlistIdFromUrl: number) => {
+    if (!Number.isFinite(playlistIdFromUrl) || playlistIdFromUrl <= 0) return;
     if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
+    const target = streamPlaylistsRef.current.find((pl) => pl.id === playlistIdFromUrl);
+    if (target?.is_coming_soon) return;
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
-    void prefetchStreamPlaylistExperience(playlistIdFromUrl);
-  }, [streamPlaylists, detailPlaylistId, secureView]);
+    void prefetchStreamPlaylistExperience(playlistIdFromUrl, { context: "programs" });
+    const url = new URL(window.location.href);
+    url.searchParams.set("section", "programs");
+    url.searchParams.set("playlist", String(playlistIdFromUrl));
+    window.history.replaceState({}, "", url.toString());
+  }, [detailPlaylistId, secureView]);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = new URLSearchParams(window.location.search).get("playlist");
+    if (!raw || !/^\d+$/.test(raw)) return;
+    openPlaylistFromUrl(Number(raw));
+  }, [openPlaylistFromUrl]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPopState = () => {
+      const raw = new URLSearchParams(window.location.search).get("playlist");
+      if (!raw || !/^\d+$/.test(raw)) return;
+      openPlaylistFromUrl(Number(raw));
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [openPlaylistFromUrl]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -1237,6 +1249,7 @@ export function ProgramsCourseSection({
                       highlightPack={highlightPack}
                       onAlreadyUnlocked={handleOfferAlreadyUnlocked}
                       onCheckoutError={setCheckoutError}
+                      onOpenPlaylist={openStreamPlaylist}
                     />
                     {effectiveStreamPlaylists.length > 0 ? (
                       <PublicGoalPathSection

@@ -30,7 +30,11 @@ import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { fetchStreamPlaylists } from "@/lib/streaming-api";
-import { buildVaultModulePlaylistHref, fetchVaultPlaylistMap } from "@/lib/vaultPlaylistMap";
+import {
+  buildVaultModulePlaylistHref,
+  fetchVaultPlaylistMap,
+  parseDashboardPlaylistId,
+} from "@/lib/vaultPlaylistMap";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 
 const PACK_SPOTLIGHT: Record<
@@ -54,6 +58,7 @@ export function PublicPlanOfferCards({
   highlightPack,
   onAlreadyUnlocked,
   onCheckoutError,
+  onOpenPlaylist,
 }: {
   checkoutReturnPath?: string;
   embedded?: boolean;
@@ -61,6 +66,8 @@ export function PublicPlanOfferCards({
   highlightPack?: GlobePackKey;
   onAlreadyUnlocked?: (plan: CheckoutOfferKey) => void | Promise<void>;
   onCheckoutError?: (message: string) => void;
+  /** Dashboard programs: open lesson view immediately (router.push alone is a no-op when URL unchanged). */
+  onOpenPlaylist?: (playlistId: number) => void;
 } = {}) {
   const router = useRouter();
   const [highlightedPack, setHighlightedPack] = useState<GlobePackKey | null>(null);
@@ -166,6 +173,11 @@ export function PublicPlanOfferCards({
         );
         if (href !== checkoutReturnPath) {
           setVaultPackOffer(null);
+          const playlistId = parseDashboardPlaylistId(href);
+          if (playlistId && onOpenPlaylist) {
+            onOpenPlaylist(playlistId);
+            return;
+          }
           router.push(href);
           return;
         }
@@ -174,7 +186,7 @@ export function PublicPlanOfferCards({
       }
       router.push(checkoutReturnPath);
     },
-    [accessTier, checkoutReturnPath, moneyMasteryActive, purchasedSet, router]
+    [accessTier, checkoutReturnPath, moneyMasteryActive, onOpenPlaylist, purchasedSet, router]
   );
 
   const joinOffer = useCallback(

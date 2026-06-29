@@ -2556,18 +2556,22 @@ export default function Page() {
     if (!rootRef.current) return;
 
     const ctx = gsap.context(() => {
-      gsap.set("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])", { opacity: 0, y: 10 });
+      const inAnim = gsap.utils.toArray<HTMLElement>("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])");
+      if (inAnim.length) gsap.set(inAnim, { opacity: 0, y: 10 });
       const leftAnim = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
       const rightAnim = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
       if (leftAnim.length) gsap.set(leftAnim, { opacity: 0, x: -18 });
       if (rightAnim.length) gsap.set(rightAnim, { opacity: 0, x: 18 });
       /* Main column content must never be hidden by intro tweens (video has no data-anim). */
-      gsap.set("[data-dashboard-video-scroll], [data-dashboard-video-scroll] *", {
-        opacity: 1,
-        y: 0,
-        x: 0,
-        clearProps: "opacity,transform"
-      });
+      const videoScrollRoots = gsap.utils.toArray<HTMLElement>("[data-dashboard-video-scroll]");
+      if (videoScrollRoots.length) {
+        gsap.set(videoScrollRoots, {
+          opacity: 1,
+          y: 0,
+          x: 0,
+          clearProps: "opacity,transform"
+        });
+      }
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
       const inTargets = gsap.utils.toArray<HTMLElement>("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])");
@@ -2665,12 +2669,14 @@ export default function Page() {
       // Card hover lift/glow
       const cards = gsap.utils.toArray<HTMLElement>("[data-course-card]");
       // Premium reveal: fade/slide-in with stagger when the grid enters view
-      gsap.set(cards, { opacity: 0, y: 18 });
+      if (cards.length) {
+        gsap.set(cards, { opacity: 0, y: 18 });
+      }
       const wrap = document.querySelector<HTMLElement>("[data-cards-wrap]");
       let revealed = false;
       const io = new IntersectionObserver(
         (entries) => {
-          if (revealed) return;
+          if (revealed || cards.length === 0) return;
           const hit = entries.some((e) => e.isIntersecting);
           if (!hit) return;
           revealed = true;
@@ -2679,7 +2685,7 @@ export default function Page() {
         },
         { root: null, threshold: 0.18 }
       );
-      if (wrap) io.observe(wrap);
+      if (wrap && cards.length) io.observe(wrap);
 
       const cardDisposers: Array<() => void> = [];
       cards.forEach((card) => {
@@ -2889,11 +2895,13 @@ export default function Page() {
       if (!title) return;
 
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
-      tl.set(active, { filter: "brightness(1.08)" })
-        .to(beep, { opacity: 0.9, scaleX: 1, duration: 0.06 }, 0)
-        .fromTo(beep, { scaleX: 0.2 }, { scaleX: 1.05, duration: 0.12 }, 0)
-        .to(beep, { opacity: 0, duration: 0.18 }, 0.16)
-        .to(title, { x: 1.2, duration: 0.04 }, 0)
+      tl.set(active, { filter: "brightness(1.08)" });
+      if (beep) {
+        tl.to(beep, { opacity: 0.9, scaleX: 1, duration: 0.06 }, 0)
+          .fromTo(beep, { scaleX: 0.2 }, { scaleX: 1.05, duration: 0.12 }, 0)
+          .to(beep, { opacity: 0, duration: 0.18 }, 0.16);
+      }
+      tl.to(title, { x: 1.2, duration: 0.04 }, 0)
         .to(title, { x: -1.4, duration: 0.05 }, 0.05)
         .to(title, { x: 0.6, duration: 0.04 }, 0.11)
         .to(title, { x: 0, duration: 0.06 }, 0.16)

@@ -184,7 +184,7 @@ class StreamPlaylist(models.Model):
         blank=True,
         db_index=True,
         help_text=(
-            "Optional vault module checkout slug (e.g. agentic_ai_c01, trading_scalpel_protocol). "
+            "Optional vault checkout slug: full pack (agentic_ai) or module (agentic_ai_c01, trading_scalpel_protocol). "
             "Links this playlist to mid-ticket pack modules for unlock + Open from the vault modal."
         ),
     )
@@ -212,9 +212,7 @@ class StreamPlaylist(models.Model):
         if not slug:
             return
         if slug in VAULT_PACK_SLUGS:
-            raise ValidationError(
-                {"vault_plan_slug": "Use a module slug (e.g. agentic_ai_c01), not a full pack slug."}
-            )
+            return
         if not is_vault_course_plan_slug(slug):
             raise ValidationError(
                 {"vault_plan_slug": f"Unknown vault module slug: {slug}. Sync with vault_plan_catalog.py."}

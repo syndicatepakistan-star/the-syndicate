@@ -15,7 +15,7 @@ import {
   buildDashboardPackHref,
   clearVaultPlaylistMapCache,
   fetchVaultPlaylistMap,
-  vaultDefaultPlaylistIdForPack,
+  resolveVaultPackPlaylistId,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
@@ -268,7 +268,7 @@ export default function CheckoutSuccessScreen({
           if (isVaultPackKey(purchasedPlan)) {
             try {
               const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-              const playlistId = vaultDefaultPlaylistIdForPack(purchasedPlan, map);
+              const playlistId = resolveVaultPackPlaylistId(purchasedPlan, map);
               if (playlistId) {
                 nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
               } else {

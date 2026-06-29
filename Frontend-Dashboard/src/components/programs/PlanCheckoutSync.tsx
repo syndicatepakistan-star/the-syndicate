@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import { clearVaultPlaylistMapCache, fetchVaultPlaylistMap, vaultDefaultPlaylistIdForPack, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
+import { clearVaultPlaylistMapCache, fetchVaultPlaylistMap, resolveVaultPackPlaylistId, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
+import { fetchStreamPlaylists } from "@/lib/streaming-api";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 
@@ -26,11 +27,14 @@ export function PlanCheckoutSync() {
       let playlistId: number | null = null;
       if (plan) {
         try {
-          const map = await fetchVaultPlaylistMap({ forceRefresh: true });
+          const [map, streamPlaylists] = await Promise.all([
+            fetchVaultPlaylistMap({ forceRefresh: true }),
+            fetchStreamPlaylists().catch(() => []),
+          ]);
           if (isVaultPackKey(plan)) {
-            playlistId = vaultDefaultPlaylistIdForPack(plan, map);
+            playlistId = resolveVaultPackPlaylistId(plan, map, streamPlaylists);
           } else {
-            playlistId = vaultPlaylistIdForPlan(plan, map);
+            playlistId = vaultPlaylistIdForPlan(plan, map, streamPlaylists);
           }
         } catch {
           // Ignore map errors; grid refresh still runs below.

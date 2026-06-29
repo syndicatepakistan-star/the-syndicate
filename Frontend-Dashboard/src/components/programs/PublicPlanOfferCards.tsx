@@ -29,6 +29,7 @@ import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { fetchStreamPlaylists } from "@/lib/streaming-api";
 import { buildVaultModulePlaylistHref, fetchVaultPlaylistMap } from "@/lib/vaultPlaylistMap";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 
@@ -148,12 +149,21 @@ export function PublicPlanOfferCards({
   const openUnlocked = useCallback(
     async (offer: PlanOfferDef) => {
       try {
-        const map = await fetchVaultPlaylistMap();
-        const href = buildVaultModulePlaylistHref(offer.plan, map, checkoutReturnPath, {
-          purchasedSlugs: purchasedSet,
-          accessTier,
-          moneyMasteryActive,
-        });
+        const [map, streamPlaylists] = await Promise.all([
+          fetchVaultPlaylistMap(),
+          fetchStreamPlaylists().catch(() => []),
+        ]);
+        const href = buildVaultModulePlaylistHref(
+          offer.plan,
+          map,
+          checkoutReturnPath,
+          {
+            purchasedSlugs: purchasedSet,
+            accessTier,
+            moneyMasteryActive,
+          },
+          streamPlaylists,
+        );
         if (href !== checkoutReturnPath) {
           setVaultPackOffer(null);
           router.push(href);

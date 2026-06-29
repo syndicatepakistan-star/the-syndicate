@@ -1,7 +1,7 @@
 import {
   buildVaultModulePlaylistHref,
   fetchVaultPlaylistMap,
-  vaultDefaultPlaylistIdForPack,
+  resolveVaultPackPlaylistId,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
@@ -39,7 +39,7 @@ export async function resolvePlaylistIdForPlan(plan: string): Promise<number | n
     const map = await fetchVaultPlaylistMap();
     const key = plan.trim().toLowerCase();
     if (isVaultPackKey(key)) {
-      return vaultDefaultPlaylistIdForPack(key, map);
+      return resolveVaultPackPlaylistId(key, map);
     }
     return vaultPlaylistIdForPlan(key, map);
   } catch {

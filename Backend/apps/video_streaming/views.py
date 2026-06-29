@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 import stripe
 from django.conf import settings
+from accounts.vault_plan_catalog import VAULT_PACK_DISPLAY_TITLES, VAULT_PACK_SLUGS
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.http import Http404, HttpResponse
@@ -482,6 +483,33 @@ def vault_playlist_map_view(request):
         slug = str(row.get("vault_plan_slug") or "").strip().lower()
         if slug:
             mapping[slug] = row
+
+    # Pack-level playlists (e.g. Agentic AI id 289) — not submodule slugs like agentic_ai_c01.
+    for pack_slug in sorted(VAULT_PACK_SLUGS):
+        if pack_slug in mapping:
+            continue
+        pack_playlist = StreamPlaylist.objects.filter(vault_plan_slug=pack_slug).first()
+        if pack_playlist is None:
+            title_hint = VAULT_PACK_DISPLAY_TITLES.get(pack_slug, "")
+            if title_hint:
+                pack_playlist = (
+                    StreamPlaylist.objects.filter(title__icontains=title_hint)
+                    .exclude(vault_plan_slug__regex=r"_c\d{2}$")
+                    .order_by("id")
+                    .first()
+                )
+        if pack_playlist is None:
+            continue
+        if not pack_playlist.is_published and pack_playlist.id not in unlocked_ids:
+            continue
+        pack_rows = StreamPlaylistListSerializer(
+            [pack_playlist],
+            many=True,
+            context={"request": request, "unlocked_playlist_ids": unlocked_ids},
+        ).data
+        if pack_rows:
+            mapping[pack_slug] = pack_rows[0]
+
     resp = JsonResponse({"map": mapping})
     resp["Cache-Control"] = "public, max-age=60, s-maxage=300"
     return resp

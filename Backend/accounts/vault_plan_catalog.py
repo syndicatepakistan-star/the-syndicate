@@ -100,6 +100,12 @@ VAULT_COURSE_TITLES: dict[str, str] = {
 
 VAULT_PACK_SLUGS = frozenset({"agentic_ai", "ai_content_automation", "trading_technical_analysis"})
 
+VAULT_PACK_DISPLAY_TITLES: dict[str, str] = {
+    "agentic_ai": "Agentic AI",
+    "ai_content_automation": "AI Content Automation",
+    "trading_technical_analysis": "Trading Advanced Technical Analysis",
+}
+
 
 def vault_pack_for_module_slug(plan: str) -> str | None:
   """Parent pack slug for a vault module slug, or the pack slug itself."""

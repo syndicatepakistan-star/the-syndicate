@@ -783,8 +783,16 @@ export function ProgramsCourseSection({
     const playlistIdFromUrl = Number(raw);
     if (!Number.isFinite(playlistIdFromUrl)) return;
     const target = streamPlaylists.find((pl) => pl.id === playlistIdFromUrl);
-    if (!target) return;
-    if (target.is_coming_soon || !target.is_unlocked) return;
+    if (!target) {
+      if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
+      setDetailCourseId(null);
+      setDetailPlaylistId(playlistIdFromUrl);
+      setSecureView("detail");
+      void prefetchStreamPlaylistExperience(playlistIdFromUrl);
+      return;
+    }
+    if (target.is_coming_soon) return;
+    if (!target.is_unlocked) return;
     if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);

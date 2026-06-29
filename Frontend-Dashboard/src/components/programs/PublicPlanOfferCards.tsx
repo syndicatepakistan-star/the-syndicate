@@ -19,6 +19,7 @@ import { isTradingModuleSlug } from "@/components/programs/tradingVaultCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import {
   isVaultOfferUnlocked,
+  isVaultPackFullyUnlocked,
   isVaultParentPackOpenable,
   resolveOfferActionLabel,
 } from "@/components/programs/vaultUnlock";
@@ -146,14 +147,15 @@ export function PublicPlanOfferCards({
 
   const openUnlocked = useCallback(
     async (offer: PlanOfferDef) => {
-      if (isVaultPackKey(offer.plan)) {
-        setVaultPackOffer(offer);
-        return;
-      }
       try {
         const map = await fetchVaultPlaylistMap();
-        const href = buildVaultModulePlaylistHref(offer.plan, map, checkoutReturnPath);
+        const href = buildVaultModulePlaylistHref(offer.plan, map, checkoutReturnPath, {
+          purchasedSlugs: purchasedSet,
+          accessTier,
+          moneyMasteryActive,
+        });
         if (href !== checkoutReturnPath) {
+          setVaultPackOffer(null);
           router.push(href);
           return;
         }
@@ -162,7 +164,7 @@ export function PublicPlanOfferCards({
       }
       router.push(checkoutReturnPath);
     },
-    [checkoutReturnPath, router]
+    [accessTier, checkoutReturnPath, moneyMasteryActive, purchasedSet, router]
   );
 
   const joinOffer = useCallback(
@@ -211,9 +213,10 @@ export function PublicPlanOfferCards({
 
   const renderOffer = (offer: PlanOfferDef) => {
     const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
-    const parentPackOpenable =
+    const packPlaylistOpenable =
       vaultPack != null &&
-      isVaultParentPackOpenable(vaultPack, purchasedSet, accessTier, moneyMasteryActive);
+      (isVaultParentPackOpenable(vaultPack, purchasedSet, accessTier, moneyMasteryActive) ||
+        isVaultPackFullyUnlocked(vaultPack, purchasedSet, accessTier, moneyMasteryActive));
     const comingSoon =
       isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
 
@@ -229,7 +232,7 @@ export function PublicPlanOfferCards({
         comingSoon={comingSoon}
         actionLabel={
           offer.openAction === "vault_picker" && vaultPack
-            ? parentPackOpenable
+            ? packPlaylistOpenable
               ? "Open"
               : offer.openLabel
             : resolveOfferActionLabel(offer, purchasedSet, accessTier, moneyMasteryActive)
@@ -244,8 +247,8 @@ export function PublicPlanOfferCards({
         onOpen={() => {
           if (comingSoon) return;
           if (offer.openAction === "vault_picker" && vaultPack) {
-            if (parentPackOpenable) {
-              setVaultPackOffer(offer);
+            if (packPlaylistOpenable) {
+              void openUnlocked(offer);
               return;
             }
             void joinOffer(offer);

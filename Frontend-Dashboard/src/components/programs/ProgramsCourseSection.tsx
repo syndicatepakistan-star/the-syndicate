@@ -10,7 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
 import { CourseVideoPlaylist } from "@/components/programs/CourseVideoPlaylist";
@@ -24,12 +24,13 @@ import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/comp
 import { isVaultCourseSlug, isVaultPackKey, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
-import { resetDashboardShellScroll } from "@/lib/dashboardShellScroll";
+import { markDashboardCheckoutReturn, resetProgramsInnerScrollOnly } from "@/lib/dashboardShellScroll";
 import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
   normalizeLevel1ProgramPlaylists,
+  ownedVaultSubmodulePlaylistsForDashboard,
   resolveProgramPlaylistDescription,
   resolveProgramPlaylistHighlightId,
   resolveProgramPlaylistHighlightSlug,
@@ -196,10 +197,15 @@ function ProgramThumbnailAccessBadge({
   }
   if (!locked) return null;
   return (
-    <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-2 text-center">
-      <span className="font-black uppercase leading-none tracking-[0.1em] text-[clamp(1.5rem,6vw,2.75rem)] text-red-600 drop-shadow-[0_4px_28px_rgba(0,0,0,0.95)] [text-shadow:0_0_32px_rgba(220,38,38,0.95),0_2px_8px_rgba(0,0,0,0.95)] sm:text-[clamp(1.75rem,4.5vw,3rem)]">
-        Locked
+    <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
+      <span className="flex h-[clamp(2.75rem,11vw,4.25rem)] w-[clamp(2.75rem,11vw,4.25rem)] items-center justify-center rounded-full border border-red-400/55 bg-black/72 shadow-[0_0_28px_rgba(220,38,38,0.55)]">
+        <Lock
+          className="h-[clamp(1.35rem,5vw,2.1rem)] w-[clamp(1.35rem,5vw,2.1rem)] text-red-500"
+          strokeWidth={2.4}
+          aria-hidden
+        />
       </span>
+      <span className="sr-only">Locked</span>
     </span>
   );
 }
@@ -330,8 +336,15 @@ export function ProgramsCourseSection({
 
   const effectiveStreamPlaylists = useMemo(() => {
     const normalized = normalizeLevel1ProgramPlaylists(streamPlaylists);
-    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return normalized;
-    return normalized.map((pl) => ({ ...pl, is_unlocked: true }));
+    const ownedVaultModules = ownedVaultSubmodulePlaylistsForDashboard(streamPlaylists);
+    const mergedById = new Map<number, (typeof normalized)[number]>();
+    for (const pl of normalized) mergedById.set(pl.id, pl);
+    for (const pl of ownedVaultModules) {
+      if (!mergedById.has(pl.id)) mergedById.set(pl.id, pl);
+    }
+    const merged = Array.from(mergedById.values());
+    if (!hasMoneyMasteryAccess(accessTier, moneyMasteryActive)) return merged;
+    return merged.map((pl) => ({ ...pl, is_unlocked: true }));
   }, [streamPlaylists, accessTier, moneyMasteryActive]);
 
   const effectiveApiCourses = useMemo(() => {
@@ -354,12 +367,11 @@ export function ProgramsCourseSection({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refreshFromCheckout = () => {
+      markDashboardCheckoutReturn();
       clearStreamPlaylistsCache();
       clearVaultPlaylistMapCache();
       void reloadStreamPlaylists({ forceRefresh: true });
       void reloadApiCourses();
-      resetProgramsViewportScroll();
-      requestAnimationFrame(() => resetProgramsViewportScroll());
       try {
         window.sessionStorage.removeItem("playlist_checkout_confirmed");
         window.sessionStorage.removeItem("plan_checkout_confirmed");
@@ -378,15 +390,23 @@ export function ProgramsCourseSection({
       refreshFromCheckout();
       const detail = (e as CustomEvent<{ plan?: string; playlistId?: number }>).detail;
       const plan = (detail?.plan || "").trim().toLowerCase();
-      if (plan && isVaultPackKey(plan)) {
-        if (GLOBE_PACK_KEYS.has(plan as GlobePackKey)) {
-          setHighlightPack(plan as GlobePackKey);
-        }
-        toast.success("Pack unlocked — choose a module below.");
-        return;
-      }
       if (detail?.playlistId) {
         openUnlockedPlaylistDirect(detail.playlistId);
+        return;
+      }
+      if (plan && isVaultPackKey(plan)) {
+        void resolvePlaylistIdForPlan(plan).then((playlistId) => {
+          if (playlistId) {
+            openUnlockedPlaylistDirect(playlistId);
+            toast.success("Pack unlocked — opening your playlist.");
+            return;
+          }
+          if (GLOBE_PACK_KEYS.has(plan as GlobePackKey)) {
+            setHighlightPack(plan as GlobePackKey);
+          }
+          toast.success("Pack unlocked — choose a module below.");
+        });
+        return;
       }
     };
 
@@ -524,9 +544,7 @@ export function ProgramsCourseSection({
   };
 
   const resetProgramsViewportScroll = () => {
-    resetDashboardShellScroll();
-    document.querySelector<HTMLElement>(".programs-grid-scroll")?.scrollTo({ top: 0, behavior: "auto" });
-    document.querySelector<HTMLElement>(".programs-lesson-scroll")?.scrollTo({ top: 0, behavior: "auto" });
+    resetProgramsInnerScrollOnly();
   };
 
   const openStreamPlaylist = (id: number) => {
@@ -668,12 +686,12 @@ export function ProgramsCourseSection({
     (items: StreamPlaylistListItem[], order: readonly string[]) => {
       const rank = new Map(order.map((slug, index) => [slug, index]));
       return [...items].sort((a, b) => {
-        const aRank = rank.get(a.slug?.trim().toLowerCase() ?? "") ?? 999;
-        const bRank = rank.get(b.slug?.trim().toLowerCase() ?? "") ?? 999;
-        if (aRank !== bRank) return aRank - bRank;
         const aUnlocked = !!a.is_unlocked;
         const bUnlocked = !!b.is_unlocked;
         if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
+        const aRank = rank.get(a.slug?.trim().toLowerCase() ?? "") ?? 999;
+        const bRank = rank.get(b.slug?.trim().toLowerCase() ?? "") ?? 999;
+        if (aRank !== bRank) return aRank - bRank;
         return a.title.localeCompare(b.title);
       });
     },
@@ -732,6 +750,12 @@ export function ProgramsCourseSection({
       }
       if (isVaultPackKey(plan)) {
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists({ forceRefresh: true })]);
+        const playlistId = await resolvePlaylistIdForPlan(plan);
+        if (playlistId) {
+          openUnlockedPlaylistDirect(playlistId);
+          toast.success("Pack already active — opening your playlist.");
+          return;
+        }
         setHighlightPack(plan);
         toast.success("Pack already active — choose a module below.");
         return;
@@ -768,7 +792,7 @@ export function ProgramsCourseSection({
     void prefetchStreamPlaylistExperience(playlistIdFromUrl);
   }, [streamPlaylists, detailPlaylistId, secureView]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const shell = document.querySelector<HTMLElement>("[data-main-shell-scroll]");
     if (!shell) return;
@@ -776,13 +800,9 @@ export function ProgramsCourseSection({
     if (lessonActive) {
       shell.setAttribute("data-programs-lesson-active", "");
       shell.removeAttribute("data-programs-grid-active");
-      resetProgramsViewportScroll();
-      requestAnimationFrame(() => resetProgramsViewportScroll());
     } else if (inProgramGridView) {
       shell.setAttribute("data-programs-grid-active", "");
       shell.removeAttribute("data-programs-lesson-active");
-      resetProgramsViewportScroll();
-      requestAnimationFrame(() => resetProgramsViewportScroll());
     } else {
       shell.removeAttribute("data-programs-lesson-active");
       shell.removeAttribute("data-programs-grid-active");
@@ -792,25 +812,6 @@ export function ProgramsCourseSection({
       shell.removeAttribute("data-programs-grid-active");
     };
   }, [inPlaylistDetail, inCourseDetail, inProgramGridView]);
-
-  useLayoutEffect(() => {
-    if (typeof window === "undefined" || !inProgramGridView) return;
-    const params = new URLSearchParams(window.location.search);
-    let fromCheckout =
-      params.get("playlist_checkout") === "success" || params.get("plan_checkout") === "success";
-    if (!fromCheckout) {
-      try {
-        fromCheckout =
-          window.sessionStorage.getItem("playlist_checkout_confirmed") === "1" ||
-          window.sessionStorage.getItem("plan_checkout_confirmed") === "1";
-      } catch {
-        fromCheckout = false;
-      }
-    }
-    if (!fromCheckout) return;
-    resetProgramsViewportScroll();
-    requestAnimationFrame(() => resetProgramsViewportScroll());
-  }, [inProgramGridView]);
 
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;

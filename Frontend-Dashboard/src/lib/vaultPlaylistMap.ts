@@ -1,10 +1,22 @@
 import { resolveClientApiUrl, resolvePortalProxyUrl } from "@/lib/portal-api";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
-import { isVaultPackKey, vaultPackForPlanSlug } from "@/components/programs/vaultPackCatalog";
+import {
+  isVaultPackKey,
+  vaultCoursesForPack,
+  vaultDisplayGroupsForPack,
+  vaultPackForPlanSlug,
+} from "@/components/programs/vaultPackCatalog";
+import { userHasVaultPlanAccess } from "@/components/programs/vaultUnlock";
 import {
   isTradingModuleSlug,
   tradingParentModuleForSlug,
 } from "@/components/programs/tradingVaultCatalog";
+
+export type VaultPlaylistUnlockContext = {
+  purchasedSlugs?: ReadonlySet<string>;
+  accessTier?: string | null;
+  moneyMasteryActive?: boolean | null;
+};
 
 export type VaultPlaylistMapEntry = StreamPlaylistListItem & {
   vault_plan_slug?: string;
@@ -111,17 +123,79 @@ export function buildDashboardPackHref(packSlug: string): string {
   return `/dashboard?section=programs&pack=${encodeURIComponent(pack)}`;
 }
 
-/** After checkout or Open: full packs open the vault picker; modules open their playlist. */
+/** First module playlist in catalog order (used after full-pack checkout). */
+export function vaultDefaultPlaylistIdForPack(
+  packSlug: string,
+  map: ReadonlyMap<string, VaultPlaylistMapEntry>,
+): number | null {
+  const key = packSlug.trim().toLowerCase();
+  if (!isVaultPackKey(key)) return null;
+
+  if (key === "trading_technical_analysis") {
+    for (const group of vaultDisplayGroupsForPack(key)) {
+      if (!group.parent) continue;
+      const id = vaultPlaylistIdForPlan(group.parent.plan, map);
+      if (id) return id;
+    }
+  }
+
+  for (const course of vaultCoursesForPack(key)) {
+    const id = vaultPlaylistIdForPlan(course.plan, map);
+    if (id) return id;
+  }
+  return null;
+}
+
+/** First owned module playlist for a pack; falls back to catalog default. */
+export function vaultFirstUnlockedPlaylistIdForPlan(
+  planSlug: string,
+  map: ReadonlyMap<string, VaultPlaylistMapEntry>,
+  context?: VaultPlaylistUnlockContext,
+): number | null {
+  const key = planSlug.trim().toLowerCase();
+  if (!isVaultPackKey(key)) {
+    return vaultPlaylistIdForPlan(key, map);
+  }
+
+  const purchasedSlugs = context?.purchasedSlugs ?? new Set<string>();
+  const { accessTier, moneyMasteryActive } = context ?? {};
+  const pickIfAccessible = (modulePlan: string): number | null => {
+    if (!userHasVaultPlanAccess(modulePlan, purchasedSlugs, accessTier, moneyMasteryActive, key)) {
+      return null;
+    }
+    return vaultPlaylistIdForPlan(modulePlan, map);
+  };
+
+  if (key === "trading_technical_analysis") {
+    for (const group of vaultDisplayGroupsForPack(key)) {
+      if (group.parent) {
+        const id = pickIfAccessible(group.parent.plan);
+        if (id) return id;
+      }
+    }
+  }
+
+  for (const course of vaultCoursesForPack(key)) {
+    const id = pickIfAccessible(course.plan);
+    if (id) return id;
+  }
+
+  return vaultDefaultPlaylistIdForPack(key, map);
+}
+
+/** After checkout or Open: packs and modules route to their lesson playlist. */
 export function buildVaultModulePlaylistHref(
   planSlug: string,
   map: ReadonlyMap<string, VaultPlaylistMapEntry>,
-  fallbackPath = "/dashboard?section=programs"
+  fallbackPath = "/dashboard?section=programs",
+  context?: VaultPlaylistUnlockContext,
 ): string {
   const key = planSlug.trim().toLowerCase();
-  if (isVaultPackKey(key)) {
-    return buildDashboardPackHref(key);
+  const playlistId = isVaultPackKey(key)
+    ? vaultFirstUnlockedPlaylistIdForPlan(key, map, context) ?? vaultDefaultPlaylistIdForPack(key, map)
+    : vaultPlaylistIdForPlan(key, map);
+  if (!playlistId) {
+    return isVaultPackKey(key) ? buildDashboardPackHref(key) : fallbackPath;
   }
-  const playlistId = vaultPlaylistIdForPlan(key, map);
-  if (!playlistId) return fallbackPath;
   return `/dashboard?section=programs&playlist=${playlistId}`;
 }

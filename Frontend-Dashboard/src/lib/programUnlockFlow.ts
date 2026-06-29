@@ -1,7 +1,7 @@
 import {
-  buildDashboardPackHref,
   buildVaultModulePlaylistHref,
   fetchVaultPlaylistMap,
+  vaultDefaultPlaylistIdForPack,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
@@ -37,7 +37,11 @@ export async function resolveDashboardPathForPlan(
 export async function resolvePlaylistIdForPlan(plan: string): Promise<number | null> {
   try {
     const map = await fetchVaultPlaylistMap();
-    return vaultPlaylistIdForPlan(plan, map);
+    const key = plan.trim().toLowerCase();
+    if (isVaultPackKey(key)) {
+      return vaultDefaultPlaylistIdForPack(key, map);
+    }
+    return vaultPlaylistIdForPlan(key, map);
   } catch {
     return null;
   }
@@ -61,9 +65,6 @@ export async function resolveAlreadyUnlockedRedirect(
   intent: { playlistId?: string; plan?: string; postAuthNext?: string }
 ): Promise<string> {
   const plan = (intent.plan || "").trim().toLowerCase();
-  if (plan && isVaultPackKey(plan)) {
-    return buildDashboardPackHref(plan);
-  }
   const playlistRaw = (intent.playlistId || "").trim();
   if (playlistRaw && /^\d+$/.test(playlistRaw)) {
     return buildDashboardPlaylistPath(Number(playlistRaw));

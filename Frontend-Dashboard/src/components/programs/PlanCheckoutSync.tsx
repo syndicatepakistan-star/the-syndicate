@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import { clearVaultPlaylistMapCache, fetchVaultPlaylistMap, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
+import { clearVaultPlaylistMapCache, fetchVaultPlaylistMap, vaultDefaultPlaylistIdForPack, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
+import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 
 /** After vault plan checkout, refresh unlock state and route to the pack picker or lesson. */
@@ -13,6 +14,7 @@ export function PlanCheckoutSync() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("plan_checkout") !== "success") return;
 
+    markDashboardCheckoutReturn();
     const plan = (params.get("plan") || "").trim().toLowerCase();
     let cancelled = false;
 
@@ -22,10 +24,14 @@ export function PlanCheckoutSync() {
       clearUnlockCelebrationStorage();
 
       let playlistId: number | null = null;
-      if (plan && !isVaultPackKey(plan)) {
+      if (plan) {
         try {
           const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-          playlistId = vaultPlaylistIdForPlan(plan, map);
+          if (isVaultPackKey(plan)) {
+            playlistId = vaultDefaultPlaylistIdForPack(plan, map);
+          } else {
+            playlistId = vaultPlaylistIdForPlan(plan, map);
+          }
         } catch {
           // Ignore map errors; grid refresh still runs below.
         }
@@ -49,10 +55,10 @@ export function PlanCheckoutSync() {
       clean.searchParams.delete("plan_checkout");
       clean.searchParams.delete("plan");
       clean.searchParams.set("section", "programs");
-      if (plan && isVaultPackKey(plan)) {
-        clean.searchParams.set("pack", plan);
-      } else if (playlistId) {
+      if (playlistId) {
         clean.searchParams.set("playlist", String(playlistId));
+      } else if (plan && isVaultPackKey(plan)) {
+        clean.searchParams.set("pack", plan);
       }
       window.history.replaceState({}, "", clean.toString());
     })();

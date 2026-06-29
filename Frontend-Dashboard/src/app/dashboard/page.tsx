@@ -31,9 +31,12 @@ import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSecti
 import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeLoadingShell";
 import { SupportSection } from "@/components/dashboard/SupportSection";
 import {
+  isDashboardCheckoutReturnGraceActive,
+  markDashboardCheckoutReturn,
   resetDashboardDocumentScroll,
   resetDashboardMainShellScroll,
-  resetDashboardShellScroll
+  resetDashboardShellScroll,
+  shouldSkipMainShellScrollReset,
 } from "@/lib/dashboardShellScroll";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
 import { PlanCheckoutSync } from "@/components/programs/PlanCheckoutSync";
@@ -2308,12 +2311,34 @@ export default function Page() {
   /** Pin document scroll on mount so a prior page scroll cannot offset the dashboard shell. */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    let fromCheckout =
+      params.get("playlist_checkout") === "success" ||
+      params.get("plan_checkout") === "success" ||
+      Boolean((params.get("session_id") || "").trim());
+    if (!fromCheckout) {
+      try {
+        fromCheckout =
+          window.sessionStorage.getItem("playlist_checkout_confirmed") === "1" ||
+          window.sessionStorage.getItem("plan_checkout_confirmed") === "1";
+      } catch {
+        fromCheckout = false;
+      }
+    }
+    if (fromCheckout) {
+      markDashboardCheckoutReturn();
+    }
+    if (isDashboardCheckoutReturnGraceActive() || shouldSkipMainShellScrollReset()) {
+      resetDashboardDocumentScroll();
+      return;
+    }
     resetDashboardShellScroll(rootRef.current);
   }, []);
 
   /** Bounded shell sections: reset scroll so the sticky top bar stays visible on section change. */
   useLayoutEffect(() => {
     if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
+    if (isDashboardCheckoutReturnGraceActive() || shouldSkipMainShellScrollReset()) return;
     resetDashboardShellScroll(rootRef.current);
   }, [selectedNavKey]);
 
@@ -2325,7 +2350,11 @@ export default function Page() {
     const body = document.body;
     html.classList.add("dashboard-shell-scroll-lock");
     body.classList.add("dashboard-shell-scroll-lock");
-    resetDashboardShellScroll(rootRef.current);
+    if (!isDashboardCheckoutReturnGraceActive() && !shouldSkipMainShellScrollReset()) {
+      resetDashboardShellScroll(rootRef.current);
+    } else {
+      resetDashboardDocumentScroll();
+    }
 
     const prevRestoration = history.scrollRestoration;
     history.scrollRestoration = "manual";
@@ -2344,6 +2373,7 @@ export default function Page() {
     const vv = window.visualViewport;
     const onViewportChange = () => {
       pinDocumentScroll();
+      if (shouldSkipMainShellScrollReset()) return;
       resetDashboardMainShellScroll(rootRef.current);
     };
     vv?.addEventListener("resize", onViewportChange);

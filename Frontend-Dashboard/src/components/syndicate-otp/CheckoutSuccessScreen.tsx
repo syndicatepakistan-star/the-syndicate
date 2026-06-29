@@ -15,9 +15,11 @@ import {
   buildDashboardPackHref,
   clearVaultPlaylistMapCache,
   fetchVaultPlaylistMap,
+  vaultDefaultPlaylistIdForPack,
   vaultPlaylistIdForPlan,
 } from "@/lib/vaultPlaylistMap";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 
 const SYNDICATE_URL =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "https://the-syndicate.com/";
@@ -264,7 +266,17 @@ export default function CheckoutSuccessScreen({
           clearVaultPlaylistMapCache();
           clearUnlockCelebrationStorage();
           if (isVaultPackKey(purchasedPlan)) {
-            nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
+            try {
+              const map = await fetchVaultPlaylistMap({ forceRefresh: true });
+              const playlistId = vaultDefaultPlaylistIdForPack(purchasedPlan, map);
+              if (playlistId) {
+                nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
+              } else {
+                nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
+              }
+            } catch {
+              nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
+            }
           } else {
             try {
               const map = await fetchVaultPlaylistMap({ forceRefresh: true });
@@ -363,6 +375,9 @@ export default function CheckoutSuccessScreen({
         setLuxuryHref(nextUrl);
         clearStreamPlaylistsCache();
         clearVaultPlaylistMapCache();
+        if (purchasedPlan) {
+          markDashboardCheckoutReturn();
+        }
         window.history.replaceState({}, "", "/");
         window.setTimeout(() => setLuxuryOpen(true), 80);
         window.setTimeout(() => {

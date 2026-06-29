@@ -313,6 +313,26 @@ export function normalizeLevel1ProgramPlaylists(
   return out;
 }
 
+/** Owned mid-ticket vault modules surface in the dashboard Business Model grid. */
+export function ownedVaultSubmodulePlaylistsForDashboard(
+  playlists: StreamPlaylistListItem[],
+): StreamPlaylistListItem[] {
+  return playlists
+    .filter((pl) => {
+      if (!isVaultSubmoduleStreamPlaylist(pl.vault_plan_slug)) return false;
+      if (pl.is_coming_soon) return false;
+      return !!pl.is_unlocked;
+    })
+    .map((pl) => {
+      const slug = pl.slug?.trim().toLowerCase() ?? "";
+      return enrichProgramPlaylist({
+        ...pl,
+        category: "business_model",
+        title: getProgramDisplayTitle(pl.id, pl.title, slug || undefined),
+      });
+    });
+}
+
 /** Map legacy ?program= id or direct API id → playlist id for highlight / checkout. */
 export function resolveProgramPlaylistHighlightId(
   playlists: StreamPlaylistListItem[],

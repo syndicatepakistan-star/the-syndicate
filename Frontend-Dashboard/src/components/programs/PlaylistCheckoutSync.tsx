@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import { resetDashboardShellScroll } from "@/lib/dashboardShellScroll";
+import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
 
 export function PlaylistCheckoutSync() {
@@ -12,6 +12,7 @@ export function PlaylistCheckoutSync() {
     const status = (params.get("playlist_checkout") || "").trim();
     const sessionId = (params.get("session_id") || "").trim();
     if (status !== "success" || !sessionId) return;
+    markDashboardCheckoutReturn();
     let cancelled = false;
     void (async () => {
       let confirmed = false;
@@ -49,9 +50,8 @@ export function PlaylistCheckoutSync() {
         if (playlistId) {
           clean.searchParams.set("playlist", playlistId);
         }
+        markDashboardCheckoutReturn();
         window.history.replaceState({}, "", clean.toString());
-        resetDashboardShellScroll();
-        requestAnimationFrame(() => resetDashboardShellScroll());
       }
     })();
     return () => {

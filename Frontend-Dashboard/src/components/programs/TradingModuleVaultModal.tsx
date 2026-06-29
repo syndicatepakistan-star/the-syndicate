@@ -21,6 +21,7 @@ import {
   tradingSubmoduleOffersForModule,
   type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
   moduleOffer: PlanOfferDef | null;
@@ -46,21 +47,22 @@ export function TradingModuleVaultModal({
   onOpenUnlocked,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useModalScrollLock(!!moduleOffer);
 
   useEffect(() => {
     if (!moduleOffer) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
-  }, [moduleOffer, onClose]);
+  }, [moduleOffer?.plan]);
 
   if (!moduleOffer || typeof document === "undefined") return null;
 

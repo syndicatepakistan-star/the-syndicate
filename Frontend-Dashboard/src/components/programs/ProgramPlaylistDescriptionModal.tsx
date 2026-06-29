@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -8,6 +8,7 @@ import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
 
@@ -485,31 +486,25 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
 }
 
 export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useModalScrollLock(!!playlist);
+
   useEffect(() => {
     if (!playlist || typeof document === "undefined") return;
     const scrollY = window.scrollY;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-    document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
-        });
+        window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
       });
     };
-  }, [playlist, onClose]);
+  }, [playlist?.id]);
 
   const displayPlaylist = useMemo(
     () => (playlist ? enrichProgramPlaylist(playlist) : null),

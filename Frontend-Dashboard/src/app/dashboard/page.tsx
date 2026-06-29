@@ -3478,6 +3478,7 @@ export default function Page() {
                   </div>
                 )
               ) : selectedNavKey === "programs" ? (
+                <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
                 <ProgramsCourseSection
                   instructorHero={<InstructorSlideshow showPanelBackgroundVideo={false} />}
                   chromaItems={chromaItems}
@@ -3510,6 +3511,7 @@ export default function Page() {
                     ) : null
                   }
                 />
+                </div>
               ) : selectedNavKey === "resources" ? (
                 !portalUser ? (
                   <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">

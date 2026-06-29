@@ -6944,6 +6944,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
 }
 
 /* Lesson view: lock outer shell on all breakpoints; only .programs-lesson-scroll moves. */
+.dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-lesson-active],
+.dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-grid-active],
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
   display: flex !important;
@@ -6967,6 +6969,7 @@ body.syndicate-mode-active::-webkit-scrollbar {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.45) 72%, rgba(0, 0, 0, 0) 100%);
 }
 
+.dashboard-hamburger-chrome .programs-lesson-shell,
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell {
   flex: 1 1 auto;
   min-height: 0;
@@ -6974,6 +6977,7 @@ body.syndicate-mode-active::-webkit-scrollbar {
   overflow: hidden;
 }
 
+.dashboard-hamburger-chrome .programs-grid-shell,
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
   flex: 1 1 auto;
   min-height: 0;
@@ -6981,6 +6985,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
   overflow: hidden;
 }
 
+.dashboard-hamburger-chrome .programs-lesson-scroll,
+.dashboard-hamburger-chrome .programs-grid-scroll,
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
   flex: 1 1 auto;
@@ -6990,6 +6996,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
   -webkit-overflow-scrolling: touch;
 }
 
+.dashboard-hamburger-chrome .dashboard-mobile-section-root:has(.programs-lesson-shell),
+.dashboard-hamburger-chrome .dashboard-mobile-section-root:has(.programs-grid-shell),
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-lesson-shell),
 .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .dashboard-mobile-section-root:has(.programs-grid-shell) {
   flex: 1 1 auto;
@@ -6999,6 +7007,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
 
 /* Desktop: lock outer main scroll during lesson/grid view (checkout return was scrolling the grid up). */
 @media (min-width: 1024px) {
+  .dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-lesson-active],
+  .dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-grid-active],
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
     display: flex !important;
@@ -7010,6 +7020,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
     overscroll-behavior: none !important;
   }
 
+  .dashboard-hamburger-chrome .programs-lesson-shell,
+  .dashboard-hamburger-chrome .programs-grid-shell,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
     flex: 1 1 auto;
@@ -7018,6 +7030,8 @@ body.syndicate-mode-active::-webkit-scrollbar {
     overflow: hidden;
   }
 
+  .dashboard-hamburger-chrome .programs-lesson-scroll,
+  .dashboard-hamburger-chrome .programs-grid-scroll,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
     flex: 1 1 auto;
@@ -9137,6 +9151,18 @@ body {
 @media (min-width: 640px) {
   .vault-modules-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+}
+
+/* Trading pack — always 2 module cards per row (2×2 for four modules) */
+.vault-modules-grid--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .vault-modules-grid--pair {
     gap: 1.5rem 2rem;
   }
 }
@@ -12136,6 +12162,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     padding-bottom: max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) !important;
   }
 
+  .dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-lesson-active],
+  .dashboard-hamburger-chrome [data-dashboard-video-scroll][data-programs-grid-active],
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-lesson-active],
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] [data-dashboard-video-shell] > [data-dashboard-video-scroll][data-programs-grid-active] {
     display: flex !important;
@@ -12148,6 +12176,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     touch-action: pan-x pan-y;
   }
 
+  .dashboard-hamburger-chrome .programs-lesson-shell,
+  .dashboard-hamburger-chrome .programs-grid-shell,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-shell,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-shell {
     flex: 1 1 auto;
@@ -12156,6 +12186,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     overflow: hidden;
   }
 
+  .dashboard-hamburger-chrome .programs-lesson-scroll,
+  .dashboard-hamburger-chrome .programs-grid-scroll,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-lesson-scroll,
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-scroll {
     flex: 1 1 auto;

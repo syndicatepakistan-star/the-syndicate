@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -10,6 +10,7 @@ import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalo
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
   offer: PlanOfferDef | null;
@@ -100,19 +101,21 @@ function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {
 }
 
 export function PlanOfferDetailModal({ offer, onClose }: Props) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useModalScrollLock(!!offer);
+
   useEffect(() => {
     if (!offer) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
-  }, [offer, onClose]);
+  }, [offer?.plan]);
 
   if (!offer || typeof document === "undefined") return null;
 

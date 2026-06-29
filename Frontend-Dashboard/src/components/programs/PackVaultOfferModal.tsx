@@ -27,6 +27,7 @@ import {
 } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
   packOffer: PlanOfferDef | null;
@@ -56,21 +57,22 @@ export function PackVaultOfferModal({
   onExploreTradingModule,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useModalScrollLock(!!packOffer);
 
   useEffect(() => {
     if (!packOffer) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
-  }, [packOffer, onClose]);
+  }, [packOffer?.plan]);
 
   const packKey = packOffer?.plan;
   const packStructuredDescription = useMemo(
@@ -302,7 +304,12 @@ export function PackVaultOfferModal({
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          <div className={isTradingPack ? "space-y-8 pb-2" : "vault-modules-grid pb-2"}>
+          <div
+            className={cn(
+              "pb-2",
+              isTradingPack ? "vault-modules-grid vault-modules-grid--pair" : "vault-modules-grid",
+            )}
+          >
             {displayGroups.map((group) => renderGroup(group))}
           </div>
         </div>

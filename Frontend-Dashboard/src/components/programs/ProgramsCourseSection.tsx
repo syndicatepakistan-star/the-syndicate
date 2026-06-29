@@ -658,8 +658,8 @@ export function ProgramsCourseSection({
   const useApiProgramBrowser = hasCatalogItems || staff || hasSecureErrors || chromaItems.length === 0;
   /** Focused lesson view: hide marketing hero and grid header. */
   const inProgramLessonView = useApiProgramBrowser && secureView === "detail";
-  /** Grid browser: sticky filters/chrome; only the card library scrolls inside the gold frame. */
-  const inProgramGridView = useApiProgramBrowser && secureView === "grid" && hasCatalogItems;
+  /** Grid browser: gold frame fixed; entire programs panel scrolls inside. */
+  const inProgramGridView = useApiProgramBrowser && secureView === "grid";
   const inPlaylistDetail = detailPlaylistId !== null;
   const inCourseDetail = detailCourseId !== null;
 
@@ -1205,234 +1205,126 @@ export function ProgramsCourseSection({
         >
           {inProgramGridView ? (
             <div className="programs-grid-shell flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="programs-grid-chrome shrink-0 space-y-3 pb-2 sm:space-y-4 sm:pb-3">
-                <div className="w-full max-w-full text-left">
-                  <div
-                    className={cn(
-                      DASHBOARD_HEADING_LIGHTNING,
-                      "text-[15px] font-black uppercase tracking-[0.14em] sm:text-[24px] sm:tracking-[0.16em]"
-                    )}
-                  >
-                    Programs
+              <div className="programs-grid-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 pr-0.5">
+                <div className="programs-grid-chrome space-y-3 pb-2 sm:space-y-4 sm:pb-3">
+                  <div className="w-full max-w-full text-left">
+                    <div
+                      className={cn(
+                        DASHBOARD_HEADING_LIGHTNING,
+                        "text-[15px] font-black uppercase tracking-[0.14em] sm:text-[24px] sm:tracking-[0.16em]"
+                      )}
+                    >
+                      Programs
+                    </div>
+                    <p className="mt-1.5 max-w-4xl text-[13px] leading-snug text-white/82 sm:mt-2 sm:text-[24px] sm:leading-[1.35]">
+                      Browse all playlists here, and open courses for lesson playlists and progress.
+                    </p>
                   </div>
-                  <p className="mt-1.5 max-w-4xl text-[13px] leading-snug text-white/82 sm:mt-2 sm:text-[24px] sm:leading-[1.35]">
-                    Browse all playlists here, and open courses for lesson playlists and progress.
-                  </p>
-                </div>
-                <div className="w-full max-w-full space-y-4 sm:space-y-6">
-                  <PublicPlanOfferCards
-                    checkoutReturnPath="/dashboard?section=programs"
-                    embedded
-                    size="large"
-                    highlightPack={highlightPack}
-                    onAlreadyUnlocked={handleOfferAlreadyUnlocked}
-                    onCheckoutError={setCheckoutError}
-                  />
-                  {effectiveStreamPlaylists.length > 0 ? (
-                    <PublicGoalPathSection
-                      playlists={effectiveStreamPlaylists}
-                      libraryTarget="dashboard"
-                      className="relative w-full max-w-none px-0 pb-2 pt-2 sm:pb-4 sm:pt-3"
+                  <div className="w-full max-w-full space-y-4 sm:space-y-6">
+                    <PublicPlanOfferCards
+                      checkoutReturnPath="/dashboard?section=programs"
+                      embedded
+                      size="large"
+                      highlightPack={highlightPack}
+                      onAlreadyUnlocked={handleOfferAlreadyUnlocked}
+                      onCheckoutError={setCheckoutError}
                     />
-                  ) : null}
-                  {streamPlaylists.length > 0 ? (
-                    <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
-                      <div className="mx-auto w-full max-w-4xl space-y-3">
-                        <div className="flex min-w-0 w-full max-w-full flex-col gap-2.5">
-                          <div className="flex flex-nowrap items-center justify-center gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 md:gap-4 [&::-webkit-scrollbar]:hidden">
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("business_psychology")}
-                              className={cn(
-                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "business_psychology"
-                                  ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
-                                  : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
-                              )}
-                            >
-                              {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("business_model")}
-                              className={cn(
-                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "business_model"
-                                  ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
-                                  : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
-                              )}
-                            >
-                              Business Model
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("all")}
-                              className={cn(
-                                "shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "all"
-                                  ? "border-amber-200 bg-[linear-gradient(135deg,rgba(112,70,8,0.98),rgba(54,34,4,0.97))] text-amber-50 shadow-[0_0_26px_rgba(251,191,36,0.92)]"
-                                  : "border-amber-400/45 bg-[linear-gradient(135deg,rgba(70,44,7,0.9),rgba(34,22,3,0.9))] text-amber-100/95 hover:border-amber-200/80 hover:bg-[linear-gradient(135deg,rgba(102,64,8,0.95),rgba(46,30,3,0.95))] hover:text-amber-50"
-                              )}
-                            >
-                              All
-                            </button>
-                          </div>
-                          <div className="relative w-full max-w-full">
-                            <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
-                              <input
-                                type="text"
-                                value={playlistTitleQuery}
-                                onChange={(e) => setPlaylistTitleQuery(e.target.value)}
-                                placeholder="Search playlist by title..."
-                                className="w-full rounded-[11px] border-0 bg-black/80 px-3 py-2 text-[13px] text-cyan-50 outline-none transition placeholder:text-cyan-100/45 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/30 lg:px-4 lg:py-3 lg:text-[14px]"
-                              />
+                    {effectiveStreamPlaylists.length > 0 ? (
+                      <PublicGoalPathSection
+                        playlists={effectiveStreamPlaylists}
+                        libraryTarget="dashboard"
+                        className="relative w-full max-w-none px-0 pb-2 pt-2 sm:pb-4 sm:pt-3"
+                      />
+                    ) : null}
+                    {streamPlaylists.length > 0 ? (
+                      <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
+                        <div className="mx-auto w-full max-w-4xl space-y-3">
+                          <div className="flex min-w-0 w-full max-w-full flex-col gap-2.5">
+                            <div className="flex flex-nowrap items-center justify-center gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 md:gap-4 [&::-webkit-scrollbar]:hidden">
+                              <button
+                                type="button"
+                                onClick={() => setPlaylistCategoryFilter("business_psychology")}
+                                className={cn(
+                                  "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
+                                  playlistCategoryFilter === "business_psychology"
+                                    ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
+                                    : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
+                                )}
+                              >
+                                {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPlaylistCategoryFilter("business_model")}
+                                className={cn(
+                                  "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
+                                  playlistCategoryFilter === "business_model"
+                                    ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
+                                    : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
+                                )}
+                              >
+                                Business Model
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPlaylistCategoryFilter("all")}
+                                className={cn(
+                                  "shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
+                                  playlistCategoryFilter === "all"
+                                    ? "border-amber-200 bg-[linear-gradient(135deg,rgba(112,70,8,0.98),rgba(54,34,4,0.97))] text-amber-50 shadow-[0_0_26px_rgba(251,191,36,0.92)]"
+                                    : "border-amber-400/45 bg-[linear-gradient(135deg,rgba(70,44,7,0.9),rgba(34,22,3,0.9))] text-amber-100/95 hover:border-amber-200/80 hover:bg-[linear-gradient(135deg,rgba(102,64,8,0.95),rgba(46,30,3,0.95))] hover:text-amber-50"
+                                )}
+                              >
+                                All
+                              </button>
+                            </div>
+                            <div className="relative w-full max-w-full">
+                              <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
+                                <input
+                                  type="text"
+                                  value={playlistTitleQuery}
+                                  onChange={(e) => setPlaylistTitleQuery(e.target.value)}
+                                  placeholder="Search playlist by title..."
+                                  className="w-full rounded-[11px] border-0 bg-black/80 px-3 py-2 text-[13px] text-cyan-50 outline-none transition placeholder:text-cyan-100/45 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/30 lg:px-4 lg:py-3 lg:text-[14px]"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
+                    ) : null}
+                  </div>
+                  {coursesError ? (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">
+                      {coursesError}
                     </div>
                   ) : null}
+                  {playlistsError ? (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">
+                      {playlistsError}
+                    </div>
+                  ) : null}
+                  {checkoutError ? (
+                    <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 px-4 py-3 text-[13px] text-rose-100/95">
+                      {checkoutError}
+                    </div>
+                  ) : null}
+                  {!coursesError && staff && apiCourses.length === 0 && streamPlaylists.length === 0 ? (
+                    <p className="text-[12px] text-white/50">
+                      No programs yet. Add a Stream playlist (Video streaming → Stream playlists) and/or a course.
+                      Uncheck “Show in programs” on legacy courses to hide them from this grid.
+                    </p>
+                  ) : null}
+                  {!hasSecureErrors && !staff && apiCourses.length === 0 && streamPlaylists.length === 0 ? (
+                    <p className="text-[12px] text-white/55">
+                      No published programs are available for this account yet. Ask admin to publish a stream playlist or
+                      enable “Show in programs” on a course.
+                    </p>
+                  ) : null}
                 </div>
-                {coursesError ? (
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">
-                    {coursesError}
-                  </div>
-                ) : null}
-                {playlistsError ? (
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">
-                    {playlistsError}
-                  </div>
-                ) : null}
-                {checkoutError ? (
-                  <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 px-4 py-3 text-[13px] text-rose-100/95">
-                    {checkoutError}
-                  </div>
-                ) : null}
-              </div>
-              <div className="programs-grid-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 pr-0.5">
                 {renderProgramsLibraryGrid()}
               </div>
             </div>
-          ) : null}
-          {!inProgramGridView && !inProgramLessonView ? (
-            <div className="w-full max-w-full space-y-4 pb-1 sm:space-y-10 sm:pb-3">
-              <div className="w-full max-w-full text-left">
-                <div
-                  className={cn(
-                    DASHBOARD_HEADING_LIGHTNING,
-                    "text-[15px] font-black uppercase tracking-[0.14em] sm:text-[24px] sm:tracking-[0.16em]"
-                  )}
-                >
-                  Programs
-                </div>
-                <p className="mt-1.5 max-w-4xl text-[13px] leading-snug text-white/82 sm:mt-2 sm:text-[24px] sm:leading-[1.35]">
-                  {useApiProgramBrowser
-                    ? "Browse all playlists here, and open courses for lesson playlists and progress."
-                    : "When published programs are available from the API, you can open any course, watch lessons, and track your learning flow from one place."}
-                </p>
-              </div>
-              {secureView === "grid" ? (
-                <div className="w-full max-w-full space-y-4 sm:space-y-8">
-                  <PublicPlanOfferCards
-                    checkoutReturnPath="/dashboard?section=programs"
-                    embedded
-                    size="large"
-                    highlightPack={highlightPack}
-                    onAlreadyUnlocked={handleOfferAlreadyUnlocked}
-                    onCheckoutError={setCheckoutError}
-                  />
-                  {effectiveStreamPlaylists.length > 0 ? (
-                    <PublicGoalPathSection
-                      playlists={effectiveStreamPlaylists}
-                      libraryTarget="dashboard"
-                      className="relative w-full max-w-none px-0 pb-2 pt-4 sm:pb-5 sm:pt-5"
-                    />
-                  ) : null}
-                  {hasCatalogItems && streamPlaylists.length > 0 ? (
-                    <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
-                      <div className="mx-auto w-full max-w-4xl space-y-3">
-                        <div className="flex min-w-0 w-full max-w-full flex-col gap-2.5">
-                          <div className="flex flex-nowrap items-center justify-center gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 md:gap-4 [&::-webkit-scrollbar]:hidden">
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("business_psychology")}
-                              className={cn(
-                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "business_psychology"
-                                  ? "border-fuchsia-200 bg-[linear-gradient(135deg,rgba(90,16,72,0.98),rgba(42,8,36,0.97))] text-fuchsia-50 shadow-[0_0_26px_rgba(217,70,239,0.9)]"
-                                  : "border-fuchsia-400/45 bg-[linear-gradient(135deg,rgba(56,12,47,0.9),rgba(24,6,20,0.9))] text-fuchsia-100/95 shadow-[0_0_14px_rgba(217,70,239,0.45)] hover:border-fuchsia-200/80 hover:bg-[linear-gradient(135deg,rgba(84,18,68,0.95),rgba(34,8,29,0.95))] hover:text-fuchsia-50 hover:shadow-[0_0_24px_rgba(217,70,239,0.72)]"
-                              )}
-                            >
-                              {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("business_model")}
-                              className={cn(
-                                "public-heading-lightning public-heading-lightning--amber shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "business_model"
-                                  ? "border-cyan-200 bg-[linear-gradient(135deg,rgba(8,70,82,0.98),rgba(5,34,40,0.97))] text-cyan-50 shadow-[0_0_26px_rgba(34,211,238,0.9)]"
-                                  : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
-                              )}
-                            >
-                              Business Model
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPlaylistCategoryFilter("all")}
-                              className={cn(
-                                "shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition sm:px-4 sm:py-2.5 sm:text-[12px] sm:tracking-[0.14em] md:px-5 md:py-3 md:text-[13px] md:tracking-[0.16em]",
-                                playlistCategoryFilter === "all"
-                                  ? "border-amber-200 bg-[linear-gradient(135deg,rgba(112,70,8,0.98),rgba(54,34,4,0.97))] text-amber-50 shadow-[0_0_26px_rgba(251,191,36,0.92)]"
-                                  : "border-amber-400/45 bg-[linear-gradient(135deg,rgba(70,44,7,0.9),rgba(34,22,3,0.9))] text-amber-100/95 hover:border-amber-200/80 hover:bg-[linear-gradient(135deg,rgba(102,64,8,0.95),rgba(46,30,3,0.95))] hover:text-amber-50"
-                              )}
-                            >
-                              All
-                            </button>
-                          </div>
-                          <div className="relative w-full max-w-full">
-                            <div className="relative rounded-xl border border-white/15 bg-black/50 p-[1px]">
-                              <input
-                                type="text"
-                                value={playlistTitleQuery}
-                                onChange={(e) => setPlaylistTitleQuery(e.target.value)}
-                                placeholder="Search playlist by title..."
-                                className="w-full rounded-[11px] border-0 bg-black/80 px-3 py-2 text-[13px] text-cyan-50 outline-none transition placeholder:text-cyan-100/45 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/30 lg:px-4 lg:py-3 lg:text-[14px]"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          {!inProgramGridView ? (
-            <>
-          {coursesError ? (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{coursesError}</div>
-          ) : null}
-          {playlistsError ? (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{playlistsError}</div>
-          ) : null}
-          {checkoutError ? (
-            <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 px-4 py-3 text-[13px] text-rose-100/95">{checkoutError}</div>
-          ) : null}
-          {!coursesError && staff && apiCourses.length === 0 && streamPlaylists.length === 0 ? (
-            <p className="text-[12px] text-white/50">
-              No programs yet. Add a Stream playlist (Video streaming → Stream playlists) and/or a course. Uncheck “Show in
-              programs” on legacy courses to hide them from this grid.
-            </p>
-          ) : null}
-          {!hasSecureErrors && !staff && apiCourses.length === 0 && streamPlaylists.length === 0 ? (
-            <p className="text-[12px] text-white/55">
-              No published programs are available for this account yet. Ask admin to publish a stream playlist or enable
-              “Show in programs” on a course.
-            </p>
-          ) : null}
-            </>
           ) : null}
 
           {hasCatalogItems && secureView === "detail" ? (
@@ -1470,8 +1362,6 @@ export function ProgramsCourseSection({
               </div>
             </div>
           ) : null}
-
-          {!inProgramGridView ? renderProgramsLibraryGrid() : null}
 
         </div>
       ) : null}

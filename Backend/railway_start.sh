@@ -69,10 +69,12 @@ if [ "${MODE}" = "--release" ]; then
   exit 0
 fi
 
-# Start mode: release DB tasks may run separately; always verify static files exist
-# before gunicorn --preload (WhiteNoise indexes STATIC_ROOT at worker import).
+# Start mode: run migrate (idempotent) then static files before gunicorn.
 export SKIP_WSGI_MIGRATE=true
 export SKIP_WSGI_COLLECTSTATIC=true
+
+echo "railway_start: migrate (start mode safety net)"
+"$PYTHON" manage.py migrate --noinput --verbosity 1
 
 echo "railway_start: ensure_staticfiles (before gunicorn)"
 "$PYTHON" manage.py ensure_staticfiles --verbosity 1

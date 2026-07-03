@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.video_streaming.entitlements import user_can_access_stream_playlist
+from apps.video_streaming.attachment_schema import stream_playlist_attachments_table_ready
 from apps.video_streaming.models import (
     StreamPlaylist,
     StreamPlaylistAttachment,
@@ -159,6 +160,8 @@ class StreamPlaylistDetailSerializer(StreamPlaylistListSerializer):
         fields = (*StreamPlaylistListSerializer.Meta.fields, "items", "attachments")
 
     def get_attachments(self, obj: StreamPlaylist):
+        if not stream_playlist_attachments_table_ready():
+            return []
         request = self.context.get("request")
         user = getattr(request, "user", None) if request else None
         if user is None or not getattr(user, "is_authenticated", False):

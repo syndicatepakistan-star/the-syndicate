@@ -9,6 +9,7 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from apps.video_streaming.attachment_schema import stream_playlist_attachments_table_ready
 from apps.video_streaming.models import (
     StreamPlaylist,
     StreamPlaylistAttachment,
@@ -81,6 +82,20 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
     search_fields = ("title", "slug", "vault_plan_slug", "description")
     prepopulated_fields = {"slug": ("title",)}
     inlines = [StreamPlaylistItemInline, StreamPlaylistAttachmentInline]
+
+    def get_inline_instances(self, request, obj=None):
+        inline_classes = [StreamPlaylistItemInline]
+        if stream_playlist_attachments_table_ready():
+            inline_classes.append(StreamPlaylistAttachmentInline)
+        elif request.method == "GET":
+            self.message_user(
+                request,
+                "PDF attachments are unavailable until database migrations finish. "
+                "Redeploy or run: python manage.py migrate video_streaming",
+                level=messages.WARNING,
+            )
+        return [inline(self.model, self.admin_site) for inline in inline_classes]
+
     fieldsets = (
         (
             None,
@@ -114,7 +129,7 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
                 "fields": ("is_published", "is_coming_soon"),
                 "description": (
                     "Attach PDFs, worksheets, and reference files below under "
-                    "“Stream playlist attachments” (visible to members who unlocked this playlist)."
+                    '"Stream playlist attachments" (visible to members who unlocked this playlist).'
                 ),
             },
         ),
@@ -159,8 +174,9 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse("admin:video_streaming_streamplaylist_add"))
         except Exception as exc:
             logger.exception("StreamPlaylist admin changeform_view failed")
-            transaction.set_rollback(True)
-            self.message_user(request, f"Save failed: {exc}", level=messages.ERROR)
+            if request.method == "POST":
+                transaction.set_rollback(True)
+            self.message_user(request, f"Playlist admin failed: {exc}", level=messages.ERROR)
             if object_id:
                 return HttpResponseRedirect(
                     reverse("admin:video_streaming_streamplaylist_change", args=[object_id])

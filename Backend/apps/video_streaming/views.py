@@ -23,6 +23,7 @@ from django.http import JsonResponse
 from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.models import UserDashboardEntitlement
+from apps.video_streaming.attachment_schema import stream_playlist_attachments_table_ready
 from apps.video_streaming.entitlements import (
     playlist_included_by_entitlement,
     unlocked_stream_playlist_ids_for_user,
@@ -424,19 +425,20 @@ class StreamPlaylistDetailView(generics.RetrieveAPIView):
 
                 if user_has_active_knight_subscription(user) and not user_has_money_mastery(user):
                     qs = qs.filter(Q(price__lte=0) | Q(id__in=unlocked_ids))
-        return (
-            qs.annotate(video_count=Count("items", distinct=True))
-            .prefetch_related(
-                Prefetch(
-                    "items",
-                    queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
-                ),
+        prefetches = [
+            Prefetch(
+                "items",
+                queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
+            ),
+        ]
+        if stream_playlist_attachments_table_ready():
+            prefetches.append(
                 Prefetch(
                     "attachments",
                     queryset=StreamPlaylistAttachment.objects.order_by("order", "id"),
-                ),
+                )
             )
-        )
+        return qs.annotate(video_count=Count("items", distinct=True)).prefetch_related(*prefetches)
 
 
 class StreamPlaylistAttachmentDownloadView(APIView):

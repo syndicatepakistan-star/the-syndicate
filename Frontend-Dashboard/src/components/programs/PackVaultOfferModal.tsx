@@ -253,23 +253,9 @@ export function PackVaultOfferModal({
         </div>
 
         <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
-          <div className="mx-auto w-full max-w-none font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody text={packStructuredDescription} prominent className="w-full" />
-            {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-              <p className="mt-5 font-mono text-[12px] text-white/55 sm:text-[13px]">
-                One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
-                separately).
-              </p>
-            ) : (
-              <p className="mt-5 font-mono text-[12px] text-white/55 sm:text-[13px]">
-                One-time purchase — lifetime access recorded to your dashboard after checkout.
-              </p>
-            )}
-          </div>
-
           <section
             className={cn(
-              "mx-auto mt-8 w-full max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
+              "mx-auto w-full max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
               copy.borderClass,
             )}
           >
@@ -283,7 +269,12 @@ export function PackVaultOfferModal({
               cardStats={resolveOfferCardStats(packOffer, "pack")}
               busy={busyPlan === packOffer.plan}
               actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
+              onDetails={() => {
+                scrollRef.current?.querySelector("[data-vault-pack-description]")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
               onOpen={() => {
                 if (packUnlocked) onOpenUnlocked(packOffer);
                 else onUnlock(packOffer);
@@ -295,6 +286,27 @@ export function PackVaultOfferModal({
               </p>
             ) : null}
           </section>
+
+          {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
+            <p
+              className={cn(
+                "mx-auto mt-6 max-w-3xl text-center font-mono text-[clamp(14px,2.6vw,19px)] font-black uppercase leading-snug tracking-[0.05em]",
+                copy.labelClass,
+                "drop-shadow-[0_0_22px_currentColor]",
+              )}
+            >
+              One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
+              separately).
+            </p>
+          ) : (
+            <p
+              className={cn(
+                "mx-auto mt-6 max-w-3xl text-center font-mono text-[clamp(13px,2.4vw,17px)] font-black uppercase leading-snug tracking-[0.05em] text-white/88",
+              )}
+            >
+              One-time purchase — lifetime access recorded to your dashboard after checkout.
+            </p>
+          )}
 
           <div className="mb-5 mt-8 flex items-center gap-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -311,6 +323,13 @@ export function PackVaultOfferModal({
             )}
           >
             {displayGroups.map((group) => renderGroup(group))}
+          </div>
+
+          <div
+            data-vault-pack-description
+            className="mx-auto mt-10 w-full max-w-none scroll-mt-6 border-t border-white/12 pt-8 sm:mt-12 sm:pt-10"
+          >
+            <StructuredDescriptionBody text={packStructuredDescription} prominent className="w-full" />
           </div>
         </div>
       </div>

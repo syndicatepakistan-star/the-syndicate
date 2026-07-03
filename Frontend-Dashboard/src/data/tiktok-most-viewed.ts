@@ -1,7 +1,9 @@
 /**
- * Home “MOST VIEWED” marquee: @followthesyndicate clips ordered by approximate public view count (high → low).
+ * Our Founder page “MOST VIEWED” grid: @followthesyndicate clips ordered by approximate public view count (high → low).
  * Local posters live in `public/assets/most viewed/` (`01.png` … `10.png`), order-matched to TikTok URLs.
  */
+import type { FounderFrameName } from "@/lib/founderFrameAssets";
+
 export type TikTokMostViewedCard = {
   videoId: string;
   href: string;
@@ -9,6 +11,11 @@ export type TikTokMostViewedCard = {
   /** Path under `public/`, e.g. `/assets/most viewed/01.png` */
   posterSrc: string;
   approxViewsLabel: string;
+  /** Cyberpunk frame overlay — defaults to cycle order when omitted. */
+  frame?: FounderFrameName;
+  /** Photo inset inside frame window, e.g. `"8%"` or `"6% 8% 10% 8%"`. */
+  inset?: string;
+  objectPosition?: string;
 };
 
 export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
@@ -18,6 +25,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "It's not over until I win — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 2.5M views",
     posterSrc: "/assets/most viewed/01.png",
+    frame: "red",
   },
   {
     videoId: "7512180280560602390",
@@ -25,6 +33,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Either you win or you lose — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 2.4M views",
     posterSrc: "/assets/most viewed/02.png",
+    frame: "neon",
   },
   {
     videoId: "7510422941474098454",
@@ -32,6 +41,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Only trust God and hard work — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 2.1M views",
     posterSrc: "/assets/most viewed/03.png",
+    frame: "purple",
   },
   {
     videoId: "7510313874315545879",
@@ -39,6 +49,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "IF YOU RISK NOTHING YOU RISK EVERYTHING — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.9M views",
     posterSrc: "/assets/most viewed/04.png",
+    frame: "yellow",
   },
   {
     videoId: "7512178101296794903",
@@ -46,6 +57,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Who will join me on this path to riches — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.9M views",
     posterSrc: "/assets/most viewed/05.png",
+    frame: "green",
   },
   {
     videoId: "7511772258201799958",
@@ -53,6 +65,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Don't be afraid of making big moves — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.8M views",
     posterSrc: "/assets/most viewed/06.png",
+    frame: "glitch",
   },
   {
     videoId: "7507706458369166594",
@@ -60,6 +73,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "The greatest risk in life is not taking one — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.6M views",
     posterSrc: "/assets/most viewed/07.png",
+    frame: "red",
   },
   {
     videoId: "7504654213645896982",
@@ -67,6 +81,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Plan for tomorrow but act now — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.5M views",
     posterSrc: "/assets/most viewed/08.png",
+    frame: "neon",
   },
   {
     videoId: "7490639131492551958",
@@ -74,6 +89,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Wealth is not just a luxury — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.3M views",
     posterSrc: "/assets/most viewed/09.png",
+    frame: "purple",
   },
   {
     videoId: "7490636467157388566",
@@ -81,5 +97,6 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     alt: "Protect your dignity, write your own story — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.1M views",
     posterSrc: "/assets/most viewed/10.png",
+    frame: "yellow",
   },
 ];

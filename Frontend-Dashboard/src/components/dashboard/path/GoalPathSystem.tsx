@@ -55,6 +55,7 @@ export function GoalPathSystem({
   playlists = [],
   opportunityCardFrame = "path",
   opportunityContentMode = "text",
+  manualScrollOnly = false,
   onContinue,
 }: {
   themeMode: ThemeMode;
@@ -64,6 +65,8 @@ export function GoalPathSystem({
   opportunityCardFrame?: OpportunityCardFrame;
   /** Public /programs: real program posters, prices, and deep links. */
   opportunityContentMode?: OpportunityContentMode;
+  /** When true, carousel advances only via arrows / dots / chips (no auto-advance). */
+  manualScrollOnly?: boolean;
   onContinue: () => void;
 }) {
   const pathNeon = getInstructorSlideNeonTheme(DASHBOARD_PANEL_NEON.path);
@@ -103,6 +106,7 @@ export function GoalPathSystem({
           userStepIndex={courseStepIdx}
           cardFrame={opportunityCardFrame}
           contentMode={opportunityContentMode}
+          manualScrollOnly={manualScrollOnly}
           onContinue={onContinue}
         />
       </div>

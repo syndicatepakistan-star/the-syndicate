@@ -12,11 +12,18 @@ type Props = {
   playlists: StreamPlaylistListItem[];
   /** Where Continue / card taps scroll — public /programs vs dashboard programs tab. */
   libraryTarget?: ProgramLibraryScrollTarget;
+  /** Show YOUR PATH even when the public program grid is empty (pack/module paths still apply). */
+  alwaysVisible?: boolean;
   className?: string;
 };
 
 /** YOUR PATH + Next opportunities — same cards on /programs and dashboard programs. */
-export function PublicGoalPathSection({ playlists, libraryTarget = "public", className }: Props) {
+export function PublicGoalPathSection({
+  playlists,
+  libraryTarget = "public",
+  alwaysVisible = false,
+  className,
+}: Props) {
   const enrichedPlaylists = useMemo(
     () =>
       playlists
@@ -46,14 +53,14 @@ export function PublicGoalPathSection({ playlists, libraryTarget = "public", cla
     scrollToProgramLibrary(libraryTarget);
   }, [libraryTarget]);
 
-  if (enrichedPlaylists.length === 0) return null;
+  if (!alwaysVisible && enrichedPlaylists.length === 0) return null;
 
   return (
     <section
       aria-label="Your path and recommended programs"
       className={
         className ??
-        "relative mx-auto w-full max-w-[1400px] px-[clamp(1rem,3.2vw,1.5rem)] pb-2 pt-2 sm:px-6 sm:pb-4 sm:pt-4"
+        "relative mx-auto w-full max-w-[1400px] px-[clamp(1rem,3.2vw,1.5rem)] pb-8 pt-2 sm:px-6 sm:pb-12 sm:pt-4"
       }
     >
       <GoalPathSystem
@@ -62,6 +69,7 @@ export function PublicGoalPathSection({ playlists, libraryTarget = "public", cla
         playlists={enrichedPlaylists}
         opportunityCardFrame="methods"
         opportunityContentMode="program"
+        manualScrollOnly
         onContinue={onContinue}
       />
     </section>

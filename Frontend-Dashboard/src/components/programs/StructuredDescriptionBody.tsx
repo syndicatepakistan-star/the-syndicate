@@ -160,11 +160,14 @@ function StructuredSectionsView({
   sections,
   compact,
   prominent,
+  omitSections = [],
 }: {
   sections: StructuredDescriptionSections;
   compact?: boolean;
   prominent?: boolean;
+  omitSections?: (keyof StructuredDescriptionSections)[];
 }) {
+  const hidden = new Set(omitSections);
   const headingClass = prominent
     ? "border-b border-[#f5c814]/25 pb-2.5 text-left text-[1.2rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.35rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
     : compact
@@ -177,6 +180,7 @@ function StructuredSectionsView({
       role="document"
     >
       {STRUCTURED_HEADINGS.map(({ key, label }) => {
+        if (hidden.has(key)) return null;
         const text = sections[key].trim();
         if (!text) return null;
         const isLearn = key === "what_you_will_learn";
@@ -203,10 +207,18 @@ type Props = {
   compact?: boolean;
   /** Large readable copy for program / vault modals. */
   prominent?: boolean;
+  /** Hide structured sections already shown elsewhere (e.g. lesson lists). */
+  omitSections?: (keyof StructuredDescriptionSections)[];
   className?: string;
 };
 
-export function StructuredDescriptionBody({ text, compact, prominent, className }: Props) {
+export function StructuredDescriptionBody({
+  text,
+  compact,
+  prominent,
+  omitSections,
+  className,
+}: Props) {
   const sections = useMemo(() => parseStructuredDescriptionSections(text), [text]);
   if (!sections) {
     return (
@@ -217,7 +229,12 @@ export function StructuredDescriptionBody({ text, compact, prominent, className 
   }
   return (
     <div className={className}>
-      <StructuredSectionsView sections={sections} compact={compact} prominent={prominent} />
+      <StructuredSectionsView
+        sections={sections}
+        compact={compact}
+        prominent={prominent}
+        omitSections={omitSections}
+      />
     </div>
   );
 }

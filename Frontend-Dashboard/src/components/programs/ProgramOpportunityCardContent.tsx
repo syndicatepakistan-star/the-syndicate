@@ -7,6 +7,7 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { resolveOfferCardStats, streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import { PROGRAM_CARD_LANDSCAPE_MEDIA } from "@/components/programs/programCardMedia";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
@@ -79,7 +80,7 @@ export function ProgramOpportunityCardContent({
       : undefined;
 
   return (
-    <div className="flex h-auto w-full flex-col pb-[10px]">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col pb-[10px]">
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
@@ -106,18 +107,20 @@ export function ProgramOpportunityCardContent({
         onClick={openTarget}
         disabled={!programId && !isPlanCard}
         className={cn(
-          "group/cover relative mt-1 block w-full shrink-0 overflow-hidden rounded-lg border border-white/20 text-left transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
-          "aspect-[4/5] min-h-[6.75rem] max-h-[9.5rem] sm:min-h-[7.25rem] sm:max-h-[10.5rem]",
+          "group/cover relative mt-1 block w-full shrink-0 overflow-hidden text-left transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
+          PROGRAM_CARD_LANDSCAPE_MEDIA,
+          "rounded-lg border border-white/20",
           !programId && !isPlanCard && "cursor-default opacity-80",
         )}
         aria-label={course.title}
       >
-        <span className="absolute inset-0 z-0 block h-full w-full overflow-hidden">
+        <span className="absolute inset-0 z-0 overflow-hidden">
           {playlist ? (
             <ProgramPlaylistCoverImage
               playlist={playlist}
               gradClassName={grad}
               loading="lazy"
+              objectFit="contain"
             />
           ) : coverSrc ? (
             <>
@@ -130,7 +133,7 @@ export function ProgramOpportunityCardContent({
                 quality={72}
                 loading="lazy"
                 decoding="async"
-                className="absolute inset-0 z-[1] object-cover object-center"
+                className="absolute inset-0 z-[1] object-contain object-center p-0.5 sm:p-1"
                 style={
                   planOffer?.imageObjectPosition
                     ? { objectPosition: planOffer.imageObjectPosition }
@@ -143,7 +146,7 @@ export function ProgramOpportunityCardContent({
           )}
         </span>
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-b from-black/20 via-transparent to-black/50" />
-        <span className="pointer-events-none absolute right-2 top-2 z-[3] inline-flex items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 text-[11px] font-black tabular-nums text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)] sm:text-[12px]">
+        <span className="program-playlist-card__price-badge pointer-events-none absolute right-2 top-2 z-[3] inline-flex items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 text-[11px] font-black tabular-nums text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)] sm:text-[12px]">
           {isPlanCard && planOffer ? planOffer.displayPrice : formatPrice(price)}
         </span>
       </button>
@@ -159,11 +162,11 @@ export function ProgramOpportunityCardContent({
       {cardStats ? (
         <ProgramCardStatsLines stats={cardStats} size="stream" className="mt-1" />
       ) : null}
-      <p className="mt-1 line-clamp-3 font-mono text-[clamp(0.62rem,0.4vw+0.48rem,0.78rem)] leading-snug text-white/88">
+      <p className="mt-1 line-clamp-2 min-h-[2.35rem] font-mono text-[clamp(0.62rem,0.4vw+0.48rem,0.78rem)] leading-snug text-white/88">
         {course.summary ?? course.outcome}
       </p>
 
-      <div className="mt-[5px] grid shrink-0 grid-cols-2 gap-1.5 sm:gap-2">
+      <div className="mt-auto grid shrink-0 grid-cols-2 gap-1.5 pt-1.5 sm:gap-2 sm:pt-2">
         <button
           type="button"
           disabled={!playlist && !planOffer}

@@ -31,6 +31,7 @@ const defaultItems: RadialNavItem[] = [
   { id: 'home', label: 'Home' },
   { id: 'whatYouGet', label: 'What You Get' },
   { id: 'ourMethods', label: 'Our Methods' },
+  { id: 'ourFounder', label: 'Our Founder' },
   { id: 'syndicateAnalysis', label: 'Syn Diagnosis' },
   { id: 'joinNow', label: 'Login' },
   { id: 'programs', label: 'Programs' },
@@ -42,6 +43,12 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
   home: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.5)', glow: 'rgba(96,165,250,0.42)' },
   whatYouGet: { color: '#22d3ee', bg: 'rgba(34,211,238,0.12)', border: 'rgba(34,211,238,0.5)', glow: 'rgba(52, 210, 235, 0.4)' },
   ourMethods: { color: '#d946ef', bg: 'rgba(217,70,239,0.14)', border: 'rgba(217,70,239,0.5)', glow: 'rgba(217,70,239,0.4)' },
+  ourFounder: {
+    color: '#fb923c',
+    bg: 'rgba(251,146,60,0.14)',
+    border: 'rgba(251,146,60,0.5)',
+    glow: 'rgba(251,146,60,0.42)',
+  },
   syndicateAnalysis: {
     color: '#22c55e',
     bg: 'rgba(34,197,94,0.12)',
@@ -64,6 +71,16 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
   },
 }
 
+/** Horizontal gap between Login + Syn Diagnosis on mobile / iPad (below lg). */
+const RADIAL_NAV_BOTTOM_PAIR_GAP_PX = 20
+
+/** Mobile + iPad (below lg) layout tweaks */
+const RADIAL_NAV_COMPACT_MAX_WIDTH = 1024
+
+function getBottomPairHalfGap(): number {
+  return RADIAL_NAV_BOTTOM_PAIR_GAP_PX / 2
+}
+
 /** Slot radius by viewport: smaller on mobile so buttons stay on screen */
 function getSlotRadius(itemCount: number): number {
   if (typeof window === 'undefined') return itemCount >= 6 ? 175 : 195
@@ -75,6 +92,7 @@ function getSlotRadius(itemCount: number): number {
     if (w < 480) return 136
     if (w < 640) return 160
     if (w < 768) return 198
+    if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return 218
     return 236
   }
   if (itemCount >= 6) {
@@ -107,24 +125,29 @@ function getSlots(radius: number, count: number) {
     } else if (w < 768) {
       xScale = 1
       yScale = 1.14
+    } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
+      xScale = 1.02
+      yScale = 1.08
     }
   }
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
     let x = radius * xScale * Math.cos(angle)
     let y = radius * yScale * Math.sin(angle)
-    if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       const w = window.innerWidth
-      if (w < 420) {
-        // Mobile/Fold: keep a visible gap between the bottom pair
-        // (`joinNow` index 4 and `syndicateAnalysis` index 3).
+      if (count >= 9) {
+        // Keep Login + Syn Diagnosis on the natural bottom arc (same spacing as other nav pairs).
+        const bottomRowY = w < 640 ? 8 : w < 768 ? 10 : 12
+        const bottomPairHalfGap = getBottomPairHalfGap()
+        if (i === 4 || i === 5) y += bottomRowY
+        // Syn Diagnosis (4) right, Login (5) left — spread by 20px total on compact viewports.
+        if (i === 4) x += bottomPairHalfGap
+        if (i === 5) x -= bottomPairHalfGap
+        if (i === 6) y -= 6
+      } else if (w < 420) {
         if (i === 3) x += 8
         if (i === 4) x -= 8
-      }
-      // Vertical gap: LOGIN (idx 4) below PROGRAMS (5) + SYN DIAGNOSIS (3).
-      if (count >= 8) {
-        if (i === 3 || i === 5) y -= 12
-        if (i === 4) y += 21
       }
     }
     return {
@@ -139,16 +162,27 @@ function getMobileItemNudge(id: NavSectionId, itemCount: number): {
   marginRight?: string;
   marginTop?: string;
   marginBottom?: string;
+  position?: 'relative';
+  zIndex?: number;
 } {
   if (typeof window === 'undefined' || itemCount < 7) return {}
   const w = window.innerWidth
-  if (w >= 768) return {}
+  if (w >= RADIAL_NAV_COMPACT_MAX_WIDTH) return {}
   if (id === 'home') return { marginBottom: '26px', marginLeft: '5px' }
   if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '26px' }
   if (id === 'ourMethods' || id === 'membership') return { marginTop: '8px' }
-  // Bottom pair: nudge Login 5px right; 5px vertical gap above Login vs Programs / Syn Diagnosis.
-  if (id === 'joinNow') return { marginLeft: '5px', marginRight: '21px', marginTop: '5px' }
-  if (id === 'syndicateAnalysis') return { marginLeft: '26px', marginTop: '8px', marginBottom: '5px' }
+  // Bottom pair: 20px horizontal gap on mobile + iPad (Login left, Syn Diagnosis right).
+  if (id === 'joinNow') {
+    return {
+      marginTop: '5px',
+      marginRight: `${RADIAL_NAV_BOTTOM_PAIR_GAP_PX}px`,
+      position: 'relative',
+      zIndex: 10,
+    }
+  }
+  if (id === 'syndicateAnalysis') {
+    return { marginTop: '5px', position: 'relative', zIndex: 20 }
+  }
   if (id === 'programs') return { marginTop: '8px', marginBottom: '5px' }
   return {}
 }
@@ -274,16 +308,23 @@ export function RadialNav({
       })
     })
 
-    tlRef.current = gsap
-      .timeline({ defaults: { ease: 'power2.out' } })
-      .to(rootRef.current.querySelector('[data-rnav="backdrop"]'), { autoAlpha: 1, duration: 0.32 })
-      .fromTo(
-        rootRef.current.querySelector('[data-rnav="center"]'),
+    const backdrop = rootRef.current.querySelector('[data-rnav="backdrop"]')
+    const center = rootRef.current.querySelector('[data-rnav="center"]')
+
+    tlRef.current = gsap.timeline({ defaults: { ease: 'power2.out' } })
+    if (backdrop) {
+      tlRef.current.to(backdrop, { autoAlpha: 1, duration: 0.32 })
+    }
+    if (center) {
+      tlRef.current.fromTo(
+        center,
         { scale: 0.85, autoAlpha: 0 },
         { scale: 1, autoAlpha: 1, duration: 0.42 },
         0,
       )
-      .to(
+    }
+    if (nodes.length) {
+      tlRef.current.to(
         nodes,
         {
           xPercent: -50,
@@ -300,6 +341,7 @@ export function RadialNav({
         },
         0.12,
       )
+    }
 
     glowRef.current?.kill()
     glowRef.current = null
@@ -406,7 +448,7 @@ export function RadialNav({
           <div className="absolute inset-0 grid place-items-center overflow-visible p-3 sm:p-4">
             <div
               data-rnav="center"
-              className="relative h-full min-h-[220px] max-h-[42vh] w-[min(92vw,340px)] max-w-[340px] sm:min-h-[38vh]"
+              className="relative h-full min-h-[240px] max-h-[48vh] w-[min(94vw,360px)] max-w-[360px] sm:min-h-[40vh] md:max-w-[400px] lg:min-h-[38vh] lg:max-h-[42vh] lg:w-[min(92vw,340px)] lg:max-w-[340px]"
             >
               <div
                 data-rnav="ring"
@@ -414,7 +456,7 @@ export function RadialNav({
                 style={{ transformOrigin: '50% 50%' }}
               >
                 {placed.map((it) => {
-                  const theme = THEMES[it.id]
+                  const theme = THEMES[it.id] ?? THEMES.home
                   return (
                     <div
                       key={it.id}

@@ -77,7 +77,7 @@ export const OUR_METHODS_BLOCKS: OurMethodsBlock[] = [
       "Our philosophy is clear: money and power are tools. When wielded with moral integrity, they can create profound personal transformation and societal impact. When misused, they have the potential to enslave and corrupt.",
       "What sets The Syndicate apart is its commitment to ethics and societal impact. This is not just about wealth; it's about defining true success as a balance between prosperity and moral codes.",
     ]),
-    image: "/assets/programs/cources%20imnages/money-philosophy.jpeg",
+    image: "/assets/programs/cources%20imnages/money-philosophy.jpg",
     imageAlt: "Syndicate philosophy — honour and leverage",
     accent: "cyan",
   },

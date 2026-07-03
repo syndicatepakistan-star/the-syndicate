@@ -11,6 +11,7 @@ from django.urls import reverse
 
 from apps.video_streaming.models import (
     StreamPlaylist,
+    StreamPlaylistAttachment,
     StreamPlaylistCertificate,
     StreamPlaylistItem,
     StreamPlaylistPurchase,
@@ -56,6 +57,13 @@ class StreamPlaylistItemInline(admin.TabularInline):
     fields = ("order", "stream_video")
 
 
+class StreamPlaylistAttachmentInline(admin.TabularInline):
+    model = StreamPlaylistAttachment
+    extra = 0
+    ordering = ("order", "id")
+    fields = ("order", "title", "file")
+
+
 @admin.register(StreamPlaylist)
 class StreamPlaylistAdmin(admin.ModelAdmin):
     list_display = (
@@ -72,7 +80,7 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
     list_filter = ("category", "is_published", "is_coming_soon")
     search_fields = ("title", "slug", "vault_plan_slug", "description")
     prepopulated_fields = {"slug": ("title",)}
-    inlines = [StreamPlaylistItemInline]
+    inlines = [StreamPlaylistItemInline, StreamPlaylistAttachmentInline]
     fieldsets = (
         (
             None,
@@ -100,7 +108,16 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
                 ),
             },
         ),
-        ("Publishing", {"fields": ("is_published", "is_coming_soon")}),
+        (
+            "Publishing",
+            {
+                "fields": ("is_published", "is_coming_soon"),
+                "description": (
+                    "Attach PDFs, worksheets, and reference files below under "
+                    "“Stream playlist attachments” (visible to members who unlocked this playlist)."
+                ),
+            },
+        ),
     )
 
     def save_model(self, request, obj, form, change):

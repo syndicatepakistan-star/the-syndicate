@@ -43,6 +43,17 @@ import {
 } from "@/lib/level1ProgramCatalog";
 import { GLOBE_PACK_KEYS, isHiddenProgramPlaylist, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import {
+  PROGRAM_CARD_FRAME,
+  PROGRAM_CARD_INFO_INSET,
+  PROGRAM_CARD_INFO_PANEL,
+  PROGRAM_CARD_INNER_SHELL,
+  PROGRAM_CARD_LANDSCAPE_MEDIA,
+  PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY,
+  PROGRAM_CARD_MOBILE_ACTIONS_FACE,
+  PROGRAM_CARD_MOBILE_INFO_FACE,
+  PROGRAM_CARD_MOBILE_TITLE_FACE,
+} from "@/components/programs/programCardMedia";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { clearUnlockCelebrationStorage, resolvePlaylistIdForPlan } from "@/lib/programUnlockFlow";
@@ -51,7 +62,7 @@ import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-ap
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
-import { STREAM_PLAYLIST_CATEGORY_LABELS } from "@/lib/streamPlaylistCategoryLabels";
+import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
 import { useTabResume } from "@/hooks/useTabResume";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
@@ -889,8 +900,8 @@ export function ProgramsCourseSection({
           void prefetchStreamPlaylistExperience(pl.id);
         }}
         className={cn(
-          "group/card relative flex w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
-          "max-lg:aspect-[3/5] lg:aspect-[3/4]",
+          "group/card relative flex h-full w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
+          "min-h-0 max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[clamp(14rem,32vh,17rem)]",
           "rounded-2xl border-2 scroll-mt-32 transition-[transform,box-shadow] duration-300 ease-out",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
@@ -908,7 +919,8 @@ export function ProgramsCourseSection({
         ) : null}
         <span
           className={cn(
-            "relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.12rem] bg-[#04060d] ring-1 ring-black/70",
+            PROGRAM_CARD_FRAME,
+            "z-[1] rounded-[1.12rem] max-lg:rounded-[0.85rem]",
             isSpotlight && "program-card-globe-spotlight border-2"
           )}
         >
@@ -919,20 +931,16 @@ export function ProgramsCourseSection({
             className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
             aria-hidden
           />
-            <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-2 sm:p-2.5">
-            <div
-              className={cn(
-                "relative min-h-[7.5rem] flex-1 overflow-hidden rounded-xl border max-lg:min-h-[7rem] max-lg:flex-[1.15] sm:min-h-[9.25rem]",
-                theme.mediaBorder
-              )}
-            >
+            <div className={PROGRAM_CARD_INNER_SHELL}>
+            <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
               <ProgramPlaylistCoverImage
                 playlist={pl}
                 gradClassName={grad}
                 loading={j < 2 ? "eager" : "lazy"}
                 fetchPriority={j < 1 ? "high" : undefined}
+                objectFit="cover"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
+              <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
               {locked && !comingSoon ? (
                 <span className="pointer-events-none absolute inset-0 z-[4] bg-black/45" aria-hidden />
               ) : null}
@@ -943,7 +951,10 @@ export function ProgramsCourseSection({
             </div>
             <div
               className={cn(
-                "flex shrink-0 flex-col justify-end gap-1.5 overflow-hidden rounded-xl border px-2 py-2 sm:px-2.5 sm:py-2",
+                PROGRAM_CARD_INFO_INSET,
+                PROGRAM_CARD_INFO_PANEL,
+                PROGRAM_CARD_MOBILE_INFO_FACE,
+                "justify-end gap-1.5 rounded-xl border px-2 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-2.5 sm:py-2",
                 theme.infoPanel,
                 "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
                 "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
@@ -952,6 +963,7 @@ export function ProgramsCourseSection({
               <div
                 className={cn(
                   "line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
+                  PROGRAM_CARD_MOBILE_TITLE_FACE,
                   theme.title
                 )}
               >
@@ -961,11 +973,12 @@ export function ProgramsCourseSection({
                 <ProgramCardStatsLines
                   stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
                   size="stream"
-                  className="shrink-0"
+                  denseMobile
+                  className="max-xl:mt-0.5 shrink-0"
                 />
               ) : null}
               {!comingSoon ? (
-                <div className="grid shrink-0 grid-cols-2 gap-1.5">
+                <div className={cn("mt-auto grid shrink-0 grid-cols-2 gap-1.5", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
                   <button
                     type="button"
                     {...{ [PROGRAM_DETAIL_TRIGGER_ATTR]: "" }}
@@ -1010,22 +1023,38 @@ export function ProgramsCourseSection({
   const renderProgramsLibraryGrid = () => {
     if (!hasCatalogItems || secureView !== "grid") return null;
     return (
-      <div id="dashboard-programs-library" className="scroll-mt-24 space-y-6">
+      <div id="dashboard-programs-library" className="program-playlist-library-band scroll-mt-24 space-y-6 max-lg:space-y-4">
         {visibleStreamPlaylistCount === 0 && streamPlaylists.length > 0 ? (
           <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">
             No playlists found in this category yet.
           </div>
         ) : null}
         {visibleBusinessPsychologyPlaylists.length > 0 || visibleBusinessModelPlaylists.length > 0 ? (
-          <div className="mx-auto max-w-[1700px]">
+          <div className="mx-auto max-w-[1800px]">
             {showBothPlaylistColumns ? (
               <div className="space-y-3 xl:hidden">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex min-h-[2.8rem] items-center justify-center text-center font-mono text-[13px] font-extrabold uppercase leading-tight tracking-[0.18em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_24px_rgba(232,121,249,0.8)] sm:min-h-[3rem] sm:text-[14px]">
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                <div className="grid grid-cols-2 items-stretch gap-3">
+                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                    <div
+                      className={cn(
+                        PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                        PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                        "text-balance"
+                      )}
+                    >
+                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                    </div>
                   </div>
-                  <div className="flex min-h-[2.8rem] items-center justify-center text-center font-mono text-[13px] font-extrabold uppercase leading-tight tracking-[0.18em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_24px_rgba(103,232,249,0.8)] sm:min-h-[3rem] sm:text-[14px]">
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                    <div
+                      className={cn(
+                        PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                        PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                        "text-balance"
+                      )}
+                    >
+                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -1037,9 +1066,9 @@ export function ProgramsCourseSection({
                           <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[5] w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-transparent via-[color:var(--gold)] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_38px_rgba(245,200,20,0.75)]" />
                         </>
                       ) : null}
-                      <div className="grid grid-cols-2 justify-items-stretch gap-3">
-                        <div className="w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
-                        <div className="w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
+                      <div className="program-playlist-mobile-grid grid grid-cols-2 justify-items-stretch gap-2 max-lg:gap-1.5 sm:gap-4">
+                        <div className="min-w-0 w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
+                        <div className="min-w-0 w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
                       </div>
                     </div>
                   ))}
@@ -1055,15 +1084,23 @@ export function ProgramsCourseSection({
               )}
             >
               {visibleBusinessPsychologyPlaylists.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                <div className="flex flex-col gap-3">
+                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.columnHeadingSlot}>
+                    <div
+                      className={cn(
+                        PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                        PLAYLIST_CATEGORY_HEADING_CLASS.columnSize,
+                        "text-balance"
+                      )}
+                    >
+                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                    </div>
                   </div>
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
                   <div
                     className={cn(
-                      "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
-                      showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 min-[400px]:grid-cols-2"
+                      "grid justify-items-stretch gap-3 sm:gap-4 md:gap-5",
+                      showBothPlaylistColumns ? "grid-cols-1 min-[560px]:grid-cols-2" : "grid-cols-1 min-[440px]:grid-cols-2"
                     )}
                   >
                     {visibleBusinessPsychologyPlaylists.map((pl, j) => renderStreamPlaylistCard(pl, j))}
@@ -1077,15 +1114,23 @@ export function ProgramsCourseSection({
                 </div>
               ) : null}
               {visibleBusinessModelPlaylists.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="public-heading-lightning public-heading-lightning--amber text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                <div className="flex flex-col gap-3">
+                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.columnHeadingSlot}>
+                    <div
+                      className={cn(
+                        PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                        PLAYLIST_CATEGORY_HEADING_CLASS.columnSize,
+                        "text-balance"
+                      )}
+                    >
+                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                    </div>
                   </div>
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
                   <div
                     className={cn(
-                      "grid justify-items-center gap-3 sm:gap-4 md:gap-5",
-                      showBothPlaylistColumns ? "grid-cols-2" : "grid-cols-1 min-[400px]:grid-cols-2"
+                      "grid justify-items-stretch gap-3 sm:gap-4 md:gap-5",
+                      showBothPlaylistColumns ? "grid-cols-1 min-[560px]:grid-cols-2 playlist-business-models-cards" : "grid-cols-1 min-[440px]:grid-cols-2"
                     )}
                   >
                     {visibleBusinessModelPlaylists.map((pl, j) =>
@@ -1125,8 +1170,8 @@ export function ProgramsCourseSection({
                       openProgram(c.id);
                     }}
                     className={cn(
-                      "group/card relative flex aspect-[4/5] w-full flex-col overflow-hidden text-left outline-none",
-                      "rounded-3xl",
+                      "group/card relative flex h-full w-full min-h-0 max-lg:min-h-0 lg:min-h-[clamp(14rem,32vh,17rem)] flex-col overflow-hidden text-left outline-none",
+                      "rounded-2xl border-2",
                       theme.glow,
                       "transition-[transform,box-shadow] duration-300 ease-out",
                       !courseLocked && "hover:-translate-y-0.5",
@@ -1135,52 +1180,35 @@ export function ProgramsCourseSection({
                       courseLocked ? "cursor-not-allowed opacity-[0.78]" : "active:translate-y-0"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "pointer-events-none absolute left-1/2 top-1/2 z-0 aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 will-change-transform animate-[spin_5.5s_linear_infinite] motion-reduce:animate-none",
-                        `bg-gradient-to-r ${theme.ring}`
-                      )}
-                      style={{ animationDuration: `${5.2 + ((streamPlaylists.length + i) % 5) * 0.45}s` }}
-                      aria-hidden
-                    />
-                    <span className="relative z-[1] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-neutral-950 ring-1 ring-black/60">
-                      <span
-                        className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.28rem]"
-                        aria-hidden
-                      >
-                        <span className="absolute -left-[40%] top-0 h-full w-[45%] -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-0 mix-blend-overlay transition-[transform,opacity] duration-700 ease-out group-hover/card:translate-x-[280%] group-hover/card:opacity-100" />
-                      </span>
-                      <span
-                        className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
-                        aria-hidden
-                      />
-                      <div className="absolute inset-0 z-0">
-                        <ProgramPlaylistCoverImage
-                          playlist={courseMeta}
-                          gradClassName={grad}
-                          loading={i < 4 ? "eager" : "lazy"}
-                          fetchPriority={i < 2 ? "high" : "auto"}
-                          displayWidth={480}
-                        />
-                      </div>
-                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/35 via-transparent to-transparent to-[45%]" />
-                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black from-0% via-black/85 via-[32%] to-transparent to-[62%]" />
-                      {courseLocked ? (
-                        <span className="pointer-events-none absolute inset-0 z-[2] bg-black/45" aria-hidden />
-                      ) : null}
-                      <ProgramThumbnailAccessBadge comingSoon={false} locked={courseLocked} />
-                      <div className="relative z-[3] flex h-full flex-col justify-end p-3 pt-10 sm:p-3.5 sm:pt-12">
+                    <span className={cn(PROGRAM_CARD_FRAME, "z-[1] rounded-[1.12rem] max-lg:rounded-[0.85rem]")}>
+                      <div className={PROGRAM_CARD_INNER_SHELL}>
+                        <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
+                          <ProgramPlaylistCoverImage
+                            playlist={courseMeta}
+                            gradClassName={grad}
+                            loading={i < 4 ? "eager" : "lazy"}
+                            fetchPriority={i < 2 ? "high" : "auto"}
+                            displayWidth={480}
+                            objectFit="cover"
+                          />
+                          <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
+                          {courseLocked ? (
+                            <span className="pointer-events-none absolute inset-0 z-[4] bg-black/45" aria-hidden />
+                          ) : null}
+                          <ProgramThumbnailAccessBadge comingSoon={false} locked={courseLocked} />
+                        </div>
                         <div
                           className={cn(
-                            "rounded-xl border px-3 py-2.5 sm:px-3.5 sm:py-3",
+                            PROGRAM_CARD_INFO_INSET,
+                            PROGRAM_CARD_INFO_PANEL,
+                            "justify-end gap-1.5 rounded-xl border px-2 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-2.5 sm:py-2",
                             theme.body,
-                            "shadow-[0_8px_28px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]",
-                            "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
+                            "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
                           )}
                         >
                           <div
                             className={cn(
-                              "line-clamp-3 text-left text-[16px] font-extrabold uppercase leading-snug tracking-[0.06em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:text-[17px] sm:tracking-[0.07em]",
+                              "line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
                               theme.title
                             )}
                           >
@@ -1188,7 +1216,7 @@ export function ProgramsCourseSection({
                           </div>
                           <div
                             className={cn(
-                              "mt-1.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-left text-[10px] font-bold uppercase tracking-[0.14em]",
+                              "inline-flex w-fit rounded-full border px-2 py-0.5 text-left text-[9px] font-bold uppercase tracking-[0.12em] sm:text-[10px]",
                               theme.chip
                             )}
                           >
@@ -1251,13 +1279,6 @@ export function ProgramsCourseSection({
                       onCheckoutError={setCheckoutError}
                       onOpenPlaylist={openStreamPlaylist}
                     />
-                    {effectiveStreamPlaylists.length > 0 ? (
-                      <PublicGoalPathSection
-                        playlists={effectiveStreamPlaylists}
-                        libraryTarget="dashboard"
-                        className="relative w-full max-w-none px-0 pb-2 pt-2 sm:pb-4 sm:pt-3"
-                      />
-                    ) : null}
                     {streamPlaylists.length > 0 ? (
                       <div className="-mx-[var(--fluid-section-p)] w-[calc(100%+2*var(--fluid-section-p))] max-w-none shrink-0 px-3 sm:px-4 md:px-5">
                         <div className="mx-auto w-full max-w-4xl space-y-3">
@@ -1285,7 +1306,7 @@ export function ProgramsCourseSection({
                                     : "border-cyan-400/45 bg-[linear-gradient(135deg,rgba(8,44,52,0.9),rgba(4,22,26,0.9))] text-cyan-100/95 shadow-[0_0_14px_rgba(34,211,238,0.45)] hover:border-cyan-200/80 hover:bg-[linear-gradient(135deg,rgba(11,66,78,0.95),rgba(5,30,36,0.95))] hover:text-cyan-50 hover:shadow-[0_0_24px_rgba(34,211,238,0.72)]"
                                 )}
                               >
-                                Business Model
+                                {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
                               </button>
                               <button
                                 type="button"
@@ -1345,6 +1366,13 @@ export function ProgramsCourseSection({
                   ) : null}
                 </div>
                 {renderProgramsLibraryGrid()}
+                {effectiveStreamPlaylists.length > 0 ? (
+                  <PublicGoalPathSection
+                    playlists={effectiveStreamPlaylists}
+                    libraryTarget="dashboard"
+                    className="relative mt-6 w-full max-w-none px-0 pb-2 pt-2 sm:mt-8 sm:pb-4 sm:pt-3"
+                  />
+                ) : null}
               </div>
             </div>
           ) : null}

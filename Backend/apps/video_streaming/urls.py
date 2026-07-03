@@ -14,6 +14,11 @@ urlpatterns = [
     path("public-playlists/", views.public_stream_playlists_view, name="streaming-playlists-public"),
     path("vault-playlist-map/", views.vault_playlist_map_view, name="streaming-vault-playlist-map"),
     path(
+        "playlists/<int:playlist_id>/attachments/<int:attachment_id>/download/",
+        views.StreamPlaylistAttachmentDownloadView.as_view(),
+        name="streaming-playlist-attachment-download",
+    ),
+    path(
         "playlists/<int:playlist_id>/certificate/",
         views.StreamPlaylistCertificateIssueView.as_view(),
         name="streaming-playlists-certificate-issue",

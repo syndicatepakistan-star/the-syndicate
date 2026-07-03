@@ -2,8 +2,28 @@ import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 /** User-facing playlist column / filter labels (DB key stays `business_psychology`). */
 export const STREAM_PLAYLIST_CATEGORY_LABELS = {
-  business_model: "Business Model",
+  business_model: "Business Models",
   business_psychology: "Business Behaviour Psychology",
+} as const;
+
+/** Column title glow + scale (programs library + dashboard grids). */
+export const PLAYLIST_CATEGORY_HEADING_CLASS = {
+  psychology:
+    "public-heading-lightning public-heading-lightning--fuchsia playlist-category-heading-lightning text-center font-mono font-black uppercase tracking-[0.1em] sm:tracking-[0.14em]",
+  businessModels:
+    "public-heading-lightning public-heading-lightning--cyan playlist-category-heading-lightning text-center font-mono font-black uppercase tracking-[0.1em] sm:tracking-[0.14em]",
+  /** Side-by-side headers (mobile / iPad before xl). */
+  splitSize: "text-[14pt] leading-[1.05] md:text-[28pt] md:leading-[1.05]",
+  /** Stacked column headers (desktop xl). */
+  columnSize: "text-[28pt] leading-[1.05]",
+  /** Equal-height slot — split view centers headings; desktop columns align to card grid. */
+  splitHeadingSlot:
+    "playlist-category-heading-slot playlist-category-heading-slot--split flex w-full justify-center px-1 text-center",
+  columnHeadingSlot:
+    "playlist-category-heading-slot playlist-category-heading-slot--column flex w-full items-end justify-center pb-1 text-center",
+  /** @deprecated use splitHeadingSlot or columnHeadingSlot */
+  headingSlot:
+    "playlist-category-heading-slot flex w-full min-h-[calc(14pt*3.2)] items-center justify-center px-1 text-center md:min-h-[calc(28pt*2.1)] xl:min-h-[calc(28pt*2.1)] xl:items-end xl:pb-1",
 } as const;
 
 export type StreamPlaylistCategoryKey = keyof typeof STREAM_PLAYLIST_CATEGORY_LABELS;

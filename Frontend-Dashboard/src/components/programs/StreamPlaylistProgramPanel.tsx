@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { Download, Play } from "lucide-react";
 import StreamHtmlVideoPlayer from "@/components/streaming/StreamHtmlVideoPlayer";
 import { useStreamPlaybackRefresh } from "@/hooks/useStreamPlaybackRefresh";
 import { useTabResume } from "@/hooks/useTabResume";
@@ -13,9 +13,11 @@ import {
   purgeExpiredStreamPlaybackCache,
   warmStreamVideoMedia,
   type StreamPayload,
+  type StreamPlaylistAttachment,
   type StreamPlaylistDetail,
   type StreamVideoListItem
 } from "@/lib/streaming-api";
+import { fetchAuthenticatedPdfBlob } from "@/lib/portal-api";
 import { resolveDjangoMediaUrl } from "@/lib/courses-api";
 import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import { issuePlaylistCertificate } from "@/lib/certificates-api";
@@ -38,6 +40,212 @@ const DISPLAY_GAP_SMOOTH_SECONDS = 1.2;
 function parsePlaylistNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(n) ? n : 0;
+}
+
+function formatAttachmentSize(bytes: number | null | undefined): string {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function openPlaylistAttachment(attachment: StreamPlaylistAttachment): Promise<void> {
+  const path = attachment.download_url?.trim();
+  if (!path) return;
+  try {
+    const blob = await fetchAuthenticatedPdfBlob(path);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch {
+    window.open(path, "_blank", "noopener,noreferrer");
+  }
+}
+
+function attachmentFileLabel(attachment: StreamPlaylistAttachment): string {
+  const name = (attachment.file_name || attachment.title || "").toLowerCase();
+  if (name.endsWith(".pdf")) return "PDF";
+  if (name.endsWith(".doc") || name.endsWith(".docx")) return "DOC";
+  if (name.endsWith(".xls") || name.endsWith(".xlsx")) return "XLS";
+  if (name.endsWith(".zip")) return "ZIP";
+  const type = (attachment.content_type || "").split("/").pop()?.toUpperCase();
+  return type && type.length <= 8 ? type : "FILE";
+}
+
+const RESOURCE_CARD_THEMES = [
+  {
+    border: "border-cyan-400/55",
+    badge: "border-cyan-300/60 bg-[linear-gradient(135deg,rgba(34,211,238,0.28),rgba(14,116,144,0.18))] text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.35)]",
+    title: "text-cyan-50",
+    panel: "bg-cyan-950/15 shadow-[inset_0_0_24px_rgba(34,211,238,0.06)]",
+    btn: "border-cyan-400/55 bg-[linear-gradient(135deg,rgba(8,51,68,0.85),rgba(4,30,40,0.98))] text-cyan-50 shadow-[0_0_18px_rgba(34,211,238,0.28)] hover:border-cyan-300/75",
+  },
+  {
+    border: "border-violet-400/55",
+    badge: "border-violet-300/60 bg-[linear-gradient(135deg,rgba(167,139,250,0.28),rgba(109,40,217,0.18))] text-violet-100 shadow-[0_0_16px_rgba(167,139,250,0.35)]",
+    title: "text-violet-50",
+    panel: "bg-violet-950/15 shadow-[inset_0_0_24px_rgba(167,139,250,0.06)]",
+    btn: "border-violet-400/55 bg-[linear-gradient(135deg,rgba(76,29,149,0.75),rgba(46,16,101,0.98))] text-violet-50 shadow-[0_0_18px_rgba(167,139,250,0.28)] hover:border-violet-300/75",
+  },
+  {
+    border: "border-amber-400/55",
+    badge: "border-amber-300/60 bg-[linear-gradient(135deg,rgba(251,191,36,0.28),rgba(180,120,20,0.18))] text-amber-100 shadow-[0_0_16px_rgba(251,191,36,0.35)]",
+    title: "text-amber-50",
+    panel: "bg-amber-950/15 shadow-[inset_0_0_24px_rgba(251,191,36,0.06)]",
+    btn: "border-amber-400/55 bg-[linear-gradient(135deg,rgba(120,80,8,0.85),rgba(54,34,4,0.98))] text-amber-50 shadow-[0_0_18px_rgba(251,191,36,0.28)] hover:border-amber-300/75",
+  },
+  {
+    border: "border-fuchsia-400/55",
+    badge: "border-fuchsia-300/60 bg-[linear-gradient(135deg,rgba(232,121,249,0.28),rgba(192,38,211,0.18))] text-fuchsia-100 shadow-[0_0_16px_rgba(232,121,249,0.35)]",
+    title: "text-fuchsia-50",
+    panel: "bg-fuchsia-950/15 shadow-[inset_0_0_24px_rgba(232,121,249,0.06)]",
+    btn: "border-fuchsia-400/55 bg-[linear-gradient(135deg,rgba(134,25,143,0.75),rgba(74,4,78,0.98))] text-fuchsia-50 shadow-[0_0_18px_rgba(232,121,249,0.28)] hover:border-fuchsia-300/75",
+  },
+  {
+    border: "border-orange-400/55",
+    badge: "border-orange-300/60 bg-[linear-gradient(135deg,rgba(251,146,60,0.28),rgba(194,65,12,0.18))] text-orange-100 shadow-[0_0_16px_rgba(251,146,60,0.35)]",
+    title: "text-orange-50",
+    panel: "bg-orange-950/15 shadow-[inset_0_0_24px_rgba(251,146,60,0.06)]",
+    btn: "border-orange-400/55 bg-[linear-gradient(135deg,rgba(154,52,18,0.75),rgba(67,20,7,0.98))] text-orange-50 shadow-[0_0_18px_rgba(251,146,60,0.28)] hover:border-orange-300/75",
+  },
+  {
+    border: "border-emerald-400/55",
+    badge: "border-emerald-300/60 bg-[linear-gradient(135deg,rgba(52,211,153,0.28),rgba(16,185,129,0.18))] text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.35)]",
+    title: "text-emerald-50",
+    panel: "bg-emerald-950/15 shadow-[inset_0_0_24px_rgba(52,211,153,0.06)]",
+    btn: "border-emerald-400/55 bg-[linear-gradient(135deg,rgba(6,78,59,0.85),rgba(4,47,46,0.98))] text-emerald-50 shadow-[0_0_18px_rgba(52,211,153,0.28)] hover:border-emerald-300/75",
+  },
+] as const;
+
+function humanResourceTitle(raw: string): string {
+  const cleaned = raw.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!cleaned) return "Program resource";
+  return cleaned;
+}
+
+function humanResourceDescription(title: string, fileLabel: string): string {
+  const t = title.toLowerCase();
+  if (t.includes("quiz") && t.includes("funnel")) {
+    return "A clear breakdown of how quiz funnels work — save it, study it, and use it to build offers that convert without guessing.";
+  }
+  if (t.includes("quiz")) {
+    return "Step-by-step quiz guidance you can follow at your own pace — built to help you turn attention into qualified leads.";
+  }
+  if (t.includes("funnel")) {
+    return "The full funnel map in one place — so you know what to build, in what order, and why each step matters.";
+  }
+  if (t.includes("workbook") || t.includes("worksheet")) {
+    return "Exercises and prompts you can print or fill in on screen — made to turn watching into doing, not just note-taking.";
+  }
+  if (t.includes("cheat") || t.includes("checklist")) {
+    return "A quick-reference sheet for when you are executing — keep it open so you do not miss the steps that actually move the needle.";
+  }
+  if (t.includes("template")) {
+    return "A ready-to-use template — copy, adapt, and deploy so you are not starting from a blank page every time.";
+  }
+  if (t.includes("guide") || t.includes("playbook")) {
+    return "A practical guide written to support this program — read it alongside the lessons and apply each section as you go.";
+  }
+  if (fileLabel === "PDF") {
+    return "Your PDF for this program — download it, keep it forever, and come back whenever you need a clear reference.";
+  }
+  return "A file included with this program — yours to download and use whenever you need it alongside the lessons.";
+}
+
+function PlaylistResourcesBlock({
+  attachments,
+  className,
+}: {
+  attachments: StreamPlaylistAttachment[];
+  className?: string;
+}) {
+  if (attachments.length === 0) return null;
+  return (
+    <div
+      className={cn(
+        "playlist-resources-panel relative w-full overflow-hidden rounded-2xl",
+        "border-2 border-cyan-400/50 bg-[linear-gradient(165deg,rgba(4,10,22,0.98),rgba(2,5,12,0.99))]",
+        "shadow-[0_0_0_1px_rgba(34,211,238,0.4),0_0_48px_rgba(34,211,238,0.16),inset_0_1px_0_rgba(255,255,255,0.1)]",
+        className
+      )}
+    >
+      <span
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(34,211,238,0.14),transparent_60%)]"
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute inset-[3px] rounded-[13px] border border-emerald-400/25"
+        aria-hidden
+      />
+      <div className="relative px-4 py-5 sm:px-6 sm:py-6">
+        <h3 className="text-center text-[clamp(1.1rem,2.4vw,1.45rem)] font-black uppercase tracking-[0.14em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.45)]">
+          Download Resources
+        </h3>
+
+        <ul className="mt-4 space-y-3 sm:mt-5 sm:space-y-3.5">
+          {attachments.map((attachment, index) => {
+            const theme = RESOURCE_CARD_THEMES[index % RESOURCE_CARD_THEMES.length];
+            const displayTitle = humanResourceTitle(attachment.title || attachment.file_name);
+            const fileLabel = attachmentFileLabel(attachment);
+            const sizeLabel = formatAttachmentSize(attachment.file_size);
+            const description = humanResourceDescription(displayTitle, fileLabel);
+            const step = String(index + 1).padStart(2, "0");
+
+            return (
+              <li
+                key={attachment.id}
+                className={cn(
+                  "flex flex-col gap-3 rounded-xl border-2 p-3.5 sm:flex-row sm:items-center sm:gap-4 sm:p-4",
+                  theme.border,
+                  theme.panel
+                )}
+              >
+                <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+                  <span
+                    className={cn(
+                      "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-[13px] font-black tabular-nums",
+                      theme.badge
+                    )}
+                  >
+                    {step}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={cn(
+                        "text-[13px] font-black uppercase leading-snug tracking-[0.06em] sm:text-[14px] sm:tracking-[0.08em]",
+                        theme.title
+                      )}
+                    >
+                      {displayTitle}
+                    </div>
+                    <p className="mt-1.5 text-[12px] leading-relaxed text-white/82 sm:text-[13px] sm:leading-6">
+                      {description}
+                    </p>
+                    {sizeLabel ? (
+                      <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.1em] text-white/45">
+                        {fileLabel} · {sizeLabel}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void openPlaylistAttachment(attachment)}
+                  className={cn(
+                    "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-[10px] font-black normal-case tracking-[0.06em] transition hover:brightness-110 sm:w-auto sm:min-w-[9.5rem]",
+                    theme.btn
+                  )}
+                >
+                  <Download className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                  Download Pdf
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 function formatDuration(seconds: number): string {
@@ -646,10 +854,33 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     );
   }
 
-  if (!playlist || items.length === 0) {
+  if (!playlist) {
+    return (
+      <div className="rounded-xl border border-amber-500/25 bg-black/35 px-4 py-8 text-center text-[14px] text-white/65">
+        This playlist could not be loaded.
+      </div>
+    );
+  }
+
+  const playlistAttachments = playlist.attachments ?? [];
+  const hasVideos = items.length > 0;
+  const hasResources = playlistAttachments.length > 0;
+
+  if (!hasVideos && !hasResources) {
     return (
       <div className="rounded-xl border border-amber-500/25 bg-black/35 px-4 py-8 text-center text-[14px] text-white/65">
         This playlist has no videos yet. Add Stream videos in Django admin.
+      </div>
+    );
+  }
+
+  if (!hasVideos && hasResources) {
+    return (
+      <div className="w-full space-y-4">
+        <h2 className="text-[clamp(1.15rem,2.2vw+0.5rem,1.65rem)] font-black leading-tight tracking-tight text-[#f5c814]">
+          {playlist.title}
+        </h2>
+        <PlaylistResourcesBlock attachments={playlistAttachments} className="w-full" />
       </div>
     );
   }
@@ -784,6 +1015,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               {formatPrice(playlistPrice)}
             </span>
           </div>
+          {playlistAttachments.length > 0 ? (
+            <PlaylistResourcesBlock attachments={playlistAttachments} className="mt-4 w-full" />
+          ) : null}
           {(activeVideo?.description || "").trim() ? (
             <div className="mt-3 max-w-4xl rounded-xl border border-white/12 bg-black/35 px-4 py-3">
               <div className="mb-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#f5c814]">Description</div>

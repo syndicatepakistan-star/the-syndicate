@@ -56,6 +56,8 @@ export type PlanOfferDef = {
   checkoutAmount: string;
   billing: "monthly";
   openLabel: string;
+  /** Primary card button when locked (defaults to Details). */
+  detailsLabel?: string;
   /** When set, Open navigates here instead of starting Stripe checkout. */
   openHref?: string;
   /** When set to vault_picker, Details opens the vault browser; Unlock starts checkout. */
@@ -94,6 +96,57 @@ export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
   "Total Videos: 133 Individual Video Lessons",
 ];
 
+export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS = [
+  {
+    tag: "01",
+    tone: "cyan",
+    title: "Syndicate Dashboard",
+    desc: "Full operator command center — track programs, progress, and execution in one vault.",
+  },
+  {
+    tag: "02",
+    tone: "violet",
+    title: "Syndicate Affiliate Opportunities",
+    desc: "Unlock referral revenue streams and Syndicate affiliate monetization paths.",
+  },
+  {
+    tag: "03",
+    tone: "gold",
+    title: "11 Business Model Programs",
+    desc: "Learn 11 different business models — choose whichever models suit you best to start your business journey with the best odds of winning.",
+  },
+  {
+    tag: "04",
+    tone: "pink",
+    title: "11 Business Behavioral Psychology Programs",
+    desc: "Master business behavioral psychology with Syndicate secret correction techniques — take how you think about business to an elite level.",
+  },
+  {
+    tag: "05",
+    tone: "amber",
+    title: "Agentic AI Pack — 26 Videos",
+    desc: "Autonomous AI workflows, agents, and systems that execute while you architect leverage.",
+  },
+  {
+    tag: "06",
+    tone: "green",
+    title: "AI Content Automation Pack — 29 Videos",
+    desc: "Content pipelines that scale output without manual babysitting or wage-labour grind.",
+  },
+  {
+    tag: "07",
+    tone: "cyan",
+    title: "Advanced Candlestick Technical Analysis — 56 Lessons",
+    desc: "Four video packs covering advanced candlestick technical analysis and execution.",
+  },
+  {
+    tag: "08",
+    tone: "violet",
+    title: "133 Individual Video Lessons Total",
+    desc: "The complete Money Mastery lifetime vault — every pack above in one commitment.",
+  },
+] as const;
+
 export const KNIGHT_SUBSCRIPTION_COPY =
   "The Knight Membership Subscription — An elite membership path for business operators who want control over their own destiny. Select your chosen programs, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.";
 
@@ -114,6 +167,40 @@ export const KNIGHT_MEMBERSHIP_FEATURES: readonly string[] = [
   "Exclusive access to Q&A business intelligence and advice sessions with the founder",
   "Exclusive opportunities to receive investment for your business venture",
 ];
+
+const KNIGHT_BENEFIT_TONES = ["green", "cyan", "violet", "gold", "pink", "amber"] as const;
+
+export const KNIGHT_MEMBERSHIP_BENEFIT_ITEMS = KNIGHT_MEMBERSHIP_FEATURES.map((feature, index) => ({
+  tag: String(index + 1).padStart(2, "0"),
+  tone: KNIGHT_BENEFIT_TONES[index % KNIGHT_BENEFIT_TONES.length]!,
+  title: feature.length > 48 ? `${feature.slice(0, 45).trim()}…` : feature,
+  desc: feature,
+}));
+
+export type PrimaryElitePlanKey = "bundle" | "king";
+
+export function isPrimaryElitePlan(plan: string): plan is PrimaryElitePlanKey {
+  return plan === "bundle" || plan === "king";
+}
+
+export function eliteOfferBenefitPanelProps(plan: PrimaryElitePlanKey) {
+  if (plan === "bundle") {
+    return {
+      intro: MONEY_MASTERY_FOUNDATION_COPY,
+      benefitsTitle: "You Will Gain Lifetime Access To",
+      items: MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS,
+      frameTone: "green" as const,
+      titleLightning: "cyan" as const,
+    };
+  }
+  return {
+    intro: `${KNIGHT_SUBSCRIPTION_COPY} ${KNIGHT_EXECUTION_COPY.join(" ")}`,
+    benefitsTitle: "You Will Gain Access To",
+    items: KNIGHT_MEMBERSHIP_BENEFIT_ITEMS,
+    frameTone: "cyan" as const,
+    titleLightning: "gold" as const,
+  };
+}
 
 /** Home page Syndicate Elite Offers intro block (read-more paragraphs). */
 export const HOME_ELITE_OFFERS_PARAGRAPHS: readonly string[] = [
@@ -138,7 +225,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "333",
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: "Unlock Full Pack",
     accent: "amber",
     detailTitle: "MONEY MASTERY",
     detailDescription: MONEY_MASTERY_FOUNDATION_COPY,
@@ -179,8 +266,9 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: "Unlock Full Pack",
     openAction: "vault_picker",
+    detailsLabel: "View All Videos",
     accent: "pink",
     detailTitle: "AGENTIC AI",
     detailDescription:
@@ -226,7 +314,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: "Unlock Full Pack",
     openAction: "vault_picker",
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
@@ -276,7 +364,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: "Unlock Full Pack",
     openAction: "vault_picker",
     accent: "purple",
     imageObjectPosition: "center center",

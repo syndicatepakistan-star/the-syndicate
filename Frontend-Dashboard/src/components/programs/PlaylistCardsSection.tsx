@@ -23,8 +23,22 @@ import {
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
 } from "@/lib/level1ProgramCatalog";
 import { programPlaylistDeepLink, programSlugDeepLink } from "@/lib/programPlaylistThumbnails";
-import { STREAM_PLAYLIST_CATEGORY_LABELS } from "@/lib/streamPlaylistCategoryLabels";
+import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import {
+  PROGRAM_CARD_FRAME,
+  PROGRAM_CARD_INFO_INSET,
+  PROGRAM_CARD_INFO_PANEL,
+  PROGRAM_CARD_INNER_SHELL,
+  PROGRAM_CARD_LANDSCAPE_MEDIA,
+  PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY,
+  PROGRAM_CARD_MOBILE_ACTIONS_FACE,
+  PROGRAM_CARD_MOBILE_INFO_FACE,
+  PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE,
+  PROGRAM_CARD_MOBILE_TITLE_FACE,
+} from "@/components/programs/programCardMedia";
+import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
 import { buildPlaylistCheckoutAuthHref } from "@/lib/plan-checkout";
@@ -299,7 +313,7 @@ export function PlaylistCardsSection({
         key={`playlist-${pl.id}`}
         style={spotlightStyle}
         className={cn(
-          "group/card relative flex min-h-[18rem] w-full flex-col text-left sm:min-h-[22rem]",
+          "group/card relative flex h-full min-h-0 w-full flex-col text-left max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[16.5rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
@@ -349,17 +363,19 @@ export function PlaylistCardsSection({
         ) : null}
         <span
           className={cn(
-            "relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70",
+            PROGRAM_CARD_FRAME,
+            "z-[2]",
             isSpotlight && "program-card-globe-spotlight border-2",
           )}
         >
-          <div className="relative z-[3] flex h-full min-h-0 flex-col gap-2 p-3 sm:p-3.5">
-            <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border-2 border-white/20 sm:min-h-[17rem] sm:flex-1">
+          <div className={PROGRAM_CARD_INNER_SHELL}>
+            <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
               <ProgramPlaylistCoverImage
                 playlist={pl}
                 gradClassName={grad}
                 loading={j < 2 ? "eager" : "lazy"}
                 fetchPriority={j < 2 ? "high" : "auto"}
+                objectFit="cover"
               />
               {comingSoon ? (
                 <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-3 text-center">
@@ -368,30 +384,47 @@ export function PlaylistCardsSection({
                   </span>
                 </span>
               ) : null}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
-            </div>
-            <div className="absolute right-3 top-3 z-[4]">
-              <span
-                className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
-                style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
-              >
-                {formatPrice(price)}
-                <span className="ml-1 text-[9px] font-bold uppercase tracking-[0.08em] text-emerald-200/80 sm:text-[10px]">
-                  lifetime
+              <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
+              <div className={cn("program-playlist-card__price-badge absolute right-2 top-2 z-[6] sm:right-2.5 sm:top-2.5", PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE)}>
+                <span
+                  className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
+                  style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+                >
+                  {formatPrice(price)}
+                  <span className="ml-1 text-[9px] font-bold uppercase tracking-[0.08em] text-emerald-200/80 sm:text-[10px]">
+                    lifetime
+                  </span>
                 </span>
-              </span>
+              </div>
             </div>
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                PROGRAM_CARD_INFO_INSET,
+                PROGRAM_CARD_INFO_PANEL,
+                PROGRAM_CARD_MOBILE_INFO_FACE,
+                "rounded-xl border-2 px-2.5 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
             >
-              <div className={cn("line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]", theme.title)}>
+              <div
+                className={cn(
+                  "line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  PROGRAM_CARD_MOBILE_TITLE_FACE,
+                  theme.title,
+                )}
+              >
                 {cardTitle}
               </div>
-              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:gap-2">
+              {!comingSoon ? (
+                <ProgramCardStatsLines
+                  stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
+                  size="stream"
+                  denseMobile
+                  className="max-xl:mt-0.5"
+                />
+              ) : null}
+              <div className={cn("mt-auto grid grid-cols-2 gap-1.5 sm:gap-2", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
                 <button
                   type="button"
                   onClick={() => setDescriptionModalPlaylist(pl)}
@@ -465,7 +498,7 @@ export function PlaylistCardsSection({
   return (
     <section
       className={cn(
-        "relative space-y-5 overflow-visible rounded-3xl px-[clamp(0.65rem,2.8vw,1.75rem)] py-2 sm:px-4 sm:py-3",
+        "program-playlist-library-band relative space-y-5 overflow-visible rounded-3xl px-[clamp(0.65rem,2.8vw,1.75rem)] py-2 max-lg:rounded-none max-lg:px-0 max-lg:py-1 sm:px-4 sm:py-3",
         className,
       )}
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
@@ -487,12 +520,28 @@ export function PlaylistCardsSection({
       {visiblePlaylists.length > 0 ? (
         <>
           <div className="mx-auto w-full max-w-[1800px] overflow-visible xl:hidden">
-            <div className="mb-3 grid grid-cols-2 gap-3">
-              <div className="text-center font-mono text-[12px] font-extrabold uppercase tracking-[0.16em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7)] sm:text-[13px]">
-                {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+            <div className="mb-3 grid grid-cols-2 items-stretch gap-3">
+              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                <div
+                  className={cn(
+                    PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                    PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                    "text-balance"
+                  )}
+                >
+                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                </div>
               </div>
-              <div className="text-center font-mono text-[12px] font-extrabold uppercase tracking-[0.16em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7)] sm:text-[13px]">
-                {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                <div
+                  className={cn(
+                    PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                    PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                    "text-balance"
+                  )}
+                >
+                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                </div>
               </div>
             </div>
             <div className="relative space-y-4 overflow-visible">
@@ -501,21 +550,29 @@ export function PlaylistCardsSection({
                 aria-hidden
               />
               {mobilePairedRows.map((row) => (
-                <div key={`mobile-row-${row.idx}`} className="grid grid-cols-2 gap-3 overflow-visible sm:gap-4">
-                  {row.psychology ? renderPlaylistCard(row.psychology, row.idx * 2) : <div aria-hidden />}
-                  {row.model ? renderPlaylistCard(row.model, row.idx * 2 + 1) : <div aria-hidden />}
+                <div key={`mobile-row-${row.idx}`} className="program-playlist-mobile-grid grid grid-cols-2 justify-items-stretch gap-2 overflow-visible max-lg:gap-1.5 sm:gap-4">
+                  <div className="min-w-0 w-full">{row.psychology ? renderPlaylistCard(row.psychology, row.idx * 2) : <div aria-hidden />}</div>
+                  <div className="min-w-0 w-full">{row.model ? renderPlaylistCard(row.model, row.idx * 2 + 1) : <div aria-hidden />}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="mx-auto hidden max-w-[1800px] grid-cols-1 gap-6 overflow-visible xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-start">
-            <div className="space-y-3 overflow-visible">
-              <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-fuchsia-100 [text-shadow:0_0_10px_rgba(232,121,249,0.7),0_0_26px_rgba(232,121,249,0.82)] sm:text-[17px]">
-                {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+          <div className="mx-auto hidden max-w-[1800px] grid-cols-1 gap-6 overflow-visible xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-stretch">
+            <div className="flex flex-col gap-3 overflow-visible">
+              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.columnHeadingSlot}>
+                <div
+                  className={cn(
+                    PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                    PLAYLIST_CATEGORY_HEADING_CLASS.columnSize,
+                    "text-balance"
+                  )}
+                >
+                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                </div>
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5">
                 {businessPsychologyPlaylists.map((pl, j) => renderPlaylistCard(pl, j))}
               </div>
             </div>
@@ -525,12 +582,20 @@ export function PlaylistCardsSection({
               <div className="absolute left-1/2 top-0 hidden h-full w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-[#f5c814] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_40px_rgba(245,200,20,0.7)] xl:block" />
             </div>
 
-            <div className="space-y-3 overflow-visible">
-              <div className="text-center font-mono text-[15px] font-extrabold uppercase tracking-[0.2em] text-cyan-100 [text-shadow:0_0_10px_rgba(103,232,249,0.7),0_0_26px_rgba(103,232,249,0.82)] sm:text-[17px]">
-                {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+            <div className="flex flex-col gap-3 overflow-visible">
+              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.columnHeadingSlot}>
+                <div
+                  className={cn(
+                    PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                    PLAYLIST_CATEGORY_HEADING_CLASS.columnSize,
+                    "text-balance"
+                  )}
+                >
+                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                </div>
               </div>
               <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 overflow-visible sm:grid-cols-2 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5 playlist-business-models-cards">
                 {businessModelPlaylists.map((pl, j) => renderPlaylistCard(pl, j + businessPsychologyPlaylists.length))}
               </div>
             </div>

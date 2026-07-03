@@ -5,6 +5,7 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
+import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 
 type Props = {
@@ -146,6 +147,11 @@ const PACK_SPOTLIGHT: Record<PlanOfferAccent, { a: string; b: string }> = {
   blue: { a: "96,165,250", b: "59,130,246" },
 };
 
+function isTradingVaultModuleCard(offer: PlanOfferDef, isModule: boolean): boolean {
+  if (!isModule) return false;
+  return isTradingModuleSlug(offer.plan) || isTradingSubmoduleSlug(offer.plan);
+}
+
 export function PlanOfferCard({
   offer,
   size = "large",
@@ -162,6 +168,7 @@ export function PlanOfferCard({
   const isModule = size === "module";
   const isCompact = size === "compact";
   const isPack = !isModule;
+  const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
   const spotlightStyle = highlighted
@@ -180,10 +187,12 @@ export function PlanOfferCard({
       className={cn(
         "plan-offer-card group/card relative flex w-full flex-col text-left scroll-mt-32",
         `plan-offer-card--${offer.accent}`,
+        cardKind === "pack" && "z-[1] hover:z-[10] focus-within:z-[10]",
         cardKind === "module" && "plan-offer-card--vault-module",
         highlighted && "program-card-globe-spotlight-host",
         isLarge && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
         isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
+        tradingMobileProgramFace && "max-xl:min-h-0",
         isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
@@ -195,7 +204,9 @@ export function PlanOfferCard({
       ) : null}
       <div
         className={cn(
-          "relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-300",
+          "relative flex h-full min-h-0 flex-col rounded-3xl border-2 transition-shadow duration-300",
+          isPack && isLarge ? "overflow-visible" : "overflow-hidden",
+          cardKind === "pack" && "z-[2]",
           theme.dominantBorder,
           !highlighted && !isModule && theme.glow,
           !highlighted && !isModule && theme.hoverGlow,
@@ -253,7 +264,8 @@ export function PlanOfferCard({
           <div
             className={cn(
               "relative z-[3] flex h-full min-h-0 flex-col gap-2",
-              isLarge ? "p-3 sm:p-5" : isModule ? "p-2 sm:p-2.5" : "p-2 sm:p-2.5"
+              isLarge ? "p-3 sm:p-5" : isModule ? "p-2 sm:p-2.5" : "p-2 sm:p-2.5",
+              tradingMobileProgramFace && "max-xl:gap-0 max-xl:p-0"
             )}
           >
             <div
@@ -262,6 +274,7 @@ export function PlanOfferCard({
                 isLarge && isPack && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
                 isLarge && !isPack && "plan-offer-card__media aspect-[16/10] min-h-[min(24dvh,8.5rem)] shrink-0 sm:aspect-[4/3] sm:min-h-[15rem]",
                 isModule && "aspect-[16/10] min-h-[7rem] shrink-0 sm:min-h-[8.5rem]",
+                tradingMobileProgramFace && "max-xl:aspect-video max-xl:min-h-0 max-xl:rounded-none max-xl:border-0",
                 isCompact && isPack && "min-h-[11.5rem] flex-1 sm:min-h-[12.5rem]",
                 isCompact && !isPack && "aspect-[4/3] min-h-[9.5rem] shrink-0"
               )}
@@ -311,6 +324,7 @@ export function PlanOfferCard({
                 isLarge && isPack && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
                 isLarge && !isPack && "min-h-[12rem] sm:min-h-[13rem]",
                 isModule && "min-h-[7.5rem] sm:min-h-[8rem]",
+                tradingMobileProgramFace && "max-xl:min-h-0 max-xl:justify-end max-xl:rounded-none max-xl:border-x-0 max-xl:border-b-0 max-xl:px-1 max-xl:py-1.5",
                 isCompact && isPack && "shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2",
                 "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
               )}
@@ -321,6 +335,7 @@ export function PlanOfferCard({
                   isLarge && isPack && "min-h-[2.2em] text-[clamp(11px,2.2vw,18px)]",
                   isLarge && !isPack && "min-h-[2.75em] text-[clamp(11px,2.2vw,18px)]",
                   isModule && "min-h-[2.75em] text-[10px] sm:text-[11px]",
+                  tradingMobileProgramFace && "max-xl:line-clamp-2 max-xl:min-h-0 max-xl:text-[clamp(10px,2.4vw,17px)]",
                   isCompact && "text-[10px] sm:text-[11px]"
                 )}
               >
@@ -328,7 +343,12 @@ export function PlanOfferCard({
               </div>
 
               {cardStats ? (
-                <ProgramCardStatsLines stats={cardStats} size={size} className="mt-1" />
+                <ProgramCardStatsLines
+                  stats={cardStats}
+                  size={size}
+                  denseMobile={tradingMobileProgramFace}
+                  className={cn("mt-1", tradingMobileProgramFace && "max-xl:mt-0.5")}
+                />
               ) : null}
 
               <ReadMoreText
@@ -338,7 +358,8 @@ export function PlanOfferCard({
                   isLarge && isPack && "mt-1",
                   isLarge && !isPack && "mt-1.5",
                   isModule && "mt-1.5",
-                  isCompact && "mt-1"
+                  isCompact && "mt-1",
+                  tradingMobileProgramFace && "hidden xl:block"
                 )}
                 textClassName={cn(
                   "text-left font-medium text-white/72",
@@ -358,6 +379,7 @@ export function PlanOfferCard({
                   isLarge && isPack && "mt-1.5 gap-1.5 sm:gap-2",
                   isLarge && !isPack && "mt-2 gap-2 sm:gap-2.5",
                   isModule && "mt-2 gap-1",
+                  tradingMobileProgramFace && "max-xl:mt-auto max-xl:gap-1.5",
                   isCompact && isPack && "mt-1.5 gap-1",
                   isCompact && !isPack && "mt-2 gap-1"
                 )}
@@ -377,7 +399,7 @@ export function PlanOfferCard({
                     isCompact && "px-1.5 py-1.5 text-[9px]"
                   )}
                 >
-                  Details
+                  {offer.detailsLabel ?? "Details"}
                 </button>
                 <button
                   type="button"

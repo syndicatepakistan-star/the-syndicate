@@ -79,6 +79,7 @@ export default function SiteFooter({
               <Link href="/" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Home</Link>
               <Link href="/what-you-get" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>What You Get</Link>
               <Link href="/our-methods" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Our Methods</Link>
+              <Link href="/our-founder" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Our Founder</Link>
               <Link href="/programs" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Programs</Link>
               <Link href="/quiz" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Syn Diagnosis</Link>
               <Link href="/affiliate" prefetch className={`${footerLinkClass} whitespace-nowrap`} style={{ color: 'rgba(254, 243, 199, 0.95)', textShadow: '0 0 8px rgba(251, 191, 36, 0.25)' }}>Affiliate</Link>

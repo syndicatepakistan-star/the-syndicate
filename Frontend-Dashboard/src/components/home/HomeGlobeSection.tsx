@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { HomeDomeGallerySection } from "@/components/home/HomeBelowFoldSections";
@@ -18,6 +19,10 @@ type DomeProps = ComponentProps<typeof HomeDomeGallerySection>;
 type HomeGlobeSectionProps = {
   images: DomeProps["images"];
 };
+
+/** Falling money — same Vimeo asset as affiliate band (background mode). */
+const VIMEO_MONEY_FALLING_EMBED =
+  "https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1";
 
 function GlobeSkeleton() {
   return (
@@ -105,18 +110,39 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
     <section
       ref={hostRef}
       id="programsGlobeSection"
-      className="home-globe-section home-lazy-section relative flex w-full min-w-0 flex-col items-stretch overflow-hidden bg-[#050508] px-0 py-1 sm:items-center sm:py-0"
+      className="home-globe-section home-lazy-section relative flex w-full min-w-0 flex-col items-stretch overflow-hidden bg-black px-0 py-1 sm:items-center sm:py-0"
     >
+      {active ? (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+          <iframe
+            title=""
+            src={VIMEO_MONEY_FALLING_EMBED}
+            className="pointer-events-none absolute left-1/2 top-1/2 opacity-[0.42] sm:opacity-45"
+            style={{
+              border: "none",
+              width: "100vw",
+              height: "56.25vw",
+              minHeight: "100%",
+              minWidth: "177.77vh",
+              transform: "translate(-50%, -50%)",
+            }}
+            allow="autoplay; fullscreen; picture-in-picture"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          <div className="absolute inset-0 bg-black/58" />
+        </div>
+      ) : null}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 z-[1]"
         aria-hidden
         style={{
           background:
-            "radial-gradient(ellipse 90% 55% at 50% 42%, rgba(250,204,21,0.07), transparent 62%), linear-gradient(180deg, #050508 0%, #030306 100%)",
+            "radial-gradient(ellipse 90% 55% at 50% 42%, rgba(250,204,21,0.07), transparent 62%), linear-gradient(180deg, rgba(5,5,8,0.72) 0%, rgba(3,3,6,0.88) 100%)",
         }}
       />
       <div
-        className="pointer-events-none absolute inset-0 hidden opacity-[0.08] sm:block"
+        className="pointer-events-none absolute inset-0 z-[1] hidden opacity-[0.08] sm:block"
         style={{
           backgroundImage:
             "repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)",
@@ -127,7 +153,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
         <h2 className="mb-1 shrink-0 text-center text-xl font-black uppercase sm:mb-8 sm:mt-0 sm:text-3xl md:text-4xl lg:text-5xl">
           <span className={publicHeadingLightning("amber")}>SYNDICATE ELITE PROGRAMS</span>
         </h2>
-        <div className="min-h-0 w-full max-w-full flex-1 overflow-hidden">
+        <div className="relative min-h-0 w-full max-w-full flex-1 overflow-hidden">
           {active ? (
             <HomeDomeGallerySection
               images={globeImages}
@@ -146,6 +172,18 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
           ) : (
             <GlobeSkeleton />
           )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-end px-2 pb-2 sm:px-6 sm:pb-5 md:px-8 md:pb-6">
+            <div className="pointer-events-auto group relative bg-gradient-to-r from-amber-300 via-orange-400 to-rose-500 p-[1px] shadow-[0_0_24px_rgba(251,191,36,0.35)] [clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)] transition duration-300 hover:shadow-[0_0_32px_rgba(251,191,36,0.55)]">
+              <span className="pointer-events-none absolute inset-[-1px] bg-inherit opacity-70 blur-[8px]" aria-hidden />
+              <Link
+                href="/programs"
+                prefetch
+                className="relative inline-flex min-h-[40px] items-center justify-center bg-[#05070c]/92 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-amber-50 [clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)] transition duration-300 hover:bg-[#070b14]/95 sm:min-h-[48px] sm:px-6 sm:py-2.5 sm:text-[13px] sm:tracking-[0.14em]"
+              >
+                View All Programs
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>

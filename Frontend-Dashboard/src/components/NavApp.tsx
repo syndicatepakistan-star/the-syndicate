@@ -18,6 +18,7 @@ function getActiveNavId(pathname: string, hash: string): NavSectionId {
   if (pathname === '/quiz' || pathname.startsWith('/quiz/')) return 'syndicateAnalysis'
   if (pathname === '/what-you-get') return 'whatYouGet'
   if (pathname === '/our-methods') return 'ourMethods'
+  if (pathname === '/our-founder') return 'ourFounder'
   if (pathname === '/programs') return 'programs'
   if (pathname === '/membership' || pathname === '/membership/') return 'membership'
   return 'home'

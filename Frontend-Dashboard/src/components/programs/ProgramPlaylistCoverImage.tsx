@@ -14,10 +14,10 @@ type Props = {
   playlist: ProgramPlaylistLike & { cover_image_url?: string | null };
   gradClassName: string;
   imageClassName?: string;
+  objectFit?: "cover" | "contain";
   loading?: "eager" | "lazy";
   fetchPriority?: "high" | "auto";
   decoding?: "async" | "auto";
-  /** Display width hint for Next/Image + Cloudinary transforms. */
   displayWidth?: number;
 };
 
@@ -25,6 +25,7 @@ export function ProgramPlaylistCoverImage({
   playlist,
   gradClassName,
   imageClassName,
+  objectFit = "cover",
   loading = "lazy",
   fetchPriority,
   displayWidth = 640,
@@ -46,30 +47,43 @@ export function ProgramPlaylistCoverImage({
   const activeSrc = src || fallbackSrc;
 
   return (
-    <>
-      <div className={cn("h-full w-full bg-gradient-to-t opacity-95", gradClassName)} />
-      {activeSrc ? (
-        <Image
-          src={activeSrc}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 320px"
-          quality={72}
-          loading={loading}
-          priority={loading === "eager"}
-          fetchPriority={fetchPriority}
-          decoding="async"
-          onError={() => {
-            if (fallbackSrc && src !== fallbackSrc) {
-              setSrc(fallbackSrc);
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="relative h-full w-full">
+        {activeSrc ? (
+          <Image
+            src={activeSrc}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 48vw, (max-width: 1024px) 34vw, 360px"
+            quality={72}
+            loading={loading}
+            priority={loading === "eager"}
+            fetchPriority={fetchPriority}
+            decoding="async"
+            onError={() => {
+              if (fallbackSrc && src !== fallbackSrc) {
+                setSrc(fallbackSrc);
+              }
+            }}
+            className={
+              imageClassName ??
+              cn(
+                "program-playlist-card__cover-img",
+                objectFit === "contain"
+                  ? "object-contain object-center"
+                  : "object-cover object-center",
+              )
             }
-          }}
-          className={
-            imageClassName ??
-            "absolute inset-0 h-full w-full object-cover object-center [backface-visibility:hidden]"
-          }
+          />
+        ) : null}
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t opacity-40 mix-blend-multiply",
+            gradClassName,
+          )}
+          aria-hidden
         />
-      ) : null}
-    </>
+      </div>
+    </div>
   );
 }

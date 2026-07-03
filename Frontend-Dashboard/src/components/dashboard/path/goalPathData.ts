@@ -119,9 +119,9 @@ export const PATH_GOAL_INTRO: Record<
       "Zero to One Million, 9 to 5 Exit, Hustle Hard, Syndicate 13 Rules, Money Philosophy, Compound Effect, Consistency, Risk, Micro Business, Transformation, and Business Warfare.",
   },
   ai_content: {
-    path: "AI content automation — the full faceless YouTube and AI publishing vault as one controlled entitlement.",
+    path: "AI content automation — faceless YouTube, Shorts factories, and viral content modules from the AI Content vault.",
     opportunities:
-      "Unlock the AI Content Automation pack — faceless channels, Shorts factories, and viral content machines in one vault.",
+      "Browse AI Content Automation sub-modules — faceless channels, documentary niches, Shorts systems, and viral content machines à la carte.",
   },
   agentic_ai: {
     path: "Agentic AI — autonomous n8n agents, Claude Code systems, and workflow stacks from the Agentic vault.",
@@ -144,6 +144,14 @@ type PathItemRef =
   | { type: "program"; title: string }
   | { type: "pack"; plan: PlanOfferKey }
   | { type: "module"; pack: VaultPackKey; title: string };
+
+function catalogModules(pack: VaultPackKey): readonly PathItemRef[] {
+  return vaultCoursesForPack(pack).map((row) => ({
+    type: "module" as const,
+    pack,
+    title: row.title,
+  }));
+}
 
 /**
  * Syndicate catalog grouped for YOUR PATH — programs, elite packs, and vault modules.
@@ -186,7 +194,7 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "program", title: "The Secret To Transformation" },
     { type: "program", title: "Business Warfare" },
   ],
-  ai_content: [{ type: "pack", plan: "ai_content_automation" }],
+  ai_content: catalogModules("ai_content_automation"),
   agentic_ai: [
     { type: "module", pack: "agentic_ai", title: "Build a Blog Writing Agent With N8N" },
     { type: "module", pack: "agentic_ai", title: "Build a WhatsApp Agent with n8n" },

@@ -107,8 +107,20 @@ export type StreamPlaylistItemRow = {
   stream_video: StreamVideoListItem;
 };
 
+export type StreamPlaylistAttachment = {
+  id: number;
+  title: string;
+  order: number;
+  file_name: string;
+  file_size: number | null;
+  content_type: string;
+  /** Relative API path — use with fetchAuthenticatedPdfBlob (works for any file type). */
+  download_url: string;
+};
+
 export type StreamPlaylistDetail = StreamPlaylistListItem & {
   items: StreamPlaylistItemRow[];
+  attachments?: StreamPlaylistAttachment[];
 };
 
 export type StreamPlaylistPurchaseHistoryItem = {

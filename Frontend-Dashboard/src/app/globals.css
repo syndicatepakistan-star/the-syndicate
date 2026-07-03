@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "../styles/laptop-vostro-viewport.css";
+@import "../styles/gaming-benefit-cards.css";
+@import "../styles/elite-offer-benefits-detail.css";
 
 :root {
   --void: #0a0a0a;
@@ -9140,6 +9142,290 @@ body {
   transition: box-shadow 0.3s ease;
 }
 
+/* Program playlist cards — compact library layout on mobile / iPad / laptop (< xl) */
+@media (max-width: 1279px) {
+  #programs-library {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .program-playlist-library-band {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .program-playlist-mobile-grid {
+    gap: 0.375rem !important;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-main-scroll:has([data-programs-grid-active]),
+  .dashboard-hamburger-chrome .dashboard-bounded-main-scroll:has([data-programs-grid-active]) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .dashboard-hamburger-chrome .programs-grid-chrome > :not(#dashboard-programs-library) {
+    padding-left: var(--fluid-section-p);
+    padding-right: var(--fluid-section-p);
+  }
+
+  .program-playlist-card__info,
+  .program-playlist-card__info-wrap {
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    padding-top: 0.2rem !important;
+  }
+
+  .program-playlist-card__info.rounded-xl {
+    border-radius: 0;
+    border-top-width: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+
+  .program-playlist-card__media {
+    border-radius: 0;
+  }
+
+  [data-program-playlist-id].rounded-3xl,
+  [data-program-playlist-id].rounded-2xl {
+    border-radius: 0.85rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .program-playlist-card__cover-img {
+    height: calc(100% + 5px) !important;
+  }
+}
+
+/* Our Founder — cyberpunk frame overlay cards */
+.framed-image {
+  --framed-image-inset: 13.5%;
+  --framed-image-width-trim: 10px;
+  --framed-image-top-trim: 5px;
+  --framed-image-object-position: center top;
+  --framed-image-radius: 14px;
+  --framed-image-inner-radius: 10px;
+  --framed-glow: rgba(34, 211, 238, 0.72);
+  --framed-glow-soft: rgba(34, 211, 238, 0.38);
+  --framed-glow-haze: rgba(34, 211, 238, 0.16);
+  isolation: isolate;
+  border-radius: var(--framed-image-radius);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--framed-glow) 35%, transparent),
+    0 0 22px var(--framed-glow-haze),
+    0 0 44px var(--framed-glow-soft);
+}
+
+.framed-image__glow {
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 88% 92% at 50% 48%,
+    var(--framed-glow-soft) 0%,
+    transparent 68%
+  );
+  opacity: 0.85;
+}
+
+.framed-image__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--framed-image-radius);
+  filter:
+    drop-shadow(0 0 4px var(--framed-glow))
+    drop-shadow(0 0 14px var(--framed-glow-soft))
+    drop-shadow(0 0 28px var(--framed-glow-haze));
+}
+
+.framed-image__photo {
+  position: absolute;
+  top: calc(var(--framed-image-inset) + var(--framed-image-top-trim, 0px));
+  right: calc(var(--framed-image-inset) + (var(--framed-image-width-trim) / 2));
+  bottom: var(--framed-image-inset);
+  left: calc(var(--framed-image-inset) + (var(--framed-image-width-trim) / 2));
+  z-index: 2;
+  border-radius: var(--framed-image-inner-radius);
+}
+
+.framed-image__photo-img {
+  object-position: var(--framed-image-object-position);
+  border-radius: inherit;
+}
+
+.framed-image--red {
+  --framed-glow: rgba(248, 113, 113, 0.92);
+  --framed-glow-soft: rgba(239, 68, 68, 0.52);
+  --framed-glow-haze: rgba(220, 38, 38, 0.22);
+}
+
+.framed-image--neon {
+  --framed-glow: rgba(34, 211, 238, 0.92);
+  --framed-glow-soft: rgba(6, 182, 212, 0.52);
+  --framed-glow-haze: rgba(14, 116, 144, 0.22);
+}
+
+.framed-image--purple {
+  --framed-glow: rgba(192, 132, 252, 0.92);
+  --framed-glow-soft: rgba(168, 85, 247, 0.52);
+  --framed-glow-haze: rgba(126, 34, 206, 0.22);
+}
+
+.framed-image--yellow {
+  --framed-glow: rgba(252, 211, 77, 0.92);
+  --framed-glow-soft: rgba(251, 191, 36, 0.52);
+  --framed-glow-haze: rgba(217, 119, 6, 0.22);
+}
+
+.framed-image--green {
+  --framed-glow: rgba(163, 230, 53, 0.92);
+  --framed-glow-soft: rgba(132, 204, 22, 0.52);
+  --framed-glow-haze: rgba(77, 124, 15, 0.22);
+}
+
+.framed-image--glitch {
+  --framed-glow: rgba(232, 121, 249, 0.88);
+  --framed-glow-soft: rgba(34, 211, 238, 0.48);
+  --framed-glow-haze: rgba(192, 38, 211, 0.2);
+}
+
+.framed-image--glitch .framed-image__frame {
+  filter:
+    drop-shadow(0 0 4px rgba(232, 121, 249, 0.85))
+    drop-shadow(0 0 12px rgba(34, 211, 238, 0.55))
+    drop-shadow(0 0 24px rgba(192, 38, 211, 0.28));
+}
+
+.framed-image--glitch .framed-image__glow {
+  background:
+    radial-gradient(ellipse 70% 80% at 42% 46%, rgba(232, 121, 249, 0.28) 0%, transparent 68%),
+    radial-gradient(ellipse 70% 80% at 58% 54%, rgba(34, 211, 238, 0.22) 0%, transparent 68%);
+}
+
+@keyframes founder-section-coin-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.founder-section-coin {
+  animation: founder-section-coin-spin 10s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .founder-section-coin {
+    animation: none;
+  }
+}
+
+/* Trading / vault module cards — one-line stats on mobile & iPad */
+@media (max-width: 1279px) {
+  .program-card-stats-lines--inline-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .program-card-stats-lines--inline-mobile > p {
+    display: contents;
+    font-size: 8px;
+    line-height: 1.25;
+  }
+
+  .program-card-stats-lines--inline-mobile > p span.font-bold {
+    font-size: 9px;
+  }
+
+  .program-card-stats-lines--inline-mobile .program-card-stats-lines__sep {
+    display: inline;
+  }
+}
+
+@media (min-width: 1280px) {
+  .program-card-stats-lines__sep {
+    display: none;
+  }
+}
+
+/* Programs library — equal column header bands + Business Models card alignment */
+.playlist-category-heading-slot--column {
+  box-sizing: border-box;
+  height: calc(28pt * 2.1);
+  min-height: calc(28pt * 2.1);
+  max-height: calc(28pt * 2.1);
+  overflow: visible;
+}
+
+.playlist-category-heading-slot--split {
+  box-sizing: border-box;
+  min-height: calc(14pt * 3.2);
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .playlist-category-heading-slot--split {
+    height: calc(28pt * 2.1);
+    min-height: calc(28pt * 2.1);
+    max-height: calc(28pt * 2.1);
+    align-items: flex-end;
+    padding-bottom: 0.25rem;
+  }
+}
+
+.playlist-business-models-cards {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Vault pack row — Agentic / AI Content / Trading full-pack cards */
+.plan-offers-vault-grid {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  padding-block: 0.75rem;
+}
+
+/* Each cell owns stacking so neon borders/glow are not clipped by neighbors */
+.plan-offers-vault-cell {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  overflow: visible;
+  padding: 0.625rem 0.375rem;
+}
+
+.plan-offers-vault-cell:hover,
+.plan-offers-vault-cell:focus-within {
+  z-index: 20;
+}
+
+.plan-offers-vault-cell > .plan-offer-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.plan-offers-vault-cell:hover > .plan-offer-card,
+.plan-offers-vault-cell:focus-within > .plan-offer-card {
+  z-index: 2;
+}
+
 /* Vault picker — individual modules: tighter glow + grid spacing (no bleed into neighbors) */
 .vault-modules-grid {
   display: grid;
@@ -9732,6 +10018,10 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   transform: none !important;
 }
 
+#syndicate-elite-offers {
+  overflow: visible !important;
+}
+
 #syndicate-elite-offers[data-globe-spotlight-active="true"],
 #syndicate-elite-offers:has(article[data-globe-spotlight="true"]) {
   overflow: visible !important;
@@ -10126,7 +10416,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning,
   .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after,
   .dashboard-hamburger-chrome .instructor-slideshow-heading--lightning,
-  .public-heading-lightning {
+  .public-heading-lightning,
+  .playlist-category-heading-lightning {
     animation: none !important;
     filter: none;
   }
@@ -10632,6 +10923,62 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   animation: syndicate-heading-lightning 1.65s ease-in-out infinite;
   transition: color 0.45s ease;
   color: var(--heading-neon-bright);
+}
+
+/* Programs library column titles — 72pt-scale glow + lightning flicker */
+@keyframes playlist-category-heading-lightning {
+  0%,
+  100% {
+    color: color-mix(in srgb, var(--heading-neon-bright, #c4b5fd) 90%, white);
+    text-shadow:
+      0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 24px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 42px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)),
+      0 0 64px var(--heading-neon-haze, rgba(139, 92, 246, 0.32)),
+      0 0 88px var(--heading-neon-haze, rgba(139, 92, 246, 0.22));
+    filter: drop-shadow(0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
+      drop-shadow(0 0 16px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)));
+  }
+  36% {
+    color: #fff;
+    text-shadow:
+      0 0 14px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 32px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 56px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 80px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)),
+      0 0 104px var(--heading-neon-haze, rgba(139, 92, 246, 0.36)),
+      0 0 128px var(--heading-neon-haze, rgba(139, 92, 246, 0.24));
+    filter: drop-shadow(0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
+      drop-shadow(0 0 24px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
+      drop-shadow(0 0 48px var(--heading-neon-haze, rgba(139, 92, 246, 0.32)));
+  }
+  43% {
+    color: color-mix(in srgb, var(--heading-neon-bright, #c4b5fd) 55%, transparent);
+    text-shadow:
+      0 0 6px var(--heading-neon-haze, rgba(139, 92, 246, 0.28)),
+      0 0 14px var(--heading-neon-haze, rgba(139, 92, 246, 0.22));
+    filter: none;
+  }
+  46% {
+    color: var(--heading-neon-bright, #c4b5fd);
+    text-shadow:
+      0 0 18px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 38px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 62px var(--heading-neon-haze, rgba(139, 92, 246, 0.32));
+    filter: drop-shadow(0 0 8px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
+  }
+  52% {
+    text-shadow:
+      0 0 12px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 28px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+      0 0 50px var(--heading-neon-haze, rgba(139, 92, 246, 0.32));
+    filter: drop-shadow(0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
+  }
+}
+
+.playlist-category-heading-lightning {
+  animation: playlist-category-heading-lightning 1.25s ease-in-out infinite;
+  text-wrap: balance;
 }
 
 .public-heading-lightning--gold {
@@ -11367,6 +11714,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   .neon-badge,
   .neon-caret,
   .public-heading-lightning,
+  .playlist-category-heading-lightning,
   .programs-heading-glow,
   .programs-heading-shine,
   .programs-heading-bg-shine,

@@ -6,11 +6,11 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
-import { isKnightCheckoutBlocked, HOME_ELITE_OFFERS_PARAGRAPHS, KNIGHT_MEMBERSHIP_FEATURES, MONEY_MASTERY_FOUNDATION_COPY, MONEY_MASTERY_LIFETIME_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from '@/components/programs/planOfferCatalog'
+import { isKnightCheckoutBlocked, MONEY_MASTERY_FOUNDATION_COPY, MONEY_MASTERY_LIFETIME_FEATURES, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY, PLAN_OFFERS_PRIMARY, type PlanOfferDef } from '@/components/programs/planOfferCatalog'
 import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
-import { MobileReadMoreText } from '@/components/MobileReadMoreText'
+import { PlanOfferDetailModal } from '@/components/programs/PlanOfferDetailModal'
 import { ViewportDecorVideo } from '@/components/ViewportDecorVideo'
 import {
   OFFER_PLAN_THUMB_MONEY_MASTERY,
@@ -34,14 +34,15 @@ interface PricingTier {
   billingMode?: 'lifetime' | 'recurring'
 }
 
-const ELITE_OFFERS_PARAGRAPHS = HOME_ELITE_OFFERS_PARAGRAPHS
-
-const ELITE_OFFERS_BODY_CLASS =
-  'font-mono text-[0.95rem] font-semibold uppercase leading-relaxed tracking-[0.12em] text-cyan-100/95 drop-shadow-[0_0_12px_rgba(34,211,238,0.25)] sm:text-base md:text-lg'
 
 /** Octagonal / tech clip shared by pricing cards (matches home social marquees). */
 const PRICING_NOTCH_CLIP =
   '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
+
+function primaryElitePlanKey(planKey: PlanKey): 'bundle' | 'king' | null {
+  if (planKey === 'bundle' || planKey === 'king') return planKey
+  return null
+}
 
 const pricingData: Record<PlanKey, PricingTier> = {
   bundle: {
@@ -116,16 +117,19 @@ function TierCard({
   billing,
   highlighted,
   onJoin,
+  onDetails,
 }: {
   planKey: PlanKey
   tier: PricingTier
   billing: BillingKey
   highlighted?: boolean
   onJoin?: (plan: PlanKey, billing: BillingKey, amount: string) => Promise<void> | void
+  onDetails?: (planKey: PlanKey) => void
 }) {
   const isLifetime = tier.billingMode === 'lifetime'
   const activeBilling: BillingKey = isLifetime ? 'monthly' : billing
   const isBundle = planKey === 'bundle'
+  const elitePlanKey = primaryElitePlanKey(planKey)
   const knightComingSoon = isKnightCheckoutBlocked(planKey)
   const hudThemeByPlan: Record<
     PlanKey,
@@ -330,38 +334,52 @@ function TierCard({
             </div>
 
             <div className="mt-2 max-w-none text-sm text-white/70 font-body sm:max-w-[52ch]">
-              {tier.description}
+              <p className={cn(elitePlanKey && "line-clamp-4")}>{tier.description}</p>
             </div>
           </motion.div>
 
         </div>
 
-        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-2">
-          {tier.features.map((f) => (
-            <div
-              key={f}
-              className={cn(
-                'flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5',
-                hudThemeByPlan[planKey].row,
-              )}
-            >
-              <Check className={cn('mt-0.5 h-4 w-4 shrink-0', accentText)} />
-              <span className="text-[13px] leading-snug text-white/80 drop-shadow-[0_0_8px_rgba(34,211,238,0.15)]">{f}</span>
-            </div>
-          ))}
-        </div>
+        {!elitePlanKey ? (
+          <div className="mt-5 flex min-h-0 flex-1 flex-col gap-2">
+            {tier.features.map((f) => (
+              <div
+                key={f}
+                className={cn(
+                  'flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5',
+                  hudThemeByPlan[planKey].row,
+                )}
+              >
+                <Check className={cn('mt-0.5 h-4 w-4 shrink-0', accentText)} />
+                <span className="text-[13px] leading-snug text-white/80 drop-shadow-[0_0_8px_rgba(34,211,238,0.15)]">{f}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
+          <div className={cn('mt-6 grid shrink-0 gap-2', elitePlanKey ? 'grid-cols-2' : 'grid-cols-1')}>
+            {elitePlanKey ? (
+              <button
+                type="button"
+                onClick={() => onDetails?.(planKey)}
+                className="hamburger-attract w-full rounded-2xl border border-white/40 bg-black/55 px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3]"
+              >
+                Details
+              </button>
+            ) : null}
           <button
             type="button"
             disabled={knightComingSoon}
             onClick={() => onJoin?.(planKey, activeBilling, tier.price[activeBilling])}
             className={cn(
-              'hamburger-attract mt-6 w-full shrink-0 rounded-2xl border border-[#bd9b4f]/70 bg-[linear-gradient(180deg,rgba(189,155,79,0.18)_0%,rgba(0,0,0,0.22)_100%)] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#f6e7bf] shadow-[0_0_0_1px_rgba(189,155,79,0.55),0_0_20px_rgba(189,155,79,0.38),inset_0_0_16px_rgba(189,155,79,0.12)] transition-all hover:scale-[1.02] hover:shadow-[0_0_0_1px_rgba(189,155,79,0.72),0_0_30px_rgba(189,155,79,0.52),inset_0_0_18px_rgba(189,155,79,0.18)] active:scale-[0.99]',
+              'hamburger-attract w-full shrink-0 rounded-2xl border border-[#bd9b4f]/70 bg-[linear-gradient(180deg,rgba(189,155,79,0.18)_0%,rgba(0,0,0,0.22)_100%)] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#f6e7bf] shadow-[0_0_0_1px_rgba(189,155,79,0.55),0_0_20px_rgba(189,155,79,0.38),inset_0_0_16px_rgba(189,155,79,0.12)] transition-all hover:scale-[1.02] hover:shadow-[0_0_0_1px_rgba(189,155,79,0.72),0_0_30px_rgba(189,155,79,0.52),inset_0_0_18px_rgba(189,155,79,0.18)] active:scale-[0.99]',
               knightComingSoon && 'cursor-not-allowed opacity-60 hover:scale-100',
+              elitePlanKey && 'col-span-1',
             )}
           >
             {knightComingSoon ? 'Coming Soon' : tier.cta}
           </button>
+          </div>
         </div>
       </div>
     </div>
@@ -380,6 +398,7 @@ export function PricingPage({
   const [billing, setBilling] = useState<BillingKey>('monthly')
   const [checkoutError, setCheckoutError] = useState('')
   const [redirectingPlan, setRedirectingPlan] = useState<PlanKey | null>(null)
+  const [detailOffer, setDetailOffer] = useState<PlanOfferDef | null>(null)
   const handleJoinPlan = async (plan: PlanKey, selectedBilling: BillingKey, rawAmount: string) => {
     if (redirectingPlan) return
     if (plan !== 'bundle' && plan !== 'king') return
@@ -444,6 +463,13 @@ export function PricingPage({
     [],
   )
 
+  const openTierDetails = (planKey: PlanKey) => {
+    const eliteKey = primaryElitePlanKey(planKey)
+    if (!eliteKey) return
+    const offer = PLAN_OFFERS_PRIMARY.find((item) => item.plan === eliteKey) ?? null
+    setDetailOffer(offer)
+  }
+
   return (
     <section
       id="pricing"
@@ -493,12 +519,6 @@ export function PricingPage({
                 <h2 className="public-heading-lightning public-heading-lightning--gold font-display text-4xl font-black uppercase tracking-[0.14em] sm:text-5xl md:text-6xl lg:text-7xl">
                   SYNDICATE ELITE OFFERS
                 </h2>
-                <MobileReadMoreText
-                  paragraphs={[...ELITE_OFFERS_PARAGRAPHS]}
-                  previewSentences={5}
-                  className="mx-auto mt-5 max-w-[52rem] space-y-0 text-left sm:mt-6"
-                  paragraphClassName={ELITE_OFFERS_BODY_CLASS}
-                />
                 {checkoutError ? (
                   <p className="mx-auto mt-4 max-w-3xl text-center text-sm text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.45)]">
                     {checkoutError}
@@ -543,12 +563,15 @@ export function PricingPage({
                 billing={billing}
                 highlighted={key === 'bundle'}
                 onJoin={handleJoinPlan}
+                onDetails={openTierDetails}
               />
             </div>
           ))}
         </div>
 
       </div>
+
+      <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
 
       <AffiliatePublicSection />
     </section>

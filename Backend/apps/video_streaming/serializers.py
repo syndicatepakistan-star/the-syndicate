@@ -1,7 +1,15 @@
 from rest_framework import serializers
 
-from apps.video_streaming.models import StreamPlaylist, StreamPlaylistItem, StreamPlaylistPurchase, StreamVideo
+from apps.video_streaming.entitlements import user_can_access_stream_playlist
+from apps.video_streaming.models import (
+    StreamPlaylist,
+    StreamPlaylistAttachment,
+    StreamPlaylistItem,
+    StreamPlaylistPurchase,
+    StreamVideo,
+)
 from apps.video_streaming.playlist_description import parse_playlist_description_sections
+from django.urls import reverse
 from syndicate_backend.media_storages import public_media_url
 
 
@@ -52,6 +60,39 @@ class StreamPlaylistItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = StreamPlaylistItem
         fields = ("id", "order", "stream_video")
+
+
+class StreamPlaylistAttachmentSerializer(serializers.ModelSerializer):
+    file_name = serializers.SerializerMethodField()
+    file_size = serializers.SerializerMethodField()
+    content_type = serializers.SerializerMethodField()
+    download_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StreamPlaylistAttachment
+        fields = ("id", "title", "order", "file_name", "file_size", "content_type", "download_url")
+        read_only_fields = fields
+
+    def get_file_name(self, obj: StreamPlaylistAttachment) -> str:
+        return obj.file_basename
+
+    def get_file_size(self, obj: StreamPlaylistAttachment):
+        try:
+            return obj.file.size if obj.file else None
+        except Exception:
+            return None
+
+    def get_content_type(self, obj: StreamPlaylistAttachment) -> str:
+        import mimetypes
+
+        guessed = mimetypes.guess_type(obj.file_basename)[0]
+        return guessed or "application/octet-stream"
+
+    def get_download_url(self, obj: StreamPlaylistAttachment) -> str:
+        return reverse(
+            "streaming-playlist-attachment-download",
+            kwargs={"playlist_id": obj.playlist_id, "attachment_id": obj.pk},
+        )
 
 
 class StreamPlaylistListSerializer(serializers.ModelSerializer):
@@ -112,9 +153,20 @@ class StreamPlaylistListSerializer(serializers.ModelSerializer):
 
 class StreamPlaylistDetailSerializer(StreamPlaylistListSerializer):
     items = StreamPlaylistItemSerializer(many=True, read_only=True)
+    attachments = serializers.SerializerMethodField()
 
     class Meta(StreamPlaylistListSerializer.Meta):
-        fields = (*StreamPlaylistListSerializer.Meta.fields, "items")
+        fields = (*StreamPlaylistListSerializer.Meta.fields, "items", "attachments")
+
+    def get_attachments(self, obj: StreamPlaylist):
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request else None
+        if user is None or not getattr(user, "is_authenticated", False):
+            return []
+        if not user_can_access_stream_playlist(user, obj):
+            return []
+        qs = obj.attachments.all()
+        return StreamPlaylistAttachmentSerializer(qs, many=True, context=self.context).data
 
 
 class StreamPlaylistPurchaseHistorySerializer(serializers.ModelSerializer):

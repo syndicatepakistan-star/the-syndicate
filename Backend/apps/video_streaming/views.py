@@ -10,7 +10,7 @@ from django.conf import settings
 from accounts.vault_plan_catalog import VAULT_PACK_DISPLAY_TITLES, VAULT_PACK_SLUGS
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
-from django.http import Http404, HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from rest_framework import generics, status
@@ -49,6 +49,7 @@ from apps.video_streaming.services.hls_playback import (
 from apps.video_streaming.services.playback_token_auth import authorize_stream_video_for_playback_token
 from apps.video_streaming.models import (
     StreamPlaylist,
+    StreamPlaylistAttachment,
     StreamPlaylistCertificate,
     StreamPlaylistItem,
     StreamPlaylistPurchase,
@@ -429,9 +430,42 @@ class StreamPlaylistDetailView(generics.RetrieveAPIView):
                 Prefetch(
                     "items",
                     queryset=StreamPlaylistItem.objects.select_related("stream_video").order_by("order", "id"),
-                )
+                ),
+                Prefetch(
+                    "attachments",
+                    queryset=StreamPlaylistAttachment.objects.order_by("order", "id"),
+                ),
             )
         )
+
+
+class StreamPlaylistAttachmentDownloadView(APIView):
+    """Download a playlist resource (PDF, worksheet, etc.) for unlocked members."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, playlist_id: int, attachment_id: int):
+        playlist = get_object_or_404(StreamPlaylist, pk=playlist_id)
+        if not user_can_access_stream_playlist(request.user, playlist):
+            return Response({"detail": "Playlist not unlocked."}, status=status.HTTP_403_FORBIDDEN)
+
+        attachment = get_object_or_404(
+            StreamPlaylistAttachment,
+            pk=attachment_id,
+            playlist_id=playlist_id,
+        )
+        if not attachment.file:
+            raise Http404()
+        try:
+            fh = attachment.file.open("rb")
+        except Exception:
+            raise Http404()
+
+        name = attachment.file_basename or "resource"
+        content_type = mimetypes.guess_type(name)[0] or "application/octet-stream"
+        resp = FileResponse(fh, content_type=content_type)
+        resp["Content-Disposition"] = f'inline; filename="{name}"'
+        return resp
 
 
 class StreamPlaylistPurchaseHistoryView(generics.ListAPIView):

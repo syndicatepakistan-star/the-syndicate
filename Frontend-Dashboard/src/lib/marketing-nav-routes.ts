@@ -2,6 +2,7 @@ export type NavSectionId =
   | "home"
   | "whatYouGet"
   | "ourMethods"
+  | "ourFounder"
   | "joinNow"
   | "programs"
   | "membership"
@@ -13,6 +14,7 @@ export const MARKETING_NAV_HREF: Record<NavSectionId, string> = {
   home: "/",
   whatYouGet: "/what-you-get",
   ourMethods: "/our-methods",
+  ourFounder: "/our-founder",
   programs: "/programs",
   membership: "/membership",
   syndicateAnalysis: "/quiz",
@@ -24,6 +26,7 @@ export const MARKETING_PREFETCH_ROUTES = [
   "/",
   "/what-you-get",
   "/our-methods",
+  "/our-founder",
   "/programs",
   "/membership",
   "/quiz",

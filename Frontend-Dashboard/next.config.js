@@ -190,6 +190,10 @@ const nextConfig = {
         headers: [{ key: "Cache-Control", value: publicPageCache }],
       },
       {
+        source: "/our-founder",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
         source: "/programs",
         headers: [{ key: "Cache-Control", value: publicPageCache }],
       },

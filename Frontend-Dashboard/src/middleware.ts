@@ -57,6 +57,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/what-you-get/") ||
     pathname === "/our-methods" ||
     pathname.startsWith("/our-methods/") ||
+    pathname === "/our-founder" ||
+    pathname.startsWith("/our-founder/") ||
     pathname === "/programs" ||
     pathname.startsWith("/programs/") ||
     pathname === "/membership" ||

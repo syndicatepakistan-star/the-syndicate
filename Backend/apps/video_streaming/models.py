@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import User
+from pathlib import Path
 from syndicate_backend.media_storages import get_image_storage
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
@@ -23,6 +24,13 @@ def stream_video_thumbnail_upload_to(instance: "StreamVideo", filename: str) -> 
 def stream_playlist_cover_upload_to(instance: "StreamPlaylist", filename: str) -> str:
     sid = str(instance.pk) if instance.pk else uuid.uuid4().hex[:16]
     return f"stream_playlists/covers/{sid}/{filename}"
+
+
+def stream_playlist_attachment_upload_to(instance: "StreamPlaylistAttachment", filename: str) -> str:
+    sid = str(instance.playlist_id) if instance.playlist_id else uuid.uuid4().hex[:12]
+    stem = slugify(Path(filename).stem)[:60] or "document"
+    ext = Path(filename).suffix.lower()[:12]
+    return f"stream_playlists/documents/{sid}/{uuid.uuid4().hex[:8]}_{stem}{ext}"
 
 
 class StreamVideo(models.Model):
@@ -255,6 +263,33 @@ class StreamPlaylistItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.playlist_id}:{self.stream_video_id}"
+
+
+class StreamPlaylistAttachment(models.Model):
+    """PDFs, worksheets, and other resources attached to a playlist (Django admin)."""
+
+    playlist = models.ForeignKey(StreamPlaylist, on_delete=models.CASCADE, related_name="attachments")
+    title = models.CharField(
+        max_length=255,
+        help_text="Member-facing label (e.g. Course workbook, Cheat sheet PDF).",
+    )
+    file = models.FileField(
+        upload_to=stream_playlist_attachment_upload_to,
+        help_text="PDF, DOCX, XLSX, ZIP, or other reference file for this playlist.",
+    )
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["playlist", "order", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.playlist_id}:{self.title}"
+
+    @property
+    def file_basename(self) -> str:
+        name = (getattr(self.file, "name", None) or "").strip()
+        return name.rsplit("/", 1)[-1] if name else ""
 
 
 class StreamPlaylistPurchase(models.Model):

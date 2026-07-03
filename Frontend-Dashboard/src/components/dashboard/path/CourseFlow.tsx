@@ -24,6 +24,7 @@ import {
 } from "@/lib/programCardScroll";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
+/** @deprecated Auto-advance removed — manual browse only. */
 const CAROUSEL_MS = 4200;
 
 /** Our Methods–style neon frames (timeline card family). */
@@ -129,7 +130,7 @@ const CLIP_HUD_B = "[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%
 const OPPORTUNITY_CARD_SIZE =
   "h-full w-full min-h-[clamp(13rem,26vh,16rem)] max-w-none flex flex-col";
 /** +10px vs base program row so Details/Unlock clear the neon frame bottom. */
-const PROGRAM_OPPORTUNITY_MIN_H = "min-h-[calc(clamp(18rem,36vh,22rem)+10px)]";
+const PROGRAM_OPPORTUNITY_MIN_H = "min-h-[calc(clamp(19.5rem,38vh,24rem)+10px)]";
 const OPPORTUNITY_CARD_SIZE_PROGRAM =
   `h-full w-full ${PROGRAM_OPPORTUNITY_MIN_H} max-w-none flex flex-col`;
 
@@ -314,8 +315,7 @@ function CourseFlowCard({
         />
         <motion.div
           className={cn(
-            "relative z-10 flex min-h-0 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3",
-            isProgramCard ? "h-auto w-full justify-start" : "h-full flex-1",
+            "relative z-10 flex h-full min-h-0 w-full flex-1 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-[clamp(0.55rem,1.2vw+0.15rem,0.85rem)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3",
           )}
         >
           {body}
@@ -360,6 +360,7 @@ export function CourseFlow({
   userStepIndex,
   cardFrame = "path",
   contentMode = "text",
+  manualScrollOnly = false,
   onContinue,
 }: {
   goal: GoalId;
@@ -368,6 +369,7 @@ export function CourseFlow({
   userStepIndex: number;
   cardFrame?: OpportunityCardFrame;
   contentMode?: OpportunityContentMode;
+  manualScrollOnly?: boolean;
   onContinue: () => void;
 }) {
   const router = useRouter();
@@ -390,14 +392,11 @@ export function CourseFlow({
   const browseCount = Math.max(1, programPool.length);
 
   const [slideIndex, setSlideIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [manualBrowse, setManualBrowse] = useState(false);
 
   const stepIdx = Math.min(Math.max(0, userStepIndex), Math.max(0, roadmapLen - 1));
 
   const goToSlide = useCallback(
     (index: number) => {
-      setManualBrowse(true);
       setSlideIndex(((index % browseCount) + browseCount) % browseCount);
     },
     [browseCount],
@@ -408,16 +407,15 @@ export function CourseFlow({
 
   useEffect(() => {
     setSlideIndex(0);
-    setManualBrowse(false);
   }, [goal]);
 
   useEffect(() => {
-    if (paused || manualBrowse || browseCount <= 1) return;
+    if (manualScrollOnly || browseCount <= 1) return;
     const id = window.setInterval(() => {
       setSlideIndex((i) => (i + 1) % browseCount);
     }, CAROUSEL_MS);
     return () => window.clearInterval(id);
-  }, [goal, browseCount, paused, manualBrowse]);
+  }, [goal, browseCount, manualScrollOnly]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -547,14 +545,7 @@ export function CourseFlow({
       : "min-h-[clamp(13rem,26vh,16rem)]";
 
   return (
-    <motion.div
-      className="relative mt-[clamp(1.5rem,4vw+0.5rem,2.75rem)] border-t border-[rgba(197,179,88,0.22)] pt-[clamp(1rem,2.5vw+0.35rem,2rem)]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => {
-        setPaused(false);
-        setManualBrowse(false);
-      }}
-    >
+    <motion.div className="relative mt-[clamp(1.5rem,4vw+0.5rem,2.75rem)] border-t border-[rgba(197,179,88,0.22)] pt-[clamp(1rem,2.5vw+0.35rem,2rem)]">
       {contentMode === "program" ? (
         <>
           <ProgramPlaylistDescriptionModal
@@ -575,7 +566,7 @@ export function CourseFlow({
           {browseCount > 1 ? (
             <p className="mt-1 font-mono text-[clamp(0.5rem,0.35vw+0.38rem,0.58rem)] uppercase tracking-[0.18em] text-white/55">
               Supporting (left) stays on your step · browse {browseCount} offers in this path — programs, packs, and vault modules
-              {manualBrowse ? " · manual" : paused ? " · auto paused on hover" : ""}
+              {manualScrollOnly ? " · manual scroll" : ""}
             </p>
           ) : null}
         </div>
@@ -661,7 +652,7 @@ export function CourseFlow({
           "lg:items-stretch",
         )}
       >
-        <div className={cn("flex min-w-0 flex-col lg:col-start-1 lg:row-start-1", rowMinH)}>
+        <div className={cn("flex h-full min-w-0 flex-col lg:col-start-1 lg:row-start-1", rowMinH)}>
           <CourseFlowCard
             course={anchorCourse}
             variant="support"

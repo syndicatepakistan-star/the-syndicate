@@ -20,15 +20,14 @@ export default async function ProgramsPage() {
       <NavApp />
       <section
         id="syndicate-elite-offers"
-        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10"
+        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10"
       >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
         <ProgramsOfferSection size="large" />
       </section>
-      <PublicGoalPathSection playlists={playlists} />
       <section
         id="programs-library"
-        className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 sm:space-y-8 sm:px-6 sm:py-14"
+        className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-0 sm:space-y-8 sm:px-6 sm:py-14"
       >
         <ProgramsGoldPillHeading as="h2" title="Programs" />
         <div className="mx-auto w-full max-w-[1400px] overflow-x-clip">
@@ -40,6 +39,7 @@ export default async function ProgramsPage() {
           </Suspense>
         </div>
       </section>
+      <PublicGoalPathSection playlists={playlists} alwaysVisible />
       <SiteFooter />
     </div>
   )

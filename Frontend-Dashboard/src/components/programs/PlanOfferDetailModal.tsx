@@ -5,11 +5,14 @@ import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
-import { isPlanOfferComingSoon } from "@/components/programs/planOfferCatalog";
-import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
-import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+import { isPlanOfferComingSoon, isPrimaryElitePlan } from "@/components/programs/planOfferCatalog";
+import { EliteOfferBenefitsDetail } from "@/components/programs/EliteOfferBenefitsDetail";
+import { isTradingModuleSlug, isTradingSubmoduleSlug, tradingSubmodulesForModule, type TradingModuleSlug } from "@/components/programs/tradingVaultCatalog";
+import { isVaultPackKey, VAULT_PACK_MODAL_COPY } from "@/components/programs/vaultPackCatalog";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
+import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
@@ -122,9 +125,18 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
   const theme = DETAIL_THEMES[offer.accent];
   const isPackDetail = isVaultPackKey(offer.plan);
   const isTradingLesson = isTradingSubmoduleSlug(offer.plan);
+  const isTradingModule = isTradingModuleSlug(offer.plan);
+  const tradingSubmodules = isTradingModule
+    ? tradingSubmodulesForModule(offer.plan as TradingModuleSlug)
+    : [];
+  const tradingPackTitle = VAULT_PACK_MODAL_COPY.trading_technical_analysis.title;
   const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
   const comingSoon = isPlanOfferComingSoon(offer);
   const structuredDescription = resolveOfferStructuredDescription(offer);
+  const primaryElitePlan = isPrimaryElitePlan(offer.plan) ? offer.plan : null;
+  const isPrimaryElite = primaryElitePlan !== null;
+  const detailCardStats =
+    isTradingModule || isTradingLesson ? resolveOfferCardStats(offer, isTradingModule ? "module" : undefined) : undefined;
 
   return createPortal(
     <div
@@ -199,11 +211,69 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             </span>
           </div>
 
+          {detailCardStats ? (
+            <ProgramCardStatsLines stats={detailCardStats} size="large" className="mt-5" />
+          ) : null}
+
+          {isTradingModule || isTradingLesson ? (
+            <p className="mt-4 text-left text-[13px] font-medium leading-relaxed text-white/78 sm:text-[14px]">
+              {offer.teaser}
+            </p>
+          ) : null}
+
           <div className="mt-6 w-full font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody text={structuredDescription} prominent />
+            {isTradingModule ? (
+              <>
+                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">Full pack</p>
+                <div
+                  className={cn(
+                    "mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
+                    theme.featureBorder
+                  )}
+                >
+                  <OfferDetailCheck accent={offer.accent} />
+                  <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
+                    {tradingPackTitle}
+                  </span>
+                </div>
+
+                <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
+                  Included lessons ({tradingSubmodules.length})
+                </p>
+                <ul className="mt-3 space-y-3" role="list">
+                  {tradingSubmodules.map((lesson) => (
+                    <li key={lesson.slug}>
+                      <div
+                        className={cn(
+                          "plan-offer-detail__feature flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
+                          theme.featureBorder
+                        )}
+                      >
+                        <OfferDetailCheck accent={offer.accent} />
+                        <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
+                          {lesson.title}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-8 border-t border-white/10 pt-8">
+                  <StructuredDescriptionBody
+                    text={structuredDescription}
+                    prominent
+                    omitSections={["what_you_will_learn"]}
+                  />
+                </div>
+              </>
+            ) : primaryElitePlan ? (
+              <EliteOfferBenefitsDetail plan={primaryElitePlan} />
+            ) : (
+              <StructuredDescriptionBody text={structuredDescription} prominent />
+            )}
           </div>
 
-          {!isTradingLesson ? (
+          {!isTradingLesson && !isTradingModule && !isPrimaryElite ? (
             <>
               <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
                 {isPackDetail ? "Included modules" : "What you get"}

@@ -10,14 +10,13 @@ import {
 import { HeroFeaturedLogosStrip } from '@/components/home/HeroFeaturedLogosStrip'
 import { HomeGlobeSection } from '@/components/home/HomeGlobeSection'
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
-import { HomeSocialClipsSection } from '@/components/home/HomeSocialClipsSection'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { NavApp } from '@/components/NavApp'
 import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
 
 const getLinkedProgramGalleryImages = unstable_cache(
   async () => getCuratedGlobeGalleryImages(),
-  ['home-program-gallery-linked-v4'],
+  ['home-program-gallery-linked-v5'],
   { revalidate: 3600 }
 )
 
@@ -80,7 +79,6 @@ export default async function Home() {
       </section>
 
       <HomeGlobeSection images={programGalleryImages} />
-      <HomeSocialClipsSection />
       <HomePricingSection />
       <HomePaywallSection />
       <HomeCertificatesSection />

@@ -326,12 +326,16 @@ export function PublicPlanOfferCards({
         </div>
       ) : null}
       {isLarge ? (
-        <div className="flex w-full max-w-full flex-col gap-4 overflow-x-clip sm:gap-8 lg:gap-10">
+        <div className="flex w-full max-w-full flex-col gap-4 sm:gap-8 lg:gap-10">
           <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8">
             {PLAN_OFFERS_PRIMARY.map(renderOffer)}
           </div>
-          <div className="grid w-full max-w-full grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
-            {PLAN_OFFERS_VAULT.map(renderOffer)}
+          <div className="plan-offers-vault-grid grid w-full grid-cols-1 items-stretch gap-5 overflow-visible sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 lg:gap-12">
+            {PLAN_OFFERS_VAULT.map((offer) => (
+              <div key={offer.plan} className="plan-offers-vault-cell">
+                {renderOffer(offer)}
+              </div>
+            ))}
           </div>
         </div>
       ) : (

@@ -129,20 +129,14 @@ export function TradingModuleVaultModal({
         </div>
 
         <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
-          <div className="w-full max-w-none font-[family-name:var(--font-body)]">
-            <StructuredDescriptionBody
-              text={resolveVaultModuleStructuredDescription(moduleOffer.title, "trading_technical_analysis")}
-              prominent
-            />
-            <p className="mt-5 font-mono text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
-              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $3
-              each. Lifetime access recorded to your dashboard after checkout.
-            </p>
-          </div>
+          <p className={cn("font-mono text-[11px] uppercase tracking-[0.18em]", copy.labelClass)}>Full pack</p>
+          <p className="mt-2 text-[clamp(1rem,2.8vw,1.25rem)] font-bold uppercase leading-tight tracking-[0.04em] text-white/95">
+            {copy.title}
+          </p>
 
           <section
             className={cn(
-              "mx-auto mb-8 mt-8 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
+              "mx-auto mb-8 mt-6 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
               copy.borderClass
             )}
           >
@@ -189,6 +183,18 @@ export function TradingModuleVaultModal({
                 />
               </div>
             ))}
+          </div>
+
+          <div className="mt-10 w-full max-w-none border-t border-white/10 pt-8 font-[family-name:var(--font-body)]">
+            <StructuredDescriptionBody
+              text={resolveVaultModuleStructuredDescription(moduleOffer)}
+              prominent
+              omitSections={["what_you_will_learn"]}
+            />
+            <p className="mt-5 font-mono text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
+              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $3
+              each. Lifetime access recorded to your dashboard after checkout.
+            </p>
           </div>
         </div>
       </div>

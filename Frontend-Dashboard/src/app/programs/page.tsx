@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { NavApp } from '@/components/NavApp'
 import SiteFooter from '@/components/SiteFooter'
 import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySection'
@@ -7,6 +8,14 @@ import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
+import { buildPageMetadata } from '@/lib/seo'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Programs — Elite Offers & Course Library',
+  description:
+    'Explore Syndicate Elite Offers and the full programs library: money mastery, trading vaults, AI automation, business psychology, and operator-grade training.',
+  path: '/programs',
+})
 
 export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())

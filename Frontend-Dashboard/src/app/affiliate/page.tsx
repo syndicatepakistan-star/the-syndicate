@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Affiliate · THE SYNDICATE",
-  description: "Syndicate affiliate partner programme — tracked links, commissions, and partner dashboard.",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Affiliate Program",
+  description:
+    "Join The Syndicate affiliate program — earn commissions with tracked links, partner dashboard, and elite program referrals.",
+  path: "/affiliate",
+});
 
 const AffiliateMarketingPage = dynamic(
   () => import("@/components/affiliate/AffiliateMarketingPage"),

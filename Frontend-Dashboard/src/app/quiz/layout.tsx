@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import LetterGlitch from "@/components/quiz-funnel/LetterGlitch";
+import { buildPageMetadata } from "@/lib/seo";
 import "./quiz-funnel.css";
 
-export const metadata: Metadata = {
-  title: "THE SYNDICATE DIAGNOSIS",
-  description: "The Syndicate Diagnosis quiz funnel.",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "The Syndicate Diagnosis",
+  description:
+    "Take The Syndicate Diagnosis — a short quiz to find your operator path, program fit, and next step inside the Syndicate ecosystem.",
+  path: "/quiz",
+});
 
 export default function QuizLayout({ children }: { children: React.ReactNode }) {
   return (

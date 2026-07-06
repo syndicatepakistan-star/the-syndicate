@@ -174,6 +174,14 @@ const nextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=604800, immutable" }],
       },
       {
+        source: "/favicon-:size.png",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, immutable" }],
+      },
+      {
+        source: "/apple-touch-icon.png",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, immutable" }],
+      },
+      {
         source: "/sw.js",
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
       },

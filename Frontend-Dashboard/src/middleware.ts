@@ -75,6 +75,10 @@ export function middleware(request: NextRequest) {
   const authFreePath =
     publicMarketingPath ||
     isPublicStaticFile ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/favicon.ico" ||
+    pathname === "/manifest.webmanifest" ||
     pathname === "/quiz" ||
     pathname.startsWith("/quiz/") ||
     pathname === "/affiliate" ||

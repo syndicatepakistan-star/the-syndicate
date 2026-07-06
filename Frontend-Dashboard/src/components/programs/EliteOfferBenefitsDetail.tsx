@@ -47,8 +47,10 @@ function BenefitItem({ item }: { item: GamingBenefitItem }) {
         {item.tag}
       </span>
       <div className="elite-benefit-detail__copy">
-        <strong>{item.title}</strong>
-        {showDesc ? <span>{item.desc}</span> : null}
+        <strong className={cn("elite-benefit-detail__heading", `elite-benefit-detail__heading--${item.tone}`)}>
+          {item.title}
+        </strong>
+        {showDesc ? <span className="elite-benefit-detail__desc">{item.desc}</span> : null}
       </div>
     </motion.article>
   );

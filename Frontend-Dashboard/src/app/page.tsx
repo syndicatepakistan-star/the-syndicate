@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { unstable_cache } from 'next/cache'
 import {
@@ -12,7 +13,19 @@ import { HomeGlobeSection } from '@/components/home/HomeGlobeSection'
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 import { NavApp } from '@/components/NavApp'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
+import { buildPageMetadata } from '@/lib/seo'
+import { buildFaqPageJsonLd, DEFAULT_SITE_DESCRIPTION, DEFAULT_SITE_TITLE } from '@/lib/structuredData'
+
+export const metadata: Metadata = {
+  ...buildPageMetadata({
+    title: DEFAULT_SITE_TITLE,
+    description: DEFAULT_SITE_DESCRIPTION,
+    path: '',
+  }),
+  title: DEFAULT_SITE_TITLE,
+}
 
 const getLinkedProgramGalleryImages = unstable_cache(
   async () => getCuratedGlobeGalleryImages(),
@@ -25,6 +38,7 @@ export default async function Home() {
 
   return (
     <div className="home-page-root min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
+      <JsonLd data={buildFaqPageJsonLd()} />
       <NavApp />
       <section
         id="heroSection"

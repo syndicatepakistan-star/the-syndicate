@@ -9358,6 +9358,24 @@ body {
   }
 }
 
+/* Vault pack cards — portrait title art (Trading Advanced Technical Analysis) */
+.plan-offer-card__media--portrait-cover {
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 42%, rgba(88, 28, 135, 0.22), transparent 68%),
+    radial-gradient(ellipse 70% 60% at 50% 55%, rgba(14, 116, 144, 0.14), transparent 72%),
+    #050508;
+}
+
+.plan-offer-card__media--portrait-cover img {
+  padding: 0.15rem;
+}
+
+@media (max-width: 1279px) {
+  .plan-offer-card__media--portrait-cover img {
+    padding: 0.35rem 0.5rem;
+  }
+}
+
 /* Programs library — equal column header bands + Business Models card alignment */
 .playlist-category-heading-slot--column {
   box-sizing: border-box;

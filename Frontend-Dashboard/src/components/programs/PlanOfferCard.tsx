@@ -169,6 +169,7 @@ export function PlanOfferCard({
   const isCompact = size === "compact";
   const isPack = !isModule;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
+  const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
   const spotlightStyle = highlighted
@@ -272,10 +273,18 @@ export function PlanOfferCard({
               className={cn(
                 "relative w-full overflow-hidden rounded-2xl border-2 border-white/20",
                 isLarge && isPack && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
+                portraitCoverArt &&
+                  isLarge &&
+                  isPack &&
+                  "plan-offer-card__media--portrait-cover bg-[#050508] max-xl:aspect-[4/5] max-xl:min-h-[min(52dvh,16.5rem)] max-xl:max-h-[min(62dvh,22rem)] sm:max-xl:aspect-[3/4] sm:max-xl:min-h-[min(48dvh,20rem)] xl:aspect-[3/4] xl:max-h-[22rem] xl:min-h-[18.5rem]",
                 isLarge && !isPack && "plan-offer-card__media aspect-[16/10] min-h-[min(24dvh,8.5rem)] shrink-0 sm:aspect-[4/3] sm:min-h-[15rem]",
                 isModule && "aspect-[16/10] min-h-[7rem] shrink-0 sm:min-h-[8.5rem]",
                 tradingMobileProgramFace && "max-xl:aspect-video max-xl:min-h-0 max-xl:rounded-none max-xl:border-0",
                 isCompact && isPack && "min-h-[11.5rem] flex-1 sm:min-h-[12.5rem]",
+                portraitCoverArt &&
+                  isCompact &&
+                  isPack &&
+                  "plan-offer-card__media--portrait-cover bg-[#050508] aspect-[4/5] min-h-[14rem] sm:aspect-[3/4] sm:min-h-[15rem]",
                 isCompact && !isPack && "aspect-[4/3] min-h-[9.5rem] shrink-0"
               )}
             >
@@ -290,8 +299,11 @@ export function PlanOfferCard({
                 }}
                 style={offer.imageObjectPosition ? { objectPosition: offer.imageObjectPosition } : undefined}
                 className={cn(
-                  "absolute inset-0 h-full w-full object-cover [image-rendering:high-quality]",
-                  !offer.imageObjectPosition && (offer.plan === "bundle" ? "object-[center_38%]" : "object-center")
+                  "absolute inset-0 h-full w-full [image-rendering:high-quality]",
+                  portraitCoverArt ? "object-contain object-center" : "object-cover",
+                  !portraitCoverArt &&
+                    !offer.imageObjectPosition &&
+                    (offer.plan === "bundle" ? "object-[center_38%]" : "object-center")
                 )}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/45" />

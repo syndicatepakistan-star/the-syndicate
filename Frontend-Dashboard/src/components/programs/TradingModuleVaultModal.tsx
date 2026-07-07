@@ -70,7 +70,6 @@ export function TradingModuleVaultModal({
   const copy = VAULT_PACK_MODAL_COPY.trading_technical_analysis;
   const lessons = tradingSubmoduleOffersForModule(moduleSlug);
   const moduleStats = resolveOfferCardStats(moduleOffer, "module");
-  const submoduleCount = moduleStats?.mode === "module" ? moduleStats.lessonCount : lessons.length;
   const moduleUnlocked = isVaultOfferUnlocked(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive);
 
   const handlePrimary = (offer: PlanOfferDef) => {
@@ -129,38 +128,48 @@ export function TradingModuleVaultModal({
         </div>
 
         <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
-          <p className={cn("font-mono text-[11px] uppercase tracking-[0.18em]", copy.labelClass)}>Full pack</p>
-          <p className="mt-2 text-[clamp(1rem,2.8vw,1.25rem)] font-bold uppercase leading-tight tracking-[0.04em] text-white/95">
-            {copy.title}
-          </p>
+          <section className="vault-hero-offer-row mb-3 sm:mb-4">
+            <div className="vault-hero-offer-row__card min-w-0">
+              <div
+                className={cn(
+                  "w-fit max-w-full rounded-2xl border-2 bg-black/40 p-2.5 sm:p-3",
+                  copy.borderClass,
+                )}
+              >
+                <PlanOfferCard
+                  offer={moduleOffer}
+                  size="large"
+                  cardKind="module"
+                  vaultHero
+                  cardStats={moduleStats}
+                  busy={busyPlan === moduleOffer.plan}
+                  actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
+                  onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
+                  onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
+                />
+              </div>
+            </div>
 
-          <section
-            className={cn(
-              "mx-auto mb-8 mt-6 max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
-              copy.borderClass
-            )}
-          >
-            <p className={cn("mb-4 text-center font-mono text-[11px] uppercase tracking-[0.2em]", copy.labelClass)}>
-              Full module — all {submoduleCount} lessons
-            </p>
-            <PlanOfferCard
-              offer={moduleOffer}
-              size="large"
-              cardKind="module"
-              cardStats={moduleStats}
-              busy={busyPlan === moduleOffer.plan}
-              actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
-              onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
-            />
-            {moduleUnlocked ? (
-              <p className="mt-3 text-center font-mono text-[11px] text-emerald-300/90">
-                Module unlocked — open any lesson below.
+            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
+              <p
+                className={cn(
+                  "text-left font-mono text-[clamp(12px,2.1vw,16px)] font-black uppercase leading-snug tracking-[0.05em]",
+                  copy.labelClass,
+                  "drop-shadow-[0_0_18px_currentColor]",
+                )}
+              >
+                One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $3
+                each. Lifetime access recorded to your dashboard after checkout.
               </p>
-            ) : null}
+              {moduleUnlocked ? (
+                <p className="text-left font-mono text-[11px] text-emerald-300/90">
+                  Module unlocked — open any lesson below.
+                </p>
+              ) : null}
+            </div>
           </section>
 
-          <div className="mb-5 flex items-center gap-4">
+          <div className="mb-3 flex items-center gap-4 sm:mb-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="shrink-0 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
               Individual lessons ({lessons.length})
@@ -191,10 +200,6 @@ export function TradingModuleVaultModal({
               prominent
               omitSections={["what_you_will_learn"]}
             />
-            <p className="mt-5 font-mono text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
-              One-time purchase — unlock the full module for {moduleOffer.displayPrice} or buy individual lessons at $3
-              each. Lifetime access recorded to your dashboard after checkout.
-            </p>
           </div>
         </div>
       </div>

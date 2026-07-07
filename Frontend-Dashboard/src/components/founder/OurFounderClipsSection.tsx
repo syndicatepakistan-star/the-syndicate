@@ -9,6 +9,49 @@ import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 const FOUNDER_COIN_SRC = "/assets/coin-gold.png";
 
+const FOUNDER_PORTRAIT_SAMPLES = [
+  {
+    label: "Amber city",
+    src: "/assets/founder-samples/founder-portrait-amber.png",
+    alt: "Founder portrait sample with warm amber city lighting",
+  },
+  {
+    label: "Red city",
+    src: "/assets/founder-samples/founder-portrait-red.png",
+    alt: "Founder portrait sample with red neon city backdrop",
+  },
+  {
+    label: "Fire gold",
+    src: "/assets/founder-samples/sample-fire-gold-portrait.png",
+    alt: "Founder portrait sample with gold fire border and Gucci shirt",
+  },
+  {
+    label: "Red jacket",
+    src: "/assets/founder-samples/sample-red-jacket-neon.png",
+    alt: "Founder portrait sample in red jacket with neon backdrop",
+  },
+  {
+    label: "Orange HUD",
+    src: "/assets/founder-samples/sample-orange-hud-frame.png",
+    alt: "Founder portrait sample with orange HUD frame and city bokeh",
+  },
+  {
+    label: "White smoke",
+    src: "/assets/founder-samples/sample-smoke-white-frame.png",
+    alt: "Founder portrait sample with white smoke frame",
+  },
+  {
+    label: "Blue smoke + views",
+    src: "/assets/founder-samples/sample-smoke-blue-views.png",
+    alt: "Founder portrait sample with blue smoke frame and view count",
+  },
+  {
+    label: "Orange smoke",
+    src: "/assets/founder-samples/sample-orange-smoke-frame.png",
+    alt: "Founder portrait sample with orange smoke frame",
+  },
+] as const;
+
 function FounderSectionHeading({ title }: { title: string }) {
   return (
     <div className="mx-auto flex w-full max-w-[min(100%,1200px)] items-center justify-center px-[25px]">
@@ -80,6 +123,34 @@ function FounderClipCard({ image, eager }: { image: ClipCard; eager?: boolean })
   );
 }
 
+function FounderPortraitSamples() {
+  return (
+    <div className="w-full space-y-4 sm:space-y-5">
+      <FounderSectionHeading title="Sample Preview" />
+      <p className="mx-auto max-w-[min(100%,720px)] text-center font-mono text-[11px] uppercase tracking-[0.14em] text-white/50 sm:text-xs">
+        Compare portrait styles below — no page borders applied
+      </p>
+      <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-4">
+        {FOUNDER_PORTRAIT_SAMPLES.map((sample) => (
+          <figure key={sample.src} className="flex w-full max-w-[280px] flex-col items-center gap-2">
+            <Image
+              src={sample.src}
+              alt={sample.alt}
+              width={571}
+              height={1024}
+              className="h-auto w-full object-contain"
+              sizes="(max-width: 640px) 46vw, (max-width: 1024px) 31vw, 280px"
+            />
+            <figcaption className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200/75 sm:text-[11px]">
+              {sample.label}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function FounderClipGrid({
   items,
   title,
@@ -128,6 +199,7 @@ export function OurFounderClipsSection() {
       <div className="mx-auto flex w-full max-w-[min(100%,1400px)] flex-col gap-8 px-3 sm:gap-12 sm:px-6 md:px-8">
         <FounderClipGrid items={mostViewedItems} title="Most Viewed" eagerCount={5} />
         <FounderClipGrid items={informativeItems} title="Most Informative" eagerCount={4} />
+        <FounderPortraitSamples />
       </div>
     </section>
   );

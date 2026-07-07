@@ -85,7 +85,7 @@ function truncate(text: string, maxLen: number): string {
 export function isSubstantialProgramDescription(description: string | null | undefined): boolean {
   const text = (description ?? "").trim();
   if (!text) return false;
-  if (/the hook/i.test(text) || /what you will learn/i.test(text) || /the core protocol/i.test(text)) {
+  if (/introduction/i.test(text) || /the hook/i.test(text) || /what you will learn/i.test(text) || /the core protocol/i.test(text)) {
     return true;
   }
   if (text.length < 72) return false;
@@ -100,7 +100,7 @@ export function extractProgramSummary(description: string, maxLen = 168): string
   if (!normalized) return "";
 
   const hookMatch = normalized.match(
-    /(?:^|\n)\s*The Hook\s*\n+([\s\S]*?)(?=\n\s*\n\s*(?:The Core Protocol|What you will|$))/i
+    /(?:^|\n)\s*(?:Introduction|The Hook)\s*\n+([\s\S]*?)(?=\n\s*\n\s*(?:The Core Protocol|What you will|$))/i
   );
   const hookParagraph = hookMatch?.[1]?.replace(/\s+/g, " ").trim();
   if (hookParagraph && hookParagraph.length > 36) {

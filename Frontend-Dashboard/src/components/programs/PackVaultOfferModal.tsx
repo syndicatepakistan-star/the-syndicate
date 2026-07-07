@@ -253,62 +253,62 @@ export function PackVaultOfferModal({
         </div>
 
         <div ref={scrollRef} className={VAULT_MODAL_BODY_CLASS}>
-          <section
-            className={cn(
-              "mx-auto w-full max-w-2xl rounded-2xl border-2 bg-black/40 p-4 sm:p-6",
-              copy.borderClass,
-            )}
-          >
-            <p className={cn("mb-4 text-center font-mono text-[11px] uppercase tracking-[0.2em]", copy.labelClass)}>
-              Full vault — best value
-            </p>
-            <PlanOfferCard
-              offer={packOffer}
-              size="large"
-              cardKind="pack"
-              cardStats={resolveOfferCardStats(packOffer, "pack")}
-              busy={busyPlan === packOffer.plan}
-              actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
-              onDetails={() => {
-                scrollRef.current?.querySelector("[data-vault-pack-description]")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }}
-              onOpen={() => {
-                if (packUnlocked) onOpenUnlocked(packOffer);
-                else onUnlock(packOffer);
-              }}
-            />
-            {packUnlocked ? (
-              <p className="mt-3 text-center font-mono text-[11px] text-emerald-300/90">
-                Pack unlocked — choose a module below and tap Open to watch.
-              </p>
-            ) : null}
+          <section className="vault-hero-offer-row mb-3 sm:mb-4">
+            <div className="vault-hero-offer-row__card min-w-0">
+              <div
+                className={cn(
+                  "w-fit max-w-full rounded-2xl border-2 bg-black/40 p-2.5 sm:p-3",
+                  copy.borderClass,
+                )}
+              >
+                <PlanOfferCard
+                  offer={packOffer}
+                  size="large"
+                  cardKind="pack"
+                  vaultHero
+                  cardStats={resolveOfferCardStats(packOffer, "pack")}
+                  busy={busyPlan === packOffer.plan}
+                  actionLabel={resolveOfferActionLabel(packOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
+                  onDetails={() => {
+                    scrollRef.current?.querySelector("[data-vault-pack-description]")?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }}
+                  onOpen={() => {
+                    if (packUnlocked) onOpenUnlocked(packOffer);
+                    else onUnlock(packOffer);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
+              {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
+                <p
+                  className={cn(
+                    "text-left font-mono text-[clamp(12px,2.1vw,16px)] font-black uppercase leading-snug tracking-[0.05em]",
+                    copy.labelClass,
+                    "drop-shadow-[0_0_18px_currentColor]",
+                  )}
+                >
+                  One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
+                  separately).
+                </p>
+              ) : (
+                <p className="text-left font-mono text-[clamp(11px,2vw,15px)] font-black uppercase leading-snug tracking-[0.05em] text-white/88">
+                  One-time purchase — lifetime access recorded to your dashboard after checkout.
+                </p>
+              )}
+              {packUnlocked ? (
+                <p className="text-left font-mono text-[11px] text-emerald-300/90">
+                  Pack unlocked — choose a module below and tap Open to watch.
+                </p>
+              ) : null}
+            </div>
           </section>
 
-          {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-            <p
-              className={cn(
-                "mx-auto mt-6 max-w-3xl text-center font-mono text-[clamp(14px,2.6vw,19px)] font-black uppercase leading-snug tracking-[0.05em]",
-                copy.labelClass,
-                "drop-shadow-[0_0_22px_currentColor]",
-              )}
-            >
-              One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
-              separately).
-            </p>
-          ) : (
-            <p
-              className={cn(
-                "mx-auto mt-6 max-w-3xl text-center font-mono text-[clamp(13px,2.4vw,17px)] font-black uppercase leading-snug tracking-[0.05em] text-white/88",
-              )}
-            >
-              One-time purchase — lifetime access recorded to your dashboard after checkout.
-            </p>
-          )}
-
-          <div className="mb-5 mt-8 flex items-center gap-4">
+          <div className="mb-3 flex items-center gap-4 sm:mb-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="shrink-0 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
               {isTradingPack ? "Modules" : "Individual modules"} ({displayOfferCount})

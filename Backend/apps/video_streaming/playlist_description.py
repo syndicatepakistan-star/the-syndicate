@@ -6,15 +6,15 @@ Admins paste one description in Django using section titles as **whole lines**
 
 Example::
 
-    The Hook
+    Introduction
     One tight paragraph that grabs attention.
-
-    The core protocol
-    How the program runs week to week.
 
     What you will learn
     - Outcome one
     - Outcome two
+
+Legacy section titles ``The Hook`` and ``The core protocol`` are still parsed for older copy;
+the core protocol body is not shown in the Programs UI.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class PlaylistDescriptionSections(TypedDict):
 
 
 # Line is only a section title (optional leading # / ## / ###)
-_HOOK = re.compile(r"^\s*#*\s*the hook\s*$", re.IGNORECASE)
+_INTRO = re.compile(r"^\s*#*\s*(?:introduction|the hook)\s*$", re.IGNORECASE)
 _CORE = re.compile(r"^\s*#*\s*(?:the\s+)?core protocol\s*$", re.IGNORECASE)
 _LEARN = re.compile(r"^\s*#*\s*what you will learn\s*$", re.IGNORECASE)
 
@@ -47,7 +47,7 @@ def parse_playlist_description_sections(raw: str | None) -> PlaylistDescriptionS
         s = line.strip()
         if not s:
             continue
-        if _HOOK.match(s) and "hook" not in seen:
+        if _INTRO.match(s) and "hook" not in seen:
             markers.append((i, "hook"))
             seen.add("hook")
         elif _CORE.match(s) and "core_protocol" not in seen:

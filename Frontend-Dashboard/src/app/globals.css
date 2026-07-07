@@ -9409,12 +9409,37 @@ body {
 /* Vault pack row — Agentic / AI Content / Trading full-pack cards */
 .plan-offers-vault-grid {
   width: 100%;
-  max-width: 100%;
-  margin-inline: 0;
+  max-width: min(100%, calc(80rem + 100px));
+  margin-inline: auto;
   overflow: visible;
   position: relative;
   z-index: 1;
   padding-block: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .plan-offers-vault-grid {
+    max-width: min(100%, calc(80rem + 200px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .plan-offers-vault-grid {
+    max-width: min(100%, calc(80rem + 300px));
+  }
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--vault-pack-fill img {
+  object-fit: cover !important;
+  padding: 0 !important;
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--portrait-cover {
+  background: #050508;
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--vault-pack-fill {
+  width: 100%;
 }
 
 /* Each cell owns stacking so neon borders/glow are not clipped by neighbors */
@@ -9476,12 +9501,12 @@ body {
   min-width: 0;
   justify-content: center;
   padding: 0.625rem;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 1.75rem;
   isolation: isolate;
   content-visibility: auto;
   contain-intrinsic-size: auto 14rem;
-  contain: layout style paint;
+  contain: layout style;
 }
 
 .vault-module-cell img {
@@ -9525,6 +9550,75 @@ body {
     0 8px 22px rgba(0, 0, 0, 0.58),
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 0 20px var(--poc-glow);
+}
+
+.plan-offer-card--vault-module:not(.plan-offer-card--vault-hero) .plan-offer-card__vault-price-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 120px !important;
+  height: 120px !important;
+  min-width: 120px !important;
+  min-height: 120px !important;
+  max-width: 120px !important;
+  max-height: 120px !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+  font-size: clamp(26px, 5vw, 36px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow:
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+.vault-hero-offer-block {
+  width: 100%;
+  max-width: 100%;
+}
+
+.vault-hero-offer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .vault-hero-offer-row {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    gap: 1rem 1.35rem;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vault-hero-offer-row {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: 1.15rem 1.75rem;
+  }
+}
+
+.vault-hero-offer-row__copy {
+  padding-top: 0.15rem;
+}
+
+.plan-offer-card--vault-hero {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.plan-offer-card--vault-hero .plan-offer-card__media--vault-hero {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 639px) {
+  .vault-hero-offer-row + div .vault-modules-grid,
+  .vault-hero-offer-row ~ div .vault-modules-grid {
+    scroll-margin-top: 0.5rem;
+  }
 }
 
 .plan-offer-card--vault-module:hover .plan-offer-card__vault-module-shell,

@@ -33,9 +33,13 @@ const PACK_BODY: Record<VaultPackKey, { hook: string; protocol: string }> = {
   },
 };
 
-function formatStructured(hook: string, protocol: string, learnItems: string[]): string {
+function formatStructured(hook: string, learnItems: string[]): string {
   const learn = learnItems.map((item) => `- ${item}`).join("\n");
-  return `The Hook\n${hook}\n\nThe Core Protocol\n${protocol}\n\nWhat You Will Learn\n${learn}`;
+  const intro = hook.trim();
+  if (!intro && learnItems.length === 0) return "";
+  if (!intro) return `What You Will Learn\n${learn}`;
+  if (learnItems.length === 0) return `Introduction\n${intro}`;
+  return `Introduction\n${intro}\n\nWhat You Will Learn\n${learn}`;
 }
 
 function packSubmoduleTitles(pack: VaultPackKey): string[] {
@@ -53,7 +57,7 @@ function moduleLearnItemTitles(offer: Pick<PlanOfferDef, "plan" | "title">): str
 
 export function resolveVaultPackStructuredDescription(pack: VaultPackKey): string {
   const body = PACK_BODY[pack];
-  return formatStructured(body.hook, body.protocol, packSubmoduleTitles(pack));
+  return formatStructured(body.hook, packSubmoduleTitles(pack));
 }
 
 export function resolveVaultModuleStructuredDescription(
@@ -61,7 +65,7 @@ export function resolveVaultModuleStructuredDescription(
 ): string {
   const pack = offer.vaultPackPlan ?? vaultPackForPlanSlug(String(offer.plan));
   if (!pack) {
-    return formatStructured("", "", moduleLearnItemTitles(offer));
+    return formatStructured("", moduleLearnItemTitles(offer));
   }
 
   const title = offer.title.trim();
@@ -74,9 +78,6 @@ export function resolveVaultModuleStructuredDescription(
     `This is not passive content — it is operational doctrine inside the ${packName} vault.`,
     `Operators who hesitate install systems last and pay the market for that delay.`,
     `One checkout records lifetime ownership to your Syndicate command dashboard.`,
-  ].join(" ");
-
-  const protocol = [
     detail,
     `You are purchasing permanent entitlement — a one-time transaction, not a subscription disguised as education.`,
     `Billing records instantly under your identity; curriculum access activates as this module deploys in the vault.`,
@@ -84,7 +85,7 @@ export function resolveVaultModuleStructuredDescription(
     `Deploy this module standalone or as part of the full ${packName} pack — your ownership is absolute either way.`,
   ].join(" ");
 
-  return formatStructured(hook, protocol, moduleLearnItemTitles(offer));
+  return formatStructured(hook, moduleLearnItemTitles(offer));
 }
 
 export function resolveOfferStructuredDescription(offer: PlanOfferDef): string {

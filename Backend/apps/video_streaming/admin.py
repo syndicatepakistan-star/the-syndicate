@@ -114,9 +114,10 @@ class StreamPlaylistAdmin(admin.ModelAdmin):
             {
                 "fields": ("description",),
                 "description": (
-                    "Use three section titles each on its own line (case-insensitive), then the body text below. "
-                    "Titles: The Hook — The core protocol (or Core protocol) — What you will learn. "
-                    "Optional markdown hashes at the start of a title line (e.g. ## The Hook) are allowed. "
+                    "Use two section titles each on its own line (case-insensitive), then the body text below. "
+                    "Titles: Introduction — What you will learn. "
+                    "Legacy titles The Hook and The core protocol are still accepted; core protocol is hidden in the UI. "
+                    "Optional markdown hashes at the start of a title line (e.g. ## Introduction) are allowed. "
                     "Under What you will learn, lines like Module 1, Chapter 2, or Chapter 3: Title (own line) "
                     "become sub-headings; list topics on the following lines (or with - bullets). "
                     "Blank lines between sections are fine."

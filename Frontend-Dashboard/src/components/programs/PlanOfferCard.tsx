@@ -20,6 +20,8 @@ type Props = {
   actionLabel?: string;
   highlighted?: boolean;
   comingSoon?: boolean;
+  /** Compact left-aligned hero inside vault pack / module picker modals. */
+  vaultHero?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -161,12 +163,16 @@ export function PlanOfferCard({
   actionLabel,
   highlighted = false,
   comingSoon = false,
+  vaultHero = false,
   onDetails,
   onOpen,
 }: Props) {
   const isLarge = size === "large";
   const isModule = size === "module";
   const isCompact = size === "compact";
+  const isVaultSubmoduleCard = cardKind === "module" && isModule;
+  const isVaultHero = vaultHero && isLarge;
+  const isVaultPackCard = cardKind === "pack" && isLarge && !isVaultHero;
   const isPack = !isModule;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const portraitCoverArt = offer.imageMobileFit === "contain";
@@ -188,10 +194,11 @@ export function PlanOfferCard({
       className={cn(
         "plan-offer-card group/card relative flex w-full flex-col text-left scroll-mt-32",
         `plan-offer-card--${offer.accent}`,
-        cardKind === "pack" && "z-[1] hover:z-[10] focus-within:z-[10]",
+        cardKind === "pack" && "plan-offer-card--vault-pack z-[1] hover:z-[10] focus-within:z-[10]",
         cardKind === "module" && "plan-offer-card--vault-module",
         highlighted && "program-card-globe-spotlight-host",
-        isLarge && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
+        isLarge && !isVaultHero && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
+        isVaultHero && "plan-offer-card--vault-hero mr-auto w-full max-w-[min(100%,20.5rem)] min-h-0 sm:max-w-[24rem]",
         isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
         tradingMobileProgramFace && "max-xl:min-h-0",
         isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
@@ -250,7 +257,7 @@ export function PlanOfferCard({
         ) : null}
 
         <span className={cn("relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70", highlighted && "border-2")}>
-          {cardKind ? (
+          {cardKind && !isVaultPackCard ? (
             <div
               className={cn(
                 "relative z-[5] mx-3 mt-3 inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] sm:text-[10px]",
@@ -264,20 +271,34 @@ export function PlanOfferCard({
           ) : null}
           <div
             className={cn(
-              "relative z-[3] flex h-full min-h-0 flex-col gap-2",
-              isLarge ? "p-3 sm:p-5" : isModule ? "p-2 sm:p-2.5" : "p-2 sm:p-2.5",
+              "relative z-[3] flex h-full min-h-0 flex-col",
+              isVaultPackCard ? "gap-0 p-0" : "gap-2",
+              isLarge && !isVaultHero && !isVaultPackCard ? "p-3 sm:p-5" : isVaultHero ? "p-2.5 sm:p-3" : isModule ? "p-2 sm:p-2.5" : !isVaultPackCard ? "p-2 sm:p-2.5" : null,
               tradingMobileProgramFace && "max-xl:gap-0 max-xl:p-0"
             )}
           >
             <div
               className={cn(
-                "relative w-full overflow-hidden rounded-2xl border-2 border-white/20",
-                isLarge && isPack && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
+                "relative w-full overflow-hidden",
+                !isVaultPackCard && "rounded-2xl border-2 border-white/20",
+                isVaultPackCard && "plan-offer-card__media plan-offer-card__media--vault-pack-fill rounded-t-[1.35rem] border-0",
+                isLarge && isPack && !isVaultHero && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
+                isVaultHero &&
+                  isPack &&
+                  "plan-offer-card__media plan-offer-card__media--vault-hero min-h-[8rem] max-h-[10rem] shrink-0 sm:min-h-[9rem] sm:max-h-[11rem]",
                 portraitCoverArt &&
                   isLarge &&
                   isPack &&
+                  !isVaultHero &&
                   "plan-offer-card__media--portrait-cover bg-[#050508] max-xl:aspect-[4/5] max-xl:min-h-[min(52dvh,16.5rem)] max-xl:max-h-[min(62dvh,22rem)] sm:max-xl:aspect-[3/4] sm:max-xl:min-h-[min(48dvh,20rem)] xl:aspect-[3/4] xl:max-h-[22rem] xl:min-h-[18.5rem]",
-                isLarge && !isPack && "plan-offer-card__media aspect-[16/10] min-h-[min(24dvh,8.5rem)] shrink-0 sm:aspect-[4/3] sm:min-h-[15rem]",
+                portraitCoverArt &&
+                  isVaultHero &&
+                  isPack &&
+                  "plan-offer-card__media--portrait-cover plan-offer-card__media--vault-hero bg-[#050508] aspect-[4/5] min-h-[8.5rem] max-h-[10.5rem] sm:aspect-[3/4] sm:min-h-[9rem] sm:max-h-[11rem]",
+                isLarge && !isPack && !isVaultHero && "plan-offer-card__media aspect-[16/10] min-h-[min(24dvh,8.5rem)] shrink-0 sm:aspect-[4/3] sm:min-h-[15rem]",
+                isVaultHero &&
+                  !isPack &&
+                  "plan-offer-card__media plan-offer-card__media--vault-hero aspect-[16/10] min-h-[7rem] max-h-[9rem] shrink-0 sm:min-h-[8rem] sm:max-h-[9.5rem]",
                 isModule && "aspect-[16/10] min-h-[7rem] shrink-0 sm:min-h-[8.5rem]",
                 tradingMobileProgramFace && "max-xl:aspect-video max-xl:min-h-0 max-xl:rounded-none max-xl:border-0",
                 isCompact && isPack && "min-h-[11.5rem] flex-1 sm:min-h-[12.5rem]",
@@ -300,7 +321,7 @@ export function PlanOfferCard({
                 style={offer.imageObjectPosition ? { objectPosition: offer.imageObjectPosition } : undefined}
                 className={cn(
                   "absolute inset-0 h-full w-full [image-rendering:high-quality]",
-                  portraitCoverArt ? "object-contain object-center" : "object-cover",
+                  isVaultPackCard || !portraitCoverArt ? "object-cover object-center" : "object-contain object-center",
                   !portraitCoverArt &&
                     !offer.imageObjectPosition &&
                     (offer.plan === "bundle" ? "object-[center_38%]" : "object-center")
@@ -314,14 +335,31 @@ export function PlanOfferCard({
                   </span>
                 </span>
               ) : null}
+              {isVaultPackCard ? (
+                <span
+                  className="absolute left-3 top-3 z-[5] inline-flex w-fit items-center rounded-full border border-white/35 bg-black/55 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_18px_rgba(255,255,255,0.12)] sm:text-[10px]"
+                >
+                  Full pack
+                </span>
+              ) : null}
             </div>
 
-            <div className={cn("absolute z-[4]", isLarge ? "right-4 top-4" : isModule ? "right-2 top-2" : "right-2 top-2")}>
+            <div
+              className={cn(
+                "absolute z-[4]",
+                isVaultPackCard ? "right-3 top-3 sm:right-4 sm:top-4" : isLarge ? "right-4 top-4" : isVaultSubmoduleCard ? "right-0 top-0 z-[8] sm:right-0.5 sm:top-0.5" : "right-2 top-2"
+              )}
+            >
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2 py-0.5 font-black tabular-nums tracking-normal sm:px-3 sm:py-1",
+                  "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full border font-black tabular-nums tracking-normal",
                   theme.priceBadge,
-                  isLarge ? "text-[13px] sm:text-[16px]" : isModule ? "text-[10px] sm:text-[11px]" : "text-[10px] sm:text-[12px]"
+                  isLarge
+                    ? "px-2 py-0.5 text-[13px] sm:px-3 sm:py-1 sm:text-[16px]"
+                    : isVaultSubmoduleCard
+                      ? "plan-offer-card__vault-price-badge !h-[120px] !w-[120px] !min-h-[120px] !min-w-[120px] !max-h-[120px] !max-w-[120px] !p-0 text-[clamp(26px,5vw,36px)] leading-none"
+                      : "px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-[12px]",
+                  isModule && !isVaultSubmoduleCard && !isLarge && "text-[10px] sm:text-[11px]"
                 )}
                 style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
@@ -333,8 +371,12 @@ export function PlanOfferCard({
               className={cn(
                 "flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
-                isLarge && isPack && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
-                isLarge && !isPack && "min-h-[12rem] sm:min-h-[13rem]",
+                isVaultPackCard && "plan-offer-card__vault-pack-body mx-2 mb-2 mt-2 sm:mx-3 sm:mb-3 sm:mt-2.5",
+                isLarge && isPack && !isVaultHero && !isVaultPackCard && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
+                isVaultPackCard && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
+                isVaultHero && isPack && "min-h-0 shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2",
+                isLarge && !isPack && !isVaultHero && "min-h-[12rem] sm:min-h-[13rem]",
+                isVaultHero && !isPack && "min-h-0 shrink-0",
                 isModule && "min-h-[7.5rem] sm:min-h-[8rem]",
                 tradingMobileProgramFace && "max-xl:min-h-0 max-xl:justify-end max-xl:rounded-none max-xl:border-x-0 max-xl:border-b-0 max-xl:px-1 max-xl:py-1.5",
                 isCompact && isPack && "shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2",
@@ -363,26 +405,28 @@ export function PlanOfferCard({
                 />
               ) : null}
 
-              <ReadMoreText
-                text={offer.teaser}
-                maxLines={isLarge && isPack ? 6 : isModule ? 5 : 5}
-                className={cn(
-                  isLarge && isPack && "mt-1",
-                  isLarge && !isPack && "mt-1.5",
-                  isModule && "mt-1.5",
-                  isCompact && "mt-1",
-                  tradingMobileProgramFace && "hidden xl:block"
-                )}
-                textClassName={cn(
-                  "text-left font-medium text-white/72",
-                  isLarge && isPack && "text-[11px] sm:text-[12px]",
-                  isLarge && !isPack && "text-[11px] sm:text-[13px]",
-                  isModule && "text-[9px] sm:text-[10px]",
-                  isCompact && isPack && "text-[9px] sm:text-[10px]",
-                  isCompact && !isPack && "text-[9px] sm:text-[10px]"
-                )}
-                buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
-              />
+              {!isVaultHero ? (
+                <ReadMoreText
+                  text={offer.teaser}
+                  maxLines={isLarge && isPack ? 6 : isModule ? 5 : 5}
+                  className={cn(
+                    isLarge && isPack && "mt-1",
+                    isLarge && !isPack && "mt-1.5",
+                    isModule && "mt-1.5",
+                    isCompact && "mt-1",
+                    tradingMobileProgramFace && "hidden xl:block"
+                  )}
+                  textClassName={cn(
+                    "text-left font-medium text-white/72",
+                    isLarge && isPack && "text-[11px] sm:text-[12px]",
+                    isLarge && !isPack && "text-[11px] sm:text-[13px]",
+                    isModule && "text-[9px] sm:text-[10px]",
+                    isCompact && isPack && "text-[9px] sm:text-[10px]",
+                    isCompact && !isPack && "text-[9px] sm:text-[10px]"
+                  )}
+                  buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
+                />
+              ) : null}
               <span className="sr-only">_</span>
 
               <div

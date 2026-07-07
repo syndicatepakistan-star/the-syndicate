@@ -20,7 +20,6 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
         />
       </div>
       <div>
-        <p className={`${publicHeadingLightning("violet")} brand-kicker`}>THE SYNDICATE</p>
         <h1 className={`${publicHeadingLightning("violet")} brand-title`}>{QUIZ_FUNNEL_TITLE}</h1>
         {subtitle ? (
           <p className={`${publicHeadingLightning("violet")} brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p>

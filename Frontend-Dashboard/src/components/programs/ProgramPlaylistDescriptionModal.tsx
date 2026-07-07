@@ -19,7 +19,18 @@ type Props = {
 
 function isTopLevelSectionHeading(line: string): boolean {
   const t = line.trim().toLowerCase();
-  return t === "the hook" || t === "the core protocol" || t === "what you will learn";
+  return t === "introduction" || t === "the hook" || t === "what you will learn";
+}
+
+function isHiddenSectionHeading(line: string): boolean {
+  return line.trim().toLowerCase() === "the core protocol";
+}
+
+function displaySectionHeading(line: string): string {
+  const t = line.trim().toLowerCase();
+  if (t === "the hook" || t === "introduction") return "Introduction";
+  if (t === "what you will learn") return "What you will learn";
+  return line.trim();
 }
 
 function isLessonListLine(line: string): boolean {
@@ -46,7 +57,7 @@ function colonHeadingInner(line: string): string | null {
   return inner;
 }
 
-/** "The Hook", "What You Will Learn", … (not ending in .) */
+/** "Introduction", "What You Will Learn", … (not ending in .) */
 function isLikelyTitleCaseHeading(line: string): boolean {
   const t = line.trim();
   if (t.length < 4 || t.length > 72) return false;
@@ -113,8 +124,8 @@ function preprocessDenseDescription(raw: string): string {
 
   const inject: [RegExp, string][] = [
     [/\s+(The Publishing Fortress:\s*)/gi, "\n\n$1\n\n"],
-    [/\s+(The Hook)\s+/gi, "\n\n$1\n\n"],
-    [/\s+(The Core Protocol)\s+/gi, "\n\n$1\n\n"],
+    [/\s+(Introduction)\s+/gi, "\n\n$1\n\n"],
+    [/\s+(The Hook)\s+/gi, "\n\nIntroduction\n\n"],
     [/\s+(What You Will Learn)\s+/gi, "\n\n$1\n\n"],
   ];
   for (const [re, rep] of inject) {
@@ -174,6 +185,7 @@ function parseDescriptionToBlocks(text: string): ReactNode {
   let para: string[] = [];
   let bulletBuf: string[] = [];
   let inLearnSection = false;
+  let skipSection = false;
   let k = 0;
 
   const listClass =
@@ -252,13 +264,22 @@ function parseDescriptionToBlocks(text: string): ReactNode {
 
   for (const line of lines) {
     const trimmed = line.trim();
+    if (isHiddenSectionHeading(trimmed)) {
+      flushPara();
+      flushBulletList();
+      inLearnSection = false;
+      skipSection = true;
+      continue;
+    }
     if (isTopLevelSectionHeading(trimmed)) {
       flushPara();
       flushBulletList();
+      skipSection = false;
       inLearnSection = trimmed.toLowerCase() === "what you will learn";
-      pushSectionHeading(trimmed);
+      pushSectionHeading(displaySectionHeading(trimmed));
       continue;
     }
+    if (skipSection) continue;
 
     if (inLearnSection) {
       if (!trimmed) {
@@ -350,7 +371,7 @@ function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSec
   const t = body.replace(/\r\n/g, "\n").trim();
   if (!t) return null;
   const hookMatch = t.match(
-    /(?:^|\n)\s*The Hook\s*\n+([\s\S]*?)(?=\n\s*The Core Protocol\s*\n)/i,
+    /(?:^|\n)\s*(?:Introduction|The Hook)\s*\n+([\s\S]*?)(?=\n\s*(?:The Core Protocol|What You Will Learn)\s*\n)/i,
   );
   const coreMatch = t.match(
     /(?:^|\n)\s*The Core Protocol\s*\n+([\s\S]*?)(?=\n\s*What You Will Learn\s*\n)/i,
@@ -364,8 +385,7 @@ function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSec
 }
 
 const STRUCTURED_HEADINGS: { key: keyof StreamPlaylistDescriptionSections; label: string }[] = [
-  { key: "hook", label: "The Hook" },
-  { key: "core_protocol", label: "The core protocol" },
+  { key: "hook", label: "Introduction" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
@@ -469,6 +489,7 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
   return (
     <div className="flex flex-col gap-8 sm:gap-10" role="document">
       {STRUCTURED_HEADINGS.map(({ key, label }) => {
+        if (key === "core_protocol") return null;
         const text = sections[key].trim();
         if (!text) return null;
         const isLearn = key === "what_you_will_learn";
@@ -569,8 +590,7 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
           ) : (
             <p className="text-[17px] leading-relaxed text-white/55 sm:text-[18px]">
               No description has been added for this program yet. In Django admin, use section lines{" "}
-              <span className="font-semibold text-white/70">The Hook</span>,{" "}
-              <span className="font-semibold text-white/70">The core protocol</span>, and{" "}
+              <span className="font-semibold text-white/70">Introduction</span> and{" "}
               <span className="font-semibold text-white/70">What you will learn</span>, each on its own line, then the
               text for each section below.
             </p>

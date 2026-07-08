@@ -6,7 +6,23 @@ import { isDashboardMotionSuspended } from "@/lib/dashboardMotionControl";
 const SCROLL_CONTAINER_SELECTOR =
   "[data-main-shell-scroll], .programs-grid-scroll, .programs-lesson-scroll, [data-syndicate-mission-scroll]";
 
-const SCROLL_END_MS = 150;
+const SCROLL_END_MS = 120;
+
+function pauseDashboardVideos(root: HTMLElement) {
+  root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {
+    if (video.paused) return;
+    video.dataset.dashboardScrollPaused = "1";
+    video.pause();
+  });
+}
+
+function resumeDashboardVideos(root: HTMLElement) {
+  root.querySelectorAll<HTMLVideoElement>("video[data-dashboard-scroll-paused='1']").forEach((video) => {
+    video.removeAttribute("data-dashboard-scroll-paused");
+    if (document.visibilityState === "hidden") return;
+    void video.play().catch(() => {});
+  });
+}
 
 /** Pause heavy chrome animations while any dashboard scroll container moves. */
 export function useDashboardSmoothScroll(rootRef: RefObject<HTMLElement | null>) {
@@ -23,6 +39,8 @@ export function useDashboardSmoothScroll(rootRef: RefObject<HTMLElement | null>)
       scrolling = active;
       root.classList.toggle("is-scrolling", active);
       document.documentElement.classList.toggle("dashboard-is-scrolling", active);
+      if (active) pauseDashboardVideos(root);
+      else resumeDashboardVideos(root);
     };
 
     const onScroll = () => {

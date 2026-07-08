@@ -68,6 +68,7 @@ export function DashboardShellBackground({
     <div className={positionClass} aria-hidden>
       <video
         ref={videoRef}
+        data-dashboard-bg-video
         className="dashboard-main-shell-video absolute inset-0 z-[0] h-full min-h-full w-full min-w-full object-cover"
         style={{ opacity }}
         autoPlay

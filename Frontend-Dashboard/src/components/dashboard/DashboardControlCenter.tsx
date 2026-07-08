@@ -250,6 +250,7 @@ function HeroStatusPanel({
   userRole,
   profileAvatar,
   snapshots,
+  courses,
   onNavigate,
   syndicateNavLocked,
   onVideoBackdrop
@@ -259,6 +260,7 @@ function HeroStatusPanel({
   userRole: string;
   profileAvatar: string;
   snapshots: DashboardSnapshots;
+  courses: DashboardCourseLike[];
   onNavigate: (nav: DashboardNavKey) => void;
   syndicateNavLocked?: boolean;
   /** Semi-transparent panel so {@link DashboardMainVideoBackground} shows through. */
@@ -272,8 +274,8 @@ function HeroStatusPanel({
     <div
       style={neonAccentStyleVars(heroNeon)}
       className={cn(
-        "dashboard-cyber-neon-panel dashboard-hero-neon-panel syndicate-mood-skip-frame cut-frame cyber-frame relative w-full max-w-none overflow-hidden border-2 p-5 md:p-6 lg:p-7",
-        onVideoBackdrop ? "bg-[rgba(4,6,12,0.78)] backdrop-blur-[8px]" : "bg-black"
+        "dashboard-cyber-neon-panel dashboard-hero-neon-panel dashboard-perf-section syndicate-mood-skip-frame cut-frame cyber-frame relative w-full max-w-none overflow-hidden border-2 p-5 md:p-6 lg:p-7",
+        onVideoBackdrop ? "bg-[rgba(4,6,12,0.94)]" : "bg-black"
       )}
     >
       <div
@@ -364,6 +366,8 @@ function HeroStatusPanel({
           </div>
         </div>
       </div>
+
+      <UnlockedProgramsDashboardStrip programs={courses} onNavigate={onNavigate} embedded />
 
       <div className="relative z-[2] mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
         <div
@@ -815,6 +819,7 @@ export function DashboardHeroStatusPanel({
       userRole={userRole}
       profileAvatar={profileAvatar}
       snapshots={snapshots}
+      courses={courses}
       onNavigate={onNavigate}
       syndicateNavLocked={syndicateNavLocked}
       onVideoBackdrop
@@ -869,6 +874,7 @@ export default function DashboardControlCenter({
               userRole={userRole}
               profileAvatar={profileAvatar}
               snapshots={snapshots}
+              courses={courses}
               onNavigate={onNavigate}
               syndicateNavLocked={syndicateLocked}
               onVideoBackdrop
@@ -876,8 +882,6 @@ export default function DashboardControlCenter({
           ) : null}
 
           <MissionCommandDeckCard themeMode={themeMode} />
-
-          <UnlockedProgramsDashboardStrip programs={courses} onNavigate={onNavigate} />
 
           <PublicGoalPathSection
             playlists={streamPlaylists}

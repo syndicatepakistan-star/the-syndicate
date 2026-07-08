@@ -28,14 +28,6 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "plan", plan: "trading_scalpel_protocol" },
   },
   {
-    src: instructorImage("Affiliate Marketing.jpg"),
-    programName: "Affiliate Marketing",
-    instructorName: "Growth Ops Instructor",
-    description:
-      "Build offer stacks, tracking links, and content funnels that convert cold traffic into commissions. From niche selection to compliance-safe promos—ship campaigns that scale without guessing.",
-    unlock: { kind: "playlist", legacyPlaylistId: 27 },
-  },
-  {
     src: instructorImage("AI Faceless YouTube Automation.png"),
     programName: "Faceless YouTube AI Content Creator",
     instructorName: "Content Systems Lead",

@@ -21,6 +21,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   const [idx, setIdx] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [unlockBusy, setUnlockBusy] = useState(false);
+  const [inView, setInView] = useState(true);
   const slides = INSTRUCTOR_SLIDES;
   const total = slides.length;
 
@@ -73,12 +74,25 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   }, [active, unlockBusy]);
 
   useEffect(() => {
-    if (!autoPlay || total < 2) return;
+    if (!autoPlay || !inView || total < 2) return;
     const t = window.setInterval(() => {
       setIdx((current) => (current + 1) % total);
     }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(t);
-  }, [autoPlay, total]);
+  }, [autoPlay, inView, total]);
+
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setInView(entries.some((entry) => entry.isIntersecting));
+      },
+      { root: null, threshold: 0.08, rootMargin: "80px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!showPanelBackgroundVideo) return;
@@ -147,8 +161,8 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
         ["--lightning-color-soft" as string]: neonTheme.glow,
       }}
       className={cn(
-        "instructor-slideshow-panel instructor-slideshow-lightning syndicate-mood-skip-frame cut-frame cyber-frame relative isolate overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]",
-        showPanelBackgroundVideo ? "glass-dark" : "bg-[rgba(4,8,14,0.78)] backdrop-blur-[8px]"
+        "instructor-slideshow-panel instructor-slideshow-lightning dashboard-perf-contain syndicate-mood-skip-frame cut-frame cyber-frame relative isolate overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]",
+        showPanelBackgroundVideo ? "glass-dark" : "bg-[rgba(4,8,14,0.92)]"
       )}
       aria-roledescription="carousel"
       aria-label="Featured instructor programs"
@@ -305,9 +319,10 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
               width={720}
               height={540}
               sizes="(max-width: 1024px) 92vw, 520px"
-              quality={88}
+              quality={isLcp ? 85 : 72}
               priority={isLcp}
-              loading={isLcp ? undefined : "eager"}
+              loading={isLcp ? undefined : "lazy"}
+              decoding="async"
               className="instructor-slide-photo max-h-full max-w-full h-auto w-auto object-contain drop-shadow-[0_14px_48px_rgba(0,0,0,0.7)]"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.visibility = "hidden";

@@ -215,13 +215,12 @@ export function PlanOfferCard({
       ) : null}
       <div
         className={cn(
-          "relative flex h-full min-h-0 flex-col rounded-3xl border-2 transition-shadow duration-300",
+          "plan-offer-card__shell relative flex h-full min-h-0 flex-col rounded-3xl transition-shadow duration-300",
           isPack && isLarge ? "overflow-visible" : "overflow-hidden",
           cardKind === "pack" && "z-[2]",
-          theme.dominantBorder,
           !highlighted && !isModule && theme.glow,
           !highlighted && !isModule && theme.hoverGlow,
-          !highlighted && isModule && "plan-offer-card__vault-module-shell",
+          isModule && "plan-offer-card__vault-module-shell",
           highlighted && "plan-offer-globe-border-glow"
         )}
       >
@@ -375,7 +374,7 @@ export function PlanOfferCard({
 
             <div
               className={cn(
-                "flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                "plan-offer-card__info-panel flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
                 isVaultPackCard && "plan-offer-card__vault-pack-body mx-2 mb-2 mt-2 sm:mx-3 sm:mb-3 sm:mt-2.5",
                 isLarge && isPack && !isVaultHero && !isVaultPackCard && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",

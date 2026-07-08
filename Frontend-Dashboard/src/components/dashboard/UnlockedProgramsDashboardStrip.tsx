@@ -33,9 +33,11 @@ const STRIP_GRADIENT_BORDER =
 type Props = {
   programs: DashboardCourseLike[];
   onNavigate: (nav: DashboardNavKey) => void;
+  /** Renders inside the dashboard hero panel without a separate outer frame. */
+  embedded?: boolean;
 };
 
-export function UnlockedProgramsDashboardStrip({ programs, onNavigate }: Props) {
+export function UnlockedProgramsDashboardStrip({ programs, onNavigate, embedded = false }: Props) {
   const neon = getInstructorSlideNeonTheme(2);
   const unlocked = programs.filter((p) => p.unlocked !== false);
 
@@ -55,21 +57,8 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate }: Props) 
     });
   };
 
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: "easeOut" }}
-      className="relative w-full overflow-hidden rounded-lg p-[2px] shadow-[0_0_40px_rgba(34,211,238,0.12),0_0_48px_rgba(251,191,36,0.1)]"
-      style={{ background: STRIP_GRADIENT_BORDER }}
-      aria-labelledby="dashboard-unlocked-programs-title"
-    >
-      <div
-        style={neonAccentStyleVars(neon)}
-        className="dashboard-cyber-neon-panel cut-frame cyber-frame relative overflow-hidden rounded-[11px] border-2 border-[color:var(--neon-accent-border)] bg-black px-4 py-5 sm:px-6 sm:py-6"
-      >
-        <div className="dashboard-cyber-neon-wash pointer-events-none absolute inset-0 opacity-90" aria-hidden />
-        <div className="relative z-[1]">
+  const content = (
+    <div className="relative z-[1]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h3
@@ -154,7 +143,7 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate }: Props) 
                               <h4 className="mt-1 line-clamp-2 min-h-[2.5rem] text-[13px] font-extrabold uppercase leading-snug tracking-[0.04em] text-white/92">
                                 {program.title}
                               </h4>
-                              <motion.button
+                              <button
                                 type="button"
                                 onClick={() => openProgram(program)}
                                 onMouseEnter={() => {
@@ -167,12 +156,10 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate }: Props) 
                                     void prefetchStreamPlaylistExperience(ref.id);
                                   }
                                 }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="mt-auto w-full rounded-md border border-[rgba(250,204,21,0.42)] bg-[rgba(250,204,21,0.1)] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)]/95 shadow-[0_0_20px_rgba(251,191,36,0.18)] transition hover:border-[rgba(250,204,21,0.62)] hover:shadow-[0_0_28px_rgba(251,191,36,0.28)]"
+                                className="mt-auto w-full rounded-md border border-[rgba(250,204,21,0.42)] bg-[rgba(250,204,21,0.1)] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--gold)]/95 shadow-[0_0_20px_rgba(251,191,36,0.18)] transition hover:scale-[1.02] hover:border-[rgba(250,204,21,0.62)] hover:shadow-[0_0_28px_rgba(251,191,36,0.28)] active:scale-[0.98]"
                               >
                                 {ref?.type === "course" ? "Open course" : "Open playlist"}
-                              </motion.button>
+                              </button>
                             </div>
                           </span>
                         </span>
@@ -183,7 +170,36 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate }: Props) 
               </ul>
             </div>
           )}
-        </div>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <section
+        style={neonAccentStyleVars(neon)}
+        className="relative z-[2] mt-5 border-t border-white/[0.06] pt-5 dashboard-perf-section"
+        aria-labelledby="dashboard-unlocked-programs-title"
+      >
+        {content}
+      </section>
+    );
+  }
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: "easeOut" }}
+      className="relative w-full overflow-hidden rounded-lg p-[2px] shadow-[0_0_40px_rgba(34,211,238,0.12),0_0_48px_rgba(251,191,36,0.1)]"
+      style={{ background: STRIP_GRADIENT_BORDER }}
+      aria-labelledby="dashboard-unlocked-programs-title"
+    >
+      <div
+        style={neonAccentStyleVars(neon)}
+        className="dashboard-cyber-neon-panel cut-frame cyber-frame relative overflow-hidden rounded-[11px] border-2 border-[color:var(--neon-accent-border)] bg-black px-4 py-5 sm:px-6 sm:py-6"
+      >
+        <div className="dashboard-cyber-neon-wash pointer-events-none absolute inset-0 opacity-90" aria-hidden />
+        {content}
       </div>
     </motion.section>
   );

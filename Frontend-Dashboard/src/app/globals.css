@@ -623,11 +623,14 @@
 /* Dashboard scroll performance — pause decorative chrome while any section scrolls */
 .dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
+.dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video],
 .dashboard-hamburger-chrome.is-scrolling .dashboard-shell-wash,
 .dashboard-hamburger-chrome.is-scrolling .syndicate-dash-scanlines,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-grid,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-vignette,
-.dashboard-hamburger-chrome.is-scrolling .mega-game-hud-noise {
+.dashboard-hamburger-chrome.is-scrolling .mega-game-hud-noise,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-wash {
   visibility: hidden !important;
   animation: none !important;
 }
@@ -1680,9 +1683,9 @@ figcaption {
   letter-spacing: 0.08em;
   text-align: right;
   text-transform: uppercase;
-  color: var(--neon-accent-bright);
-  text-shadow: 0 0 12px var(--neon-accent-glow);
-  opacity: 0.92;
+  color: #f87171;
+  text-shadow: 0 0 12px rgba(248, 113, 113, 0.55), 0 0 22px rgba(239, 68, 68, 0.35);
+  opacity: 0.95;
 }
 
 @container syndicate-sidebar (max-width: 300px) {
@@ -9191,53 +9194,89 @@ body {
 }
 
 .plan-offer-card--amber {
-  --poc-border: rgba(251, 191, 36, 0.72);
-  --poc-glow: rgba(245, 158, 11, 0.34);
-  --poc-panel-border: rgba(251, 191, 36, 0.38);
+  --poc-border: rgba(251, 191, 36, 0.82);
+  --poc-glow: rgba(245, 158, 11, 0.42);
+  --poc-panel-border: rgba(251, 191, 36, 0.58);
   --poc-open-border: rgba(251, 191, 36, 0.88);
   --poc-open-text: #fde68a;
 }
 
 .plan-offer-card--cyan {
-  --poc-border: rgba(34, 211, 238, 0.72);
-  --poc-glow: rgba(6, 182, 212, 0.38);
-  --poc-panel-border: rgba(34, 211, 238, 0.42);
+  --poc-border: rgba(34, 211, 238, 0.82);
+  --poc-glow: rgba(6, 182, 212, 0.45);
+  --poc-panel-border: rgba(34, 211, 238, 0.58);
   --poc-open-border: rgba(103, 232, 249, 0.85);
   --poc-open-text: #a5f3fc;
 }
 
 .plan-offer-card--pink {
-  --poc-border: rgba(244, 114, 182, 0.82);
-  --poc-glow: rgba(236, 72, 153, 0.48);
-  --poc-panel-border: rgba(217, 70, 239, 0.45);
+  --poc-border: rgba(244, 114, 182, 0.88);
+  --poc-glow: rgba(236, 72, 153, 0.52);
+  --poc-panel-border: rgba(217, 70, 239, 0.62);
   --poc-open-border: rgba(244, 114, 182, 0.92);
   --poc-open-text: #fbcfe8;
 }
 
 .plan-offer-card--green {
-  --poc-border: rgba(74, 222, 128, 0.82);
-  --poc-glow: rgba(52, 211, 153, 0.48);
-  --poc-panel-border: rgba(16, 185, 129, 0.45);
+  --poc-border: rgba(74, 222, 128, 0.88);
+  --poc-glow: rgba(52, 211, 153, 0.52);
+  --poc-panel-border: rgba(16, 185, 129, 0.62);
   --poc-open-border: rgba(74, 222, 128, 0.92);
   --poc-open-text: #bbf7d0;
 }
 
 .plan-offer-card--purple {
-  --poc-border: rgba(192, 132, 252, 0.82);
-  --poc-glow: rgba(168, 85, 247, 0.48);
-  --poc-panel-border: rgba(139, 92, 246, 0.45);
+  --poc-border: rgba(192, 132, 252, 0.88);
+  --poc-glow: rgba(168, 85, 247, 0.52);
+  --poc-panel-border: rgba(139, 92, 246, 0.62);
   --poc-open-border: rgba(192, 132, 252, 0.92);
   --poc-open-text: #ddd6fe;
+}
+
+.plan-offer-card--red {
+  --poc-border: rgba(248, 113, 113, 0.88);
+  --poc-glow: rgba(239, 68, 68, 0.48);
+  --poc-panel-border: rgba(248, 113, 113, 0.58);
+}
+
+.plan-offer-card--orange {
+  --poc-border: rgba(251, 146, 60, 0.88);
+  --poc-glow: rgba(249, 115, 22, 0.48);
+  --poc-panel-border: rgba(251, 146, 60, 0.58);
+}
+
+.plan-offer-card--blue {
+  --poc-border: rgba(96, 165, 250, 0.88);
+  --poc-glow: rgba(59, 130, 246, 0.48);
+  --poc-panel-border: rgba(96, 165, 250, 0.58);
 }
 
 .plan-offer-card__shell {
   border: 2px solid var(--poc-border);
   background: #04060d;
-    box-shadow:
+  box-shadow:
     0 14px 38px rgba(0, 0, 0, 0.58),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 42px var(--poc-glow);
-  transition: box-shadow 0.3s ease;
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 42px var(--poc-glow),
+    0 0 72px color-mix(in srgb, var(--poc-glow) 42%, transparent);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.plan-offer-card__info-panel {
+  border-color: var(--poc-panel-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 20px color-mix(in srgb, var(--poc-glow) 38%, transparent);
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__shell {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--poc-border);
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__vault-pack-body {
+  border-color: var(--poc-panel-border) !important;
 }
 
 /* Program playlist cards — compact library layout on mobile / iPad / laptop (< xl) */
@@ -9298,57 +9337,47 @@ body {
   }
 }
 
-/* Our Founder — cyberpunk frame overlay cards */
+/* Our Founder — neon border clip cards (no frame overlay images) */
 .framed-image {
-  --framed-image-inset: 13.5%;
-  --framed-image-width-trim: 10px;
-  --framed-image-top-trim: 5px;
-  --framed-image-object-position: center top;
   --framed-image-radius: 14px;
   --framed-image-inner-radius: 10px;
-  --framed-glow: rgba(34, 211, 238, 0.72);
-  --framed-glow-soft: rgba(34, 211, 238, 0.38);
-  --framed-glow-haze: rgba(34, 211, 238, 0.16);
+  --framed-image-object-position: center top;
+  --framed-border: rgba(34, 211, 238, 0.82);
+  --framed-glow: rgba(6, 182, 212, 0.45);
+  --framed-glow-soft: rgba(34, 211, 238, 0.28);
   isolation: isolate;
+}
+
+.framed-image__shell {
+  box-sizing: border-box;
+  border: 2px solid var(--framed-border);
   border-radius: var(--framed-image-radius);
+  background: #04060d;
+  padding: 3px;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--framed-glow) 35%, transparent),
-    0 0 22px var(--framed-glow-haze),
-    0 0 44px var(--framed-glow-soft);
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 36px var(--framed-glow),
+    0 0 64px color-mix(in srgb, var(--framed-glow) 42%, transparent);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
-.framed-image__glow {
-  position: absolute;
-  inset: -6%;
-  z-index: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    ellipse 88% 92% at 50% 48%,
-    var(--framed-glow-soft) 0%,
-    transparent 68%
-  );
-  opacity: 0.85;
-}
-
-.framed-image__frame {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: var(--framed-image-radius);
-  filter:
-    drop-shadow(0 0 4px var(--framed-glow))
-    drop-shadow(0 0 14px var(--framed-glow-soft))
-    drop-shadow(0 0 28px var(--framed-glow-haze));
+.group:hover .framed-image__shell,
+.group:focus-visible .framed-image__shell {
+  border-color: color-mix(in srgb, var(--framed-border) 90%, white);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 52px var(--framed-glow),
+    0 0 96px color-mix(in srgb, var(--framed-glow) 58%, transparent);
 }
 
 .framed-image__photo {
-  position: absolute;
-  top: calc(var(--framed-image-inset) + var(--framed-image-top-trim, 0px));
-  right: calc(var(--framed-image-inset) + (var(--framed-image-width-trim) / 2));
-  bottom: var(--framed-image-inset);
-  left: calc(var(--framed-image-inset) + (var(--framed-image-width-trim) / 2));
-  z-index: 2;
   border-radius: var(--framed-image-inner-radius);
+  background: #08080c;
 }
 
 .framed-image__photo-img {
@@ -9357,52 +9386,48 @@ body {
 }
 
 .framed-image--red {
-  --framed-glow: rgba(248, 113, 113, 0.92);
-  --framed-glow-soft: rgba(239, 68, 68, 0.52);
-  --framed-glow-haze: rgba(220, 38, 38, 0.22);
+  --framed-border: rgba(248, 113, 113, 0.88);
+  --framed-glow: rgba(239, 68, 68, 0.48);
+  --framed-glow-soft: rgba(220, 38, 38, 0.28);
 }
 
 .framed-image--neon {
-  --framed-glow: rgba(34, 211, 238, 0.92);
-  --framed-glow-soft: rgba(6, 182, 212, 0.52);
-  --framed-glow-haze: rgba(14, 116, 144, 0.22);
+  --framed-border: rgba(34, 211, 238, 0.88);
+  --framed-glow: rgba(6, 182, 212, 0.48);
+  --framed-glow-soft: rgba(14, 116, 144, 0.28);
 }
 
 .framed-image--purple {
-  --framed-glow: rgba(192, 132, 252, 0.92);
-  --framed-glow-soft: rgba(168, 85, 247, 0.52);
-  --framed-glow-haze: rgba(126, 34, 206, 0.22);
+  --framed-border: rgba(192, 132, 252, 0.88);
+  --framed-glow: rgba(168, 85, 247, 0.52);
+  --framed-glow-soft: rgba(126, 34, 206, 0.28);
 }
 
 .framed-image--yellow {
-  --framed-glow: rgba(252, 211, 77, 0.92);
-  --framed-glow-soft: rgba(251, 191, 36, 0.52);
-  --framed-glow-haze: rgba(217, 119, 6, 0.22);
+  --framed-border: rgba(252, 211, 77, 0.9);
+  --framed-glow: rgba(251, 191, 36, 0.5);
+  --framed-glow-soft: rgba(217, 119, 6, 0.28);
 }
 
 .framed-image--green {
-  --framed-glow: rgba(163, 230, 53, 0.92);
-  --framed-glow-soft: rgba(132, 204, 22, 0.52);
-  --framed-glow-haze: rgba(77, 124, 15, 0.22);
+  --framed-border: rgba(163, 230, 53, 0.9);
+  --framed-glow: rgba(132, 204, 22, 0.5);
+  --framed-glow-soft: rgba(77, 124, 15, 0.28);
 }
 
 .framed-image--glitch {
-  --framed-glow: rgba(232, 121, 249, 0.88);
-  --framed-glow-soft: rgba(34, 211, 238, 0.48);
-  --framed-glow-haze: rgba(192, 38, 211, 0.2);
+  --framed-border: rgba(232, 121, 249, 0.88);
+  --framed-glow: rgba(34, 211, 238, 0.42);
+  --framed-glow-soft: rgba(192, 38, 211, 0.26);
 }
 
-.framed-image--glitch .framed-image__frame {
-  filter:
-    drop-shadow(0 0 4px rgba(232, 121, 249, 0.85))
-    drop-shadow(0 0 12px rgba(34, 211, 238, 0.55))
-    drop-shadow(0 0 24px rgba(192, 38, 211, 0.28));
-}
-
-.framed-image--glitch .framed-image__glow {
-  background:
-    radial-gradient(ellipse 70% 80% at 42% 46%, rgba(232, 121, 249, 0.28) 0%, transparent 68%),
-    radial-gradient(ellipse 70% 80% at 58% 54%, rgba(34, 211, 238, 0.22) 0%, transparent 68%);
+.framed-image--glitch .framed-image__shell {
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 32px rgba(232, 121, 249, 0.42),
+    0 0 48px rgba(34, 211, 238, 0.28),
+    0 0 72px rgba(192, 38, 211, 0.2);
 }
 
 @keyframes founder-section-coin-spin {
@@ -9643,10 +9668,12 @@ body {
 }
 
 .plan-offer-card--vault-module .plan-offer-card__vault-module-shell {
+  border: 2px solid var(--poc-border);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.58),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 20px var(--poc-glow);
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 20px var(--poc-glow),
+    0 0 48px color-mix(in srgb, var(--poc-glow) 35%, transparent);
 }
 
 .plan-offer-card__pack-price-badge {
@@ -9793,11 +9820,20 @@ body {
 
 .plan-offer-card:hover .plan-offer-card__shell,
 .plan-offer-card:focus-within .plan-offer-card__shell {
+  border-color: color-mix(in srgb, var(--poc-border) 88%, white);
   box-shadow:
     0 14px 38px rgba(0, 0, 0, 0.58),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
     0 0 64px var(--poc-glow),
     0 0 120px color-mix(in srgb, var(--poc-glow) 65%, transparent);
+}
+
+.plan-offer-card:hover .plan-offer-card__info-panel,
+.plan-offer-card:focus-within .plan-offer-card__info-panel {
+  border-color: color-mix(in srgb, var(--poc-panel-border) 92%, white) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 28px color-mix(in srgb, var(--poc-glow) 52%, transparent);
 }
 
 .plan-offer-detail-modal {
@@ -12318,7 +12354,6 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 .dashboard-hamburger-chrome [data-main-shell-scroll] {
   background: transparent !important;
   contain: layout style;
-  will-change: scroll-position;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] {
@@ -12461,13 +12496,11 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] .dashboard-cyber-neon-panel {
-  background: rgba(4, 6, 12, 0.82) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(4, 6, 12, 0.94) !important;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] .dashboard-hero-neon-panel {
-  background: rgba(4, 6, 12, 0.78) !important;
+  background: rgba(4, 6, 12, 0.94) !important;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] .syndicate-snapshot-panel.bg-black {
@@ -12480,22 +12513,16 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] [data-dashboard-video-scroll] .syndicate-mood-skip-frame.cut-frame.cyber-frame.bg-black {
-  background-color: rgba(4, 6, 12, 0.78) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(4, 6, 12, 0.94) !important;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] [data-dashboard-video-scroll] .bg-\[\#050508\]\/90,
 .dashboard-hamburger-chrome [data-dashboard-video-shell] [data-dashboard-video-scroll] .bg-\[\#060606\]\/78 {
-  background-color: rgba(5, 5, 10, 0.8) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(5, 5, 10, 0.94) !important;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] .instructor-slideshow-panel.instructor-slideshow-lightning {
-  background-color: rgba(4, 8, 14, 0.78) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(4, 8, 14, 0.94) !important;
 }
 
 .dashboard-hamburger-chrome .dashboard-cyber-neon-panel.cut-frame::after {
@@ -12581,6 +12608,47 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   border-color: var(--neon-accent-border) !important;
   color: var(--neon-accent-bright);
   box-shadow: 0 0 14px var(--neon-accent-glow);
+}
+
+/* Heavy dashboard sections — skip paint when off-screen; lighten work while scrolling */
+.dashboard-hamburger-chrome .dashboard-perf-contain {
+  contain: layout style paint;
+}
+
+.dashboard-hamburger-chrome .dashboard-perf-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
+  contain: layout style paint;
+}
+
+.dashboard-hamburger-chrome.is-scrolling [data-dashboard-video-shell] .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
+.dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-panel,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-hero-neon-panel,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-panel.instructor-slideshow-lightning,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-heading--lightning,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-heading-lightning,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-heading-lightning--goals {
+  animation: none !important;
+  filter: none !important;
+  transition: none !important;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-panel.cut-frame::after,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-hero-neon-panel.cut-frame::after,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after {
+  animation: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-wash {
+  opacity: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

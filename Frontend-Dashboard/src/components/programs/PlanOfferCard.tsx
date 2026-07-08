@@ -197,16 +197,14 @@ export function PlanOfferCard({
       className={cn(
         "plan-offer-card group/card relative flex w-full flex-col text-left scroll-mt-32",
         `plan-offer-card--${offer.accent}`,
-        (offer.plan === "bundle" || offer.plan === "king") && "plan-offer-card--primary-elite",
-        cardKind === "pack" && "plan-offer-card--vault-pack z-[2] hover:z-[30] focus-within:z-[30]",
+        cardKind === "pack" && "plan-offer-card--vault-pack z-[1] hover:z-[10] focus-within:z-[10]",
         cardKind === "module" && "plan-offer-card--vault-module",
         highlighted && "program-card-globe-spotlight-host",
         isLarge && !isVaultHero && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
         isVaultHero && "plan-offer-card--vault-hero mr-auto w-full max-w-[min(100%,20.5rem)] min-h-0 sm:max-w-[24rem]",
         isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
         tradingMobileProgramFace && "max-xl:min-h-0",
-        isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]",
-        !cardKind && isLarge && "z-[2] hover:z-[30] focus-within:z-[30]",
+        isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
       {highlighted ? (
@@ -217,9 +215,10 @@ export function PlanOfferCard({
       ) : null}
       <div
         className={cn(
-          "plan-offer-card__shell relative flex h-full min-h-0 flex-col rounded-3xl transition-shadow duration-300",
-          isPack && isLarge ? "overflow-visible" : "overflow-hidden",
-          cardKind === "pack" && "z-[3]",
+          "plan-offer-card__shell relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl transition-shadow duration-300",
+          cardKind === "pack" && "z-[2]",
+          !highlighted && !isModule && theme.glow,
+          !highlighted && !isModule && theme.hoverGlow,
           isModule && "plan-offer-card__vault-module-shell",
           highlighted && "plan-offer-globe-border-glow"
         )}
@@ -248,17 +247,10 @@ export function PlanOfferCard({
           className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen"
           aria-hidden
         />
-        <span
-          className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 z-[1] aspect-square w-[185%] max-w-none -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r",
-            theme.ring
-          )}
-          aria-hidden
-        />
           </>
         ) : null}
 
-        <span className={cn("plan-offer-card__inner relative z-[2] m-[2px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.4rem] bg-[#04060d]", highlighted && "border-2")}>
+        <span className={cn("relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70", highlighted && "border-2")}>
           {cardKind && !isVaultPackCard ? (
             <div
               className={cn(
@@ -282,7 +274,7 @@ export function PlanOfferCard({
             <div
               className={cn(
                 "relative w-full overflow-hidden",
-                !isVaultPackCard && "plan-offer-card__media-frame rounded-2xl border-2",
+                !isVaultPackCard && "rounded-2xl border-2 border-white/20",
                 isVaultPackCard && "plan-offer-card__media plan-offer-card__media--vault-pack-fill rounded-t-[1.35rem] border-0",
                 isLarge && isPack && !isVaultHero && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
                 isVaultHero &&

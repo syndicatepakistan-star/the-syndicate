@@ -9252,64 +9252,31 @@ body {
 }
 
 .plan-offer-card__shell {
-  position: relative;
-  z-index: 2;
-  border: 3px solid var(--poc-border);
+  border: 2px solid var(--poc-border);
   background: #04060d;
   box-shadow:
-    0 16px 42px rgba(0, 0, 0, 0.62),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 28px var(--poc-glow),
-    0 0 64px color-mix(in srgb, var(--poc-glow) 55%, transparent),
-    0 0 96px color-mix(in srgb, var(--poc-glow) 28%, transparent);
-  transition:
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.3s ease;
-}
-
-.plan-offer-card__inner {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--poc-border) 35%, transparent);
-}
-
-.plan-offer-card__media-frame {
-  border-color: color-mix(in srgb, var(--poc-panel-border) 72%, transparent) !important;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--poc-border) 22%, transparent),
-    0 0 18px color-mix(in srgb, var(--poc-glow) 24%, transparent);
+    0 14px 38px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 42px var(--poc-glow),
+    0 0 72px color-mix(in srgb, var(--poc-glow) 42%, transparent);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .plan-offer-card__info-panel {
-  position: relative;
-  z-index: 2;
-  border-width: 2px !important;
-  border-style: solid !important;
   border-color: var(--poc-panel-border) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 24px color-mix(in srgb, var(--poc-glow) 42%, transparent),
-    0 10px 28px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 20px color-mix(in srgb, var(--poc-glow) 38%, transparent);
 }
 
 .plan-offer-card--vault-pack .plan-offer-card__shell {
-  border-width: 3px;
+  border-width: 2px;
   border-style: solid;
   border-color: var(--poc-border);
 }
 
 .plan-offer-card--vault-pack .plan-offer-card__vault-pack-body {
-  border-width: 2px !important;
-  border-style: solid !important;
   border-color: var(--poc-panel-border) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 24px color-mix(in srgb, var(--poc-glow) 42%, transparent),
-    0 10px 28px rgba(0, 0, 0, 0.45);
-}
-
-.plan-offer-card--primary-elite .plan-offer-card__shell {
-  border-width: 3px;
-  border-color: var(--poc-border);
 }
 
 /* Program playlist cards — compact library layout on mobile / iPad / laptop (< xl) */
@@ -9599,7 +9566,6 @@ body {
 }
 
 /* Each cell owns stacking so neon borders/glow are not clipped by neighbors */
-.plan-offers-primary-cell,
 .plan-offers-vault-cell {
   position: relative;
   z-index: 1;
@@ -9610,25 +9576,20 @@ body {
   padding: 0.625rem 0.375rem;
 }
 
-.plan-offers-primary-cell:hover,
-.plan-offers-primary-cell:focus-within,
 .plan-offers-vault-cell:hover,
 .plan-offers-vault-cell:focus-within {
-  z-index: 24;
+  z-index: 20;
 }
 
-.plan-offers-primary-cell > .plan-offer-card,
 .plan-offers-vault-cell > .plan-offer-card {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
 }
 
-.plan-offers-primary-cell:hover > .plan-offer-card,
-.plan-offers-primary-cell:focus-within > .plan-offer-card,
 .plan-offers-vault-cell:hover > .plan-offer-card,
 .plan-offers-vault-cell:focus-within > .plan-offer-card {
-  z-index: 3;
+  z-index: 2;
 }
 
 /* Vault picker — individual modules: tighter glow + grid spacing (no bleed into neighbors) */
@@ -9727,16 +9688,12 @@ body {
   max-width: 80px !important;
   max-height: 40px !important;
   padding: 0 !important;
-  border: 2px solid var(--poc-border) !important;
-  border-radius: 8px !important;
-  color: var(--poc-open-text, currentColor) !important;
-  background: rgba(4, 6, 13, 0.94) !important;
+  border-radius: 6px !important;
   font-size: 24pt !important;
   line-height: 1 !important;
   letter-spacing: 0.01em !important;
   box-shadow:
-    0 0 18px var(--poc-glow),
-    0 0 32px color-mix(in srgb, var(--poc-glow) 45%, transparent),
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent),
     0 6px 18px rgba(0, 0, 0, 0.5) !important;
 }
 
@@ -9800,15 +9757,9 @@ body {
 }
 
 #syndicate-elite-offers .plan-offer-card,
-#syndicate-elite-offers .plan-offers-vault-cell,
-#syndicate-elite-offers .plan-offers-primary-cell {
+#syndicate-elite-offers .plan-offers-vault-cell {
   content-visibility: visible;
   contain-intrinsic-size: none;
-}
-
-#syndicate-elite-offers .plan-offers-vault-grid,
-#syndicate-elite-offers .plan-offers-primary-grid {
-  overflow: visible !important;
 }
 
 .vault-hero-offer-block {
@@ -9869,33 +9820,20 @@ body {
 
 .plan-offer-card:hover .plan-offer-card__shell,
 .plan-offer-card:focus-within .plan-offer-card__shell {
-  border-color: color-mix(in srgb, var(--poc-border) 92%, white);
+  border-color: color-mix(in srgb, var(--poc-border) 88%, white);
   box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.64),
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 0 48px var(--poc-glow),
-    0 0 88px color-mix(in srgb, var(--poc-glow) 72%, transparent),
-    0 0 128px color-mix(in srgb, var(--poc-glow) 38%, transparent);
+    0 14px 38px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 64px var(--poc-glow),
+    0 0 120px color-mix(in srgb, var(--poc-glow) 65%, transparent);
 }
 
 .plan-offer-card:hover .plan-offer-card__info-panel,
-.plan-offer-card:focus-within .plan-offer-card__info-panel,
-.plan-offer-card:hover .plan-offer-card__vault-pack-body,
-.plan-offer-card:focus-within .plan-offer-card__vault-pack-body {
-  border-color: color-mix(in srgb, var(--poc-panel-border) 94%, white) !important;
+.plan-offer-card:focus-within .plan-offer-card__info-panel {
+  border-color: color-mix(in srgb, var(--poc-panel-border) 92%, white) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 32px color-mix(in srgb, var(--poc-glow) 58%, transparent),
-    0 12px 32px rgba(0, 0, 0, 0.5);
-}
-
-.plan-offer-card:hover .plan-offer-card__pack-price-badge,
-.plan-offer-card:focus-within .plan-offer-card__pack-price-badge {
-  border-color: color-mix(in srgb, var(--poc-border) 94%, white) !important;
-  box-shadow:
-    0 0 24px var(--poc-glow),
-    0 0 44px color-mix(in srgb, var(--poc-glow) 55%, transparent),
-    0 8px 22px rgba(0, 0, 0, 0.52) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 28px color-mix(in srgb, var(--poc-glow) 52%, transparent);
 }
 
 .plan-offer-detail-modal {

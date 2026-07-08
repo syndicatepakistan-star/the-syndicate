@@ -614,6 +614,82 @@
 /* Keeps in-page anchors (e.g. mission detail) clear of the sticky top bar when scrolling. */
 [data-main-shell-scroll] {
   scroll-padding-top: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 4.5rem));
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scroll-behavior: auto;
+}
+
+/* Dashboard scroll performance — pause decorative chrome while any section scrolls */
+.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-shell-wash,
+.dashboard-hamburger-chrome.is-scrolling .syndicate-dash-scanlines,
+.dashboard-hamburger-chrome.is-scrolling .mega-game-hud-grid,
+.dashboard-hamburger-chrome.is-scrolling .mega-game-hud-vignette,
+.dashboard-hamburger-chrome.is-scrolling .mega-game-hud-noise {
+  visibility: hidden !important;
+  animation: none !important;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.is-scrolling [class*="animate-pulse"],
+.dashboard-hamburger-chrome.is-scrolling [class*="animate-spin"] {
+  animation-play-state: paused !important;
+}
+
+.dashboard-hamburger-chrome .dashboard-mobile-section-root > section,
+.dashboard-hamburger-chrome .dashboard-mobile-section-root > div:not(.dashboard-section-fallback),
+.dashboard-hamburger-chrome .programs-grid-shell,
+.dashboard-hamburger-chrome .programs-lesson-shell {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
+html.dashboard-is-scrolling {
+  scroll-behavior: auto;
+}
+
+/* Tab backgrounded — freeze decorative motion so return is instant, not "catch-up" laggy */
+.dashboard-hamburger-chrome.dashboard-tab-suspended .dashboard-chrome-letter-glitch,
+.dashboard-hamburger-chrome.dashboard-tab-suspended .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.dashboard-tab-suspended .dashboard-shell-wash,
+html.dashboard-tab-suspended .dashboard-chrome-letter-glitch {
+  visibility: hidden !important;
+  animation: none !important;
+}
+
+.dashboard-hamburger-chrome.dashboard-tab-suspended,
+.dashboard-hamburger-chrome.dashboard-tab-suspended *:not([data-main-shell-scroll]):not([data-main-shell-scroll] *) {
+  animation-play-state: paused !important;
+}
+
+/* Sidebar open/close — GPU transform layer */
+.dashboard-hamburger-chrome .dashboard-sidebar-rail,
+.dashboard-hamburger-chrome .dashboard-overlay-sidebar-rail {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+.dashboard-hamburger-chrome .dashboard-overlay-sidebar-backdrop,
+.dashboard-hamburger-chrome .mobile-sidebar-overlay-backdrop,
+.dashboard-hamburger-chrome .tablet-sidebar-overlay-backdrop {
+  will-change: opacity;
+}
+
+.dashboard-hamburger-chrome [data-dock-item="sidebar"],
+.dashboard-hamburger-chrome [data-dock-item="top"] {
+  will-change: transform;
+  transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-hamburger-chrome [data-dock-item="sidebar"],
+  .dashboard-hamburger-chrome [data-dock-item="top"] {
+    transition: none;
+  }
 }
 
 /* Today's missions — cyberpunk HUD challenge cards */
@@ -1593,6 +1669,28 @@ figcaption {
   font-size: var(--sidebar-nav-label-size);
   letter-spacing: var(--sidebar-nav-label-tracking);
   line-height: 1.2;
+}
+
+.sidebar-nav-dock .sidebar-nav-launching-soon {
+  margin-left: auto;
+  max-width: 4.25rem;
+  font-family: var(--font-heading);
+  font-size: clamp(0.38rem, 0.12rem + 2.8cqi, 0.58rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+  color: var(--neon-accent-bright);
+  text-shadow: 0 0 12px var(--neon-accent-glow);
+  opacity: 0.92;
+}
+
+@container syndicate-sidebar (max-width: 300px) {
+  .sidebar-nav-dock .sidebar-nav-launching-soon {
+    max-width: 3.1rem;
+    font-size: clamp(0.34rem, 0.1rem + 2.5cqi, 0.5rem);
+    line-height: 1.1;
+  }
 }
 
 .sidebar-nav-dock .sidebar-nav-checkbox {
@@ -9504,13 +9602,12 @@ body {
   overflow: visible;
   border-radius: 1.75rem;
   isolation: isolate;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 14rem;
+  content-visibility: visible;
   contain: layout style;
 }
 
 .vault-module-cell img {
-  content-visibility: auto;
+  content-visibility: visible;
 }
 
 .vault-modal-scroll {
@@ -9552,25 +9649,90 @@ body {
     0 0 20px var(--poc-glow);
 }
 
-.plan-offer-card--vault-module:not(.plan-offer-card--vault-hero) .plan-offer-card__vault-price-badge {
+.plan-offer-card__pack-price-badge {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-sizing: border-box !important;
-  width: 120px !important;
-  height: 120px !important;
-  min-width: 120px !important;
-  min-height: 120px !important;
-  max-width: 120px !important;
-  max-height: 120px !important;
+  width: 80px !important;
+  height: 40px !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  max-width: 80px !important;
+  max-height: 40px !important;
   padding: 0 !important;
-  border-radius: 9999px !important;
-  font-size: clamp(26px, 5vw, 36px) !important;
+  border-radius: 6px !important;
+  font-size: 24pt !important;
   line-height: 1 !important;
   letter-spacing: 0.01em !important;
   box-shadow:
     0 0 16px color-mix(in srgb, currentColor 28%, transparent),
     0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plan-offer-card--vault-module:not(.plan-offer-card--vault-hero) .plan-offer-card__vault-price-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 80px !important;
+  height: 40px !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  max-width: 80px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  font-size: clamp(14px, 3vw, 18px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow:
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plan-offer-card__pack-price-badge--long {
+  font-size: clamp(14px, 3.2vw, 18px) !important;
+  letter-spacing: 0 !important;
+}
+
+.program-playlist-card__pack-price-badge {
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 80px;
+  height: 40px;
+  min-width: 80px;
+  min-height: 40px;
+  max-width: 80px;
+  max-height: 40px;
+  padding: 0;
+  border-radius: 6px;
+  line-height: 1;
+  text-align: center;
+}
+
+.program-playlist-card__pack-price-badge__amount {
+  font-size: clamp(16px, 3.8vw, 20px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.program-playlist-card__pack-price-badge__suffix {
+  margin-top: 1px;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+#syndicate-elite-offers .plan-offer-card,
+#syndicate-elite-offers .plan-offers-vault-cell {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
 }
 
 .vault-hero-offer-block {
@@ -10492,6 +10654,10 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   line-height: 1.58;
 }
 
+.dashboard-hamburger-chrome .instructor-slideshow-unlock-btn {
+  font-size: clamp(0.72rem, 1.1vw + 0.45rem, 0.92rem);
+}
+
 .dashboard-hamburger-chrome .instructor-slide-media--static {
   pointer-events: none;
 }
@@ -10501,6 +10667,9 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 .dashboard-hamburger-chrome .instructor-slideshow-nav-btn {
+  position: relative;
+  z-index: 6;
+  touch-action: manipulation;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--instructor-neon-border) 70%, transparent),
     0 0 16px var(--instructor-neon-haze);
@@ -12148,6 +12317,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 .dashboard-hamburger-chrome .dashboard-main-scroll,
 .dashboard-hamburger-chrome [data-main-shell-scroll] {
   background: transparent !important;
+  contain: layout style;
+  will-change: scroll-position;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] {
@@ -12670,7 +12841,13 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-panel {
     padding: clamp(0.65rem, 2vw, 0.95rem) !important;
-    max-height: min(36dvh, 280px);
+    max-height: none;
+    overflow: visible;
+  }
+
+  .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-unlock-btn {
+    font-size: clamp(0.68rem, 2.6vw, 0.82rem) !important;
+    padding: 0.55rem 0.75rem !important;
   }
 
   .dashboard-hamburger-chrome[data-dashboard-bounded-shell] .instructor-slideshow-title {

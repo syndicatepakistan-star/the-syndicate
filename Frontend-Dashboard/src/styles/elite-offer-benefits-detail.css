@@ -113,7 +113,7 @@
   margin: 0;
   max-width: 72ch;
   font-family: var(--font-body);
-  font-size: clamp(13px, 1.6vw, 15px);
+  font-size: clamp(15px, 1.9vw, 18px);
   font-weight: 500;
   line-height: 1.65;
   letter-spacing: 0.02em;
@@ -396,9 +396,9 @@
 
 .elite-benefit-detail__desc {
   font-family: var(--font-body);
-  font-size: clamp(12px, 1.4vw, 13px);
-  line-height: 1.5;
-  color: rgba(203, 213, 225, 0.82);
+  font-size: clamp(14px, 1.75vw, 16px);
+  line-height: 1.55;
+  color: rgba(203, 213, 225, 0.88);
 }
 
 @media (prefers-reduced-motion: reduce) {

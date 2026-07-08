@@ -3,6 +3,7 @@
 import { type CSSProperties } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
+import { KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
@@ -174,6 +175,8 @@ export function PlanOfferCard({
   const isVaultHero = vaultHero && isLarge;
   const isVaultPackCard = cardKind === "pack" && isLarge && !isVaultHero;
   const isPack = !isModule;
+  const showPackPriceBadge = (isLarge && isPack) || isVaultPackCard;
+  const isLongPackPrice = offer.displayPrice.length > 5;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
@@ -331,7 +334,7 @@ export function PlanOfferCard({
               {comingSoon ? (
                 <span className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-3 text-center">
                   <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-[clamp(1rem,3.8vw,1.35rem)] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-[1.15rem]">
-                    Coming Soon
+                    {KNIGHT_LAUNCHING_SOON_LABEL}
                   </span>
                 </span>
               ) : null}
@@ -352,13 +355,16 @@ export function PlanOfferCard({
             >
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full border font-black tabular-nums tracking-normal",
+                  "inline-flex shrink-0 items-center justify-center whitespace-nowrap border font-black tabular-nums tracking-normal",
                   theme.priceBadge,
-                  isLarge
-                    ? "px-2 py-0.5 text-[13px] sm:px-3 sm:py-1 sm:text-[16px]"
+                  showPackPriceBadge
+                    ? cn(
+                        "plan-offer-card__pack-price-badge rounded-md leading-none",
+                        isLongPackPrice && "plan-offer-card__pack-price-badge--long",
+                      )
                     : isVaultSubmoduleCard
-                      ? "plan-offer-card__vault-price-badge !h-[120px] !w-[120px] !min-h-[120px] !min-w-[120px] !max-h-[120px] !max-w-[120px] !p-0 text-[clamp(26px,5vw,36px)] leading-none"
-                      : "px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-[12px]",
+                      ? "plan-offer-card__vault-price-badge rounded-md leading-none"
+                      : cn("rounded-full px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-[12px]"),
                   isModule && !isVaultSubmoduleCard && !isLarge && "text-[10px] sm:text-[11px]"
                 )}
                 style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
@@ -418,7 +424,8 @@ export function PlanOfferCard({
                   )}
                   textClassName={cn(
                     "text-left font-medium text-white/72",
-                    isLarge && isPack && "text-[11px] sm:text-[12px]",
+                    offer.plan === "bundle" && "text-[13px] leading-relaxed sm:text-[15px]",
+                    isLarge && isPack && offer.plan !== "bundle" && "text-[11px] sm:text-[12px]",
                     isLarge && !isPack && "text-[11px] sm:text-[13px]",
                     isModule && "text-[9px] sm:text-[10px]",
                     isCompact && isPack && "text-[9px] sm:text-[10px]",

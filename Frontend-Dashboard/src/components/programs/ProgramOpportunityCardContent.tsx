@@ -146,8 +146,26 @@ export function ProgramOpportunityCardContent({
           )}
         </span>
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-b from-black/20 via-transparent to-black/50" />
-        <span className="program-playlist-card__price-badge pointer-events-none absolute right-2 top-2 z-[3] inline-flex items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 text-[11px] font-black tabular-nums text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)] sm:text-[12px]">
-          {isPlanCard && planOffer ? planOffer.displayPrice : formatPrice(price)}
+        <span
+          className={cn(
+            "program-playlist-card__price-badge pointer-events-none absolute right-2 top-2 z-[3]",
+            isPlanCard
+              ? cn(
+                  "plan-offer-card__pack-price-badge inline-flex shrink-0 items-center justify-center rounded-md border border-emerald-300/50 bg-[#03140d]/95 font-black tabular-nums leading-none text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)]",
+                  planOffer && planOffer.displayPrice.length > 5 && "plan-offer-card__pack-price-badge--long",
+                )
+              : "program-playlist-card__pack-price-badge border border-emerald-300/50 bg-[#03140d]/95 text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)]",
+          )}
+          style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+        >
+          {isPlanCard && planOffer ? (
+            planOffer.displayPrice
+          ) : (
+            <>
+              <span className="program-playlist-card__pack-price-badge__amount">{formatPrice(price)}</span>
+              <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">lifetime</span>
+            </>
+          )}
         </span>
       </button>
 

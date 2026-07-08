@@ -101,7 +101,12 @@ export function PublicPlanOfferCards({
   }, []);
 
   useEffect(() => {
-    void reloadUnlockState();
+    const frame = window.requestAnimationFrame(() => {
+      void reloadUnlockState();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [reloadUnlockState]);
 
   useEffect(() => {

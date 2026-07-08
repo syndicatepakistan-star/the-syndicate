@@ -7,7 +7,6 @@ import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import type { ActivityCategory, ActivityItem, DashboardNavKey, DashboardSnapshots } from "./types";
 import { useDashboardSnapshots, type DashboardCourseLike } from "./useDashboardSnapshots";
 import {
-  DASHBOARD_PANEL_NEON,
   getInstructorSlideNeonTheme,
   neonAccentStyleVars
 } from "@/data/instructorSlideNeonThemes";
@@ -15,388 +14,16 @@ import {
   accentByKey,
   Card,
   cn,
-  DASHBOARD_HEADING_LIGHTNING,
   themeAccent,
   type ThemeMode
 } from "./dashboardPrimitives";
-import { DECK_TYPO } from "./missionDeckTypography";
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
 import { fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
-import {
-  formatSyndicateReminderCountdown,
-  useSyndicateMissionsPeek,
-  type SyndicateMissionPeekRow
-} from "./useSyndicateMissionsPeek";
-import { Bell, Lock, Target, Activity } from "lucide-react";
+import { UnlockedProgramsDashboardStrip } from "./UnlockedProgramsDashboardStrip";
+import { Lock, Activity } from "lucide-react";
 export type { ThemeMode };
 
-function pickPrimaryMission(rows: SyndicateMissionPeekRow[]): SyndicateMissionPeekRow | null {
-  const missions = rows.filter((r) => r.mood !== "reminder");
-  if (!missions.length) return null;
-  return (
-    missions.find((r) => !r.completed && r.onBoard) ??
-    missions.find((r) => !r.completed) ??
-    missions[0] ??
-    null
-  );
-}
-
-function pickPrimaryReminder(rows: SyndicateMissionPeekRow[], now: number): SyndicateMissionPeekRow | null {
-  const withRem = rows.filter((r) => r.reminderAtMs != null && r.reminderAtMs > now);
-  if (!withRem.length) return null;
-  return withRem.reduce((a, b) => ((a.reminderAtMs ?? 0) <= (b.reminderAtMs ?? 0) ? a : b));
-}
-
-function formatSyndicateReminderWhen(ms: number) {
-  try {
-    return new Date(ms).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  } catch {
-    return "";
-  }
-}
-
-function syndicateDifficultyChipClass(d: string) {
-  const x = d.toLowerCase();
-  if (x === "easy") return "border-emerald-400/40 bg-emerald-500/14 text-emerald-100/90";
-  if (x === "hard") return "border-rose-400/40 bg-rose-500/14 text-rose-100/88";
-  return "border-amber-400/38 bg-amber-500/12 text-amber-100/88";
-}
-
-const SNAPSHOT_GRADIENT_BORDER =
-  "linear-gradient(135deg, rgba(34,211,238,0.58), rgba(251,191,36,0.48), rgba(192,132,252,0.5))";
-
-const SNAPSHOT_MISSION_PANEL =
-  "relative flex min-h-0 flex-col overflow-hidden rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_rgba(34,211,238,0.28),0_0_52px_rgba(6,182,212,0.12)] sm:p-5";
-
-const SNAPSHOT_REMINDER_PANEL =
-  "relative flex min-h-0 flex-col overflow-hidden rounded-md border-2 border-amber-400/58 bg-gradient-to-br from-amber-400/[0.14] to-black/65 p-4 shadow-[0_0_0_1px_rgba(251,191,36,0.24),0_0_28px_rgba(251,191,36,0.28),0_0_52px_rgba(245,158,11,0.14)] sm:p-5";
-
-function SyndicateSnapshotCorner({
-  accent
-}: {
-  accent: "cyan" | "amber";
-}) {
-  const corner = accent === "cyan" ? "border-cyan-300/75" : "border-amber-300/70";
-  return (
-    <>
-      <span
-        aria-hidden
-        className={cn("pointer-events-none absolute left-2 top-2 z-[2] h-5 w-5 border-l-2 border-t-2", corner)}
-      />
-      <span
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute bottom-2 right-2 z-[2] h-5 w-5 border-b-2 border-r-2",
-          corner
-        )}
-      />
-    </>
-  );
-}
-
-function SyndicateMissionsSnapshotCard({
-  themeMode,
-  onNavigate,
-  syndicateNavLocked
-}: {
-  themeMode: ThemeMode;
-  onNavigate: (nav: DashboardNavKey) => void;
-  syndicateNavLocked?: boolean;
-}) {
-  const { rows, loading, error, linkedAccount, apiReached, refresh } = useSyndicateMissionsPeek(!syndicateNavLocked);
-  const [reminderTick, setReminderTick] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => setReminderTick((n) => n + 1), 30_000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const primaryMission = useMemo(() => pickPrimaryMission(rows), [rows]);
-  const primaryReminder = useMemo(() => pickPrimaryReminder(rows, Date.now()), [rows, reminderTick]);
-
-  const snapshotNeon = getInstructorSlideNeonTheme(DASHBOARD_PANEL_NEON.goals);
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: "easeOut" }}
-      className="relative w-full overflow-hidden rounded-lg p-[2px] shadow-[0_0_48px_rgba(34,211,238,0.16),0_0_56px_rgba(251,191,36,0.14),0_0_72px_rgba(192,132,252,0.1)]"
-      style={{ background: SNAPSHOT_GRADIENT_BORDER }}
-      aria-labelledby="syndicate-dashboard-snapshot-title"
-    >
-      <div
-        style={neonAccentStyleVars(snapshotNeon)}
-        className="dashboard-cyber-neon-panel cut-frame cyber-frame syndicate-snapshot-panel relative overflow-hidden rounded-[11px] border-2 border-[color:var(--neon-accent-border)] bg-black px-4 py-5 sm:px-6 sm:py-6"
-      >
-        <div className="dashboard-cyber-neon-wash pointer-events-none absolute inset-0 opacity-90" aria-hidden />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.95] [background:radial-gradient(720px_420px_at_0%_-10%,rgba(34,211,238,0.14),transparent_55%),radial-gradient(560px_380px_at_100%_0%,rgba(250,204,21,0.1),transparent_52%)]"
-          aria-hidden
-        />
-        <div className="relative z-[1]">
-        {syndicateNavLocked ? (
-          <div
-            className={cn(
-              "mb-4 flex items-start gap-2.5 rounded-lg border border-amber-500/38 bg-amber-500/10 px-3 py-2.5 leading-snug text-amber-50/95 sm:items-center",
-              DECK_TYPO.body
-            )}
-          >
-            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-200 sm:mt-0" aria-hidden />
-            <span>
-              Syndicate Mode is locked for your plan (Money Mastery includes courses only). Upgrade to The Knight to
-              unlock missions and the 24h board here.
-            </span>
-          </div>
-        ) : null}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              <h3
-                id="syndicate-dashboard-snapshot-title"
-                className={cn(
-                  DASHBOARD_HEADING_LIGHTNING,
-                  "font-mono text-[clamp(1.05rem,2vw+0.55rem,1.45rem)] font-black uppercase italic tracking-[0.07em]"
-                )}
-              >
-                Syndicate Mode
-              </h3>
-              {syndicateNavLocked ? (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full border border-amber-500/45 bg-black/40 px-2.5 py-1",
-                    DECK_TYPO.btn,
-                    "text-amber-100/95"
-                  )}
-                >
-                  <Lock className="h-3 w-3" aria-hidden />
-                  Locked
-                </span>
-              ) : null}
-              {rows.length > 0 ? (
-                <span
-                  className={cn(
-                    "rounded-full border border-cyan-400/35 bg-cyan-500/[0.12] px-2.5 py-1 text-cyan-100/90 shadow-[0_0_18px_rgba(34,211,238,0.22)]",
-                    DECK_TYPO.btn
-                  )}
-                >
-                  Board active
-                </span>
-              ) : null}
-            </div>
-            <p className={cn("mt-2 max-w-[46rem] text-white/72", DECK_TYPO.body)}>
-              Build <span className="font-semibold text-cyan-200/92">streaks</span>, unlock{" "}
-              <span className="font-semibold text-[color:var(--gold)]/90">levels</span>, and{" "}
-              <span className="font-semibold text-emerald-200/88">earn points</span> — then keep your edge on the 24h board.
-            </p>
-            {!apiReached && rows.length > 0 ? (
-              <p className={cn("mt-2 text-amber-200/78", DECK_TYPO.bodyMuted)}>
-                Board sync limited — showing what’s saved on this device.
-              </p>
-            ) : null}
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-            <motion.button
-              type="button"
-              onClick={() => refresh()}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "rounded-lg border border-cyan-400/35 bg-cyan-500/[0.1] px-3 py-2.5 text-cyan-100/92 shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_24px_rgba(34,211,238,0.28)] hover:border-cyan-300/55 hover:shadow-[0_0_32px_rgba(34,211,238,0.38)]",
-                DECK_TYPO.btn
-              )}
-            >
-              Refresh
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={() => onNavigate("monk")}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "rounded-lg border border-[rgba(250,204,21,0.42)] bg-[rgba(250,204,21,0.08)] px-3 py-2.5 text-[color:var(--gold)]/95 shadow-[0_0_0_1px_rgba(251,191,36,0.22),0_0_24px_rgba(251,191,36,0.2)] hover:border-[rgba(250,204,21,0.62)] hover:shadow-[0_0_32px_rgba(251,191,36,0.32)]",
-                DECK_TYPO.btn
-              )}
-            >
-              Open mode →
-            </motion.button>
-          </div>
-        </div>
-
-        {loading && rows.length === 0 ? (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]" aria-busy>
-            <div className="h-52 animate-pulse rounded-xl bg-white/[0.06]" />
-            <div className="h-52 animate-pulse rounded-xl bg-white/[0.06] lg:h-auto" />
-          </div>
-        ) : null}
-
-        {!loading && error && rows.length === 0 ? (
-          <div className={cn("mt-6 rounded-xl border border-red-500/28 bg-red-950/20 px-4 py-4 text-red-200/90", DECK_TYPO.body)}>
-            {error}
-            <button
-              type="button"
-              onClick={() => refresh()}
-              className={cn(
-                "mt-3 block underline-offset-2 hover:underline text-[color:var(--gold)]/95",
-                DECK_TYPO.btn
-              )}
-            >
-              Try again
-            </button>
-          </div>
-        ) : null}
-
-        {!loading && (rows.length > 0 || (!error && rows.length === 0)) ? (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,340px)] lg:items-stretch">
-            {/* Mission — primary column */}
-            <div className={SNAPSHOT_MISSION_PANEL}>
-              <SyndicateSnapshotCorner accent="cyan" />
-              <div className="relative z-[1] flex items-center justify-between gap-3 border-b border-cyan-400/25 pb-3">
-                <span className={DECK_TYPO.columnTitleCyan}>Mission</span>
-                <Target className="h-5 w-5 shrink-0 text-cyan-300/85 drop-shadow-[0_0_10px_rgba(34,211,238,0.55)]" aria-hidden />
-              </div>
-              <div className="relative z-[1] min-h-0 flex-1 pt-4">
-                {primaryMission ? (
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn("font-mono font-bold text-white/38", DECK_TYPO.meta)}>
-                        #{primaryMission.id}
-                      </span>
-                      {primaryMission.completed ? (
-                        <span className={cn("rounded border border-white/16 bg-white/[0.06] px-2 py-0.5 text-white/50", DECK_TYPO.btn)}>
-                          Completed
-                        </span>
-                      ) : null}
-                    </div>
-                    <h4
-                      className={cn(
-                        DECK_TYPO.listTitle,
-                        "text-white/93",
-                        primaryMission.completed && "line-through decoration-white/35"
-                      )}
-                    >
-                      {primaryMission.title}
-                    </h4>
-                    {primaryMission.subtitle ? (
-                      <p className={cn(DECK_TYPO.bodyMuted, "text-white/58")}>{primaryMission.subtitle}</p>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <span className={cn("rounded-md border border-white/14 bg-black/35 px-2 py-1 text-white/55", DECK_TYPO.btn)}>
-                        {primaryMission.mood}
-                      </span>
-                      <span className={cn("rounded-md border border-white/14 bg-black/35 px-2 py-1 text-white/55", DECK_TYPO.btn)}>
-                        {primaryMission.category}
-                      </span>
-                      {primaryMission.difficulty && primaryMission.difficulty !== "—" ? (
-                        <span
-                          className={cn(
-                            "rounded-md border px-2 py-1",
-                            DECK_TYPO.btn,
-                            syndicateDifficultyChipClass(primaryMission.difficulty)
-                          )}
-                        >
-                          {primaryMission.difficulty}
-                        </span>
-                      ) : null}
-                      {primaryMission.onBoard ? (
-                        <span
-                          className={cn(
-                            "rounded-md border border-cyan-500/38 bg-cyan-500/12 px-2 py-1 text-cyan-100/85 shadow-[0_0_14px_rgba(34,211,238,0.2)]",
-                            DECK_TYPO.btn
-                          )}
-                        >
-                          On 24h board
-                        </span>
-                      ) : (
-                        <span className={cn("rounded-md border border-white/10 bg-black/25 px-2 py-1 text-white/38", DECK_TYPO.btn)}>
-                          Off board
-                        </span>
-                      )}
-                      {primaryMission.points > 0 ? (
-                        <span className={cn("self-center text-[color:var(--gold)]/88", DECK_TYPO.btn)}>
-                          +{primaryMission.points} pts
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-cyan-400/25 bg-black/35 px-3 py-6 text-center shadow-[inset_0_0_24px_rgba(34,211,238,0.06)]">
-                    <p className={cn(DECK_TYPO.emptyPrimary, "text-white/62")}>No mission on your board right now.</p>
-                    <p className={cn("mt-2 max-w-sm text-white/42", DECK_TYPO.emptySecondary)}>
-                      Open Syndicate Mode to pull today’s missions onto the board.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Reminder — secondary column */}
-            <div className={SNAPSHOT_REMINDER_PANEL}>
-              <SyndicateSnapshotCorner accent="amber" />
-              <div className="relative z-[1] flex items-center justify-between gap-3 border-b border-amber-400/25 pb-3">
-                <span className={DECK_TYPO.columnTitleAmber}>Reminder</span>
-                <Bell className="h-5 w-5 shrink-0 text-amber-200/75 drop-shadow-[0_0_10px_rgba(251,191,36,0.45)]" aria-hidden />
-              </div>
-              <div className="relative z-[1] min-h-0 flex-1 pt-4">
-                {primaryReminder && primaryReminder.reminderAtMs != null && primaryReminder.reminderAtMs > Date.now() ? (
-                  <div className="flex flex-col gap-3 rounded-lg border border-cyan-400/35 bg-gradient-to-b from-cyan-500/14 via-black/35 to-transparent px-3 py-4 shadow-[0_0_24px_rgba(34,211,238,0.12)] sm:px-4 sm:py-5">
-                    <div>
-                      <div className={DECK_TYPO.columnTitleCyan}>Next up</div>
-                      <p className={cn("mt-2 text-white/90", DECK_TYPO.listTitle)}>{primaryReminder.title}</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/15 shadow-[0_0_18px_rgba(34,211,238,0.25)]">
-                        <Bell className="h-5 w-5 text-cyan-100/95" aria-hidden />
-                      </div>
-                      <div className="min-w-0">
-                        <div className={cn(DECK_TYPO.btn, "text-cyan-200/80")}>Rings in</div>
-                        <div className="mt-1 font-mono text-[clamp(1.25rem,2vw+0.85rem,1.85rem)] font-black tabular-nums leading-none text-cyan-50 drop-shadow-[0_0_16px_rgba(34,211,238,0.35)]">
-                          {formatSyndicateReminderCountdown(primaryReminder.reminderAtMs, Date.now())}
-                        </div>
-                        <div className={cn("mt-2 text-white/52", DECK_TYPO.bodyMuted)}>
-                          {formatSyndicateReminderWhen(primaryReminder.reminderAtMs)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-amber-400/28 bg-black/35 px-3 py-6 text-center shadow-[inset_0_0_24px_rgba(251,191,36,0.06)]">
-                    <p className={cn(DECK_TYPO.emptyPrimary, "text-white/62")}>No reminder scheduled.</p>
-                    <p className={cn("mt-2 max-w-sm text-white/42", DECK_TYPO.emptySecondary)}>
-                      Set one on a mission card inside Syndicate Mode.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {!loading && rows.length === 0 && !error ? (
-          <motion.button
-            type="button"
-            onClick={() => onNavigate("monk")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "mt-6 w-full rounded-xl border border-cyan-400/40 bg-cyan-500/14 py-3.5 text-cyan-50/95 shadow-[0_0_0_1px_rgba(34,211,238,0.28),0_0_32px_rgba(34,211,238,0.22)] hover:border-cyan-300/55 hover:shadow-[0_0_40px_rgba(34,211,238,0.35)] md:w-auto md:px-12",
-              DECK_TYPO.btn
-            )}
-          >
-            Open Syndicate Mode
-          </motion.button>
-        ) : null}
-
-        {!loading && rows.length > 0 && !linkedAccount ? (
-          <p className={cn("mt-4 text-white/45", DECK_TYPO.bodyMuted)}>
-            Sign in from Syndicate Mode to sync missions and reminders across devices.
-          </p>
-        ) : null}
-        </div>
-      </div>
-    </motion.section>
-  );
-}
 
 function timeAgo(ts: number) {
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
@@ -640,9 +267,6 @@ function HeroStatusPanel({
   const s = snapshots;
   const activePrograms = s.programStats?.unlocked ?? s.programs.length;
   const ongoingPrograms = s.programStats?.inProgress ?? s.programs.filter((p) => p.progressPct > 0).length;
-  const completedMissionCount = s.syndicate.completedMissionsCount ?? 0;
-  const pendingMissionCount = s.syndicate.pendingMissionsCount ?? (s.syndicate.activeLiveMissionCount ?? (s.syndicate.activeMissionTitle ? 1 : 0));
-  const totalMissionPoints = s.syndicate.missionPointsTotal ?? 0;
   const heroNeon = getInstructorSlideNeonTheme(6);
   return (
     <div
@@ -707,7 +331,7 @@ function HeroStatusPanel({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="grid w-full max-w-none grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-4">
+          <div className="w-full max-w-[14rem]">
             <button
               type="button"
               onClick={() => onNavigate("programs")}
@@ -735,81 +359,6 @@ function HeroStatusPanel({
                       ? "Unlocked"
                       : "None yet"}
                 </div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate("monk")}
-              className={cn(
-                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-emerald-400/55 bg-gradient-to-br from-emerald-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
-                "shadow-[0_0_0_1px_rgba(52,211,153,0.22),0_0_28px_rgba(52,211,153,0.26),0_0_52px_rgba(16,185,129,0.12)]",
-                "hover:border-emerald-200/75 hover:bg-gradient-to-br hover:from-emerald-400/[0.2] hover:to-black/72",
-                "hover:shadow-[0_0_0_1px_rgba(110,231,183,0.42),0_0_40px_rgba(52,211,153,0.4),0_0_88px_rgba(16,185,129,0.2)]",
-                syndicateNavLocked && "opacity-80 ring-1 ring-emerald-500/35"
-              )}
-            >
-              <div className="flex w-full items-center justify-center gap-1 text-[16px] font-extrabold uppercase leading-tight tracking-[0.14em] text-emerald-100 sm:text-[17px]">
-                Syndicate Completed Missions
-                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-emerald-200/90" aria-hidden /> : null}
-              </div>
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
-                <div
-                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
-                  style={{ textShadow: "0 0 22px rgba(52,211,153,0.5), 0 0 40px rgba(16,185,129,0.22)" }}
-                >
-                  {completedMissionCount}
-                </div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-emerald-200/78">From challenges</div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate("monk")}
-              className={cn(
-                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-amber-400/58 bg-gradient-to-br from-amber-400/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
-                "shadow-[0_0_0_1px_rgba(251,191,36,0.24),0_0_28px_rgba(251,191,36,0.28),0_0_52px_rgba(245,158,11,0.14)]",
-                "hover:border-amber-200/78 hover:bg-gradient-to-br hover:from-amber-300/[0.2] hover:to-black/72",
-                "hover:shadow-[0_0_0_1px_rgba(253,224,71,0.42),0_0_40px_rgba(251,191,36,0.42),0_0_88px_rgba(234,88,12,0.18)]",
-                syndicateNavLocked && "opacity-80 ring-1 ring-amber-500/35"
-              )}
-            >
-              <div className="flex w-full items-center justify-center gap-1 text-[16px] font-extrabold uppercase leading-tight tracking-[0.14em] text-amber-100 sm:text-[17px]">
-                Syndicate Pending Missions
-                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-amber-200/90" aria-hidden /> : null}
-              </div>
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
-                <div
-                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
-                  style={{ textShadow: "0 0 22px rgba(251,191,36,0.48), 0 0 40px rgba(245,158,11,0.22)" }}
-                >
-                  {pendingMissionCount}
-                </div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-amber-200/78">In challenges</div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate("monk")}
-              className={cn(
-                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-fuchsia-400/55 bg-gradient-to-br from-fuchsia-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
-                "shadow-[0_0_0_1px_rgba(232,121,249,0.22),0_0_28px_rgba(217,70,239,0.28),0_0_52px_rgba(192,38,211,0.12)]",
-                "hover:border-fuchsia-200/75 hover:bg-gradient-to-br hover:from-fuchsia-400/[0.2] hover:to-black/72",
-                "hover:shadow-[0_0_0_1px_rgba(240,171,252,0.42),0_0_40px_rgba(217,70,239,0.4),0_0_88px_rgba(168,85,247,0.2)]",
-                syndicateNavLocked && "opacity-80 ring-1 ring-fuchsia-500/35"
-              )}
-            >
-              <div className="flex w-full items-center justify-center gap-1 text-[16px] font-extrabold uppercase leading-tight tracking-[0.14em] text-fuchsia-100 sm:text-[17px]">
-                Total points
-                {syndicateNavLocked ? <Lock className="h-3 w-3 shrink-0 text-fuchsia-200/90" aria-hidden /> : null}
-              </div>
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
-                <div
-                  className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
-                  style={{ textShadow: "0 0 22px rgba(217,70,239,0.52), 0 0 44px rgba(168,85,247,0.22)" }}
-                >
-                  {totalMissionPoints}
-                </div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/78">Mission pool</div>
               </div>
             </button>
           </div>
@@ -1328,11 +877,7 @@ export default function DashboardControlCenter({
 
           <MissionCommandDeckCard themeMode={themeMode} />
 
-          <SyndicateMissionsSnapshotCard
-            themeMode={themeMode}
-            onNavigate={onNavigate}
-            syndicateNavLocked={syndicateLocked}
-          />
+          <UnlockedProgramsDashboardStrip programs={courses} onNavigate={onNavigate} />
 
           <PublicGoalPathSection
             playlists={streamPlaylists}

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
-import { isPlanOfferComingSoon, isPrimaryElitePlan } from "@/components/programs/planOfferCatalog";
+import { isPlanOfferComingSoon, isPrimaryElitePlan, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_LAUNCHING_SOON_MESSAGE } from "@/components/programs/planOfferCatalog";
 import { EliteOfferBenefitsDetail } from "@/components/programs/EliteOfferBenefitsDetail";
 import { isTradingModuleSlug, isTradingSubmoduleSlug, tradingSubmodulesForModule, type TradingModuleSlug } from "@/components/programs/tradingVaultCatalog";
 import { isVaultPackKey, VAULT_PACK_MODAL_COPY } from "@/components/programs/vaultPackCatalog";
@@ -175,13 +175,13 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
                   : cn("bg-black/60", theme.featureBorder, theme.title)
               )}
             >
-              {comingSoon ? "Coming soon" : isPackDetail ? "Full pack" : isTradingLesson ? "Lesson" : "Module"}
+              {comingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : isPackDetail ? "Full pack" : isTradingLesson ? "Lesson" : "Module"}
             </span>
           </div>
 
           {comingSoon ? (
             <p className="mt-4 rounded-xl border border-amber-300/50 bg-amber-950/30 px-4 py-3 font-mono text-[12px] uppercase tracking-[0.12em] text-amber-100/95">
-              The Knight is not available for purchase yet. Check back soon.
+              {KNIGHT_LAUNCHING_SOON_MESSAGE}
             </p>
           ) : null}
 

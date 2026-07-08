@@ -1,6 +1,7 @@
 import {
   isKnightPlanSlug,
   isPlanOfferComingSoon,
+  KNIGHT_LAUNCHING_SOON_LABEL,
   KNIGHT_PLAN_COMING_SOON,
   type CheckoutOfferKey,
   type PlanOfferDef,
@@ -108,7 +109,7 @@ export function resolveOfferActionLabel(
 ): string {
   const plan = String(offer.plan);
   if (isKnightPlanSlug(plan)) {
-    if (KNIGHT_PLAN_COMING_SOON) return "Coming Soon";
+    if (KNIGHT_PLAN_COMING_SOON) return KNIGHT_LAUNCHING_SOON_LABEL;
     return isKnightPlanUnlocked(purchasedSlugs, knightSubscriptionActive) ? "Open" : offer.openLabel;
   }
   if (isPlanOfferComingSoon(offer) && !isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {

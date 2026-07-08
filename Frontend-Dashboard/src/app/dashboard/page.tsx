@@ -4,18 +4,27 @@ import { createPortal } from "react-dom";
 import type { ReactPortal } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import type { CSSProperties } from "react";
 import gsap from "gsap";
 import { Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
 import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
 import { DashboardMediaWarmup } from "@/components/dashboard/DashboardMediaWarmup";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
+import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
 import LetterGlitch from "@/components/LetterGlitch";
@@ -25,18 +34,20 @@ import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { GoalsPanel } from "@/components/ui/GoalsPanel";
 import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
-import { MembershipContentHub } from "@/components/membership/MembershipContentHub";
 import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
 import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
 import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeLoadingShell";
-import { SupportSection } from "@/components/dashboard/SupportSection";
+import { useDashboardSmoothScroll } from "@/hooks/useDashboardSmoothScroll";
+import { useDashboardTabLifecycle } from "@/hooks/useDashboardTabLifecycle";
+import { useDockMagnification } from "@/hooks/useDockMagnification";
 import {
   isDashboardCheckoutReturnGraceActive,
   markDashboardCheckoutReturn,
   resetDashboardDocumentScroll,
-  resetDashboardMainShellScroll,
   resetDashboardShellScroll,
+  saveDashboardSectionScroll,
   shouldSkipMainShellScrollReset,
+  transitionDashboardSectionScroll,
 } from "@/lib/dashboardShellScroll";
 import { PlaylistCheckoutSync } from "@/components/programs/PlaylistCheckoutSync";
 import { PlanCheckoutSync } from "@/components/programs/PlanCheckoutSync";
@@ -146,7 +157,7 @@ const sidebarMotion = {
   animate: { opacity: 1, x: 0 },
   /** Match initial x so open/close are mirrored (was -32 on exit, which felt asymmetric). */
   exit: { opacity: 0, x: -28 },
-  transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] as const }
+  transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }
 };
 
 function QuickAccessGridFallback() {
@@ -172,6 +183,29 @@ const SyndicateAiChallengePanel = dynamic(
       default: mod.SyndicateAiChallengePanel,
     })),
   { ssr: false, loading: () => <SyndicateModeLoadingShell /> }
+);
+
+function DashboardSectionFallback() {
+  return (
+    <div
+      className="dashboard-section-fallback flex min-h-[min(48vh,520px)] w-full flex-col gap-4 rounded-xl border border-white/8 bg-black/20 px-4 py-8"
+      aria-hidden
+    >
+      <div className="mx-auto h-2 w-56 max-w-[85%] animate-pulse rounded-full bg-[rgba(255,215,0,0.18)]" />
+      <div className="mx-auto h-2 w-40 max-w-[65%] animate-pulse rounded-full bg-white/10" />
+      <div className="mx-auto mt-4 h-32 w-full max-w-md animate-pulse rounded-2xl bg-white/[0.04]" />
+    </div>
+  );
+}
+
+const MembershipContentHub = dynamic(
+  () => import("@/components/membership/MembershipContentHub").then((mod) => mod.MembershipContentHub),
+  { ssr: false, loading: () => <DashboardSectionFallback /> }
+);
+
+const SupportSectionLazy = dynamic(
+  () => import("@/components/dashboard/SupportSection").then((mod) => mod.SupportSection),
+  { ssr: false, loading: () => <DashboardSectionFallback /> }
 );
 
 function cn(...parts: Array<string | false | null | undefined>) {
@@ -336,6 +370,7 @@ function SidebarNavRailList({
     <div className="sidebar-nav-list">
       {nav.map((item, index) => {
         const locked = isNavLocked(item.key);
+        const showLaunchingSoon = locked && (item.key === "monk" || item.key === "resources");
         const selected = selectedNavKey === item.key;
         const neonTheme = getInstructorSlideNeonTheme(index);
         return (
@@ -350,9 +385,11 @@ function SidebarNavRailList({
             data-nav-neon={item.key}
             style={neonAccentStyleVars(neonTheme)}
             title={
-              locked
-                ? "The Knight — full access. Money Mastery: open to read what is included."
-                : undefined
+              showLaunchingSoon
+                ? "Launching Soon — The Knight membership unlocks this section."
+                : locked
+                  ? "The Knight — full access. Money Mastery: open to read what is included."
+                  : undefined
             }
             className={cn(
               "sidebar-nav-item sidebar-nav-neon-item syndicate-mood-skip-frame nav-item group relative flex w-full items-center text-left",
@@ -376,7 +413,11 @@ function SidebarNavRailList({
                 <SidebarNavLabel text={item.label} />
                 <span className="nav-glitch" aria-hidden="true" />
               </span>
-              {locked ? (
+              {showLaunchingSoon ? (
+                <span className="sidebar-nav-launching-soon shrink-0 leading-tight">
+                  Launching Soon
+                </span>
+              ) : locked ? (
                 <span className="sr-only">Tier locked — opens overview page for this section.</span>
               ) : null}
             </span>
@@ -1840,6 +1881,12 @@ export default function Page() {
     useGoalsPanel();
 
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const previousNavKeyRef = useRef<string>("dashboard");
+  const dashboardScrollBootRef = useRef(true);
+  const dashboardSectionAnimDoneRef = useRef(false);
+  const monkSectionAnimDoneRef = useRef(false);
+  useDashboardSmoothScroll(rootRef);
+  useDashboardTabLifecycle(rootRef);
   const ringOuterRef = useRef<HTMLDivElement | null>(null);
   const ringInnerRef = useRef<HTMLDivElement | null>(null);
   const glowPulseRef = useRef<HTMLDivElement | null>(null);
@@ -1852,8 +1899,6 @@ export default function Page() {
   const logoWrapRef = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
   const topDockRef = useRef<HTMLDivElement | null>(null);
-  const dockMouseY = useRef<number>(Infinity);
-  const topMouseX = useRef<number>(Infinity);
   const topbarRef = useRef<HTMLDivElement | null>(null);
   const [overlayMount, setOverlayMount] = useState(false);
   const [profileMenuFixedStyle, setProfileMenuFixedStyle] = useState<CSSProperties | null>(null);
@@ -1907,14 +1952,20 @@ export default function Page() {
         const raw = new URLSearchParams(window.location.search).get("section");
         const currentKey = raw && valid.has(raw) ? raw : "dashboard";
         if (currentKey === key) {
-          setNavKeyState(key);
+          startTransition(() => {
+            setNavKeyState(key);
+          });
+          saveDashboardSectionScroll(key, rootRef.current);
           requestAnimationFrame(() => {
             resetDashboardShellScroll(rootRef.current);
           });
           return;
         }
+        saveDashboardSectionScroll(currentKey, rootRef.current);
       }
-      setNavKeyState(key);
+      startTransition(() => {
+        setNavKeyState(key);
+      });
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         params.set("section", key);
@@ -2020,6 +2071,7 @@ export default function Page() {
   }, []);
   /** Overlay (max-lg): slide-out; lg+ grid rail (opened before paint in useLayoutEffect). */
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useDockMagnification({ rootRef, sidebarRef, topDockRef, sidebarOpen });
   /** Below md (768px): main + sidebar sit side-by-side; nav column is 5/12 (~42% width). */
   const [isNarrowViewport, setIsNarrowViewport] = useState(false);
   /** max-lg + iPad Pro portrait range: sidebar is a fixed overlay; main stays full width and only dims. */
@@ -2175,6 +2227,15 @@ export default function Page() {
     closeQuickAccessPanel();
   }, [selectedNavKey, closeGoalsPanel, closeQuickAccessPanel]);
 
+  /** Warm lazy section chunks after auth so first nav to each pane is faster. */
+  useEffect(() => {
+    if (!authChecked || !portalUser) return;
+    void import("@/features/productivity/control-center/QuickAccessGrid");
+    void import("@/components/SyndicateAiChallengePanel");
+    void import("@/components/membership/MembershipContentHub");
+    void import("@/components/dashboard/SupportSection");
+  }, [authChecked, portalUser]);
+
   useEffect(() => {
     setPanelThemeMode(themeMode);
   }, [themeMode, setPanelThemeMode]);
@@ -2200,6 +2261,7 @@ export default function Page() {
     const valid = new Set(nav.map((n) => n.key));
     if (section && valid.has(section)) {
       setNavKeyState(section);
+      previousNavKeyRef.current = section;
     }
   }, [nav]);
 
@@ -2335,16 +2397,35 @@ export default function Page() {
     resetDashboardShellScroll(rootRef.current);
   }, []);
 
-  /** Bounded shell sections: reset scroll so the sticky top bar stays visible on section change. */
+  /** Bounded shell sections: restore saved scroll (or reset) when switching sections. */
   useLayoutEffect(() => {
-    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
-    if (isDashboardCheckoutReturnGraceActive() || shouldSkipMainShellScrollReset()) return;
-    resetDashboardShellScroll(rootRef.current);
+    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") {
+      previousNavKeyRef.current = selectedNavKey;
+      return;
+    }
+    if (isDashboardCheckoutReturnGraceActive() || shouldSkipMainShellScrollReset()) {
+      previousNavKeyRef.current = selectedNavKey;
+      return;
+    }
+
+    if (dashboardScrollBootRef.current) {
+      dashboardScrollBootRef.current = false;
+      previousNavKeyRef.current = selectedNavKey;
+      return;
+    }
+
+    const previousKey = previousNavKeyRef.current;
+    if (previousKey !== selectedNavKey) {
+      transitionDashboardSectionScroll(previousKey, selectedNavKey, rootRef.current);
+    } else {
+      resetDashboardShellScroll(rootRef.current);
+    }
+    previousNavKeyRef.current = selectedNavKey;
   }, [selectedNavKey]);
 
-  /** Bounded shell: lock document scroll so only the main gold-frame panel scrolls. */
+  /** Bounded shell: lock document scroll once for the dashboard route (not per section swap). */
   useEffect(() => {
-    if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
 
     const html = document.documentElement;
     const body = document.body;
@@ -2373,8 +2454,6 @@ export default function Page() {
     const vv = window.visualViewport;
     const onViewportChange = () => {
       pinDocumentScroll();
-      if (shouldSkipMainShellScrollReset()) return;
-      resetDashboardMainShellScroll(rootRef.current);
     };
     vv?.addEventListener("resize", onViewportChange);
     vv?.addEventListener("scroll", onViewportChange);
@@ -2387,7 +2466,7 @@ export default function Page() {
       body.classList.remove("dashboard-shell-scroll-lock");
       history.scrollRestoration = prevRestoration;
     };
-  }, [selectedNavKey]);
+  }, []);
 
   /** lg+: collapse grid rail when not on Dashboard so missions / detail use full shell width (reopen via menu). */
   useEffect(() => {
@@ -2420,9 +2499,6 @@ export default function Page() {
       if (isCompactMobileUi || isOverlaySidebarBp) {
         setSidebarOpen(false);
       }
-      requestAnimationFrame(() => {
-        resetDashboardShellScroll(rootRef.current);
-      });
     },
     [isOverlaySidebarBp, isCompactMobileUi]
   );
@@ -2434,7 +2510,7 @@ export default function Page() {
   /** Compact mobile: slide via `left` (not `x`) so the 220px rail is fully visible when open. */
   const MOBILE_SIDEBAR_OFF_LEFT = -220;
   const mobileOverlaySidebarTransition = useMemo(
-    () => ({ duration: 0.38, ease: [0.22, 1, 0.36, 1] as const }),
+    () => ({ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }),
     []
   );
 
@@ -2548,9 +2624,7 @@ export default function Page() {
   }, [profileOpen]);
 
   /**
-   * Shell motion: dock tickers, intro tweens, course/monk reveals.
-   * Depends on `selectedNavKey` (not `profileOpen`) so toggling the profile menu does not tear down tickers/tweens
-   * and scramble layout during dev Fast Refresh or normal use.
+   * Shell chrome motion (rings, intro) — mount once so section switches do not rebuild tickers/tweens.
    */
   useLayoutEffect(() => {
     if (!rootRef.current) return;
@@ -2562,14 +2636,14 @@ export default function Page() {
       const rightAnim = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
       if (leftAnim.length) gsap.set(leftAnim, { opacity: 0, x: -18 });
       if (rightAnim.length) gsap.set(rightAnim, { opacity: 0, x: 18 });
-      /* Main column content must never be hidden by intro tweens (video has no data-anim). */
+
       const videoScrollRoots = gsap.utils.toArray<HTMLElement>("[data-dashboard-video-scroll]");
       if (videoScrollRoots.length) {
         gsap.set(videoScrollRoots, {
           opacity: 1,
           y: 0,
           x: 0,
-          clearProps: "opacity,transform"
+          clearProps: "opacity,transform",
         });
       }
 
@@ -2577,15 +2651,9 @@ export default function Page() {
       const inTargets = gsap.utils.toArray<HTMLElement>("[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])");
       const leftTargets = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
       const rightTargets = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
-      if (inTargets.length) {
-        tl.to(inTargets, { opacity: 1, y: 0, stagger: 0.06 }, 0);
-      }
-      if (leftTargets.length) {
-        tl.to(leftTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.05);
-      }
-      if (rightTargets.length) {
-        tl.to(rightTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
-      }
+      if (inTargets.length) tl.to(inTargets, { opacity: 1, y: 0, stagger: 0.06 }, 0);
+      if (leftTargets.length) tl.to(leftTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.05);
+      if (rightTargets.length) tl.to(rightTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
 
       if (ringOuterRef.current) {
         gsap.to(ringOuterRef.current, {
@@ -2593,7 +2661,7 @@ export default function Page() {
           duration: 26,
           ease: "none",
           repeat: -1,
-          transformOrigin: "50% 50%"
+          transformOrigin: "50% 50%",
         });
       }
       if (ringInnerRef.current) {
@@ -2602,7 +2670,7 @@ export default function Page() {
           duration: 40,
           ease: "none",
           repeat: -1,
-          transformOrigin: "50% 50%"
+          transformOrigin: "50% 50%",
         });
       }
       if (glowPulseRef.current) {
@@ -2611,145 +2679,121 @@ export default function Page() {
           duration: 2.8,
           yoyo: true,
           repeat: -1,
-          ease: "sine.inOut"
+          ease: "sine.inOut",
         });
       }
-
-      // GSAP "Dock" magnification for sidebar items (vertical)
-      const sidebarTick: gsap.TickerCallback = () => {
-        if (window.matchMedia("(max-width: 820px)").matches) return;
-        const root = sidebarRef.current;
-        if (!root) return;
-        const items = Array.from(root.querySelectorAll<HTMLElement>("[data-dock-item='sidebar']"));
-        if (items.length === 0) return;
-        const y = dockMouseY.current;
-        if (!Number.isFinite(y)) {
-          items.forEach((it) => gsap.to(it, { scale: 1, duration: 0.18, ease: "power2.out", overwrite: true }));
-          return;
-        }
-        const distance = 140;
-        const base = 1;
-        const mag = 1.18;
-        items.forEach((it) => {
-          const r = it.getBoundingClientRect();
-          const cy = r.top + r.height / 2;
-          const d = Math.min(distance, Math.abs(y - cy));
-          const t = 1 - d / distance;
-          const s = base + (mag - base) * t;
-          gsap.to(it, { scale: s, duration: 0.12, ease: "power2.out", overwrite: true, transformOrigin: "50% 50%" });
-        });
-      };
-      gsap.ticker.add(sidebarTick);
-
-      // GSAP "Dock" magnification for top elements (horizontal)
-      const topTick: gsap.TickerCallback = () => {
-        const root = topDockRef.current;
-        if (!root) return;
-        const items = Array.from(root.querySelectorAll<HTMLElement>("[data-dock-item='top']"));
-        if (items.length === 0) return;
-        const x = topMouseX.current;
-        if (!Number.isFinite(x)) {
-          items.forEach((it) => gsap.to(it, { scale: 1, duration: 0.18, ease: "power2.out", overwrite: true }));
-          return;
-        }
-        const distance = 220;
-        const base = 1;
-        const mag = 1.12;
-        items.forEach((it) => {
-          const r = it.getBoundingClientRect();
-          const cx = r.left + r.width / 2;
-          const d = Math.min(distance, Math.abs(x - cx));
-          const t = 1 - d / distance;
-          const s = base + (mag - base) * t;
-          gsap.to(it, { scale: s, duration: 0.12, ease: "power2.out", overwrite: true, transformOrigin: "50% 50%" });
-        });
-      };
-      gsap.ticker.add(topTick);
-
-      // Card hover lift/glow
-      const cards = gsap.utils.toArray<HTMLElement>("[data-course-card]");
-      // Premium reveal: fade/slide-in with stagger when the grid enters view
-      if (cards.length) {
-        gsap.set(cards, { opacity: 0, y: 18 });
-      }
-      const wrap = document.querySelector<HTMLElement>("[data-cards-wrap]");
-      let revealed = false;
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (revealed || cards.length === 0) return;
-          const hit = entries.some((e) => e.isIntersecting);
-          if (!hit) return;
-          revealed = true;
-          gsap.to(cards, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 });
-          io.disconnect();
-        },
-        { root: null, threshold: 0.18 }
-      );
-      if (wrap && cards.length) io.observe(wrap);
-
-      const cardDisposers: Array<() => void> = [];
-      cards.forEach((card) => {
-        const onEnter = () => {
-          gsap.to(card, { y: -2, duration: 0.18, ease: "power2.out" });
-        };
-        const onLeave = () => {
-          gsap.to(card, { y: 0, duration: 0.2, ease: "power2.out" });
-        };
-        card.addEventListener("mouseenter", onEnter);
-        card.addEventListener("mouseleave", onLeave);
-        card.addEventListener("focus", onEnter);
-        card.addEventListener("blur", onLeave);
-        cardDisposers.push(() => {
-          card.removeEventListener("mouseenter", onEnter);
-          card.removeEventListener("mouseleave", onLeave);
-          card.removeEventListener("focus", onEnter);
-          card.removeEventListener("blur", onLeave);
-        });
-      });
-
-      // Monk section cards: reveal on scroll with premium stagger
-      let monkIo: IntersectionObserver | null = null;
-      const monkCards = gsap.utils.toArray<HTMLElement>("[data-monk-card]");
-      if (monkCards.length) {
-        gsap.set(monkCards, { opacity: 0, y: 18 });
-        const monkWrap = document.querySelector<HTMLElement>("[data-monk-card]")?.parentElement ?? null;
-        let monkRevealed = false;
-        monkIo = new IntersectionObserver(
-          (entries) => {
-            if (monkRevealed) return;
-            const hit = entries.some((e) => e.isIntersecting);
-            if (!hit) return;
-            monkRevealed = true;
-            gsap.to(monkCards, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out", stagger: 0.08 });
-            monkIo?.disconnect();
-          },
-          { root: null, threshold: 0.16 }
-        );
-        if (monkWrap) monkIo.observe(monkWrap);
-
-        const monkIcons = gsap.utils.toArray<HTMLElement>("[data-monk-icon]");
-        monkIcons.forEach((icon, i) => {
-          gsap.to(icon, {
-            y: i % 2 === 0 ? -4 : -3,
-            rotate: i % 2 === 0 ? 1.2 : -1.2,
-            duration: 1.9 + i * 0.18,
-            ease: "sine.inOut",
-            yoyo: true,
-            repeat: -1
-          });
-        });
-      }
-
-      return () => {
-        gsap.ticker.remove(sidebarTick);
-        gsap.ticker.remove(topTick);
-        io.disconnect();
-        monkIo?.disconnect();
-        for (const d of cardDisposers) d();
-      };
     }, rootRef);
 
     return () => ctx.revert();
+  }, []);
+
+  /** Dashboard section reveals — run once on first visit; scoped to the active pane. */
+  useLayoutEffect(() => {
+    if (
+      selectedNavKey !== "dashboard" ||
+      dashboardSectionAnimDoneRef.current ||
+      !rootRef.current
+    ) {
+      return;
+    }
+
+    const pane = rootRef.current.querySelector<HTMLElement>(
+      '[data-dashboard-section="dashboard"][data-dashboard-section-active="true"]',
+    );
+    if (!pane) return;
+
+    const cards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-course-card]"));
+    if (!cards.length) return;
+
+    gsap.set(cards, { opacity: 0, y: 18 });
+    const wrap = pane.querySelector<HTMLElement>("[data-cards-wrap]");
+    let revealed = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (revealed) return;
+        const hit = entries.some((e) => e.isIntersecting);
+        if (!hit) return;
+        revealed = true;
+        gsap.to(cards, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 });
+        io.disconnect();
+      },
+      { root: null, threshold: 0.18 },
+    );
+    if (wrap) io.observe(wrap);
+
+    const cardDisposers: Array<() => void> = [];
+    cards.forEach((card) => {
+      const onEnter = () => {
+        gsap.to(card, { y: -2, duration: 0.18, ease: "power2.out" });
+      };
+      const onLeave = () => {
+        gsap.to(card, { y: 0, duration: 0.2, ease: "power2.out" });
+      };
+      card.addEventListener("mouseenter", onEnter);
+      card.addEventListener("mouseleave", onLeave);
+      card.addEventListener("focus", onEnter);
+      card.addEventListener("blur", onLeave);
+      cardDisposers.push(() => {
+        card.removeEventListener("mouseenter", onEnter);
+        card.removeEventListener("mouseleave", onLeave);
+        card.removeEventListener("focus", onEnter);
+        card.removeEventListener("blur", onLeave);
+      });
+    });
+
+    dashboardSectionAnimDoneRef.current = true;
+
+    return () => {
+      io.disconnect();
+      for (const d of cardDisposers) d();
+    };
+  }, [selectedNavKey]);
+
+  /** Monk section reveals — run once on first visit; scoped to the active pane. */
+  useLayoutEffect(() => {
+    if (selectedNavKey !== "monk" || monkSectionAnimDoneRef.current || !rootRef.current) return;
+
+    const pane = rootRef.current.querySelector<HTMLElement>(
+      '[data-dashboard-section="monk"][data-dashboard-section-active="true"]',
+    );
+    if (!pane) return;
+
+    const monkCards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-card]"));
+    if (!monkCards.length) return;
+
+    gsap.set(monkCards, { opacity: 0, y: 18 });
+    const monkWrap = pane.querySelector<HTMLElement>("[data-monk-card]")?.parentElement ?? null;
+    let monkRevealed = false;
+    const monkIo = new IntersectionObserver(
+      (entries) => {
+        if (monkRevealed) return;
+        const hit = entries.some((e) => e.isIntersecting);
+        if (!hit) return;
+        monkRevealed = true;
+        gsap.to(monkCards, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out", stagger: 0.08 });
+        monkIo.disconnect();
+      },
+      { root: null, threshold: 0.16 },
+    );
+    if (monkWrap) monkIo.observe(monkWrap);
+
+    const monkIcons = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-icon]"));
+    monkIcons.forEach((icon, i) => {
+      gsap.to(icon, {
+        y: i % 2 === 0 ? -4 : -3,
+        rotate: i % 2 === 0 ? 1.2 : -1.2,
+        duration: 1.9 + i * 0.18,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+    });
+
+    monkSectionAnimDoneRef.current = true;
+
+    return () => {
+      monkIo.disconnect();
+    };
   }, [selectedNavKey]);
 
   /** Nav glitch must attach when the rail exists (separate from main GSAP shell context). */
@@ -2993,12 +3037,6 @@ export default function Page() {
             <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.05),rgba(0,0,0,0)_55%)] [grid-column:1/-1] [grid-row:1/-1]" />
             <div
               ref={topDockRef}
-              onMouseMove={(e) => {
-                topMouseX.current = e.clientX;
-              }}
-              onMouseLeave={() => {
-                topMouseX.current = Infinity;
-              }}
               className="relative z-[1] flex min-w-0 shrink-0 items-center fluid-dock-gap max-lg:col-start-1 max-lg:row-start-1 max-lg:self-center"
             >
               <button
@@ -3340,18 +3378,18 @@ export default function Page() {
                       ref={sidebarRef as unknown as React.Ref<HTMLElement>}
                       initial={
                         isCompactMobileUi
-                          ? { left: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
+                          ? { x: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
                           : { x: "-100%", opacity: 1 }
                       }
-                      animate={isCompactMobileUi ? { left: 0, opacity: 1 } : { x: 0, opacity: 1 }}
+                      animate={isCompactMobileUi ? { x: 0, opacity: 1 } : { x: 0, opacity: 1 }}
                       exit={
                         isCompactMobileUi
-                          ? { left: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
+                          ? { x: MOBILE_SIDEBAR_OFF_LEFT, opacity: 1 }
                           : { x: "-100%", opacity: 1 }
                       }
                       transition={mobileOverlaySidebarTransition}
                       className={cn(
-                        "sidebar-nav-dock dashboard-overlay-sidebar-rail pointer-events-auto",
+                        "sidebar-nav-dock dashboard-sidebar-rail dashboard-overlay-sidebar-rail pointer-events-auto",
                         "shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface",
                         "fixed bottom-0 left-0 z-[86] box-border flex flex-col bg-black no-scrollbar",
                         "shadow-[0_12px_48px_rgba(0,0,0,0.72)] [--sidebar-nav-section-pt:0]",
@@ -3421,14 +3459,8 @@ export default function Page() {
                 animate={sidebarMotion.animate}
                 exit={sidebarMotion.exit}
                 transition={sidebarMotion.transition}
-                onMouseMove={(e) => {
-                  dockMouseY.current = e.clientY;
-                }}
-                onMouseLeave={() => {
-                  dockMouseY.current = Infinity;
-                }}
                 className={cn(
-                  "sidebar-nav-dock shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
+                  "sidebar-nav-dock dashboard-sidebar-rail shell-neon-yellow shell-chrome-multineon cut-frame cyber-frame gold-stroke dashboard-shell-surface overflow-y-auto border bg-black no-scrollbar",
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
@@ -3458,10 +3490,10 @@ export default function Page() {
               "dashboard-main-content-shell shell-neon-yellow cut-frame cyber-frame gold-stroke dashboard-shell-surface relative grid min-h-0 w-full min-w-0 max-w-full grid-cols-1 grid-rows-1 self-stretch overflow-hidden border border-[color:var(--gold-neon-border-mid)] bg-transparent",
               "col-span-12",
               sidebarOccupiesGrid ? "lg:col-span-10" : "lg:col-span-12",
-              isOverlaySidebarBp &&
+                isOverlaySidebarBp &&
                 sidebarOpen &&
                 !isCompactMobileUi &&
-                "pointer-events-none opacity-[0.42] transition-opacity duration-200 ease-out",
+                "pointer-events-none opacity-[0.42] transition-opacity duration-150 ease-out",
               usesBoundedMobileShell && "max-lg:min-h-0 max-lg:h-full max-lg:flex-1",
               "lg:h-full lg:min-h-0",
               sidebarOpen && !isOverlaySidebarBp ? "col-span-7 md:col-span-10 lg:col-span-10" : "col-span-12",
@@ -3501,8 +3533,12 @@ export default function Page() {
                   </div>
                 </header>
               ) : null}
-              {selectedNavKey === "monk" ? (
-                !portalUser ? (
+              <DashboardSectionKeepAlive
+                sectionKey="monk"
+                activeKey={selectedNavKey}
+                className="syndicate-monk-route flex min-h-0 w-full min-w-0 max-w-none flex-col"
+              >
+                {!portalUser ? (
                   <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                     Loading access…
                   </div>
@@ -3511,12 +3547,14 @@ export default function Page() {
                     <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=monk" />
                   </div>
                 ) : (
-                  <div className="syndicate-monk-route flex min-h-0 w-full min-w-0 max-w-none flex-col">
-                    <SyndicateModeSection />
-                  </div>
-                )
-              ) : selectedNavKey === "programs" ? (
-                <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
+                  <SyndicateModeSection />
+                )}
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive
+                sectionKey="programs"
+                activeKey={selectedNavKey}
+                className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden"
+              >
                 <ProgramsCourseSection
                   instructorHero={<InstructorSlideshow showPanelBackgroundVideo={false} />}
                   chromaItems={chromaItems}
@@ -3549,9 +3587,13 @@ export default function Page() {
                     ) : null
                   }
                 />
-                </div>
-              ) : selectedNavKey === "resources" ? (
-                !portalUser ? (
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive
+                sectionKey="resources"
+                activeKey={selectedNavKey}
+                className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col"
+              >
+                {!portalUser ? (
                   <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                     Loading access…
                   </div>
@@ -3560,50 +3602,56 @@ export default function Page() {
                     <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=resources" />
                   </div>
                 ) : (
-                  <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col">
-                    <MembershipContentHub />
-                  </div>
-                )
-              ) : selectedNavKey === "support" ? (
-                !portalUser ? (
+                  <MembershipContentHub />
+                )}
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive sectionKey="support" activeKey={selectedNavKey} className="w-full">
+                {!portalUser ? (
                   <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                     Loading access…
                   </div>
                 ) : (
-                  <SupportSection />
-                )
-              ) : selectedNavKey === "quickaccess" ? (
-                <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
-                  <section aria-label="Quick access tools" className="relative w-full min-w-0 flex-1 scroll-mt-2">
-                    <div className="relative flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-visible rounded-xl border border-[rgba(212,175,55,0.28)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(212,175,55,0.1),0_0_52px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(212,175,55,0.08)] lg:min-h-[min(52vh,640px)]">
-                      <div
-                        className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(212,175,55,0.12),rgba(0,0,0,0)_60%)]"
-                        aria-hidden
-                      />
-                      <div className="relative z-[1] flex min-h-0 w-full flex-1 flex-col">
-                        <QuickAccessGrid siteName="The Syndicate" variant="fullWidth" />
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              ) : selectedNavKey === "settings" ? (
-                <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
-                  <div className="space-y-4">
-                    <SettingsProfileSection
-                      profileName={profileName}
-                      onProfileNameChange={setProfileName}
-                      onProfileNameSave={persistProfileName}
-                      profileAvatar={profileAvatar}
-                      onProfileAvatarFile={onProfileAvatarFile}
-                      onResetProfile={resetProfileSettings}
-                      onLogout={handleLogout}
+                  <SupportSectionLazy />
+                )}
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive
+                sectionKey="quickaccess"
+                activeKey={selectedNavKey}
+                className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2"
+              >
+                <section aria-label="Quick access tools" className="relative w-full min-w-0 flex-1 scroll-mt-2">
+                  <div className="relative flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-visible rounded-xl border border-[rgba(212,175,55,0.28)] bg-[#060606]/78 p-[var(--fluid-deck-p)] shadow-[0_0_0_1px_rgba(212,175,55,0.1),0_0_52px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(212,175,55,0.08)] lg:min-h-[min(52vh,640px)]">
+                    <div
+                      className="pointer-events-none absolute inset-0 opacity-90 [background:radial-gradient(720px_320px_at_20%_0%,rgba(212,175,55,0.12),rgba(0,0,0,0)_60%)]"
+                      aria-hidden
                     />
-                    <SettingsCertificatesSection />
-                    <SettingsBillingSection />
+                    <div className="relative z-[1] flex min-h-0 w-full flex-1 flex-col">
+                      <QuickAccessGrid siteName="The Syndicate" variant="fullWidth" />
+                    </div>
                   </div>
+                </section>
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive
+                sectionKey="settings"
+                activeKey={selectedNavKey}
+                className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2"
+              >
+                <div className="space-y-4">
+                  <SettingsProfileSection
+                    profileName={profileName}
+                    onProfileNameChange={setProfileName}
+                    onProfileNameSave={persistProfileName}
+                    profileAvatar={profileAvatar}
+                    onProfileAvatarFile={onProfileAvatarFile}
+                    onResetProfile={resetProfileSettings}
+                    onLogout={handleLogout}
+                  />
+                  <SettingsCertificatesSection />
+                  <SettingsBillingSection />
                 </div>
-              ) : selectedNavKey === "dashboard" ? (
-                !portalUser ? (
+              </DashboardSectionKeepAlive>
+              <DashboardSectionKeepAlive sectionKey="dashboard" activeKey={selectedNavKey} className="w-full">
+                {!portalUser ? (
                   <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                     Loading access…
                   </div>
@@ -3634,10 +3682,11 @@ export default function Page() {
                       />
                     </div>
                   </>
-                )
-              ) : (
+                )}
+              </DashboardSectionKeepAlive>
+              {!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) ? (
                 <div className="rounded-md border border-white/15 bg-black/35 p-4 text-[12px] text-white/72">Section available soon.</div>
-              )}
+              ) : null}
             </div>
             <GoalsPanel />
             <QuickAccessPanel />

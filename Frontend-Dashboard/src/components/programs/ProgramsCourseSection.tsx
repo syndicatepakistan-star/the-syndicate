@@ -56,7 +56,12 @@ import {
 } from "@/components/programs/programCardMedia";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
-import { clearUnlockCelebrationStorage, resolvePlaylistIdForPlan } from "@/lib/programUnlockFlow";
+import {
+  clearUnlockCelebrationStorage,
+  DASHBOARD_OPEN_COURSE_EVENT,
+  DASHBOARD_OPEN_PLAYLIST_EVENT,
+  resolvePlaylistIdForPlan,
+} from "@/lib/programUnlockFlow";
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
@@ -821,6 +826,24 @@ export function ProgramsCourseSection({
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
+  }, [openPlaylistFromUrl]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onDashboardOpenPlaylist = (event: Event) => {
+      const playlistId = (event as CustomEvent<{ playlistId?: number }>).detail?.playlistId;
+      if (playlistId) openPlaylistFromUrl(playlistId);
+    };
+    const onDashboardOpenCourse = (event: Event) => {
+      const courseId = (event as CustomEvent<{ courseId?: number }>).detail?.courseId;
+      if (courseId) openProgram(courseId);
+    };
+    window.addEventListener(DASHBOARD_OPEN_PLAYLIST_EVENT, onDashboardOpenPlaylist);
+    window.addEventListener(DASHBOARD_OPEN_COURSE_EVENT, onDashboardOpenCourse);
+    return () => {
+      window.removeEventListener(DASHBOARD_OPEN_PLAYLIST_EVENT, onDashboardOpenPlaylist);
+      window.removeEventListener(DASHBOARD_OPEN_COURSE_EVENT, onDashboardOpenCourse);
+    };
   }, [openPlaylistFromUrl]);
 
   useLayoutEffect(() => {

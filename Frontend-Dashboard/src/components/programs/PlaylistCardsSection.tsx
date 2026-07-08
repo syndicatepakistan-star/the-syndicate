@@ -387,13 +387,11 @@ export function PlaylistCardsSection({
               <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
               <div className={cn("program-playlist-card__price-badge absolute right-2 top-2 z-[6] sm:right-2.5 sm:top-2.5", PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE)}>
                 <span
-                  className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/50 bg-[#03140d]/95 px-2 py-0.5 tabular-nums text-[12px] font-black tracking-normal text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)] sm:px-3 sm:py-1 sm:text-[15px]"
+                  className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
                   style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
                 >
-                  {formatPrice(price)}
-                  <span className="ml-1 text-[9px] font-bold uppercase tracking-[0.08em] text-emerald-200/80 sm:text-[10px]">
-                    lifetime
-                  </span>
+                  <span className="program-playlist-card__pack-price-badge__amount">{formatPrice(price)}</span>
+                  <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">lifetime</span>
                 </span>
               </div>
             </div>

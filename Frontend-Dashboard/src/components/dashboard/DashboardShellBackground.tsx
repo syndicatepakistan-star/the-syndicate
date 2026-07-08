@@ -28,6 +28,7 @@ export function DashboardShellBackground({
     el.setAttribute("playsinline", "");
 
     const startOnce = () => {
+      if (document.visibilityState === "hidden") return;
       if (startedRef.current && !el.paused) return;
       startedRef.current = true;
       void el.play().catch(() => {
@@ -35,16 +36,26 @@ export function DashboardShellBackground({
       });
     };
 
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (!el.paused) el.pause();
+        return;
+      }
+      if (el.paused) void el.play().catch(() => {});
+    };
+
     void warmVideo(DASHBOARD_MAIN_BG_VIDEO).finally(startOnce);
 
     if (isVideoWarm(DASHBOARD_MAIN_BG_VIDEO) && el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
       startOnce();
-      return;
+    } else {
+      el.addEventListener("canplay", startOnce, { once: true });
     }
 
-    el.addEventListener("canplay", startOnce, { once: true });
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       el.removeEventListener("canplay", startOnce);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

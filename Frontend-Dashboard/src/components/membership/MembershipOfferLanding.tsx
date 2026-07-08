@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { KNIGHT_PLAN_COMING_SOON, KNIGHT_EXECUTION_COPY, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
+import { KNIGHT_PLAN_COMING_SOON, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_EXECUTION_COPY, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
@@ -125,17 +125,17 @@ function MembershipHeroOffer({
   comingSoon?: boolean;
 }) {
   return (
-    <div className={cn("mt-6 w-full max-w-3xl space-y-4", className)}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        <CyberInsetPanel variant="blood" className="h-full min-h-[7.5rem]">
+    <div className={cn("mt-6 w-full space-y-4", className)}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch sm:gap-4">
+        <CyberInsetPanel variant="blood" className="h-full min-h-[8rem] [&>div]:h-full">
           <p className="font-mono text-sm leading-relaxed text-zinc-100/92 sm:text-base">{HERO_OFFER_COPY}</p>
         </CyberInsetPanel>
-        <CyberInsetPanel variant="cyan" className="h-full min-h-[7.5rem]">
+        <CyberInsetPanel variant="cyan" className="h-full min-h-[8rem] [&>div]:h-full">
           <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-base">{HERO_OFFER_DETAIL}</p>
         </CyberInsetPanel>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(9.5rem,auto)_1fr] sm:items-stretch">
+      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(9.5rem,auto)_1fr] sm:items-stretch">
         <span
           className="inline-flex h-full min-h-[3.25rem] items-center justify-center border-[3px] border-cyan-400/90 bg-black/80 px-4 py-3 font-mono text-xl font-black tabular-nums text-cyan-100 [text-shadow:0_0_16px_rgba(103,232,249,0.55)] shadow-[0_0_28px_rgba(34,211,238,0.35)] sm:text-2xl"
           style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
@@ -155,7 +155,7 @@ function MembershipHeroOffer({
             onClick={onUnlock}
             className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem] w-full", comingSoon && "cursor-not-allowed opacity-70")}
           >
-            {comingSoon ? "Coming Soon" : busy ? "Opening checkout…" : "Unlock membership"}
+            {comingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : busy ? "Opening checkout…" : "Unlock membership"}
           </button>
         </div>
       </div>
@@ -173,21 +173,12 @@ function MembershipHeroOffer({
   );
 }
 
-function ChannelCard({
-  item,
-  idx,
-}: {
-  item: (typeof MEMBERSHIP_CHANNELS)[number];
-  idx: number;
-}) {
+function ChannelCard({ item }: { item: (typeof MEMBERSHIP_CHANNELS)[number] }) {
   return (
     <article
       className={cx(
-        "group relative overflow-hidden rounded-2xl border-2 p-5 transition-transform duration-300 hover:-translate-y-0.5",
-        idx === 1 ? "xl:col-span-4" : idx === 2 ? "xl:col-span-3" : "xl:col-span-2",
-        idx % 2 === 0
-          ? "[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]"
-          : "[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]",
+        "group relative flex h-full flex-col overflow-hidden rounded-2xl border-2 p-5 transition-transform duration-300 hover:-translate-y-0.5",
+        "[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]",
         item.border,
         item.glow
       )}
@@ -198,7 +189,7 @@ function ChannelCard({
       <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" />
       <span className={cx("pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-[3px] border-t-[3px]", item.stepBorder)} />
       <span className={cx("pointer-events-none absolute bottom-3 right-3 h-7 w-7 border-b-[3px] border-r-[3px]", item.stepBorder)} />
-      <div className="relative z-10 rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-3.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-[1px] transition-transform duration-300 group-hover:scale-[1.02] sm:p-4">
+      <div className="relative z-10 flex min-h-[11.5rem] flex-1 flex-col rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-3.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-[1px] transition-transform duration-300 group-hover:scale-[1.02] sm:min-h-[12.5rem] sm:p-4">
         <p
           className={cx(
             "inline-flex rounded-md border-2 bg-[linear-gradient(180deg,rgba(6,4,12,0.88),rgba(2,2,8,0.92))] px-3 py-1 text-[11px] font-bold tracking-[0.24em] text-zinc-100",
@@ -216,7 +207,7 @@ function ChannelCard({
         >
           {item.title}
         </h3>
-        <p className="mt-3 text-base leading-relaxed text-zinc-100/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.68)]">{item.tagline}</p>
+        <p className="mt-3 flex-1 text-base leading-relaxed text-zinc-100/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.68)]">{item.tagline}</p>
       </div>
     </article>
   );
@@ -306,7 +297,7 @@ export function MembershipOfferLanding({
     >
       <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
           <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-7 sm:p-10 lg:p-14">
-            <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+            <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div className="order-1 min-w-0">
                 <h1 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
                   Enter The Knight Tier
@@ -366,9 +357,9 @@ export function MembershipOfferLanding({
               Membership Rig
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
-            {MEMBERSHIP_CHANNELS.map((item, idx) => (
-              <ChannelCard key={item.step} item={item} idx={idx} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+            {MEMBERSHIP_CHANNELS.map((item) => (
+              <ChannelCard key={item.step} item={item} />
             ))}
           </div>
         </section>

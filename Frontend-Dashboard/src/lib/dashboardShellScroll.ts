@@ -4,6 +4,80 @@ const PROGRAMS_GRID_SCROLL_SELECTOR = ".programs-grid-scroll";
 const PROGRAMS_LESSON_SCROLL_SELECTOR = ".programs-lesson-scroll";
 const CHECKOUT_RETURN_GRACE_KEY = "dashboard_checkout_return_until";
 const CHECKOUT_RETURN_GRACE_MS = 3000;
+const SECTION_SCROLL_STORE_KEY = "dashboard_section_scroll_v1";
+
+type SectionScrollStore = Record<string, number>;
+
+function readSectionScrollStore(): SectionScrollStore {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.sessionStorage.getItem(SECTION_SCROLL_STORE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as SectionScrollStore;
+  } catch {
+    return {};
+  }
+}
+
+function writeSectionScrollStore(store: SectionScrollStore) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(SECTION_SCROLL_STORE_KEY, JSON.stringify(store));
+  } catch {
+    // Ignore storage exceptions.
+  }
+}
+
+export function getDashboardMainShellScrollElement(
+  root?: HTMLElement | null,
+): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  if (root) {
+    const scoped = root.querySelector<HTMLElement>(MAIN_SHELL_SELECTOR);
+    if (scoped) return scoped;
+  }
+  return document.querySelector<HTMLElement>(MAIN_SHELL_SELECTOR);
+}
+
+/** Remember scroll position when leaving a dashboard section. */
+export function saveDashboardSectionScroll(section: string, root?: HTMLElement | null) {
+  if (!section || typeof window === "undefined") return;
+  const shell = getDashboardMainShellScrollElement(root);
+  if (!shell) return;
+  const store = readSectionScrollStore();
+  store[section] = shell.scrollTop;
+  writeSectionScrollStore(store);
+}
+
+/** Restore saved scroll for a section; returns true when a non-zero position was applied. */
+export function restoreDashboardSectionScroll(section: string, root?: HTMLElement | null): boolean {
+  if (!section || typeof window === "undefined") return false;
+  const shell = getDashboardMainShellScrollElement(root);
+  if (!shell) return false;
+  const top = readSectionScrollStore()[section];
+  if (typeof top !== "number" || top <= 0) return false;
+  shell.scrollTo({ top, left: 0, behavior: "auto" });
+  return true;
+}
+
+/** Swap sections: persist outgoing scroll, restore incoming when available. */
+export function transitionDashboardSectionScroll(
+  fromSection: string,
+  toSection: string,
+  root?: HTMLElement | null,
+) {
+  if (fromSection && fromSection !== toSection) {
+    saveDashboardSectionScroll(fromSection, root);
+  }
+  resetDashboardDocumentScroll();
+  if (shouldSkipMainShellScrollReset()) return;
+  const restored = restoreDashboardSectionScroll(toSection, root);
+  if (!restored) {
+    resetDashboardMainShellScroll(root);
+  }
+}
 
 /** After Stripe return, skip main-shell resets so the navbar and gold frame stay pinned. */
 export function markDashboardCheckoutReturn() {
@@ -112,4 +186,16 @@ export function scrollIntoDashboardMainShell(
   }
 
   shell.scrollTo({ top: Math.max(0, target), behavior });
+}
+
+/** Smooth scroll the main dashboard column to an absolute offset. */
+export function smoothScrollDashboardMainShellTo(
+  top: number,
+  root?: HTMLElement | null,
+  behavior: ScrollBehavior = "smooth",
+) {
+  const shell = getDashboardMainShellScrollElement(root);
+  if (!shell) return;
+  resetDashboardDocumentScroll();
+  shell.scrollTo({ top: Math.max(0, top), left: 0, behavior });
 }

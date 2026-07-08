@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import toast from "react-hot-toast";
 import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 import {
   getInstructorSlideNeonTheme,
   neonAccentStyleVars,
 } from "@/data/instructorSlideNeonThemes";
+import { unlockInstructorSlide } from "@/lib/instructorSlideUnlock";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 const AUTO_ADVANCE_MS = 6000;
@@ -18,6 +20,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [idx, setIdx] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
+  const [unlockBusy, setUnlockBusy] = useState(false);
   const slides = INSTRUCTOR_SLIDES;
   const total = slides.length;
 
@@ -29,17 +32,53 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
       if (total < 1) return;
       setIdx(((next % total) + total) % total);
     },
-    [total]
+    [total],
   );
 
-  const goPrev = useCallback(() => goTo(idx - 1), [goTo, idx]);
-  const goNext = useCallback(() => goTo(idx + 1), [goTo, idx]);
+  const goPrev = useCallback(() => {
+    setIdx((current) => ((current - 1 + total) % total));
+  }, [total]);
+
+  const goNext = useCallback(() => {
+    setIdx((current) => (current + 1) % total);
+  }, [total]);
+
+  const handleDotSelect = useCallback(
+    (nextIndex: number) => {
+      goTo(nextIndex);
+    },
+    [goTo],
+  );
+
+  useEffect(() => {
+    setIdx((current) => {
+      if (total < 1) return 0;
+      return current >= total ? current % total : current;
+    });
+  }, [total]);
+
+  const handleUnlock = useCallback(async () => {
+    if (unlockBusy) return;
+    setUnlockBusy(true);
+    try {
+      const result = await unlockInstructorSlide(active);
+      if (!result.ok && result.message) {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not start checkout.");
+    } finally {
+      setUnlockBusy(false);
+    }
+  }, [active, unlockBusy]);
 
   useEffect(() => {
     if (!autoPlay || total < 2) return;
-    const t = window.setInterval(() => setIdx((v) => (v + 1) % total), AUTO_ADVANCE_MS);
+    const t = window.setInterval(() => {
+      setIdx((current) => (current + 1) % total);
+    }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(t);
-  }, [autoPlay, idx, total]);
+  }, [autoPlay, total]);
 
   useEffect(() => {
     if (!showPanelBackgroundVideo) return;
@@ -176,13 +215,33 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             <p className="instructor-slideshow-description m-0 font-medium leading-[1.55] text-white/90">
               {active.description}
             </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 pt-1">
             <button
               type="button"
-              className={navBtnClass}
-              onClick={goPrev}
+              disabled={unlockBusy}
+              onClick={() => void handleUnlock()}
+              className={cn(
+                "instructor-slideshow-unlock-btn inline-flex w-full max-w-xl items-center justify-center rounded-lg border-2 px-4 py-2.5 text-left font-black uppercase leading-tight tracking-[0.1em] transition sm:px-5 sm:py-3 sm:tracking-[0.12em]",
+                "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/18 text-[color:var(--instructor-neon-bright)]",
+                "shadow-[0_0_20px_var(--instructor-neon-haze),inset_0_1px_0_rgba(255,255,255,0.1)]",
+                "hover:bg-[color:var(--instructor-neon)]/28 hover:shadow-[0_0_28px_var(--instructor-neon-glow)]",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--instructor-neon-bright)]",
+                unlockBusy && "cursor-wait opacity-75",
+              )}
+            >
+              <span className="min-w-0 text-balance">
+                {unlockBusy ? "Starting checkout…" : `Unlock Now — ${active.programName}`}
+              </span>
+            </button>
+          </div>
+
+          <div className="relative z-[5] flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="button"
+              className={cn(navBtnClass, "touch-manipulation")}
+              onClick={(event) => {
+                event.stopPropagation();
+                goPrev();
+              }}
               aria-label="Previous program"
               disabled={total < 2}
             >
@@ -190,20 +249,23 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             </button>
 
             <div
-              className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2 sm:gap-2.5"
+              className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-x-auto overscroll-x-contain py-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2.5 [&::-webkit-scrollbar]:hidden"
               role="tablist"
               aria-label="Programs"
             >
               {slides.map((slide, i) => (
                 <button
-                  key={slide.src}
+                  key={`${slide.programName}-${i}`}
                   type="button"
                   role="tab"
                   aria-selected={i === idx}
                   aria-label={`${slide.programName} — ${i + 1} of ${total}`}
-                  onClick={() => goTo(i)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleDotSelect(i);
+                  }}
                   className={cn(
-                    "instructor-slideshow-dot h-3 w-3 rounded-[4px] border-2 transition hover:scale-110 hover:border-white/45 sm:h-3.5 sm:w-3.5",
+                    "instructor-slideshow-dot h-3 w-3 shrink-0 rounded-[4px] border-2 transition hover:scale-110 hover:border-white/45 sm:h-3.5 sm:w-3.5",
                     i === idx
                       ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/45 shadow-[0_0_14px_var(--instructor-neon-glow)] scale-110"
                       : "border-white/20 bg-white/12"
@@ -214,8 +276,11 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
 
             <button
               type="button"
-              className={navBtnClass}
-              onClick={goNext}
+              className={cn(navBtnClass, "touch-manipulation")}
+              onClick={(event) => {
+                event.stopPropagation();
+                goNext();
+              }}
               aria-label="Next program"
               disabled={total < 2}
             >

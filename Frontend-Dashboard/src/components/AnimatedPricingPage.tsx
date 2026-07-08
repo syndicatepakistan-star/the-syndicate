@@ -6,7 +6,17 @@ import { Check, Crown, Shield, Star, Swords } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { buildPlanCheckoutAuthHref, startPlanCheckout } from '@/lib/plan-checkout'
-import { isKnightCheckoutBlocked, MONEY_MASTERY_FOUNDATION_COPY, MONEY_MASTERY_LIFETIME_FEATURES, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY, PLAN_OFFERS_PRIMARY, type PlanOfferDef } from '@/components/programs/planOfferCatalog'
+import {
+  isKnightCheckoutBlocked,
+  KNIGHT_LAUNCHING_SOON_LABEL,
+  KNIGHT_LAUNCHING_SOON_MESSAGE,
+  MONEY_MASTERY_FOUNDATION_COPY,
+  MONEY_MASTERY_LIFETIME_FEATURES,
+  KNIGHT_MEMBERSHIP_FEATURES,
+  KNIGHT_SUBSCRIPTION_COPY,
+  PLAN_OFFERS_PRIMARY,
+  type PlanOfferDef,
+} from '@/components/programs/planOfferCatalog'
 import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
@@ -274,7 +284,7 @@ function TierCard({
             {knightComingSoon ? (
               <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-3 text-center">
                 <span className="rounded-xl border border-amber-300/60 bg-black/80 px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-base">
-                  Coming Soon
+                  {KNIGHT_LAUNCHING_SOON_LABEL}
                 </span>
               </span>
             ) : null}
@@ -333,7 +343,12 @@ function TierCard({
               </div>
             </div>
 
-            <div className="mt-2 max-w-none text-sm text-white/70 font-body sm:max-w-[52ch]">
+            <div
+              className={cn(
+                "mt-2 max-w-none font-body text-white/70",
+                elitePlanKey ? "text-base leading-relaxed sm:max-w-[52ch] sm:text-lg" : "text-sm sm:max-w-[52ch]",
+              )}
+            >
               <p className={cn(elitePlanKey && "line-clamp-4")}>{tier.description}</p>
             </div>
           </motion.div>
@@ -377,7 +392,7 @@ function TierCard({
               elitePlanKey && 'col-span-1',
             )}
           >
-            {knightComingSoon ? 'Coming Soon' : tier.cta}
+            {knightComingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : tier.cta}
           </button>
           </div>
         </div>
@@ -403,7 +418,7 @@ export function PricingPage({
     if (redirectingPlan) return
     if (plan !== 'bundle' && plan !== 'king') return
     if (isKnightCheckoutBlocked(plan)) {
-      setCheckoutError('The Knight membership is coming soon and is not available for purchase yet.')
+      setCheckoutError(KNIGHT_LAUNCHING_SOON_MESSAGE)
       return
     }
     const amount = rawAmount.replace(/[^0-9.]/g, '')

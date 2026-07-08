@@ -35,6 +35,11 @@ export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple" | "
 /** Flip to false when The Knight checkout should go live. */
 export const KNIGHT_PLAN_COMING_SOON = true;
 
+export const KNIGHT_LAUNCHING_SOON_LABEL = "Launching Soon";
+
+export const KNIGHT_LAUNCHING_SOON_MESSAGE =
+  "The Knight membership is launching soon and is not available for purchase yet.";
+
 export function isKnightPlanSlug(plan: string): boolean {
   const p = plan.trim().toLowerCase();
   return p === "king" || p === "knight";
@@ -244,7 +249,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/mo",
     checkoutAmount: "19.99",
     billing: "monthly",
-    openLabel: "Coming Soon",
+    openLabel: KNIGHT_LAUNCHING_SOON_LABEL,
     openHref: "/membership",
     isComingSoon: true,
     accent: "cyan",
@@ -318,6 +323,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     openAction: "vault_picker",
+    detailsLabel: "View All Videos",
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
     detailDescription:
@@ -368,6 +374,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     openAction: "vault_picker",
+    detailsLabel: "View All Videos",
     accent: "purple",
     imageMobileFit: "contain",
     detailTitle: "TRADING ADVANCED TECHNICAL ANALYSIS",

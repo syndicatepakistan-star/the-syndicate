@@ -145,6 +145,7 @@ const preloadedStreamVideoUrls = new Set<string>();
 const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
 
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
+let playlistsFetchInflight: Promise<StreamPlaylistListItem[]> | null = null;
 const playlistDetailCache = new Map<number, { at: number; data: StreamPlaylistDetail }>();
 const playbackCache = new Map<string, { at: number; data: StreamPayload }>();
 
@@ -247,6 +248,7 @@ function writePlaylistsSessionCache(data: StreamPlaylistListItem[]): void {
 /** Drop cached playlist lock state (call after checkout, login, or tier change). */
 export function clearStreamPlaylistsCache(): void {
   playlistsCache = null;
+  playlistsFetchInflight = null;
   playlistDetailCache.clear();
   if (typeof window === "undefined") return;
   try {
@@ -294,24 +296,39 @@ export async function fetchStreamPlaylists(options?: {
     return normalized;
   }
 
-  const res = await portalFetch<StreamPlaylistListItem[]>("/api/streaming/playlists/");
-  if (res.ok) {
-    const list = normalizePlaylistList(Array.isArray(res.data) ? res.data : []);
-    playlistsCache = { at: Date.now(), data: list };
-    writePlaylistsSessionCache(list);
-    return list;
+  if (!forceRefresh && playlistsFetchInflight) {
+    return playlistsFetchInflight;
   }
-  if (!options?.allowPublicFallback) {
-    throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
+
+  const fetchPromise = (async (): Promise<StreamPlaylistListItem[]> => {
+    const res = await portalFetch<StreamPlaylistListItem[]>("/api/streaming/playlists/");
+    if (res.ok) {
+      const list = normalizePlaylistList(Array.isArray(res.data) ? res.data : []);
+      playlistsCache = { at: Date.now(), data: list };
+      writePlaylistsSessionCache(list);
+      return list;
+    }
+    if (!options?.allowPublicFallback) {
+      throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
+    }
+    try {
+      const list = await fetchPublicStreamPlaylists();
+      playlistsCache = { at: Date.now(), data: list };
+      writePlaylistsSessionCache(list);
+      return list;
+    } catch {
+      throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
+    }
+  })();
+
+  if (!forceRefresh) {
+    playlistsFetchInflight = fetchPromise.finally(() => {
+      playlistsFetchInflight = null;
+    });
+    return playlistsFetchInflight;
   }
-  try {
-    const list = await fetchPublicStreamPlaylists();
-    playlistsCache = { at: Date.now(), data: list };
-    writePlaylistsSessionCache(list);
-    return list;
-  } catch {
-    throw new Error(errMessage(res.status, res.data, "Could not load playlists."));
-  }
+
+  return fetchPromise;
 }
 
 export async function fetchPublicStreamPlaylists(): Promise<StreamPlaylistListItem[]> {

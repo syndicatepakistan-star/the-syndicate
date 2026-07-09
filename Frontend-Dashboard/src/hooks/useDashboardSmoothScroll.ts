@@ -4,9 +4,9 @@ import { useEffect, type RefObject } from "react";
 import { isDashboardMotionSuspended } from "@/lib/dashboardMotionControl";
 
 const SCROLL_CONTAINER_SELECTOR =
-  "[data-main-shell-scroll], .programs-grid-scroll, .programs-lesson-scroll, [data-syndicate-mission-scroll]";
+  "[data-main-shell-scroll], .programs-grid-scroll, .programs-lesson-scroll, [data-syndicate-mission-scroll], .support-thread-scroll";
 
-const SCROLL_END_MS = 120;
+const SCROLL_END_MS = 100;
 
 function pauseDashboardVideos(root: HTMLElement) {
   root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {

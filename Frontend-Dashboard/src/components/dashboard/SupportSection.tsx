@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, ChevronLeft, Clock, MessageCircle, Send, ShieldAlert } from "lucide-react";
@@ -199,17 +199,27 @@ export function SupportSection() {
     void loadThreads();
   }, [loadThreads]);
 
-  const openThread = useCallback(async (id: string) => {
-    setSelectedId(id);
-    setError(null);
-    setSuccess(null);
-    try {
-      const t = await fetchSupportThread(id);
-      setActiveThread(t);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load conversation.");
-    }
-  }, []);
+  const [, startThreadTransition] = useTransition();
+
+  const openThread = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      setError(null);
+      setSuccess(null);
+      const preview = threads.find((t) => t.id === id);
+      if (preview) {
+        setActiveThread({ ...preview, messages: preview.messages ?? [] });
+      }
+      startThreadTransition(() => {
+        void fetchSupportThread(id)
+          .then((t) => setActiveThread(t))
+          .catch((e) => {
+            setError(e instanceof Error ? e.message : "Could not load conversation.");
+          });
+      });
+    },
+    [threads],
+  );
 
   const closeThread = () => {
     setSelectedId(null);
@@ -233,8 +243,8 @@ export function SupportSection() {
       setUrgentStep("none");
       setConfirmText("");
       setSuccess("Request submitted. Our team has been notified by email.");
-      await loadThreads();
-      void openThread(created.id);
+      void loadThreads();
+      openThread(created.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Submission failed.");
     } finally {
@@ -397,7 +407,7 @@ export function SupportSection() {
 
               <div
                 className={cn(
-                  "relative flex max-h-[min(42vh,420px)] min-h-[200px] flex-1 flex-col gap-3 overflow-y-auto rounded-lg border border-white/12 bg-gradient-to-b from-black/55 via-[#0a0810]/80 to-black/60 p-4",
+                  "support-thread-scroll relative flex max-h-[min(42vh,420px)] min-h-[200px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-gradient-to-b from-black/55 via-[#0a0810]/80 to-black/60 p-4",
                   threadTheme.ticketGlow
                 )}
               >

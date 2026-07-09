@@ -7162,6 +7162,22 @@ body.dashboard-shell-scroll-lock::-webkit-scrollbar {
   background: transparent !important;
 }
 
+/* Inactive keep-alive dashboard sections — skip layout/paint until revisited */
+[data-dashboard-section-active="false"] {
+  content-visibility: hidden;
+  contain-intrinsic-size: 0 720px;
+}
+
+.support-thread-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  contain: layout style paint;
+}
+
+html.dashboard-is-scrolling .support-thread-scroll {
+  scroll-behavior: auto;
+}
+
 .syndicate-mood-context.dashboard-hamburger-chrome {
   display: flex;
   flex-direction: column;

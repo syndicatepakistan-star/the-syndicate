@@ -18,7 +18,7 @@ import {
   type ThemeMode
 } from "./dashboardPrimitives";
 import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
-import { fetchStreamPlaylists, type StreamPlaylistListItem } from "@/lib/streaming-api";
+import { useStreamPlaylists } from "@/hooks/useStreamPlaylists";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
 import { UnlockedProgramsDashboardStrip } from "./UnlockedProgramsDashboardStrip";
 import { Lock, Activity } from "lucide-react";
@@ -840,22 +840,7 @@ export default function DashboardControlCenter({
   const syndicateLocked = !!dashboardNavLocks?.monk;
   const { snapshots } = useDashboardSnapshots({ userName, courses, syndicateKnightApi: !syndicateLocked });
   const integrityHigh = snapshots.coreIntegrity.integrityPct > 90;
-  const [streamPlaylists, setStreamPlaylists] = useState<StreamPlaylistListItem[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const list = await fetchStreamPlaylists({ allowPublicFallback: true });
-        if (!cancelled) setStreamPlaylists(Array.isArray(list) ? list : []);
-      } catch {
-        if (!cancelled) setStreamPlaylists([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { playlists: streamPlaylists } = useStreamPlaylists({ allowPublicFallback: true });
 
   return (
     <>

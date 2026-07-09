@@ -118,7 +118,8 @@ class UserMeSerializer(serializers.ModelSerializer):
         from apps.courses.access import _user_is_playlist_only_buyer
 
         if _user_is_playlist_only_buyer(obj):
-            return {"monk": True, "resources": True, "goals": True, "dashboard": True}
+            # Single-program buyers still get the dashboard overview + their unlocked strip.
+            return {"monk": True, "resources": True, "goals": True, "dashboard": False}
         return {"monk": True, "resources": True, "goals": False, "dashboard": False}
 
     def get_king_program_selection_required(self, obj: User) -> bool:

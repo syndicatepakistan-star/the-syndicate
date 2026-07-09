@@ -16,6 +16,38 @@ export function buildDashboardPlaylistPath(playlistId: number): string {
 export const DASHBOARD_OPEN_PLAYLIST_EVENT = "dashboard-open-playlist";
 export const DASHBOARD_OPEN_COURSE_EVENT = "dashboard-open-course";
 
+let pendingPlaylistOpenId: number | null = null;
+let pendingCourseOpenId: number | null = null;
+
+/** Consumed by ProgramsCourseSection on mount — survives event-before-listener races. */
+export function consumePendingDashboardProgramOpen(): {
+  playlistId?: number;
+  courseId?: number;
+} {
+  const out = {
+    playlistId: pendingPlaylistOpenId ?? undefined,
+    courseId: pendingCourseOpenId ?? undefined,
+  };
+  pendingPlaylistOpenId = null;
+  pendingCourseOpenId = null;
+  return out;
+}
+
+export function readDashboardProgramDeepLink(
+  search = typeof window !== "undefined" ? window.location.search : "",
+): { playlistId: number | null; courseId: number | null; needsProgramsSection: boolean } {
+  const params = new URLSearchParams(search);
+  const playlistRaw = params.get("playlist") || params.get("playlist_id");
+  const programRaw = params.get("program");
+  const playlistId =
+    playlistRaw && /^\d+$/.test(playlistRaw) && Number(playlistRaw) > 0 ? Number(playlistRaw) : null;
+  const courseId =
+    programRaw && /^\d+$/.test(programRaw) && Number(programRaw) > 0 ? Number(programRaw) : null;
+  const section = (params.get("section") || "").trim().toLowerCase();
+  const needsProgramsSection = playlistId !== null || courseId !== null || section === "programs";
+  return { playlistId, courseId, needsProgramsSection };
+}
+
 /** Switch to Programs and open a playlist/course (works when Programs pane is keep-alive mounted). */
 export function requestDashboardProgramOpen(opts: {
   playlistId?: number;
@@ -28,11 +60,17 @@ export function requestDashboardProgramOpen(opts: {
   params.set("section", "programs");
 
   if (opts.playlistId != null && Number.isFinite(opts.playlistId) && opts.playlistId > 0) {
+    pendingPlaylistOpenId = opts.playlistId;
+    pendingCourseOpenId = null;
     params.set("playlist", String(opts.playlistId));
     params.delete("program");
+    params.delete("playlist_id");
   } else if (opts.courseId != null && Number.isFinite(opts.courseId) && opts.courseId > 0) {
+    pendingCourseOpenId = opts.courseId;
+    pendingPlaylistOpenId = null;
     params.set("program", String(opts.courseId));
     params.delete("playlist");
+    params.delete("playlist_id");
   }
 
   const href = `${window.location.pathname}?${params.toString()}`;

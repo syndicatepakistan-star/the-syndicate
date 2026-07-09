@@ -10,7 +10,7 @@ import {
   tradingSubmodulesForModule,
   type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
-import { TRADING_PACK_DESCRIPTION } from "@/components/programs/tradingVaultCopy";
+import { TRADING_PACK_DESCRIPTION, curatedTradingVaultDescription } from "@/components/programs/tradingVaultCopy";
 
 const PACK_NAMES: Record<VaultPackKey, string> = {
   agentic_ai: "Agentic AI",
@@ -69,8 +69,9 @@ export function resolveVaultModuleStructuredDescription(
   }
 
   const title = offer.title.trim();
-  const teaser = resolveVaultModuleTeaser(title, pack);
-  const detail = resolveVaultModuleDetail(title, pack);
+  const planSlug = String(offer.plan);
+  const teaser = resolveVaultModuleTeaser(title, pack, planSlug);
+  const detail = resolveVaultModuleDetail(title, pack, planSlug);
   const packName = PACK_NAMES[pack];
 
   const hook = [
@@ -89,6 +90,9 @@ export function resolveVaultModuleStructuredDescription(
 }
 
 export function resolveOfferStructuredDescription(offer: PlanOfferDef): string {
+  const plan = String(offer.plan);
+  const curated = curatedTradingVaultDescription(plan, offer.title);
+  if (curated) return curated;
   if (isVaultPackKey(offer.plan)) {
     return resolveVaultPackStructuredDescription(offer.plan);
   }

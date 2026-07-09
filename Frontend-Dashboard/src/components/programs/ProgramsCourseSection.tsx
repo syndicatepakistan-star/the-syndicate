@@ -58,8 +58,10 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import {
   clearUnlockCelebrationStorage,
+  consumePendingDashboardProgramOpen,
   DASHBOARD_OPEN_COURSE_EVENT,
   DASHBOARD_OPEN_PLAYLIST_EVENT,
+  readDashboardProgramDeepLink,
   resolvePlaylistIdForPlan,
 } from "@/lib/programUnlockFlow";
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
@@ -548,9 +550,18 @@ export function ProgramsCourseSection({
 
   useEffect(() => {
     if (apiCourses.length === 0 && streamPlaylists.length === 0) {
-      setSecureView("grid");
-    } else if (detailCourseId === null && detailPlaylistId === null) {
-      setSecureView("grid");
+      const deepLink = readDashboardProgramDeepLink();
+      const hasPendingDetail = detailCourseId !== null || detailPlaylistId !== null;
+      if (!hasPendingDetail && !deepLink.playlistId && !deepLink.courseId) {
+        setSecureView("grid");
+      }
+      return;
+    }
+    if (detailCourseId === null && detailPlaylistId === null) {
+      const deepLink = readDashboardProgramDeepLink();
+      if (!deepLink.playlistId && !deepLink.courseId) {
+        setSecureView("grid");
+      }
     }
   }, [apiCourses.length, streamPlaylists.length, detailCourseId, detailPlaylistId]);
 
@@ -687,6 +698,8 @@ export function ProgramsCourseSection({
   const activeDetailCourse =
     detailCourseId !== null ? visibleApiCourses.find((c) => c.id === detailCourseId) : undefined;
   const hasCatalogItems = visibleApiCourses.length > 0 || streamPlaylists.length > 0;
+  const inLessonDetail =
+    secureView === "detail" && (detailPlaylistId !== null || detailCourseId !== null);
   const hasSecureErrors = coursesError !== null || playlistsError !== null;
   const showSecureBlock = staff || hasCatalogItems || hasSecureErrors || chromaItems.length === 0;
   const useApiProgramBrowser = hasCatalogItems || staff || hasSecureErrors || chromaItems.length === 0;
@@ -795,32 +808,60 @@ export function ProgramsCourseSection({
   const streamPlaylistsRef = useRef(streamPlaylists);
   streamPlaylistsRef.current = streamPlaylists;
 
+  const pendingPlaylistUrlRef = useRef<number | null>(null);
+
   const openPlaylistFromUrl = useCallback((playlistIdFromUrl: number) => {
     if (!Number.isFinite(playlistIdFromUrl) || playlistIdFromUrl <= 0) return;
     if (detailPlaylistId === playlistIdFromUrl && secureView === "detail") return;
     const target = streamPlaylistsRef.current.find((pl) => pl.id === playlistIdFromUrl);
     if (target?.is_coming_soon) return;
+    pendingPlaylistUrlRef.current = playlistIdFromUrl;
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
     void prefetchStreamPlaylistExperience(playlistIdFromUrl, { context: "programs" });
-    const url = new URL(window.location.href);
-    url.searchParams.set("section", "programs");
-    url.searchParams.set("playlist", String(playlistIdFromUrl));
-    window.history.replaceState({}, "", url.toString());
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("section", "programs");
+      url.searchParams.set("playlist", String(playlistIdFromUrl));
+      url.searchParams.delete("playlist_id");
+      window.history.replaceState({}, "", url.toString());
+    }
   }, [detailPlaylistId, secureView]);
+
+  const syncPlaylistDeepLinkFromUrl = useCallback(() => {
+    const deepLink = readDashboardProgramDeepLink();
+    if (deepLink.playlistId) {
+      openPlaylistFromUrl(deepLink.playlistId);
+      return;
+    }
+    const pending = consumePendingDashboardProgramOpen();
+    if (pending.playlistId) openPlaylistFromUrl(pending.playlistId);
+    else if (pending.courseId) openProgram(pending.courseId);
+  }, [openPlaylistFromUrl]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = new URLSearchParams(window.location.search).get("playlist");
-    if (!raw || !/^\d+$/.test(raw)) return;
-    openPlaylistFromUrl(Number(raw));
-  }, [openPlaylistFromUrl]);
+    syncPlaylistDeepLinkFromUrl();
+  }, [syncPlaylistDeepLinkFromUrl]);
+
+  useEffect(() => {
+    const pending = pendingPlaylistUrlRef.current ?? readDashboardProgramDeepLink().playlistId;
+    if (!pending) return;
+    const target = effectiveStreamPlaylists.find((pl) => pl.id === pending);
+    if (!target || target.is_coming_soon) return;
+    if (detailPlaylistId === pending && secureView === "detail") {
+      pendingPlaylistUrlRef.current = null;
+      return;
+    }
+    openPlaylistFromUrl(pending);
+  }, [effectiveStreamPlaylists, detailPlaylistId, secureView, openPlaylistFromUrl]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onPopState = () => {
-      const raw = new URLSearchParams(window.location.search).get("playlist");
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("playlist") || params.get("playlist_id");
       if (!raw || !/^\d+$/.test(raw)) return;
       openPlaylistFromUrl(Number(raw));
     };
@@ -840,11 +881,12 @@ export function ProgramsCourseSection({
     };
     window.addEventListener(DASHBOARD_OPEN_PLAYLIST_EVENT, onDashboardOpenPlaylist);
     window.addEventListener(DASHBOARD_OPEN_COURSE_EVENT, onDashboardOpenCourse);
+    syncPlaylistDeepLinkFromUrl();
     return () => {
       window.removeEventListener(DASHBOARD_OPEN_PLAYLIST_EVENT, onDashboardOpenPlaylist);
       window.removeEventListener(DASHBOARD_OPEN_COURSE_EVENT, onDashboardOpenCourse);
     };
-  }, [openPlaylistFromUrl]);
+  }, [openPlaylistFromUrl, syncPlaylistDeepLinkFromUrl]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -1400,7 +1442,7 @@ export function ProgramsCourseSection({
             </div>
           ) : null}
 
-          {hasCatalogItems && secureView === "detail" ? (
+          {inLessonDetail ? (
             <div className="programs-lesson-shell flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
               <div className="programs-lesson-nav shrink-0 pt-3 sm:pt-4 md:pt-5">
                 <button

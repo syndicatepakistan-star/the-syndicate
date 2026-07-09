@@ -68,6 +68,7 @@ import {
 } from "@/lib/dashboardProfileStorage";
 import { DASHBOARD_SHELL_NAV_EVENT, type DashboardShellNavEventDetail } from "@/lib/dashboardShellNavEvent";
 import { useUnlockedDashboardPrograms } from "@/hooks/useUnlockedDashboardPrograms";
+import { readDashboardProgramDeepLink } from "@/lib/programUnlockFlow";
 import {
   fetchKingProgramSelection,
   fetchPortalIdentity,
@@ -1917,12 +1918,21 @@ export default function Page() {
     []
   );
 
-  const [selectedNavKey, setNavKeyState] = useState<string>("dashboard");
+  const [selectedNavKey, setNavKeyState] = useState<string>(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const deepLink = readDashboardProgramDeepLink();
+    if (deepLink.needsProgramsSection) return "programs";
+    const section = new URLSearchParams(window.location.search).get("section");
+    return section && section !== "affiliate" ? section : "dashboard";
+  });
   const [authChecked, setAuthChecked] = useState(false);
   const [portalUser, setPortalUser] = useState<PortalUser | null>(null);
   const [kingSelectionState, setKingSelectionState] = useState<KingProgramSelectionState | null>(null);
   const [kingSelectionLoading, setKingSelectionLoading] = useState(false);
   const [kingSelectionError, setKingSelectionError] = useState("");
+
+  const unlockedProgramsEnabled = !!portalUser && authChecked;
+  const { programs: unlockedDashboardPrograms, unlockedCount } = useUnlockedDashboardPrograms(unlockedProgramsEnabled);
 
   const isNavLocked = useCallback(
     (key: string) => {
@@ -1931,14 +1941,14 @@ export default function Page() {
       if (!L) return knightOnly;
       if (key === "monk" && L.monk) return true;
       if (key === "resources" && L.resources) return true;
-      if (key === "dashboard" && L.dashboard) return true;
+      if (key === "dashboard" && L.dashboard) {
+        if (unlockedCount > 0) return false;
+        return true;
+      }
       return false;
     },
-    [portalUser]
+    [portalUser, unlockedCount]
   );
-
-  const unlockedProgramsEnabled = !!portalUser && authChecked && !isNavLocked("dashboard");
-  const { programs: unlockedDashboardPrograms } = useUnlockedDashboardPrograms(unlockedProgramsEnabled);
 
   const applyNavKey = useCallback(
     (key: string) => {
@@ -2256,14 +2266,30 @@ export default function Page() {
   /** Restore section from URL on load / refresh (e.g. /?section=programs). */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    const section = new URLSearchParams(window.location.search).get("section");
+    const params = new URLSearchParams(window.location.search);
+    const deepLink = readDashboardProgramDeepLink(params.toString());
+    const section = params.get("section");
     if (section === "affiliate") return;
     const valid = new Set(nav.map((n) => n.key));
+
+    if (deepLink.needsProgramsSection && valid.has("programs")) {
+      if (deepLink.playlistId) {
+        params.set("playlist", String(deepLink.playlistId));
+        params.delete("playlist_id");
+      }
+      params.set("section", "programs");
+      const qs = params.toString();
+      window.history.replaceState({ dashboardSection: "programs" }, "", `${pathname}?${qs}`);
+      setNavKeyState("programs");
+      previousNavKeyRef.current = "programs";
+      return;
+    }
+
     if (section && valid.has(section)) {
       setNavKeyState(section);
       previousNavKeyRef.current = section;
     }
-  }, [nav]);
+  }, [nav, pathname]);
 
   /** Browser back/forward: sync section from URL; leaving dashboard goes to public home. */
   useEffect(() => {

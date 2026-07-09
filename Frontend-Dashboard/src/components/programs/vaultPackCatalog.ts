@@ -51,7 +51,7 @@ function toOffer(
   packPlan: VaultPackKey
 ): PlanOfferDef {
   const price = String(row.unitPrice);
-  const teaser = resolveVaultModuleTeaser(row.title, packPlan);
+  const teaser = resolveVaultModuleTeaser(row.title, packPlan, row.slug);
   return {
     plan: row.slug,
     title: row.title,
@@ -65,7 +65,7 @@ function toOffer(
     openLabel: "Unlock",
     accent,
     detailTitle: row.title.toUpperCase().slice(0, 80),
-    detailDescription: resolveVaultModuleDetail(row.title, packPlan),
+    detailDescription: resolveVaultModuleDetail(row.title, packPlan, row.slug),
     detailFeatures: [row.title, "Lifetime access for this module", "Dashboard billing record after checkout"],
     grantsEntitlement: false,
     vaultPackPlan: packPlan,

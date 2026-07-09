@@ -1,8 +1,10 @@
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
 import {
+  curatedTradingVaultDescription,
   resolveTradingModuleDetail,
   resolveTradingModuleTeaser,
   resolveTradingSubmoduleTeaser,
+  tradingVaultDescriptionTeaser,
   TRADING_MODULE_DESCRIPTIONS,
   TRADING_PACK_DESCRIPTION,
 } from "@/components/programs/tradingVaultCopy";
@@ -153,12 +155,14 @@ export const VAULT_MODULE_TEASERS: Readonly<Record<string, string>> = {
   "Secrets of a Master Trader": resolveTradingModuleTeaser("Secrets of a Master Trader"),
 };
 
-export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey): string {
+export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey, planSlug?: string): string {
   if (pack === "trading_technical_analysis") {
+    const curated = curatedTradingVaultDescription(planSlug, title);
+    if (curated) return tradingVaultDescriptionTeaser(curated, planSlug);
     const moduleTeaser = VAULT_MODULE_TEASERS[title];
     if (moduleTeaser) return moduleTeaser;
     const index = TRADING_SUBMODULES.findIndex((row) => row.title === title);
-    if (index >= 0) return resolveTradingSubmoduleTeaser(index);
+    if (index >= 0) return resolveTradingSubmoduleTeaser(index, title, TRADING_SUBMODULES[index]?.slug);
   }
   const custom = VAULT_MODULE_TEASERS[title];
   if (custom) return custom;
@@ -167,12 +171,15 @@ export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey): str
   return `${lead} ${short}`;
 }
 
-export function resolveVaultModuleDetail(title: string, pack: VaultPackKey): string {
+export function resolveVaultModuleDetail(title: string, pack: VaultPackKey, planSlug?: string): string {
   if (pack === "trading_technical_analysis") {
-    if (TRADING_MODULE_DESCRIPTIONS[title]) return resolveTradingModuleDetail(title);
+    const curated = curatedTradingVaultDescription(planSlug, title);
+    if (curated) return curated;
+    if (TRADING_MODULE_DESCRIPTIONS[title]) return resolveTradingModuleDetail(title, planSlug);
     const index = TRADING_SUBMODULES.findIndex((row) => row.title === title);
     if (index >= 0) {
-      const teaser = resolveTradingSubmoduleTeaser(index);
+      const row = TRADING_SUBMODULES[index];
+      const teaser = resolveTradingSubmoduleTeaser(index, title, row?.slug);
       return `${teaser} Buy once — your dashboard records ownership. Curriculum access activates when the module deploys in the vault. No vanity access. Only controlled entitlement under your Syndicate identity.`;
     }
     return `${TRADING_PACK_DESCRIPTION} Buy once — your dashboard records ownership. Curriculum access activates when the module deploys in the vault.`;

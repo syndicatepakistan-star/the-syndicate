@@ -35,6 +35,14 @@ export function DashboardSectionKeepAlive({
       data-dashboard-section={sectionKey}
       data-dashboard-section-active={active ? "true" : "false"}
       aria-hidden={!active}
+      style={
+        active
+          ? undefined
+          : {
+              contentVisibility: "hidden",
+              containIntrinsicSize: "0 720px",
+            }
+      }
     >
       {children}
     </div>

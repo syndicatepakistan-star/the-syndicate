@@ -442,7 +442,7 @@ function resolvePathItem(
       titleMatches(row.title, item.title),
     );
     if (!moduleOffer) return null;
-    const teaser = resolveVaultModuleTeaser(moduleOffer.title, item.pack);
+    const teaser = resolveVaultModuleTeaser(moduleOffer.title, item.pack, String(moduleOffer.plan));
     const copy = defaultCopyForTitle(moduleOffer.title, goal);
     return {
       id: `module-${moduleOffer.plan}`,

@@ -81,30 +81,37 @@ Push notifications: sending alerts and messages on iOS and Android devices
 Real-world portfolio: building complete apps including a to-do list, music player, e-commerce cart, and messaging app`,
 
   "building-apps-react-js": `Introduction
-The web is the highest-leverage real estate on earth — and most operators still rent their presence on platforms they do not control. Building Apps using React JS is your extraction protocol from template dependency and no-code limitations into full sovereign control over web applications that scale. React is not a trend; it is the infrastructure layer powering modern SaaS, dashboards, marketplaces, and client portals. If you cannot build in React, you are permanently subcontracting your most valuable digital territory to developers who bill by the hour and vanish when complexity arrives.
+Are you tired of just watching React tutorials and never actually building anything? Many beginners get stuck watching videos without knowing how to put the pieces together. This course fixes that by showing you exactly how to build a real app, step by step. By the end, you will have the freedom to take your own ideas and turn them into working, interactive websites.
+
+This course is all about creating a complete React application from start to finish. You will learn core skills, like creating reusable pieces of your website (called components) and managing user data. It is worth your time because learning by doing is the fastest way to build real skills. You will take control of your learning and build a finished project you can actually show off.
 
 What You Will Learn
-Modern React fundamentals and component architecture
-Routing, navigation, and multi-page application structure
-State management and data flow patterns
-Consuming REST and API endpoints securely
-Forms, validation, and user input handling
-Authentication and protected route patterns
-Building and styling production UI systems
-Deploying React applications to production environments`,
+Setting up your React workspace and tools
+Understanding how React builds web pages
+Creating your first reusable website parts (components)
+Adding styles and layouts to make your app look great
+Managing data and user clicks (using state)
+Pulling in outside information to your app (fetching data)
+Adding different screens and menus to your website (routing)
+Finding and fixing common code errors
+Putting your finished app live on the internet for the world to see`,
 
   "amazon-kdp": `Introduction
-Publishing empires are not built in boardrooms — they are built in distribution channels that compound while you sleep. Amazon KDP is one of the highest-leverage publishing weapons available to a solo operator: zero inventory, global reach, and royalty streams that do not require your face, your office, or your constant presence. Amateurs treat KDP like a lottery ticket — upload once, hope for sales, quit after thirty days. Syndicate operators treat it like a publishing factory: research-driven niches, systematic production, and covers and copy engineered for conversion.
+Are you new to Amazon KDP and want to publish books to earn passive income? Or have you been trying for a while but not seeing the results you hoped for? This course is for you! We will break down the process of publishing on Amazon step by step. You'll learn how to create books that people want to read. By the end of this course, you'll feel confident in publishing your own books and starting to earn money online.
+
+This course teaches you everything you need to know about Amazon KDP. You will learn how to choose the right book topics, create quality content, and launch your books effectively. You will gain skills to build a successful publishing business. This course is worth your time because it provides clear, practical steps to help you succeed in a crowded market. Join us in "THE SYNDICATE" and take control of your time and income through the power of publishing!
 
 What You Will Learn
-Amazon KDP platform setup and publishing workflow
-Niche research and market validation techniques
-Manuscript formatting and interior design standards
-Cover design principles that convert browsers to buyers
-Keyword, category, and listing optimization
-Launch strategy for new titles
-Building a compounding back catalogue
-Long-term royalty architecture without inventory overhead`,
+What Amazon KDP is and how it works
+How to choose book topics with high potential for success
+Techniques to validate your book ideas
+The process of creating high-quality content
+How to effectively work with ghostwriters
+Tips for designing eye-catching book covers
+Strategies for launching your book to maximize visibility
+Understanding Amazon ads and how to use them
+Expanding into audiobooks for additional income
+Using book traffic to promote other products`,
 
   "building-games-using-unreal-engine": `Introduction
 Are you a beginner who wants to make your own games but feels overwhelmed? This course is for you! We will guide you step by step in creating a fun GTA-style game using Unreal Engine 5. By the end, you'll have the skills to build characters, vehicles, and a whole city full of life. Get ready to take control of your game development journey!
@@ -199,6 +206,10 @@ Connecting your blog to an email marketing service
 Enhancing your blog's security`,
 };
 
+const SLUG_ALIASES: Record<string, keyof typeof BUSINESS_MODEL_PROGRAM_DESCRIPTIONS> = {
+  "book-publishing-on-amazon-kindle": "amazon-kdp",
+};
+
 const LEVEL1_SLUG_TO_DESCRIPTION_KEY: Record<string, keyof typeof BUSINESS_MODEL_PROGRAM_DESCRIPTIONS> = {
   "level1-model-01": "n8n-ai-automation",
   "level1-model-02": "ai-automations",
@@ -220,6 +231,8 @@ const BY_TITLE = new Map<string, string>(
     "ai automation": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["ai-automations"],
     "app building using flutter": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["app-building-flutter"],
     "building apps using react js": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
+    "build a real react app": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
+    "building a real react app": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
     "book publishing on amazon kindle": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["amazon-kdp"],
     "amazon kdp": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["amazon-kdp"],
     "building games using unreal engine": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-games-using-unreal-engine"],
@@ -241,6 +254,9 @@ export function curatedBusinessModelDescription(
   title: string | null | undefined,
 ): string | undefined {
   const slugKey = slug?.trim().toLowerCase();
+  if (slugKey && SLUG_ALIASES[slugKey]) {
+    return BUSINESS_MODEL_PROGRAM_DESCRIPTIONS[SLUG_ALIASES[slugKey]];
+  }
   if (slugKey && LEVEL1_SLUG_TO_DESCRIPTION_KEY[slugKey]) {
     const descKey = LEVEL1_SLUG_TO_DESCRIPTION_KEY[slugKey];
     return BUSINESS_MODEL_PROGRAM_DESCRIPTIONS[descKey];

@@ -11,6 +11,8 @@ const files = [
   "src/data/tradingStrategiesProgramDescriptions.ts",
   "src/data/tradingSetupsProgramDescriptions.ts",
   "src/data/tradingSecretsProgramDescriptions.ts",
+  "src/data/tradingVaultPackProgramDescriptions.ts",
+  "src/data/agenticAiVaultProgramDescriptions.ts",
   "../Backend/apps/video_streaming/data/business_psychology_program_descriptions.json",
   "../Backend/apps/video_streaming/data/business_model_program_descriptions.json",
   "src/components/programs/vaultModuleCopy.ts",

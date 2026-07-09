@@ -1,5 +1,9 @@
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
 import {
+  agenticAiTeaser,
+  curatedAgenticAiDescription,
+} from "@/data/agenticAiVaultProgramDescriptions";
+import {
   curatedTradingVaultDescription,
   resolveTradingModuleDetail,
   resolveTradingModuleTeaser,
@@ -156,6 +160,10 @@ export const VAULT_MODULE_TEASERS: Readonly<Record<string, string>> = {
 };
 
 export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey, planSlug?: string): string {
+  if (pack === "agentic_ai") {
+    const curated = curatedAgenticAiDescription(planSlug, title);
+    if (curated) return agenticAiTeaser(curated);
+  }
   if (pack === "trading_technical_analysis") {
     const curated = curatedTradingVaultDescription(planSlug, title);
     if (curated) return tradingVaultDescriptionTeaser(curated, planSlug);
@@ -172,6 +180,10 @@ export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey, plan
 }
 
 export function resolveVaultModuleDetail(title: string, pack: VaultPackKey, planSlug?: string): string {
+  if (pack === "agentic_ai") {
+    const curated = curatedAgenticAiDescription(planSlug, title);
+    if (curated) return curated;
+  }
   if (pack === "trading_technical_analysis") {
     const curated = curatedTradingVaultDescription(planSlug, title);
     if (curated) return curated;

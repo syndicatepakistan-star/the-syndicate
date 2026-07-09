@@ -11,6 +11,11 @@ import {
   type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
 import { TRADING_PACK_DESCRIPTION, curatedTradingVaultDescription } from "@/components/programs/tradingVaultCopy";
+import {
+  curatedAgenticAiDescription,
+  curatedAgenticVaultPackDescription,
+} from "@/data/agenticAiVaultProgramDescriptions";
+import { curatedTradingVaultPackDescription } from "@/data/tradingVaultPackProgramDescriptions";
 
 const PACK_NAMES: Record<VaultPackKey, string> = {
   agentic_ai: "Agentic AI",
@@ -56,6 +61,8 @@ function moduleLearnItemTitles(offer: Pick<PlanOfferDef, "plan" | "title">): str
 }
 
 export function resolveVaultPackStructuredDescription(pack: VaultPackKey): string {
+  const curated = curatedTradingVaultPackDescription(pack) ?? curatedAgenticVaultPackDescription(pack);
+  if (curated) return curated;
   const body = PACK_BODY[pack];
   return formatStructured(body.hook, packSubmoduleTitles(pack));
 }
@@ -91,11 +98,15 @@ export function resolveVaultModuleStructuredDescription(
 
 export function resolveOfferStructuredDescription(offer: PlanOfferDef): string {
   const plan = String(offer.plan);
-  const curated = curatedTradingVaultDescription(plan, offer.title);
-  if (curated) return curated;
   if (isVaultPackKey(offer.plan)) {
+    const packCurated =
+      curatedTradingVaultPackDescription(offer.plan) ?? curatedAgenticVaultPackDescription(offer.plan);
+    if (packCurated) return packCurated;
     return resolveVaultPackStructuredDescription(offer.plan);
   }
+  const curated =
+    curatedTradingVaultDescription(plan, offer.title) ?? curatedAgenticAiDescription(plan, offer.title);
+  if (curated) return curated;
   const pack = offer.vaultPackPlan ?? vaultPackForPlanSlug(offer.plan);
   if (pack) {
     return resolveVaultModuleStructuredDescription(offer);

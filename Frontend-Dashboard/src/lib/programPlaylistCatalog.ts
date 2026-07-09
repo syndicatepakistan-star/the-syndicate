@@ -1,7 +1,12 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
 import { curatedBusinessPsychologyDescription } from "@/data/businessPsychologyProgramDescriptions";
 import { curatedBusinessModelDescription } from "@/data/businessModelProgramDescriptions";
+import {
+  curatedAgenticAiDescription,
+  curatedAgenticVaultPackDescription,
+} from "@/data/agenticAiVaultProgramDescriptions";
 import { curatedTradingVaultDescription } from "@/components/programs/tradingVaultCopy";
+import { curatedTradingVaultPackDescription } from "@/data/tradingVaultPackProgramDescriptions";
 import { vaultCourseByTitle } from "@/components/programs/vaultPackCatalog";
 import {
   getProgramDisplayTitle,
@@ -136,6 +141,12 @@ export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike)
   if (businessModel) return finalizeProgramDescription(businessModel);
   const trading = curatedTradingVaultDescription(slug, title);
   if (trading) return finalizeProgramDescription(trading);
+  const agentic = curatedAgenticAiDescription(slug, title);
+  if (agentic) return finalizeProgramDescription(agentic);
+  const tradingPack = slug === "trading_technical_analysis" ? curatedTradingVaultPackDescription("trading_technical_analysis") : undefined;
+  if (tradingPack) return finalizeProgramDescription(tradingPack);
+  const agenticPack = slug === "agentic_ai" ? curatedAgenticVaultPackDescription("agentic_ai") : undefined;
+  if (agenticPack) return finalizeProgramDescription(agenticPack);
   const fromApi = (playlist.description ?? "").trim();
   if (isSubstantialProgramDescription(fromApi)) return finalizeProgramDescription(fromApi);
   if (catalog?.description?.trim()) return finalizeProgramDescription(catalog.description.trim());

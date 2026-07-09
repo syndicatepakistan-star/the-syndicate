@@ -19,6 +19,8 @@ import {
   persistAffiliateSession,
 } from "@/lib/affiliateSession";
 
+const AFFILIATE_OTP_AUTOSEND_KEY = "affiliate_otp_autosend_v1";
+
 type Mode = "email" | "otp";
 
 type ApiPayload = {
@@ -44,6 +46,8 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const autoSendStartedRef = useRef(false);
+  const redirectPendingRef = useRef(false);
   const isOtp = mode === "otp";
   const otpValue = otpDigits.join("");
 
@@ -258,6 +262,27 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
     otpRefs.current[focusIndex]?.focus();
   }
 
+  async function requestOtp(targetEmail: string) {
+    let response: Response;
+    try {
+      response = await fetch(affiliateAuthPostUrl("request-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+    } catch (caught) {
+      if (caught instanceof TypeError) {
+        throw new Error(`Cannot reach the API. ${getApiDisplayHint()}`);
+      }
+      throw caught;
+    }
+    const data = await readApiPayload(response);
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Could not send code.");
+    }
+    return data;
+  }
+
   async function resendOtp() {
     const targetEmail = email.trim();
     if (!targetEmail) return;
@@ -265,23 +290,7 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
     setError("");
     setMessage("");
     try {
-      let response: Response;
-      try {
-        response = await fetch(affiliateAuthPostUrl("request-otp"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: targetEmail }),
-        });
-      } catch (caught) {
-        if (caught instanceof TypeError) {
-          throw new Error(`Cannot reach the API. ${getApiDisplayHint()}`);
-        }
-        throw caught;
-      }
-      const data = await readApiPayload(response);
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Could not resend code.");
-      }
+      const data = await requestOtp(targetEmail);
       setOtpDigits(Array.from({ length: 6 }, () => ""));
       const devOtp = typeof data.dev_otp === "string" ? data.dev_otp.trim() : "";
       if (devOtp) {
@@ -295,6 +304,36 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
       setResendBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!isOtp) return;
+    const emailNorm = prefilledEmail.trim().toLowerCase();
+    if (!emailNorm) return;
+    const pending = sessionStorage.getItem(AFFILIATE_OTP_AUTOSEND_KEY);
+    if (pending !== emailNorm || autoSendStartedRef.current) return;
+    autoSendStartedRef.current = true;
+    sessionStorage.removeItem(AFFILIATE_OTP_AUTOSEND_KEY);
+
+    void (async () => {
+      setLoading(true);
+      setError("");
+      setMessage("Sending your code…");
+      try {
+        const data = await requestOtp(emailNorm);
+        const devOtp = typeof data.dev_otp === "string" ? data.dev_otp.trim() : "";
+        if (devOtp) {
+          setMessage(`${data.message || "Dev mode."} Code: ${devOtp}`);
+        } else {
+          setMessage(data.message || "Check your inbox for the code.");
+        }
+      } catch (sendError) {
+        setError(sendError instanceof Error ? sendError.message : "Could not send code.");
+        setMessage("");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isOtp, prefilledEmail]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -330,39 +369,31 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
         return;
       }
 
-      let response: Response;
-      try {
-        response = await fetch(affiliateAuthPostUrl("request-otp"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim() }),
-        });
-      } catch (caught) {
-        if (caught instanceof TypeError) {
-          throw new Error(`Cannot reach the API. ${getApiDisplayHint()}`);
-        }
-        throw caught;
+      const emailTrimmed = email.trim();
+      if (!emailTrimmed) {
+        throw new Error("Email is required.");
       }
-      const data = await readApiPayload(response);
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Request failed.");
-      }
-      const devOtp = typeof data.dev_otp === "string" ? data.dev_otp.trim() : "";
-      if (devOtp) {
-        setMessage(`${data.message || "Dev mode."} Code: ${devOtp}`);
-      } else {
-        setMessage(data.message || "Check your inbox for the code.");
-      }
-      router.replace(affiliateVerifyHref(email.trim()));
+      sessionStorage.setItem(AFFILIATE_OTP_AUTOSEND_KEY, emailTrimmed.toLowerCase());
+      redirectPendingRef.current = true;
+      router.replace(affiliateVerifyHref(emailTrimmed));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Something went wrong.");
     } finally {
-      setLoading(false);
+      if (!redirectPendingRef.current) {
+        setLoading(false);
+      }
     }
   }
 
   const heading = isOtp ? "VERIFY" : "AFFILIATE";
   const submitLabel = isOtp ? "Verify code" : "Send code";
+  const submitBusyLabel = isOtp
+    ? loading
+      ? otpValue.length === 6
+        ? "VERIFYING…"
+        : "SENDING CODE…"
+      : submitLabel
+    : submitLabel;
 
   return (
     <>
@@ -491,7 +522,9 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
             {!error && message ? <p className="form-message">{message}</p> : null}
 
             <button className="cyber-btn hamburger-attract" type="submit" disabled={loading || resendBusy}>
-              <span className="cyber-btn__text">{loading ? "PLEASE WAIT" : submitLabel.toUpperCase()}</span>
+              <span className="cyber-btn__text">
+                {(loading ? submitBusyLabel : submitLabel).toUpperCase()}
+              </span>
             </button>
 
             {isOtp ? (

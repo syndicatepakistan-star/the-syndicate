@@ -139,6 +139,7 @@ function scheduleSignupRedirect(
 }
 
 const OTP_PENDING_EMAIL_KEY = "syndicate_otp_pending_email_v1";
+const SYNDICATE_LOGIN_OTP_AUTOSEND_KEY = "syndicate_login_otp_autosend_v1";
 
 function writeOtpPendingEmail(email: string): void {
   if (typeof window === "undefined") return;
@@ -190,6 +191,7 @@ export default function AuthScreen({
   const [resendBusy, setResendBusy] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const redirectPendingRef = useRef(false);
+  const autoSendStartedRef = useRef(false);
 
   const isSignup = mode === "signup";
   const isOtp = mode === "otp";
@@ -197,6 +199,17 @@ export default function AuthScreen({
   const heading = isOtp ? "VERIFY" : isSignup ? "SIGN UP" : "LOGIN";
   const submitLabel = isOtp ? "Verify code" : isSignup ? "Sign up" : "Continue";
   const otpValue = otpDigits.join("");
+  const submitBusyLabel = isOtp
+    ? loading
+      ? otpValue.length === 6
+        ? "VERIFYING…"
+        : "SENDING CODE…"
+      : submitLabel
+    : isSignup
+      ? loading
+        ? "SENDING CODE…"
+        : submitLabel
+      : submitLabel;
   const normalizedPlan = selectedPlan.trim();
   const normalizedBilling = selectedBilling.trim();
   const normalizedAmount = selectedAmount.trim();
@@ -289,6 +302,48 @@ export default function AuthScreen({
     window.addEventListener("pagehide", onLeave);
     return () => window.removeEventListener("pagehide", onLeave);
   }, [authLeadLabel, email]);
+
+  useEffect(() => {
+    if (!isOtp || isSignupOtp) return;
+    const emailNorm = (prefilledEmail || email).trim().toLowerCase();
+    if (!emailNorm) return;
+    const pending = sessionStorage.getItem(SYNDICATE_LOGIN_OTP_AUTOSEND_KEY);
+    if (pending !== emailNorm || autoSendStartedRef.current) return;
+    autoSendStartedRef.current = true;
+    sessionStorage.removeItem(SYNDICATE_LOGIN_OTP_AUTOSEND_KEY);
+
+    void (async () => {
+      setLoading(true);
+      setError("");
+      setMessage("Sending your code…");
+      try {
+        const { response, data } = await postJson("/api/auth/otp-login/", { email: emailNorm });
+        if (isSignupRequiredResponse(response, data)) {
+          showLoginSignupRequiredError(
+            router,
+            appendOfferParams(syndicateOtpSignupHref(emailNorm)),
+            setMessage,
+            setError,
+          );
+          redirectPendingRef.current = true;
+          return;
+        }
+        if (!response.ok) {
+          throw new Error(apiErrorMessage(data, "Could not send code."));
+        }
+        if (!data.otp_required) {
+          throw new Error("Verification step not started. Please try again.");
+        }
+        writeOtpPendingEmail(data.email || emailNorm);
+        setMessage(data.message || "Check your inbox for the code.");
+      } catch (sendError) {
+        setError(sendError instanceof Error ? sendError.message : "Could not send code.");
+        setMessage("");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isOtp, isSignupOtp, prefilledEmail, email, router]);
 
   useEffect(() => {
     const canvas = document.getElementById("particles") as HTMLCanvasElement | null;
@@ -822,91 +877,12 @@ export default function AuthScreen({
         return;
       }
 
-      let { response, data } = await postJson("/api/auth/otp-login/", requestBody);
-
-      if (isSignupRequiredResponse(response, data)) {
-        showLoginSignupRequiredError(
-          router,
-          appendOfferParams(syndicateOtpSignupHref(email.trim())),
-          setMessage,
-          setError,
-        );
-        redirectPendingRef.current = true;
-        return;
-      }
-
-      // Compatibility fallback when OTP route is missing — not when the account does not exist.
-      if (response.status === 404) {
-        const retry = await postJson("/api/auth/login/", requestBody);
-        if (isSignupRequiredResponse(retry.response, retry.data)) {
-          showLoginSignupRequiredError(
-            router,
-            appendOfferParams(syndicateOtpSignupHref(email.trim())),
-            setMessage,
-            setError,
-          );
-          redirectPendingRef.current = true;
-          return;
-        }
-        response = retry.response;
-        data = retry.data;
-      }
-
-      if (!response.ok) {
-        if (isSignupRequiredResponse(response, data)) {
-          showLoginSignupRequiredError(
-            router,
-            appendOfferParams(syndicateOtpSignupHref(email.trim())),
-            setMessage,
-            setError,
-          );
-          redirectPendingRef.current = true;
-          return;
-        }
-        // Some deployments return 404 without SIGNUP_REQUIRED code; show friendly guidance.
-        if (response.status === 404) {
-          scheduleSignupRedirect(
-            router,
-            appendOfferParams(syndicateOtpSignupHref(email.trim())),
-            setMessage,
-            setError,
-          );
-          redirectPendingRef.current = true;
-          return;
-        }
-        if (response.status === 400 || response.status === 401) {
-          const msg = apiErrorMessage(data, "Request failed");
-          if (isNoAccountMessage(msg)) {
-            scheduleSignupRedirect(
-              router,
-              appendOfferParams(syndicateOtpSignupHref(email.trim())),
-              setMessage,
-              setError,
-            );
-            redirectPendingRef.current = true;
-            return;
-          }
-          throw new Error(msg);
-        }
-        scheduleSignupRedirect(
-          router,
-          appendOfferParams(syndicateOtpSignupHref(email.trim())),
-          setMessage,
-          setError,
-        );
-        redirectPendingRef.current = true;
-        return;
-      }
-
-      if (!data.otp_required) {
-        throw new Error("Verification step not started. Please try again.");
-      }
-      writeOtpPendingEmail(data.email || email.trim());
-      setMessage(data.message || "Check your inbox for the code.");
+      const loginEmail = trimmedEmail;
+      writeOtpPendingEmail(loginEmail);
+      sessionStorage.setItem(SYNDICATE_LOGIN_OTP_AUTOSEND_KEY, loginEmail.toLowerCase());
+      redirectPendingRef.current = true;
       router.replace(
-        appendOfferParams(
-          syndicateOtpVerifyHref(data.email || email.trim(), "login", normalizedPostLoginNext)
-        )
+        appendOfferParams(syndicateOtpVerifyHref(loginEmail, "login", normalizedPostLoginNext)),
       );
     } catch (submitError) {
       const rawMessage = submitError instanceof Error ? submitError.message : "Something went wrong.";
@@ -1070,7 +1046,7 @@ export default function AuthScreen({
               disabled={loading || resendBusy || luxuryOpen}
             >
               <span className="cyber-btn__text">
-                {loading ? "PLEASE WAIT" : submitLabel.toUpperCase()}
+                {(loading ? submitBusyLabel : submitLabel).toUpperCase()}
               </span>
             </button>
 

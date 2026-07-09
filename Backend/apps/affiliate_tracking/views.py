@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from accounts.syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
+from accounts.syndicate_otp_mailer import build_syndicate_otp_email_html, queue_syndicate_otp_html_email
 
 from .models import AffiliateProfile, AffiliateWithdrawalAccount, ApiToken, ClickEvent, EmailOTP, LeadEvent, SaleEvent, SectionReferral, WithdrawalRequest
 from .subscription_labels import display_subscription_name, join_display_subscription_names
@@ -461,11 +461,11 @@ def auth_request_otp(request):
         )
 
     try:
-        send_syndicate_otp_html_email(email, subject, html_body)
+        queue_syndicate_otp_html_email(email, subject, html_body, dev_log_code=code)
     except Exception:
         return _bad_request("Could not send OTP email right now. Verify SMTP credentials/settings.", 503)
 
-    return JsonResponse({"success": True, "message": "OTP sent to your email.", "delivery": "smtp"})
+    return JsonResponse({"success": True, "message": "OTP sent to your email.", "delivery": "queued"})
 
 
 @csrf_exempt

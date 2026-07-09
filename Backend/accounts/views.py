@@ -59,7 +59,7 @@ from .pending_signup import (
   purge_stale_pending_signups,
   user_registered_for_email,
 )
-from .syndicate_otp_mailer import build_syndicate_otp_email_html, send_syndicate_otp_html_email
+from .syndicate_otp_mailer import build_syndicate_otp_email_html, queue_syndicate_otp_html_email
 
 logger = logging.getLogger(__name__)
 
@@ -608,7 +608,12 @@ def _send_login_otp_email(email: str, otp_code: str, username: str) -> None:
     expires_minutes=expires_minutes,
     ignore_line="If you did not request this login, you can safely ignore this email.",
   )
-  send_syndicate_otp_html_email(email, "Your Syndicate login verification code", html_body)
+  queue_syndicate_otp_html_email(
+    email,
+    "Your Syndicate login verification code",
+    html_body,
+    dev_log_code=otp_code,
+  )
 
 
 def _send_signup_otp_email(email: str, otp_code: str) -> None:
@@ -622,7 +627,12 @@ def _send_signup_otp_email(email: str, otp_code: str) -> None:
     expires_minutes=expires_minutes,
     ignore_line="If you did not request this signup, you can safely ignore this email.",
   )
-  send_syndicate_otp_html_email(email, "Your Syndicate signup verification code", html_body)
+  queue_syndicate_otp_html_email(
+    email,
+    "Your Syndicate signup verification code",
+    html_body,
+    dev_log_code=otp_code,
+  )
 
 
 def _unique_pending_username() -> str:
@@ -649,16 +659,8 @@ def _create_and_email_login_otp(email: str):
     defaults={"otp_code": otp_code, "otp_expires_at": expires_at},
   )
 
-  try:
-    username = user_by_email.username if user_by_email is not None else (email.split("@")[0] or "Operator")
-    _send_login_otp_email(email=email, otp_code=otp_code, username=username)
-  except Exception:
-    logger.exception("Failed to send login OTP email to %s", email)
-    if settings.DEBUG:
-      print(f"[DEV OTP FALLBACK] login {email}: {otp_code}")
-      return None
-    return _json_error("Failed to send login OTP email.", status=500)
-
+  username = user_by_email.username if user_by_email is not None else (email.split("@")[0] or "Operator")
+  _send_login_otp_email(email=email, otp_code=otp_code, username=username)
   return None
 
 
@@ -682,15 +684,7 @@ def _create_and_email_signup_otp(email: str):
     defaults={"otp_code": otp_code, "otp_expires_at": expires_at},
   )
 
-  try:
-    _send_signup_otp_email(email=email, otp_code=otp_code)
-  except Exception:
-    logger.exception("Failed to send signup OTP email to %s", email)
-    if settings.DEBUG:
-      print(f"[DEV OTP FALLBACK] signup {email}: {otp_code}")
-      return None
-    return _json_error("Failed to send signup OTP email.", status=500)
-
+  _send_signup_otp_email(email=email, otp_code=otp_code)
   return None
 
 

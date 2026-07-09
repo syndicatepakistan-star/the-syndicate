@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+import threading
+
 import requests
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db import connection, transaction
 from django.utils.html import strip_tags
+
+logger = logging.getLogger(__name__)
 
 
 def otp_email_headers() -> dict[str, str]:
@@ -34,12 +40,12 @@ def _resend_api_url() -> str:
 
 
 def _email_timeout_seconds() -> int:
-  raw = getattr(settings, "EMAIL_TIMEOUT", 15)
+  raw = getattr(settings, "EMAIL_TIMEOUT", 8)
   try:
     value = int(raw)
   except (TypeError, ValueError):
-    value = 15
-  return value if value > 0 else 15
+    value = 8
+  return value if value > 0 else 8
 
 
 def _send_via_resend(to_email: str, subject: str, html_body: str, text_body: str) -> None:
@@ -139,3 +145,30 @@ def send_syndicate_otp_html_email(to_email: str, subject: str, html_body: str) -
   )
   msg.attach_alternative(html_body, "text/html")
   msg.send(fail_silently=False)
+
+
+def queue_syndicate_otp_html_email(
+  to_email: str,
+  subject: str,
+  html_body: str,
+  *,
+  dev_log_code: str | None = None,
+) -> None:
+  """Persist OTP first, then deliver email on a background thread for a fast API response."""
+  if dev_log_code and getattr(settings, "DEBUG", False):
+    logger.info("[DEV OTP] %s: %s", to_email, dev_log_code)
+
+  def _deliver() -> None:
+    connection.close()
+    try:
+      send_syndicate_otp_html_email(to_email, subject, html_body)
+    except Exception:
+      logger.exception("OTP email delivery failed for %s", to_email)
+
+  transaction.on_commit(
+    lambda: threading.Thread(
+      target=_deliver,
+      name="syndicate-otp-mail",
+      daemon=True,
+    ).start()
+  )

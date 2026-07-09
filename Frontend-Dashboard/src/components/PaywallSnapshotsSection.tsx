@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { KNIGHT_LAUNCHING_SOON_LABEL } from '@/components/programs/planOfferCatalog'
 
 type SnapshotItem = {
   src: string
@@ -10,6 +11,7 @@ type SnapshotItem = {
   frame: string
   tone: string
   aura: string
+  launchingSoon?: boolean
 }
 
 const SNAPSHOTS: SnapshotItem[] = [
@@ -30,6 +32,7 @@ const SNAPSHOTS: SnapshotItem[] = [
     frame: 'border-lime-300/95 border-[8px] shadow-[0_0_0_1px_rgba(163,230,53,0.95),0_0_24px_rgba(163,230,53,0.72),0_0_58px_rgba(163,230,53,0.5),0_0_110px_rgba(163,230,53,0.34),inset_0_0_20px_rgba(163,230,53,0.28)]',
     tone: 'from-lime-400/24 via-emerald-500/16 to-amber-500/22',
     aura: 'from-lime-300/42 via-emerald-500/28 to-transparent',
+    launchingSoon: true,
   },
   {
     src: '/assets/paywall/dashboard-snapshot.png',
@@ -83,7 +86,7 @@ export default function PaywallSnapshotsSection() {
               className={`group relative overflow-hidden bg-transparent p-[1px] transition duration-300 [clip-path:polygon(24px_0,calc(100%-24px)_0,100%_24px,100%_calc(100%-28px),calc(100%-28px)_100%,28px_100%,0_calc(100%-24px),0_24px)] ${snapshot.frame}`}
             >
               <span className={`pointer-events-none absolute -inset-8 -z-10 bg-gradient-to-br ${snapshot.aura} blur-[44px]`} />
-              <article className="relative flex h-full min-h-[clamp(320px,40vh,420px)] flex-col border border-zinc-100/35 bg-[#03050b]/94 p-4 sm:p-5 [clip-path:polygon(26px_0,calc(100%-26px)_0,100%_26px,100%_calc(100%-30px),calc(100%-30px)_100%,30px_100%,0_calc(100%-26px),0_26px)]">
+              <article className="relative flex h-full min-h-[clamp(380px,52vh,560px)] flex-col border border-zinc-100/35 bg-[#03050b]/94 p-4 sm:min-h-[clamp(420px,48vh,600px)] sm:p-5 [clip-path:polygon(26px_0,calc(100%-26px)_0,100%_26px,100%_calc(100%-30px),calc(100%-30px)_100%,30px_100%,0_calc(100%-26px),0_26px)]">
                 <span className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${snapshot.tone}`} />
                 <span className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:34px_34px]" />
                 <span className="pointer-events-none absolute inset-0 opacity-[0.09] [background-image:repeating-linear-gradient(0deg,transparent_0px,transparent_2px,rgba(255,255,255,0.15)_2px,rgba(255,255,255,0.15)_3px)]" />
@@ -109,17 +112,29 @@ export default function PaywallSnapshotsSection() {
                     {snapshot.description}
                   </p>
                 </div>
-                <div className="relative mt-4 h-[clamp(180px,36vw,260px)] sm:h-[clamp(220px,30vw,320px)] lg:h-[clamp(240px,26vw,340px)] overflow-hidden border border-zinc-100/30 bg-transparent shadow-[0_0_12px_rgba(255,255,255,0.3)] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-24px),calc(100%-24px)_100%,24px_100%,0_calc(100%-22px),0_22px)]">
+                <div className="relative mt-4 w-full min-h-0 flex-1 overflow-hidden border border-zinc-100/30 bg-[#020408] shadow-[0_0_12px_rgba(255,255,255,0.3)] [clip-path:polygon(22px_0,calc(100%-22px)_0,100%_22px,100%_calc(100%-24px),calc(100%-24px)_100%,24px_100%,0_calc(100%-22px),0_22px)]">
                   <span className="pointer-events-none absolute inset-0 z-[3] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.24))]" />
                   <span className="pointer-events-none absolute left-1/2 top-2 z-[3] h-[1px] w-20 -translate-x-1/2 bg-gradient-to-r from-transparent via-zinc-100/55 to-transparent" />
                   <span className="pointer-events-none absolute bottom-2 right-3 z-[3] h-2 w-2 border-r border-b border-zinc-100/65" />
-                  <Image
-                    src={snapshot.src}
-                    alt={snapshot.title}
-                    fill
-                    sizes="(max-width: 639px) 90vw, (max-width: 1023px) 88vw, (max-width: 1200px) 46vw, 42vw"
-                    className="object-cover object-center sm:object-top saturate-[1.08] contrast-[1.03]"
-                  />
+                  <div className="relative aspect-[16/11] w-full min-h-[clamp(180px,38vw,320px)] max-h-[min(52vh,420px)] sm:aspect-[16/10] sm:min-h-[clamp(220px,32vw,360px)] lg:min-h-[clamp(240px,28vw,400px)]">
+                    <Image
+                      src={snapshot.src}
+                      alt={snapshot.title}
+                      fill
+                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 42vw"
+                      className={`object-contain object-top sm:object-center saturate-[1.08] contrast-[1.03]${snapshot.launchingSoon ? ' blur-[7px] brightness-[0.68] scale-[1.03]' : ''}`}
+                    />
+                    {snapshot.launchingSoon ? (
+                      <div
+                        className="absolute inset-0 z-[4] flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
+                        aria-hidden
+                      >
+                        <span className="rounded-md border border-amber-400/55 bg-black/75 px-5 py-2.5 text-center text-lg font-black uppercase tracking-[0.2em] text-amber-100 shadow-[0_0_28px_rgba(251,191,36,0.38)] sm:px-6 sm:text-xl">
+                          {KNIGHT_LAUNCHING_SOON_LABEL}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </article>
             </div>

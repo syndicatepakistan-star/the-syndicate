@@ -1,14 +1,18 @@
 /**
  * Curated Secrets of a Master Trader copy — vault modals and program library.
- * Section headers: Introduction, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn.
  */
+import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
+
 export const TRADING_SECRETS_MODULE_TITLE = "Secrets of a Master Trader";
 
 export const TRADING_SECRETS_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  __module_pack__: `Introduction
+  __module_pack__: `Programme Introduction
 Are you tired of feeling confused by trading charts and losing money to unexpected market traps? Many new investors struggle to know exactly when to enter or exit a trade, letting emotions and fakeouts ruin their progress. This complete program will guide you step by step through the hidden patterns and secret strategies used by professional traders. You will learn how to read the true story behind price movements and adapt quickly when the market suddenly changes direction. By the end of this journey, you will take control of your time and money by making confident, data-driven decisions that lead to consistent profits.
 
+Programme Description
 This entire course is a masterclass in advanced chart reading and trading psychology. You will build highly profitable skills, from drawing exact trendlines and parallel channels to spotting hidden RSI divergences and time-based patterns. We focus heavily on fine-tuning your entries and exits while teaching you how to avoid the institutional fakeouts that trick most beginners. It is highly worth your time because it shifts your mindset from gambling to trading with strict, professional discipline. Ultimately, you will gain the freedom to trade any market safely using a proven, reliable framework.
+
 
 What You Will Learn
 Develop a disciplined master trader mindset that relies on facts and probability instead of emotions
@@ -26,10 +30,12 @@ Read RSI divergences to spot hidden market weaknesses instead of just looking at
 Predict future price targets using the psychology of "Measured Moves" and the "3-Tail Theory" for market reversals
 Unlock the secret of "Time Counts" and understand how the time value of a level affects its strength`,
 
-  "The Confirmation Signal": `Introduction
+  "The Confirmation Signal": `Programme Introduction
 Are you confused about trading? Do you often feel stuck when trying to figure out if a price movement is real or just a trick? This course will help you. You will learn about the Confirmation Signal, a powerful tool that shows you when to trust a breakout or a breakdown in the market. After this course, you will trade with confidence and avoid costly mistakes.
 
+Programme Description
 This course teaches you about the Confirmation Signal, a method that helps you identify true market movements. You'll learn step-by-step how to distinguish between real breakouts and fakeouts. By the end of the course, you'll have the skills to make smarter trading decisions, saving you time and money while boosting your chances for success.
+
 
 What You Will Learn
 What the Confirmation Signal is and why it matters
@@ -44,10 +50,12 @@ Real-life examples to help you apply what you've learned
 Tips on maintaining discipline and control in trading
 How to keep a trading journal to track your progress and improve over time`,
 
-  "Drawing Proper Trendlines": `Introduction
+  "Drawing Proper Trendlines": `Programme Introduction
 Are you feeling lost when it comes to understanding trendlines in trading? Do you want to make better buying and selling decisions? This course will show you how to draw trendlines correctly. After completing this course, you'll be able to identify key support and resistance levels on charts. This knowledge will help you trade more effectively and confidently.
 
+Programme Description
 This course focuses on teaching you how to draw proper trendlines in trading. You will learn how to connect highs and lows on charts to identify important price levels. By mastering this skill, you'll improve your trading decisions and increase your chances of success. It's a valuable investment of your time that will empower you to take control of your trading journey.
+
 
 What You Will Learn
 What trendlines are and why they matter in trading
@@ -62,10 +70,12 @@ The role of trendlines in confirming breakouts and breakdowns
 How to use trendlines in swing trading and day trading
 Practical exercises to improve your trendline drawing skills`,
 
-  "Scene of the Crime Retrace": `Introduction
+  "Scene of the Crime Retrace": `Programme Introduction
 Are you feeling lost in the world of trading? Do you often find yourself jumping into trades too quickly and then losing money? This course will help you learn a crucial trading setup called the "scene of the crime retrace." After completing this course, you'll be able to spot the right moments to enter a trade, helping you make better decisions and increase your chances of success.
 
+Programme Description
 This course is all about mastering the scene of the crime retrace setup in trading. You will learn how to identify when to enter a trade after a price breakout or breakdown. By focusing on patience and discipline, you will discover how to make smarter trading choices that can lead to better profits. Investing your time in this course is worth it because you'll gain essential skills that can change your trading game.
+
 
 What You Will Learn
 Understand the basics of the scene of the crime retrace setup
@@ -82,10 +92,12 @@ Review real-life examples of successful trades using this setup
 Learn to avoid common trading mistakes like chasing trades
 Build your confidence as a disciplined trader`,
 
-  "Measured Move": `Introduction
+  "Measured Move": `Programme Introduction
 Are you confused about how to read price charts? Do you often feel stuck when deciding when to buy or sell? This course will help you understand the powerful concept of measured moves. You'll learn how to identify these moves on charts, which can guide your trading decisions. After completing the course, you'll feel more confident in predicting market trends and making informed trades.
 
+Programme Description
 This course dives into the concept of measured moves in trading. You will learn how these moves are connected to human psychology and market behaviors. By mastering this skill, you'll be able to set clear price targets for your trades, both when prices go up and when they go down. This knowledge will save you time and help you make better trading decisions.
+
 
 What You Will Learn
 Understand what a measured move is and why it matters
@@ -98,10 +110,12 @@ Use measured moves to set targets for buying and selling
 Develop a disciplined approach to trading based on chart patterns
 Gain confidence in making trading decisions without letting emotions take over`,
 
-  "Three Tail Theory": `Introduction
+  "Three Tail Theory": `Programme Introduction
 Are you tired of feeling lost when looking at charts? Do you want to make informed trades instead of guessing? This course on the 3-Tail Theory will give you the tools you need. You will learn how to recognize a specific pattern that can help predict market movements. After completing this course, you will feel more confident in making trading decisions that can lead to profits.
 
+Programme Description
 This course teaches you the 3-Tail Theory, a method for reading charts effectively. You will learn how to identify three specific types of candles that signal potential market reversals. By mastering this approach, you will increase your chances of making successful trades. This course is worth your time because it breaks down complex ideas into simple steps you can easily follow.
+
 
 What You Will Learn
 Understand the 3-Tail Theory and its significance in trading
@@ -115,10 +129,12 @@ Explore real-life examples and quizzes to test your understanding
 Gain insights into using additional factors to improve trade success
 Develop skills to analyze charts like a professional trader`,
 
-  "Trading Parallels": `Introduction
+  "Trading Parallels": `Programme Introduction
 Are you feeling lost in the world of trading? Do you struggle to know when to buy or sell? This course on trading parallels will help you understand how to find major highs and lows in the market. You'll learn to spot patterns that many traders miss. After completing this course, you will be able to make smarter trading decisions based on clear strategies.
 
+Programme Description
 This course focuses on trading parallels, which are powerful tools for understanding market movements. You will learn how to identify key support and resistance levels using parallel lines. This knowledge can help you trade with more confidence and improve your chances of making a profit. It's worth your time because it simplifies the chaos of the market into clear, actionable steps.
+
 
 What You Will Learn
 Understand the concept and power of trading parallels
@@ -136,10 +152,12 @@ Practice drawing and using parallel lines on real-time charts
 Discover how to combine multiple parallels for enhanced trading accuracy
 Learn to identify when to stop out of a trade for risk management`,
 
-  "Major vs Minor Support and Resistance": `Introduction
+  "Major vs Minor Support and Resistance": `Programme Introduction
 Are you feeling lost when it comes to trading? Do you struggle to understand why prices move in certain ways? This course will help you understand the important concepts of major and minor support and resistance levels. By the end, you'll be able to identify these levels clearly and use them to make smarter trading decisions. You'll take control of your trading strategy and improve your skills step by step.
 
+Programme Description
 This course focuses on the key differences between major and minor support and resistance levels in trading. You'll learn how to spot these levels on charts and understand their significance. With this knowledge, you'll be able to make better trading choices, reduce emotional stress, and increase your chances of success. It's a valuable investment of your time for anyone looking to improve their trading skills.
+
 
 What You Will Learn
 The difference between major and minor support and resistance lines
@@ -155,10 +173,12 @@ The importance of confirmation signals before entering trades
 Practical examples of analyzing charts for support and resistance levels
 Strategies for recognizing when a level changes from major to minor and vice versa`,
 
-  "Multi-Hit Methodology": `Introduction
+  "Multi-Hit Methodology": `Programme Introduction
 Are you feeling lost when it comes to trading? Do you find it hard to know when to buy or sell? This course will help you understand a special method that can improve your trading skills. You'll learn how to read charts better and predict when prices might rise or fall. After completing this course, you will feel more confident making trading decisions.
 
+Programme Description
 This course teaches you the Multi-Hit Methodology, a strategy for predicting market moves. You will learn how many times a trend line can be hit before it breaks. This knowledge will help you decide when to enter or exit trades. It's a valuable skill that can lead to better trading results and help you take control of your financial future.
+
 
 What You Will Learn
 The basics of the Multi-Hit Methodology in trading
@@ -172,10 +192,12 @@ The role of support and resistance in trading strategies
 Real-life examples of the Multi-Hit Methodology in action
 How to develop a disciplined trading mindset for success`,
 
-  "Trading the Hit and Kiss of a Level": `Introduction
+  "Trading the Hit and Kiss of a Level": `Programme Introduction
 Are you feeling confused about trading and missing out on good opportunities? This course teaches you how to understand and trade using the hit and kiss levels. You will learn to recognize important price points and make smarter trading decisions. After this course, you'll be able to trade with more confidence and control over your money.
 
+Programme Description
 This course focuses on the hit and kiss levels in trading. You'll learn how to identify key support and resistance levels and what to do when prices get close to these levels. With this knowledge, you will improve your trading skills and increase your chances of success. It's worth your time because it provides practical strategies that can help you make better trades.
+
 
 What You Will Learn
 Understand the master trader mentality
@@ -192,10 +214,12 @@ Avoid poor trades by recognizing risk
 Embrace discipline and patience in trading
 Master the art of trading less to achieve more`,
 
-  "Macro Versus Micro Patterns": `Introduction
+  "Macro Versus Micro Patterns": `Programme Introduction
 Are you confused about trading patterns? Do you feel stuck not knowing when to buy or sell? This course will help you understand the difference between macro (big picture) and micro (short-term) patterns. After this course, you'll be able to read charts more effectively, make better trading decisions, and potentially increase your profits.
 
+Programme Description
 This course is all about learning how to analyze trading patterns. You'll discover how macro patterns show larger trends while micro patterns provide insights into short-term movements. By the end of the course, you'll have the skills to spot these patterns, helping you make smarter trades. This knowledge is worth your time because it can lead to better entry and exit points in your trading strategy, ultimately giving you more control over your investments.
+
 
 What You Will Learn
 The difference between macro and micro patterns
@@ -209,10 +233,12 @@ Why practicing pattern recognition is crucial for becoming a master trader
 How to combine knowledge of macro and micro patterns for optimal trading strategy
 Real-world examples of macro and micro analysis to improve your skills`,
 
-  "Bull and Bear Flag Flips": `Introduction
+  "Bull and Bear Flag Flips": `Programme Introduction
 Are you feeling confused by market charts? Are you struggling to understand when to buy or sell? This course will help you make sense of bull and bear flags. You will learn how these patterns can change direction. By the end, you'll be able to adapt your trading strategy based on new market information.
 
+Programme Description
 This course teaches you about bull and bear flag patterns in trading. You'll learn how to recognize these patterns and understand when they flip from one to the other. You'll gain valuable skills that will help you make better trading decisions. By becoming more flexible with your approach, you can improve your chances of success in the market.
+
 
 What You Will Learn
 The basics of bull and bear flag patterns
@@ -227,10 +253,12 @@ How to identify key levels of support and resistance in trading
 Techniques for staying nimble and responsive to market changes
 The psychology behind trading decisions and market movements`,
 
-  "Trading RSI Divergences": `Introduction
+  "Trading RSI Divergences": `Programme Introduction
 Are you struggling to understand how to read market trends? Do you feel lost when it comes to using the RSI indicator? This course will help you uncover the secrets of trading RSI divergences. By the end, you will confidently spot patterns that signal when to buy or sell, helping you take control of your trading journey.
 
+Programme Description
 This course is all about understanding RSI divergences. You will learn how to identify these divergences and what they mean for price movements. By mastering this skill, you'll improve your trading strategies and make better decisions. It's a valuable investment of your time that can lead to greater success in your trading activities.
+
 
 What You Will Learn
 Understanding the RSI indicator and its basic functions
@@ -247,10 +275,12 @@ Real-life case studies of successful trades using RSI divergences
 Tips for practicing and improving your skills with RSI divergences
 How to incorporate RSI divergences into your daily trading routine`,
 
-  "Time Counts": `Introduction
+  "Time Counts": `Programme Introduction
 Are you feeling confused about trading charts? Do you want to understand what makes a successful trader? This course will help you unlock the secrets of time counts. You'll learn how to spot patterns that can guide your trading decisions. After this course, you will be able to analyze charts with confidence and improve your trading results.
 
+Programme Description
 This course is all about understanding time counts, especially the magic of the number 7 in trading. You will learn how to identify patterns in price movement that repeat and often lead to profitable trades. This knowledge will help you make better decisions and take control of your trading journey. It's worth your time because it can change the way you view and interact with charts completely.
+
 
 What You Will Learn
 The significance of time counts in trading
@@ -265,10 +295,12 @@ How to apply time counts across different time frames
 Tips for managing trades based on time counts
 How to notice time counts in your everyday life and trading`,
 
-  "The Biggest Moves Come from Failed Moves": `Introduction
+  "The Biggest Moves Come from Failed Moves": `Programme Introduction
 Do you feel lost when trading? Are you unsure why some trades go wrong while others succeed? This course will help you understand a key trading principle: the biggest market moves often come from failed moves. After completing this course, you will know how to react quickly when a trade fails. This skill will help you minimize losses and maximize profits.
 
+Programme Description
 This course teaches you how to recognize and react to failed trading setups. You will learn how to identify when a breakout or breakdown fails and what actions to take next. By understanding these concepts, you can protect your investments and make better trades. This is worth your time because it will help you build confidence in your trading skills and improve your overall results.
+
 
 What You Will Learn
 Understand the principle of failed moves in trading
@@ -282,10 +314,12 @@ Learn about the psychology of other traders and its effect on the market
 Practice using multiple factors for higher probability trades
 Gain insights to improve your overall trading success`,
 
-  "Time Value of a Level": `Introduction
+  "Time Value of a Level": `Programme Introduction
 Are you confused about why your trades sometimes fail? Do you feel stuck at a beginner level in trading? This course helps you understand the "time value of a level." You will learn how timing affects the strength of support and resistance levels. After this course, you'll know when to expect big price moves and how to make better trading decisions.
 
+Programme Description
 This course is all about understanding how time impacts trading levels. You will learn to identify major and minor levels of support and resistance, and how the timing of price hitting these levels affects their strength. This course is worth your time because it gives you the skills to make smarter trades, increasing your chances of success.
+
 
 What You Will Learn
 The importance of timing in trading
@@ -299,10 +333,12 @@ Analyzing charts for better trade setups
 Understanding the psychology behind price moves
 Applying strategies to maximize your trading success`,
 
-  "Fine-Tuning Entry Points": `Introduction
+  "Fine-Tuning Entry Points": `Programme Introduction
 Do you struggle with knowing the right time to enter or exit a trade? Are you often confused about where to set your prices? This course will help you understand how to fine-tune your entry points for better trading decisions. After taking this course, you'll feel more confident in placing your buy and sell orders, maximizing your potential profits.
 
+Programme Description
 This course teaches you how to identify the best entry points for your trades. You will learn key factors that influence where to place your orders, whether you're buying or selling. By understanding these concepts, you can make informed decisions that improve your chances of success in trading. This course is worth your time because it will help you take control of your trading strategy and make smarter moves in the market.
+
 
 What You Will Learn
 How to analyze entry points for buying and selling
@@ -319,10 +355,12 @@ Steps to analyze the day-to-day market action
 Understanding how news impacts market movements
 Practical examples to apply your knowledge in real trades`,
 
-  "Goals and Expectations": `Introduction
+  "Goals and Expectations": `Programme Introduction
 Are you feeling stuck in your trading journey? It's common to feel lost, especially when the market is unpredictable. This course will help you gain clarity and confidence. You will learn the secrets of successful traders and how to become a master investor. After taking this course, you'll be able to make smarter trading decisions and manage your investments better.
 
+Programme Description
 This course is all about becoming a great trader. You will learn essential skills like analyzing market trends and understanding when to buy or sell. Each lesson builds on the last, making it easy to follow. By the end, you will have the tools to trade confidently and effectively. Investing your time here will pay off as you master your trading skills.
+
 
 What You Will Learn
 Goals and expectations for becoming a winning trader
@@ -399,10 +437,7 @@ function normalizeTitleKey(title: string): string {
 }
 
 export function tradingSecretsTeaser(description: string): string {
-  const match = description.match(/Introduction\s*\n([\s\S]*?)(?:\n\nWhat You Will Learn|\nWhat You Will Learn)/i);
-  const hook = match?.[1]?.trim() ?? "";
-  const first = hook.split(/\n\s*\n/)[0]?.replace(/\s+/g, " ").trim();
-  return first || hook.replace(/\s+/g, " ").trim();
+  return extractProgrammeIntroductionTeaser(description);
 }
 
 export function curatedTradingSecretsDescription(

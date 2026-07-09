@@ -1,14 +1,18 @@
 /**
  * Curated Strategies of a Master Trader copy — vault modals and program library.
- * Section headers: Introduction, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn.
  */
+import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
+
 export const TRADING_STRATEGIES_MODULE_TITLE = "Strategies of a Master Trader";
 
 export const TRADING_STRATEGIES_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  __module_pack__: `Introduction
+  __module_pack__: `Programme Introduction
 Are you feeling lost in the trading world, letting confusion and emotions drive your investment decisions? Many beginners struggle to read market charts and often lose money by chasing risky, quick wins instead of sticking to a plan. This complete program gives you a clear, step-by-step path to understanding how the financial markets truly work. You will learn how to read price charts, use key trading indicators, and build a reliable strategy that takes the guesswork out of investing. By the end of this journey, you will trade with strict discipline, allowing you to take control of your time and money to build lasting wealth.
 
+Programme Description
 This entire course is a practical guide to mastering both the technical and mental skills needed for profitable trading. You will learn how to read candlestick patterns, identify support and resistance levels, and use popular tools like moving averages to spot hidden market trends. Beyond just reading charts, the program trains you to control your emotions, balance risk versus reward, and safely lock in consistent profits. It is highly worth your time because it replaces dangerous gambling habits with a professional, rule-based system. You will build a strong foundation that protects your money and sets you up for sustainable financial success.
+
 
 What You Will Learn
 Read and understand candlestick patterns to spot potential market trends and price reversals early
@@ -23,10 +27,12 @@ Control your emotions and ignore distracting social media noise by sticking to a
 Shift your mindset from gambling to thinking like a disciplined, probability-based business owner
 Diversify your investments and set realistic expectations to build sustainable, long-term wealth`,
 
-  "Strategies of a Master Trader — Lesson": `Introduction
+  "Strategies of a Master Trader — Lesson": `Programme Introduction
 Are you feeling lost in the trading world? Do you struggle with making decisions because of emotions? This course helps you gain control over your trading habits. You will learn to manage your feelings and make better choices. After this course, you will trade with confidence and discipline.
 
+Programme Description
 This course is all about mastering your trading discipline. You will learn how to control your emotions and create a solid plan for every trade. By the end, you will have the skills to make informed decisions and avoid costly mistakes. It's worth your time because these skills can help you achieve financial freedom.
+
 
 What You Will Learn
 Understand why discipline is crucial in trading
@@ -43,10 +49,12 @@ Recognize the importance of personal responsibility in trading
 Learn to analyze your mental state before investing
 Build confidence in your trading abilities through practice`,
 
-  "The Keys to Building Wealth": `Introduction
+  "The Keys to Building Wealth": `Programme Introduction
 Are you feeling lost about how to build real wealth? Many new investors struggle with this. They often try to hit big wins quickly, but this can lead to losses. In this course, you'll learn simple strategies for investing wisely. After completing this course, you'll know how to grow your money consistently and avoid costly mistakes.
 
+Programme Description
 This course is all about building wealth step by step. You will learn how to invest smartly without risking everything you have. The main skills you'll gain are how to diversify your investments, set realistic expectations, and manage risks. This course is worth your time because it helps you create a solid financial future.
+
 
 What You Will Learn
 The basics of creating real wealth
@@ -64,10 +72,12 @@ Understanding market signals and technical indicators
 The significance of maintaining discipline in trading
 How to develop a long-term wealth-building mindset`,
 
-  "Favorite Trading Indicators": `Introduction
+  "Favorite Trading Indicators": `Programme Introduction
 Are you feeling lost in the world of trading? Do you struggle with emotional decisions that lead to losses? This course will help you gain clarity. You will learn how to use reliable trading indicators to make informed choices. After completing this course, you will have the skills to trade with confidence and control your investments.
 
+Programme Description
 This course focuses on essential trading indicators that can help you make better investment decisions. You will learn how to use tools like moving averages, Fibonacci retracements, and the RSI. By the end of this course, you will know how to analyze market data to improve your chances of success. It's a valuable investment of your time that can lead to greater financial freedom.
+
 
 What You Will Learn
 What defines a disciplined trader or investor
@@ -83,10 +93,12 @@ Understanding the put-call ratio and its role in market trends
 The importance of combining multiple indicators for better trading decisions
 Strategies for managing risks while trading`,
 
-  "Charting Strategies for Indicators": `Introduction
+  "Charting Strategies for Indicators": `Programme Introduction
 Are you confused about how to read charts and use indicators in trading? Do you feel stuck at a beginner level, unsure of what to look for? This course will help you understand charts in a simple way. By the end, you will know how to read charts, recognize patterns, and make better trading decisions.
 
+Programme Description
 This course is all about understanding charts and how they connect to human emotions in trading. You will learn key skills like reading price movements, identifying trends, and using simple indicators. This knowledge will help you make informed decisions and take control of your investments.
+
 
 What You Will Learn
 What charts are and how they differ from indicators
@@ -100,10 +112,12 @@ Understanding the Relative Strength Index (RSI) and its signals
 How to analyze multiple factors for better trading decisions
 Tips for using TradingView software for charting and analysis`,
 
-  "Support & Resistance Strategies": `Introduction
+  "Support & Resistance Strategies": `Programme Introduction
 Are you feeling confused about trading? Do you struggle to understand when to buy or sell? This course on Support and Resistance Strategies will help you learn how to identify key levels on a chart. You will understand where prices tend to bounce or pull back. After completing this course, you will be able to make more informed trading decisions and take control of your financial future.
 
+Programme Description
 This course is all about understanding support and resistance in trading. You will learn how to identify important levels on charts that can help you decide when to enter or exit a trade. By mastering these strategies, you will improve your skills and increase your chances of success in the market. This course is worth your time because it provides practical knowledge you can use right away.
+
 
 What You Will Learn
 What support and resistance are
@@ -118,10 +132,12 @@ Strategies for managing risk and reward in your trades
 The psychology behind market movements and investor behavior
 How to become a more confident trader through consistent practice`,
 
-  "Candlestick Trading Strategies": `Introduction
+  "Candlestick Trading Strategies": `Programme Introduction
 Are you feeling lost when looking at candlestick charts? Do you want to understand what those colorful bars really mean? This course is designed to help you learn the ins and outs of candlestick trading. By the end, you'll be able to read charts with confidence and make better trading decisions.
 
+Programme Description
 This course focuses on candlestick trading strategies. You will learn how to read and analyze candlestick patterns to understand market movements. You'll gain skills that will help you spot potential trends and reversals. This knowledge can lead to smarter trading and better results.
+
 
 What You Will Learn
 Introduction to candlesticks and their importance in trading
@@ -135,10 +151,12 @@ Analyzing real-world examples for practical understanding
 Using a trading journal to track your learning and performance
 Developing the confidence to make informed trading decisions`,
 
-  "Risk vs Rewards & Rules to Trade": `Introduction
+  "Risk vs Rewards & Rules to Trade": `Programme Introduction
 Do you feel confused about trading? Are you unsure how to manage risk and reward? This course is designed for you. We will break down the concepts of risk versus reward in trading. By the end, you will know how to make smarter trading decisions and take control of your money. You will feel more confident and ready to trade effectively.
 
+Programme Description
 This course focuses on understanding the balance between risk and reward when trading. You will learn essential strategies to evaluate potential trades and make informed decisions. You'll gain practical skills to manage your investments wisely. This course is worth your time because it teaches you how to protect your money and maximize your trading success.
+
 
 What You Will Learn
 Understand visual risk versus reward in trading
@@ -152,10 +170,12 @@ Learn how to effectively leg into positions during trades
 Discover the pitfalls of options trading
 Develop strategies to manage your investments confidently`,
 
-  "Extract the Market Capital": `Introduction
+  "Extract the Market Capital": `Programme Introduction
 Are you feeling lost in the world of trading? Do you find yourself unsure of when to take profits or how to avoid big losses? This course will guide you step by step through important trading strategies. You'll learn how to build wealth over time, not just with big wins but with smart, consistent trades. After completing this course, you'll be confident in making informed trading decisions.
 
+Programme Description
 This course is all about developing smart trading habits that lead to long-term success. You will learn how to manage your trades, take profits wisely, and avoid emotional mistakes. This course is worth your time because it will help you build a strong foundation in trading. With these skills, you can take control of your financial future.
+
 
 What You Will Learn
 Key wise words to guide your trading decisions
@@ -210,10 +230,7 @@ function normalizeTitleKey(title: string): string {
 }
 
 export function tradingStrategiesTeaser(description: string): string {
-  const match = description.match(/Introduction\s*\n([\s\S]*?)(?:\n\nWhat You Will Learn|\nWhat You Will Learn)/i);
-  const hook = match?.[1]?.trim() ?? "";
-  const first = hook.split(/\n\s*\n/)[0]?.replace(/\s+/g, " ").trim();
-  return first || hook.replace(/\s+/g, " ").trim();
+  return extractProgrammeIntroductionTeaser(description);
 }
 
 export function curatedTradingStrategiesDescription(

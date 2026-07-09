@@ -16,6 +16,7 @@ import {
   curatedAgenticVaultPackDescription,
 } from "@/data/agenticAiVaultProgramDescriptions";
 import { curatedTradingVaultPackDescription } from "@/data/tradingVaultPackProgramDescriptions";
+import { formatStructuredDescription } from "@/lib/structuredDescription";
 
 const PACK_NAMES: Record<VaultPackKey, string> = {
   agentic_ai: "Agentic AI",
@@ -39,12 +40,8 @@ const PACK_BODY: Record<VaultPackKey, { hook: string; protocol: string }> = {
 };
 
 function formatStructured(hook: string, learnItems: string[]): string {
-  const learn = learnItems.map((item) => `- ${item}`).join("\n");
-  const intro = hook.trim();
-  if (!intro && learnItems.length === 0) return "";
-  if (!intro) return `What You Will Learn\n${learn}`;
-  if (learnItems.length === 0) return `Introduction\n${intro}`;
-  return `Introduction\n${intro}\n\nWhat You Will Learn\n${learn}`;
+  if (!hook.trim() && learnItems.length === 0) return "";
+  return formatStructuredDescription(hook, "", learnItems);
 }
 
 function packSubmoduleTitles(pack: VaultPackKey): string[] {
@@ -60,11 +57,15 @@ function moduleLearnItemTitles(offer: Pick<PlanOfferDef, "plan" | "title">): str
   return title ? [title] : [];
 }
 
+function formatVaultPackFallback(pack: VaultPackKey): string {
+  const body = PACK_BODY[pack];
+  return formatStructuredDescription(body.hook, body.protocol, packSubmoduleTitles(pack));
+}
+
 export function resolveVaultPackStructuredDescription(pack: VaultPackKey): string {
   const curated = curatedTradingVaultPackDescription(pack) ?? curatedAgenticVaultPackDescription(pack);
   if (curated) return curated;
-  const body = PACK_BODY[pack];
-  return formatStructured(body.hook, packSubmoduleTitles(pack));
+  return formatVaultPackFallback(pack);
 }
 
 export function resolveVaultModuleStructuredDescription(

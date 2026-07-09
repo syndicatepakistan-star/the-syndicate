@@ -1,15 +1,19 @@
 /**
  * Curated Scalpel Protocol (1-Minute Chart) copy — vault modals and program library.
- * Section headers: Introduction, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn.
  */
+import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
+
 export const TRADING_SCALPEL_MODULE_TITLE =
   "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart";
 
 export const TRADING_SCALPEL_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  [TRADING_SCALPEL_MODULE_TITLE]: `Introduction
+  [TRADING_SCALPEL_MODULE_TITLE]: `Programme Introduction
 Are you feeling lost in the fast-paced world of trading and struggling to know the right moments to buy or sell? Many beginners let confusion and emotions drive their trades, resulting in costly mistakes and missed financial opportunities. This complete program helps you cut through the market noise by teaching you the proven "One Minute Scalpel" method. You will learn step by step how to read price charts, spot hidden patterns, and protect your investments from sudden drops. By the end of this journey, you will trade with confidence and take true control of your financial future.
 
+Programme Description
 This entire course is a practical guide to mastering short-term trading by identifying highly profitable market setups. You will build essential skills in reading chart patterns like flags, wedges, and channels, while using tools like moving averages and momentum indicators to confirm your moves. The program also focuses heavily on strict risk management, showing you exactly where to set your entry, exit, and stop-loss targets. It is highly worth your time because it replaces dangerous guesswork with a disciplined, mechanical trading system. Instead of gambling your money, you will learn how to make smart, calculated decisions that build consistent, long-term wealth.
+
 
 What You Will Learn
 Master the One Minute Scalpel method to make smart, quick trading decisions across different timeframes
@@ -25,10 +29,12 @@ Protect your money with strict risk management by calculating precise stop-loss 
 Practice your new skills safely using replay features before risking real money in the live market
 Combine technical chart reading with strict mental discipline to build a reliable, consistent trading system`,
 
-  "Chapter 1 — Introduction": `Introduction
+  "Chapter 1 — Introduction": `Programme Introduction
 Are you feeling lost in the world of trading? Do you struggle to find the right moments to buy or sell? This course will help you understand the patterns in trading that can lead to success. After completing this course, you will be able to identify key areas in the market and make informed trading decisions. You'll take control of your trading journey and start seeing results.
 
+Programme Description
 This course is all about mastering the art of trading using the One Minute Scalpel method. You will learn how to analyze charts to spot important price levels and make smart trading choices. By focusing on these techniques, you will save time and increase your chances of success in the market. It's a valuable skill set that can lead to consistent profits.
+
 
 What You Will Learn
 Introduction to the One Minute Scalpel method
@@ -41,10 +47,12 @@ Insights into trading strategies used by Wall Street traders
 Tips for practicing and improving your trading skills
 Building a consistent trading system over time`,
 
-  "Chapter 2 — Bull and Bear Flags": `Introduction
+  "Chapter 2 — Bull and Bear Flags": `Programme Introduction
 Are you confused by market trends? Do you struggle to understand when prices will go up or down? This course on bull and bear flags will help you spot important chart patterns. After this course, you'll be able to read price movements better and make smarter trading decisions.
 
+Programme Description
 This course teaches you about bull and bear flags, which are patterns that show how prices might move in the market. You will learn to identify these patterns on charts and understand what they mean for price direction. This knowledge is valuable because it helps you make informed choices about your trades, giving you more control over your money and time.
+
 
 What You Will Learn
 Introduction to bull and bear flags
@@ -58,10 +66,12 @@ Understanding rising wedges and falling wedges
 The concept of retraces and retests in trading
 Best practices for trading with bull flags at the right angle`,
 
-  "Chapter 3 — Falling Wedges": `Introduction
+  "Chapter 3 — Falling Wedges": `Programme Introduction
 Are you confused about when to buy stocks or worried about losing money? This course helps you understand a trading pattern called the "falling wedge." After taking this course, you'll know how to spot these patterns and take action when the market is ready to turn around. You'll feel more confident in your trading decisions.
 
+Programme Description
 This course teaches you about falling wedges, a key trading pattern that can signal a market reversal. You will learn how to identify these patterns and understand important indicators like support lines and divergence. This knowledge can help you make profitable trades and take control of your financial future.
+
 
 What You Will Learn
 Introduction to the falling wedge pattern
@@ -75,10 +85,12 @@ Real-life examples of falling wedge patterns in action
 Tips for trading during regular and extended market hours
 How to maximize profits by knowing when to sell`,
 
-  "Chapter 4 — Rising Wedges": `Introduction
+  "Chapter 4 — Rising Wedges": `Programme Introduction
 Are you feeling lost when it comes to trading? Do you find it hard to spot winning patterns in stocks or cryptocurrencies? This course can help you understand rising wedges and how they work. After completing this course, you will know how to identify these patterns and use them to make informed trading decisions.
 
+Programme Description
 This course teaches you about rising wedges in trading. You will learn how to recognize this specific pattern when trading stocks, cryptocurrencies, and commodities. By understanding rising wedges, you will gain skills that can help you make better trades and improve your chances of success. It's a smart use of your time if you want to take control of your trading journey.
+
 
 What You Will Learn
 Introduction to rising wedges and their characteristics
@@ -93,10 +105,12 @@ Understanding the importance of combining wedge patterns with support, resistanc
 Learning the risks of trading these patterns and knowing where to set your stops
 Building skills to help you profit in the markets consistently`,
 
-  "Chapter 5 — Moving Averages Strategies": `Introduction
+  "Chapter 5 — Moving Averages Strategies": `Programme Introduction
 Are you confused about how to use moving averages in trading? Many beginners struggle to know when to buy or sell. This course will help you understand moving averages and how they can guide your trading decisions. After completing this course, you will confidently identify key support and resistance levels using moving averages.
 
+Programme Description
 This course focuses on moving averages and how they can improve your trading. You will learn how to use moving averages as tools to find good places to enter and exit trades. This knowledge is valuable because it helps you make better decisions, potentially increasing your chances of success in trading.
+
 
 What You Will Learn
 Understand what moving averages are and how they work
@@ -109,10 +123,12 @@ Combine moving averages with other tools for stronger trading signals
 Recognize bullish and bearish patterns in moving averages
 Gain techniques to improve your trading strategies using moving averages`,
 
-  "Chapter 6 — Parallels and Channels": `Introduction
+  "Chapter 6 — Parallels and Channels": `Programme Introduction
 Are you feeling confused about how to trade effectively? Do you find it hard to understand market trends? This course will help you learn about parallel channels, a powerful tool for trading. After this course, you'll know how to spot trading opportunities and make informed decisions about when to buy or sell.
 
+Programme Description
 This course is all about using parallel channels in trading. You'll learn how to identify these channels and use them to guide your trading strategy. By the end, you will be able to trade more confidently and make better choices in the market. It's worth your time because these skills can help you take control of your trading and improve your success.
+
 
 What You Will Learn
 Introduction to parallel channels and their importance in trading
@@ -128,10 +144,12 @@ Applying the same principles to any stock or index
 How to determine when to take profits in trading
 Preparing for advanced topics like gap fills in trading`,
 
-  "Chapter 7 — Final Protocol": `Introduction
+  "Chapter 7 — Final Protocol": `Programme Introduction
 Are you confused about how to read market movements? Do you feel like you're missing important trading opportunities? This course will teach you about gap fills in the market. After completing the course, you will understand how gaps work and how to use them to make better trading decisions.
 
+Programme Description
 This course focuses on understanding gap fills and their importance in trading. You will learn how gaps form, why they matter, and how to identify them in market charts. This knowledge will help you make informed trading choices and increase your chances of success in the market.
+
 
 What You Will Learn
 Understand what a gap is in the market
@@ -145,10 +163,12 @@ Discover strategies for trading based on gap fills
 Understand the psychology behind traders' reactions to gaps
 Gain confidence in making trading decisions based on gaps`,
 
-  "Chapter 8 — Retrace to the Scene of Crime": `Introduction
+  "Chapter 8 — Retrace to the Scene of Crime": `Programme Introduction
 Are you feeling lost when it comes to making smart trades? Do you struggle to know when to buy or sell? This course will help you understand the important concept of retracing to the scene of the crime. After completing this course, you'll be able to spot key price movements. You'll gain skills to make better trading decisions and improve your overall results.
 
+Programme Description
 This course focuses on a key trading strategy known as retracing to the scene of the crime. You'll learn how to identify price patterns that can help you decide when to enter or exit trades. This knowledge will save you time and help you manage your money better. It's a valuable skill for anyone looking to take control of their trading journey.
+
 
 What You Will Learn
 Understanding the concept of retracing in trading
@@ -162,10 +182,12 @@ Identifying key resistance and support levels
 Learning about price action and its implications
 Mastering entry and exit strategies for better trades`,
 
-  "Chapter 9 — Risk Management": `Introduction
+  "Chapter 9 — Risk Management": `Programme Introduction
 Are you feeling lost when it comes to managing your money in trading? Do you struggle to know when to enter or exit a trade? This course will help you take control. You'll learn the essential skills for smart money management and risk management. After this course, you will know how to make better trading decisions and protect your investments.
 
+Programme Description
 This course is all about risk management in trading. You will learn how to manage your money effectively and make smart trades. We will cover entry points, exit points, and how to set stop losses. By mastering these skills, you can minimize losses and maximize gains. It's worth your time because it will make you a more confident and successful trader.
+
 
 What You Will Learn
 Understanding the importance of money management in trading
@@ -180,10 +202,12 @@ Recognizing bullish and bearish divergences for better decisions
 Tips for practicing money management over time
 How to plan your trades and stick to your plan`,
 
-  "Chapter 10 — Final Execution": `Introduction
+  "Chapter 10 — Final Execution": `Programme Introduction
 Are you feeling confused about trading? Do you find yourself stuck trying to understand chart patterns and how to make profitable trades? This course will guide you step by step. You'll learn how to analyze charts, set up trades, and manage your money wisely. After completing this course, you'll have the skills to trade confidently and take control of your financial future.
 
+Programme Description
 This course is all about mastering the Scalpel Protocol, a method that helps you become a better trader. You will learn how to read charts, identify patterns, and make smart trading decisions. By the end, you will know how to manage your trades effectively and maximize your profits. It's worth your time because it builds essential skills that can lead to real financial freedom.
+
 
 What You Will Learn
 Overview of Module 10 and course summary
@@ -218,10 +242,7 @@ const SCALPEL_SLUG_TO_TITLE: Readonly<Record<string, string>> = {
 };
 
 export function tradingScalpelTeaser(description: string): string {
-  const match = description.match(/Introduction\s*\n([\s\S]*?)(?:\n\nWhat You Will Learn|\nWhat You Will Learn)/i);
-  const hook = match?.[1]?.trim() ?? "";
-  const first = hook.split(/\n\s*\n/)[0]?.replace(/\s+/g, " ").trim();
-  return first || hook.replace(/\s+/g, " ").trim();
+  return extractProgrammeIntroductionTeaser(description);
 }
 
 export function curatedTradingScalpelDescription(

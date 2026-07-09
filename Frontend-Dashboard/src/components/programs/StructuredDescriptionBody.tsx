@@ -2,42 +2,21 @@
 
 import { useMemo } from "react";
 import { stripLessonPrefix } from "@/lib/descriptionText";
+import {
+  parseStructuredDescriptionSections,
+  type StructuredDescriptionSections,
+} from "@/lib/structuredDescription";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
-export type StructuredDescriptionSections = {
-  hook: string;
-  core_protocol: string;
-  what_you_will_learn: string;
-};
+export type { StructuredDescriptionSections };
 
 const STRUCTURED_HEADINGS: { key: keyof StructuredDescriptionSections; label: string }[] = [
-  { key: "hook", label: "Introduction" },
+  { key: "hook", label: "Programme Introduction" },
+  { key: "core_protocol", label: "Programme Description" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
-const INTRODUCTION_HEADING_RE = /(?:^|\n)\s*(?:Introduction|The Hook)\s*\n/i;
-const CORE_PROTOCOL_HEADING_RE = /(?:^|\n)\s*The Core Protocol\s*\n/i;
-const LEARN_HEADING_RE = /(?:^|\n)\s*What You Will Learn\s*\n/i;
-
-export function parseStructuredDescriptionSections(body: string): StructuredDescriptionSections | null {
-  const t = body.replace(/\r\n/g, "\n").trim();
-  if (!t) return null;
-  const hookMatch = t.match(
-    new RegExp(
-      `${INTRODUCTION_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:The Core Protocol|What You Will Learn)\\s*\\n)`,
-      "i",
-    ),
-  );
-  const coreMatch = t.match(
-    new RegExp(`${CORE_PROTOCOL_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*What You Will Learn\\s*\\n)`, "i"),
-  );
-  const learnMatch = t.match(new RegExp(`${LEARN_HEADING_RE.source}([\\s\\S]*)$`, "i"));
-  const hook = hookMatch?.[1]?.trim() ?? "";
-  const core = coreMatch?.[1]?.trim() ?? "";
-  const learn = learnMatch?.[1]?.trim() ?? "";
-  if (!hook && !core && !learn) return null;
-  return { hook, core_protocol: core, what_you_will_learn: learn };
-}
+export { parseStructuredDescriptionSections };
 
 const MODULE_OR_CHAPTER_LINE =
   /^\s*(?:module|chapter)\s+(\d+)\s*(?:[:.)-]\s*)?(.*)$/i;
@@ -173,7 +152,7 @@ function StructuredSectionsView({
   prominent?: boolean;
   omitSections?: (keyof StructuredDescriptionSections)[];
 }) {
-  const hidden = new Set<keyof StructuredDescriptionSections>([...omitSections, "core_protocol"]);
+  const hidden = new Set<keyof StructuredDescriptionSections>(omitSections);
   const headingClass = prominent
     ? "border-b border-[#f5c814]/25 pb-2.5 text-left text-[1.2rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.35rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
     : compact

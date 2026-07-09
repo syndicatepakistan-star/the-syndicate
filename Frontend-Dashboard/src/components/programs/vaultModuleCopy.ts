@@ -64,7 +64,7 @@ export const VAULT_MODULE_TEASERS: Readonly<Record<string, string>> = {
     "Three hours of advanced Claude Code doctrine — move from prompt toy to production systems that ship, sell, and scale.",
   "CLAUDE CODE FULL COURSE 4 HOURS — Build & Sell (2026)":
     "Four hours. Build. Sell. 2026 — the full Claude Code operating system for creators who refuse to trade hours for output.",
-  "4 Claude Code Hacks To Make Any Website Look 10 by 10":
+  "4 Claude Code Hacks To Make Any Website Look Pro":
     "Design debt kills conversion — four Claude Code hacks that elevate any site to premium-grade presentation without hiring a studio.",
   "12 Ways to Fix Context in Claude Code":
     "Context drift destroys agent output — install twelve fixes that keep Claude Code locked on mission, memory, and measurable results.",
@@ -94,57 +94,57 @@ export const VAULT_MODULE_TEASERS: Readonly<Record<string, string>> = {
   // — AI Content Automation —
   "Beginners Guide to Faceless YouTube in 2026 (3 hours)":
     "Faceless YouTube in 2026 is a warfare niche — three hours of doctrine to launch channels that scale without showing your face.",
-  "New YouTube Policy ENDS Those Faceless YouTube Channels":
+  "New YouTube Policy ENDS These Faceless YouTube Channels":
     "Policy shifts liquidate lazy operators — understand what ended, what survived, and how to reposition before the algorithm buries you.",
-  "How to Start YouTube Automation in 2026 (Step By Step) NO FACE | FREE COURSE":
+  "Start YouTube Automation in 2026 (Step By Step) NO FACE":
     "Step-by-step automation doctrine — start a faceless YouTube machine in 2026 without trading your identity for views.",
-  "How to Build Faceless YouTube Channels Using Just ONE AI Tool (Genspark AI)":
+  "Build Faceless YouTube Channels Using Just ONE AI Tool (Genspark AI)":
     "One tool. Full channel. Zero face — Genspark AI compresses research, scripting, and production into a single command surface.",
-  "How to Build a VIRAL AI Movie Channel Using Only AI Tools":
+  "Build a VIRAL AI Movie Channel Using Only AI Tools":
     "Viral movie channels are systems, not luck — replicate the AI-only production stack that turns cinematic niches into repeatable traffic.",
-  "How to Create Viral High RPM Finance Videos Using AI (Full Blueprint)":
+  "Create Viral High RPM Finance Videos Using AI (Full Blueprint)":
     "Finance RPM is a math game — full blueprint for AI finance videos engineered for high RPM, retention, and scalable publishing.",
-  "How to Make VIRAL 3D Animated Videos Using FREE AI Tools (FULL COURSE)":
+  "Make VIRAL 3D Animated Videos Using FREE AI Tools (FULL COURSE)":
     "3D animation used to require studios — produce viral 3D content with free AI tools and own the visual niche competitors cannot afford.",
-  "How to Build a Viral AI Influencer Like Aitana Lopez (AI Instagram Model)":
+  "Build a Viral AI Influencer (AI Instagram Models)":
     "Synthetic influence is the new frontier — build a viral AI persona with the same leverage as human creators, minus the liability.",
-  "How to Make a VIRAL AI Documentary Channel Using FREE Tools (FULL COURSE)":
+  "Make a VIRAL AI Documentary Channel Using FREE Tools (FULL COURSE)":
     "Documentary channels dominate watch time — full course on viral AI documentary production using free tools and ruthless consistency.",
-  "How to Build a VIRAL Philosophy Channel Using FREE AI Tools (FULL COURSE)":
+  "Build a VIRAL Philosophy Channel Using FREE AI Tools (FULL COURSE)":
     "Philosophy audiences binge — deploy free AI tools to build a viral philosophy channel that educates, retains, and monetizes.",
-  "How to Use AI to Build a VIRAL Prehistoric Faceless Channel (Full Course)":
+  "Use AI to Build a VIRAL Prehistoric Faceless Channel (Full Course)":
     "Prehistoric niches print views — full course on faceless prehistoric channels built entirely with AI production pipelines.",
-  "How to Clone a VIRAL 3D Documentary Channel Using AI (Full Course)":
+  "Clone a VIRAL 3D Documentary Channel Using AI (Full Course)":
     "Clone what already won — reverse-engineer a viral 3D documentary channel and redeploy the stack under your command.",
-  "How to Make VIRAL Geography Shorts Using Only AI (FULL GUIDE)":
+  "Make VIRAL Geography Shorts Using Only AI (FULL GUIDE)":
     "Geography Shorts explode on autopilot — full guide to AI-only geography content that hooks in three seconds and scales in bulk.",
-  "How to Build a Viral Universe Documentary Channel Using Only AI (Step by Step!)":
+  "Build a Viral Universe Documentary Channel Using Only AI (Step by Step!)":
     "Universe documentaries own curiosity — step-by-step AI channel build for cosmic niches with infinite content runway.",
-  "How To ACTUALLY Go Viral":
+  "ACTUALLY Go Viral":
     "Five thousand videos dissected — viral is not random; it is pattern. Install the evidence layer most creators never see.",
-  "50 Easy Faceless Niches Explained in 19 Minutes":
-    "Niche selection decides everything — fifty faceless niches explained in nineteen minutes so you deploy where competition is weak.",
-  "Create 1,000 YouTube Shorts in 13 Minutes Using FREE AI — Free Auto Shorts in Bulk":
-    "Volume wins Shorts — generate one thousand Shorts in thirteen minutes with free AI bulk automation built for operators.",
-  "How to Crack The NEW Algorithm":
+  "50 Easy Faceless Niches":
+    "Niche selection decides everything — fifty faceless niches explained so you deploy where competition is weak.",
+  "Create 1,000 YouTube Shorts Using FREE AI - Free Auto Shorts in Bulk":
+    "Volume wins Shorts — generate one thousand Shorts with free AI bulk automation built for operators.",
+  "Crack The NEW Algorithm":
     "Seventy channels cracked open — decode the new algorithm signals faceless operators use to stay ahead of policy and competition.",
   "These Faceless YouTube Niches Are Now BANNED":
     "Banned niches destroy channels overnight — know what is dead, what replaced it, and where to redeploy capital and attention.",
-  "How to Write Faceless YouTube Scripts That Get 100s Of Millions Of Views":
+  "Write Faceless YouTube Scripts That Get 100s Of Millions Of Views":
     "Scripts are the weapon — learn the writing doctrine behind faceless videos that accumulate hundreds of millions of views.",
   "The Smart Way to Build a Faceless Finance Channel":
     "Finance faceless is crowded — smart channel architecture exposed so you build RPM-rich finance content without copying noise.",
   "New YouTube Shorts Niche That No One Is Doing Yet (And It's Exploding)":
     "First movers own Shorts — exploit a new niche exploding now before saturation turns edge into commodity.",
-  "How to create Motion Graphics videos in MINUTES with AI":
+  "Create Motion Graphics videos in MINUTES with AI":
     "Motion graphics used to take days — produce broadcast-grade motion content in minutes with AI pipelines built for speed.",
   "Viral Faceless Stickman POV":
     "Stickman POV is dominating feeds — full guide to the viral faceless format competitors underestimate until it is too late.",
   "The Secret NotebookLM Workflow Every YouTuber Needs!":
     "NotebookLM is the hidden research engine — deploy the workflow elite YouTubers use to script, clone, and outproduce channels.",
-  "How to create viral 3D documentary videos using ai(FERN 3D STYLE)":
+  "Create viral 3D documentary videos using ai(FERN 3D STYLE)":
     "FERN 3D style documentary is a category killer — create viral 3D documentary videos with AI and own the aesthetic.",
-  "How to make VIRAL Life Advice Videos Using Only FREE AI Tools":
+  "Make VIRAL Life Advice Videos Using Only FREE AI Tools":
     "Life advice niches never sleep — full course on viral life advice videos using only free AI tools and systematic publishing.",
   "Create Viral inspirational finance Videos with Free AI Tools":
     "Inspirational finance merges emotion and RPM — create viral finance motivation videos with free AI and scale the format.",

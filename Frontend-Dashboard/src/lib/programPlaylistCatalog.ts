@@ -22,6 +22,7 @@ import {
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
 } from "@/lib/level1ProgramCatalog";
 import { cleanProgramDescription } from "@/lib/descriptionText";
+import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 export type ProgramPlaylistCatalogEntry = {
@@ -91,7 +92,7 @@ function truncate(text: string, maxLen: number): string {
 export function isSubstantialProgramDescription(description: string | null | undefined): boolean {
   const text = (description ?? "").trim();
   if (!text) return false;
-  if (/introduction/i.test(text) || /the hook/i.test(text) || /what you will learn/i.test(text) || /the core protocol/i.test(text)) {
+  if (/programme introduction/i.test(text) || /introduction/i.test(text) || /the hook/i.test(text) || /what you will learn/i.test(text) || /programme description/i.test(text) || /the core protocol/i.test(text)) {
     return true;
   }
   if (text.length < 72) return false;
@@ -105,10 +106,7 @@ export function extractProgramSummary(description: string, maxLen = 168): string
   const normalized = description.replace(/\r\n/g, "\n").trim();
   if (!normalized) return "";
 
-  const hookMatch = normalized.match(
-    /(?:^|\n)\s*(?:Introduction|The Hook)\s*\n+([\s\S]*?)(?=\n\s*\n\s*(?:The Core Protocol|What you will|$))/i
-  );
-  const hookParagraph = hookMatch?.[1]?.replace(/\s+/g, " ").trim();
+  const hookParagraph = extractProgrammeIntroductionTeaser(normalized);
   if (hookParagraph && hookParagraph.length > 36) {
     return truncate(hookParagraph, maxLen);
   }
@@ -133,7 +131,15 @@ export function resolveProgramPlaylistTitle(playlist: ProgramPlaylistLike): stri
 
 export function resolveProgramPlaylistDescription(playlist: ProgramPlaylistLike): string {
   const catalog = findProgramCatalogEntry(playlist);
-  const slug = catalog?.slug ?? playlist.slug ?? null;
+  const legacyLevel1Slug = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[playlist.id];
+  const rawSlug = playlist.slug?.trim().toLowerCase();
+  const slug =
+    (rawSlug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(rawSlug) ? rawSlug : undefined) ??
+    legacyLevel1Slug ??
+    (catalog?.id ? LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[catalog.id] : undefined) ??
+    rawSlug ??
+    catalog?.slug ??
+    null;
   const title = catalog?.title ?? playlist.title ?? null;
   const psychology = curatedBusinessPsychologyDescription(slug, title);
   if (psychology) return finalizeProgramDescription(psychology);

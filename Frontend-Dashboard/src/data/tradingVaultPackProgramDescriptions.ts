@@ -1,15 +1,18 @@
 /**
  * Curated Trading Advanced Technical Analysis full-pack copy.
- * Section headers: Introduction, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn.
  */
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
+import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 
 export const TRADING_VAULT_PACK_TITLE = "Trading Advanced Technical Analysis";
 
-export const TRADING_VAULT_PACK_STRUCTURED_DESCRIPTION = `Introduction
+export const TRADING_VAULT_PACK_STRUCTURED_DESCRIPTION = `Programme Introduction
 Are you feeling lost in the fast-paced world of trading and struggling to know the right moments to buy or sell? Many beginners let confusion and emotions drive their trades, resulting in costly mistakes and missed financial opportunities. This complete program helps you cut through the market noise by teaching you the proven "One Minute Scalpel" method. You will learn step by step how to read price charts, spot hidden patterns, and protect your investments from sudden drops. By the end of this journey, you will trade with confidence and take true control of your financial future.
 
+Programme Description
 This entire course is a practical guide to mastering short-term trading by identifying highly profitable market setups. You will build essential skills in reading chart patterns like flags, wedges, and channels, while using tools like moving averages and momentum indicators to confirm your moves. The program also focuses heavily on strict risk management, showing you exactly where to set your entry, exit, and stop-loss targets. It is highly worth your time because it replaces dangerous guesswork with a disciplined, mechanical trading system. Instead of gambling your money, you will learn how to make smart, calculated decisions that build consistent, long-term wealth.
+
 
 What You Will Learn
 Master the One Minute Scalpel method to make smart, quick trading decisions across different timeframes
@@ -30,10 +33,7 @@ const PACK_DESCRIPTIONS: Partial<Record<VaultPackKey, string>> = {
 };
 
 export function tradingVaultPackTeaser(description: string): string {
-  const match = description.match(/Introduction\s*\n([\s\S]*?)(?:\n\nWhat You Will Learn|\nWhat You Will Learn)/i);
-  const hook = match?.[1]?.trim() ?? "";
-  const first = hook.split(/\n\s*\n/)[0]?.replace(/\s+/g, " ").trim();
-  return first || hook.replace(/\s+/g, " ").trim();
+  return extractProgrammeIntroductionTeaser(description);
 }
 
 export function curatedTradingVaultPackDescription(pack: VaultPackKey): string | undefined {

@@ -7,6 +7,7 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { parseStructuredDescriptionSections } from "@/lib/structuredDescription";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
@@ -19,16 +20,26 @@ type Props = {
 
 function isTopLevelSectionHeading(line: string): boolean {
   const t = line.trim().toLowerCase();
-  return t === "introduction" || t === "the hook" || t === "what you will learn";
+  return (
+    t === "introduction" ||
+    t === "programme introduction" ||
+    t === "programme description" ||
+    t === "the hook" ||
+    t === "what you will learn"
+  );
 }
 
 function isHiddenSectionHeading(line: string): boolean {
-  return line.trim().toLowerCase() === "the core protocol";
+  const t = line.trim().toLowerCase();
+  return t === "the core protocol";
 }
 
 function displaySectionHeading(line: string): string {
   const t = line.trim().toLowerCase();
-  if (t === "the hook" || t === "introduction") return "Introduction";
+  if (t === "the hook" || t === "introduction" || t === "programme introduction") {
+    return "Programme Introduction";
+  }
+  if (t === "the core protocol" || t === "programme description") return "Programme Description";
   if (t === "what you will learn") return "What you will learn";
   return line.trim();
 }
@@ -124,8 +135,11 @@ function preprocessDenseDescription(raw: string): string {
 
   const inject: [RegExp, string][] = [
     [/\s+(The Publishing Fortress:\s*)/gi, "\n\n$1\n\n"],
-    [/\s+(Introduction)\s+/gi, "\n\n$1\n\n"],
-    [/\s+(The Hook)\s+/gi, "\n\nIntroduction\n\n"],
+    [/\s+(Programme Introduction)\s+/gi, "\n\n$1\n\n"],
+    [/\s+(Programme Description)\s+/gi, "\n\n$1\n\n"],
+    [/\s+(Introduction)\s+/gi, "\n\nProgramme Introduction\n\n"],
+    [/\s+(The Hook)\s+/gi, "\n\nProgramme Introduction\n\n"],
+    [/\s+(The Core Protocol)\s+/gi, "\n\nProgramme Description\n\n"],
     [/\s+(What You Will Learn)\s+/gi, "\n\n$1\n\n"],
   ];
   for (const [re, rep] of inject) {
@@ -368,24 +382,18 @@ function parseDescriptionToBlocks(text: string): ReactNode {
 }
 
 function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSections | null {
-  const t = body.replace(/\r\n/g, "\n").trim();
-  if (!t) return null;
-  const hookMatch = t.match(
-    /(?:^|\n)\s*(?:Introduction|The Hook)\s*\n+([\s\S]*?)(?=\n\s*(?:The Core Protocol|What You Will Learn)\s*\n)/i,
-  );
-  const coreMatch = t.match(
-    /(?:^|\n)\s*The Core Protocol\s*\n+([\s\S]*?)(?=\n\s*What You Will Learn\s*\n)/i,
-  );
-  const learnMatch = t.match(/(?:^|\n)\s*What You Will Learn\s*\n+([\s\S]*)$/i);
-  const hook = hookMatch?.[1]?.trim() ?? "";
-  const core = coreMatch?.[1]?.trim() ?? "";
-  const learn = learnMatch?.[1]?.trim() ?? "";
-  if (!hook && !core && !learn) return null;
-  return { hook, core_protocol: core, what_you_will_learn: learn };
+  const parsed = parseStructuredDescriptionSections(body);
+  if (!parsed) return null;
+  return {
+    hook: parsed.hook,
+    core_protocol: parsed.core_protocol,
+    what_you_will_learn: parsed.what_you_will_learn,
+  };
 }
 
 const STRUCTURED_HEADINGS: { key: keyof StreamPlaylistDescriptionSections; label: string }[] = [
-  { key: "hook", label: "Introduction" },
+  { key: "hook", label: "Programme Introduction" },
+  { key: "core_protocol", label: "Programme Description" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
@@ -489,7 +497,6 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
   return (
     <div className="flex flex-col gap-8 sm:gap-10" role="document">
       {STRUCTURED_HEADINGS.map(({ key, label }) => {
-        if (key === "core_protocol") return null;
         const text = sections[key].trim();
         if (!text) return null;
         const isLearn = key === "what_you_will_learn";
@@ -590,7 +597,8 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
           ) : (
             <p className="text-[17px] leading-relaxed text-white/55 sm:text-[18px]">
               No description has been added for this program yet. In Django admin, use section lines{" "}
-              <span className="font-semibold text-white/70">Introduction</span> and{" "}
+              <span className="font-semibold text-white/70">Programme Introduction</span>,{" "}
+              <span className="font-semibold text-white/70">Programme Description</span>, and{" "}
               <span className="font-semibold text-white/70">What you will learn</span>, each on its own line, then the
               text for each section below.
             </p>

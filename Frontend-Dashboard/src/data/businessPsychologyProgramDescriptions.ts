@@ -1,11 +1,12 @@
 /**
  * Curated Business Psychology program copy — public /programs and dashboard programs.
- * Section headers: Introduction, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn.
  */
 export const BUSINESS_PSYCHOLOGY_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  "the-9-to-5-exit-strategy": `Introduction
+  "the-9-to-5-exit-strategy": `Programme Introduction
 Are you feeling stuck in your daily job and dreaming of more freedom? This complete program is your step-by-step guide to breaking free from the 9-to-5 grind. You will learn how to build a simple, low-risk digital business that puts you in control of your time and money. Instead of guessing, you will follow a proven path to replace your current income safely. By the end of this journey, you will know exactly how to launch your own business and finally work for yourself.
 
+Programme Description
 This entire course is about helping you smoothly transition from an employee to a confident business owner. You will learn essential skills like finding digital product ideas, testing market demand, and selling real results rather than just your time. We focus completely on online models, so you avoid the high costs and heavy risks of opening a physical store. It is worth your time because it breaks a massive life change into small, manageable steps. You will build your new income stream while keeping your current job until you are fully prepared to leave.
 
 What You Will Learn
@@ -21,9 +22,10 @@ Avoid the trap of perfectionism so you can start earning faster
 Build a strong financial safety net while still working your current job
 Know exactly when and how to hand in your resignation safely`,
 
-  "zero-to-one-million": `Introduction
+  "zero-to-one-million": `Programme Introduction
 Are you feeling stuck in a crowded market where you are just copying others and competing on price? Many new entrepreneurs struggle to stand out, wasting time on weak ideas and fighting for small profits. This complete program gives you a clear, step-by-step path to build a unique business from the ground up. You will learn how to leave the fierce competition behind and create true value that customers actually want. By the end of this journey, you will have the confidence and tools to grow a highly profitable business and take control of your financial future.
 
+Programme Description
 This entire course is about transforming how you think about and build a business, guiding you smoothly from zero to your first million. You will learn essential skills like finding hidden market opportunities, choosing the right partners, and making sales feel like natural storytelling. The program also teaches you how to focus on one powerful opportunity instead of juggling many small tasks, while safely using technology to boost your results. It is highly worth your time because it replaces guesswork with a proven plan for success, allowing you to step away from exhausting price wars and build a standout company.
 
 What You Will Learn
@@ -39,9 +41,10 @@ Combine your human creativity with technology and AI to amplify your business re
 Answer the seven critical business questions to ensure your timing, team, and product are ready for success
 Follow a clear step-by-step path to grow your company confidently from zero to one million`,
 
-  "syndicate-13-business-rules": `Introduction
+  "syndicate-13-business-rules": `Programme Introduction
 Are you struggling to understand how to build real wealth and feeling overwhelmed by where to start? Many beginners waste time overthinking, spend too much money early on, or get trapped competing with others on price. This complete program gives you a clear, step-by-step path to take control of your time and money. You will learn the fundamental rules of business survival, from testing cheap ideas to taking fast, confident action. By the end of this journey, you will know exactly how to turn a simple idea into a profitable system that creates true financial freedom.
 
+Programme Description
 This entire course is a practical guide to building a successful business from the ground up without breaking the bank. You will learn essential skills like managing your cash flow, analyzing your competitors, and protecting your hard-earned reputation. The program trains you to avoid common traps, such as paying expensive legal fees too soon, fighting in endless price wars, and getting lazy after your first win. It is highly worth your time because it replaces risky guesswork with proven rules for growth and efficiency. Ultimately, you will gain the tools to work smarter, serve your customers better, and build lasting wealth.
 
 What You Will Learn
@@ -59,9 +62,10 @@ Step out of your comfort zone by taking smart, calculated risks without gambling
 Connect with experienced mentors who can share their wisdom and help you avoid costly mistakes
 Kill complacency by constantly setting new goals and staying hungry for daily improvement`,
 
-  "business-warfare": `Introduction
+  "business-warfare": `Programme Introduction
 Are you feeling overwhelmed by fighting larger competitors and spreading your time and money too thin? Many business owners get stuck playing defense and reacting slowly to market changes. This complete course helps you apply powerful military strategies to take control of your business journey. You will learn step by step how to stop waiting for customers and start commanding your market with smart, focused actions. By the end of this program, you will know exactly how to outsmart your rivals, protect your resources, and build the freedom you truly want.
 
+Programme Description
 The entire course is about mastering the art of business warfare by working smarter instead of harder. You will build crucial skills in quick decision-making, concentrating your resources, and launching surprise strategies that leave your competition behind. The lessons also cover how to simplify your daily operations and secure your cash flow so you can grow safely. Taking this full journey is worth your time because it prevents costly mistakes and wasted energy. You will replace confusion with clear, bold plans that give you total control over your financial future.
 
 What You Will Learn
@@ -75,9 +79,10 @@ Ignore low-value tasks on purpose so you can dedicate all your energy to your bi
 Keep your upcoming plans a total secret to launch surprise moves that competitors cannot block
 Protect your business from unexpected risks by securing cash reserves and diversifying your suppliers`,
 
-  "the-compound-effect": `Introduction
+  "the-compound-effect": `Programme Introduction
 Are you feeling frustrated because business success seems out of reach and your hard work is not paying off instantly? Many people get stuck expecting quick results and end up overwhelmed by daily struggles or a lack of progress. This complete program shows you that true success comes from the compound effect, where small, daily actions build up into massive growth over time. You will learn to take control of your time and money by fixing tiny problems before they damage your business. By the end of this journey, you will know exactly how to build powerful daily habits and maintain the steady momentum needed to achieve lasting freedom.
 
+Programme Description
 This entire course is a practical guide to using the compound effect to build a highly successful business step by step. You will learn essential skills like designing powerful daily routines, breaking bad habits, and protecting your mind from negative influences. The program teaches you how to track your daily actions, take full responsibility for your results, and avoid the small mistakes that quietly drain your profits. It is highly worth your time because it replaces the stressful cycle of starting and stopping with a steady, reliable working rhythm. Ultimately, you will build a solid business foundation that turns your long-term goals into a reality without burning out.
 
 What You Will Learn
@@ -93,9 +98,10 @@ Escape the stressful feast-and-famine cycle of sales by maintaining consistent d
 Build a strong business foundation that keeps you moving forward even when progress feels slow
 Track your progress and commit to a 30-day challenge to turn your new knowledge into real action`,
 
-  "hustle-hard": `Introduction
+  "hustle-hard": `Programme Introduction
 Are you feeling overwhelmed and stressed by the daily grind of running your business? Many entrepreneurs get stuck making important decisions when they are exhausted, accepting low-paying work out of fear, and repeating the same costly mistakes. This complete program will teach you how to face these challenges head-on and take real control of your time and money. You will learn to build a strong team, protect your mental energy, and use your past failures as a tool for growth. By the end of this journey, you will have the confidence to make smart choices that increase your profits and create a business you truly own.
 
+Programme Description
 This course is a complete guide to working smarter and transforming your mindset from a stressed worker into a professional owner. You will learn essential skills like auditing your mistakes, reading your competition, and choosing the right people to help you grow. The program also shows you how to protect your daily focus, say no to bad deals, and tackle complex work that pays much better. Investing your time in this journey is highly worthwhile because it stops you from wasting energy on strategies that do not work. You will walk away with clear systems and strong habits to build a lasting, profitable business.
 
 What You Will Learn
@@ -112,9 +118,10 @@ Perform a deep review of your business mistakes to find the root cause instead o
 Create strict rules and daily systems that prevent you from repeating past failures
 Bounce back quickly from setbacks and turn your challenges into profitable opportunities`,
 
-  "mastering-consistency": `Introduction
+  "mastering-consistency": `Programme Introduction
 Many people struggle to stay motivated and feel stuck when their hard work does not bring instant results. Procrastination, fear of failure, and emotional highs and lows often stop beginners from reaching their true potential. This complete program shows you how to replace unreliable motivation with rock-solid daily habits. You will learn step by step how to beat hesitation and take control of your time, even when you feel uninspired or tired. By the end of this journey, you will know exactly how to take small, consistent actions that build real freedom and long-term success.
 
+Programme Description
 This entire course is about mastering the power of consistency to create unstoppable momentum in your life and business. You will learn practical tools, like the five-second rule, to stop overthinking and begin building reliable daily systems. The lessons also teach you how to separate your emotions from your business results and find a deep, personal reason to keep pushing forward. It is highly worth your time because it shifts your focus from chasing stressful quick wins to building lasting wealth. Instead of waiting for perfect conditions, you will build the discipline to guarantee your own progress.
 
 What You Will Learn
@@ -131,9 +138,10 @@ Focus completely on the daily actions you can control rather than stressing over
 Trust the process of delayed gratification and watch how small, daily efforts stack up into massive wins
 Shift your mindset from expecting quick cash to building exponential, long-term business growth`,
 
-  "mastering-risk-and-uncertainty": `Introduction
+  "mastering-risk-and-uncertainty": `Programme Introduction
 Are you feeling stuck or overwhelmed by the fear of making the wrong business decisions? Many entrepreneurs freeze when faced with uncertainty, either avoiding risk entirely or making reckless gambles that lead to failure. This complete program will help you understand that risk is not an enemy to avoid, but a tool you can manage and control. You will learn how to turn your anxiety into a clear, step-by-step process for making smart, confident choices. By the end of this journey, you will know exactly how to gather the right data, run safe tests, and scale your business without the fear of unexpected disaster.
 
+Programme Description
 This entire course is about mastering the art of calculated risk and decision-making in business. You will learn essential skills like identifying your personal risk style, separating facts from social noise, and balancing your emotions with logical planning. The program teaches you how to break massive, scary decisions into small, manageable steps so you can build momentum safely. It is highly worth your time because it replaces the stress of uncertainty with proven systems for growth and resilience. Ultimately, you will gain the confidence to bounce back from failures and build a business infrastructure that can handle success.
 
 What You Will Learn
@@ -148,9 +156,10 @@ Run small, inexpensive tests to validate your ideas before spending large amount
 Build strong daily systems and infrastructure so your business can handle rapid growth safely
 Treat business failures as temporary setbacks and perform an autopsy to extract valuable lessons`,
 
-  "syndicate-money-philosophy": `Introduction
+  "syndicate-money-philosophy": `Programme Introduction
 Do you feel trapped by money, struggling to get ahead in a system that feels built against you? This complete program changes how you think about wealth, showing you how to break free from limiting beliefs and a traditional worker mindset. You will learn to step into a new role as a confident leader who uses money as a tool for personal growth. By the end of this journey, you will take control of your time and money, empowering yourself to build a life of true freedom and purpose.
 
+Programme Description
 This entire course is a step-by-step guide to mastering money so it serves you instead of controlling you. You will discover how to overcome a poverty mindset, understand the dark side of greed in society, and build real wealth with honor. We focus on building skills that turn you into a strong leader who protects their family while fighting financial exploitation. It is highly worth your time because it replaces guilt and confusion with a clear, honorable path to success. You will gain the mental tools to stop living paycheck to paycheck and start creating a meaningful, wealthy future.
 
 What You Will Learn
@@ -165,9 +174,10 @@ Shift from simply trading your time for a paycheck to creating true value and lo
 Build wealth with strict integrity, honor, and wisdom instead of selfishness or greed
 Take control of your financial destiny so money serves your goals instead of ruling your life`,
 
-  "the-secret-to-transformation": `Introduction
+  "the-secret-to-transformation": `Programme Introduction
 Do you feel overwhelmed by the expectations of others and stuck in your personal growth? This complete program guides you step by step to step away from outside noise and focus entirely on yourself. You will learn how to protect your biggest goals, face challenges with confidence, and design a daily life that supports your success. By the end of this journey, you will take true control of your path and step forward as a stronger, authentic version of yourself.
 
+Programme Description
 This entire course is about mastering the art of personal transformation by building a strong foundation in private. You will gain the skills to guard your dreams from negativity, rewire limiting beliefs, and organize your daily habits to match your ambitions. You will also learn the exact time to finally share your progress with the world on your own terms. Investing your time here gives you the freedom to build real skills without needing outside approval. It is the ultimate roadmap to taking ownership of your future and making lasting, meaningful progress.
 
 What You Will Learn
@@ -182,9 +192,10 @@ Evaluate your inner circle and surround yourself with people who support your jo
 Reprogram your mindset with positive self-talk to overcome the limiting beliefs holding you back
 Know exactly when and how to confidently share your transformation with the world`,
 
-  "the-micro-business-protocol": `Introduction
+  "the-micro-business-protocol": `Programme Introduction
 Are you feeling stuck trading your time for low-paying work and wondering how to start a business without risking all your savings? Many beginners feel overwhelmed by big business strategies and get trapped doing every small task themselves. This complete program shows you how to build a flexible, low-cost micro business that gives you real financial freedom. You will learn how to find exactly what customers want, package your skills into high-value offers, and build simple systems that run smoothly. By the end of this journey, you will know how to confidently launch, grow, and automate your own business without burning out.
 
+Programme Description
 This entire course is a practical guide to mastering the micro business model, designed to help you work smarter, not harder. You will learn essential skills like matching your abilities to real market needs, selling complete solutions instead of hourly labor, and reaching out to customers instead of waiting for them. The program also teaches you how to create powerful templates, standard operating procedures, and delegate tasks so your business runs like a factory. It is highly worth your time because it replaces the stress of starting from scratch every day with a proven system to save time, increase profits, and build a business that eventually runs without you.
 
 What You Will Learn

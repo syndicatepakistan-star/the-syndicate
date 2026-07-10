@@ -11,9 +11,9 @@ import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { buildPageMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'Programs — Elite Offers & Course Library',
+  title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',
   description:
-    'Explore Syndicate Elite Offers and the full programs library: money mastery, trading vaults, AI automation, business psychology, and operator-grade training.',
+    'Syndicate Elite Offers: Money Mastery vault, Syndicate Trading, Agentic AI, Syndicate faceless YouTube / AI Content Automation, Syndicate business models and behaviour psychology — buy packs or single courses.',
   path: '/programs',
 })
 
@@ -32,6 +32,12 @@ export default async function ProgramsPage() {
         className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10"
       >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
+        <p className="mx-auto max-w-3xl px-1 text-center font-mono text-xs leading-relaxed text-zinc-300/90 sm:text-sm">
+          This is The Syndicate vault floor — Money Mastery, Syndicate Trading, Agentic AI, and the Syndicate
+          faceless YouTube pack under AI Content Automation, plus Level 1 Syndicate business models and
+          Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
+          curriculum.
+        </p>
         <ProgramsOfferSection size="large" />
       </section>
       <section

@@ -8,6 +8,7 @@ import {
   HomePaywallSection,
   HomePricingSection,
 } from '@/components/home/HomeBelowFoldSections'
+import { HomeEntityStatement } from '@/components/home/HomeEntityStatement'
 import { HeroFeaturedLogosStrip } from '@/components/home/HeroFeaturedLogosStrip'
 import { HomeGlobeSection } from '@/components/home/HomeGlobeSection'
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
@@ -92,6 +93,7 @@ export default async function Home() {
         <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
       </section>
 
+      <HomeEntityStatement />
       <HomeGlobeSection images={programGalleryImages} />
       <HomePricingSection />
       <HomePaywallSection />

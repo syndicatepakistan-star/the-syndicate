@@ -7,10 +7,11 @@ export const SYNDICATE_SAME_AS = [
   "https://www.tiktok.com/@followthesyndicate",
 ] as const;
 
-export const DEFAULT_SITE_TITLE = "The Syndicate — Business Education, Trading Vaults & AI Programs";
+export const DEFAULT_SITE_TITLE =
+  "The Syndicate — Business Education, Money Mastery, Trading Vaults & AI Programs";
 
 export const DEFAULT_SITE_DESCRIPTION =
-  "Elite business education: money mastery, trading technical analysis, AI automation, business psychology & operator programs. Explore courses, membership & vault packs at The Syndicate.";
+  "The Syndicate is an online business education platform at the-syndicate.com — not a university. Money Mastery vault, Syndicate Trading, AI automation, Syndicate business models & behaviour psychology. Lifetime packs and The Knight membership.";
 
 function stripFaqAnswer(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -23,6 +24,7 @@ export function buildOrganizationJsonLd() {
     "@type": "Organization",
     "@id": `${site}/#organization`,
     name: SITE_NAME,
+    alternateName: ["Syndicate", "The Syndicate Business Education"],
     url: site,
     logo: {
       "@type": "ImageObject",
@@ -32,6 +34,8 @@ export function buildOrganizationJsonLd() {
     },
     image: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
     description: DEFAULT_SITE_DESCRIPTION,
+    disambiguatingDescription:
+      "Private online business education platform (the-syndicate.com) — not a university, Examination Syndicate, or academic exam board.",
     sameAs: [...SYNDICATE_SAME_AS],
   };
 }

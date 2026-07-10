@@ -12,7 +12,23 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
   general: [
     {
       q: "What is The Syndicate?",
-      a: "It is a private channel for people who want real leverage — money, power, and self-mastery — not motivational noise.\nYou get courses, bigger program packs, membership if you want it, and a way to earn as an affiliate. Head to the Programs page to see everything that is open right now.",
+      a: "The Syndicate is a private online business education platform at the-syndicate.com — not a university, not an exam board, and not a crypto coin.\nWe train operators in money mastery, Syndicate Trading, AI automation, Syndicate business models, and Syndicate behaviour psychology. You buy lifetime vaults and courses, or run The Knight membership, then execute from your dashboard.",
+    },
+    {
+      q: "Is The Syndicate a university or Examination Syndicate?",
+      a: "No. We are not the University of the Punjab, not an Examination Syndicate, and not a degree-granting school.\nThe Syndicate is an independent operator education brand. If you searched for campus exams or academic departments, that is a different organisation. We sell digital programs, vault packs, and membership for people building leverage in business, trading, and AI systems.",
+    },
+    {
+      q: "What is The Syndicate vault / Money Mastery?",
+      a: "The Syndicate vault is the lifetime library. Money Mastery is the full vault unlock — one payment, permanent access to Level 1 courses plus the three mid-ticket packs: Agentic AI, AI Content Automation (including the Syndicate faceless YouTube pack), and Syndicate Trading.\nBuy a single pack or course if you want a narrower strike. Money Mastery is the all-in command option.",
+    },
+    {
+      q: "What is Syndicate Trading?",
+      a: "Syndicate Trading is our Advanced Technical Analysis vault — chart discipline, setups, and execution frameworks for operators who refuse to gamble on hope.\nYou can unlock the full trading pack or take modules one at a time from the Programs page. It sits beside Money Mastery, not inside a university syllabus.",
+    },
+    {
+      q: "What are Syndicate business models and Syndicate behaviour psychology?",
+      a: "Syndicate business models are the Level 1 tracks that teach real operating models you can start and scale — pick the lanes that fit your edge.\nSyndicate behaviour psychology is the correction layer: how you think under pressure, how you decide, and how you stop sabotaging your own execution. Both live in the Programs library under The Syndicate brand.",
     },
     {
       q: "What does Money Mastery unlock?",
@@ -20,7 +36,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
     },
     {
       q: "What are the mid-ticket program packs?",
-      a: "On the Programs page you will see three larger packs. Each one lets you buy the full bundle or pick courses one at a time.\nAgentic AI is $150 for the full pack (about $200 if you bought every course separately) — about 26 courses on automation, agents, and similar tools.\nAI Content Automation is $150 for the full pack (about $200 separately) — faceless YouTube, shorts, documentaries, that kind of thing.\nTrading Advanced Technical Analysis is $150 for the full pack (about $200 separately) — four trading programs at $50 each, or single lessons inside each module.\nHit Unlock on any of those cards and you can choose the full pack or just the courses you want.",
+      a: "On the Programs page you will see three larger packs. Each one lets you buy the full bundle or pick courses one at a time.\nAgentic AI is $150 for the full pack (about $200 if you bought every course separately) — about 26 courses on automation, agents, and similar tools.\nAI Content Automation is $150 for the full pack (about $200 separately) — the Syndicate faceless YouTube pack: shorts, documentaries, finance channels, that kind of machine.\nTrading Advanced Technical Analysis is $150 for the full pack (about $200 separately) — four trading programs at $50 each, or single lessons inside each module.\nHit Unlock on any of those cards and you can choose the full pack or just the courses you want.",
     },
     {
       q: "How does the affiliate program work?",
@@ -32,7 +48,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
     },
     {
       q: "Will this work if I have a job or study at university?",
-      a: "Yes. Everything is on your schedule — watch when you can, around work or classes.\nThat does not mean coast. If you never apply what you learn, you are wasting your own time.",
+      a: "Yes. Everything is on your schedule — watch when you can, around work or classes.\nThat does not mean coast. If you never apply what you learn, you are wasting your own time. Studying at a university and training inside The Syndicate are not the same thing — one is campus academia; we are operator education.",
     },
   ],
   pricing: [
@@ -89,13 +105,41 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
   ],
 };
 
+/** Priority FAQs for rich results / AI Overviews — entity first, then products. */
+const STRUCTURED_FAQ_PRIORITY: readonly string[] = [
+  "What is The Syndicate?",
+  "Is The Syndicate a university or Examination Syndicate?",
+  "What is The Syndicate vault / Money Mastery?",
+  "What is Syndicate Trading?",
+  "What are Syndicate business models and Syndicate behaviour psychology?",
+  "What does Money Mastery unlock?",
+  "What are the mid-ticket program packs?",
+  "Who is The Syndicate for?",
+];
+
 /** Flat list for FAQ rich results (Google recommends a focused subset). */
 export function homeFaqForStructuredData(limit = 8): FaqItem[] {
-  const picked: FaqItem[] = [];
+  const byQuestion = new Map<string, FaqItem>();
   for (const category of ["general", "pricing", "program"] as const) {
     for (const item of FAQS_BY_CATEGORY[category]) {
-      if (picked.length >= limit) return picked;
+      byQuestion.set(item.q, item);
+    }
+  }
+
+  const picked: FaqItem[] = [];
+  for (const q of STRUCTURED_FAQ_PRIORITY) {
+    const item = byQuestion.get(q);
+    if (item) {
       picked.push(item);
+      if (picked.length >= limit) return picked;
+    }
+  }
+
+  for (const category of ["general", "pricing", "program"] as const) {
+    for (const item of FAQS_BY_CATEGORY[category]) {
+      if (picked.some((p) => p.q === item.q)) continue;
+      picked.push(item);
+      if (picked.length >= limit) return picked;
     }
   }
   return picked;

@@ -7,7 +7,7 @@ export const SITE_NAME = "The Syndicate";
 
 export const DEFAULT_OG_IMAGE_PATH = "/assets/logo.png";
 
-/** Public marketing routes included in sitemap.xml */
+/** Public marketing routes included in sitemap.xml (HTML pages only — never favicons). */
 export const PUBLIC_SITEMAP_PATHS = [
   "",
   "/what-you-get",

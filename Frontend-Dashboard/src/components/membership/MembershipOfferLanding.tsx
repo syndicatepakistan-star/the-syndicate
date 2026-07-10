@@ -95,7 +95,7 @@ const MEMBERSHIP_PILLARS = [
 ] as const;
 
 const HERO_INTRO =
-  "Breach the paywall and run the full Syndicate rig — your curriculum, your rhythm, your command surface inside the dashboard.";
+  "The Knight is The Syndicate membership airlock — pick your courses, run Syndicate Mode, and work the member library. Money Mastery stays the lifetime vault. This is operator access, not a university login.";
 
 const HERO_OFFER_COPY = KNIGHT_SUBSCRIPTION_COPY;
 

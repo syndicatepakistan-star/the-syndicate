@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Our Methods",
+  title: "Our Methods — Syndicate Money Mastery & Operator Doctrine",
   description:
-    "How The Syndicate teaches operators to decode systems, build leverage, and execute — structured methods for business, trading, and digital sovereignty.",
+    "How The Syndicate trains operators: decode the system, build leverage, and execute. Doctrine behind Money Mastery, Syndicate Trading, Syndicate business models, and behaviour psychology — not university theory.",
   path: "/our-methods",
 });
 

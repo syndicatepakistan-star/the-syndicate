@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "What You Get",
+  title: "What You Get — The Syndicate Vault, Packs & Alliance",
   description:
-    "See what you get inside The Syndicate: elite programs, trading vaults, AI systems, community access, and the operator playbook for building real income.",
+    "Inside The Syndicate: Money Mastery vault, Syndicate Trading, AI packs including the faceless YouTube track, Syndicate business models, behaviour psychology, and alliance access for operators who execute.",
   path: "/what-you-get",
 });
 

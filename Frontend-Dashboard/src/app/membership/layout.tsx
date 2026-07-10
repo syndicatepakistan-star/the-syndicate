@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Membership — The Knight",
+  title: "The Knight Membership — The Syndicate Vault Access",
   description:
-    "Join The Syndicate membership — The Knight tier with premium access, elite content, and the full operator ecosystem for serious builders.",
+    "Enter The Knight — The Syndicate monthly membership for operators who want selected courses, Syndicate Mode, and member library access. Money Mastery remains the lifetime vault unlock.",
   path: "/membership",
 });
 

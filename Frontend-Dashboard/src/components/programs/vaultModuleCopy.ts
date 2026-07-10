@@ -4,6 +4,10 @@ import {
   curatedAgenticAiDescription,
 } from "@/data/agenticAiVaultProgramDescriptions";
 import {
+  aiContentTeaser,
+  curatedAiContentDescription,
+} from "@/data/aiContentVaultProgramDescriptions";
+import {
   curatedTradingVaultDescription,
   resolveTradingModuleDetail,
   resolveTradingModuleTeaser,
@@ -164,6 +168,10 @@ export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey, plan
     const curated = curatedAgenticAiDescription(planSlug, title);
     if (curated) return agenticAiTeaser(curated);
   }
+  if (pack === "ai_content_automation") {
+    const curated = curatedAiContentDescription(planSlug, title);
+    if (curated) return aiContentTeaser(curated);
+  }
   if (pack === "trading_technical_analysis") {
     const curated = curatedTradingVaultDescription(planSlug, title);
     if (curated) return tradingVaultDescriptionTeaser(curated, planSlug);
@@ -182,6 +190,10 @@ export function resolveVaultModuleTeaser(title: string, pack: VaultPackKey, plan
 export function resolveVaultModuleDetail(title: string, pack: VaultPackKey, planSlug?: string): string {
   if (pack === "agentic_ai") {
     const curated = curatedAgenticAiDescription(planSlug, title);
+    if (curated) return curated;
+  }
+  if (pack === "ai_content_automation") {
+    const curated = curatedAiContentDescription(planSlug, title);
     if (curated) return curated;
   }
   if (pack === "trading_technical_analysis") {

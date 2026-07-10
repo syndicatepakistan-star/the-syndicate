@@ -15,6 +15,10 @@ import {
   curatedAgenticAiDescription,
   curatedAgenticVaultPackDescription,
 } from "@/data/agenticAiVaultProgramDescriptions";
+import {
+  curatedAiContentDescription,
+  curatedAiContentVaultPackDescription,
+} from "@/data/aiContentVaultProgramDescriptions";
 import { curatedTradingVaultPackDescription } from "@/data/tradingVaultPackProgramDescriptions";
 import { formatStructuredDescription } from "@/lib/structuredDescription";
 
@@ -63,7 +67,10 @@ function formatVaultPackFallback(pack: VaultPackKey): string {
 }
 
 export function resolveVaultPackStructuredDescription(pack: VaultPackKey): string {
-  const curated = curatedTradingVaultPackDescription(pack) ?? curatedAgenticVaultPackDescription(pack);
+  const curated =
+    curatedTradingVaultPackDescription(pack) ??
+    curatedAgenticVaultPackDescription(pack) ??
+    curatedAiContentVaultPackDescription(pack);
   if (curated) return curated;
   return formatVaultPackFallback(pack);
 }
@@ -101,12 +108,16 @@ export function resolveOfferStructuredDescription(offer: PlanOfferDef): string {
   const plan = String(offer.plan);
   if (isVaultPackKey(offer.plan)) {
     const packCurated =
-      curatedTradingVaultPackDescription(offer.plan) ?? curatedAgenticVaultPackDescription(offer.plan);
+      curatedTradingVaultPackDescription(offer.plan) ??
+      curatedAgenticVaultPackDescription(offer.plan) ??
+      curatedAiContentVaultPackDescription(offer.plan);
     if (packCurated) return packCurated;
     return resolveVaultPackStructuredDescription(offer.plan);
   }
   const curated =
-    curatedTradingVaultDescription(plan, offer.title) ?? curatedAgenticAiDescription(plan, offer.title);
+    curatedTradingVaultDescription(plan, offer.title) ??
+    curatedAgenticAiDescription(plan, offer.title) ??
+    curatedAiContentDescription(plan, offer.title);
   if (curated) return curated;
   const pack = offer.vaultPackPlan ?? vaultPackForPlanSlug(offer.plan);
   if (pack) {

@@ -5,7 +5,6 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 export type GamingBenefitTone = "cyan" | "violet" | "gold" | "pink" | "amber" | "green";
 
 export type GamingBenefitItem = {
-  tag: string;
   tone: GamingBenefitTone;
   title: string;
   desc: string;
@@ -54,13 +53,13 @@ export function GamingBenefitCards({
         {title}
       </h3>
       <div className="gaming-benefit-grid">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <article
-            key={item.tag}
+            key={item.title}
             className={cn("gaming-benefit-item", `gaming-benefit-item--${item.tone}`)}
           >
             <span className="gaming-benefit-tag" aria-hidden>
-              {item.tag}
+              {String(index + 1).padStart(2, "0")}
             </span>
             <div className="gaming-benefit-copy">
               <strong>{item.title}</strong>

@@ -32,7 +32,7 @@ const itemVariants = {
   },
 };
 
-function BenefitItem({ item }: { item: GamingBenefitItem }) {
+function BenefitItem({ item, index }: { item: GamingBenefitItem; index: number }) {
   const showDesc = item.desc.trim() !== item.title.trim();
 
   return (
@@ -44,7 +44,7 @@ function BenefitItem({ item }: { item: GamingBenefitItem }) {
         className={cn("elite-benefit-detail__tag", `elite-benefit-detail__tag--${item.tone}`)}
         aria-hidden
       >
-        {item.tag}
+        {String(index + 1).padStart(2, "0")}
       </span>
       <div className="elite-benefit-detail__copy">
         <strong className={cn("elite-benefit-detail__heading", `elite-benefit-detail__heading--${item.tone}`)}>
@@ -92,8 +92,8 @@ export function EliteOfferBenefitsDetail({ plan, className }: Props) {
         animate="show"
         style={{ "--elite-benefit-accent": config.frameTone === "cyan" ? "#22d3ee" : "#4ade80" } as CSSProperties}
       >
-        {config.items.map((item) => (
-          <BenefitItem key={item.tag} item={item} />
+        {config.items.map((item, index) => (
+          <BenefitItem key={item.title} item={item} index={index} />
         ))}
       </motion.div>
     </section>

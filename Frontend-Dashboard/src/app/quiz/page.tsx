@@ -4,40 +4,34 @@ import { GamingBenefitCards } from "@/components/GamingBenefitCards";
 
 const WILL_GET_ITEMS = [
   {
-    tag: "01",
     tone: "cyan",
-    title: "Dual Psychology Programs",
-    desc: "Two Business Behaviour Psychology tracks that harden operator mindset before you scale.",
+    title: "Mindset Training",
+    desc: "Two guides to build the mental toughness you need for business.",
   },
   {
-    tag: "02",
     tone: "violet",
-    title: "Full Diagnosis Dossier",
-    desc: "Designation, fatal flaw, and a tactical prescription mapped to your exact profile.",
+    title: "Full Diagnosis",
+    desc: "Your personal profile, your main weakness, and how to fix it.",
   },
   {
-    tag: "03",
     tone: "gold",
-    title: "Strength / Weakness Scan",
-    desc: "See where you dominate — and where you leak leverage in real execution.",
+    title: "Strengths Check",
+    desc: "See what you do best and where you need help.",
   },
   {
-    tag: "04",
     tone: "pink",
-    title: "Business Model Match",
-    desc: "Identify the models that fit your psychology — not generic hustle noise.",
+    title: "Business Match",
+    desc: "Find a way to make money that actually fits your skills.",
   },
   {
-    tag: "05",
     tone: "amber",
-    title: "Failure Pattern Audit",
-    desc: "Expose the hidden viruses sabotaging your momentum in business.",
+    title: "Mistake Finder",
+    desc: "Spot the hidden habits keeping you stuck.",
   },
   {
-    tag: "06",
     tone: "green",
-    title: "9-to-5 Exit Blueprint",
-    desc: "A system-level path to break the job trap with precision, not wishful thinking.",
+    title: "Exit Blueprint",
+    desc: "A realistic plan to leave the 9-to-5 trap behind.",
   },
 ] as const;
 
@@ -47,7 +41,7 @@ export default function QuizFunnelLandingPage() {
       <section className="card card-landing">
         <BrandHeader />
         <h2 className="section-title public-heading-lightning public-heading-lightning--violet">
-          THE SYSTEM HAS A FILE ON YOU. IT&apos;S TIME YOU HAD THE FILE ON THE SYSTEM.
+          The 17 Point Audit that predicts Business Success
         </h2>
         <p className="section-subtitle">
           Most people in the hood have the engine, but they are driving in circles. You are either a

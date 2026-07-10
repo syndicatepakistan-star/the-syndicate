@@ -105,49 +105,41 @@ export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
 
 export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS = [
   {
-    tag: "01",
     tone: "cyan",
     title: "Syndicate Dashboard",
     desc: "Full operator command center — track programs, progress, and execution in one vault.",
   },
   {
-    tag: "02",
     tone: "violet",
     title: "Syndicate Affiliate Opportunities",
     desc: "Unlock referral revenue streams and Syndicate affiliate monetization paths.",
   },
   {
-    tag: "03",
     tone: "gold",
     title: "11 Business Model Programs",
     desc: "Learn 11 different business models — choose whichever models suit you best to start your business journey with the best odds of winning.",
   },
   {
-    tag: "04",
     tone: "pink",
     title: "11 Business Behavioral Psychology Programs",
     desc: "Master business behavioral psychology with Syndicate secret correction techniques — take how you think about business to an elite level.",
   },
   {
-    tag: "05",
     tone: "amber",
     title: "Agentic AI Pack — 26 Videos",
     desc: "Autonomous AI workflows, agents, and systems that execute while you architect leverage.",
   },
   {
-    tag: "06",
     tone: "green",
     title: "AI Content Automation Pack — 29 Videos",
     desc: "Content pipelines that scale output without manual babysitting or wage-labour grind.",
   },
   {
-    tag: "07",
     tone: "cyan",
     title: "Advanced Candlestick Technical Analysis — 56 Lessons",
     desc: "Four video packs covering advanced candlestick technical analysis and execution.",
   },
   {
-    tag: "08",
     tone: "violet",
     title: "133 Individual Video Lessons Total",
     desc: "The complete Money Mastery lifetime vault — every pack above in one commitment.",
@@ -178,7 +170,6 @@ export const KNIGHT_MEMBERSHIP_FEATURES: readonly string[] = [
 const KNIGHT_BENEFIT_TONES = ["green", "cyan", "violet", "gold", "pink", "amber"] as const;
 
 export const KNIGHT_MEMBERSHIP_BENEFIT_ITEMS = KNIGHT_MEMBERSHIP_FEATURES.map((feature, index) => ({
-  tag: String(index + 1).padStart(2, "0"),
   tone: KNIGHT_BENEFIT_TONES[index % KNIGHT_BENEFIT_TONES.length]!,
   title: feature.length > 48 ? `${feature.slice(0, 45).trim()}…` : feature,
   desc: feature,

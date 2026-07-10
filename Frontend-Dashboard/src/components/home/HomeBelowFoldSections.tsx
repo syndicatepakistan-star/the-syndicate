@@ -84,6 +84,7 @@ export function HomeFaqSection() {
     <LazyWhenVisible
       minHeight="60dvh"
       rootMargin="160px 0px"
+      eagerOnHash="faq"
       placeholder={<HomeSectionPlaceholder minHeight="60dvh" titleWidth="10rem" />}
     >
       <FAQSection />

@@ -12,7 +12,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
   general: [
     {
       q: "What is The Syndicate?",
-      a: "The Syndicate is a private online business education platform at the-syndicate.com — not a university, not an exam board, and not a crypto coin.\nWe train operators in money mastery, Syndicate Trading, AI automation, Syndicate business models, and Syndicate behaviour psychology. You buy lifetime vaults and courses, or run The Knight membership, then execute from your dashboard.",
+      a: "The Syndicate is a private online business education platform — not a university, not an exam board, and not a crypto coin.\nWe train operators in money mastery, Syndicate Trading, AI automation, Syndicate business models, and Syndicate behaviour psychology. You buy lifetime vaults and courses, or run The Knight membership, then execute from your dashboard.",
     },
     {
       q: "Is The Syndicate a university or Examination Syndicate?",

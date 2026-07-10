@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { startPlanCheckout } from "@/lib/plan-checkout";
-import { KNIGHT_PLAN_COMING_SOON, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_EXECUTION_COPY, KNIGHT_MEMBERSHIP_FEATURES, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
+import { KNIGHT_PLAN_COMING_SOON, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
@@ -99,7 +99,8 @@ const HERO_INTRO =
 
 const HERO_OFFER_COPY = KNIGHT_SUBSCRIPTION_COPY;
 
-const HERO_OFFER_DETAIL = `${KNIGHT_EXECUTION_COPY.join(" ")} You will gain access to hand-picked courses, exclusive weekly content drops, full dashboard access, membership articles and briefings, the exclusive membership section, goals and milestones, Syndicate Challenges Mode, founder Q&A intelligence sessions, and opportunities to receive investment for your business venture.`;
+const HERO_OFFER_DETAIL =
+  "This is not passive education — it is a controlled environment for action, discipline, and execution. Hand-pick your courses, run weekly drops and Syndicate Challenges Mode, use the full dashboard, and unlock founder Q&A plus real investment pathways.";
 
 const CYBER_UNLOCK_CTA = cn(
   "membership-unlock-cta relative z-[1] w-full rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
@@ -127,11 +128,15 @@ function MembershipHeroOffer({
   return (
     <div className={cn("mt-6 w-full space-y-4", className)}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch sm:gap-4">
-        <CyberInsetPanel variant="blood" className="h-full min-h-[8rem] [&>div]:h-full">
-          <p className="font-mono text-sm leading-relaxed text-zinc-100/92 sm:text-base">{HERO_OFFER_COPY}</p>
+        <CyberInsetPanel variant="blood" className="h-full min-h-[8rem] [&>div]:flex [&>div]:h-full [&>div]:items-center">
+          <p className="font-mono text-sm leading-relaxed text-zinc-100/92 sm:text-[0.95rem] sm:leading-relaxed">
+            {HERO_OFFER_COPY}
+          </p>
         </CyberInsetPanel>
-        <CyberInsetPanel variant="cyan" className="h-full min-h-[8rem] [&>div]:h-full">
-          <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-base">{HERO_OFFER_DETAIL}</p>
+        <CyberInsetPanel variant="cyan" className="h-full min-h-[8rem] [&>div]:flex [&>div]:h-full [&>div]:items-center">
+          <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-[0.95rem] sm:leading-relaxed">
+            {HERO_OFFER_DETAIL}
+          </p>
         </CyberInsetPanel>
       </div>
 

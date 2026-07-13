@@ -1,6 +1,6 @@
 import type { CheckoutOfferKey, PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components/programs/vaultModuleCopy";
-import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultPackCatalog";
+import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultSubCourseNeonAccents";
 
 const PACKS_BASE = "/assets/programs/packs courses";
 

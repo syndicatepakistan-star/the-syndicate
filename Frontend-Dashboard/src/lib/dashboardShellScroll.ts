@@ -118,6 +118,25 @@ export function isProgramsInnerScrollActive(): boolean {
   );
 }
 
+/** Release programs-only shell lock so other dashboard sections can scroll. */
+export function clearProgramsMainShellScrollLock() {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll<HTMLElement>(MAIN_SHELL_SELECTOR).forEach((shell) => {
+    shell.removeAttribute("data-programs-grid-active");
+    shell.removeAttribute("data-programs-lesson-active");
+  });
+}
+
+/** Ensure the dashboard main column can scroll (fixes stuck overflow after section swaps). */
+export function ensureDashboardMainShellScrollable(root?: HTMLElement | null) {
+  clearProgramsMainShellScrollLock();
+  const shell = getDashboardMainShellScrollElement(root);
+  if (!shell) return;
+  shell.style.removeProperty("overflow");
+  shell.style.removeProperty("overflow-y");
+  shell.style.removeProperty("max-height");
+}
+
 export function shouldSkipMainShellScrollReset(): boolean {
   return isDashboardCheckoutReturnGraceActive() || isProgramsInnerScrollActive();
 }

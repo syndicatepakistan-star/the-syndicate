@@ -70,7 +70,7 @@ import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-che
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
 import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
-import { useTabResume } from "@/hooks/useTabResume";
+import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -253,6 +253,8 @@ type Props = {
   isQuickAccessPanelOpen?: boolean;
   selectedCourseWithProgress: (Course & { progress: number }) | null;
   activeCoursePanel: ReactNode | null;
+  /** False when dashboard keep-alive hides Programs — must not lock main shell scroll. */
+  sectionActive?: boolean;
 };
 
 export function ProgramsCourseSection({
@@ -266,7 +268,11 @@ export function ProgramsCourseSection({
   isQuickAccessPanelOpen = false,
   selectedCourseWithProgress,
   activeCoursePanel,
+  sectionActive = true,
 }: Props) {
+  const sectionActiveRef = useRef(sectionActive);
+  sectionActiveRef.current = sectionActive;
+
   const [apiCourses, setApiCourses] = useState<CourseDto[]>([]);
   const [coursesError, setCoursesError] = useState<string | null>(null);
   const [streamPlaylists, setStreamPlaylists] = useState<StreamPlaylistListItem[]>([]);
@@ -338,7 +344,7 @@ export function ProgramsCourseSection({
   }, [reloadApiCourses, reloadStreamPlaylists]);
 
   const refreshAfterTabResume = useCallback(() => {
-    if (!hasSimpleAuthSessionClient()) return;
+    if (!hasSimpleAuthSessionClient() || !sectionActiveRef.current) return;
     purgeExpiredStreamPlaybackCache();
     void fetchPortalIdentity().then((identity) => {
       setStaff(!!identity?.is_staff);
@@ -350,7 +356,7 @@ export function ProgramsCourseSection({
     void reloadApiCourses();
   }, [reloadApiCourses, reloadStreamPlaylists]);
 
-  useTabResume(refreshAfterTabResume);
+  useEffect(() => registerDashboardTabResumeTask(refreshAfterTabResume), [refreshAfterTabResume]);
 
   const effectiveStreamPlaylists = useMemo(() => {
     const normalized = normalizeLevel1ProgramPlaylists(streamPlaylists);
@@ -892,6 +898,13 @@ export function ProgramsCourseSection({
     if (typeof window === "undefined") return;
     const shell = document.querySelector<HTMLElement>("[data-main-shell-scroll]");
     if (!shell) return;
+
+    if (!sectionActive) {
+      shell.removeAttribute("data-programs-lesson-active");
+      shell.removeAttribute("data-programs-grid-active");
+      return;
+    }
+
     const lessonActive = inPlaylistDetail || inCourseDetail;
     if (lessonActive) {
       shell.setAttribute("data-programs-lesson-active", "");
@@ -907,7 +920,7 @@ export function ProgramsCourseSection({
       shell.removeAttribute("data-programs-lesson-active");
       shell.removeAttribute("data-programs-grid-active");
     };
-  }, [inPlaylistDetail, inCourseDetail, inProgramGridView]);
+  }, [sectionActive, inPlaylistDetail, inCourseDetail, inProgramGridView]);
 
   const renderStreamPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const i = j;

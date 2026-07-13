@@ -7,6 +7,7 @@ export function pauseDashboardMotion(root?: HTMLElement | null) {
   if (typeof document === "undefined" || motionSuspended) return;
   motionSuspended = true;
 
+  gsap.globalTimeline.pause();
   gsap.ticker.sleep();
   root?.classList.add("dashboard-tab-suspended");
   document.documentElement.classList.add("dashboard-tab-suspended");
@@ -25,15 +26,19 @@ export function resumeDashboardMotion(root?: HTMLElement | null) {
   if (typeof document === "undefined" || !motionSuspended) return;
   motionSuspended = false;
 
-  gsap.ticker.wake();
   gsap.ticker.lagSmoothing(0);
+  gsap.ticker.wake();
+  gsap.globalTimeline.resume();
   root?.classList.remove("dashboard-tab-suspended");
   document.documentElement.classList.remove("dashboard-tab-suspended");
 
-  document.querySelectorAll<HTMLVideoElement>("video[data-dashboard-was-playing='1']").forEach((video) => {
-    video.removeAttribute("data-dashboard-was-playing");
-    void video.play().catch(() => {
-      // Autoplay may be blocked until the next gesture — safe to ignore.
+  requestAnimationFrame(() => {
+    document.querySelectorAll<HTMLVideoElement>("video[data-dashboard-was-playing='1']").forEach((video) => {
+      video.removeAttribute("data-dashboard-was-playing");
+      if (document.visibilityState === "hidden") return;
+      void video.play().catch(() => {
+        // Autoplay may be blocked until the next gesture — safe to ignore.
+      });
     });
   });
 }

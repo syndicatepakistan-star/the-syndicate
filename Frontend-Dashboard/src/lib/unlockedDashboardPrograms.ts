@@ -134,14 +134,19 @@ export type UnlockedDashboardProgramsResult = {
   inProgressCount: number;
 };
 
-export async function loadUnlockedDashboardPrograms(): Promise<UnlockedDashboardProgramsResult> {
+export async function loadUnlockedDashboardPrograms(options?: {
+  forceRefresh?: boolean;
+}): Promise<UnlockedDashboardProgramsResult> {
+  const forceRefresh = !!options?.forceRefresh;
   const identity = await fetchPortalIdentity().catch(() => null);
   const accessTier = identity?.access_tier ?? null;
   const moneyMasteryActive = !!identity?.money_mastery_active;
   const fullUnlock = hasMoneyMasteryAccess(accessTier, moneyMasteryActive);
 
   const [playlistList, coursesRes] = await Promise.all([
-    fetchStreamPlaylists({ allowPublicFallback: false, forceRefresh: true }).catch(() => [] as StreamPlaylistListItem[]),
+    fetchStreamPlaylists({ allowPublicFallback: false, forceRefresh }).catch(
+      () => [] as StreamPlaylistListItem[],
+    ),
     fetchCoursesList().catch(() => ({ ok: false as const, data: null, status: 0 })),
   ]);
 

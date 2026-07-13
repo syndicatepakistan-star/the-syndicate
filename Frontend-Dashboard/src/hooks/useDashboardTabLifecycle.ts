@@ -2,7 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import { pauseDashboardMotion, resumeDashboardMotion } from "@/lib/dashboardMotionControl";
-import { resetDashboardDocumentScroll } from "@/lib/dashboardShellScroll";
+import { ensureDashboardMainShellScrollable } from "@/lib/dashboardShellScroll";
 
 /** Suspend heavy dashboard motion when the tab is hidden; recover cleanly on return. */
 export function useDashboardTabLifecycle(rootRef: RefObject<HTMLElement | null>) {
@@ -15,14 +15,18 @@ export function useDashboardTabLifecycle(rootRef: RefObject<HTMLElement | null>)
         pauseDashboardMotion(root);
         return;
       }
-      resumeDashboardMotion(root);
-      resetDashboardDocumentScroll();
+      requestAnimationFrame(() => {
+        resumeDashboardMotion(root);
+        ensureDashboardMainShellScrollable(root);
+      });
     };
 
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
-      resumeDashboardMotion(rootRef.current);
-      resetDashboardDocumentScroll();
+      requestAnimationFrame(() => {
+        resumeDashboardMotion(rootRef.current);
+        ensureDashboardMainShellScrollable(rootRef.current);
+      });
     };
 
     const onPageHide = () => {

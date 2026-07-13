@@ -41,6 +41,8 @@ import { useDashboardSmoothScroll } from "@/hooks/useDashboardSmoothScroll";
 import { useDashboardTabLifecycle } from "@/hooks/useDashboardTabLifecycle";
 import { useDockMagnification } from "@/hooks/useDockMagnification";
 import {
+  clearProgramsMainShellScrollLock,
+  ensureDashboardMainShellScrollable,
   isDashboardCheckoutReturnGraceActive,
   markDashboardCheckoutReturn,
   resetDashboardDocumentScroll,
@@ -158,7 +160,7 @@ const sidebarMotion = {
   animate: { opacity: 1, x: 0 },
   /** Match initial x so open/close are mirrored (was -32 on exit, which felt asymmetric). */
   exit: { opacity: 0, x: -28 },
-  transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }
+  transition: { duration: 0.08, ease: [0.22, 1, 0.36, 1] as const }
 };
 
 function QuickAccessGridFallback() {
@@ -1965,10 +1967,6 @@ export default function Page() {
           startTransition(() => {
             setNavKeyState(key);
           });
-          saveDashboardSectionScroll(key, rootRef.current);
-          requestAnimationFrame(() => {
-            resetDashboardShellScroll(rootRef.current);
-          });
           return;
         }
         saveDashboardSectionScroll(currentKey, rootRef.current);
@@ -2418,13 +2416,20 @@ export default function Page() {
     }
     if (isDashboardCheckoutReturnGraceActive() || shouldSkipMainShellScrollReset()) {
       resetDashboardDocumentScroll();
+      ensureDashboardMainShellScrollable(rootRef.current);
       return;
     }
     resetDashboardShellScroll(rootRef.current);
+    ensureDashboardMainShellScrollable(rootRef.current);
   }, []);
 
   /** Bounded shell sections: restore saved scroll (or reset) when switching sections. */
   useLayoutEffect(() => {
+    if (selectedNavKey !== "programs") {
+      clearProgramsMainShellScrollLock();
+    }
+    ensureDashboardMainShellScrollable(rootRef.current);
+
     if (!BOUNDED_MOBILE_SHELL_KEYS.has(selectedNavKey) || typeof window === "undefined") {
       previousNavKeyRef.current = selectedNavKey;
       return;
@@ -2442,9 +2447,9 @@ export default function Page() {
 
     const previousKey = previousNavKeyRef.current;
     if (previousKey !== selectedNavKey) {
-      transitionDashboardSectionScroll(previousKey, selectedNavKey, rootRef.current);
-    } else {
-      resetDashboardShellScroll(rootRef.current);
+      requestAnimationFrame(() => {
+        transitionDashboardSectionScroll(previousKey, selectedNavKey, rootRef.current);
+      });
     }
     previousNavKeyRef.current = selectedNavKey;
   }, [selectedNavKey]);
@@ -2457,6 +2462,7 @@ export default function Page() {
     const body = document.body;
     html.classList.add("dashboard-shell-scroll-lock");
     body.classList.add("dashboard-shell-scroll-lock");
+    ensureDashboardMainShellScrollable(rootRef.current);
     if (!isDashboardCheckoutReturnGraceActive() && !shouldSkipMainShellScrollReset()) {
       resetDashboardShellScroll(rootRef.current);
     } else {
@@ -2508,12 +2514,9 @@ export default function Page() {
     resetDashboardDocumentScroll();
     const prevBody = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const root = rootRef.current;
-    const prevRoot = root?.style.overflow ?? "";
-    if (root) root.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevBody;
-      if (root) root.style.overflow = prevRoot;
+      ensureDashboardMainShellScrollable(rootRef.current);
     };
   }, [isOverlaySidebarBp, sidebarOpen]);
 
@@ -2536,7 +2539,7 @@ export default function Page() {
   /** Compact mobile: slide via `left` (not `x`) so the 220px rail is fully visible when open. */
   const MOBILE_SIDEBAR_OFF_LEFT = -220;
   const mobileOverlaySidebarTransition = useMemo(
-    () => ({ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }),
+    () => ({ duration: 0.08, ease: [0.22, 1, 0.36, 1] as const }),
     []
   );
 
@@ -3475,7 +3478,7 @@ export default function Page() {
             usesBoundedMobileShell ? "min-h-0 items-stretch max-lg:flex-1" : "max-md:items-start"
           )}
         >
-          <AnimatePresence initial={true} mode="popLayout">
+          <AnimatePresence initial={true}>
             {sidebarOpen && !isOverlaySidebarBp ? (
               <motion.aside
                 key="main-sidebar"
@@ -3509,7 +3512,6 @@ export default function Page() {
           {/* Courses grid */}
           <motion.section
             layout={false}
-            transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             data-dashboard-main-shell
             data-dashboard-video-shell
             className={cn(
@@ -3582,6 +3584,7 @@ export default function Page() {
                 className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden"
               >
                 <ProgramsCourseSection
+                  sectionActive={selectedNavKey === "programs"}
                   instructorHero={<InstructorSlideshow showPanelBackgroundVideo={false} />}
                   chromaItems={chromaItems}
                   selectedCourseId={selectedCourseId}

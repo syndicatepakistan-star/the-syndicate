@@ -668,6 +668,11 @@ html.dashboard-tab-suspended .dashboard-chrome-letter-glitch {
   animation-play-state: paused !important;
 }
 
+.dashboard-hamburger-chrome.dashboard-tab-suspended [data-dashboard-section-active="false"] {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Sidebar open/close — GPU transform layer */
 .dashboard-hamburger-chrome .dashboard-sidebar-rail,
 .dashboard-hamburger-chrome .dashboard-overlay-sidebar-rail {

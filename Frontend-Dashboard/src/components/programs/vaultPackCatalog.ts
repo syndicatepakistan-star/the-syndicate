@@ -52,6 +52,8 @@ function toOffer(
 ): PlanOfferDef {
   const price = String(row.unitPrice);
   const teaser = resolveVaultModuleTeaser(row.title, packPlan, row.slug);
+  const isTradingModule =
+    packPlan === "trading_technical_analysis" && isTradingModuleSlug(row.slug);
   return {
     plan: row.slug,
     title: row.title,
@@ -62,7 +64,8 @@ function toOffer(
     billingLabel: "/lifetime",
     checkoutAmount: price,
     billing: "monthly",
-    openLabel: "Unlock",
+    openLabel: isTradingModule ? "Unlock Full Pack" : "Unlock",
+    ...(isTradingModule ? { detailsLabel: "View All Videos" } : {}),
     accent,
     detailTitle: row.title.toUpperCase().slice(0, 80),
     detailDescription: resolveVaultModuleDetail(row.title, packPlan, row.slug),

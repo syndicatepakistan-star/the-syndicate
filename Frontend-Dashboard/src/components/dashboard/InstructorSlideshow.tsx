@@ -76,6 +76,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   useEffect(() => {
     if (!autoPlay || !inView || total < 2) return;
     const t = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
       setIdx((current) => (current + 1) % total);
     }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(t);

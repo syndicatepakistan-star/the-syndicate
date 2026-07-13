@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { DashboardCourseLike } from "@/components/dashboard/useDashboardSnapshots";
 import { loadUnlockedDashboardPrograms } from "@/lib/unlockedDashboardPrograms";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
+import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 
 export function useUnlockedDashboardPrograms(enabled = true): {
   programs: DashboardCourseLike[];
@@ -17,7 +18,7 @@ export function useUnlockedDashboardPrograms(enabled = true): {
   const [inProgressCount, setInProgressCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (options?: { forceRefresh?: boolean }) => {
     if (!enabled || !hasSimpleAuthSessionClient()) {
       setPrograms([]);
       setUnlockedCount(0);
@@ -27,7 +28,9 @@ export function useUnlockedDashboardPrograms(enabled = true): {
     }
 
     try {
-      const result = await loadUnlockedDashboardPrograms();
+      const result = await loadUnlockedDashboardPrograms({
+        forceRefresh: options?.forceRefresh,
+      });
       setPrograms(result.programs);
       setUnlockedCount(result.unlockedCount);
       setInProgressCount(result.inProgressCount);
@@ -46,21 +49,20 @@ export function useUnlockedDashboardPrograms(enabled = true): {
 
   useEffect(() => {
     if (!enabled) return;
-    const onFocus = () => void reload();
-    const onVis = () => {
-      if (document.visibilityState === "visible") void reload();
-    };
-    const onCheckout = () => void reload();
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVis);
+    const onCheckout = () => void reload({ forceRefresh: true });
     window.addEventListener("plan-checkout-confirmed", onCheckout);
     window.addEventListener("playlist-checkout-confirmed", onCheckout);
     return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("plan-checkout-confirmed", onCheckout);
       window.removeEventListener("playlist-checkout-confirmed", onCheckout);
     };
+  }, [enabled, reload]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    return registerDashboardTabResumeTask(() => {
+      void reload({ forceRefresh: true });
+    });
   }, [enabled, reload]);
 
   return { programs, unlockedCount, inProgressCount, hydrated, reload };

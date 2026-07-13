@@ -1,7 +1,9 @@
 import { NavApp } from "@/components/NavApp";
 import { ViewportDecorVideo } from "@/components/ViewportDecorVideo";
 import SiteFooter from "@/components/SiteFooter";
-import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
+import { MembershipKnightHero } from "@/components/membership/MembershipKnightHero";
+import { MembershipKnightHeroOffer } from "@/components/membership/MembershipKnightHeroOffer";
+import { MembershipOfferSections } from "@/components/membership/MembershipOfferLanding";
 
 const MEMBERSHIP_BG_VIDEO = "/assets/bg-video%201.mp4";
 
@@ -25,7 +27,14 @@ export default function MembershipMarketingPage() {
       </div>
 
       <NavApp />
-      <MembershipOfferLanding />
+      <main className="relative z-10 w-full min-w-0 overflow-x-clip pb-14 pt-[88px] sm:pb-20 sm:pt-[106px]">
+        <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
+          <MembershipKnightHero>
+            <MembershipKnightHeroOffer />
+          </MembershipKnightHero>
+          <MembershipOfferSections />
+        </div>
+      </main>
       <SiteFooter />
     </div>
   );

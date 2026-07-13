@@ -14,6 +14,7 @@ import {
   rowOnBoard
 } from "@/lib/syndicateHeroMetrics";
 import { applySyncedStateFromServer, SYNDICATE_DASHBOARD_REFRESH_EVENT } from "@/lib/syndicateProgressSync";
+import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 import type {
   CoreIntegritySnapshot,
   DashboardSnapshots,
@@ -370,22 +371,19 @@ export function useDashboardSnapshots({
 
     void pullSyndicateLive();
     const onRefresh = () => void pullSyndicateLive();
-    const onWindowFocus = () => void pullSyndicateLive();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") void pullSyndicateLive();
-    };
+    const unregisterResume = registerDashboardTabResumeTask(() => {
+      void pullSyndicateLive();
+    });
     const pollId = window.setInterval(() => {
-      if (!cancelled) void pullSyndicateLive();
-    }, 15000);
+      if (cancelled || document.visibilityState !== "visible") return;
+      void pullSyndicateLive();
+    }, 30_000);
     window.addEventListener(SYNDICATE_DASHBOARD_REFRESH_EVENT, onRefresh);
-    window.addEventListener("focus", onWindowFocus);
-    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
+      unregisterResume();
       window.clearInterval(pollId);
       window.removeEventListener(SYNDICATE_DASHBOARD_REFRESH_EVENT, onRefresh);
-      window.removeEventListener("focus", onWindowFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [courses, userName, syndicateKnightApi]);
 

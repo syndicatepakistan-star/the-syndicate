@@ -1,21 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
-import { startPlanCheckout } from "@/lib/plan-checkout";
-import { KNIGHT_PLAN_COMING_SOON, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_SUBSCRIPTION_COPY } from "@/components/programs/planOfferCatalog";
-import { fetchPortalIdentity } from "@/lib/portal-api";
-import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
-import { OFFER_PLAN_THUMB_THE_KNIGHT } from "@/components/programs/offerPlanThumbnails";
 import { cx, CyberChamferFrame, CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
-
-const BILLING = "monthly" as const;
-const CHECKOUT_AMOUNT = "19.99";
-const DISPLAY_PRICE = "$19.99";
 
 const MEMBERSHIP_CHANNELS = [
   {
@@ -94,90 +82,6 @@ const MEMBERSHIP_PILLARS = [
   },
 ] as const;
 
-const HERO_INTRO =
-  "The Knight is The Syndicate membership airlock — pick your courses, run Syndicate Mode, and work the member library. Money Mastery stays the lifetime vault. This is operator access, not a university login.";
-
-const HERO_OFFER_COPY = KNIGHT_SUBSCRIPTION_COPY;
-
-const HERO_OFFER_DETAIL =
-  "This is not passive education — it is a controlled environment for action, discipline, and execution. Hand-pick your courses, run weekly drops and Syndicate Challenges Mode, use the full dashboard, and unlock founder Q&A plus real investment pathways.";
-
-const CYBER_UNLOCK_CTA = cn(
-  "membership-unlock-cta relative z-[1] w-full rounded-xl border-[3px] border-[#d4af39] bg-[linear-gradient(180deg,rgba(10,12,28,0.96),rgba(4,6,18,0.99))]",
-  "px-5 py-4 font-mono text-[clamp(11px,2.4vw,15px)] font-black uppercase tracking-[0.16em] text-[#d4af39]",
-  "[text-shadow:0_0_18px_rgba(212,175,57,0.55),0_0_32px_rgba(250,204,21,0.45),0_1px_2px_rgba(0,0,0,0.85)]",
-  "disabled:cursor-wait disabled:opacity-65"
-);
-
-function MembershipHeroOffer({
-  busy,
-  error,
-  onUnlock,
-  className,
-  publicMarketing = false,
-  comingSoon = false,
-}: {
-  busy: boolean;
-  error: string | null;
-  onUnlock: () => void;
-  className?: string;
-  /** Strong bounce + glow on /membership public page */
-  publicMarketing?: boolean;
-  comingSoon?: boolean;
-}) {
-  return (
-    <div className={cn("mt-6 w-full space-y-4", className)}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch sm:gap-4">
-        <CyberInsetPanel variant="blood" className="h-full min-h-[8rem] [&>div]:flex [&>div]:h-full [&>div]:items-center">
-          <p className="font-mono text-sm leading-relaxed text-zinc-100/92 sm:text-[0.95rem] sm:leading-relaxed">
-            {HERO_OFFER_COPY}
-          </p>
-        </CyberInsetPanel>
-        <CyberInsetPanel variant="cyan" className="h-full min-h-[8rem] [&>div]:flex [&>div]:h-full [&>div]:items-center">
-          <p className="font-mono text-sm leading-relaxed text-zinc-100/88 sm:text-[0.95rem] sm:leading-relaxed">
-            {HERO_OFFER_DETAIL}
-          </p>
-        </CyberInsetPanel>
-      </div>
-
-      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(9.5rem,auto)_1fr] sm:items-stretch">
-        <span
-          className="inline-flex h-full min-h-[3.25rem] items-center justify-center border-[3px] border-cyan-400/90 bg-black/80 px-4 py-3 font-mono text-xl font-black tabular-nums text-cyan-100 [text-shadow:0_0_16px_rgba(103,232,249,0.55)] shadow-[0_0_28px_rgba(34,211,238,0.35)] sm:text-2xl"
-          style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
-        >
-          {DISPLAY_PRICE}
-          <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 sm:text-xs">/ mo</span>
-        </span>
-        <div
-          className={cn(
-            "membership-unlock-cta-shell min-h-[3.25rem] w-full",
-            publicMarketing && !comingSoon && "membership-unlock-cta-shell--public"
-          )}
-        >
-          <button
-            type="button"
-            disabled={busy || comingSoon}
-            onClick={onUnlock}
-            className={cn(CYBER_UNLOCK_CTA, "min-h-[3.25rem] w-full", comingSoon && "cursor-not-allowed opacity-70")}
-          >
-            {comingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : busy ? "Opening checkout…" : "Unlock membership"}
-          </button>
-        </div>
-      </div>
-
-      {error ? (
-        <p className="min-h-[1.375rem] font-mono text-sm text-rose-300 [text-shadow:0_0_10px_rgba(244,63,94,0.5)]">
-          {error}
-        </p>
-      ) : (
-        <p className="min-h-[1.375rem] font-mono text-sm" aria-hidden="true">
-          {"\u00a0"}
-        </p>
-      )}
-    </div>
-  );
-}
-
 function ChannelCard({ item }: { item: (typeof MEMBERSHIP_CHANNELS)[number] }) {
   return (
     <article
@@ -218,64 +122,7 @@ function ChannelCard({ item }: { item: (typeof MEMBERSHIP_CHANNELS)[number] }) {
   );
 }
 
-export function MembershipOfferLanding({
-  embedded = false,
-  checkoutReturnPath = "/dashboard?section=resources",
-}: {
-  embedded?: boolean;
-  /** Where to land after checkout or when plan is already active. */
-  checkoutReturnPath?: string;
-}) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [knightRemaining, setKnightRemaining] = useState<string | null>(null);
-  const [knightActive, setKnightActive] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void fetchPortalIdentity().then((user) => {
-      if (cancelled) return;
-      const active = !!user?.knight_subscription_active;
-      setKnightActive(active);
-      if (!active) return;
-      setKnightRemaining(formatKnightSubscriptionRemaining(user.knight_subscription_expires_at));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const knightCheckoutComingSoon = KNIGHT_PLAN_COMING_SOON && !knightActive;
-
-  const unlockMembership = useCallback(async () => {
-    if (knightCheckoutComingSoon) return;
-    setError(null);
-    setBusy(true);
-    try {
-      const result = await startPlanCheckout({
-        plan: "king",
-        billing: BILLING,
-        amount: CHECKOUT_AMOUNT,
-        postAuthNext: checkoutReturnPath,
-      });
-      if (result.status === "checkout" || result.status === "auth_required") {
-        return;
-      }
-      if (result.status === "already_unlocked") {
-        router.push(checkoutReturnPath);
-        return;
-      }
-      if (result.status === "error") {
-        throw new Error(result.message);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start checkout.");
-    } finally {
-      setBusy(false);
-    }
-  }, [checkoutReturnPath, knightCheckoutComingSoon, router]);
-
+export function MembershipOfferSections() {
   const accentFrame = (accent: (typeof MEMBERSHIP_PILLARS)[number]["accent"]) =>
     accent === "cyan" ? "cyan" : accent === "violet" ? "violet" : "amber";
 
@@ -285,6 +132,70 @@ export function MembershipOfferLanding({
     amber: "text-amber-100",
   };
 
+  return (
+    <>
+      <section>
+        <div className="mb-6">
+          <h2 className="public-heading-lightning public-heading-lightning--gold text-[clamp(1.75rem,4vw,3.2rem)] font-black uppercase tracking-[0.08em]">
+            Membership Rig
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+          {MEMBERSHIP_CHANNELS.map((item) => (
+            <ChannelCard key={item.step} item={item} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-7">
+        {MEMBERSHIP_PILLARS.map((block) => {
+          const isPrimary = block.id === "curriculum";
+          return (
+            <div
+              key={block.id}
+              className={isPrimary ? "grid items-start gap-4 lg:grid-cols-[1fr_200px]" : "grid items-start"}
+            >
+              <CyberChamferFrame accent={accentFrame(block.accent)} chamfer={22} innerClassName="cyber-frame-mobile-pad p-6 sm:p-8">
+                <h3
+                  className={cx(
+                    publicHeadingLightning("amber"),
+                    "marketing-card-title-oneline text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]",
+                    titleColor[block.accent]
+                  )}
+                >
+                  {block.title}
+                </h3>
+                <p className="mt-3 text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">{block.summary}</p>
+                <CyberInsetPanel variant={block.accent === "violet" ? "void" : block.accent === "amber" ? "blood" : "cyan"} className="cyber-inset-mobile-pad mt-6">
+                  <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{block.body}</p>
+                </CyberInsetPanel>
+              </CyberChamferFrame>
+              {isPrimary ? (
+                <div className="relative mx-auto w-full max-w-[200px] justify-self-center lg:justify-self-end">
+                  <Image
+                    src={block.image}
+                    alt={block.imageAlt}
+                    width={400}
+                    height={520}
+                    className="h-[200px] w-full object-contain object-center sm:h-[260px] lg:h-[320px]"
+                  />
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </section>
+    </>
+  );
+}
+
+export function MembershipOfferLanding({
+  embedded = false,
+  checkoutReturnPath = "/dashboard?section=resources",
+}: {
+  embedded?: boolean;
+  checkoutReturnPath?: string;
+}) {
   if (embedded) {
     return (
       <main className="relative z-10 flex w-full min-w-0 flex-col items-center overflow-x-clip py-4">
@@ -293,121 +204,5 @@ export function MembershipOfferLanding({
     );
   }
 
-  return (
-    <main
-      className={cn(
-        "relative z-10 w-full min-w-0 overflow-x-clip",
-        "pb-14 pt-[88px] sm:pb-20 sm:pt-[106px]"
-      )}
-    >
-      <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
-          <CyberChamferFrame accent="hero" chamfer={24} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-7 sm:p-10 lg:p-14">
-            <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-              <div className="order-1 min-w-0">
-                <h1 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline text-[clamp(2.2rem,5.4vw,5rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}>
-                  Enter The Knight Tier
-                </h1>
-                <p className="mt-5 max-w-2xl font-mono text-base leading-relaxed text-zinc-100/85 sm:text-lg">
-                  {HERO_INTRO}
-                </p>
-                {knightRemaining ? (
-                  <p className="mt-3 font-mono text-sm uppercase tracking-wider text-amber-200/90">
-                    Knight membership active — {knightRemaining}
-                  </p>
-                ) : null}
-                <MembershipHeroOffer
-                  busy={busy}
-                  error={error}
-                  onUnlock={() => void unlockMembership()}
-                  comingSoon={knightCheckoutComingSoon}
-                  publicMarketing
-                />
-              </div>
-              <div
-                className="relative order-2 isolate mx-auto w-full max-w-[min(100%,26rem)] shrink-0 [contain:layout] lg:mx-0 lg:max-w-none lg:justify-self-end [filter:drop-shadow(0_0_20px_rgba(34,211,238,0.75))_drop-shadow(0_0_44px_rgba(168,85,247,0.55))_drop-shadow(0_0_72px_rgba(251,191,36,0.28))]"
-              >
-                <span
-                  className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[72%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.55)_0%,rgba(168,85,247,0.38)_38%,rgba(251,191,36,0.12)_62%,transparent_78%)] blur-[42px] sm:blur-[52px]"
-                  aria-hidden
-                />
-                <span
-                  className="pointer-events-none absolute left-1/2 top-[48%] z-0 h-[55%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(232,121,249,0.45)_0%,rgba(34,211,238,0.28)_45%,transparent_72%)] blur-[28px]"
-                  aria-hidden
-                />
-                <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" className="relative z-[1]" innerClassName="p-2">
-                <div className="relative aspect-[4/5] w-full max-h-[min(60vh,540px)] min-h-[280px] overflow-hidden sm:min-h-[320px]">
-                  <span
-                    className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_38%,rgba(56,189,248,0.22),rgba(168,85,247,0.14)_48%,transparent_72%)]"
-                    aria-hidden
-                  />
-                  <Image
-                    src={OFFER_PLAN_THUMB_THE_KNIGHT}
-                    alt="The Knight membership tier"
-                    width={800}
-                    height={1000}
-                    priority
-                    sizes="(max-width: 1024px) min(100vw, 26rem), 36vw"
-                    className="relative z-[1] h-full w-full object-cover object-[center_22%]"
-                  />
-                  <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                </div>
-              </CyberChamferFrame>
-              </div>
-            </div>
-          </CyberChamferFrame>
-
-        <section>
-          <div className="mb-6">
-            <h2 className="public-heading-lightning public-heading-lightning--gold text-[clamp(1.75rem,4vw,3.2rem)] font-black uppercase tracking-[0.08em]">
-              Membership Rig
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-            {MEMBERSHIP_CHANNELS.map((item) => (
-              <ChannelCard key={item.step} item={item} />
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-7">
-          {MEMBERSHIP_PILLARS.map((block) => {
-            const isPrimary = block.id === "curriculum";
-            return (
-              <div
-                key={block.id}
-                className={isPrimary ? "grid items-start gap-4 lg:grid-cols-[1fr_200px]" : "grid items-start"}
-              >
-                <CyberChamferFrame accent={accentFrame(block.accent)} chamfer={22} innerClassName="cyber-frame-mobile-pad p-6 sm:p-8">
-                  <h3
-                    className={cx(
-                      publicHeadingLightning("amber"),
-                      "marketing-card-title-oneline text-[clamp(1.85rem,3.8vw,3.2rem)] font-black leading-[1]",
-                      titleColor[block.accent]
-                    )}
-                  >
-                    {block.title}
-                  </h3>
-                  <p className="mt-3 text-xl leading-relaxed text-zinc-100/88 sm:text-2xl">{block.summary}</p>
-                  <CyberInsetPanel variant={block.accent === "violet" ? "void" : block.accent === "amber" ? "blood" : "cyan"} className="cyber-inset-mobile-pad mt-6">
-                    <p className="text-lg leading-relaxed text-zinc-100/90 sm:text-xl">{block.body}</p>
-                  </CyberInsetPanel>
-                </CyberChamferFrame>
-                {isPrimary ? (
-                  <div className="relative mx-auto w-full max-w-[200px] justify-self-center lg:justify-self-end">
-                    <Image
-                      src={block.image}
-                      alt={block.imageAlt}
-                      width={400}
-                      height={520}
-                      className="h-[200px] w-full object-contain object-center sm:h-[260px] lg:h-[320px]"
-                    />
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </section>
-      </div>
-    </main>
-  );
+  return null;
 }

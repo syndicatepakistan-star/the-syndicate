@@ -31,16 +31,18 @@ export function DashboardSectionKeepAlive({
 
   return (
     <div
-      className={cn(className, !active && "hidden")}
+      className={cn(className, !active && "pointer-events-none hidden")}
       data-dashboard-section={sectionKey}
       data-dashboard-section-active={active ? "true" : "false"}
       aria-hidden={!active}
+      {...(!active ? { inert: true as const } : {})}
       style={
         active
           ? undefined
           : {
               contentVisibility: "hidden",
               containIntrinsicSize: "0 720px",
+              contain: "strict",
             }
       }
     >

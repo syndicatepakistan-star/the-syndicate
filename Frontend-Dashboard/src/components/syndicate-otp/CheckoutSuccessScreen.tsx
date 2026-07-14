@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LuxuryRedirectOverlay from "@/components/syndicate-otp/LuxuryRedirectOverlay";
 import { persistSimpleAuthSession } from "@/lib/portal-api";
 import { resolveClientApiUrl } from "@/lib/portal-api";
@@ -20,6 +20,8 @@ import {
 } from "@/lib/vaultPlaylistMap";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
+import { CheckoutClaimForm, type UnlockedProgramItem } from "@/components/syndicate-otp/CheckoutClaimForm";
+import toast, { Toaster } from "react-hot-toast";
 
 const SYNDICATE_URL =
   process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL ?? "https://the-syndicate.com/";
@@ -60,6 +62,16 @@ type SuccessPayload = {
   selected_plan?: string | null;
   playlist_id?: number | null;
   already_purchased?: boolean;
+  needs_claim?: boolean;
+  unlocked_titles?: string[];
+  unlocked_items?: Array<{
+    title?: string;
+    image?: string;
+    amount?: string;
+    plan?: string | null;
+    playlist_id?: number | null;
+  }>;
+  cart_count?: number;
 };
 
 function toNumber(value: unknown): number | null {
@@ -81,12 +93,27 @@ function looksLikeHtml(text: string): boolean {
 export default function CheckoutSuccessScreen({
   sessionId,
 }: CheckoutSuccessScreenProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [luxuryOpen, setLuxuryOpen] = useState(false);
   const [luxuryHref, setLuxuryHref] = useState(SYNDICATE_URL);
   const [trackingDebug, setTrackingDebug] = useState<string | null>(null);
+  const [needsClaim, setNeedsClaim] = useState(false);
+  const [unlockedItems, setUnlockedItems] = useState<UnlockedProgramItem[]>([]);
+  const [claimAmount, setClaimAmount] = useState<number | null>(null);
+  const [claimCurrency, setClaimCurrency] = useState("usd");
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollTop = 0;
+    const id = window.requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [sessionId, needsClaim, unlockedItems.length]);
 
   useEffect(() => {
     const canvas = document.getElementById("particles") as HTMLCanvasElement | null;
@@ -226,6 +253,37 @@ export default function CheckoutSuccessScreen({
         }
 
         setMessage(data.message || "Payment confirmed.");
+
+        if (data.needs_claim) {
+          const fromApi: UnlockedProgramItem[] = Array.isArray(data.unlocked_items)
+            ? data.unlocked_items
+                .map((row) => ({
+                  title: typeof row.title === "string" ? row.title.trim() : "",
+                  image: typeof row.image === "string" ? row.image.trim() : "",
+                  amount: typeof row.amount === "string" ? row.amount.trim() : "",
+                  plan: typeof row.plan === "string" ? row.plan : null,
+                  playlist_id: typeof row.playlist_id === "number" ? row.playlist_id : null,
+                }))
+                .filter((row) => row.title)
+            : [];
+          const fromTitles: UnlockedProgramItem[] =
+            !fromApi.length && Array.isArray(data.unlocked_titles)
+              ? data.unlocked_titles
+                  .filter((t): t is string => typeof t === "string" && t.trim().length > 0)
+                  .map((title) => ({ title }))
+              : [];
+          setUnlockedItems(fromApi.length ? fromApi : fromTitles.length ? fromTitles : [{ title: "Your program unlock" }]);
+          setClaimAmount(toNumber(data.amount_paid));
+          setClaimCurrency(
+            typeof data.currency === "string" && data.currency.trim()
+              ? data.currency.trim().toLowerCase()
+              : "usd",
+          );
+          setNeedsClaim(true);
+          setLoading(false);
+          return;
+        }
+
         const t = typeof data.token === "string" ? data.token.trim() : "";
         if (t) {
           const loginEmail = (data.user?.email || data.email || "").trim();
@@ -399,35 +457,55 @@ export default function CheckoutSuccessScreen({
 
   return (
     <div className="checkout-page-wrap checkout-page-wrap--entered">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: "#0a0c12",
+            color: "#f5f5f5",
+            border: "1px solid rgba(245,158,11,0.35)",
+          },
+        }}
+      />
       <LuxuryRedirectOverlay active={luxuryOpen} href={luxuryHref} delayMs={650} />
 
       <div className="scanline" />
       <div className="noise" />
       <canvas id="particles" />
-      <div className="hud-frame">
-        <div className="hud-corner hud-corner--tl" />
-        <div className="hud-corner hud-corner--tr" />
-        <div className="hud-corner hud-corner--bl" />
-        <div className="hud-corner hud-corner--br" />
-        <div className="hud-border hud-border--top" />
-        <div className="hud-border hud-border--bottom" />
-        <div className="hud-border hud-border--left" />
-        <div className="hud-border hud-border--right" />
-      </div>
 
-      <div className="login-container">
-        <div className="login-box checkout-box">
-          <div className="login-header">
+      <div ref={scrollRef} className="checkout-success-scroll">
+        <div className="checkout-success-scroll__inner">
+          <div className="login-header !mb-6 !mt-4 !min-h-[5.5rem] !items-center">
             <span className="status-dot" />
-            <h1 className="glitch" data-text="SUCCESS">
+            <h1
+              className="glitch !text-[clamp(2rem,5vw,3.25rem)] !leading-none"
+              data-text="SUCCESS"
+            >
               SUCCESS
             </h1>
             <span className="status-dot" />
           </div>
 
           {loading ? <p className="form-message">VERIFYING PAYMENT...</p> : null}
-          {!loading && message ? <p className="form-message">{message}</p> : null}
-          {!loading && luxuryOpen ? (
+          {!loading && message && !needsClaim ? <p className="form-message">{message}</p> : null}
+          {!loading && needsClaim ? (
+            <CheckoutClaimForm
+              sessionId={sessionId}
+              unlockedItems={unlockedItems}
+              amountPaid={claimAmount}
+              currency={claimCurrency}
+              onClaimed={(nextUrl) => {
+                toast.success("Access unlocked — opening your dashboard.");
+                setLuxuryHref(nextUrl);
+                window.history.replaceState({}, "", "/");
+                window.setTimeout(() => setLuxuryOpen(true), 80);
+                window.setTimeout(() => {
+                  if (typeof window !== "undefined") window.location.replace(nextUrl);
+                }, 700);
+              }}
+            />
+          ) : null}
+          {!loading && !needsClaim && luxuryOpen ? (
             <p className="form-message">Preparing your arrival at the main site…</p>
           ) : null}
           {!loading && trackingDebug ? (
@@ -436,7 +514,7 @@ export default function CheckoutSuccessScreen({
           {!loading && error ? <p className="form-error">{error}</p> : null}
 
           {!loading && error ? (
-            <Link className="cyber-btn checkout-login-btn" href={syndicateOtpSignupHref()}>
+            <Link className="cyber-btn checkout-login-btn mt-4" href={syndicateOtpSignupHref()}>
               <span className="cyber-btn__text">BACK TO SIGN UP</span>
             </Link>
           ) : null}

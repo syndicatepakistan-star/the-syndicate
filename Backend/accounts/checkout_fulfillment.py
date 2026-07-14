@@ -60,18 +60,18 @@ def resolve_playlist_from_checkout_metadata(session_meta: dict) -> StreamPlaylis
     return None
 
 
-def _apply_playlist_purchase(user: User, session, session_meta: dict) -> None:
-    playlist = resolve_playlist_from_checkout_metadata(session_meta)
-    if playlist is None:
+def _apply_playlist_purchase(user: User, session, session_meta: dict, *, playlist: StreamPlaylist | None = None) -> None:
+    resolved = playlist or resolve_playlist_from_checkout_metadata(session_meta)
+    if resolved is None:
         return
     purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
         user=user,
-        playlist=playlist,
+        playlist=resolved,
         defaults={
             "status": StreamPlaylistPurchase.Status.PAID,
             "stripe_session_id": session.id,
             "stripe_checkout_session_id": session.id,
-            "amount_paid": playlist.price,
+            "amount_paid": resolved.price,
             "currency": settings.DEFAULT_CURRENCY,
             "paid_at": timezone.now(),
         },
@@ -79,7 +79,7 @@ def _apply_playlist_purchase(user: User, session, session_meta: dict) -> None:
     purchase.status = StreamPlaylistPurchase.Status.PAID
     purchase.stripe_session_id = session.id
     purchase.stripe_checkout_session_id = session.id
-    purchase.amount_paid = playlist.price
+    purchase.amount_paid = resolved.price
     purchase.currency = settings.DEFAULT_CURRENCY
     purchase.paid_at = timezone.now()
     purchase.save(
@@ -107,14 +107,38 @@ def fulfill_checkout_session_for_user(
     Idempotent plan/playlist fulfillment for a paid Stripe session.
     Returns (plan_slug, playlist_id_raw, was_already_recorded).
     """
+    from accounts.checkout_cart import (
+        cart_item_amount_decimal,
+        is_vault_cart_checkout_metadata,
+        parse_cart_items_from_metadata,
+        playlist_purchase_session_key,
+    )
     from accounts.views import _safe_apply_plan_and_record_purchase
 
     sid = str(getattr(session, "id", "") or "").strip()
     playlist_id = str(session_meta.get("playlist_id", "") or "").strip()
     playlist_slug = str(session_meta.get("playlist_slug", "") or "").strip()
     plan_sel = str(session_meta.get("selected_plan", "") or "").strip().lower()
+    cart_items = parse_cart_items_from_metadata(session_meta)
+    cart_multi = is_vault_cart_checkout_metadata(session_meta) and len(cart_items) > 1
 
     was_recorded = bool(sid) and UserPlanPurchase.objects.filter(stripe_checkout_session_id=sid).exists()
+    if cart_multi and sid:
+        plan_count = sum(1 for item in cart_items if item.plan)
+        playlist_count = sum(1 for item in cart_items if item.playlist_id is not None)
+        plan_recorded = (
+            UserPlanPurchase.objects.filter(stripe_checkout_session_id__startswith=f"{sid}:").count() >= plan_count
+            if plan_count
+            else True
+        )
+        playlist_recorded = True
+        if playlist_count:
+            playlist_recorded = (
+                StreamPlaylistPurchase.objects.filter(stripe_checkout_session_id__startswith=f"{sid}:playlist:").count()
+                >= playlist_count
+            )
+        was_recorded = plan_recorded and playlist_recorded
+
     playlist_paid = False
     resolved_playlist = resolve_playlist_from_checkout_metadata(session_meta)
     if resolved_playlist is not None:
@@ -126,7 +150,64 @@ def fulfill_checkout_session_for_user(
 
     if resolved_playlist is not None and not playlist_paid:
         _apply_playlist_purchase(user, session, session_meta)
-    if plan_sel:
+
+    if cart_items:
+        for item in cart_items:
+            if item.playlist_id is not None:
+                playlist = StreamPlaylist.objects.filter(pk=item.playlist_id).first()
+                if playlist is None:
+                    continue
+                already_paid = StreamPlaylistPurchase.objects.filter(
+                    user=user,
+                    playlist=playlist,
+                    status=StreamPlaylistPurchase.Status.PAID,
+                ).exists()
+                if already_paid:
+                    continue
+                session_key = playlist_purchase_session_key(sid, item.playlist_id, cart_multi=cart_multi)
+                purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
+                    user=user,
+                    playlist=playlist,
+                    defaults={
+                        "status": StreamPlaylistPurchase.Status.PAID,
+                        "stripe_session_id": session_key,
+                        "stripe_checkout_session_id": session_key,
+                        "amount_paid": playlist.price,
+                        "currency": paid_currency,
+                        "paid_at": timezone.now(),
+                    },
+                )
+                purchase.status = StreamPlaylistPurchase.Status.PAID
+                purchase.stripe_session_id = session_key
+                purchase.stripe_checkout_session_id = session_key
+                purchase.amount_paid = playlist.price
+                purchase.currency = paid_currency
+                purchase.paid_at = timezone.now()
+                purchase.save(
+                    update_fields=[
+                        "status",
+                        "stripe_session_id",
+                        "stripe_checkout_session_id",
+                        "amount_paid",
+                        "currency",
+                        "paid_at",
+                        "updated_at",
+                    ]
+                )
+                continue
+            if item.plan:
+                item_amount = float(cart_item_amount_decimal(item))
+                _safe_apply_plan_and_record_purchase(
+                    user,
+                    session,
+                    item.plan,
+                    item_amount,
+                    paid_currency,
+                    cart_multi=cart_multi,
+                )
+        first_plan = next((item.plan for item in cart_items if item.plan), "")
+        plan_sel = first_plan or plan_sel
+    elif plan_sel:
         _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
     elif not was_recorded and sid:
         logger.warning(

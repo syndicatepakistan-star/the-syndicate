@@ -7,7 +7,6 @@ import {
   VAULT_ALACARTE_AGENTIC_USD,
   VAULT_ALACARTE_AI_CONTENT_USD,
 } from "@/lib/packPricing";
-import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultSubCourseNeonAccents";
 import {
   allTradingSubmoduleOffers,
   isTradingModuleSlug,
@@ -15,6 +14,9 @@ import {
   tradingSubmoduleOffersForModule,
   type TradingModuleSlug,
 } from "@/components/programs/tradingVaultCatalog";
+import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultSubCourseNeonAccents";
+
+export { VAULT_SUB_COURSE_NEON_ACCENTS };
 
 const PACKS_BASE = "/assets/programs/packs courses";
 
@@ -33,8 +35,6 @@ function packThumb(folder: string, filename: string): string {
 function slugIndex(prefix: string, index: number): CheckoutOfferKey {
   return `${prefix}_c${String(index).padStart(2, "0")}` as CheckoutOfferKey;
 }
-
-export { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultSubCourseNeonAccents";
 
 function toOffer(
   row: VaultCourseRow,

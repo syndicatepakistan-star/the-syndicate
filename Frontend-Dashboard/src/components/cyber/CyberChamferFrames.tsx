@@ -9,7 +9,15 @@ function chamferPolygon(px: number) {
   return `polygon(${px}px 0,calc(100% - ${px}px) 0,100% ${px}px,100% calc(100% - ${px}px),calc(100% - ${px}px) 100%,${px}px 100%,0 calc(100% - ${px}px),0 ${px}px)`
 }
 
-export type CyberFrameAccent = 'hero' | 'video' | 'separator' | 'cyan' | 'violet' | 'amber'
+export type CyberFrameAccent =
+  | 'hero'
+  | 'video'
+  | 'separator'
+  | 'cyan'
+  | 'violet'
+  | 'amber'
+  | 'pink'
+  | 'lime'
 
 const CYBER_FRAME: Record<
   CyberFrameAccent,
@@ -109,6 +117,34 @@ const CYBER_FRAME: Record<
     hairR: 'from-transparent via-rose-500/72 to-transparent',
     cornerTL: 'border-amber-300/85',
     cornerBR: 'border-orange-500/78',
+  },
+  pink: {
+    ring: 'linear-gradient(125deg, #fb7185, #f472b6, #e879f9, #fb7185)',
+    outerGlow:
+      '0 0 0 1px rgba(251,113,133,0.55), 0 0 0 3px rgba(236,72,153,0.2), 0 0 12px rgba(244,114,182,0.9), 0 0 52px rgba(232,121,249,0.38)',
+    innerVeil: 'radial-gradient(95% 120% at 45% -8%, rgba(244,114,182,0.18), transparent 58%)',
+    panelFill:
+      'linear-gradient(168deg, rgba(18,6,14,0.95) 0%, rgba(10,4,12,0.98) 50%, rgba(12,4,16,0.99) 100%), radial-gradient(ellipse 80% 55% at 10% 0%, rgba(244,114,182,0.1), transparent 48%)',
+    insetStrong: 'border-pink-400/50',
+    insetSoft: 'border-fuchsia-300/16',
+    hairL: 'from-transparent via-pink-400/88 to-transparent',
+    hairR: 'from-transparent via-fuchsia-400/75 to-transparent',
+    cornerTL: 'border-pink-400/85',
+    cornerBR: 'border-fuchsia-400/80',
+  },
+  lime: {
+    ring: 'linear-gradient(125deg, #a3e635, #22c55e, #84cc16, #a3e635)',
+    outerGlow:
+      '0 0 0 1px rgba(163,230,53,0.55), 0 0 0 3px rgba(34,197,94,0.2), 0 0 12px rgba(132,204,22,0.85), 0 0 52px rgba(34,197,94,0.35)',
+    innerVeil: 'radial-gradient(95% 120% at 40% -8%, rgba(163,230,53,0.16), transparent 58%)',
+    panelFill:
+      'linear-gradient(168deg, rgba(6,16,8,0.95) 0%, rgba(4,12,8,0.98) 50%, rgba(4,10,8,0.99) 100%), radial-gradient(ellipse 80% 55% at 10% 0%, rgba(132,204,22,0.09), transparent 48%)',
+    insetStrong: 'border-lime-400/52',
+    insetSoft: 'border-green-300/16',
+    hairL: 'from-transparent via-lime-300/88 to-transparent',
+    hairR: 'from-transparent via-green-400/75 to-transparent',
+    cornerTL: 'border-lime-300/85',
+    cornerBR: 'border-green-400/80',
   },
 }
 

@@ -3,7 +3,6 @@ import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalo
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import {
   getAuthorizationHeader,
-  hasSimpleAuthSessionClient,
   portalFetch,
 } from "@/lib/portal-api";
 
@@ -22,6 +21,15 @@ export type PlanCheckoutParams = {
   plan: CheckoutOfferKey;
   billing?: string;
   amount: string;
+  postAuthNext?: string;
+};
+
+export type UnlockCartCheckoutItem =
+  | { plan: CheckoutOfferKey; amount: string; title?: string; image?: string; playlistId?: never }
+  | { playlistId: number; amount: string; title?: string; image?: string; plan?: never };
+
+export type UnlockCartCheckoutParams = {
+  items: UnlockCartCheckoutItem[];
   postAuthNext?: string;
 };
 
@@ -82,6 +90,7 @@ export type PlanCheckoutSessionPayload = {
   message?: string;
   error?: string;
   detail?: string;
+  excluded_owned?: string[];
 };
 
 export async function createPlanCheckoutSession(
@@ -96,6 +105,38 @@ export async function createPlanCheckoutSession(
         selected_plan: params.plan,
         selected_billing: params.billing?.trim() || "monthly",
         selected_amount: params.amount.trim(),
+        ...affiliateCheckoutFields(),
+      }),
+    }
+  );
+  const payload = (data && typeof data === "object" ? data : {}) as PlanCheckoutSessionPayload;
+  return { ok, status, payload };
+}
+
+export async function createUnlockCartCheckoutSession(
+  params: UnlockCartCheckoutParams,
+): Promise<{ ok: boolean; status: number; payload: PlanCheckoutSessionPayload }> {
+  const { ok, status, data } = await portalFetch<PlanCheckoutSessionPayload>(
+    "/api/auth/checkout/create-session/",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
+        cart_items: params.items.map((item) =>
+          item.playlistId != null
+            ? {
+                playlist_id: item.playlistId,
+                amount: item.amount.trim(),
+                ...(item.title ? { title: item.title } : {}),
+                ...(item.image ? { image: item.image } : {}),
+              }
+            : {
+                plan: item.plan,
+                amount: item.amount.trim(),
+                ...(item.title ? { title: item.title } : {}),
+                ...(item.image ? { image: item.image } : {}),
+              },
+        ),
         ...affiliateCheckoutFields(),
       }),
     }
@@ -173,20 +214,22 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
     return { status: "error", message: KNIGHT_COMING_SOON_MESSAGE };
   }
 
-  const authHeader = getAuthorizationHeader();
-  if (!authHeader) {
-    if (hasSimpleAuthSessionClient()) {
-      redirectToAuthCheckout(params);
-      return { status: "auth_required" };
-    }
-    redirectToAuthCheckout(params);
-    return { status: "auth_required" };
-  }
-
   const { ok, status, payload } = await createPlanCheckoutSession(params);
   const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
 
   if (ok && checkoutUrl) {
+    if (Array.isArray(payload.excluded_owned) && payload.excluded_owned.length && typeof window !== "undefined") {
+      try {
+        const toast = (await import("react-hot-toast")).default;
+        toast(
+          payload.message ||
+            `Skipped ${payload.excluded_owned.length} already-owned program(s) before checkout.`,
+          { icon: "✓" },
+        );
+      } catch {
+        // Toast optional.
+      }
+    }
     redirectToCheckout(checkoutUrl);
     return { status: "checkout", checkoutUrl };
   }
@@ -199,8 +242,69 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
   }
 
   const message = payloadErrorMessage(payload, status);
-  if (shouldRetryViaAuth(status, message)) {
+  // Guest checkout is supported — only redirect to auth when session is truly expired/forbidden for a logged-in attempt.
+  if (getAuthorizationHeader() && shouldRetryViaAuth(status, message)) {
     redirectToAuthCheckout(params);
+    return { status: "auth_required" };
+  }
+
+  return { status: "error", message };
+}
+
+export async function startUnlockCartCheckout(
+  params: UnlockCartCheckoutParams,
+): Promise<StartPlanCheckoutResult> {
+  const items = params.items.filter(
+    (item) => (item.plan && item.amount.trim()) || (item.playlistId != null && item.amount.trim()),
+  );
+  if (items.length < 1) {
+    return { status: "error", message: "Add at least one program to checkout." };
+  }
+
+  for (const item of items) {
+    if (item.plan && isKnightCheckoutBlocked(item.plan)) {
+      return { status: "error", message: KNIGHT_LAUNCHING_SOON_MESSAGE };
+    }
+  }
+
+  const firstPlan = items.find((item) => item.plan)?.plan;
+  const firstAmount = items[0]?.amount ?? "";
+
+  const { ok, status, payload } = await createUnlockCartCheckoutSession(params);
+  const checkoutUrl = typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
+
+  if (ok && checkoutUrl) {
+    if (Array.isArray(payload.excluded_owned) && payload.excluded_owned.length && typeof window !== "undefined") {
+      try {
+        const toast = (await import("react-hot-toast")).default;
+        toast(
+          payload.message ||
+            `Skipped ${payload.excluded_owned.length} already-owned program(s) before checkout.`,
+          { icon: "✓" },
+        );
+      } catch {
+        // Toast optional.
+      }
+    }
+    redirectToCheckout(checkoutUrl);
+    return { status: "checkout", checkoutUrl };
+  }
+
+  if (ok && (payload.is_unlocked || payload.already_purchased)) {
+    return {
+      status: "already_unlocked",
+      message: payload.message,
+    };
+  }
+
+  const message = payloadErrorMessage(payload, status);
+  if (getAuthorizationHeader() && shouldRetryViaAuth(status, message) && firstPlan) {
+    redirectToAuthCheckout({
+      plan: firstPlan,
+      billing: "monthly",
+      amount: firstAmount,
+      postAuthNext: params.postAuthNext,
+    });
     return { status: "auth_required" };
   }
 

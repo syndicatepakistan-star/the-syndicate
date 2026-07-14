@@ -37,6 +37,11 @@ import {
   parseDashboardPlaylistId,
 } from "@/lib/vaultPlaylistMap";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
+import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
+import { UnlockCartPanel } from "@/components/programs/UnlockCartPanel";
+import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
+import { isUnlockCartEligible } from "@/lib/unlockCart";
+import toast, { Toaster } from "react-hot-toast";
 
 const PACK_SPOTLIGHT: Record<
   PlanOfferDef["accent"],
@@ -52,9 +57,21 @@ const PACK_SPOTLIGHT: Record<
   blue: { a: "96,165,250", b: "59,130,246" },
 };
 
-export function PublicPlanOfferCards({
+export function PublicPlanOfferCards(props: Parameters<typeof PublicPlanOfferCardsInner>[0] = {}) {
+  if (props.shellHosted) {
+    return <PublicPlanOfferCardsInner {...props} />;
+  }
+  return (
+    <UnlockCartProvider>
+      <PublicPlanOfferCardsInner {...props} />
+    </UnlockCartProvider>
+  );
+}
+
+function PublicPlanOfferCardsInner({
   checkoutReturnPath = "/dashboard?section=programs",
   embedded = false,
+  shellHosted = false,
   size = "large",
   highlightPack,
   onAlreadyUnlocked,
@@ -63,6 +80,7 @@ export function PublicPlanOfferCards({
 }: {
   checkoutReturnPath?: string;
   embedded?: boolean;
+  shellHosted?: boolean;
   size?: "large" | "compact";
   highlightPack?: GlobePackKey;
   onAlreadyUnlocked?: (plan: CheckoutOfferKey) => void | Promise<void>;
@@ -78,12 +96,15 @@ export function PublicPlanOfferCards({
   const [detailOffer, setDetailOffer] = useState<PlanOfferDef | null>(null);
   const [vaultPackOffer, setVaultPackOffer] = useState<PlanOfferDef | null>(null);
   const [tradingModuleOffer, setTradingModuleOffer] = useState<PlanOfferDef | null>(null);
+  const [cartCheckoutBusy, setCartCheckoutBusy] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
   const [purchasedSlugs, setPurchasedSlugs] = useState<ReadonlySet<string>>(() => new Set());
   const [accessTier, setAccessTier] = useState<string | null>(null);
   const [moneyMasteryActive, setMoneyMasteryActive] = useState(false);
   const [knightSubscriptionActive, setKnightSubscriptionActive] = useState(false);
   const packModalOpenedRef = useRef(false);
   const isLarge = size === "large";
+  const unlockCart = useUnlockCart();
 
   const reloadUnlockState = useCallback(async () => {
     if (!getAuthorizationHeader()) {
@@ -198,7 +219,7 @@ export function PublicPlanOfferCards({
     [accessTier, checkoutReturnPath, moneyMasteryActive, onOpenPlaylist, purchasedSet, router]
   );
 
-  const joinOffer = useCallback(
+  const joinOfferDirect = useCallback(
     async (offer: PlanOfferDef) => {
       if (isKnightPlanSlug(String(offer.plan))) {
         if (isPlanOfferComingSoon(offer)) return;
@@ -213,6 +234,7 @@ export function PublicPlanOfferCards({
         return;
       }
       setError(null);
+      setCartError(null);
       setBusyPlan(offer.plan);
       try {
         const result = await startPlanCheckout({
@@ -244,8 +266,60 @@ export function PublicPlanOfferCards({
         setBusyPlan(null);
       }
     },
-    [accessTier, moneyMasteryActive, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState, router]
+    [accessTier, moneyMasteryActive, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState]
   );
+
+  const requestUnlock = useCallback(
+    (offer: PlanOfferDef) => {
+      if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+        void openUnlocked(offer);
+        return;
+      }
+      if (!isUnlockCartEligible(offer)) {
+        void joinOfferDirect(offer);
+        return;
+      }
+      const added = unlockCart.addItem(offer);
+      if (added) {
+        toast.success(`Added to unlock bucket — ${offer.title}`, { duration: 2800 });
+      } else {
+        toast(`Already in unlock bucket — ${offer.title}`, { duration: 2200 });
+        unlockCart.setPanelExpanded(true);
+      }
+    },
+    [accessTier, joinOfferDirect, moneyMasteryActive, openUnlocked, purchasedSet, unlockCart]
+  );
+
+  const checkoutUnlockCart = useCallback(async () => {
+    if (cartCheckoutBusy) return;
+    const cartItems = unlockCart.items;
+    if (!cartItems.length) return;
+    setCartError(null);
+    setError(null);
+    setCartCheckoutBusy(true);
+    try {
+      const result = await checkoutUnlockCartItems(cartItems, {
+        postAuthNext: checkoutReturnPath,
+        playlistReturnPath: "/programs",
+      });
+      if (result.status === "already_unlocked") {
+        await reloadUnlockState();
+        unlockCart.clearCart();
+        return;
+      }
+      if (result.status === "error") {
+        throw new Error(result.message);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Could not start cart checkout.";
+      setCartError(msg);
+      if (onCheckoutError) onCheckoutError(msg);
+    } finally {
+      setCartCheckoutBusy(false);
+    }
+  }, [cartCheckoutBusy, checkoutReturnPath, onCheckoutError, reloadUnlockState, unlockCart]);
+
+  const joinOffer = requestUnlock;
 
   const renderOffer = (offer: PlanOfferDef) => {
     const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
@@ -257,6 +331,11 @@ export function PublicPlanOfferCards({
       ? isPlanOfferComingSoon(offer)
       : isPlanOfferComingSoon(offer) &&
         !isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
+    const unlocked = isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive);
+    const inCart = unlockCart.isInCart(offer.plan);
+    const bucketSelection =
+      unlockCart.selectionMode && !unlocked && !comingSoon && isUnlockCartEligible(offer);
+    const bucketActionLabel = bucketSelection ? (inCart ? "Added" : "Add to bucket") : undefined;
 
     return (
       <PlanOfferCard
@@ -268,8 +347,10 @@ export function PublicPlanOfferCards({
         busy={busyPlan === offer.plan}
         highlighted={highlightedPack === offer.plan}
         comingSoon={comingSoon}
+        inCart={inCart}
         actionLabel={
-          offer.openAction === "vault_picker" && vaultPack
+          bucketActionLabel ??
+          (offer.openAction === "vault_picker" && vaultPack
             ? packPlaylistOpenable
               ? "Open"
               : offer.openLabel
@@ -279,7 +360,7 @@ export function PublicPlanOfferCards({
                 accessTier,
                 moneyMasteryActive,
                 knightSubscriptionActive,
-              )
+              ))
         }
         onDetails={() => {
           if (offer.openAction === "vault_picker") {
@@ -355,6 +436,8 @@ export function PublicPlanOfferCards({
         purchasedSlugs={purchasedSet}
         accessTier={accessTier}
         moneyMasteryActive={moneyMasteryActive}
+        selectionMode={unlockCart.selectionMode}
+        isInCart={unlockCart.isInCart}
         onClose={() => setVaultPackOffer(null)}
         onDetails={setDetailOffer}
         onModuleDetails={(offer) => {
@@ -374,11 +457,34 @@ export function PublicPlanOfferCards({
         purchasedSlugs={purchasedSet}
         accessTier={accessTier}
         moneyMasteryActive={moneyMasteryActive}
+        selectionMode={unlockCart.selectionMode}
+        isInCart={unlockCart.isInCart}
         onClose={() => setTradingModuleOffer(null)}
         onDetails={setDetailOffer}
         onUnlock={(offer) => void joinOffer(offer)}
         onOpenUnlocked={openUnlocked}
       />
+      {!shellHosted ? (
+        <>
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              className: "font-mono text-xs",
+              style: {
+                background: "#04060d",
+                color: "#e2e8f0",
+                border: "1px solid rgba(34,211,238,0.35)",
+                marginBottom: "5.5rem",
+              },
+            }}
+          />
+          <UnlockCartPanel
+            busy={cartCheckoutBusy || busyPlan !== null}
+            error={cartError}
+            onCheckout={() => void checkoutUnlockCart()}
+          />
+        </>
+      ) : null}
     </section>
   );
 }

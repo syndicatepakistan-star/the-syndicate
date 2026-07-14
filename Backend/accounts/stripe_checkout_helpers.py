@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from accounts.checkout_cart import CartCheckoutItem, build_stripe_cart_line_items
+
 _KNIGHT_PLANS = frozenset({"king", "knight"})
 
 
@@ -27,6 +29,10 @@ def build_checkout_line_items(*, plan_raw: str, product_name: str, unit_amount: 
     if is_knight_subscription_plan(plan_raw):
         price_data["recurring"] = {"interval": "month"}
     return [{"price_data": price_data, "quantity": 1}]
+
+
+def build_checkout_line_items_for_cart(items: list[CartCheckoutItem], *, currency: str) -> list[dict]:
+    return build_stripe_cart_line_items(items, currency=currency)
 
 
 def checkout_session_mode(plan_raw: str) -> str:

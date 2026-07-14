@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { NavApp } from '@/components/NavApp'
 import SiteFooter from '@/components/SiteFooter'
 import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySection'
+import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
 import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
@@ -27,6 +28,7 @@ export default async function ProgramsPage() {
         <div className="absolute bottom-[-10%] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-cyan-400/15 blur-[130px] sm:h-[560px] sm:w-[560px]" />
       </div>
       <NavApp />
+      <ProgramsUnlockShell>
       <section
         id="syndicate-elite-offers"
         className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10"
@@ -38,7 +40,7 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        <ProgramsOfferSection size="large" />
+        <ProgramsOfferSection size="large" shellHosted />
       </section>
       <section
         id="programs-library"
@@ -54,6 +56,7 @@ export default async function ProgramsPage() {
           </Suspense>
         </div>
       </section>
+      </ProgramsUnlockShell>
       <PublicGoalPathSection playlists={playlists} alwaysVisible />
       <SiteFooter />
     </div>

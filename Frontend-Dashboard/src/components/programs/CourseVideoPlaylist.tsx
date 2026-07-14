@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { AlertTriangle, Play } from "lucide-react";
 import { fetchCourseVideos, postVideoProgress, resolveDjangoMediaUrl, resolveLessonVideoUrl, type VideoDto } from "@/lib/courses-api";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 
 type Props = {
   courseId: number;
@@ -188,13 +189,11 @@ export function CourseVideoPlaylist({
                 </p>
               ) : null}
               {programAbout ? (
-                <div className="mt-4 max-w-3xl rounded-xl border border-white/15 bg-black/40 px-4 py-3.5">
-                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--gold)]/85">
+                <div className="mt-4 max-w-4xl">
+                  <div className="mb-3 text-[13px] font-black uppercase tracking-[0.14em] text-[#f5c814] sm:text-[14px]">
                     About this program
                   </div>
-                  <p className="mt-2.5 text-[14px] font-normal leading-[1.65] tracking-[0.01em] text-white/[0.82] antialiased">
-                    {programAbout}
-                  </p>
+                  <StructuredDescriptionBody text={programAbout} prominent />
                 </div>
               ) : !(active.description || "").trim() ? (
                 <p className="mt-3 max-w-3xl text-[13px] leading-[1.6] text-white/55">

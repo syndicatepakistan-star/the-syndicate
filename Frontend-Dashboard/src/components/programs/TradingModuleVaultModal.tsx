@@ -16,6 +16,7 @@ import { resolveVaultModuleStructuredDescription } from "@/components/programs/v
 import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { VAULT_PACK_MODAL_COPY } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
+import { isUnlockCartEligible } from "@/lib/unlockCart";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import {
   tradingSubmoduleOffersForModule,
@@ -29,6 +30,8 @@ type Props = {
   purchasedSlugs: ReadonlySet<string>;
   accessTier: string | null;
   moneyMasteryActive?: boolean;
+  selectionMode?: boolean;
+  isInCart?: (plan: CheckoutOfferKey) => boolean;
   onClose: () => void;
   onDetails: (offer: PlanOfferDef) => void;
   onUnlock: (offer: PlanOfferDef) => void;
@@ -41,6 +44,8 @@ export function TradingModuleVaultModal({
   purchasedSlugs,
   accessTier,
   moneyMasteryActive = false,
+  selectionMode = false,
+  isInCart,
   onClose,
   onDetails,
   onUnlock,
@@ -71,6 +76,14 @@ export function TradingModuleVaultModal({
   const lessons = tradingSubmoduleOffersForModule(moduleSlug);
   const moduleStats = resolveOfferCardStats(moduleOffer, "module");
   const moduleUnlocked = isVaultOfferUnlocked(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive);
+
+  const resolveActionLabel = (offer: PlanOfferDef) => {
+    const unlocked = isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive);
+    if (selectionMode && !unlocked && isUnlockCartEligible(offer)) {
+      return isInCart?.(offer.plan) ? "Added" : "Add to bucket";
+    }
+    return resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive);
+  };
 
   const handlePrimary = (offer: PlanOfferDef) => {
     if (isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive)) {
@@ -143,7 +156,8 @@ export function TradingModuleVaultModal({
                   vaultHero
                   cardStats={moduleStats}
                   busy={busyPlan === moduleOffer.plan}
-                  actionLabel={resolveOfferActionLabel(moduleOffer, purchasedSlugs, accessTier, moneyMasteryActive)}
+                  inCart={isInCart?.(moduleOffer.plan)}
+                  actionLabel={resolveActionLabel(moduleOffer)}
                   onDetails={() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" })}
                   onOpen={() => (moduleUnlocked ? onClose() : handlePrimary(moduleOffer))}
                 />
@@ -186,7 +200,8 @@ export function TradingModuleVaultModal({
                   cardKind="module"
                   cardStats={resolveOfferCardStats(offer, "module")}
                   busy={busyPlan === offer.plan}
-                  actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)}
+                  inCart={isInCart?.(offer.plan)}
+                  actionLabel={resolveActionLabel(offer)}
                   onDetails={() => onDetails(offer)}
                   onOpen={() => handlePrimary(offer)}
                 />

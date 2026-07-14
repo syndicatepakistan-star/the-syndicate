@@ -228,6 +228,9 @@
   z-index: 10;
   padding: clamp(0.75rem, 3vw, 2rem);
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .login-box {
@@ -557,8 +560,11 @@
 }
 
 .checkout-page-wrap {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
+  /* Do not nest a second scrollport here — the success shell scrolls instead. */
+  overflow: hidden;
   opacity: 0;
   transform: scale(0.988) translateY(clamp(0.35rem, 1vw, 0.75rem));
   filter: blur(5px);
@@ -572,6 +578,28 @@
   opacity: 1;
   transform: scale(1) translateY(0);
   filter: blur(0);
+}
+
+/* Success claim: avoid flex-centering tall content (clips the top / can't scroll to start). */
+.checkout-success-scroll {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 2.75rem max(1rem, min(100px, 8vw)) 4.5rem;
+  display: block;
+}
+
+.checkout-success-scroll__inner {
+  width: 100%;
+  max-width: min(100%, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding-top: 1rem;
+  padding-bottom: 2.5rem;
 }
 
 .checkout-bridge-overlay {

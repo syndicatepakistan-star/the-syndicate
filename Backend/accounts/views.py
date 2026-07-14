@@ -36,12 +36,34 @@ from apps.quiz_funnel.logic import (
   map_weapon_to_playlist_title,
   normalize_free_ticket_title,
 )
-from accounts.checkout_ownership import already_owned_checkout_response, user_owns_checkout_selection
+from accounts.checkout_ownership import (
+  already_owned_checkout_response,
+  partition_display_items_for_user,
+  user_owns_checkout_selection,
+)
 from accounts.stripe_checkout_helpers import (
   build_checkout_line_items,
+  build_checkout_line_items_for_cart,
   checkout_session_is_paid,
   checkout_session_mode,
 )
+from accounts.checkout_cart import (
+  cart_items_to_metadata_json,
+  filter_cart_items_excluding_owned,
+  parse_cart_items_from_payload,
+)
+from accounts.checkout_guest import (
+  claim_and_fulfill_guest_checkout,
+  ensure_pending_signup_for_claim,
+  ensure_session_is_guest_paid,
+  guest_session_mode,
+  guest_success_payload,
+  load_unlocked_items_for_session,
+  resolve_guest_line_items,
+  save_guest_checkout_receipt,
+  unique_pending_username,
+)
+from accounts.models import GuestCheckoutClaim, LoginOTP, PendingSignup, ReturningCheckout, SignupOTP
 from accounts.vault_plan_catalog import (
   is_vault_course_plan_slug,
   vault_course_billing_title,
@@ -52,7 +74,6 @@ from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import LoginOTP, PendingSignup, ReturningCheckout, SignupOTP
 from .pending_signup import (
   abandoned_pending_signup_queryset,
   complete_pending_signup,
@@ -514,7 +535,15 @@ def _apply_purchased_plan(user: User, plan: str, session=None) -> None:
     apply_purchased_plan(user, plan)
 
 
-def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
+def _record_user_plan_purchase(
+  user: User,
+  session,
+  plan_sel: str,
+  paid_amount: float,
+  paid_currency: str,
+  *,
+  cart_multi: bool = False,
+) -> None:
   """Persist plan checkout for dashboard billing history (Money Mastery, King, future vault offers, etc.)."""
   plan_sel = (plan_sel or "").strip().lower()
   if not _is_recordable_plan_slug(plan_sel):
@@ -540,8 +569,11 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
   except Exception:
     amt = Decimal("0.00")
   cur = (paid_currency or settings.DEFAULT_CURRENCY).strip().lower()[:8] or settings.DEFAULT_CURRENCY
+  from accounts.checkout_cart import purchase_record_session_key
+
+  record_sid = purchase_record_session_key(sid, plan_sel, cart_multi=cart_multi)
   UserPlanPurchase.objects.update_or_create(
-    stripe_checkout_session_id=sid,
+    stripe_checkout_session_id=record_sid,
     defaults={
       "user": user,
       "plan_slug": plan_sel,
@@ -554,7 +586,15 @@ def _record_user_plan_purchase(user: User, session, plan_sel: str, paid_amount: 
   )
 
 
-def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, paid_amount: float, paid_currency: str) -> None:
+def _safe_apply_plan_and_record_purchase(
+  user: User,
+  session,
+  plan_sel: str,
+  paid_amount: float,
+  paid_currency: str,
+  *,
+  cart_multi: bool = False,
+) -> None:
   if not plan_sel:
     return
   plan_sel = (plan_sel or "").strip().lower()
@@ -564,7 +604,7 @@ def _safe_apply_plan_and_record_purchase(user: User, session, plan_sel: str, pai
     except Exception:
       logger.exception("Checkout succeeded but plan entitlement update failed for user_id=%s plan=%s", user.id, plan_sel)
   try:
-    _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency)
+    _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency, cart_multi=cart_multi)
   except Exception:
     logger.exception("Checkout succeeded but plan purchase record write failed for user_id=%s plan=%s", user.id, plan_sel)
   if plan_sel in _PLAN_ENTITLEMENT_SLUGS:
@@ -893,6 +933,7 @@ def create_checkout_session_view(request):
 
   signup_token = _parse_signup_token(str(payload.get("signup_token", "")))
   checkout_user = _authenticate_checkout_user(request) if not signup_token else None
+  allow_guest = False
   if not signup_token and checkout_user is None:
     auth_header = (request.META.get("HTTP_AUTHORIZATION") or "").strip()
     if auth_header:
@@ -900,7 +941,102 @@ def create_checkout_session_view(request):
     raw_signup = str(payload.get("signup_token", "")).strip()
     if raw_signup:
       return _json_error("Checkout link expired or invalid. Sign up again to continue.", status=400)
-    return _json_error("Signup token is required.")
+    allow_guest = True
+
+  if allow_guest:
+    if not settings.STRIPE_SECRET_KEY:
+      return _json_error(
+        "Stripe is not configured. Add STRIPE_SECRET_KEY in backend .env.",
+        status=500,
+      )
+    line_items, metadata, guest_error, excluded_owned = resolve_guest_line_items(
+      payload,
+      currency=settings.DEFAULT_CURRENCY,
+      parse_pence=_parse_pence_from_amount_payload,
+      checkout_product_name=_checkout_product_name,
+      knight_blocked=_knight_plan_checkout_blocked,
+    )
+    if guest_error:
+      status = 403 if "coming soon" in guest_error.lower() else 400
+      if "not found" in guest_error.lower():
+        status = 404
+      if "already own" in guest_error.lower():
+        return JsonResponse(
+          {
+            "is_unlocked": True,
+            "already_purchased": True,
+            "message": guest_error,
+            "excluded_owned": excluded_owned,
+          },
+          status=200,
+        )
+      return _json_error(guest_error, status=status)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    frontend_base = settings.FRONTEND_BASE_URL.rstrip("/")
+    requested_base = str(payload.get("return_base_url", "")).strip()
+    if requested_base:
+      parsed = urlsplit(requested_base)
+      if parsed.scheme in ("http", "https") and bool(parsed.netloc):
+        frontend_base = f"{parsed.scheme}://{parsed.netloc}"
+
+    def _session_create_guest(pm_types: list[str]):
+      return stripe.checkout.Session.create(
+        mode=guest_session_mode(metadata),
+        payment_method_types=pm_types,
+        line_items=line_items,
+        success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{frontend_base}/programs",
+        custom_text={
+          "submit": {"message": "The Syndicate — secure checkout"},
+        },
+        metadata=metadata,
+      )
+
+    pm_list = list(settings.STRIPE_CHECKOUT_PAYMENT_METHOD_TYPES)
+    try:
+      session = _session_create_guest(pm_list)
+    except stripe.error.InvalidRequestError as exc:
+      err_txt = str(exc).lower()
+      match = re.search(r"payment method type provided:\s*([a-z0-9_]+)\s+is invalid", err_txt)
+      bad_type = match.group(1) if match else ""
+      pm_retry = [t for t in pm_list if t != bad_type] if bad_type else [t for t in pm_list if t not in ("pay_by_bank",)]
+      if not pm_retry:
+        pm_retry = ["card"]
+      try:
+        session = _session_create_guest(pm_retry)
+      except stripe.error.StripeError as exc2:
+        msg = _sanitize_stripe_checkout_error(exc2)
+        logger.exception("Stripe guest checkout session failed (retry): %s", msg)
+        return _json_error(msg, status=400)
+    except stripe.error.StripeError as exc:
+      msg = _sanitize_stripe_checkout_error(exc)
+      logger.exception("Stripe guest checkout session failed: %s", msg)
+      return _json_error(msg, status=400)
+    except Exception as exc:
+      logger.exception("Guest checkout session failed")
+      return _json_error(f"Unable to create checkout session: {exc}", status=500)
+
+    if not session.url:
+      return _json_error("Stripe did not return a checkout URL.", status=500)
+
+    try:
+      save_guest_checkout_receipt(session.id, payload, session_meta=metadata)
+    except Exception:
+      logger.exception("Failed to persist guest checkout receipt for %s", session.id)
+
+    body = {
+      "checkout_url": session.url,
+      "session_id": session.id,
+      "guest_checkout": True,
+    }
+    if excluded_owned:
+      body["excluded_owned"] = excluded_owned
+      body["message"] = (
+        f"Removed {len(excluded_owned)} already-owned program(s) from checkout: "
+        + ", ".join(excluded_owned[:5])
+      )
+    return JsonResponse(body, status=200)
 
   if checkout_user is not None:
     checkout_email = (checkout_user.email or "").strip()
@@ -913,6 +1049,97 @@ def create_checkout_session_view(request):
     }
     selected_playlist = None
     selected_playlist_id_raw = str(payload.get("playlist_id", "")).strip()
+    cart_items, cart_parse_error = parse_cart_items_from_payload(payload)
+    if cart_parse_error:
+      return _json_error(cart_parse_error, status=400)
+    if cart_items and selected_playlist_id_raw:
+      return _json_error("Use either playlist checkout or unlock cart — not both.", status=400)
+
+    if cart_items:
+      cart_items, excluded_owned, cart_error = filter_cart_items_excluding_owned(checkout_user, cart_items)
+      if cart_error:
+        return _json_error(cart_error, status=400)
+      if not cart_items:
+        return JsonResponse(
+          {
+            "is_unlocked": True,
+            "already_purchased": True,
+            "message": "You already own every program in this unlock bucket.",
+            "excluded_owned": excluded_owned,
+          },
+          status=200,
+        )
+      metadata["checkout_cart"] = "1"
+      metadata["cart_items_json"] = cart_items_to_metadata_json(cart_items)
+      first_plan = next((item.plan for item in cart_items if item.plan), "")
+      if first_plan:
+        metadata["selected_plan"] = first_plan
+      if not settings.STRIPE_SECRET_KEY:
+        return _json_error(
+          "Stripe is not configured. Add STRIPE_SECRET_KEY in backend .env.",
+          status=500,
+        )
+      stripe.api_key = settings.STRIPE_SECRET_KEY
+      frontend_base = settings.FRONTEND_BASE_URL.rstrip("/")
+      requested_base = str(payload.get("return_base_url", "")).strip()
+      if requested_base:
+        parsed = urlsplit(requested_base)
+        if parsed.scheme in ("http", "https") and bool(parsed.netloc):
+          frontend_base = f"{parsed.scheme}://{parsed.netloc}"
+
+      def _session_create_cart(pm_types: list[str]):
+        return stripe.checkout.Session.create(
+          mode="payment",
+          customer_email=checkout_email,
+          payment_method_types=pm_types,
+          line_items=build_checkout_line_items_for_cart(cart_items, currency=settings.DEFAULT_CURRENCY),
+          success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+          cancel_url=f"{frontend_base}/login",
+          custom_text={
+            "submit": {"message": "The Syndicate — secure checkout"},
+          },
+          metadata=metadata,
+        )
+
+      pm_list = list(settings.STRIPE_CHECKOUT_PAYMENT_METHOD_TYPES)
+      try:
+        session = _session_create_cart(pm_list)
+      except stripe.error.InvalidRequestError as exc:
+        err_txt = str(exc).lower()
+        match = re.search(r"payment method type provided:\s*([a-z0-9_]+)\s+is invalid", err_txt)
+        bad_type = match.group(1) if match else ""
+        pm_retry = [t for t in pm_list if t != bad_type] if bad_type else [t for t in pm_list if t not in ("pay_by_bank",)]
+        if not pm_retry:
+          pm_retry = ["card"]
+        try:
+          session = _session_create_cart(pm_retry)
+        except stripe.error.StripeError as exc2:
+          msg = _sanitize_stripe_checkout_error(exc2)
+          logger.exception("Stripe cart checkout session failed (logged-in, retry): %s", msg)
+          return _json_error(msg, status=400)
+      except stripe.error.StripeError as exc:
+        msg = _sanitize_stripe_checkout_error(exc)
+        logger.exception("Stripe cart checkout session failed (logged-in): %s", msg)
+        return _json_error(msg, status=400)
+      except Exception as exc:
+        logger.exception("Cart checkout session failed (logged-in)")
+        return _json_error(f"Unable to create checkout session: {exc}", status=500)
+
+      if not session.url:
+        return _json_error("Stripe did not return a checkout URL.", status=500)
+
+      body = {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "cart_count": len(cart_items),
+      }
+      if excluded_owned:
+        body["excluded_owned"] = excluded_owned
+        body["message"] = (
+          f"Removed {len(excluded_owned)} already-owned program(s) from checkout."
+        )
+      return JsonResponse(body, status=200)
+
     if selected_playlist_id_raw:
       if not selected_playlist_id_raw.isdigit():
         return _json_error("Invalid playlist ID.")
@@ -1239,6 +1466,8 @@ def checkout_success_view(request):
       "selected_plan",
       "selected_billing",
       "selected_amount",
+      "cart_items_json",
+      "checkout_cart",
     ):
       try:
         v = raw[k]  # StripeObject supports key indexing.
@@ -1253,6 +1482,28 @@ def checkout_success_view(request):
     stripe_checkout_session_id=session.id,
   ).first()
   session_meta = _session_metadata_dict(session)
+
+  if str(session_meta.get("checkout_kind", "") or "").strip() == "guest":
+    # Also pull cart JSON from StripeObject if missing from dict helper.
+    if "cart_items_json" not in session_meta:
+      raw_meta = getattr(session, "metadata", None) or {}
+      try:
+        cart_json = raw_meta["cart_items_json"] if raw_meta else ""
+      except Exception:
+        cart_json = ""
+      if cart_json:
+        session_meta["cart_items_json"] = str(cart_json)
+      try:
+        checkout_cart = raw_meta["checkout_cart"] if raw_meta else ""
+      except Exception:
+        checkout_cart = ""
+      if checkout_cart:
+        session_meta["checkout_cart"] = str(checkout_cart)
+    return JsonResponse(
+      guest_success_payload(session, session_meta, paid_amount=paid_amount, paid_currency=paid_currency),
+      status=200,
+    )
+
   if pending_signup is None:
     signup_token_raw = str(session_meta.get("signup_token", "") or "").strip()
     if signup_token_raw:
@@ -1452,6 +1703,255 @@ def checkout_success_view(request):
     )
 
   return _json_error("Checkout record not found for this payment.", status=404)
+
+
+@csrf_exempt
+@require_POST
+def claim_checkout_send_otp_view(request):
+  """After guest Stripe payment: send OTP so buyer can claim purchases with email."""
+  payload = _read_payload(request)
+  if payload is None:
+    return _json_error("Invalid JSON payload.")
+
+  session_id = str(payload.get("session_id", "")).strip()
+  email = str(payload.get("email", "")).strip().lower()
+  if not session_id:
+    return _json_error("Session ID is required.")
+  if not email:
+    return _json_error("Email is required.")
+  try:
+    validate_email(email)
+  except ValidationError:
+    return _json_error("Enter a valid email address.")
+
+  stripe.api_key = settings.STRIPE_SECRET_KEY
+  try:
+    session = stripe.checkout.Session.retrieve(session_id)
+  except Exception:
+    return _json_error("Invalid checkout session.", status=400)
+
+  session_meta = {}
+  raw_meta = getattr(session, "metadata", None) or {}
+  if isinstance(raw_meta, dict):
+    session_meta = {str(k): str(v) for k, v in raw_meta.items() if v is not None}
+  else:
+    for k in ("checkout_kind", "cart_items_json", "checkout_cart", "selected_plan", "playlist_id", "affiliate_id", "visitor_id"):
+      try:
+        v = raw_meta[k]
+      except Exception:
+        continue
+      if v is not None:
+        session_meta[k] = str(v)
+
+  guest_err = ensure_session_is_guest_paid(session, session_meta)
+  if guest_err:
+    return _json_error(guest_err, status=400)
+
+  existing_claim = GuestCheckoutClaim.objects.filter(stripe_checkout_session_id=session.id).select_related("user").first()
+  if existing_claim is not None and existing_claim.user_id:
+    claimed_email = (existing_claim.email or "").strip().lower()
+    if claimed_email and claimed_email != email:
+      return _json_error("This purchase is already linked to another email. Please log in with that account.", status=400)
+    login_err = _create_and_email_login_otp(email)
+    if login_err is not None:
+      return login_err
+    unlocked_items = load_unlocked_items_for_session(session.id, session_meta)
+    owned, claimable = partition_display_items_for_user(existing_claim.user, unlocked_items)
+    return JsonResponse(
+      {
+        "message": "Verification code sent. Check your email to continue.",
+        "email": email,
+        "otp_required": True,
+        "mode": "login",
+        "already_claimed": True,
+        "already_owned_items": owned,
+        "claimable_items": claimable,
+      },
+      status=200,
+    )
+
+  unlocked_items = load_unlocked_items_for_session(session.id, session_meta)
+  existing_user = _canonical_user_for_email(email)
+  owned, claimable = partition_display_items_for_user(existing_user, unlocked_items)
+
+  ownership_note = ""
+  if owned:
+    titles = [str(row.get("title") or "").strip() for row in owned if str(row.get("title") or "").strip()]
+    ownership_note = (
+      f" You already own {len(owned)} program(s) on this email"
+      + (f" ({', '.join(titles[:3])}{'…' if len(titles) > 3 else ''})" if titles else "")
+      + " — those stay linked and will not be re-charged as new unlocks."
+    )
+
+  if existing_user is not None:
+    otp_code = _generate_otp()
+    expires_at = timezone.now() + timedelta(minutes=getattr(settings, "OTP_EXPIRES_MINUTES", 10))
+    LoginOTP.objects.update_or_create(
+      email=email,
+      defaults={"otp_code": otp_code, "otp_expires_at": expires_at},
+    )
+    _send_login_otp_email(email=email, otp_code=otp_code, username=existing_user.username)
+    return JsonResponse(
+      {
+        "message": ("Verification code sent. Check your email to continue." + ownership_note).strip(),
+        "email": email,
+        "otp_required": True,
+        "mode": "login",
+        "already_owned_items": owned,
+        "claimable_items": claimable,
+      },
+      status=200,
+    )
+
+  ensure_pending_signup_for_claim(email)
+  SignupOTP.objects.filter(email=email).delete()
+  signup_err = _create_and_email_signup_otp(email)
+  if signup_err is not None:
+    return signup_err
+
+  return JsonResponse(
+    {
+      "message": ("Verification code sent. Check your email to unlock access." + ownership_note).strip(),
+      "email": email,
+      "otp_required": True,
+      "mode": "signup",
+      "already_owned_items": owned,
+      "claimable_items": claimable,
+    },
+    status=200,
+  )
+
+
+@csrf_exempt
+@require_POST
+def claim_checkout_verify_otp_view(request):
+  """Verify OTP after guest pay and attach purchases to the email account."""
+  payload = _read_payload(request)
+  if payload is None:
+    return _json_error("Invalid JSON payload.")
+
+  session_id = str(payload.get("session_id", "")).strip()
+  email = str(payload.get("email", "")).strip().lower()
+  otp = str(payload.get("otp", "")).strip()
+  if not session_id:
+    return _json_error("Session ID is required.")
+  if not email or not otp:
+    return _json_error("Email and OTP are required.")
+  if len(otp) != 6 or not otp.isdigit():
+    return _json_error("OTP must be a 6-digit code.")
+
+  stripe.api_key = settings.STRIPE_SECRET_KEY
+  try:
+    session = stripe.checkout.Session.retrieve(session_id)
+  except Exception:
+    return _json_error("Invalid checkout session.", status=400)
+
+  session_meta = {}
+  raw_meta = getattr(session, "metadata", None) or {}
+  if isinstance(raw_meta, dict):
+    session_meta = {str(k): str(v) for k, v in raw_meta.items() if v is not None}
+  else:
+    for k in ("checkout_kind", "cart_items_json", "checkout_cart", "selected_plan", "playlist_id", "affiliate_id", "visitor_id", "email"):
+      try:
+        v = raw_meta[k]
+      except Exception:
+        continue
+      if v is not None:
+        session_meta[k] = str(v)
+
+  guest_err = ensure_session_is_guest_paid(session, session_meta)
+  if guest_err:
+    return _json_error(guest_err, status=400)
+
+  paid_currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
+  paid_minor_total = int(getattr(session, "amount_total", 0) or 0)
+  paid_amount = round(paid_minor_total / 100, 2)
+
+  existing_claim = GuestCheckoutClaim.objects.filter(stripe_checkout_session_id=session.id).select_related("user").first()
+  if existing_claim is not None and existing_claim.user_id:
+    claimed_email = (existing_claim.email or "").strip().lower()
+    if claimed_email and claimed_email != email:
+      return _json_error("This purchase is already linked to another email.", status=400)
+
+  user = _canonical_user_for_email(email)
+  mode = "login" if user is not None else "signup"
+
+  if mode == "login":
+    try:
+      login_otp = LoginOTP.objects.get(email=email)
+    except LoginOTP.DoesNotExist:
+      return _json_error("Verification not requested for this email.", status=404)
+    if login_otp.otp_expires_at < timezone.now():
+      login_otp.delete()
+      return _json_error("Verification code expired. Request a new code.", status=400)
+    if login_otp.otp_code != otp:
+      return _json_error("Invalid verification code.", status=400)
+    login_otp.delete()
+  else:
+    try:
+      pending_signup = PendingSignup.objects.get(email=email)
+    except PendingSignup.DoesNotExist:
+      return _json_error("No pending signup for this email.", status=404)
+    try:
+      signup_otp = SignupOTP.objects.get(email=email)
+    except SignupOTP.DoesNotExist:
+      return _json_error("Verification not requested for this email.", status=404)
+    if signup_otp.otp_expires_at < timezone.now():
+      signup_otp.delete()
+      return _json_error("Verification code expired. Request a new code.", status=400)
+    if signup_otp.otp_code != otp:
+      return _json_error("Invalid verification code.", status=400)
+    signup_otp.delete()
+
+    if User.objects.filter(username=pending_signup.username).exists():
+      pending_signup.username = unique_pending_username()
+      pending_signup.save(update_fields=["username", "updated_at"])
+    if User.objects.filter(email=pending_signup.email).exists():
+      user = _canonical_user_for_email(pending_signup.email)
+      complete_pending_signup(pending_signup)
+    else:
+      user = User(
+        username=pending_signup.username,
+        email=pending_signup.email,
+        password=pending_signup.password_hash,
+      )
+      user.save()
+      complete_pending_signup(pending_signup)
+
+  if user is None:
+    return _json_error("Unable to resolve account for this email.", status=500)
+
+  claim_and_fulfill_guest_checkout(
+    user=user,
+    session=session,
+    session_meta=session_meta,
+    paid_amount=paid_amount,
+    paid_currency=paid_currency,
+  )
+  _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
+
+  auth_token, _ = Token.objects.get_or_create(user=user)
+  af_profile = ensure_affiliate_profile_for_existing_user(user)
+  plan_sel = str(session_meta.get("selected_plan", "") or "").strip().lower()
+  playlist_id = str(session_meta.get("playlist_id", "") or "").strip()
+
+  return JsonResponse(
+    {
+      "message": "Access unlocked. Welcome to The Syndicate.",
+      "email": user.email,
+      "token": auth_token.key,
+      "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
+      "user": {"id": user.id, "username": user.username, "email": user.email},
+      "referral_ids": referral_ids_payload(af_profile),
+      "amount_paid": paid_amount,
+      "currency": paid_currency,
+      "affiliate_attribution": _affiliate_attribution_payload(session_meta),
+      "selected_plan": plan_sel or None,
+      "playlist_id": int(playlist_id) if playlist_id.isdigit() else None,
+      "needs_claim": False,
+    },
+    status=200,
+  )
 
 
 @csrf_exempt

@@ -23,6 +23,8 @@ type Props = {
   comingSoon?: boolean;
   /** Compact left-aligned hero inside vault pack / module picker modals. */
   vaultHero?: boolean;
+  /** Shows syndicate unlock-bucket badge on module/pack cards. */
+  inCart?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -165,6 +167,7 @@ export function PlanOfferCard({
   highlighted = false,
   comingSoon = false,
   vaultHero = false,
+  inCart = false,
   onDetails,
   onOpen,
 }: Props) {
@@ -261,6 +264,11 @@ export function PlanOfferCard({
               )}
             >
               {cardKind === "pack" ? "Full pack" : "Module"}
+            </div>
+          ) : null}
+          {inCart ? (
+            <div className="relative z-[6] mx-3 mt-2 inline-flex w-fit items-center rounded-full border border-cyan-300/55 bg-cyan-950/40 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.28)] sm:text-[10px]">
+              In bucket
             </div>
           ) : null}
           <div

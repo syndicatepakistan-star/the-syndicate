@@ -42,6 +42,8 @@ const pillarTitleClass: Record<CyberFrameAccent, string> = {
   cyan: 'text-cyan-100 drop-shadow-[0_0_14px_rgba(34,211,238,0.35)]',
   violet: 'text-fuchsia-100/95 drop-shadow-[0_0_14px_rgba(232,121,249,0.32)]',
   amber: 'text-amber-100 drop-shadow-[0_0_14px_rgba(251,191,36,0.28)]',
+  pink: 'text-pink-100 drop-shadow-[0_0_14px_rgba(244,114,182,0.32)]',
+  lime: 'text-lime-100 drop-shadow-[0_0_14px_rgba(163,230,53,0.3)]',
   hero: 'text-cyan-100',
   video: 'text-sky-100',
   separator: 'text-amber-100',

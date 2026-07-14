@@ -44,16 +44,28 @@ function ProgramsOfferSectionFallback({ size = "large" }: { size?: "large" | "co
   );
 }
 
-function ProgramsOfferSectionInner({ size = "large" }: { size?: "large" | "compact" }) {
+function ProgramsOfferSectionInner({
+  size = "large",
+  shellHosted = false,
+}: {
+  size?: "large" | "compact";
+  shellHosted?: boolean;
+}) {
   const searchParams = useSearchParams();
   const highlightPack = parseHighlightPack(searchParams.get("pack"));
-  return <PublicPlanOfferCards size={size} highlightPack={highlightPack} />;
+  return <PublicPlanOfferCards size={size} highlightPack={highlightPack} shellHosted={shellHosted} />;
 }
 
-export function ProgramsOfferSection({ size = "large" }: { size?: "large" | "compact" }) {
+export function ProgramsOfferSection({
+  size = "large",
+  shellHosted = false,
+}: {
+  size?: "large" | "compact";
+  shellHosted?: boolean;
+}) {
   return (
     <Suspense fallback={<ProgramsOfferSectionFallback size={size} />}>
-      <ProgramsOfferSectionInner size={size} />
+      <ProgramsOfferSectionInner size={size} shellHosted={shellHosted} />
     </Suspense>
   );
 }

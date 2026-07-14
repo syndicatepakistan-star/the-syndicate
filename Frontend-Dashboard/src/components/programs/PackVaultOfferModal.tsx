@@ -26,6 +26,7 @@ import {
   type VaultPackDisplayGroup,
 } from "@/components/programs/vaultPackCatalog";
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
+import { isUnlockCartEligible } from "@/lib/unlockCart";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
@@ -35,6 +36,8 @@ type Props = {
   purchasedSlugs: ReadonlySet<string>;
   accessTier: string | null;
   moneyMasteryActive?: boolean;
+  selectionMode?: boolean;
+  isInCart?: (plan: CheckoutOfferKey) => boolean;
   onClose: () => void;
   onDetails: (offer: PlanOfferDef) => void;
   onModuleDetails?: (offer: PlanOfferDef) => void;
@@ -49,6 +52,8 @@ export function PackVaultOfferModal({
   purchasedSlugs,
   accessTier,
   moneyMasteryActive = false,
+  selectionMode = false,
+  isInCart,
   onClose,
   onDetails,
   onModuleDetails,
@@ -114,6 +119,14 @@ export function PackVaultOfferModal({
   const packUnlocked = isVaultOfferUnlocked(packOffer, purchasedSlugs, accessTier, moneyMasteryActive);
   const isTradingPack = packOffer.plan === "trading_technical_analysis";
 
+  const resolveActionLabel = (offer: PlanOfferDef) => {
+    const unlocked = isVaultOfferUnlocked(offer, purchasedSlugs, accessTier, moneyMasteryActive);
+    if (selectionMode && !unlocked && isUnlockCartEligible(offer)) {
+      return isInCart?.(offer.plan) ? "Added" : "Add to bucket";
+    }
+    return resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive);
+  };
+
   const renderOfferCard = (offer: PlanOfferDef) => {
     const isLesson = isTradingSubmoduleSlug(offer.plan);
     return (
@@ -123,7 +136,8 @@ export function PackVaultOfferModal({
         cardKind="module"
         cardStats={isLesson ? undefined : resolveOfferCardStats(offer, "module")}
         busy={busyPlan === offer.plan}
-        actionLabel={resolveOfferActionLabel(offer, purchasedSlugs, accessTier, moneyMasteryActive)}
+        inCart={isInCart?.(offer.plan)}
+        actionLabel={resolveActionLabel(offer)}
         onDetails={() => handleModuleDetails(offer)}
         onOpen={() => handleModuleOpen(offer)}
       />
@@ -141,7 +155,8 @@ export function PackVaultOfferModal({
             cardKind="module"
             cardStats={resolveOfferCardStats(parent, "module")}
             busy={busyPlan === parent.plan}
-            actionLabel={resolveOfferActionLabel(parent, purchasedSlugs, accessTier, moneyMasteryActive)}
+            inCart={isInCart?.(parent.plan)}
+            actionLabel={resolveActionLabel(parent)}
             onDetails={() => {
               if (onExploreTradingModule) onExploreTradingModule(parent);
               else handleModuleDetails(parent);
@@ -174,7 +189,8 @@ export function PackVaultOfferModal({
             cardKind="module"
             cardStats={resolveOfferCardStats(parent, "module")}
             busy={busyPlan === parent.plan}
-            actionLabel={resolveOfferActionLabel(parent, purchasedSlugs, accessTier, moneyMasteryActive)}
+            inCart={isInCart?.(parent.plan)}
+            actionLabel={resolveActionLabel(parent)}
             onDetails={() => handleModuleDetails(parent)}
             onOpen={() => handleModuleOpen(parent)}
           />

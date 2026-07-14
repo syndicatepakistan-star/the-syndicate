@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
-  createPlaylistCheckoutSession,
   fetchPublicStreamPlaylists,
   fetchStreamPlaylists,
   type StreamPlaylistListItem,
@@ -41,9 +40,15 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { formatPrice } from "@/lib/currency";
-import { buildPlaylistCheckoutAuthHref } from "@/lib/plan-checkout";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
+import { useUnlockCartOptional } from "@/components/programs/UnlockCartContext";
+import {
+  cartItemKey,
+  isPlaylistUnlockCartEligible,
+  playlistToCartItem,
+} from "@/lib/unlockCart";
+import toast from "react-hot-toast";
 
 function playlistProgramsReturnHref(pl: StreamPlaylistListItem): string {
   const slug = pl.slug?.trim();
@@ -157,8 +162,8 @@ export function PlaylistCardsSection({
   );
   const [error, setError] = useState<string | null>(null);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
-  const [pendingCheckoutPlaylistId, setPendingCheckoutPlaylistId] = useState<number | null>(null);
   const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
+  const unlockCart = useUnlockCartOptional();
   const highlightHandledRef = useRef(false);
 
   useEffect(() => {
@@ -289,6 +294,26 @@ export function PlaylistCardsSection({
       } as CSSProperties)
     : undefined;
 
+  const requestPlaylistUnlock = (pl: StreamPlaylistListItem, cardTitle: string) => {
+    if (pl.is_unlocked) {
+      router.push(`/dashboard?section=programs&playlist=${pl.id}`);
+      return;
+    }
+    if (pl.is_coming_soon) return;
+    if (unlockCart && isPlaylistUnlockCartEligible(pl)) {
+      const thumb = resolveProgramPlaylistThumbnail(pl, null) || pl.cover_image_url || undefined;
+      const added = unlockCart.addPlaylist(pl, cardTitle, thumb || undefined);
+      if (added) {
+        toast.success(`Added to unlock bucket — ${cardTitle}`, { duration: 2800 });
+      } else {
+        toast(`Already in unlock bucket — ${cardTitle}`, { duration: 2200 });
+        unlockCart.setPanelExpanded(true);
+      }
+      return;
+    }
+    setError("This program cannot be added to the unlock bucket right now.");
+  };
+
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const cardTitle = resolveProgramPlaylistTitle(pl);
@@ -298,6 +323,7 @@ export function PlaylistCardsSection({
     const price = parseNumber(pl.price);
     const isSpotlight = highlightedPlaylistId === pl.id;
     const comingSoon = !!pl.is_coming_soon;
+    const inCart = unlockCart?.isInCartKey(cartItemKey(playlistToCartItem(pl, cardTitle))) ?? false;
     const showIdleGlow = !spotlightActive;
     const spotlightStyle = isSpotlight
       ? ({
@@ -432,57 +458,23 @@ export function PlaylistCardsSection({
                 </button>
                 <button
                   type="button"
-                  disabled={comingSoon || pendingCheckoutPlaylistId === pl.id}
+                  disabled={comingSoon}
                   onClick={() => {
                     if (comingSoon) return;
-                    void (async () => {
-                      if (pl.is_unlocked) {
-                        router.push(`/dashboard?section=programs&playlist=${pl.id}`);
-                        return;
-                      }
-                      if (!hasSimpleAuthSessionClient()) {
-                        window.location.assign(
-                          buildPlaylistCheckoutAuthHref(pl.id, playlistProgramsReturnHref(pl)),
-                        );
-                        return;
-                      }
-                      setPendingCheckoutPlaylistId(pl.id);
-                      setError(null);
-                      try {
-                        const payload = await createPlaylistCheckoutSession(pl.id, {
-                          returnBaseUrl: typeof window !== "undefined" ? window.location.origin : "",
-                        });
-                        const checkoutUrl =
-                          typeof payload.checkout_url === "string" ? payload.checkout_url.trim() : "";
-                        if (checkoutUrl) {
-                          window.location.assign(checkoutUrl);
-                          return;
-                        }
-                        if (payload.is_unlocked) {
-                          router.push(`/dashboard?section=programs&playlist=${pl.id}`);
-                          return;
-                        }
-                        window.location.assign(
-                          buildPlaylistCheckoutAuthHref(pl.id, playlistProgramsReturnHref(pl)),
-                        );
-                      } catch (e) {
-                        setError(e instanceof Error ? e.message : "Could not start checkout.");
-                      } finally {
-                        setPendingCheckoutPlaylistId((current) => (current === pl.id ? null : current));
-                      }
-                    })();
+                    requestPlaylistUnlock(pl, cardTitle);
                   }}
                   className={cn(
                     "min-w-0 rounded-xl border border-[#caa724]/90 bg-[linear-gradient(135deg,rgba(202,167,36,0.28),rgba(98,73,11,0.98))] px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-[#ffe9a3] shadow-[0_0_20px_rgba(202,167,36,0.6),inset_0_0_0_1px_rgba(202,167,36,0.35)] transition hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(202,167,36,0.9),0_0_52px_rgba(202,167,36,0.5),inset_0_0_0_1px_rgba(202,167,36,0.55)] sm:px-2 sm:py-2 sm:tracking-[0.15em]",
-                    comingSoon && "cursor-not-allowed opacity-60 hover:scale-100"
+                    comingSoon && "cursor-not-allowed opacity-60 hover:scale-100",
+                    inCart && "border-cyan-300/70 text-cyan-100",
                   )}
                 >
                   {comingSoon
                     ? "Coming Soon"
-                    : pendingCheckoutPlaylistId === pl.id
-                      ? "Loading..."
-                      : pl.is_unlocked
-                        ? "Open Program"
+                    : pl.is_unlocked
+                      ? "Open Program"
+                      : inCart
+                        ? "In bucket"
                         : "Unlock"}
                 </button>
               </div>

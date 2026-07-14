@@ -296,6 +296,18 @@
   line-height: 1.4;
 }
 
+.gaming-benefit-bullets {
+  margin: 0.3rem 0 0;
+  padding: 0 0 0 1rem;
+  list-style: disc;
+  font-size: clamp(11px, 1.4vw, 13px);
+  line-height: 1.4;
+}
+
+.gaming-benefit-bullets li {
+  margin: 0.18rem 0;
+}
+
 /* Nested inside Money Mastery / Knight plan cards */
 .gaming-benefit-intro {
   margin: 0;

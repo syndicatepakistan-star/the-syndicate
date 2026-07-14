@@ -8,6 +8,8 @@ export type GamingBenefitItem = {
   tone: GamingBenefitTone;
   title: string;
   desc: string;
+  /** Optional bullet list (preferred over `desc` when present). */
+  bullets?: readonly string[];
 };
 
 type FrameTone = "green" | "cyan";
@@ -63,7 +65,15 @@ export function GamingBenefitCards({
             </span>
             <div className="gaming-benefit-copy">
               <strong>{item.title}</strong>
-              <span>{item.desc}</span>
+              {item.bullets && item.bullets.length > 0 ? (
+                <ul className="gaming-benefit-bullets">
+                  {item.bullets.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <span>{item.desc}</span>
+              )}
             </div>
           </article>
         ))}

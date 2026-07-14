@@ -113,7 +113,7 @@
   margin: 0;
   max-width: 72ch;
   font-family: var(--font-body);
-  font-size: clamp(15px, 1.9vw, 18px);
+  font-size: calc(clamp(15px, 1.9vw, 18px) + 10pt);
   font-weight: 500;
   line-height: 1.65;
   letter-spacing: 0.02em;
@@ -399,6 +399,25 @@
   font-size: clamp(14px, 1.75vw, 16px);
   line-height: 1.55;
   color: rgba(203, 213, 225, 0.88);
+}
+
+.elite-benefit-detail__bullets {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  list-style: disc;
+  font-family: var(--font-body);
+  font-size: calc(clamp(14px, 1.75vw, 16px) + 2pt);
+  line-height: 1.5;
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.elite-benefit-detail__bullets li {
+  margin: 0.28rem 0;
+  padding-left: 0.15rem;
+}
+
+.elite-benefit-detail__bullets li::marker {
+  color: rgba(148, 163, 184, 0.85);
 }
 
 @media (prefers-reduced-motion: reduce) {

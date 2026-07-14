@@ -33,7 +33,8 @@ const itemVariants = {
 };
 
 function BenefitItem({ item, index }: { item: GamingBenefitItem; index: number }) {
-  const showDesc = item.desc.trim() !== item.title.trim();
+  const hasBullets = Boolean(item.bullets && item.bullets.length > 0);
+  const showDesc = !hasBullets && item.desc.trim() !== item.title.trim();
 
   return (
     <motion.article
@@ -50,7 +51,15 @@ function BenefitItem({ item, index }: { item: GamingBenefitItem; index: number }
         <strong className={cn("elite-benefit-detail__heading", `elite-benefit-detail__heading--${item.tone}`)}>
           {item.title}
         </strong>
-        {showDesc ? <span className="elite-benefit-detail__desc">{item.desc}</span> : null}
+        {hasBullets ? (
+          <ul className="elite-benefit-detail__bullets">
+            {item.bullets!.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        ) : showDesc ? (
+          <span className="elite-benefit-detail__desc">{item.desc}</span>
+        ) : null}
       </div>
     </motion.article>
   );

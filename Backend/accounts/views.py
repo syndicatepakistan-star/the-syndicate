@@ -1510,6 +1510,25 @@ def checkout_success_view(request):
       parsed_token = _parse_signup_token(signup_token_raw)
       if parsed_token:
         pending_signup = PendingSignup.objects.filter(token=parsed_token).first()
+  from accounts.checkout_fulfillment import (
+    checkout_success_json_response,
+    fulfill_checkout_session_for_user,
+    resolve_checkout_user_from_metadata,
+  )
+
+  # Ensure cart metadata is present for all fulfillment paths (StripeObject edge cases).
+  if "cart_items_json" not in session_meta or "checkout_cart" not in session_meta:
+    raw_meta = getattr(session, "metadata", None) or {}
+    for meta_key in ("cart_items_json", "checkout_cart", "playlist_slug", "playlist_id", "selected_plan"):
+      if meta_key in session_meta:
+        continue
+      try:
+        raw_val = raw_meta[meta_key] if raw_meta else ""
+      except Exception:
+        raw_val = ""
+      if raw_val:
+        session_meta[meta_key] = str(raw_val)
+
   if pending_signup is not None:
     existing_user = User.objects.filter(email=pending_signup.email).first()
     if existing_user is not None:
@@ -1527,48 +1546,22 @@ def checkout_success_view(request):
       )
       user.save()
     complete_pending_signup(pending_signup)
-    playlist_id = str(session_meta.get("playlist_id", "")).strip()
-    if playlist_id.isdigit():
-      playlist = StreamPlaylist.objects.filter(id=int(playlist_id)).first()
-      if playlist is not None:
-        purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
-          user=user,
-          playlist=playlist,
-          defaults={
-            "status": StreamPlaylistPurchase.Status.PAID,
-            "stripe_session_id": session.id,
-            "stripe_checkout_session_id": session.id,
-            "amount_paid": playlist.price,
-            "currency": settings.DEFAULT_CURRENCY,
-            "paid_at": timezone.now(),
-          },
-        )
-        purchase.status = StreamPlaylistPurchase.Status.PAID
-        purchase.stripe_session_id = session.id
-        purchase.stripe_checkout_session_id = session.id
-        purchase.amount_paid = playlist.price
-        purchase.currency = settings.DEFAULT_CURRENCY
-        purchase.paid_at = timezone.now()
-        purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
-    plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
-    auth_token, _ = Token.objects.get_or_create(user=user)
-    referral_ids = _safe_affiliate_referral_ids(user)
-    _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
-
-    return JsonResponse(
-      {
-        "message": "Payment successful.",
-        "email": user.email,
-        "token": auth_token.key,
-        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
-        "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids,
-        "amount_paid": paid_amount,
-        "currency": paid_currency,
-        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
-      },
-      status=200,
+    plan_sel, playlist_id, was_recorded = fulfill_checkout_session_for_user(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+    )
+    return checkout_success_json_response(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+      plan_sel=plan_sel,
+      playlist_id=playlist_id,
+      was_already_recorded=was_recorded,
     )
 
   returning = ReturningCheckout.objects.filter(
@@ -1578,47 +1571,22 @@ def checkout_success_view(request):
     user = _canonical_user_for_email(returning.email)
     if user is None:
       return _json_error("No account found for this checkout email.", status=404)
-    playlist_id = str(session_meta.get("playlist_id", "")).strip()
-    if playlist_id.isdigit():
-      playlist = StreamPlaylist.objects.filter(id=int(playlist_id)).first()
-      if playlist is not None:
-        purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
-          user=user,
-          playlist=playlist,
-          defaults={
-            "status": StreamPlaylistPurchase.Status.PAID,
-            "stripe_session_id": session.id,
-            "stripe_checkout_session_id": session.id,
-            "amount_paid": playlist.price,
-            "currency": settings.DEFAULT_CURRENCY,
-            "paid_at": timezone.now(),
-          },
-        )
-        purchase.status = StreamPlaylistPurchase.Status.PAID
-        purchase.stripe_session_id = session.id
-        purchase.stripe_checkout_session_id = session.id
-        purchase.amount_paid = playlist.price
-        purchase.currency = settings.DEFAULT_CURRENCY
-        purchase.paid_at = timezone.now()
-        purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
-    plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
-    auth_token, _ = Token.objects.get_or_create(user=user)
-    referral_ids = _safe_affiliate_referral_ids(user)
-    _record_checkout_affiliate_sale(session, session_meta, returning.email, paid_amount, paid_currency)
-    return JsonResponse(
-      {
-        "message": "Payment successful. Thank you for your purchase.",
-        "email": returning.email,
-        "token": auth_token.key,
-        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
-        "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids,
-        "amount_paid": paid_amount,
-        "currency": paid_currency,
-        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
-      },
-      status=200,
+    plan_sel, playlist_id, was_recorded = fulfill_checkout_session_for_user(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+    )
+    return checkout_success_json_response(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+      plan_sel=plan_sel,
+      playlist_id=playlist_id,
+      was_already_recorded=was_recorded,
     )
 
   uid_raw = str(session_meta.get("user_id", "")).strip()
@@ -1628,59 +1596,24 @@ def checkout_success_view(request):
       user = User.objects.get(pk=int(uid_raw))
     except User.DoesNotExist:
       return _json_error("Account not found for this payment.", status=404)
-    playlist_id = str(session_meta.get("playlist_id", "")).strip()
-    if playlist_id.isdigit():
-      playlist = StreamPlaylist.objects.filter(id=int(playlist_id)).first()
-      if playlist is not None:
-        purchase, _ = StreamPlaylistPurchase.objects.get_or_create(
-          user=user,
-          playlist=playlist,
-          defaults={
-            "status": StreamPlaylistPurchase.Status.PAID,
-            "stripe_session_id": session.id,
-            "stripe_checkout_session_id": session.id,
-            "amount_paid": playlist.price,
-            "currency": settings.DEFAULT_CURRENCY,
-            "paid_at": timezone.now(),
-          },
-        )
-        purchase.status = StreamPlaylistPurchase.Status.PAID
-        purchase.stripe_session_id = session.id
-        purchase.stripe_checkout_session_id = session.id
-        purchase.amount_paid = playlist.price
-        purchase.currency = settings.DEFAULT_CURRENCY
-        purchase.paid_at = timezone.now()
-        purchase.save(update_fields=["status", "stripe_checkout_session_id", "amount_paid", "currency", "paid_at", "updated_at"])
-    plan_sel = str(session_meta.get("selected_plan", "")).strip().lower()
-    _safe_apply_plan_and_record_purchase(user, session, plan_sel, paid_amount, paid_currency)
-    auth_token, _ = Token.objects.get_or_create(user=user)
-    referral_ids = _safe_affiliate_referral_ids(user)
-    _record_checkout_affiliate_sale(session, session_meta, user.email, paid_amount, paid_currency)
-    sid = str(getattr(session, "id", "") or "").strip()
-    was_recorded = bool(sid) and UserPlanPurchase.objects.filter(stripe_checkout_session_id=sid).exists()
-    return JsonResponse(
-      {
-        "message": "Payment successful.",
-        "email": user.email,
-        "token": auth_token.key,
-        "redirect_url": _checkout_success_redirect_path(plan_sel, playlist_id),
-        "user": {"id": user.id, "username": user.username, "email": user.email},
-        "referral_ids": referral_ids,
-        "amount_paid": paid_amount,
-        "currency": paid_currency,
-        "affiliate_attribution": _affiliate_attribution_payload(session_meta),
-        "selected_plan": plan_sel or None,
-        "playlist_id": int(playlist_id) if playlist_id.isdigit() else None,
-        "already_purchased": was_recorded,
-      },
-      status=200,
+    # Critical: multi-item cart unlocks live in cart_items_json — must use shared fulfill.
+    plan_sel, playlist_id, was_recorded = fulfill_checkout_session_for_user(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
     )
-
-  from accounts.checkout_fulfillment import (
-    checkout_success_json_response,
-    fulfill_checkout_session_for_user,
-    resolve_checkout_user_from_metadata,
-  )
+    return checkout_success_json_response(
+      user,
+      session,
+      session_meta,
+      paid_amount=paid_amount,
+      paid_currency=paid_currency,
+      plan_sel=plan_sel,
+      playlist_id=playlist_id,
+      was_already_recorded=was_recorded,
+    )
 
   fallback_user = resolve_checkout_user_from_metadata(session_meta)
   if fallback_user is not None:
@@ -2114,6 +2047,71 @@ def stripe_webhook_view(request):
               _expires_from_period_end(period_end),
               stripe_subscription_id=sub_id,
             )
+    elif mode == "payment":
+      # Safety net: grant one-time cart/program entitlements even if the browser
+      # never hits /checkout/success. Never auto-fulfill guest sessions — OTP claim
+      # must prove email ownership first.
+      meta = data_object.get("metadata") or {}
+      if not isinstance(meta, dict):
+        meta = {}
+      checkout_kind = str(meta.get("checkout_kind", "") or "").strip().lower()
+      payment_status = str(data_object.get("payment_status", "") or "").strip().lower()
+      session_id = str(data_object.get("id", "") or "").strip()
+      if checkout_kind != "guest" and payment_status == "paid" and session_id:
+        try:
+          session = stripe.checkout.Session.retrieve(session_id)
+          if checkout_session_is_paid(session):
+            from accounts.checkout_fulfillment import (
+              fulfill_checkout_session_for_user,
+              resolve_checkout_user_from_metadata,
+            )
+
+            raw_session_meta = getattr(session, "metadata", None)
+            if isinstance(raw_session_meta, dict):
+              session_meta = {str(k): str(v) for k, v in raw_session_meta.items() if v is not None}
+            elif raw_session_meta:
+              session_meta = {}
+              for meta_key in (
+                "checkout_kind",
+                "user_id",
+                "email",
+                "selected_plan",
+                "playlist_id",
+                "playlist_slug",
+                "cart_items_json",
+                "checkout_cart",
+                "signup_token",
+                "returning_token",
+                "affiliate_id",
+                "visitor_id",
+              ):
+                try:
+                  raw_val = raw_session_meta[meta_key]
+                except Exception:
+                  raw_val = None
+                if raw_val is not None:
+                  session_meta[meta_key] = str(raw_val)
+            else:
+              session_meta = {str(k): str(v) for k, v in meta.items() if v is not None}
+            if not session_meta:
+              session_meta = {str(k): str(v) for k, v in meta.items() if v is not None}
+            user = resolve_checkout_user_from_metadata(session_meta)
+            if user is not None:
+              paid_currency = str(getattr(session, "currency", settings.DEFAULT_CURRENCY) or settings.DEFAULT_CURRENCY).lower()
+              paid_minor_total = int(getattr(session, "amount_total", 0) or 0)
+              paid_amount = round(paid_minor_total / 100, 2)
+              fulfill_checkout_session_for_user(
+                user,
+                session,
+                session_meta,
+                paid_amount=paid_amount,
+                paid_currency=paid_currency,
+              )
+        except Exception:
+          logging.getLogger(__name__).exception(
+            "stripe webhook payment fulfill failed session_id=%s",
+            session_id,
+          )
 
   if event_type in ("invoice.paid", "customer.subscription.updated"):
     sub_id = str(data_object.get("subscription") or data_object.get("id") or "").strip()

@@ -21,6 +21,7 @@ import {
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { CheckoutClaimForm, type UnlockedProgramItem } from "@/components/syndicate-otp/CheckoutClaimForm";
+import { writeUnlockCartToStorage } from "@/lib/unlockCart";
 import toast, { Toaster } from "react-hot-toast";
 
 const SYNDICATE_URL =
@@ -88,6 +89,39 @@ function toNumber(value: unknown): number | null {
 function looksLikeHtml(text: string): boolean {
   const t = text.trim().toLowerCase();
   return t.startsWith("<!doctype html") || t.startsWith("<html");
+}
+
+/** Clear unlock bucket immediately (success page may not mount UnlockCartProvider). */
+function clearUnlockCartAfterPurchase() {
+  if (typeof window === "undefined") return;
+  writeUnlockCartToStorage([]);
+  try {
+    window.sessionStorage.setItem("plan_checkout_confirmed", "1");
+    window.sessionStorage.setItem("playlist_checkout_confirmed", "1");
+  } catch {
+    // Ignore storage exceptions.
+  }
+  window.dispatchEvent(new Event("plan-checkout-confirmed"));
+  window.dispatchEvent(new Event("playlist-checkout-confirmed"));
+}
+
+function buildLoggedInCheckoutRedirect(opts: {
+  origin: string;
+  purchasedPlan: string;
+  playlistId: number | null;
+  fallbackUrl: string;
+}): string {
+  const { origin, purchasedPlan, playlistId, fallbackUrl } = opts;
+  const url = new URL(fallbackUrl, origin);
+  url.searchParams.set("section", "programs");
+  url.searchParams.set("plan_checkout", "success");
+  if (purchasedPlan) {
+    url.searchParams.set("plan", purchasedPlan);
+  }
+  if (playlistId && playlistId > 0) {
+    url.searchParams.set("playlist", String(playlistId));
+  }
+  return url.toString();
 }
 
 export default function CheckoutSuccessScreen({
@@ -314,43 +348,54 @@ export default function CheckoutSuccessScreen({
         )
           .trim()
           .toLowerCase();
+        const responsePlaylistId =
+          typeof data.playlist_id === "number" && data.playlist_id > 0 ? data.playlist_id : null;
 
         let nextUrl =
           typeof window !== "undefined"
             ? resolvePostOtpAppRedirect(data.redirect_url)
             : SYNDICATE_URL;
 
+        // Always clear bucket after confirmed paid unlock (logged-in path skips claim UI).
+        clearUnlockCartAfterPurchase();
+
         if (purchasedPlan && typeof window !== "undefined") {
           clearVaultPlaylistMapCache();
           clearUnlockCelebrationStorage();
+          let resolvedPlaylistId: number | null = responsePlaylistId;
           if (isVaultPackKey(purchasedPlan)) {
             try {
               const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-              const playlistId = resolveVaultPackPlaylistId(purchasedPlan, map);
-              if (playlistId) {
-                nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
-              } else {
-                nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
-              }
+              resolvedPlaylistId = resolveVaultPackPlaylistId(purchasedPlan, map) || resolvedPlaylistId;
+              nextUrl = resolvedPlaylistId
+                ? `${window.location.origin}/dashboard?section=programs&playlist=${resolvedPlaylistId}`
+                : `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
             } catch {
               nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
             }
           } else {
             try {
               const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-              const playlistId = vaultPlaylistIdForPlan(purchasedPlan, map);
-              if (playlistId) {
-                nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${playlistId}`;
-              } else {
-                nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
-              }
+              resolvedPlaylistId = vaultPlaylistIdForPlan(purchasedPlan, map) || resolvedPlaylistId;
             } catch {
-              nextUrl = `${window.location.origin}/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(purchasedPlan)}`;
+              // Keep response playlist id if map fails.
             }
+            nextUrl = `${window.location.origin}/dashboard?section=programs`;
           }
-        } else if (typeof data.playlist_id === "number" && data.playlist_id > 0) {
+          nextUrl = buildLoggedInCheckoutRedirect({
+            origin: window.location.origin,
+            purchasedPlan,
+            playlistId: resolvedPlaylistId,
+            fallbackUrl: nextUrl,
+          });
+        } else if (responsePlaylistId && typeof window !== "undefined") {
           clearUnlockCelebrationStorage();
-          nextUrl = `${window.location.origin}/dashboard?section=programs&playlist=${data.playlist_id}`;
+          nextUrl = buildLoggedInCheckoutRedirect({
+            origin: window.location.origin,
+            purchasedPlan: "",
+            playlistId: responsePlaylistId,
+            fallbackUrl: `${window.location.origin}/dashboard?section=programs&playlist=${responsePlaylistId}`,
+          });
         }
 
         const attribution = getAffiliateAttribution();

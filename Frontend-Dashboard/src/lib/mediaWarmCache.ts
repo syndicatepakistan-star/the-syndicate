@@ -45,8 +45,20 @@ export const MARKETING_VIDEO_URLS = [
   "/assets/video.mp4",
 
   "/assets/bg-video%201.mp4",
-  "/assets/video2.mp4",
+  // NOTE: /assets/video2.mp4 (~49 MB) is intentionally NOT pre-warmed — the pricing
+  // section's ViewportDecorVideo loads it on demand when scrolled into view.
 ] as const;
+
+/** Phones / data-saver connections skip the background video warmup entirely. */
+function shouldSkipHeavyVideoWarmup(): boolean {
+  if (typeof window === "undefined") return true;
+  if (window.matchMedia("(max-width: 767px)").matches) return true;
+  type NetworkInformation = { saveData?: boolean; effectiveType?: string };
+  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
+  if (connection?.saveData) return true;
+  const effectiveType = connection?.effectiveType ?? "";
+  return effectiveType === "2g" || effectiveType === "slow-2g" || effectiveType === "3g";
+}
 
 
 
@@ -378,6 +390,12 @@ export function scheduleMarketingMediaWarmup(options?: { deferProgramsBand?: boo
 
 
   void warmImage(MARKETING_IMAGE_URLS[0]);
+
+  if (shouldSkipHeavyVideoWarmup()) {
+    // Phones / slow connections: never bulk-download background MP4s. Videos that
+    // actually render still load on demand via ViewportDecorVideo.
+    return;
+  }
 
   if (!options?.deferProgramsBand) {
     void warmVideo(PROGRAMS_SECTION_VIDEO);

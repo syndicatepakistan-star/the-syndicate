@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import LetterGlitch from "@/components/quiz-funnel/LetterGlitch";
+import DeferredLetterGlitch from "@/components/quiz-funnel/DeferredLetterGlitch";
 import { buildPageMetadata } from "@/lib/seo";
 import "./quiz-funnel.css";
 
@@ -15,7 +15,7 @@ export default function QuizLayout({ children }: { children: React.ReactNode }) 
     <div className="quiz-funnel-root">
       <div className="global-letter-glitch">
         <div className="quiz-glitch-placeholder" aria-hidden />
-        <LetterGlitch
+        <DeferredLetterGlitch
           glitchColors={["#24345f", "#2dc6e8", "#be992e"]}
           glitchSpeed={55}
           centerVignette

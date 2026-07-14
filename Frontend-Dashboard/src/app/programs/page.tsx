@@ -28,6 +28,7 @@ export default async function ProgramsPage() {
         <div className="absolute bottom-[-10%] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-cyan-400/15 blur-[130px] sm:h-[560px] sm:w-[560px]" />
       </div>
       <NavApp />
+      <main>
       <ProgramsUnlockShell>
       <section
         id="syndicate-elite-offers"
@@ -58,6 +59,7 @@ export default async function ProgramsPage() {
       </section>
       </ProgramsUnlockShell>
       <PublicGoalPathSection playlists={playlists} alwaysVisible />
+      </main>
       <SiteFooter />
     </div>
   )

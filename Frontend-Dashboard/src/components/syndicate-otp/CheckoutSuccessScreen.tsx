@@ -21,7 +21,7 @@ import {
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { CheckoutClaimForm, type UnlockedProgramItem } from "@/components/syndicate-otp/CheckoutClaimForm";
-import { writeUnlockCartToStorage } from "@/lib/unlockCart";
+import { clearUnlockCartStorage } from "@/lib/unlockCart";
 import toast, { Toaster } from "react-hot-toast";
 
 const SYNDICATE_URL =
@@ -94,7 +94,7 @@ function looksLikeHtml(text: string): boolean {
 /** Clear unlock bucket immediately (success page may not mount UnlockCartProvider). */
 function clearUnlockCartAfterPurchase() {
   if (typeof window === "undefined") return;
-  writeUnlockCartToStorage([]);
+  clearUnlockCartStorage();
   try {
     window.sessionStorage.setItem("plan_checkout_confirmed", "1");
     window.sessionStorage.setItem("playlist_checkout_confirmed", "1");

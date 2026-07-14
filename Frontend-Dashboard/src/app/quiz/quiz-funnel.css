@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Thryon";
-  src: url("/Thryon.otf") format("opentype");
+  src: url("/fonts/Thryon.otf") format("opentype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -2220,7 +2220,9 @@ body.result-view .section-cards-grid {
 @media (max-width: 640px) {
   .page-wrap {
     padding: 12px;
-    align-items: center;
+    /* Top-align on phones: the card is taller than the viewport, so centering only
+       causes layout shift (CLS) while content streams in — no visual difference. */
+    align-items: flex-start;
   }
 
   body.result-view .page-wrap.result-page-wrap {

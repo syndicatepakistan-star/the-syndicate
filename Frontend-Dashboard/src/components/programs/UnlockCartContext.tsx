@@ -11,9 +11,14 @@ import {
 } from "react";
 import type { CheckoutOfferKey, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+import { fetchStreamPlaylists } from "@/lib/streaming-api";
+import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
 import {
+  UNLOCK_CART_STORAGE_KEY,
   cartContainsKey,
   cartItemKey,
+  clearUnlockCartStorage,
+  filterOwnedUnlockCartItems,
   formatCartTotal,
   offerToCartItem,
   playlistToCartItem,
@@ -36,6 +41,10 @@ type UnlockCartContextValue = {
   toggleItem: (offer: PlanOfferDef) => void;
   togglePlaylist: (playlist: StreamPlaylistListItem, title: string, imageSrc?: string) => void;
   clearCart: () => void;
+  pruneOwnedItems: (owned: {
+    planSlugs?: ReadonlySet<string> | readonly string[];
+    unlockedPlaylistIds?: ReadonlySet<number> | readonly number[];
+  }) => void;
   isInCart: (plan: CheckoutOfferKey) => boolean;
   isInCartKey: (key: string) => boolean;
   totalLabel: string;
@@ -44,6 +53,20 @@ type UnlockCartContextValue = {
 
 const UnlockCartContext = createContext<UnlockCartContextValue | null>(null);
 
+function consumeCheckoutConfirmedFlags(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const planFlag = window.sessionStorage.getItem("plan_checkout_confirmed");
+    const playlistFlag = window.sessionStorage.getItem("playlist_checkout_confirmed");
+    if (!planFlag && !playlistFlag) return false;
+    window.sessionStorage.removeItem("plan_checkout_confirmed");
+    window.sessionStorage.removeItem("playlist_checkout_confirmed");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function UnlockCartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<UnlockCartItem[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -51,8 +74,37 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
   const [checkoutPulse, setCheckoutPulse] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setSelectionMode(false);
+    setPanelExpanded(false);
+    setCheckoutPulse(false);
+    clearUnlockCartStorage();
+  }, []);
+
+  const pruneOwnedItems = useCallback(
+    (owned: {
+      planSlugs?: ReadonlySet<string> | readonly string[];
+      unlockedPlaylistIds?: ReadonlySet<number> | readonly number[];
+    }) => {
+      setItems((prev) => {
+        const next = filterOwnedUnlockCartItems(prev, owned);
+        return next.length === prev.length ? prev : next;
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
-    setItems(readUnlockCartFromStorage());
+    if (consumeCheckoutConfirmedFlags()) {
+      clearUnlockCartStorage();
+      setItems([]);
+      setSelectionMode(false);
+      setPanelExpanded(false);
+      setCheckoutPulse(false);
+    } else {
+      setItems(readUnlockCartFromStorage());
+    }
     setHydrated(true);
   }, []);
 
@@ -66,13 +118,6 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
     }
   }, [hydrated, items]);
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-    setSelectionMode(false);
-    setPanelExpanded(false);
-    setCheckoutPulse(false);
-  }, []);
-
   useEffect(() => {
     const onCheckoutConfirmed = () => {
       clearCart();
@@ -84,6 +129,56 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
     };
   }, [clearCart]);
+
+  // Other tabs clearing the bucket should sync immediately.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.sessionStorage) return;
+      if (event.key !== UNLOCK_CART_STORAGE_KEY) return;
+      if (event.newValue && event.newValue !== "[]") return;
+      clearCart();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [clearCart]);
+
+  // Safety net: drop already-unlocked programs that were left in the bucket.
+  useEffect(() => {
+    if (!hydrated) return;
+    let cancelled = false;
+
+    const pruneFromServer = async () => {
+      try {
+        const [slugs, playlists] = await Promise.all([
+          fetchPurchasedPlanSlugs().catch(() => [] as string[]),
+          fetchStreamPlaylists().catch(() => [] as StreamPlaylistListItem[]),
+        ]);
+        if (cancelled) return;
+        const unlockedPlaylistIds = playlists
+          .filter((pl) => !!pl.is_unlocked)
+          .map((pl) => pl.id)
+          .filter((id) => Number.isFinite(id) && id > 0);
+        pruneOwnedItems({ planSlugs: slugs, unlockedPlaylistIds });
+      } catch {
+        // Ownership prune is best-effort; checkout clear path remains primary.
+      }
+    };
+
+    void pruneFromServer();
+
+    const onCheckoutConfirmed = () => {
+      window.setTimeout(() => {
+        void pruneFromServer();
+      }, 400);
+    };
+    window.addEventListener("plan-checkout-confirmed", onCheckoutConfirmed);
+    window.addEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("plan-checkout-confirmed", onCheckoutConfirmed);
+      window.removeEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
+    };
+  }, [hydrated, pruneOwnedItems]);
 
   const pulseBucket = useCallback(() => {
     setSelectionMode(true);
@@ -109,6 +204,7 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
 
   const addPlaylist = useCallback(
     (playlist: StreamPlaylistListItem, title: string, imageSrc?: string) => {
+      if (playlist.is_unlocked) return false;
       const key = cartItemKey(playlistToCartItem(playlist, title, imageSrc));
       let added = false;
       setItems((prev) => {
@@ -149,6 +245,11 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
 
   const togglePlaylist = useCallback(
     (playlist: StreamPlaylistListItem, title: string, imageSrc?: string) => {
+      if (playlist.is_unlocked) {
+        const key = cartItemKey(playlistToCartItem(playlist, title, imageSrc));
+        setItems((prev) => prev.filter((item) => cartItemKey(item) !== key));
+        return;
+      }
       const key = cartItemKey(playlistToCartItem(playlist, title, imageSrc));
       setItems((prev) => {
         if (cartContainsKey(prev, key)) {
@@ -183,6 +284,7 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       toggleItem,
       togglePlaylist,
       clearCart,
+      pruneOwnedItems,
       isInCart,
       isInCartKey,
       totalLabel: formatCartTotal(items),
@@ -197,6 +299,7 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       isInCartKey,
       items,
       panelExpanded,
+      pruneOwnedItems,
       removeByKey,
       removeItem,
       selectionMode,

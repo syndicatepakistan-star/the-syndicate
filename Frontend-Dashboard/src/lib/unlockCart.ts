@@ -197,6 +197,53 @@ export function writeUnlockCartToStorage(items: readonly UnlockCartItem[]): void
   }
 }
 
+/** Drop cart rows the user already owns (plan slugs and/or unlocked playlists). */
+export function filterOwnedUnlockCartItems(
+  items: readonly UnlockCartItem[],
+  owned: {
+    planSlugs?: ReadonlySet<string> | readonly string[];
+    unlockedPlaylistIds?: ReadonlySet<number> | readonly number[];
+  },
+): UnlockCartItem[] {
+  const slugSet =
+    owned.planSlugs instanceof Set
+      ? owned.planSlugs
+      : new Set(
+          Array.from(owned.planSlugs ?? [])
+            .map((s) => String(s).trim().toLowerCase())
+            .filter(Boolean),
+        );
+  const playlistSet =
+    owned.unlockedPlaylistIds instanceof Set
+      ? owned.unlockedPlaylistIds
+      : new Set(
+          Array.from(owned.unlockedPlaylistIds ?? [])
+            .map((id) => Number(id))
+            .filter((id) => Number.isFinite(id) && id > 0),
+        );
+
+  return items.filter((item) => {
+    if (item.kind === "plan") {
+      const plan = String(item.plan || "").trim().toLowerCase();
+      if (!plan) return true;
+      if (slugSet.has(plan)) return false;
+      if (item.vaultPackPlan && slugSet.has(String(item.vaultPackPlan).trim().toLowerCase())) return false;
+      return true;
+    }
+    return !playlistSet.has(item.playlistId);
+  });
+}
+
+export function clearUnlockCartStorage(): void {
+  writeUnlockCartToStorage([]);
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem("syndicate:unlock-cart:v1");
+  } catch {
+    // Ignore storage exceptions.
+  }
+}
+
 export function cartContainsKey(items: readonly UnlockCartItem[], key: string): boolean {
   return items.some((item) => cartItemKey(item) === key);
 }

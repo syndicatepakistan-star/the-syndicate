@@ -131,6 +131,11 @@ function PublicPlanOfferCardsInner({
   }, [reloadUnlockState]);
 
   useEffect(() => {
+    if (!purchasedSlugs.size) return;
+    unlockCart.pruneOwnedItems({ planSlugs: purchasedSlugs });
+  }, [purchasedSlugs, unlockCart.pruneOwnedItems]);
+
+  useEffect(() => {
     const onCheckoutConfirmed = () => {
       void reloadUnlockState();
     };

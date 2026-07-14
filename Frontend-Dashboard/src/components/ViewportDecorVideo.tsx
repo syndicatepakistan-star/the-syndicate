@@ -34,7 +34,7 @@ function usePreferStaticBackdrop(enabled: boolean): boolean {
       setPreferStatic(false);
       return;
     }
-    const narrow = window.matchMedia("(max-width: 479px)");
+    const narrow = window.matchMedia("(max-width: 767px)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setPreferStatic(narrow.matches || reduced.matches);
     sync();

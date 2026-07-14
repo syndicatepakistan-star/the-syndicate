@@ -1,0 +1,30 @@
+# The Syndicate
+
+> The Syndicate (https://the-syndicate.com) is an online business education platform.
+> It sells lifetime-access programs on money mastery, trading technical analysis,
+> agentic AI automation, AI content automation (faceless YouTube), business models,
+> and business behaviour psychology. Content is delivered through a member dashboard
+> after one-time purchase; there is also a Knight membership tier and an affiliate program.
+
+## Public pages
+
+- [Home](https://the-syndicate.com/): brand overview, elite programs, pricing, FAQ
+- [Programs](https://the-syndicate.com/programs): full catalog — Money Mastery vault, Trading Advanced Technical Analysis (Scalpel Protocol, Strategies / Setups / Secrets of a Master Trader), Agentic AI pack, AI Content Automation pack, business model courses
+- [What You Get](https://the-syndicate.com/what-you-get): membership benefits and deliverables
+- [Our Methods](https://the-syndicate.com/our-methods): teaching doctrine and approach
+- [Our Founder](https://the-syndicate.com/our-founder): founder story
+- [Membership](https://the-syndicate.com/membership): The Knight tier offer
+- [Affiliate](https://the-syndicate.com/affiliate): affiliate / partner program with tracked commissions
+- [Quiz](https://the-syndicate.com/quiz): The Syndicate Diagnosis — business archetype audit
+
+## Key facts
+
+- Programs are one-time purchases with lifetime access (no subscription for vault packs).
+- Trading Advanced Technical Analysis: $150 full pack, or 4 modules at $50 each, or single lessons.
+- Agentic AI and AI Content Automation packs: $150 each full pack, individual courses available.
+- Money Mastery bundle: flagship $333 vault.
+- Login, dashboard, and checkout areas are private and not for indexing.
+
+## Contact
+
+- Website: https://the-syndicate.com

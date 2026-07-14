@@ -8,6 +8,7 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
+import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 type Props = {
   offer: PlanOfferDef;
@@ -312,7 +313,13 @@ export function PlanOfferCard({
               )}
             >
               <img
-                src={offer.imageSrc}
+                src={nextOptimizedImageUrl(offer.imageSrc, isModule ? 480 : 828)}
+                srcSet={nextOptimizedImageSrcSet(offer.imageSrc)}
+                sizes={
+                  isModule
+                    ? "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 320px"
+                    : "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 420px"
+                }
                 alt={offer.title}
                 loading={isModule || offer.plan !== "bundle" ? "lazy" : "eager"}
                 fetchPriority={offer.plan === "bundle" ? "high" : "low"}

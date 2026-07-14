@@ -500,6 +500,7 @@ export function PricingPage({
         <ViewportDecorVideo
           src="/assets/video2.mp4"
           className="absolute inset-0 h-full min-h-full w-full min-w-full object-cover opacity-10"
+          preferStaticOnMobile
         />
       </div>
       <div className="relative z-[1] mx-auto flex w-full max-w-none flex-col items-center">

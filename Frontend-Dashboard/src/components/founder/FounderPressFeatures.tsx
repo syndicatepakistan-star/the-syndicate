@@ -34,6 +34,19 @@ const ARTICLE_TITLE_LINES: Record<string, string[]> = {
   ],
 };
 
+/** Fixed-height frame: full screenshot visible (scaled), still aligned with text. */
+const ARTICLE_SCREENSHOT_FRAME: Record<string, string> = {
+  "Forbes Georgia": "h-[min(34rem,70vh)] max-h-[34rem]",
+  "GQ South Africa": "h-[min(34rem,70vh)] max-h-[34rem]",
+  "Luxury Lifestyle Magazine": "h-[min(28rem,60vh)] max-h-[28rem]",
+};
+
+const ARTICLE_SCREENSHOT_FIT: Record<string, string> = {
+  "Forbes Georgia": "object-contain object-top",
+  "GQ South Africa": "object-contain object-top",
+  "Luxury Lifestyle Magazine": "object-contain object-center",
+};
+
 export function FounderPressFeatures() {
   return (
     <section
@@ -57,8 +70,8 @@ export function FounderPressFeatures() {
                 As Covered in {PRESS_NAME[feature.publisher]}
               </h2>
 
-              <div className="grid flex-1 grid-cols-[minmax(0,1fr)_minmax(120px,0.9fr)] items-stretch gap-3 sm:grid-cols-[minmax(0,1.05fr)_minmax(220px,0.95fr)] sm:gap-5 lg:gap-9">
-                <div className="flex min-w-0 flex-col justify-center px-1 py-2 sm:px-3">
+              <div className="grid flex-1 items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)] lg:gap-9">
+                <div className="flex min-w-0 flex-col justify-start px-1 py-2 sm:px-3 sm:pt-4">
                   <a
                     href={feature.url}
                     target="_blank"
@@ -80,36 +93,21 @@ export function FounderPressFeatures() {
                   </p>
                 </div>
 
-                <div className="grid min-h-[calc(13rem+100px)] grid-rows-[64px_minmax(0,1fr)] gap-2 sm:min-h-[calc(18rem+100px)] sm:grid-rows-[110px_minmax(0,1fr)] sm:gap-3">
-                  <div className="relative overflow-hidden">
-                    <Image
-                      src={feature.logoSrc}
-                      alt={`${feature.publisher} logo`}
-                      fill
-                      sizes="(max-width: 768px) 45vw, 42vw"
-                      className="object-contain p-1 sm:p-3"
-                    />
-                  </div>
-                  <a
-                    href={feature.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
-                    className="group relative min-h-[calc(9rem+100px)] overflow-hidden rounded-lg border border-white/15 bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:min-h-[calc(13rem+100px)]"
-                  >
-                    <Image
-                      src={feature.articleImageSrc}
-                      alt={`Guss Qureshi in the ${feature.publisher} feature`}
-                      fill
-                      sizes="(max-width: 768px) 45vw, 42vw"
-                      className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.035]"
-                    />
-                    <span
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-white/5"
-                      aria-hidden
-                    />
-                  </a>
-                </div>
+                <a
+                  href={feature.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
+                  className={`group relative mx-auto w-full max-w-[40rem] overflow-hidden rounded-lg border border-white/15 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${ARTICLE_SCREENSHOT_FRAME[feature.publisher] ?? "h-[min(32rem,65vh)]"}`}
+                >
+                  <Image
+                    src={feature.articleImageSrc}
+                    alt={`Screenshot of The Syndicate's ${feature.publisher} feature`}
+                    fill
+                    sizes="(max-width: 1024px) 94vw, 54vw"
+                    className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
+                  />
+                </a>
               </div>
             </article>
           </CyberChamferFrame>

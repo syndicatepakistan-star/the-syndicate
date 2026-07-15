@@ -46,10 +46,9 @@ export function PlaylistCheckoutSync() {
         clean.searchParams.delete("playlist_checkout");
         clean.searchParams.delete("session_id");
         clean.searchParams.delete("playlist_id");
+        clean.searchParams.delete("playlist");
+        clean.searchParams.delete("pack");
         clean.searchParams.set("section", "programs");
-        if (playlistId) {
-          clean.searchParams.set("playlist", playlistId);
-        }
         markDashboardCheckoutReturn();
         window.history.replaceState({}, "", clean.toString());
       }

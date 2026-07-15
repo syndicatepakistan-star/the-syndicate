@@ -25,6 +25,7 @@ function isTopLevelSectionHeading(line: string): boolean {
     t === "programme introduction" ||
     t === "programme description" ||
     t === "the hook" ||
+    t === "projects you will build" ||
     t === "what you will learn"
   );
 }
@@ -40,6 +41,7 @@ function displaySectionHeading(line: string): string {
     return "Programme Introduction";
   }
   if (t === "the core protocol" || t === "programme description") return "Programme Description";
+  if (t === "projects you will build") return "Projects you will build";
   if (t === "what you will learn") return "What you will learn";
   return line.trim();
 }
@@ -140,6 +142,7 @@ function preprocessDenseDescription(raw: string): string {
     [/\s+(Introduction)\s+/gi, "\n\nProgramme Introduction\n\n"],
     [/\s+(The Hook)\s+/gi, "\n\nProgramme Introduction\n\n"],
     [/\s+(The Core Protocol)\s+/gi, "\n\nProgramme Description\n\n"],
+    [/\s+(Projects You Will Build)\s+/gi, "\n\n$1\n\n"],
     [/\s+(What You Will Learn)\s+/gi, "\n\n$1\n\n"],
   ];
   for (const [re, rep] of inject) {
@@ -387,6 +390,7 @@ function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSec
   return {
     hook: parsed.hook,
     core_protocol: parsed.core_protocol,
+    projects_you_will_build: parsed.projects_you_will_build,
     what_you_will_learn: parsed.what_you_will_learn,
   };
 }
@@ -394,6 +398,7 @@ function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSec
 const STRUCTURED_HEADINGS: { key: keyof StreamPlaylistDescriptionSections; label: string }[] = [
   { key: "hook", label: "Programme Introduction" },
   { key: "core_protocol", label: "Programme Description" },
+  { key: "projects_you_will_build", label: "Projects you will build" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
@@ -402,9 +407,15 @@ function pickStructuredSections(playlist: StreamPlaylistListItem): StreamPlaylis
   if (!s) return null;
   const hook = (s.hook ?? "").trim();
   const core = (s.core_protocol ?? "").trim();
+  const projects = (s.projects_you_will_build ?? "").trim();
   const learn = (s.what_you_will_learn ?? "").trim();
-  if (!hook && !core && !learn) return null;
-  return { hook, core_protocol: core, what_you_will_learn: learn };
+  if (!hook && !core && !projects && !learn) return null;
+  return {
+    hook,
+    core_protocol: core,
+    projects_you_will_build: projects,
+    what_you_will_learn: learn,
+  };
 }
 
 /** "Module 12" / "chapter 3: Title" on their own line → subheading; other lines → bullets under current block. */
@@ -499,13 +510,13 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
       {STRUCTURED_HEADINGS.map(({ key, label }) => {
         const text = sections[key].trim();
         if (!text) return null;
-        const isLearn = key === "what_you_will_learn";
+        const isList = key === "projects_you_will_build" || key === "what_you_will_learn";
         return (
           <section key={key} className="scroll-mt-4">
             <h3 className="border-b border-[#f5c814]/25 pb-2 text-left text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.15rem] sm:tracking-[0.14em]">
               {label}
             </h3>
-            <div className="mt-4 text-left">{isLearn ? <WhatYouWillLearnBody text={text} /> : parseDescriptionToBlocks(text)}</div>
+            <div className="mt-4 text-left">{isList ? <WhatYouWillLearnBody text={text} /> : parseDescriptionToBlocks(text)}</div>
           </section>
         );
       })}

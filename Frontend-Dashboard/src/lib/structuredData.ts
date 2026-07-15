@@ -1,5 +1,11 @@
 import { homeFaqForStructuredData, type FaqItem } from "@/data/homeFaq";
-import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
+import {
+  absoluteUrl,
+  DEFAULT_OG_IMAGE_PATH,
+  getSiteUrl,
+  PRESS_FEATURES,
+  SITE_NAME,
+} from "@/lib/seo";
 
 /** Brand social profiles (footer + structured data). */
 export const SYNDICATE_SAME_AS = [
@@ -51,6 +57,59 @@ export function buildWebSiteJsonLd() {
     description: DEFAULT_SITE_DESCRIPTION,
     publisher: { "@id": `${site}/#organization` },
     inLanguage: "en-US",
+  };
+}
+
+export function buildFounderPageJsonLd() {
+  const site = getSiteUrl();
+  const founderId = `${site}/our-founder#founder`;
+  const coverage = PRESS_FEATURES.map((feature) => ({
+    "@type": "NewsArticle",
+    headline: feature.title,
+    description: feature.description,
+    url: feature.url,
+    datePublished: feature.datePublished,
+    image: feature.sourceImageUrl,
+    publisher: {
+      "@type": "Organization",
+      name: feature.publisher,
+      url: feature.publisherUrl,
+    },
+    about: { "@id": founderId },
+  }));
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        "@id": `${site}/our-founder#profile`,
+        url: absoluteUrl("/our-founder"),
+        name: "Guss Qureshi — Founder of The Syndicate",
+        description:
+          "Meet Guss Qureshi, founder of The Syndicate, and explore independent coverage of The Syndicate's approach to money, power, influence, and practical business education.",
+        isPartOf: { "@id": `${site}/#website` },
+        mainEntity: { "@id": founderId },
+        citation: PRESS_FEATURES.map((feature) => feature.url),
+      },
+      {
+        "@type": "Person",
+        "@id": founderId,
+        name: "Guss Qureshi",
+        jobTitle: "Founder of The Syndicate",
+        url: absoluteUrl("/our-founder"),
+        image: absoluteUrl(PRESS_FEATURES[0].articleImageSrc),
+        worksFor: { "@id": `${site}/#organization` },
+        knowsAbout: [
+          "Business education",
+          "Money mastery",
+          "Ethical leadership",
+          "Power and influence",
+          "Entrepreneurship",
+        ],
+        subjectOf: coverage,
+      },
+    ],
   };
 }
 

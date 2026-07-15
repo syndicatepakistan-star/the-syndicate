@@ -1,39 +1,7 @@
 import Link from "next/link";
+import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
+import { HeroFeaturedLogosStrip } from "@/components/home/HeroFeaturedLogosStrip";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
-import { GamingBenefitCards } from "@/components/GamingBenefitCards";
-
-const WILL_GET_ITEMS = [
-  {
-    tone: "cyan",
-    title: "Mindset Training",
-    desc: "Two guides to build the mental toughness you need for business.",
-  },
-  {
-    tone: "violet",
-    title: "Full Diagnosis",
-    desc: "Your personal profile, your main weakness, and how to fix it.",
-  },
-  {
-    tone: "gold",
-    title: "Strengths Check",
-    desc: "See what you do best and where you need help.",
-  },
-  {
-    tone: "pink",
-    title: "Business Match",
-    desc: "Find a way to make money that actually fits your skills.",
-  },
-  {
-    tone: "amber",
-    title: "Mistake Finder",
-    desc: "Spot the hidden habits keeping you stuck.",
-  },
-  {
-    tone: "green",
-    title: "Exit Blueprint",
-    desc: "A realistic plan to leave the 9-to-5 trap behind.",
-  },
-] as const;
 
 export default function QuizFunnelLandingPage() {
   return (
@@ -43,46 +11,105 @@ export default function QuizFunnelLandingPage() {
         <h2 className="section-title public-heading-lightning public-heading-lightning--violet">
           The 17 Point Audit that predicts Business Success
         </h2>
-        <p className="section-subtitle">
-          Most people in the hood have the engine, but they are driving in circles. You are either a
-          System Asset or a System Liability. This 17-point Audit exposes the &quot;viruses&quot; in your
-          psychology and identifies the exact &quot;Digital Weapon&quot; you need to build your War Chest.
+        <p className="landing-free-offer public-heading-lightning public-heading-lightning--gold">
+          You get all of these benefits for free and 4 free programmes worth $396
         </p>
+        <p className="landing-free-note">No strings attached. No hidden fees. No hidden obligations.</p>
+        <div className="landing-top-start-wrap">
+          <Link href="/quiz/questions">
+            <button type="button" className="btn btn-primary hamburger-attract landing-top-start-btn">
+              START QUIZ
+            </button>
+          </Link>
+        </div>
+
         <div className="landing-details-grid">
-          <div className="landing-detail-card landing-detail-card--cyan landing-detail-frame-bracket">
-            <h3>What You Unlock</h3>
-            <p>
-              A full tactical diagnosis with designation, fatal flaw, and a personalized
-              execution prescription aligned to your profile.
-            </p>
-          </div>
+          <CyberChamferFrame
+            accent="cyan"
+            chamfer={22}
+            className="landing-detail-unlock-frame w-full"
+            innerClassName="h-full p-0"
+            contentClassName="h-full max-lg:!p-0"
+            decorSize="compact"
+          >
+            <div className="landing-detail-card landing-detail-card--cyan h-full">
+              <h3>What You Unlock</h3>
+              <ol className="landing-detail-list landing-detail-list--numbered">
+                <li>
+                  <strong>Your Full Diagnosis Check</strong>
+                  <span>Discover what you do best and get matched with the business model that fits you.</span>
+                </li>
+                <li>
+                  <strong>Your True Strength</strong>
+                  <span>Find what you are naturally gifted at and learn how to turn it into a business.</span>
+                </li>
+                <li>
+                  <strong>The Perfect Business Model</strong>
+                  <span>Match your natural business personality with the right model instead of wasting money on ideas that do not suit you.</span>
+                </li>
+                <li>
+                  <strong>Real-World Business Models</strong>
+                  <span>Choose from 11 practical online business models matched to your strengths and budget.</span>
+                </li>
+                <li>
+                  <strong>Low-Cost Business Models</strong>
+                  <span>Receive safer, lower-cost options you can start today and reduce the risk of losing money.</span>
+                </li>
+                <li>
+                  <strong>Your Business Path</strong>
+                  <span>Get a fast-track blueprint that uses your natural talents and helps you work toward earning your first dollar.</span>
+                </li>
+                <li>
+                  <strong>Your Growth Plan</strong>
+                  <span>Follow a simple plan designed around two focused hours a day.</span>
+                </li>
+                <li>
+                  <strong>The Exact Next Step</strong>
+                  <span>Replace confusion with a clear and simple blueprint for what to do tomorrow.</span>
+                </li>
+              </ol>
+            </div>
+          </CyberChamferFrame>
+
+          <HeroFeaturedLogosStrip speedSeconds={40} compact className="quiz-press-logo-strip my-[5px]" />
+
           <div className="landing-detail-card landing-detail-card--violet landing-detail-frame-double">
             <h3>How It Works</h3>
-            <p>
-              Answer 17 strategic audit questions, get scored instantly, and receive a custom
-              blueprint that maps your next moves with precision.
-            </p>
+            <ol className="landing-detail-list landing-detail-list--steps">
+              <li>
+                <strong>Remove the Guessing</strong>
+                <span>Answer 17 easy questions to discover what has been holding you back.</span>
+              </li>
+              <li>
+                <strong>Remove the Confusion</strong>
+                <span>Receive an online business model matched to your natural business instincts.</span>
+              </li>
+              <li>
+                <strong>Get the Blueprint</strong>
+                <span>Leave with a proven and safer real-world business model you can start building.</span>
+              </li>
+            </ol>
           </div>
+
           <div className="landing-detail-card landing-detail-card--gold landing-detail-frame-rail">
             <h3>Built For Operators</h3>
-            <p>
-              This is not generic motivation. It is a tactical report focused on leverage,
-              execution, and system-level growth.
-            </p>
+            <ul className="landing-detail-list landing-detail-list--bullets">
+              <li>
+                <strong>Real-World Action</strong>
+                <span>Receive actionable, step-by-step instructions that work in the real world.</span>
+              </li>
+              <li>
+                <strong>Professional Direction</strong>
+                <span>Build a highly respected, professional business you can be proud of.</span>
+              </li>
+              <li>
+                <strong>Long-Term Value</strong>
+                <span>Focus your effort on building something real that can last for years.</span>
+              </li>
+            </ul>
           </div>
         </div>
-        <GamingBenefitCards
-          className="mx-auto mt-3 mb-4 w-full max-w-full sm:mt-4"
-          headingId="landing-will-get-heading"
-          title="What You Will Get"
-          titleLightning="cyan"
-          frameTone="green"
-          items={WILL_GET_ITEMS}
-        />
-        <p className="section-subtitle">
-          <strong>Inside Your Report:</strong> Score out of 170, designation analysis, detected
-          virus breakdown, recommended skill track, and a direct call-to-action to execute fast.
-        </p>
+
         <Link href="/quiz/questions">
           <button type="button" className="btn btn-primary">
             START DIAGNOSIS

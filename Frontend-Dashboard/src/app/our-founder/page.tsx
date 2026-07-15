@@ -1,11 +1,16 @@
 import { NavApp } from "@/components/NavApp";
 import GlobalBottomSections from "@/components/GlobalBottomSections";
+import { FounderPressFeatures } from "@/components/founder/FounderPressFeatures";
 import { OurFounderClipsSection } from "@/components/founder/OurFounderClipsSection";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
+import { buildFounderPageJsonLd } from "@/lib/structuredData";
 
 export default function OurFounderPage() {
   return (
     <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
+      <JsonLd data={buildFounderPageJsonLd()} />
+
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-10%] top-[8%] h-[280px] w-[280px] rounded-full bg-amber-400/18 blur-[110px] sm:h-[420px] sm:w-[420px]" />
         <div className="absolute right-[-8%] top-[32%] h-[260px] w-[260px] rounded-full bg-fuchsia-500/16 blur-[100px] sm:h-[400px] sm:w-[400px]" />
@@ -23,6 +28,7 @@ export default function OurFounderPage() {
           </h1>
         </header>
 
+        <FounderPressFeatures />
         <OurFounderClipsSection />
       </main>
 

@@ -13,6 +13,7 @@ export type { StructuredDescriptionSections };
 const STRUCTURED_HEADINGS: { key: keyof StructuredDescriptionSections; label: string }[] = [
   { key: "hook", label: "Programme Introduction" },
   { key: "core_protocol", label: "Programme Description" },
+  { key: "projects_you_will_build", label: "Projects you will build" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
@@ -107,6 +108,23 @@ function WhatYouWillLearnBody({ text, prominent }: { text: string; prominent?: b
   );
 }
 
+function ProjectsYouWillBuildBody({ text, prominent }: { text: string; prominent?: boolean }) {
+  const firstGroup = text.search(/^\s*(?:module|chapter)\s+\d+/im);
+  if (firstGroup < 0) {
+    return <WhatYouWillLearnBody text={text} prominent={prominent} />;
+  }
+
+  const introduction = text.slice(0, firstGroup).trim();
+  const projects = text.slice(firstGroup).trim();
+
+  return (
+    <div className="flex flex-col gap-6 sm:gap-7">
+      {introduction ? <ParagraphBody text={introduction} prominent={prominent} /> : null}
+      <WhatYouWillLearnBody text={projects} prominent={prominent} />
+    </div>
+  );
+}
+
 function ParagraphBody({
   text,
   compact,
@@ -168,12 +186,15 @@ function StructuredSectionsView({
         if (hidden.has(key)) return null;
         const text = sections[key].trim();
         if (!text) return null;
+        const isProjects = key === "projects_you_will_build";
         const isLearn = key === "what_you_will_learn";
         return (
           <section key={key} className="scroll-mt-4">
             <h3 className={headingClass}>{label}</h3>
             <div className="mt-3 sm:mt-4">
-              {isLearn ? (
+              {isProjects ? (
+                <ProjectsYouWillBuildBody text={text} prominent={prominent} />
+              ) : isLearn ? (
                 <WhatYouWillLearnBody text={text} prominent={prominent} />
               ) : (
                 <ParagraphBody text={text} compact={compact} prominent={prominent} />

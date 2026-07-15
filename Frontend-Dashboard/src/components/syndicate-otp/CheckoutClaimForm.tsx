@@ -6,11 +6,15 @@ import { persistSimpleAuthSession, resolveClientApiUrl } from "@/lib/portal-api"
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
-import { resolvePlanOfferBySlug, resolvePlanOfferByTitle } from "@/lib/unlockCart";
+import {
+  clearUnlockCartStorage,
+  resolvePlanOfferBySlug,
+  resolvePlanOfferByTitle,
+} from "@/lib/unlockCart";
 import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
-const COVER_PX = 150;
+const COVER_PX = 165;
 
 export type UnlockedProgramItem = {
   title: string;
@@ -269,16 +273,18 @@ export function CheckoutClaimForm({
       clearStreamPlaylistsCache();
       clearVaultPlaylistMapCache();
       markDashboardCheckoutReturn();
+      clearUnlockCartStorage();
+      try {
+        window.sessionStorage.setItem("plan_checkout_confirmed", "1");
+        window.sessionStorage.setItem("playlist_checkout_confirmed", "1");
+      } catch {
+        // Ignore storage exceptions.
+      }
       window.dispatchEvent(new Event("plan-checkout-confirmed"));
       window.dispatchEvent(new Event("playlist-checkout-confirmed"));
 
-      let nextUrl =
-        typeof data.redirect_url === "string" && data.redirect_url.trim()
-          ? data.redirect_url.trim()
-          : "/dashboard?section=programs";
-      if (typeof data.playlist_id === "number" && data.playlist_id > 0) {
-        nextUrl = `/dashboard?section=programs&playlist=${data.playlist_id}`;
-      } else if (typeof data.selected_plan === "string" && data.selected_plan.trim()) {
+      let nextUrl = "/dashboard?section=programs";
+      if (typeof data.selected_plan === "string" && data.selected_plan.trim()) {
         nextUrl = `/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(data.selected_plan.trim())}`;
       }
       if (nextUrl.startsWith("/")) {
@@ -305,18 +311,18 @@ export function CheckoutClaimForm({
         accent="cyan"
         chamfer={22}
         ringPaddingClass="p-[3px]"
-        className="w-full max-w-[520px]"
+        className="w-full max-w-[572px]"
         contentClassName="!p-0"
       >
-        <div className="relative z-[1] flex min-h-[320px] flex-col items-center justify-center gap-7 px-8 py-14 text-center sm:min-h-[360px] sm:px-10 sm:py-16">
-          <p className="max-w-[28rem] text-lg font-medium leading-snug text-white sm:text-xl md:text-2xl">
+        <div className="relative z-[1] flex min-h-[352px] flex-col items-center justify-center gap-7 px-8 py-14 text-center sm:min-h-[396px] sm:px-11 sm:py-[4.4rem]">
+          <p className="max-w-[31rem] text-lg font-semibold leading-snug text-amber-100 [text-shadow:0_0_18px_rgba(251,191,36,0.28)] sm:text-xl md:text-2xl">
             Payment successful. Enter your email to unlock access.
           </p>
 
           <div className="flex w-full flex-col items-center gap-4">
             {step === "email" ? (
               <label className="flex flex-col items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/90">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200">
                   Email
                 </span>
                 <input
@@ -337,7 +343,7 @@ export function CheckoutClaimForm({
               </label>
             ) : (
               <label className="flex flex-col items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/90">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200">
                   Verification code
                 </span>
                 <input
@@ -359,7 +365,7 @@ export function CheckoutClaimForm({
                 />
                 <button
                   type="button"
-                  className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan-300/85 transition hover:text-cyan-100"
+                  className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-300 transition hover:text-fuchsia-100 hover:[text-shadow:0_0_12px_rgba(232,121,249,0.65)]"
                   disabled={busy}
                   onClick={() => void sendOtp()}
                 >
@@ -369,7 +375,7 @@ export function CheckoutClaimForm({
             )}
 
             {info ? (
-              <p className="max-w-sm rounded-md border border-cyan-400/30 bg-cyan-950/25 px-3 py-2 font-mono text-xs text-cyan-100">
+              <p className="max-w-md rounded-md border border-emerald-400/45 bg-emerald-950/30 px-4 py-2.5 font-mono text-xs text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.12)]">
                 {info}
               </p>
             ) : null}
@@ -399,33 +405,33 @@ export function CheckoutClaimForm({
         </div>
       </CyberChamferFrame>
 
-      {/* Container 2 — unlocked items (60vw) */}
+      {/* Container 2 — unlocked items */}
       <CyberChamferFrame
         accent="amber"
         chamfer={16}
         decorSize="compact"
         ringPaddingClass="p-[3px]"
-        className="w-[60vw] max-w-[60vw]"
+        className="w-[92vw] max-w-[92vw] sm:w-[72vw] sm:max-w-[72vw]"
         contentClassName="!p-0"
       >
-        <div className="relative z-[1] space-y-4 px-4 py-5 sm:px-5 sm:py-6">
-          <div className="flex flex-wrap items-end justify-between gap-2 border-b border-white/10 pb-3">
+        <div className="relative z-[1] space-y-5 px-5 py-6 sm:px-6 sm:py-7">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-4">
             <div className="min-w-0">
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-amber-200/95">
                 The Syndicate
               </p>
-              <h2 className="mt-1 text-base font-black uppercase tracking-[0.08em] text-white sm:text-lg">
+              <h2 className="mt-1 text-xl font-black uppercase tracking-[0.08em] text-white sm:text-2xl">
                 Programs unlocked
               </h2>
             </div>
             {amountPaid != null && Number.isFinite(amountPaid) ? (
-              <p className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-cyan-200 sm:text-xs">
+              <p className="shrink-0 font-mono text-sm font-bold uppercase tracking-[0.12em] text-cyan-200 sm:text-base">
                 Paid {currency?.toUpperCase() || "USD"} {amountPaid.toFixed(2)}
               </p>
             ) : null}
           </div>
 
-          <ul className="max-h-[min(54vh,36rem)] space-y-3.5 overflow-y-auto pr-0.5">
+          <ul className="max-h-[min(59.4vh,39.6rem)] space-y-4 overflow-y-auto pr-0.5">
             {displayItems.map((item, index) => {
               const price = formatItemAmount(item.amount);
               const accent = ITEM_NEONS[index % ITEM_NEONS.length];
@@ -436,28 +442,28 @@ export function CheckoutClaimForm({
                 <li
                   key={`${item.title}-${index}`}
                   className={cn(
-                    "grid items-center gap-5 rounded-xl border-2 p-4 sm:p-5",
+                    "grid items-center gap-5 rounded-xl border-2 p-5 sm:p-[1.375rem]",
                     neon.card,
                     alreadyOwned && "opacity-70",
                   )}
-                  style={{ gridTemplateColumns: "150px minmax(0, 1fr)" }}
+                  style={{ gridTemplateColumns: `${COVER_PX}px minmax(0, 1fr)` }}
                 >
                   <div
                     className={cn(
                       "relative overflow-hidden rounded-lg border-2 bg-black/70",
                       neon.imageBorder,
                     )}
-                    style={{ width: 150, height: 150, minWidth: 150, minHeight: 150 }}
+                    style={{ width: COVER_PX, height: COVER_PX, minWidth: COVER_PX, minHeight: COVER_PX }}
                   >
                     {cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={cover}
                         alt=""
-                        width={150}
-                        height={150}
+                        width={COVER_PX}
+                        height={COVER_PX}
                         className="block object-cover"
-                        style={{ width: 150, height: 150 }}
+                        style={{ width: COVER_PX, height: COVER_PX }}
                       />
                     ) : (
                       <div

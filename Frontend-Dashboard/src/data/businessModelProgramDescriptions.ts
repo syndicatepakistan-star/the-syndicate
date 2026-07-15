@@ -61,24 +61,37 @@ Techniques for adding animations and effects to enhance user experience
 How to use CMS (Content Management System) to manage your website content easily`,
 
   "app-building-flutter": `Programme Introduction
-Are you full of app ideas but completely new to coding? Don't worry, everyone starts somewhere! This complete Flutter development program is designed specifically for beginners who want to build their own mobile applications. You will learn how to build apps for both iOS and Android at the exact same time using a single, easy-to-learn codebase. By the end of this journey, you will transform from a complete novice into a confident app creator, fully capable of bringing your own digital ideas to life.
+Do you have great ideas for apps but feel completely lost when it comes to coding? Many beginners want to create their own digital products but struggle to find a clear path to start. This complete program solves that problem by teaching you how to build apps step by step using Flutter, a powerful tool that lets you create applications for multiple devices using just one codebase. By the end of this journey, you will have the practical skills to build your own working software from scratch, giving you the freedom to take control of your time and money.
 
 Programme Description
-This comprehensive course walks you through the entire process of app development using Flutter. We start with the absolute basics of programming and slowly step up to creating real, functioning applications. You will learn how to design beautiful user interfaces, manage complex data, and connect your apps to the internet. Instead of just reading about code, you will learn by building exciting, hands-on projects—including a sneaker shop, a habit tracker, a chat application, a social media platform, and a weather app. It is highly worth your time because it breaks down complex tech skills into simple, bite-sized steps, giving you the practical experience needed to build, launch, and control your very own apps.
+This course is a complete blueprint for mastering app development from the ground up. You will learn essential skills like designing user interfaces, managing data safely, and connecting your apps to online services. In this course you will build 10 practical apps, including a Counter App, a Todo App, a Sneaker Shop App, a Habit Tracker, an E-commerce App, a Notes App, a Weather App, a Music Player App, a Chat App, and a Social Media App. Mastering these tools is a highly valuable investment of your time, providing you with the power to bring your ideas to life without needing a whole team of developers.
+
+Projects You Will Build
+Counter App — a basic interactive app to understand how buttons change numbers on a screen.
+Todo App — a simple checklist that saves your daily tasks directly on your device.
+Sneaker Shop App — a visual storefront where users can browse shoes and use a shopping cart.
+Habit Tracker — a daily goal-tracking tool that uses a visual heat map to show your progress.
+E-commerce App — a minimal online store complete with product pages and a payment button.
+Notes App — a digital notebook that stores your ideas safely in an online database.
+Weather App — a live forecasting tool that pulls real-time climate data from the internet based on location.
+Music Player App — a media player that organizes playlists and controls audio playback.
+Chat App — a real-time messaging platform where users can log in, see who is online, and text each other.
+Social Media App — a community platform featuring user profiles, secure login, and a public wall to post messages.
 
 What You Will Learn
-Programming basics: variables, loops, math operators, and basic logic
-Widget mastery: using Flutter widgets to design beautiful, interactive layouts
-Seamless navigation: creating buttons and menus so users can move between pages
-Responsive and custom design: perfect layouts on phones, tablets, and desktops, including Light Mode and Dark Mode
-App stability: handling user inputs safely and learning null safety to prevent crashes
-State management: keeping app data clean and organized across pages using Provider
-Offline data storage: saving user data on the device using local databases
-Secure authentication: user login and registration with Firebase (Email, Google, and Apple sign-ins)
-Cloud databases: connecting apps to online databases for real-time user data
-Working with APIs: pulling live information from the internet into your app
-Push notifications: sending alerts and messages on iOS and Android devices
-Real-world portfolio: building complete apps including a to-do list, music player, e-commerce cart, and messaging app`,
+Understand the basics of programming, variables, and safe coding practices in Flutter.
+Design beautiful user interfaces using flexible building blocks called widgets.
+Create a simple Counter App to learn about interactive buttons and changing data.
+Navigate smoothly between different screens and easily switch between Light Mode and Dark Mode themes.
+Collect user input and store data locally on your device to build a Todo App and a Habit Tracker.
+Manage app data efficiently using a method called Provider to keep your code organized as your apps grow.
+Design clean layouts for a Sneaker Shop App and a minimal E-commerce App with a working shopping cart.
+Set up user authentication so people can log in, and use Firebase to safely store online data for a Notes App.
+Send and receive live messages by building a secure, real-time Chat App and a Social Media App.
+Fetch live data from external internet services to create a working Weather App.
+Build a Music Player App with audio controls and visually appealing playlists.
+Design responsive apps that adapt perfectly to mobile phones, tablets, and desktop computer screens.
+Keep your users engaged by sending push notifications directly to their devices.`,
 
   "building-apps-react-js": `Programme Introduction
 Are you tired of just watching React tutorials and never actually building anything? Many beginners get stuck watching videos without knowing how to put the pieces together. This course fixes that by showing you exactly how to build a real app, step by step. By the end, you will have the freedom to take your own ideas and turn them into working, interactive websites.

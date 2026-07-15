@@ -78,6 +78,7 @@ function normalizeStreamPayload(payload: StreamPayload): StreamPayload {
 export type StreamPlaylistDescriptionSections = {
   hook: string;
   core_protocol: string;
+  projects_you_will_build: string;
   what_you_will_learn: string;
 };
 

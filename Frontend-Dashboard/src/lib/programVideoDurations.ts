@@ -7,8 +7,6 @@
 export const PENDING_WATCH_DURATIONS: readonly string[] = [
   "level1-model-trading",
   "level1-model-blockchain",
-  "level1-psych-08",
-  "level1-psych-09",
   "level1-psych-10",
   "level1-psych-11",
   "trading_technical_analysis",
@@ -23,13 +21,15 @@ const S = (hours: number, minutes: number, seconds: number): number =>
 
 /** Level 1 Business Psychology + Business Model (total program watch time). */
 const LEVEL1_DURATION_SECONDS: Record<string, number> = {
-  "level1-psych-01": S(1, 2, 1),
+  "level1-psych-01": S(1, 4, 19),
   "level1-psych-02": S(0, 58, 14),
-  "level1-psych-03": S(1, 5, 53),
-  "level1-psych-04": S(1, 11, 1),
-  "level1-psych-05": S(0, 31, 35),
-  "level1-psych-06": S(1, 29, 28),
-  "level1-psych-07": S(1, 14, 51),
+  "level1-psych-03": S(1, 7, 15),
+  "level1-psych-04": S(1, 10, 46),
+  "level1-psych-05": S(0, 32, 29),
+  "level1-psych-06": S(1, 31, 1),
+  "level1-psych-07": S(1, 14, 29),
+  "level1-psych-08": S(0, 54, 21),
+  "level1-psych-09": S(1, 1, 42),
   "level1-model-01": S(12, 29, 5),
   "level1-model-02": S(11, 58, 23),
   "level1-model-03": S(10, 22, 1),
@@ -76,37 +76,34 @@ const AI_CONTENT_MODULE_SECONDS: Record<string, number> = {
   ai_content_c29: S(0, 13, 35),
 };
 
-/**
- * Agentic AI vault modules — durations from reviewer sheet (per title).
- * Note: several rows in the source sheet repeated placeholder lengths; replace when verified.
- */
+/** Agentic AI vault modules — verified durations from reviewer sheet (per title). */
 const AGENTIC_MODULE_SECONDS: Record<string, number> = {
-  agentic_ai_c01: S(0, 47, 21),
+  agentic_ai_c01: S(0, 47, 35),
   agentic_ai_c02: S(0, 6, 45),
   agentic_ai_c03: S(0, 34, 14),
-  agentic_ai_c04: S(0, 47, 21),
-  agentic_ai_c05: S(0, 6, 45),
-  agentic_ai_c06: S(0, 34, 14),
-  agentic_ai_c07: S(0, 47, 21),
-  agentic_ai_c08: S(0, 6, 45),
-  agentic_ai_c09: S(0, 34, 14),
-  agentic_ai_c10: S(0, 47, 21),
-  agentic_ai_c11: S(0, 6, 45),
-  agentic_ai_c12: S(0, 34, 14),
-  agentic_ai_c13: S(0, 47, 21),
-  agentic_ai_c14: S(0, 6, 45),
-  agentic_ai_c15: S(0, 34, 14),
-  agentic_ai_c16: S(0, 47, 21),
-  agentic_ai_c17: S(0, 6, 45),
-  agentic_ai_c18: S(0, 34, 14),
-  agentic_ai_c19: S(0, 47, 21),
-  agentic_ai_c20: S(0, 6, 45),
-  agentic_ai_c21: S(0, 34, 14),
-  agentic_ai_c22: S(0, 47, 21),
-  agentic_ai_c23: S(0, 6, 45),
-  agentic_ai_c24: S(0, 34, 14),
-  agentic_ai_c25: S(0, 47, 21),
-  agentic_ai_c26: S(0, 6, 45),
+  agentic_ai_c04: S(0, 22, 33),
+  agentic_ai_c05: S(0, 27, 3),
+  agentic_ai_c06: S(0, 23, 4),
+  agentic_ai_c07: S(0, 27, 6),
+  agentic_ai_c08: S(0, 47, 21),
+  agentic_ai_c09: S(0, 4, 55),
+  agentic_ai_c10: S(1, 27, 54),
+  agentic_ai_c11: S(1, 25, 8),
+  agentic_ai_c12: S(2, 38, 35),
+  agentic_ai_c13: S(3, 34, 14),
+  agentic_ai_c14: S(0, 24, 37),
+  agentic_ai_c15: S(0, 14, 25),
+  agentic_ai_c16: S(0, 12, 14),
+  agentic_ai_c17: S(0, 35, 28),
+  agentic_ai_c18: S(0, 23, 6),
+  agentic_ai_c19: S(0, 21, 49),
+  agentic_ai_c20: S(0, 43, 55),
+  agentic_ai_c21: S(0, 18, 9),
+  agentic_ai_c22: S(0, 42, 40),
+  agentic_ai_c23: S(0, 14, 3),
+  agentic_ai_c24: S(0, 18, 21),
+  agentic_ai_c25: S(6, 12, 38),
+  agentic_ai_c26: S(5, 27, 58),
 };
 
 const CURATED_DURATION_SECONDS: Record<string, number> = {

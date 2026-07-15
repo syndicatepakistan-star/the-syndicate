@@ -130,11 +130,9 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
     ? tradingSubmodulesForModule(offer.plan as TradingModuleSlug)
     : [];
   const tradingPackTitle = VAULT_PACK_MODAL_COPY.trading_technical_analysis.title;
-  const featureColumns = isPackDetail && offer.detailFeatures.length > 4;
   const comingSoon = isPlanOfferComingSoon(offer);
   const structuredDescription = resolveOfferStructuredDescription(offer);
   const primaryElitePlan = isPrimaryElitePlan(offer.plan) ? offer.plan : null;
-  const isPrimaryElite = primaryElitePlan !== null;
   const detailCardStats =
     isTradingModule || isTradingLesson ? resolveOfferCardStats(offer, isTradingModule ? "module" : undefined) : undefined;
 
@@ -272,35 +270,6 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
               <StructuredDescriptionBody text={structuredDescription} prominent />
             )}
           </div>
-
-          {!isTradingLesson && !isTradingModule && !isPrimaryElite ? (
-            <>
-              <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-white/45">
-                {isPackDetail ? "Included modules" : "What you get"}
-              </p>
-
-              <ul
-                className={cn("mt-3", featureColumns ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "space-y-3")}
-                role="list"
-              >
-                {offer.detailFeatures.map((feature) => (
-                  <li key={feature}>
-                    <div
-                      className={cn(
-                        "plan-offer-detail__feature flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3",
-                        theme.featureBorder
-                      )}
-                    >
-                      <OfferDetailCheck accent={offer.accent} />
-                      <span className="min-w-0 font-mono text-[11px] leading-snug text-white/88 sm:text-[13px]">
-                        {feature}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
         </div>
       </div>
     </div>,

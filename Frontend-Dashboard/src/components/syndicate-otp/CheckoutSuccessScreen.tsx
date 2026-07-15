@@ -11,14 +11,7 @@ import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 import { getAffiliateAttribution, saveAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead, trackSale } from "@/lib/affiliateApi";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import {
-  buildDashboardPackHref,
-  clearVaultPlaylistMapCache,
-  fetchVaultPlaylistMap,
-  resolveVaultPackPlaylistId,
-  vaultPlaylistIdForPlan,
-} from "@/lib/vaultPlaylistMap";
-import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
+import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { CheckoutClaimForm, type UnlockedProgramItem } from "@/components/syndicate-otp/CheckoutClaimForm";
 import { clearUnlockCartStorage } from "@/lib/unlockCart";
@@ -108,19 +101,18 @@ function clearUnlockCartAfterPurchase() {
 function buildLoggedInCheckoutRedirect(opts: {
   origin: string;
   purchasedPlan: string;
-  playlistId: number | null;
   fallbackUrl: string;
 }): string {
-  const { origin, purchasedPlan, playlistId, fallbackUrl } = opts;
+  const { origin, purchasedPlan, fallbackUrl } = opts;
   const url = new URL(fallbackUrl, origin);
   url.searchParams.set("section", "programs");
   url.searchParams.set("plan_checkout", "success");
   if (purchasedPlan) {
     url.searchParams.set("plan", purchasedPlan);
   }
-  if (playlistId && playlistId > 0) {
-    url.searchParams.set("playlist", String(playlistId));
-  }
+  url.searchParams.delete("playlist");
+  url.searchParams.delete("playlist_id");
+  url.searchParams.delete("pack");
   return url.toString();
 }
 
@@ -348,9 +340,6 @@ export default function CheckoutSuccessScreen({
         )
           .trim()
           .toLowerCase();
-        const responsePlaylistId =
-          typeof data.playlist_id === "number" && data.playlist_id > 0 ? data.playlist_id : null;
-
         let nextUrl =
           typeof window !== "undefined"
             ? resolvePostOtpAppRedirect(data.redirect_url)
@@ -362,39 +351,17 @@ export default function CheckoutSuccessScreen({
         if (purchasedPlan && typeof window !== "undefined") {
           clearVaultPlaylistMapCache();
           clearUnlockCelebrationStorage();
-          let resolvedPlaylistId: number | null = responsePlaylistId;
-          if (isVaultPackKey(purchasedPlan)) {
-            try {
-              const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-              resolvedPlaylistId = resolveVaultPackPlaylistId(purchasedPlan, map) || resolvedPlaylistId;
-              nextUrl = resolvedPlaylistId
-                ? `${window.location.origin}/dashboard?section=programs&playlist=${resolvedPlaylistId}`
-                : `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
-            } catch {
-              nextUrl = `${window.location.origin}${buildDashboardPackHref(purchasedPlan)}`;
-            }
-          } else {
-            try {
-              const map = await fetchVaultPlaylistMap({ forceRefresh: true });
-              resolvedPlaylistId = vaultPlaylistIdForPlan(purchasedPlan, map) || resolvedPlaylistId;
-            } catch {
-              // Keep response playlist id if map fails.
-            }
-            nextUrl = `${window.location.origin}/dashboard?section=programs`;
-          }
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan,
-            playlistId: resolvedPlaylistId,
-            fallbackUrl: nextUrl,
+            fallbackUrl: `${window.location.origin}/dashboard?section=programs`,
           });
-        } else if (responsePlaylistId && typeof window !== "undefined") {
+        } else if (typeof window !== "undefined") {
           clearUnlockCelebrationStorage();
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan: "",
-            playlistId: responsePlaylistId,
-            fallbackUrl: `${window.location.origin}/dashboard?section=programs&playlist=${responsePlaylistId}`,
+            fallbackUrl: `${window.location.origin}/dashboard?section=programs`,
           });
         }
 

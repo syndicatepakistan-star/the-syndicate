@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
-import { clearVaultPlaylistMapCache, fetchVaultPlaylistMap, resolveVaultPackPlaylistId, vaultPlaylistIdForPlan } from "@/lib/vaultPlaylistMap";
-import { fetchStreamPlaylists } from "@/lib/streaming-api";
+import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
 
-/** After vault plan checkout, refresh unlock state and route to the pack picker or lesson. */
+/** After checkout, refresh ownership and keep the user on the main Programs catalog. */
 export function PlanCheckoutSync() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -17,59 +15,30 @@ export function PlanCheckoutSync() {
 
     markDashboardCheckoutReturn();
     const plan = (params.get("plan") || "").trim().toLowerCase();
-    let cancelled = false;
+    clearStreamPlaylistsCache();
+    clearVaultPlaylistMapCache();
+    clearUnlockCelebrationStorage();
 
-    void (async () => {
-      clearStreamPlaylistsCache();
-      clearVaultPlaylistMapCache();
-      clearUnlockCelebrationStorage();
+    try {
+      window.sessionStorage.setItem("plan_checkout_confirmed", "1");
+    } catch {
+      // Ignore storage exceptions.
+    }
 
-      let playlistId: number | null = null;
-      if (plan) {
-        try {
-          const [map, streamPlaylists] = await Promise.all([
-            fetchVaultPlaylistMap({ forceRefresh: true }),
-            fetchStreamPlaylists().catch(() => []),
-          ]);
-          if (isVaultPackKey(plan)) {
-            playlistId = resolveVaultPackPlaylistId(plan, map, streamPlaylists);
-          } else {
-            playlistId = vaultPlaylistIdForPlan(plan, map, streamPlaylists);
-          }
-        } catch {
-          // Ignore map errors; grid refresh still runs below.
-        }
-      }
+    window.dispatchEvent(
+      new CustomEvent("plan-checkout-confirmed", {
+        detail: { plan },
+      }),
+    );
 
-      if (cancelled) return;
-
-      try {
-        window.sessionStorage.setItem("plan_checkout_confirmed", "1");
-      } catch {
-        // Ignore storage exceptions.
-      }
-
-      window.dispatchEvent(
-        new CustomEvent("plan-checkout-confirmed", {
-          detail: { plan, playlistId: playlistId ?? undefined },
-        })
-      );
-
-      const clean = new URL(window.location.href);
-      clean.searchParams.delete("plan_checkout");
-      clean.searchParams.delete("plan");
-      clean.searchParams.set("section", "programs");
-      if (playlistId) {
-        clean.searchParams.set("playlist", String(playlistId));
-      } else if (plan && isVaultPackKey(plan)) {
-        clean.searchParams.set("pack", plan);
-      }
-      window.history.replaceState({}, "", clean.toString());
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("plan_checkout");
+    clean.searchParams.delete("plan");
+    clean.searchParams.delete("playlist");
+    clean.searchParams.delete("playlist_id");
+    clean.searchParams.delete("pack");
+    clean.searchParams.set("section", "programs");
+    window.history.replaceState({}, "", clean.toString());
   }, []);
 
   return null;

@@ -5,11 +5,13 @@ export type StructuredDescriptionSections = {
   hook: string;
   /** Programme Description paragraph(s). */
   core_protocol: string;
+  projects_you_will_build: string;
   what_you_will_learn: string;
 };
 
 const PROGRAMME_INTRO_HEADING_RE = /(?:^|\n)\s*(?:Programme Introduction|Introduction|The Hook)\s*\n/i;
 const PROGRAMME_DESC_HEADING_RE = /(?:^|\n)\s*(?:Programme Description|The Core Protocol)\s*\n/i;
+const PROJECTS_HEADING_RE = /(?:^|\n)\s*Projects You Will Build\s*\n/i;
 const LEARN_HEADING_RE = /(?:^|\n)\s*What You Will Learn\s*\n/i;
 
 function splitLegacyIntroductionBlock(text: string): { intro: string; description: string } {
@@ -29,20 +31,24 @@ export function parseStructuredDescriptionSections(body: string): StructuredDesc
 
   const introMatch = t.match(
     new RegExp(
-      `${PROGRAMME_INTRO_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Programme Description|The Core Protocol|What You Will Learn)\\s*\\n)`,
+      `${PROGRAMME_INTRO_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Programme Description|The Core Protocol|Projects You Will Build|What You Will Learn)\\s*\\n)`,
       "i",
     ),
   );
   const descMatch = t.match(
     new RegExp(
-      `${PROGRAMME_DESC_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*What You Will Learn\\s*\\n)`,
+      `${PROGRAMME_DESC_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Projects You Will Build|What You Will Learn)\\s*\\n)`,
       "i",
     ),
+  );
+  const projectsMatch = t.match(
+    new RegExp(`${PROJECTS_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*What You Will Learn\\s*\\n|$)`, "i"),
   );
   const learnMatch = t.match(new RegExp(`${LEARN_HEADING_RE.source}([\\s\\S]*)$`, "i"));
 
   let hook = introMatch?.[1]?.trim() ?? "";
   let core = descMatch?.[1]?.trim() ?? "";
+  const projects = projectsMatch?.[1]?.trim() ?? "";
   const learn = learnMatch?.[1]?.trim() ?? "";
 
   if (!core && hook && !descMatch) {
@@ -51,8 +57,13 @@ export function parseStructuredDescriptionSections(body: string): StructuredDesc
     core = split.description;
   }
 
-  if (!hook && !core && !learn) return null;
-  return { hook, core_protocol: core, what_you_will_learn: learn };
+  if (!hook && !core && !projects && !learn) return null;
+  return {
+    hook,
+    core_protocol: core,
+    projects_you_will_build: projects,
+    what_you_will_learn: learn,
+  };
 }
 
 /** First paragraph of Programme Introduction — used for card teasers and summaries. */
@@ -75,14 +86,17 @@ export function formatStructuredDescription(
   programmeIntroduction: string,
   programmeDescription: string,
   learnItems: string[],
+  projectsYouWillBuild = "",
 ): string {
   const intro = programmeIntroduction.trim();
   const desc = programmeDescription.trim();
+  const projects = projectsYouWillBuild.trim();
   const learn = learnItems.map((item) => item.trim()).filter(Boolean).join("\n");
 
   const parts: string[] = [];
   if (intro) parts.push(`Programme Introduction\n${intro}`);
   if (desc) parts.push(`Programme Description\n${desc}`);
+  if (projects) parts.push(`Projects You Will Build\n${projects}`);
   if (learn) parts.push(`What You Will Learn\n${learn}`);
   return parts.join("\n\n");
 }

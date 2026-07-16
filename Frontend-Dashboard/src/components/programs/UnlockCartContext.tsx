@@ -17,15 +17,16 @@ import {
   UNLOCK_CART_STORAGE_KEY,
   cartContainsKey,
   cartItemKey,
+  cartItemTotal,
   clearUnlockCartStorage,
   filterOwnedUnlockCartItems,
-  formatCartTotal,
   offerToCartItem,
   playlistToCartItem,
   readUnlockCartFromStorage,
   type UnlockCartItem,
   writeUnlockCartToStorage,
 } from "@/lib/unlockCart";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type UnlockCartContextValue = {
   items: UnlockCartItem[];
@@ -68,6 +69,7 @@ function consumeCheckoutConfirmedFlags(): boolean {
 }
 
 export function UnlockCartProvider({ children }: { children: ReactNode }) {
+  const { currency, formatPrice } = useCurrency();
   const [items, setItems] = useState<UnlockCartItem[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [panelExpanded, setPanelExpanded] = useState(false);
@@ -287,7 +289,7 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       pruneOwnedItems,
       isInCart,
       isInCartKey,
-      totalLabel: formatCartTotal(items),
+      totalLabel: formatPrice(cartItemTotal(items)),
       count: items.length,
     }),
     [
@@ -295,6 +297,8 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       addPlaylist,
       checkoutPulse,
       clearCart,
+      currency,
+      formatPrice,
       isInCart,
       isInCartKey,
       items,

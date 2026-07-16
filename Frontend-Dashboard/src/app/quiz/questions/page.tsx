@@ -10,6 +10,8 @@ import { submitAnswers } from "@/lib/quizFunnelApi";
 import { QUIZ_QUESTIONS, type QuizQuestionRow } from "@/lib/quizQuestions";
 import { getAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead } from "@/lib/affiliateApi";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { isUkPhone, markUkCitizen } from "@/lib/currency";
 
 type LeadStep = "name" | "email" | "phone";
 
@@ -253,6 +255,7 @@ export default function QuizPage() {
   const loadingWords = ["Money", "Power", "Freedom", "Honour"];
   const QUIZ_DURATION_SECONDS = 20 * 60;
   const router = useRouter();
+  const { applyPhoneCountry } = useCurrency();
   const [questions] = useState<QuizQuestionRow[]>(QUIZ_QUESTIONS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -420,6 +423,10 @@ export default function QuizPage() {
         answers: answerList,
       };
 
+      if (isUkPhone(leadForm.countryCode) || isUkPhone(buildFullPhone())) {
+        markUkCitizen(true);
+      }
+
       const result = await submitAnswers(payload);
       localStorage.setItem("quiz_result", JSON.stringify(result));
       localStorage.setItem("quiz_user_email", leadForm.email.trim().toLowerCase());
@@ -529,7 +536,9 @@ export default function QuizPage() {
                       aria-label="Country code"
                       value={leadForm.countryCode}
                       onChange={(e) => {
-                        setLeadForm((prev) => ({ ...prev, countryCode: e.target.value }));
+                        const next = e.target.value;
+                        setLeadForm((prev) => ({ ...prev, countryCode: next }));
+                        applyPhoneCountry(next);
                         setLeadError("");
                       }}
                       className="quiz-input lead-gate-country"

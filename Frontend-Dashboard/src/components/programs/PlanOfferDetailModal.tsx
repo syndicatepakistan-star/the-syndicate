@@ -14,6 +14,7 @@ import { resolveOfferStructuredDescription } from "@/components/programs/vaultSt
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Props = {
   offer: PlanOfferDef | null;
@@ -106,6 +107,7 @@ function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {
 export function PlanOfferDetailModal({ offer, onClose }: Props) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const { localizeLabel } = useCurrency();
 
   useModalScrollLock(!!offer);
 
@@ -195,13 +197,13 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
 
           <div className="mt-5 flex flex-wrap items-end gap-x-2 gap-y-1">
             <span className="font-mono text-lg text-white/40 line-through decoration-white/35 sm:text-xl">
-              {offer.comparePrice}
+              {localizeLabel(offer.comparePrice)}
             </span>
             <span
               className="font-mono text-[clamp(2.5rem,9vw,4rem)] font-black leading-none tracking-tight text-white"
               style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
             >
-              {offer.displayPrice}
+              {localizeLabel(offer.displayPrice)}
             </span>
             <span className="pb-1 font-mono text-sm text-white/55 sm:text-base">
               {offer.billingLabel}

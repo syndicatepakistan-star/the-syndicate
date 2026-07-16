@@ -39,7 +39,7 @@ import {
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { formatPrice } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
 import { useUnlockCartOptional } from "@/components/programs/UnlockCartContext";
@@ -145,6 +145,7 @@ export function PlaylistCardsSection({
   className,
   highlightPlaylistId,
 }: Props) {
+  const { formatPrice: formatLocalizedPrice } = useCurrency();
   const readInitialPlaylistsFromSession = (): StreamPlaylistListItem[] => {
     if (typeof window === "undefined") return [];
     try {
@@ -416,7 +417,7 @@ export function PlaylistCardsSection({
                   className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
                   style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
                 >
-                  <span className="program-playlist-card__pack-price-badge__amount">{formatPrice(price)}</span>
+                  <span className="program-playlist-card__pack-price-badge__amount">{formatLocalizedPrice(price)}</span>
                   <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">lifetime</span>
                 </span>
               </div>

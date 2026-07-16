@@ -9,6 +9,7 @@ import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { PROGRAM_CARD_LANDSCAPE_MEDIA } from "@/components/programs/programCardMedia";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatPrice } from "@/lib/currency";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
@@ -52,6 +53,7 @@ export function ProgramOpportunityCardContent({
   onPlanUnlock,
   onPlanOpen,
 }: Props) {
+  const { localizeLabel, formatPrice: formatLocalizedPrice } = useCurrency();
   const programId = course.programId;
   const isPack = course.offerKind === "pack";
   const isModule = course.offerKind === "module";
@@ -64,6 +66,7 @@ export function ProgramOpportunityCardContent({
         : "Up next";
   const grad = PROGRAM_CARD_BACKGROUNDS[cardIndex % PROGRAM_CARD_BACKGROUNDS.length];
   const price = course.price ?? (planOffer ? Number(planOffer.checkoutAmount) : 0);
+  const localizedPlanPrice = planOffer ? localizeLabel(planOffer.displayPrice) : "";
 
   const openTarget = () => {
     onPlanOpen(course);
@@ -152,17 +155,17 @@ export function ProgramOpportunityCardContent({
             isPlanCard
               ? cn(
                   "plan-offer-card__pack-price-badge inline-flex shrink-0 items-center justify-center rounded-md border border-emerald-300/50 bg-[#03140d]/95 font-black tabular-nums leading-none text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)]",
-                  planOffer && planOffer.displayPrice.length > 5 && "plan-offer-card__pack-price-badge--long",
+                  planOffer && localizedPlanPrice.length > 5 && "plan-offer-card__pack-price-badge--long",
                 )
               : "program-playlist-card__pack-price-badge border border-emerald-300/50 bg-[#03140d]/95 text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)]",
           )}
           style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
         >
           {isPlanCard && planOffer ? (
-            planOffer.displayPrice
+            localizedPlanPrice
           ) : (
             <>
-              <span className="program-playlist-card__pack-price-badge__amount">{formatPrice(price)}</span>
+              <span className="program-playlist-card__pack-price-badge__amount">{formatLocalizedPrice(price)}</span>
               <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">lifetime</span>
             </>
           )}

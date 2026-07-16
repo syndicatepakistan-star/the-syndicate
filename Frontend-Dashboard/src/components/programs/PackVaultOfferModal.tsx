@@ -28,6 +28,7 @@ import {
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
@@ -64,6 +65,7 @@ export function PackVaultOfferModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const { localizeLabel, symbol } = useCurrency();
 
   useModalScrollLock(!!packOffer);
 
@@ -308,7 +310,8 @@ export function PackVaultOfferModal({
                     "drop-shadow-[0_0_18px_currentColor]",
                   )}
                 >
-                  One-time purchase — full pack {packOffer.displayPrice} (individual total ${alaCarteTotal} if bought
+                  One-time purchase — full pack {localizeLabel(packOffer.displayPrice)} (individual total {symbol}
+                  {alaCarteTotal} if bought
                   separately).
                 </p>
               ) : (

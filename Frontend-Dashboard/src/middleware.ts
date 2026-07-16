@@ -32,6 +32,49 @@ const sameHostHint =
   "(e.g. https://your-django-service.up.railway.app), then redeploy if you changed NEXT_PUBLIC_*). " +
   "Or open /static/admin/css/base.css on your Django service URL directly.";
 
+function countryFromRequest(request: NextRequest): string {
+  const headers = request.headers;
+  for (const key of [
+    "cf-ipcountry",
+    "x-vercel-ip-country",
+    "cloudfront-viewer-country",
+    "x-country-code",
+    "x-geo-country",
+  ]) {
+    const raw = (headers.get(key) || "").trim().toUpperCase();
+    if (raw && raw !== "XX" && raw !== "T1" && raw !== "UNKNOWN") return raw;
+  }
+  return "";
+}
+
+function applyCheckoutCurrencyCookie(request: NextRequest, response: NextResponse) {
+  const ukCitizen = request.cookies.get("syndicate_uk_citizen")?.value === "1";
+  const country = countryFromRequest(request);
+  const ukIp = country === "GB";
+
+  // Strong UK signals always win.
+  if (ukCitizen || ukIp) {
+    response.cookies.set("syndicate_currency", "gbp", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+    });
+    return;
+  }
+
+  // Positive non-UK country from CDN/edge → USD.
+  if (country && country !== "GB") {
+    response.cookies.set("syndicate_currency", "usd", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+    });
+    return;
+  }
+
+  // No geo header (localhost / plain Node): do not overwrite — client IP lookup may set GBP via VPN.
+}
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -43,7 +86,9 @@ export function middleware(request: NextRequest) {
     dest.search = "";
     dest.searchParams.set("program", programDeepLink[1]);
     dest.hash = "programs-library";
-    return NextResponse.redirect(dest);
+    const redirect = NextResponse.redirect(dest);
+    applyCheckoutCurrencyCookie(request, redirect);
+    return redirect;
   }
 
   const isPublicStaticFile = /\.[a-zA-Z0-9]+$/.test(pathname);
@@ -117,11 +162,14 @@ export function middleware(request: NextRequest) {
     if (!pathname.startsWith("/api/")) {
       loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     }
-    return NextResponse.redirect(loginUrl);
+    const loginRedirect = NextResponse.redirect(loginUrl);
+    applyCheckoutCurrencyCookie(request, loginRedirect);
+    return loginRedirect;
   }
 
   if (!pathname.startsWith("/static/")) {
     const response = NextResponse.next();
+    applyCheckoutCurrencyCookie(request, response);
     const isRscPayload =
       request.headers.get("RSC") === "1" ||
       request.headers.get("Next-Router-Prefetch") === "1" ||

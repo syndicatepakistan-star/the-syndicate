@@ -8,6 +8,7 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 type Props = {
@@ -172,6 +173,7 @@ export function PlanOfferCard({
   onDetails,
   onOpen,
 }: Props) {
+  const { localizeLabel } = useCurrency();
   const isLarge = size === "large";
   const isModule = size === "module";
   const isCompact = size === "compact";
@@ -180,7 +182,8 @@ export function PlanOfferCard({
   const isVaultPackCard = cardKind === "pack" && isLarge && !isVaultHero;
   const isPack = !isModule;
   const showPackPriceBadge = (isLarge && isPack) || isVaultPackCard;
-  const isLongPackPrice = offer.displayPrice.length > 5;
+  const localizedPrice = localizeLabel(offer.displayPrice);
+  const isLongPackPrice = localizedPrice.length > 5;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
@@ -375,7 +378,7 @@ export function PlanOfferCard({
                 )}
                 style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
-                {offer.displayPrice}
+                {localizedPrice}
               </span>
             </div>
 

@@ -21,6 +21,7 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 
 from apps.affiliate_tracking.checkout_attribution import record_sale_from_checkout_metadata
+from accounts.checkout_currency import resolve_checkout_currency
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.models import UserDashboardEntitlement
 from apps.video_streaming.attachment_schema import stream_playlist_attachments_table_ready
@@ -615,8 +616,10 @@ class StreamPlaylistCheckoutSessionView(APIView):
 
         stripe.api_key = settings.STRIPE_SECRET_KEY
         amount_pence = int(max(50, round(float(playlist.price) * 100)))
+        payload = request.data if isinstance(request.data, dict) else {}
+        checkout_currency = resolve_checkout_currency(request, payload)
         frontend_base = settings.FRONTEND_BASE_URL.rstrip("/")
-        requested_base = str(request.data.get("return_base_url", "")).strip() if isinstance(request.data, dict) else ""
+        requested_base = str(payload.get("return_base_url", "")).strip()
         if requested_base:
             parsed = urlsplit(requested_base)
             if parsed.scheme in ("http", "https") and bool(parsed.netloc):
@@ -630,7 +633,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 line_items=[
                     {
                         "price_data": {
-                            "currency": settings.DEFAULT_CURRENCY,
+                            "currency": checkout_currency,
                             "product_data": {"name": f"{playlist.title} playlist access"},
                             "unit_amount": amount_pence,
                         },
@@ -687,7 +690,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
                 "stripe_session_id": session.id,
                 "stripe_checkout_session_id": session.id,
                 "amount_paid": playlist.price,
-                "currency": settings.DEFAULT_CURRENCY,
+                "currency": checkout_currency,
                 "paid_at": timezone.now(),
             },
         )
@@ -696,7 +699,7 @@ class StreamPlaylistCheckoutSessionView(APIView):
             purchase.stripe_session_id = session.id
             purchase.stripe_checkout_session_id = session.id
             purchase.amount_paid = playlist.price
-            purchase.currency = settings.DEFAULT_CURRENCY
+            purchase.currency = checkout_currency
             purchase.save(update_fields=["status", "stripe_session_id", "stripe_checkout_session_id", "amount_paid", "currency", "updated_at"])
         return Response({"checkout_url": session.url, "session_id": session.id, "playlist_id": playlist.id}, status=status.HTTP_200_OK)
 

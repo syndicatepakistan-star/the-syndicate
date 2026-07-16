@@ -1,6 +1,7 @@
 import { isKnightCheckoutBlocked, KNIGHT_LAUNCHING_SOON_MESSAGE, type CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
 import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
+import { getActiveCurrency } from "@/lib/currency";
 import {
   getAuthorizationHeader,
   portalFetch,
@@ -105,6 +106,7 @@ export async function createPlanCheckoutSession(
         selected_plan: params.plan,
         selected_billing: params.billing?.trim() || "monthly",
         selected_amount: params.amount.trim(),
+        currency: getActiveCurrency(),
         ...affiliateCheckoutFields(),
       }),
     }
@@ -137,6 +139,7 @@ export async function createUnlockCartCheckoutSession(
                 ...(item.image ? { image: item.image } : {}),
               },
         ),
+        currency: getActiveCurrency(),
         ...affiliateCheckoutFields(),
       }),
     }

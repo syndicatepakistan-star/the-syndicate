@@ -8,6 +8,7 @@ import { KNIGHT_PLAN_COMING_SOON, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_SUBSCRIPTI
 import { fetchPortalIdentity } from "@/lib/portal-api";
 import { formatKnightSubscriptionRemaining } from "@/lib/syndicateKnightAccess";
 import { CyberInsetPanel } from "@/components/cyber/CyberChamferFrames";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const BILLING = "monthly" as const;
 const CHECKOUT_AMOUNT = "19.99";
@@ -31,6 +32,7 @@ export function MembershipKnightHeroOffer({
   checkoutReturnPath?: string;
 }) {
   const router = useRouter();
+  const { localizeLabel } = useCurrency();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [knightRemaining, setKnightRemaining] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export function MembershipKnightHeroOffer({
           className="inline-flex h-full min-h-[3.25rem] items-center justify-center border-[3px] border-cyan-400/90 bg-black/80 px-4 py-3 font-mono text-xl font-black tabular-nums text-cyan-100 [text-shadow:0_0_16px_rgba(103,232,249,0.55)] shadow-[0_0_28px_rgba(34,211,238,0.35)] sm:text-2xl"
           style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
         >
-          {DISPLAY_PRICE}
+          {localizeLabel(DISPLAY_PRICE)}
           <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400 sm:text-xs">/ mo</span>
         </span>
         <div

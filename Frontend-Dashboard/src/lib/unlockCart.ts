@@ -125,8 +125,8 @@ export function cartItemTotal(items: readonly UnlockCartItem[]): number {
 
 export function formatCartTotal(items: readonly UnlockCartItem[]): string {
   const total = cartItemTotal(items);
-  if (!Number.isFinite(total) || total <= 0) return "$0";
-  return total % 1 === 0 ? `$${total}` : `$${total.toFixed(2)}`;
+  if (!Number.isFinite(total) || total <= 0) return formatPrice(0);
+  return formatPrice(total);
 }
 
 function parseStoredCartItem(entry: unknown): UnlockCartItem | null {

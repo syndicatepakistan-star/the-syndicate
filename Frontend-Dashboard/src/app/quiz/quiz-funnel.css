@@ -939,8 +939,9 @@ body.result-view .section-cards-grid {
     0 0 58px rgba(47, 82, 165, 0.52);
 }
 
-/* Reserved slot prevents CLS when the marquee hydrates */
+/* Reserved slot prevents CLS when the marquee hydrates — full grid width to match unlock section */
 .quiz-press-logo-strip-slot {
+  grid-column: 1 / -1;
   min-height: 56px;
   width: 100%;
   contain: layout;

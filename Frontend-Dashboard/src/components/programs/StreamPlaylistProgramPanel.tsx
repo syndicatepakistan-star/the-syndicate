@@ -23,6 +23,7 @@ import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import { issuePlaylistCertificate } from "@/lib/certificates-api";
 import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 type Props = {
@@ -367,6 +368,7 @@ function goToSettingsCertificates() {
 }
 
 export function StreamPlaylistProgramPanel({ playlistId }: Props) {
+  const { formatPrice: formatLocalizedPrice } = useCurrency();
   const [playlist, setPlaylist] = useState<StreamPlaylistDetail | null>(null);
   const [playback, setPlayback] = useState<StreamPayload | null>(null);
   const [playbackCache, setPlaybackCache] = useState<Record<number, StreamPayload>>({});
@@ -1012,7 +1014,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               {activeVideo?.title ?? "Episode"}
             </h2>
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-black text-emerald-200">
-              {formatPrice(playlistPrice)}
+              {formatLocalizedPrice(playlistPrice)}
             </span>
           </div>
           {playlistAttachments.length > 0 ? (
@@ -1037,7 +1039,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
           <div className="mt-2 flex items-center gap-2 text-[11px]">
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
-              {formatPrice(playlistPrice)}
+              {formatLocalizedPrice(playlistPrice)}
             </span>
           </div>
           <div className="mt-3 space-y-3 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-3.5">

@@ -7,6 +7,7 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { CyberChamferFrame, type CyberFrameAccent } from "@/components/cyber/CyberChamferFrames";
 import { useUnlockCart } from "@/components/programs/UnlockCartContext";
 import { cartItemKey } from "@/lib/unlockCart";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
@@ -29,6 +30,7 @@ export function UnlockCartPanel({ busy = false, error = null, onCheckout }: Prop
     setPanelExpanded,
     checkoutPulse,
   } = useUnlockCart();
+  const { localizeLabel } = useCurrency();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useModalScrollLock(panelExpanded && count > 0);
@@ -161,7 +163,7 @@ export function UnlockCartPanel({ busy = false, error = null, onCheckout }: Prop
                             {item.title}
                           </p>
                           <p className="mt-2 font-mono text-xs text-cyan-200/85 sm:text-sm">
-                            {item.displayPrice}
+                            {localizeLabel(item.displayPrice)}
                           </p>
                         </div>
                         <button

@@ -1,5 +1,6 @@
 import { djangoStreamingApiUrl } from "@/lib/djangoBackendOrigin";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
+import { getActiveCurrency } from "@/lib/currency";
 import { portalFetch, resolveClientApiUrl } from "@/lib/portal-api";
 import { formatProgramDisplayTitle } from "@/lib/programDisplayTitle";
 import { warmPlaybackHeader } from "@/lib/streamPlaybackSeek";
@@ -366,6 +367,7 @@ export async function createPlaylistCheckoutSession(
       method: "POST",
       body: JSON.stringify({
         return_base_url: options?.returnBaseUrl || "",
+        currency: getActiveCurrency(),
         ...affiliateCheckoutFields(),
       }),
     }

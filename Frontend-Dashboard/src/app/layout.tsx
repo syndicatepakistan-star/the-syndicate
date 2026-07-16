@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import { cookies } from "next/headers";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { JsonLd } from "@/components/seo/JsonLd";
+import type { CheckoutCurrency } from "@/lib/currency";
 import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
 import {
   buildOrganizationJsonLd,
@@ -90,7 +92,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const currencyCookie = cookieStore.get("syndicate_currency")?.value;
+  const initialCurrency: CheckoutCurrency = currencyCookie === "gbp" ? "gbp" : "usd";
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -127,7 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </noscript>
         {/* End Google Tag Manager (noscript) */}
-        <Providers>
+        <Providers initialCurrency={initialCurrency}>
           <ServiceWorkerRegister />
           <RouteWarmup />
           {children}

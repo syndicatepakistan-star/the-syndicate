@@ -52,6 +52,7 @@ from accounts.checkout_cart import (
   filter_cart_items_excluding_owned,
   parse_cart_items_from_payload,
 )
+from accounts.checkout_currency import resolve_checkout_currency
 from accounts.checkout_guest import (
   claim_and_fulfill_guest_checkout,
   ensure_pending_signup_for_claim,
@@ -931,6 +932,8 @@ def create_checkout_session_view(request):
   if payload is None:
     return _json_error("Invalid JSON payload.")
 
+  checkout_currency = resolve_checkout_currency(request, payload)
+
   signup_token = _parse_signup_token(str(payload.get("signup_token", "")))
   checkout_user = _authenticate_checkout_user(request) if not signup_token else None
   allow_guest = False
@@ -951,7 +954,7 @@ def create_checkout_session_view(request):
       )
     line_items, metadata, guest_error, excluded_owned = resolve_guest_line_items(
       payload,
-      currency=settings.DEFAULT_CURRENCY,
+      currency=checkout_currency,
       parse_pence=_parse_pence_from_amount_payload,
       checkout_product_name=_checkout_product_name,
       knight_blocked=_knight_plan_checkout_blocked,
@@ -1092,7 +1095,7 @@ def create_checkout_session_view(request):
           mode="payment",
           customer_email=checkout_email,
           payment_method_types=pm_types,
-          line_items=build_checkout_line_items_for_cart(cart_items, currency=settings.DEFAULT_CURRENCY),
+          line_items=build_checkout_line_items_for_cart(cart_items, currency=checkout_currency),
           success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
           cancel_url=f"{frontend_base}/login",
           custom_text={
@@ -1202,7 +1205,7 @@ def create_checkout_session_view(request):
           plan_raw=plan_raw,
           product_name=product_name,
           unit_amount=unit_amount,
-          currency=settings.DEFAULT_CURRENCY,
+          currency=checkout_currency,
         ),
         success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{frontend_base}/login",
@@ -1364,7 +1367,7 @@ def create_checkout_session_view(request):
         plan_raw=plan_payload,
         product_name=product_name,
         unit_amount=unit_amount,
-        currency=settings.DEFAULT_CURRENCY,
+        currency=checkout_currency,
       ),
       success_url=f"{frontend_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
       cancel_url=f"{frontend_base}/signup",

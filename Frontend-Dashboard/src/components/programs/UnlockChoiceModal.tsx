@@ -12,6 +12,7 @@ import {
 } from "@/components/programs/ReadMoreText";
 import { findPackOfferForModule, type UnlockChoiceTarget } from "@/lib/unlockCart";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatPrice } from "@/lib/currency";
 
 type Props = {
@@ -32,12 +33,15 @@ export function UnlockChoiceModal({
   onUnlockPack,
 }: Props) {
   useModalScrollLock(!!target);
+  const { localizeLabel, formatPrice: formatLocalizedPrice } = useCurrency();
 
   if (!target || typeof document === "undefined") return null;
 
   const isPlan = target.kind === "plan";
   const title = isPlan ? target.offer.title : target.title.trim() || target.playlist.title;
-  const displayPrice = isPlan ? target.offer.displayPrice : formatPrice(String(target.playlist.price ?? "0"));
+  const displayPrice = isPlan
+    ? localizeLabel(target.offer.displayPrice)
+    : formatLocalizedPrice(String(target.playlist.price ?? "0"));
   const teaser = isPlan ? target.offer.teaser : target.teaser ?? "Level 1 program playlist access.";
   const accent = isPlan ? target.offer.accent : "cyan";
   const packOffer = isPlan ? findPackOfferForModule(target.offer) : null;
@@ -133,7 +137,7 @@ export function UnlockChoiceModal({
               )}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Full vault pack — {packOffer.displayPrice}
+              Full vault pack — {localizeLabel(packOffer.displayPrice)}
             </button>
           ) : null}
         </div>

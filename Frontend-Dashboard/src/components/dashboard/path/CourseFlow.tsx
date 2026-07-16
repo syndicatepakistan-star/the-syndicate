@@ -453,7 +453,7 @@ export function CourseFlow({
       void (async () => {
         if (!hasSimpleAuthSessionClient()) {
           window.location.assign(
-            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard/programs"),
           );
           return;
         }
@@ -468,15 +468,15 @@ export function CourseFlow({
             return;
           }
           if (payload.is_unlocked) {
-            router.push(`/dashboard?section=programs&playlist=${playlist.id}`);
+            router.push(`/dashboard/programs&playlist=${playlist.id}`);
             return;
           }
           window.location.assign(
-            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard/programs"),
           );
         } catch {
           window.location.assign(
-            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard?section=programs"),
+            buildPlaylistCheckoutAuthHref(playlist.id, "/dashboard/programs"),
           );
         }
       })();
@@ -494,11 +494,11 @@ export function CourseFlow({
             amount: offer.checkoutAmount,
             postAuthNext:
               typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
-                ? "/dashboard?section=programs"
+                ? "/dashboard/programs"
                 : "/programs",
           });
           if (result.status === "already_unlocked") {
-            const href = await resolveDashboardPathForPlan(offer.plan, "/dashboard?section=programs");
+            const href = await resolveDashboardPathForPlan(offer.plan, "/dashboard/programs");
             router.push(href);
             return;
           }
@@ -552,7 +552,11 @@ export function CourseFlow({
             playlist={descriptionModalPlaylist}
             onClose={() => setDescriptionModalPlaylist(null)}
           />
-          <PlanOfferDetailModal offer={detailPlanOffer} onClose={() => setDetailPlanOffer(null)} />
+          <PlanOfferDetailModal
+            offer={detailPlanOffer}
+            onClose={() => setDetailPlanOffer(null)}
+            onUnlock={handlePlanUnlock}
+          />
         </>
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-[clamp(0.65rem,1.8vw+0.2rem,1rem)]">

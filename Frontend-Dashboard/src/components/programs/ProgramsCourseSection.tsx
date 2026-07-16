@@ -638,7 +638,7 @@ export function ProgramsCourseSection({
         plan: "bundle",
         billing: "monthly",
         amount: "333",
-        postAuthNext: "/dashboard?section=programs",
+        postAuthNext: "/dashboard/programs",
       });
       if (result.status === "checkout" || result.status === "auth_required") {
         return;
@@ -647,7 +647,7 @@ export function ProgramsCourseSection({
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
         await navigateToAlreadyUnlockedProgram({
           plan: "bundle",
-          postAuthNext: "/dashboard?section=programs",
+          postAuthNext: "/dashboard/programs",
         });
         return;
       }
@@ -1349,7 +1349,7 @@ export function ProgramsCourseSection({
                   </div>
                   <div className="w-full max-w-full space-y-4 sm:space-y-6">
                     <PublicPlanOfferCards
-                      checkoutReturnPath="/dashboard?section=programs"
+                      checkoutReturnPath="/dashboard/programs"
                       embedded
                       size="large"
                       highlightPack={highlightPack}

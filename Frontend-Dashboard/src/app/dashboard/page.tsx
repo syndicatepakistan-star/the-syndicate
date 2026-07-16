@@ -35,7 +35,6 @@ import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
 import { GoalsPanel } from "@/components/ui/GoalsPanel";
 import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
 import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
-import { ProgramsCourseSection } from "@/components/programs/ProgramsCourseSection";
 import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeLoadingShell";
 import { useDashboardSmoothScroll } from "@/hooks/useDashboardSmoothScroll";
 import { useDashboardTabLifecycle } from "@/hooks/useDashboardTabLifecycle";
@@ -69,6 +68,7 @@ import {
   writeDashboardProfileDisplayName
 } from "@/lib/dashboardProfileStorage";
 import { DASHBOARD_SHELL_NAV_EVENT, type DashboardShellNavEventDetail } from "@/lib/dashboardShellNavEvent";
+import { dashboardHref, resolveDashboardSectionFromLocation } from "@/lib/dashboardRoutes";
 import { useUnlockedDashboardPrograms } from "@/hooks/useUnlockedDashboardPrograms";
 import { readDashboardProgramDeepLink } from "@/lib/programUnlockFlow";
 import {
@@ -208,6 +208,11 @@ const MembershipContentHub = dynamic(
 
 const SupportSectionLazy = dynamic(
   () => import("@/components/dashboard/SupportSection").then((mod) => mod.SupportSection),
+  { ssr: false, loading: () => <DashboardSectionFallback /> }
+);
+
+const ProgramsCourseSection = dynamic(
+  () => import("@/components/programs/ProgramsCourseSection").then((mod) => mod.ProgramsCourseSection),
   { ssr: false, loading: () => <DashboardSectionFallback /> }
 );
 
@@ -1924,8 +1929,7 @@ export default function Page() {
     if (typeof window === "undefined") return "dashboard";
     const deepLink = readDashboardProgramDeepLink();
     if (deepLink.needsProgramsSection) return "programs";
-    const section = new URLSearchParams(window.location.search).get("section");
-    return section && section !== "affiliate" ? section : "dashboard";
+    return resolveDashboardSectionFromLocation(window.location.pathname, window.location.search);
   });
   const [authChecked, setAuthChecked] = useState(false);
   const [portalUser, setPortalUser] = useState<PortalUser | null>(null);
@@ -1961,8 +1965,10 @@ export default function Page() {
       const valid = new Set(nav.map((n) => n.key));
       if (!valid.has(key)) return;
       if (typeof window !== "undefined") {
-        const raw = new URLSearchParams(window.location.search).get("section");
-        const currentKey = raw && valid.has(raw) ? raw : "dashboard";
+        const currentKey = resolveDashboardSectionFromLocation(
+          window.location.pathname,
+          window.location.search,
+        );
         if (currentKey === key) {
           startTransition(() => {
             setNavKeyState(key);
@@ -1976,21 +1982,29 @@ export default function Page() {
       });
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
-        params.set("section", key);
-        const qs = params.toString();
-        const href = qs ? `${pathname}?${qs}` : pathname;
+        params.delete("section");
+        // Clear program deep-link params when leaving programs.
+        if (key !== "programs") {
+          params.delete("playlist");
+          params.delete("playlist_id");
+          params.delete("program");
+          params.delete("pack");
+          params.delete("plan");
+          params.delete("plan_checkout");
+        }
+        const nextPath =
+          key === "dashboard"
+            ? dashboardHref("dashboard", params)
+            : dashboardHref(key as "programs" | "monk" | "resources" | "support" | "quickaccess" | "settings", params);
         const currentHref = `${window.location.pathname}${window.location.search}`;
-        if (currentHref !== href) {
-          window.history.replaceState({ dashboardSection: key }, "", href);
+        if (currentHref !== nextPath) {
+          window.history.replaceState({ dashboardSection: key }, "", nextPath);
         }
         return;
       }
-      const params = new URLSearchParams();
-      params.set("section", key);
-      const qs = params.toString();
-      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      router.push(dashboardHref(key === "dashboard" ? "dashboard" : (key as "programs")), { scroll: false });
     },
-    [nav, pathname, router]
+    [nav, router]
   );
 
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
@@ -2235,13 +2249,25 @@ export default function Page() {
     closeQuickAccessPanel();
   }, [selectedNavKey, closeGoalsPanel, closeQuickAccessPanel]);
 
-  /** Warm lazy section chunks after auth so first nav to each pane is faster. */
+  /** Warm lazy section chunks after idle — skip on small phones to save data/CPU. */
   useEffect(() => {
     if (!authChecked || !portalUser) return;
-    void import("@/features/productivity/control-center/QuickAccessGrid");
-    void import("@/components/SyndicateAiChallengePanel");
-    void import("@/components/membership/MembershipContentHub");
-    void import("@/components/dashboard/SupportSection");
+    if (typeof window === "undefined") return;
+    const narrow = window.matchMedia("(max-width: 640px)").matches;
+    if (narrow) return;
+    const warm = () => {
+      void import("@/features/productivity/control-center/QuickAccessGrid");
+      void import("@/components/SyndicateAiChallengePanel");
+      void import("@/components/membership/MembershipContentHub");
+      void import("@/components/dashboard/SupportSection");
+      void import("@/components/programs/ProgramsCourseSection");
+    };
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(warm, 1800);
+    return () => window.clearTimeout(t);
   }, [authChecked, portalUser]);
 
   useEffect(() => {
@@ -2261,13 +2287,11 @@ export default function Page() {
     }
   }, [router]);
 
-  /** Restore section from URL on load / refresh (e.g. /?section=programs). */
+  /** Restore section from URL on load / refresh (path or legacy ?section=). */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const deepLink = readDashboardProgramDeepLink(params.toString());
-    const section = params.get("section");
-    if (section === "affiliate") return;
     const valid = new Set(nav.map((n) => n.key));
 
     if (deepLink.needsProgramsSection && valid.has("programs")) {
@@ -2275,19 +2299,21 @@ export default function Page() {
         params.set("playlist", String(deepLink.playlistId));
         params.delete("playlist_id");
       }
-      params.set("section", "programs");
+      params.delete("section");
       const qs = params.toString();
-      window.history.replaceState({ dashboardSection: "programs" }, "", `${pathname}?${qs}`);
+      const href = qs ? `/dashboard/programs?${qs}` : "/dashboard/programs";
+      window.history.replaceState({ dashboardSection: "programs" }, "", href);
       setNavKeyState("programs");
       previousNavKeyRef.current = "programs";
       return;
     }
 
-    if (section && valid.has(section)) {
-      setNavKeyState(section);
-      previousNavKeyRef.current = section;
+    const resolved = resolveDashboardSectionFromLocation(window.location.pathname, params);
+    if (valid.has(resolved)) {
+      setNavKeyState(resolved);
+      previousNavKeyRef.current = resolved;
     }
-  }, [nav, pathname]);
+  }, [nav]);
 
   /** Browser back/forward: sync section from URL; leaving dashboard goes to public home. */
   useEffect(() => {
@@ -2298,14 +2324,14 @@ export default function Page() {
         router.replace("/");
         return;
       }
-      const section = new URLSearchParams(window.location.search).get("section");
-      if (section === "affiliate") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("section") === "affiliate") {
         router.replace("/affiliate-portal");
         return;
       }
+      const resolved = resolveDashboardSectionFromLocation(path, params);
       const valid = new Set(nav.map((n) => n.key));
-      if (section && valid.has(section)) setNavKeyState(section);
-      else if (!section) setNavKeyState("dashboard");
+      if (valid.has(resolved)) setNavKeyState(resolved);
     };
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);
@@ -3572,7 +3598,7 @@ export default function Page() {
                   </div>
                 ) : isNavLocked("monk") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto no-scrollbar">
-                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=monk" />
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard/monk" />
                   </div>
                 ) : (
                   <SyndicateModeSection />
@@ -3628,7 +3654,7 @@ export default function Page() {
                   </div>
                 ) : isNavLocked("resources") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
-                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=resources" />
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard/resources" />
                   </div>
                 ) : (
                   <MembershipContentHub />
@@ -3686,7 +3712,7 @@ export default function Page() {
                   </div>
                 ) : isNavLocked("dashboard") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
-                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard?section=dashboard" />
+                    <MembershipOfferLanding embedded checkoutReturnPath="/dashboard" />
                   </div>
                 ) : (
                   <>

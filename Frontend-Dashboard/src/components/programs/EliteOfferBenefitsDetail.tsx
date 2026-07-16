@@ -1,6 +1,5 @@
 "use client";
 
-import { type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
@@ -14,97 +13,166 @@ type Props = {
   className?: string;
 };
 
-const containerVariants = {
+const manifestVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.14 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.08 },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16, filter: "blur(5px)" },
+const manifestRowVariants = {
+  hidden: { opacity: 0, x: -14 },
   show: {
     opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] as const },
+    x: 0,
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
-function BenefitItem({ item, index }: { item: GamingBenefitItem; index: number }) {
-  const hasBullets = Boolean(item.bullets && item.bullets.length > 0);
-  const showDesc = !hasBullets && item.desc.trim() !== item.title.trim();
-
+/** Inventory-manifest layout — list rows, not cards. */
+function WhatYouGetManifest({
+  headingId,
+  title,
+  items,
+  footer,
+}: {
+  headingId: string;
+  title: string;
+  items: readonly GamingBenefitItem[];
+  footer?: string | null;
+}) {
   return (
-    <motion.article
-      variants={itemVariants}
-      className={cn("elite-benefit-detail__item", `elite-benefit-detail__item--${item.tone}`)}
+    <section
+      className="elite-benefit-detail__section elite-benefit-detail__section--what-you-get elite-mm-manifest"
+      aria-labelledby={headingId}
     >
-      <span
-        className={cn("elite-benefit-detail__tag", `elite-benefit-detail__tag--${item.tone}`)}
-        aria-hidden
-      >
-        {String(index + 1).padStart(2, "0")}
-      </span>
-      <div className="elite-benefit-detail__copy">
-        <strong className={cn("elite-benefit-detail__heading", `elite-benefit-detail__heading--${item.tone}`)}>
-          {item.title}
-        </strong>
-        {hasBullets ? (
-          <ul className="elite-benefit-detail__bullets">
-            {item.bullets!.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        ) : showDesc ? (
-          <span className="elite-benefit-detail__desc">{item.desc}</span>
-        ) : null}
+      <div className="elite-mm-manifest__header">
+        <span className="elite-mm-manifest__eyebrow" aria-hidden>
+          Inventory · Included
+        </span>
+        <motion.h3
+          id={headingId}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="elite-mm-manifest__title"
+        >
+          {title}
+        </motion.h3>
+        <div className="elite-mm-manifest__rule" aria-hidden />
       </div>
-    </motion.article>
+
+      <motion.ol
+        className="elite-mm-manifest__list"
+        variants={manifestVariants}
+        initial="hidden"
+        animate="show"
+      >
+        {items.map((item, index) => (
+          <motion.li
+            key={item.title}
+            variants={manifestRowVariants}
+            className={cn("elite-mm-manifest__row", `elite-mm-manifest__row--${item.tone}`)}
+          >
+            <span className="elite-mm-manifest__index" aria-hidden>
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div className="elite-mm-manifest__body">
+              <strong className="elite-mm-manifest__pack">{item.title}</strong>
+              <p className="elite-mm-manifest__meta">{item.desc}</p>
+            </div>
+          </motion.li>
+        ))}
+      </motion.ol>
+
+      {footer ? <p className="elite-mm-manifest__footer">{footer}</p> : null}
+    </section>
+  );
+}
+
+/**
+ * Lifetime access — dossier cards (always visible; no blur/opacity-0 traps).
+ * Visually opposite of the flat inventory list above.
+ */
+function LifetimeAccessSection({
+  headingId,
+  title,
+  items,
+}: {
+  headingId: string;
+  title: string;
+  items: readonly GamingBenefitItem[];
+}) {
+  return (
+    <section
+      className="elite-benefit-detail__section elite-benefit-detail__section--lifetime elite-mm-lifetime"
+      aria-labelledby={headingId}
+    >
+      <div className="elite-mm-lifetime__header">
+        <span className="elite-mm-lifetime__eyebrow" aria-hidden>
+          Vault · Lifetime unlock
+        </span>
+        <h3 id={headingId} className="elite-mm-lifetime__title public-heading-lightning public-heading-lightning--cyan">
+          {title}
+        </h3>
+        <p className="elite-mm-lifetime__sub">
+          Every programme, pack, and platform path included in Money Mastery — permanent access.
+        </p>
+      </div>
+
+      <div className="elite-mm-lifetime__grid">
+        {items.map((item, index) => {
+          const hasBullets = Boolean(item.bullets && item.bullets.length > 0);
+          return (
+            <article
+              key={item.title}
+              className={cn("elite-mm-lifetime__card", `elite-mm-lifetime__card--${item.tone}`)}
+            >
+              <header className="elite-mm-lifetime__card-head">
+                <span className="elite-mm-lifetime__badge" aria-hidden>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h4 className="elite-mm-lifetime__card-title">{item.title}</h4>
+              </header>
+              {item.desc.trim() && item.desc.trim() !== item.title.trim() ? (
+                <p className="elite-mm-lifetime__card-desc">{item.desc}</p>
+              ) : null}
+              {hasBullets ? (
+                <ul className="elite-mm-lifetime__bullets">
+                  {item.bullets!.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
 export function EliteOfferBenefitsDetail({ plan, className }: Props) {
   const config = eliteOfferBenefitPanelProps(plan);
-  const headingId = `elite-offer-benefits-${plan}`;
+  const whatYouGetId = `elite-offer-what-you-get-${plan}`;
+  const lifetimeId = `elite-offer-benefits-${plan}`;
+  const hasWhatYouGet = Boolean(config.whatYouGetItems?.length && config.whatYouGetTitle);
 
   return (
-    <section className={cn("elite-benefit-detail", className)} aria-labelledby={headingId}>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.38 }}
-        className="elite-benefit-detail__intro"
-      >
-        {config.intro}
-      </motion.p>
+    <div className={cn("elite-benefit-detail", className)}>
+      {hasWhatYouGet ? (
+        <WhatYouGetManifest
+          headingId={whatYouGetId}
+          title={config.whatYouGetTitle!}
+          items={config.whatYouGetItems!}
+          footer={config.whatYouGetFooter}
+        />
+      ) : null}
 
-      <motion.h3
-        id={headingId}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.42, delay: 0.1 }}
-        className={cn(
-          "elite-benefit-detail__title public-heading-lightning",
-          config.titleLightning === "gold" && "public-heading-lightning--gold",
-          config.titleLightning === "cyan" && "public-heading-lightning--cyan",
-        )}
-      >
-        {config.benefitsTitle}
-      </motion.h3>
+      <p className="elite-benefit-detail__intro">{config.intro}</p>
 
-      <motion.div
-        className="elite-benefit-detail__grid"
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        style={{ "--elite-benefit-accent": config.frameTone === "cyan" ? "#22d3ee" : "#4ade80" } as CSSProperties}
-      >
-        {config.items.map((item, index) => (
-          <BenefitItem key={item.title} item={item} index={index} />
-        ))}
-      </motion.div>
-    </section>
+      <LifetimeAccessSection headingId={lifetimeId} title={config.benefitsTitle} items={config.items} />
+    </div>
   );
 }

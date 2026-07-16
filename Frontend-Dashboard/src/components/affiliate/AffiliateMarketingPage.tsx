@@ -43,7 +43,7 @@ const SHOWCASE = [
     body: "Growth creates volume. As your network expands, your lead feed becomes your wealth system. Every entry shows activity status, conversion stage, purchase movement, and commission outcome. Clear visibility. Clean intelligence. The system scales with your ambition.",
   },
   {
-    src: "/assets/affiliate-page/04-conversion-formula.png",
+    src: "/assets/affiliate-page/04-conversion-formula.jpg",
     width: 988,
     height: 735,
     accent: "cyan" as const satisfies ShowcaseAccent,
@@ -55,7 +55,7 @@ const SHOWCASE = [
     ],
   },
   {
-    src: "/assets/affiliate-page/05-withdraw-airlock.png",
+    src: "/assets/affiliate-page/05-withdraw-airlock.jpg",
     width: 894,
     height: 730,
     accent: "violet" as const satisfies ShowcaseAccent,

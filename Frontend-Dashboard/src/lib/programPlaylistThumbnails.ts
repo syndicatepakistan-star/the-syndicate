@@ -213,14 +213,14 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   {
     src: OFFER_PLAN_THUMB_MONEY_MASTERY,
     alt: "Money Mastery",
-    fileName: "money-mastery-v2.png",
+    fileName: "money-mastery-v2.jpg",
     href: planOfferDeepLink("bundle"),
     packKey: "bundle",
   },
   {
     src: OFFER_PLAN_THUMB_THE_KNIGHT,
     alt: "The Knight",
-    fileName: "theknight.png",
+    fileName: "theknight.jpg",
     href: planOfferDeepLink("king"),
     packKey: "king",
   },
@@ -241,7 +241,7 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   {
     src: OFFER_PLAN_THUMB_TRADING,
     alt: "Trading Advanced Technical Analysis",
-    fileName: "trading.png",
+    fileName: "trading.jpg",
     href: planOfferDeepLink("trading_technical_analysis"),
     packKey: "trading_technical_analysis",
   },

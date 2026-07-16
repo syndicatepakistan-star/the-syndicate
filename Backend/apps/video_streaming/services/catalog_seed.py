@@ -12,7 +12,8 @@ from django.utils import timezone
 
 from accounts.level1_program_catalog import (
     LEVEL1_ALL_PROGRAMS,
-    LEVEL1_CATEGORY_TOTAL_USD,
+    LEVEL1_BUSINESS_MODEL_UNIT_USD,
+    LEVEL1_BUSINESS_PSYCHOLOGY_UNIT_USD,
     Level1ProgramRow,
 )
 from accounts.r2_path_catalog import (
@@ -183,10 +184,12 @@ def seed_level1_playlists(
     create_videos: bool,
     stats: CatalogSeedStats,
 ) -> None:
-    psych_prices = distribute_level1_prices(LEVEL1_CATEGORY_TOTAL_USD, 11)
-    model_prices = distribute_level1_prices(LEVEL1_CATEGORY_TOTAL_USD, 11)
-
-    for row, price in zip(LEVEL1_ALL_PROGRAMS, psych_prices + model_prices, strict=True):
+    for row in LEVEL1_ALL_PROGRAMS:
+        price = (
+            LEVEL1_BUSINESS_PSYCHOLOGY_UNIT_USD
+            if row.category == StreamPlaylist.Category.BUSINESS_PSYCHOLOGY
+            else LEVEL1_BUSINESS_MODEL_UNIT_USD
+        )
         playlist = StreamPlaylist.objects.filter(slug=row.catalog_slug).first()
         if not playlist:
             playlist = StreamPlaylist.objects.create(

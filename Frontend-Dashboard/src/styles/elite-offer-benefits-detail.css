@@ -90,6 +90,364 @@
   position: relative;
   width: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+.elite-benefit-detail__section {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.elite-benefit-detail__section--what-you-get {
+  padding-bottom: clamp(1.25rem, 3vw, 2rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.elite-benefit-detail__section--lifetime {
+  padding-top: 0.25rem;
+}
+
+.elite-benefit-detail__section-footer {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(12px, 1.6vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.88);
+}
+
+/* ——— What You Get: inventory manifest (not neon cards) ——— */
+.elite-mm-manifest {
+  --mm-line: rgba(255, 255, 255, 0.12);
+  --mm-ink: rgba(244, 244, 245, 0.96);
+  --mm-mute: rgba(161, 161, 170, 0.92);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+    rgba(8, 8, 10, 0.55);
+  border: 1px solid var(--mm-line);
+  border-radius: 0;
+  padding: clamp(1.1rem, 2.8vw, 1.75rem);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+.elite-mm-manifest__header {
+  margin-bottom: 1.15rem;
+}
+
+.elite-mm-manifest__eyebrow {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(212, 175, 57, 0.9);
+}
+
+.elite-mm-manifest__title {
+  margin: 0;
+  font-family: "Thryon", "Rajdhani", var(--font-display), sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--mm-ink);
+  text-shadow: none;
+  filter: none;
+}
+
+.elite-mm-manifest__rule {
+  margin-top: 0.85rem;
+  height: 2px;
+  width: min(100%, 14rem);
+  background: linear-gradient(90deg, rgba(212, 175, 57, 0.95), rgba(212, 175, 57, 0.15), transparent);
+}
+
+.elite-mm-manifest__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--mm-line);
+}
+
+.elite-mm-manifest__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0.85rem 1rem;
+  align-items: start;
+  padding: 0.95rem 0.35rem 0.95rem 0;
+  border-bottom: 1px solid var(--mm-line);
+  background: transparent;
+}
+
+.elite-mm-manifest__row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mm-accent, rgba(212, 175, 57, 0.85));
+  opacity: 0.85;
+}
+
+.elite-mm-manifest__row--amber {
+  --mm-accent: #f59e0b;
+}
+.elite-mm-manifest__row--green {
+  --mm-accent: #34d399;
+}
+.elite-mm-manifest__row--gold {
+  --mm-accent: #eab308;
+}
+.elite-mm-manifest__row--pink {
+  --mm-accent: #e879f9;
+}
+.elite-mm-manifest__row--cyan {
+  --mm-accent: #38bdf8;
+}
+.elite-mm-manifest__row--violet {
+  --mm-accent: #a78bfa;
+}
+
+.elite-mm-manifest__index {
+  padding-left: 0.85rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--mm-accent, #eab308) 55%, transparent);
+}
+
+.elite-mm-manifest__body {
+  min-width: 0;
+  padding-right: 0.25rem;
+}
+
+.elite-mm-manifest__pack {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(13px, 1.7vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  color: var(--mm-ink);
+}
+
+.elite-mm-manifest__meta {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.55vw, 15px);
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: var(--mm-mute);
+}
+
+.elite-mm-manifest__footer {
+  margin: 1.15rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px dashed rgba(212, 175, 57, 0.35);
+  text-align: left;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(11px, 1.4vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.55;
+  color: rgba(250, 204, 21, 0.88);
+}
+
+@media (max-width: 640px) {
+  .elite-mm-manifest__row {
+    grid-template-columns: 2.6rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .elite-mm-manifest__index {
+    font-size: 1.25rem;
+  }
+}
+
+/* ——— You Will Gain Lifetime Access: dossier cards (not inventory rows) ——— */
+.elite-mm-lifetime {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.25rem;
+  padding: clamp(1.25rem, 3vw, 1.85rem);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(34, 211, 238, 0.12), transparent 60%),
+    linear-gradient(165deg, rgba(6, 18, 28, 0.95), rgba(2, 6, 14, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 0 40px rgba(34, 211, 238, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.elite-mm-lifetime__header {
+  text-align: center;
+  margin-bottom: clamp(1.1rem, 2.5vw, 1.6rem);
+}
+
+.elite-mm-lifetime__eyebrow {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(34, 211, 238, 0.85);
+}
+
+.elite-mm-lifetime__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4.2vw, 2.55rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.elite-mm-lifetime__sub {
+  margin: 0.65rem auto 0;
+  max-width: 42rem;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.6vw, 15px);
+  line-height: 1.5;
+  color: rgba(186, 230, 253, 0.72);
+}
+
+.elite-mm-lifetime__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .elite-mm-lifetime__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+.elite-mm-lifetime__card {
+  --lt-accent: #22d3ee;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 100%;
+  padding: 1rem 1.05rem 1.05rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--lt-accent) 45%, rgba(255, 255, 255, 0.08));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--lt-accent) 14%, transparent), transparent 48%),
+    rgba(3, 10, 18, 0.92);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--lt-accent) 18%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  opacity: 1;
+  visibility: visible;
+}
+
+.elite-mm-lifetime__card--amber {
+  --lt-accent: #f59e0b;
+}
+.elite-mm-lifetime__card--green {
+  --lt-accent: #34d399;
+}
+.elite-mm-lifetime__card--gold {
+  --lt-accent: #eab308;
+}
+.elite-mm-lifetime__card--pink {
+  --lt-accent: #e879f9;
+}
+.elite-mm-lifetime__card--cyan {
+  --lt-accent: #22d3ee;
+}
+.elite-mm-lifetime__card--violet {
+  --lt-accent: #a78bfa;
+}
+
+.elite-mm-lifetime__card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.elite-mm-lifetime__badge {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  min-width: 2.35rem;
+  height: 1.65rem;
+  padding: 0 0.4rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--lt-accent) 70%, white);
+  background: color-mix(in srgb, var(--lt-accent) 28%, rgba(0, 0, 0, 0.65));
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fff;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--lt-accent) 40%, transparent);
+}
+
+.elite-mm-lifetime__card-title {
+  margin: 0;
+  font-family: "Rajdhani", var(--font-display), sans-serif;
+  font-size: clamp(15px, 1.9vw, 18px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--lt-accent) 75%, white);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--lt-accent) 45%, transparent);
+}
+
+.elite-mm-lifetime__card-desc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.5vw, 15px);
+  line-height: 1.5;
+  color: rgba(203, 213, 225, 0.88);
+}
+
+.elite-mm-lifetime__bullets {
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 1.05rem;
+  list-style: disc;
+  font-family: var(--font-body);
+  font-size: clamp(12px, 1.45vw, 14px);
+  line-height: 1.5;
+  color: rgba(186, 198, 214, 0.92);
+}
+
+.elite-mm-lifetime__bullets li {
+  margin: 0.22rem 0;
+}
+
+.elite-mm-lifetime__bullets li::marker {
+  color: color-mix(in srgb, var(--lt-accent) 80%, white);
 }
 
 .elite-benefit-detail::before {

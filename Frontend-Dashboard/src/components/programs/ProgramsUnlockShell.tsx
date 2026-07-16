@@ -17,7 +17,7 @@ function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
     setCartCheckoutBusy(true);
     try {
       const result = await checkoutUnlockCartItems(unlockCart.items, {
-        postAuthNext: "/dashboard?section=programs",
+        postAuthNext: "/dashboard/programs",
         playlistReturnPath: "/programs",
       });
       if (result.status === "already_unlocked") {

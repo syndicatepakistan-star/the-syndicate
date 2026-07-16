@@ -13,27 +13,36 @@ export const VAULT_ALACARTE_AI_CONTENT_USD = 250;
 /** @deprecated Use pack-specific totals above. */
 export const VAULT_ALACARTE_TOTAL_USD = 240;
 
-export const LEVEL1_CATEGORY_CHECKOUT_USD = 150;
 export const LEVEL1_PROGRAMS_PER_CATEGORY = 11;
 
-/** Business Behaviour Psychology — 11 programs @ $150 total. */
+/** Business Behaviour Psychology — $99 per program. */
+export const BUSINESS_PSYCHOLOGY_UNIT_USD = 99;
+
+/** Business Model — $75 per program. */
+export const BUSINESS_MODEL_UNIT_USD = 75;
+
+/** @deprecated Prefer per-program unit prices above. */
+export const LEVEL1_CATEGORY_CHECKOUT_USD =
+  BUSINESS_MODEL_UNIT_USD * LEVEL1_PROGRAMS_PER_CATEGORY;
+
+/** Business Behaviour Psychology — 11 programs. */
 export const BUSINESS_PSYCHOLOGY_PLAYLIST_IDS: readonly number[] = [
   3, 6, 31, 30, 99, 1, 12, 2, 9, 7, 8,
 ];
 
-/** Business Model — 11 programs @ $150 total. */
+/** Business Model — 11 programs. */
 export const BUSINESS_MODEL_PLAYLIST_IDS: readonly number[] = [
   21, 28, 25, 20, 14, 23, 19, 24, 13, 16, 17,
 ];
 
-export const BUSINESS_PSYCHOLOGY_PLAYLIST_PRICES = distributeDollarPrices(
-  LEVEL1_CATEGORY_CHECKOUT_USD,
-  BUSINESS_PSYCHOLOGY_PLAYLIST_IDS.length
+export const BUSINESS_PSYCHOLOGY_PLAYLIST_PRICES = Array.from(
+  { length: BUSINESS_PSYCHOLOGY_PLAYLIST_IDS.length },
+  () => BUSINESS_PSYCHOLOGY_UNIT_USD
 );
 
-export const BUSINESS_MODEL_PLAYLIST_PRICES = distributeDollarPrices(
-  LEVEL1_CATEGORY_CHECKOUT_USD,
-  BUSINESS_MODEL_PLAYLIST_IDS.length
+export const BUSINESS_MODEL_PLAYLIST_PRICES = Array.from(
+  { length: BUSINESS_MODEL_PLAYLIST_IDS.length },
+  () => BUSINESS_MODEL_UNIT_USD
 );
 
 export function comparePriceForUnit(unitPrice: number): number {

@@ -38,7 +38,7 @@ export function syndicateOtpVerifyHref(email: string, flow: "login" | "signup", 
  * After Stripe checkout on the-syndicate.com, never follow a stale `POST_LOGIN_REDIRECT_URL`
  * on another domain (e.g. syndicateofficial.com) — always land on the same host the user paid on.
  */
-const DEFAULT_AFTER_AUTH = "/dashboard?section=programs";
+const DEFAULT_AFTER_AUTH = "/dashboard/programs";
 
 export function resolvePostOtpAppRedirect(redirectFromApi: string | undefined): string {
   if (typeof window === "undefined") return DEFAULT_AFTER_AUTH;

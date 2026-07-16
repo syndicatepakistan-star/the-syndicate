@@ -16,7 +16,7 @@ type SnapshotItem = {
 
 const SNAPSHOTS: SnapshotItem[] = [
   {
-    src: '/assets/paywall/programs-snapshot.png',
+    src: '/assets/paywall/programs-snapshot.jpg',
     title: 'PROGRAM EXECUTION HUB',
     description:
       'Access structured programs, actionable lessons, and progress systems from a personalized dashboard.',

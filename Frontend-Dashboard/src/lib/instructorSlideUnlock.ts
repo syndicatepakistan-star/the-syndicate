@@ -12,7 +12,7 @@ import {
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { createPlaylistCheckoutSession } from "@/lib/streaming-api";
 
-const PROGRAMS_RETURN = "/dashboard?section=programs";
+const PROGRAMS_RETURN = "/dashboard/programs";
 
 function resolvePlanOffer(plan: CheckoutOfferKey) {
   return planOfferByKey(plan as never) ?? vaultCourseBySlug(plan);

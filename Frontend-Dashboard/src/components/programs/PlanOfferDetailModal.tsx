@@ -19,6 +19,9 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 type Props = {
   offer: PlanOfferDef | null;
   onClose: () => void;
+  /** Money Mastery / primary offers — unlock CTA inside the details modal. */
+  onUnlock?: (offer: PlanOfferDef) => void;
+  unlockBusy?: boolean;
 };
 
 const DETAIL_THEMES: Record<
@@ -104,7 +107,7 @@ function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {
   );
 }
 
-export function PlanOfferDetailModal({ offer, onClose }: Props) {
+export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = false }: Props) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const { localizeLabel } = useCurrency();
@@ -135,8 +138,27 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
   const comingSoon = isPlanOfferComingSoon(offer);
   const structuredDescription = resolveOfferStructuredDescription(offer);
   const primaryElitePlan = isPrimaryElitePlan(offer.plan) ? offer.plan : null;
+  const showMoneyMasteryUnlock = offer.plan === "bundle" && typeof onUnlock === "function" && !comingSoon;
   const detailCardStats =
     isTradingModule || isTradingLesson ? resolveOfferCardStats(offer, isTradingModule ? "module" : undefined) : undefined;
+
+  const unlockButton = showMoneyMasteryUnlock ? (
+    <button
+      type="button"
+      disabled={unlockBusy}
+      onClick={() => onUnlock?.(offer)}
+      className={cn(
+        "inline-flex w-full max-w-md items-center justify-center rounded-xl border-2 px-5 py-3.5",
+        "font-mono text-[12px] font-black uppercase tracking-[0.16em] transition sm:text-[13px]",
+        "border-amber-300/70 bg-[linear-gradient(180deg,rgba(251,191,36,0.22),rgba(180,83,9,0.35))]",
+        "text-amber-50 shadow-[0_0_28px_rgba(251,191,36,0.28)]",
+        "hover:border-amber-200 hover:bg-amber-400/25",
+        "disabled:cursor-wait disabled:opacity-65",
+      )}
+    >
+      {unlockBusy ? "Starting checkout…" : offer.openLabel || "Unlock Full Pack"}
+    </button>
+  ) : null;
 
   return createPortal(
     <div
@@ -211,6 +233,8 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
             </span>
           </div>
 
+          {unlockButton ? <div className="mt-6 flex justify-start">{unlockButton}</div> : null}
+
           {detailCardStats ? (
             <ProgramCardStatsLines stats={detailCardStats} size="large" className="mt-5" />
           ) : null}
@@ -272,6 +296,10 @@ export function PlanOfferDetailModal({ offer, onClose }: Props) {
               <StructuredDescriptionBody text={structuredDescription} prominent />
             )}
           </div>
+
+          {unlockButton ? (
+            <div className="mt-10 flex justify-start border-t border-white/10 pt-8">{unlockButton}</div>
+          ) : null}
         </div>
       </div>
     </div>,

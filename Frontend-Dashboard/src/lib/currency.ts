@@ -77,45 +77,75 @@ export function setActiveCurrency(currency: CheckoutCurrency) {
 
 /**
  * Resolve country from the browser's public IP (works with VPN on localhost).
- * CDN geo headers are absent on local `npm run dev`.
+ * Prefer CORS-friendly endpoints — many CDN traces are blocked in the browser.
  */
 export async function detectPublicIpCountry(): Promise<string | null> {
   if (typeof window === "undefined") return null;
 
-  const controllers: AbortController[] = [];
   const withTimeout = (ms: number) => {
     const c = new AbortController();
-    controllers.push(c);
     window.setTimeout(() => c.abort(), ms);
     return c.signal;
   };
 
+  // 1) Same-origin API (production CDN headers / server IP lookup)
   try {
-    // Primary: Cloudflare trace (returns `loc=GB`)
-    const cfRes = await fetch("https://www.cloudflare.com/cdn-cgi/trace", {
-      signal: withTimeout(4000),
+    const res = await fetch("/api/geo-currency", {
+      signal: withTimeout(4500),
       cache: "no-store",
-    });
-    if (cfRes.ok) {
-      const text = await cfRes.text();
-      const match = text.match(/(?:^|\n)loc=([A-Z]{2})(?:\n|$)/i);
-      if (match?.[1]) return match[1].toUpperCase();
-    }
-  } catch {
-    // fall through
-  }
-
-  try {
-    const res = await fetch("https://ipapi.co/country_code/", {
-      signal: withTimeout(4000),
-      cache: "no-store",
+      credentials: "same-origin",
     });
     if (res.ok) {
-      const code = (await res.text()).trim().toUpperCase();
+      const data = (await res.json()) as { country?: string | null };
+      const code = String(data.country || "").trim().toUpperCase();
       if (/^[A-Z]{2}$/.test(code)) return code;
     }
   } catch {
-    // ignore
+    // fall through — localhost often has no usable server-side IP
+  }
+
+  // 2) Browser public-IP lookups (VPN-aware; CORS OK)
+  const clients: Array<() => Promise<string | null>> = [
+    async () => {
+      const res = await fetch("https://api.country.is/", {
+        signal: withTimeout(4000),
+        cache: "no-store",
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { country?: string };
+      const code = String(data.country || "").trim().toUpperCase();
+      return /^[A-Z]{2}$/.test(code) ? code : null;
+    },
+    async () => {
+      const res = await fetch("https://get.geojs.io/v1/ip/country.json", {
+        signal: withTimeout(4000),
+        cache: "no-store",
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { country?: string };
+      const code = String(data.country || "").trim().toUpperCase();
+      return /^[A-Z]{2}$/.test(code) ? code : null;
+    },
+    async () => {
+      const res = await fetch("https://ipwho.is/", {
+        signal: withTimeout(4000),
+        cache: "no-store",
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { country_code?: string; success?: boolean };
+      if (data.success === false) return null;
+      const code = String(data.country_code || "").trim().toUpperCase();
+      return /^[A-Z]{2}$/.test(code) ? code : null;
+    },
+  ];
+
+  for (const run of clients) {
+    try {
+      const code = await run();
+      if (code) return code;
+    } catch {
+      // try next
+    }
   }
 
   return null;

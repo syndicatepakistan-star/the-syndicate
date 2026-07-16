@@ -40,7 +40,7 @@ export async function checkoutUnlockCartItems(
     return { status: "error", message: "Unlock bucket is empty." };
   }
 
-  const postAuthNext = options.postAuthNext?.trim() || "/dashboard?section=programs";
+  const postAuthNext = options.postAuthNext?.trim() || "/dashboard/programs";
 
   if (items.length === 1 && items[0].kind === "plan") {
     const offer = resolvePlanOfferBySlug(items[0].plan);

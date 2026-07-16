@@ -23,7 +23,7 @@ export type PostAuthCheckoutResult =
 function safePostAuthNext(next: string | undefined): string {
   const trimmed = (next || "").trim();
   if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return trimmed;
-  return "/dashboard?section=programs";
+  return "/dashboard/programs";
 }
 
 export function hasPendingCheckoutIntent(intent: PendingCheckoutIntent): boolean {

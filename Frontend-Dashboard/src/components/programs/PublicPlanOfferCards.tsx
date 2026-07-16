@@ -69,7 +69,7 @@ export function PublicPlanOfferCards(props: Parameters<typeof PublicPlanOfferCar
 }
 
 function PublicPlanOfferCardsInner({
-  checkoutReturnPath = "/dashboard?section=programs",
+  checkoutReturnPath = "/dashboard/programs",
   embedded = false,
   shellHosted = false,
   size = "large",
@@ -434,7 +434,12 @@ function PublicPlanOfferCardsInner({
           {PLAN_OFFERS.map(renderOffer)}
         </div>
       )}
-      <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
+      <PlanOfferDetailModal
+        offer={detailOffer}
+        onClose={() => setDetailOffer(null)}
+        onUnlock={(offer) => void joinOffer(offer)}
+        unlockBusy={busyPlan === "bundle"}
+      />
       <PackVaultOfferModal
         packOffer={vaultPackOffer}
         busyPlan={busyPlan}

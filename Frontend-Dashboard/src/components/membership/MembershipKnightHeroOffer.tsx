@@ -27,7 +27,7 @@ const CYBER_UNLOCK_CTA = cn(
 );
 
 export function MembershipKnightHeroOffer({
-  checkoutReturnPath = "/dashboard?section=resources",
+  checkoutReturnPath = "/dashboard/resources",
 }: {
   checkoutReturnPath?: string;
 }) {

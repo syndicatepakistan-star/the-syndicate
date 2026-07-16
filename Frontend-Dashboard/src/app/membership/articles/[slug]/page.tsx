@@ -9,7 +9,7 @@ import { fetchAuthenticatedPdfBlob, portalFetch } from "@/lib/portal-api";
 import type { ArticleDto } from "@/components/membership/ArticleCard";
 import { MembershipArticleReader, type ArticleReaderState } from "@/components/membership/MembershipArticleReader";
 
-const ARTICLES_HREF = "/dashboard?section=resources";
+const ARTICLES_HREF = "/dashboard/resources";
 type ArticleDetailResponse = ArticleDto & { detail?: string };
 type ArticleRequestResult = { ok: boolean; status: number; data: ArticleDetailResponse };
 const articleDetailCache = new Map<string, ArticleDto>();

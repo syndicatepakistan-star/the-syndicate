@@ -283,9 +283,9 @@ export function CheckoutClaimForm({
       window.dispatchEvent(new Event("plan-checkout-confirmed"));
       window.dispatchEvent(new Event("playlist-checkout-confirmed"));
 
-      let nextUrl = "/dashboard?section=programs";
+      let nextUrl = "/dashboard/programs";
       if (typeof data.selected_plan === "string" && data.selected_plan.trim()) {
-        nextUrl = `/dashboard?section=programs&plan_checkout=success&plan=${encodeURIComponent(data.selected_plan.trim())}`;
+        nextUrl = `/dashboard/programs&plan_checkout=success&plan=${encodeURIComponent(data.selected_plan.trim())}`;
       }
       if (nextUrl.startsWith("/")) {
         nextUrl = `${window.location.origin}${nextUrl}`;

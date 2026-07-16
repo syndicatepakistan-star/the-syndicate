@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { loadOperatorBrief, type StoredOperatorBrief } from "@/lib/operator-brief-storage";
 
-const ARTICLES_HREF = "/dashboard?section=resources";
+const ARTICLES_HREF = "/dashboard/resources";
 
 /** Improve readability when the dataset seed is mostly uppercase. */
 function displaySeedText(s: string): string {

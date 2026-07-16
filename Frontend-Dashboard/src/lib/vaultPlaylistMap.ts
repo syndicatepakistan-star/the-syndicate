@@ -12,6 +12,7 @@ import {
 import { isVaultSubmoduleStreamPlaylist } from "@/lib/programPlaylistThumbnails";
 import { resolveClientApiUrl, resolvePortalProxyUrl } from "@/lib/portal-api";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+import { dashboardProgramsHref } from "@/lib/dashboardRoutes";
 
 export type VaultPlaylistUnlockContext = {
   purchasedSlugs?: ReadonlySet<string>;
@@ -149,7 +150,7 @@ export function vaultPlaylistIdForPlan(
 
 export function buildDashboardPackHref(packSlug: string): string {
   const pack = packSlug.trim().toLowerCase();
-  return `/dashboard?section=programs&pack=${encodeURIComponent(pack)}`;
+  return dashboardProgramsHref({ pack });
 }
 
 export function parseDashboardPlaylistId(href: string): number | null {
@@ -207,7 +208,7 @@ export function vaultFirstUnlockedPlaylistIdForPlan(
 export function buildVaultModulePlaylistHref(
   planSlug: string,
   map: ReadonlyMap<string, VaultPlaylistMapEntry>,
-  fallbackPath = "/dashboard?section=programs",
+  fallbackPath = dashboardProgramsHref(),
   context?: VaultPlaylistUnlockContext,
   streamPlaylists?: readonly StreamPlaylistListItem[],
 ): string {
@@ -216,5 +217,5 @@ export function buildVaultModulePlaylistHref(
   if (!playlistId) {
     return isVaultPackKey(key) ? buildDashboardPackHref(key) : fallbackPath;
   }
-  return `/dashboard?section=programs&playlist=${playlistId}`;
+  return dashboardProgramsHref({ playlist: playlistId });
 }

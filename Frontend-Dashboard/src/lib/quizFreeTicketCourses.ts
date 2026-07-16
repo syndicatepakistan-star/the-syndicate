@@ -31,8 +31,8 @@ export function isFreeTicketPsychologyCourse(courseName: string): boolean {
 /** Private dashboard programs library — highlight unlocked free-ticket card. */
 export function freeTicketDashboardPath(courseName: string): string {
   const programId = resolveFreeTicketProgramId(courseName);
-  if (!programId) return "/dashboard?section=programs";
-  return `/dashboard?section=programs&program=${programId}`;
+  if (!programId) return "/dashboard/programs";
+  return `/dashboard/programs&program=${programId}`;
 }
 
 export function freeTicketLoginNextPath(courseName: string): string {

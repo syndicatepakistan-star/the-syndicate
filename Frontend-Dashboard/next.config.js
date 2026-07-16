@@ -69,8 +69,8 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     /** Any `quality` passed to `<Image />` must be listed here (Next 15+). */
     qualities: [55, 60, 62, 70, 72, 75, 78, 85, 88],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [256, 384, 480, 640, 768],
+    deviceSizes: [360, 414, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [96, 128, 256, 384, 480, 640, 768],
     remotePatterns: [
       { protocol: "http", hostname: "127.0.0.1", port: "8000", pathname: "/media/**" },
       { protocol: "http", hostname: "localhost", port: "8000", pathname: "/media/**" },

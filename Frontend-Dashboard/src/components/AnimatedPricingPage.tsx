@@ -430,12 +430,12 @@ export function PricingPage({
         plan,
         billing: selectedBilling,
         amount,
-        postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+        postAuthNext: plan === 'king' ? '/dashboard/resources' : '/dashboard/programs',
       })
       if (result.status === 'already_unlocked') {
         await navigateToAlreadyUnlockedProgram({
           plan,
-          postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+          postAuthNext: plan === 'king' ? '/dashboard/resources' : '/dashboard/programs',
         })
         return
       }
@@ -447,7 +447,7 @@ export function PricingPage({
               plan,
               billing: selectedBilling,
               amount,
-              postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+              postAuthNext: plan === 'king' ? '/dashboard/resources' : '/dashboard/programs',
             })
           )
         }
@@ -459,7 +459,7 @@ export function PricingPage({
             plan,
             billing: selectedBilling,
             amount,
-            postAuthNext: plan === 'king' ? '/dashboard?section=resources' : '/dashboard?section=programs',
+            postAuthNext: plan === 'king' ? '/dashboard/resources' : '/dashboard/programs',
           })
         )
       } else if (typeof window !== 'undefined') {
@@ -587,7 +587,14 @@ export function PricingPage({
 
       </div>
 
-      <PlanOfferDetailModal offer={detailOffer} onClose={() => setDetailOffer(null)} />
+      <PlanOfferDetailModal
+        offer={detailOffer}
+        onClose={() => setDetailOffer(null)}
+        onUnlock={(offer) => {
+          void handleJoinPlan(offer.plan as PlanKey, 'monthly', offer.checkoutAmount)
+        }}
+        unlockBusy={redirectingPlan === 'bundle'}
+      />
 
       <AffiliatePublicSection />
     </section>

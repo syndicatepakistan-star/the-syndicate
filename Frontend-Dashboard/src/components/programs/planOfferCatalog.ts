@@ -5,6 +5,11 @@ import {
   OFFER_PLAN_THUMB_THE_KNIGHT,
   OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
+import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
+import {
+  LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES,
+  LEVEL1_PSYCHOLOGY_PROGRAM_TITLES,
+} from "@/lib/level1ProgramCatalog";
 
 export type PlanOfferKey =
   | "bundle"
@@ -92,83 +97,166 @@ export function isPlanOfferComingSoon(offer: Pick<PlanOfferDef, "plan" | "isComi
 export const MONEY_MASTERY_FOUNDATION_COPY =
   "Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.";
 
-export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
-  "Access to Syndicate Dashboard",
-  "Access to Syndicate Affiliate Opportunities",
-  "11 Business Model Programs (Learn 11 different business models – choose whichever models suit you best to start your business journey with the best odds of winning)",
-  "11 Business Behavioral Phycology Programs (Master business behavioral phycology and become an elite business operator - with the Syndicate secret behavioral correction techniques and strategies – take the way you think about business to an elite level)",
-  "26 Videos – Agentic Ai Pack",
-  "29 Videos – Ai Content Automation Pack",
-  "56 Lessons – Advanced Candlestick Technical Analysis Pack (4 video packs)",
-  "Total Videos: 133 Individual Video Lessons",
-];
+export const MONEY_MASTERY_WHAT_YOU_GET_TITLE = "What You Get";
 
-export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS = [
+export const MONEY_MASTERY_WHAT_YOU_GET_FOOTER =
+  "133 videos in total · One lifetime price — no hidden fees, no strings attached, no hidden obligation.";
+
+/** Summary pack overview shown at the top of Money Mastery details (separate from lifetime-access cards). */
+export const MONEY_MASTERY_WHAT_YOU_GET_ITEMS: readonly GamingBenefitItem[] = [
   {
-    tone: "cyan",
-    title: "Syndicate Dashboard",
-    desc: "Full operator command center — track programs, progress, and execution in one vault.",
+    tone: "amber",
+    title: "Full Agentic AI Pack",
+    desc: "26 videos · Total video length: 29hrs 15min · Building 30 AI projects ($364 if purchased separately)",
   },
   {
-    tone: "violet",
-    title: "Syndicate Affiliate Opportunities",
-    desc: "Unlock referral revenue streams and Syndicate affiliate monetization paths.",
+    tone: "green",
+    title: "Full AI Content Automation Pack",
+    desc: "29 videos · Total video length: 12hrs 49min · Building faceless content systems ($406 if purchased separately)",
   },
   {
     tone: "gold",
-    title: "11 Business Model Programs",
-    desc: "Learn 11 different business models — choose whichever models suit you best to start your business journey with the best odds of winning.",
+    title: "Full Real World Business Models Pack",
+    desc: "11 different business models · 11 videos ($825 if purchased separately)",
   },
   {
     tone: "pink",
-    title: "11 Business Behavioral Psychology Programs",
-    desc: "Master business behavioral psychology with Syndicate secret correction techniques — take how you think about business to an elite level.",
+    title: "Full Business Behavioural Psychology Programmes Pack",
+    desc: "11 different behavioural programmes · 11 videos ($1,089 if purchased separately)",
+  },
+  {
+    tone: "cyan",
+    title: "Full Advanced Technical Trading Pack",
+    desc: "56 videos · Total video length: 39hrs 45min ($396 if purchased separately)",
+  },
+  {
+    tone: "violet",
+    title: "Platform Access Included",
+    desc: "Syndicate Dashboard · Syndicate Affiliate Programmes · Syndicate Certification",
+  },
+];
+
+export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
+  "133 Individual Video Lessons Total",
+  "11 Business Behavioral Psychology Programs",
+  "11 Business Model Programs",
+  "26 Videos – Agentic Ai Pack",
+  "29 Videos – Ai Content Automation Pack",
+  "56 Lessons – Advanced Candlestick Technical Analysis Pack (4 video packs)",
+  "Access to Syndicate Dashboard",
+  "Access to Syndicate Affiliate Opportunities",
+  "Syndicate Certification",
+];
+
+const AGENTIC_PROJECT_HIGHLIGHTS = [
+  "Blog writing & WhatsApp agents (n8n)",
+  "Claude Code apps, memory & advanced workflows",
+  "Google Antigravity & vibe coding systems",
+  "RAG agents, MCP servers & business automations",
+  "SEO blogging, Gmail labelling & site scrapers",
+  "Faceless Shorts / YouTube automation pipelines",
+] as const;
+
+const AI_CONTENT_BUILD_HIGHLIGHTS = [
+  "Faceless YouTube channels & Shorts machines",
+  "3D docs, finance, philosophy & geography niches",
+  "AI influencers, stickman POV & motion graphics",
+  "NotebookLM clone workflows & script systems",
+  "Bulk Shorts, algorithm & policy-safe publishing",
+  "Always-on content automation that scales",
+] as const;
+
+const TRADING_LEARNING_HIGHLIGHTS = [
+  "The Scalpel Protocol — 1-minute chart wealth architecture",
+  "Strategies of a Master Trader — mechanical edge frameworks",
+  "Setups of a Master Trader — flags, wedges, channels & key patterns",
+  "Secrets of a Master Trader — entries, exits & risk discipline",
+  "Confirm moves with moving averages & momentum tools",
+  "Replace guesswork with calculated long-term trading systems",
+] as const;
+
+const DASHBOARD_FEATURE_HIGHLIGHTS = [
+  "Track every program, progress, and unlock in one vault",
+  "Operator command center for goals, streams & execution",
+  "Permanent billing record of lifetime access",
+  "Controlled entitlement across packs and Level 1 courses",
+] as const;
+
+const AFFILIATE_BENEFIT_HIGHLIGHTS = [
+  "Earn referral revenue promoting Syndicate programmes",
+  "Private affiliate dashboard for assets & performance",
+  "Commission tracking and withdrawal controls",
+  "Built for operators monetising trusted recommendations",
+] as const;
+
+/** Lifetime-access cards (bottom section) — program lists and pack detail. Order is intentional. */
+export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] = [
+  {
+    tone: "violet",
+    title: "133 Individual Video Lessons Total",
+    desc: "The complete Money Mastery lifetime vault — every pack below in one commitment.",
+    bullets: [
+      "26 Agentic AI lessons",
+      "29 AI Content Automation lessons",
+      "11 Business Model programmes",
+      "11 Behavioural Psychology programmes",
+      "56 Advanced Technical Trading lessons",
+      "One checkout. Lifetime access. No recurring fees.",
+    ],
+  },
+  {
+    tone: "pink",
+    title: "11 Business Behavioural Psychology Programmes",
+    desc: "Master how elite operators think under pressure — every programme included:",
+    bullets: LEVEL1_PSYCHOLOGY_PROGRAM_TITLES,
+  },
+  {
+    tone: "gold",
+    title: "11 Real World Business Model Programmes",
+    desc: "Eleven different models — pick the lanes that fit your edge:",
+    bullets: LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES,
   },
   {
     tone: "amber",
-    title: "Agentic AI Pack — 26 Videos",
-    desc: "Build agents, automate research, and scrape data into systems that work for you.",
-    bullets: [
-      "Build blog writing and WhatsApp agents",
-      "Learn vibe coding with Google Antigravity",
-      "Smart assistant for messages, meetings, and inbox",
-      "Automated research to find profitable software ideas",
-      "Scrape site data into spreadsheets — no coding",
-      "Custom search agents for private databases",
-    ],
+    title: "Agentic AI Pack — 26 Videos · 30 AI Projects",
+    desc: "Build autonomous agents and systems. Projects include:",
+    bullets: AGENTIC_PROJECT_HIGHLIGHTS,
   },
   {
     tone: "green",
     title: "AI Content Automation Pack — 29 Videos",
-    desc: "Faceless YouTube and social automation from beginner to always-on systems.",
-    bullets: [
-      "Dominate YouTube & social without facing the camera",
-      "Automate niches: 3D docs, finance, Shorts, AI influencers",
-      "Use NotebookLM & AI video tools for research, scripts, edits",
-      "Go from beginner to confident creator with clear systems",
-      "Avoid common mistakes and YouTube policy bans",
-      "Build content automation that runs around the clock",
-    ],
+    desc: "What you build and gain in this vault:",
+    bullets: AI_CONTENT_BUILD_HIGHLIGHTS,
   },
   {
     tone: "cyan",
-    title: "Advanced Candlestick Technical Analysis — 56 Lessons",
-    desc: "Short-term trading setups with chart patterns, indicators, and strict risk management.",
-    bullets: [
-      "Master profitable short-term market setups",
-      "Read flags, wedges, channels, and key chart patterns",
-      "Confirm moves with moving averages & momentum tools",
-      "Set clear entry, exit, and stop-loss targets",
-      "Replace guesswork with a disciplined mechanical system",
-      "Trade with calculated decisions for long-term wealth",
-    ],
+    title: "Advanced Technical Trading Pack — 56 Videos",
+    desc: "Four sub-packs: Scalpel Protocol, Strategies, Setups & Secrets. You learn:",
+    bullets: TRADING_LEARNING_HIGHLIGHTS,
+  },
+  {
+    tone: "cyan",
+    title: "Syndicate Dashboard",
+    desc: "Your operator command center:",
+    bullets: DASHBOARD_FEATURE_HIGHLIGHTS,
   },
   {
     tone: "violet",
-    title: "133 Individual Video Lessons Total",
-    desc: "The complete Money Mastery lifetime vault — every pack above in one commitment.",
+    title: "Syndicate Affiliate Opportunities",
+    desc: "Monetise trust with Syndicate referral paths:",
+    bullets: AFFILIATE_BENEFIT_HIGHLIGHTS,
   },
-] as const;
+  {
+    tone: "gold",
+    title: "Syndicate Certification",
+    desc: "Credential your completion inside the vault — proof of discipline, not vanity paper.",
+    bullets: [
+      "Certificate pathways on completed programmes",
+      "Operator-grade proof of execution",
+      "Tied to real progress in your dashboard",
+    ],
+  },
+];
 
 export const KNIGHT_SUBSCRIPTION_COPY =
   "The Knight Membership Subscription — An elite membership path for business operators who want control over their own destiny. Select your chosen programs, build your private war-chest, receive continuous intelligence drops, and access the dashboard designed to track your progression.";
@@ -209,6 +297,9 @@ export function eliteOfferBenefitPanelProps(plan: PrimaryElitePlanKey) {
   if (plan === "bundle") {
     return {
       intro: MONEY_MASTERY_FOUNDATION_COPY,
+      whatYouGetTitle: MONEY_MASTERY_WHAT_YOU_GET_TITLE,
+      whatYouGetItems: MONEY_MASTERY_WHAT_YOU_GET_ITEMS,
+      whatYouGetFooter: MONEY_MASTERY_WHAT_YOU_GET_FOOTER,
       benefitsTitle: "You Will Gain Lifetime Access To",
       items: MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS,
       frameTone: "green" as const,
@@ -217,6 +308,9 @@ export function eliteOfferBenefitPanelProps(plan: PrimaryElitePlanKey) {
   }
   return {
     intro: `${KNIGHT_SUBSCRIPTION_COPY} ${KNIGHT_EXECUTION_COPY.join(" ")}`,
+    whatYouGetTitle: null as string | null,
+    whatYouGetItems: null as readonly GamingBenefitItem[] | null,
+    whatYouGetFooter: null as string | null,
     benefitsTitle: "You Will Gain Access To",
     items: KNIGHT_MEMBERSHIP_BENEFIT_ITEMS,
     frameTone: "cyan" as const,

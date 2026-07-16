@@ -11,21 +11,36 @@ type DashboardSectionKeepAliveProps = {
   activeKey: string;
   className?: string;
   children: ReactNode;
+  /**
+   * When true (default for heavy sections), inactive panes unmount instead of staying hidden.
+   * Cuts memory/CPU after leaving Programs / Syndicate Mode / Membership.
+   */
+  unmountWhenInactive?: boolean;
 };
 
-/** Mount a dashboard section on first visit; hide inactive panes instead of unmounting. */
+const HEAVY_SECTIONS = new Set(["programs", "monk", "resources", "quickaccess"]);
+
+/** Mount a dashboard section on first visit; heavy sections unmount when left. */
 export function DashboardSectionKeepAlive({
   sectionKey,
   activeKey,
   className,
   children,
+  unmountWhenInactive,
 }: DashboardSectionKeepAliveProps) {
   const active = activeKey === sectionKey;
+  const shouldUnmount = unmountWhenInactive ?? HEAVY_SECTIONS.has(sectionKey);
   const [mounted, setMounted] = useState(active);
 
   useEffect(() => {
-    if (active) setMounted(true);
-  }, [active]);
+    if (active) {
+      setMounted(true);
+      return;
+    }
+    if (shouldUnmount) {
+      setMounted(false);
+    }
+  }, [active, shouldUnmount]);
 
   if (!mounted) return null;
 

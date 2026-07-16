@@ -77,6 +77,44 @@ function applyCheckoutCurrencyCookie(request: NextRequest, response: NextRespons
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const section = (request.nextUrl.searchParams.get("section") || "").trim().toLowerCase();
+
+  const dashboardSections = new Set([
+    "dashboard",
+    "programs",
+    "monk",
+    "resources",
+    "support",
+    "quickaccess",
+    "settings",
+  ]);
+
+  // Clean URLs: /dashboard?section=programs → /dashboard/programs (keep other query params).
+  if (pathname === "/dashboard" && dashboardSections.has(section) && section !== "dashboard") {
+    const clean = request.nextUrl.clone();
+    clean.pathname = `/dashboard/${section}`;
+    clean.searchParams.delete("section");
+    const redirect = NextResponse.redirect(clean);
+    applyCheckoutCurrencyCookie(request, redirect);
+    return redirect;
+  }
+
+  // Path sections rewrite onto the existing dashboard page with ?section= for the client shell.
+  const pathParts = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  if (
+    pathParts[0] === "dashboard" &&
+    pathParts.length === 2 &&
+    dashboardSections.has(pathParts[1]) &&
+    pathParts[1] !== "dashboard"
+  ) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = "/dashboard";
+    rewriteUrl.searchParams.set("section", pathParts[1]);
+    const rewrite = NextResponse.rewrite(rewriteUrl);
+    applyCheckoutCurrencyCookie(request, rewrite);
+    rewrite.headers.set("Cache-Control", "private, no-store, max-age=0");
+    return rewrite;
+  }
 
   // Legacy globe/deep links: /program/12 → public programs library card (no login).
   const programDeepLink = pathname.match(/^\/program\/(\d+)\/?$/);
@@ -94,8 +132,6 @@ export function middleware(request: NextRequest) {
   const isPublicStaticFile = /\.[a-zA-Z0-9]+$/.test(pathname);
   const authCookie = request.cookies.get("simple_auth_session")?.value;
   const hasAuthSession = authCookie === "1";
-  const section = (request.nextUrl.searchParams.get("section") || "").trim().toLowerCase();
-  const dashboardSections = new Set(["dashboard", "programs", "monk", "resources", "support", "quickaccess", "settings"]);
   const publicMarketingPath =
     pathname === "/" ||
     pathname === "/what-you-get" ||

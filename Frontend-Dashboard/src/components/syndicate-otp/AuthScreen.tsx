@@ -765,7 +765,7 @@ export default function AuthScreen({
           await navigateToAlreadyUnlockedProgram({
             playlistId: prefilledPlaylistId,
             plan: normalizedPlan,
-            postAuthNext: normalizedPostLoginNext || "/dashboard?section=programs",
+            postAuthNext: normalizedPostLoginNext || "/dashboard/programs",
           });
           return;
         }
@@ -861,7 +861,7 @@ export default function AuthScreen({
             await navigateToAlreadyUnlockedProgram({
               playlistId: prefilledPlaylistId,
               plan: normalizedPlan,
-              postAuthNext: normalizedPostLoginNext || "/dashboard?section=programs",
+              postAuthNext: normalizedPostLoginNext || "/dashboard/programs",
             });
             return;
           }

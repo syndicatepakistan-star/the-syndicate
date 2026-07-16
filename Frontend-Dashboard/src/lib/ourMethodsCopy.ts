@@ -65,7 +65,7 @@ export const OUR_METHODS_BLOCKS: OurMethodsBlock[] = [
       "The Syndicate philosophy teaches that money and power go hand in hand. They are like two sides of the same coin.",
       "The Syndicate's mission goes beyond attaining money, power and influence. Its elite training programmes aim to redefine how individuals perceive power and influence.",
     ]),
-    image: "/assets/money-power-mastery.png",
+    image: "/assets/money-power-mastery.jpg",
     imageAlt: "Money and power mastery — dystopian throne and neon doctrine",
     accent: "violet",
   },

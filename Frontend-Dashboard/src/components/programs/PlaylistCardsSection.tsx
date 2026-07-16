@@ -297,7 +297,7 @@ export function PlaylistCardsSection({
 
   const requestPlaylistUnlock = (pl: StreamPlaylistListItem, cardTitle: string) => {
     if (pl.is_unlocked) {
-      router.push(`/dashboard?section=programs&playlist=${pl.id}`);
+      router.push(`/dashboard/programs&playlist=${pl.id}`);
       return;
     }
     if (pl.is_coming_soon) return;

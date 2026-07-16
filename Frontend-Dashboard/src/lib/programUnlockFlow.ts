@@ -1,3 +1,4 @@
+import { dashboardHref, dashboardProgramsHref } from "@/lib/dashboardRoutes";
 import {
   buildVaultModulePlaylistHref,
   fetchVaultPlaylistMap,
@@ -10,7 +11,7 @@ import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 export const PROGRAM_UNLOCK_CELEBRATION_KEY = "program_unlock_celebration_id";
 
 export function buildDashboardPlaylistPath(playlistId: number): string {
-  return `/dashboard?section=programs&playlist=${playlistId}`;
+  return dashboardProgramsHref({ playlist: playlistId });
 }
 
 export const DASHBOARD_OPEN_PLAYLIST_EVENT = "dashboard-open-playlist";
@@ -44,7 +45,11 @@ export function readDashboardProgramDeepLink(
   const courseId =
     programRaw && /^\d+$/.test(programRaw) && Number(programRaw) > 0 ? Number(programRaw) : null;
   const section = (params.get("section") || "").trim().toLowerCase();
-  const needsProgramsSection = playlistId !== null || courseId !== null || section === "programs";
+  const onProgramsPath =
+    typeof window !== "undefined" &&
+    /^\/dashboard\/programs\/?$/.test(window.location.pathname.replace(/\/+$/, "") || "");
+  const needsProgramsSection =
+    playlistId !== null || courseId !== null || section === "programs" || onProgramsPath;
   return { playlistId, courseId, needsProgramsSection };
 }
 
@@ -57,7 +62,7 @@ export function requestDashboardProgramOpen(opts: {
   if (typeof window === "undefined") return;
 
   const params = new URLSearchParams(window.location.search);
-  params.set("section", "programs");
+  params.delete("section");
 
   if (opts.playlistId != null && Number.isFinite(opts.playlistId) && opts.playlistId > 0) {
     pendingPlaylistOpenId = opts.playlistId;
@@ -73,7 +78,9 @@ export function requestDashboardProgramOpen(opts: {
     params.delete("playlist_id");
   }
 
-  const href = `${window.location.pathname}?${params.toString()}`;
+  const href = dashboardProgramsHref(
+    Object.fromEntries(params.entries()) as Record<string, string>,
+  );
   window.history.replaceState({ dashboardSection: "programs" }, "", href);
   opts.onNavigate?.("programs");
 
@@ -113,7 +120,7 @@ export function clearUnlockCelebrationStorage(): void {
 
 export async function resolveDashboardPathForPlan(
   plan: string,
-  fallback = "/dashboard?section=programs"
+  fallback = dashboardProgramsHref(),
 ): Promise<string> {
   try {
     const map = await fetchVaultPlaylistMap();
@@ -138,15 +145,15 @@ export async function resolvePlaylistIdForPlan(plan: string): Promise<number | n
 
 export function normalizePostAuthPath(raw: string | undefined): string {
   const trimmed = (raw || "").trim();
-  if (!trimmed) return "/dashboard?section=programs";
+  if (!trimmed) return dashboardProgramsHref();
   if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
     return trimmed.split("#")[0] || trimmed;
   }
   try {
     const url = new URL(trimmed);
-    return `${url.pathname}${url.search}` || "/dashboard?section=programs";
+    return `${url.pathname}${url.search}` || dashboardProgramsHref();
   } catch {
-    return "/dashboard?section=programs";
+    return dashboardProgramsHref();
   }
 }
 

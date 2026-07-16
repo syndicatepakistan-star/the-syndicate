@@ -51,8 +51,8 @@ const DEFAULT_IMAGES: ImageItem[] = [
   { src: '/assets/pawn.png', alt: 'Featured program two' },
   { src: '/assets/kings3.png', alt: 'Featured program three' },
   { src: '/assets/pawn.png', alt: 'Featured program four' },
-  { src: '/assets/pawn1.png', alt: 'Featured program five' },
-  { src: '/assets/pawn2.png', alt: 'Featured program six' },
+  { src: '/assets/pawn1.jpg', alt: 'Featured program five' },
+  { src: '/assets/pawn2.jpg', alt: 'Featured program six' },
   { src: '/assets/coin-gold.png', alt: 'Featured program seven' },
 ]
 

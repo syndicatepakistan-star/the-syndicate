@@ -20,7 +20,7 @@ const instructorImage = (fileName: string) =>
 /** Dashboard instructor hero — images from `public/instructors`. */
 export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
   {
-    src: instructorImage("1 Minute Scalpel.png"),
+    src: instructorImage("1 Minute Scalpel.jpg"),
     programName: "The 1 Minute Scalpel",
     instructorName: "Trading Desk Lead",
     description:
@@ -28,7 +28,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "plan", plan: "trading_scalpel_protocol" },
   },
   {
-    src: instructorImage("AI Faceless YouTube Automation.png"),
+    src: instructorImage("AI Faceless YouTube Automation.jpg"),
     programName: "Faceless YouTube AI Content Creator",
     instructorName: "Content Systems Lead",
     description:
@@ -36,7 +36,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "plan", plan: "ai_content_automation" },
   },
   {
-    src: instructorImage("App Building (using Flutter).png"),
+    src: instructorImage("App Building (using Flutter).jpg"),
     programName: "App Building (using Flutter)",
     instructorName: "Mobile Engineering Lead",
     description:
@@ -92,7 +92,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 19 },
   },
   {
-    src: instructorImage("Avatar - Prompt Engineering.png"),
+    src: instructorImage("Avatar - Prompt Engineering.jpg"),
     programName: "Prompt Engineering",
     instructorName: "LLM Workflow Lead",
     description:
@@ -100,7 +100,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 26 },
   },
   {
-    src: instructorImage("Avatar 3 - A.I Automation.png"),
+    src: instructorImage("Avatar 3 - A.I Automation.jpg"),
     programName: "AI Automations",
     instructorName: "Automation Architect",
     description:
@@ -108,7 +108,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 16 },
   },
   {
-    src: instructorImage("Book Publishing on Amazon Kindle.png"),
+    src: instructorImage("Book Publishing on Amazon Kindle.jpg"),
     programName: "Book Publishing On Amazon (Kindle)",
     instructorName: "Publishing Ops Lead",
     description:
@@ -124,7 +124,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 20 },
   },
   {
-    src: instructorImage("Python Programming.png"),
+    src: instructorImage("Python Programming.jpg"),
     programName: "Python Programming",
     instructorName: "Software Foundations Lead",
     description:
@@ -132,7 +132,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 24 },
   },
   {
-    src: instructorImage("WordPress Blog.png"),
+    src: instructorImage("WordPress Blog.jpg"),
     programName: "WordPress Blog",
     instructorName: "Content Platform Lead",
     description:

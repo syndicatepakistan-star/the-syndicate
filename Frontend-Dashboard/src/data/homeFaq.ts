@@ -54,7 +54,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
   pricing: [
     {
       q: "How much does everything cost?",
-      a: "Check the Programs page — that is where prices are listed and where you pay.\nMoney Mastery is $333 lifetime and unlocks all features and all program packs.\nThe Knight is $19.99 a month — pick a few courses, use the dashboard, Syndicate Mode, goals, and member content.\nAgentic AI, AI Content Automation, and Trading: $150 each for the full pack (about $200 if you bought every module separately).\nLevel 1 Business Model and Business Behaviour Psychology courses are priced across eleven programs per column ($150 total if you bought all eleven in a column separately — most are about $13–$14 each). Buying a full vault pack is cheaper than grabbing every course inside it separately.",
+      a: "Check the Programs page — that is where prices are listed and where you pay.\nMoney Mastery is $333 lifetime and unlocks all features and all program packs.\nThe Knight is $19.99 a month — pick a few courses, use the dashboard, Syndicate Mode, goals, and member content.\nAgentic AI, AI Content Automation, and Trading: $150 each for the full pack (about $200 if you bought every module separately).\nLevel 1 Business Model courses are $75 each (lifetime). Business Behaviour Psychology courses are $99 each (lifetime). Buying a full vault pack is cheaper than grabbing every course inside it separately.",
     },
     {
       q: "Can I buy one course inside a pack instead of the whole thing?",

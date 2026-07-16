@@ -58,16 +58,21 @@ export function CurrencyProvider({
   // Localhost / no CDN geo headers: detect country from the browser public IP (VPN-aware).
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      try {
-        const resolved = await resolveCurrencyFromPublicIp();
-        if (!cancelled) setCurrency(resolved);
-      } catch {
-        // Keep cookie / initial currency.
-      }
-    })();
+    const refresh = () => {
+      void (async () => {
+        try {
+          const resolved = await resolveCurrencyFromPublicIp();
+          if (!cancelled) setCurrency(resolved);
+        } catch {
+          // Keep cookie / initial currency.
+        }
+      })();
+    };
+    refresh();
+    window.addEventListener("focus", refresh);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", refresh);
     };
   }, []);
 

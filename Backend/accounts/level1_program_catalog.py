@@ -12,7 +12,11 @@ from decimal import Decimal
 
 from apps.video_streaming.models import StreamPlaylist
 
-LEVEL1_CATEGORY_TOTAL_USD = Decimal("150.00")
+LEVEL1_BUSINESS_PSYCHOLOGY_UNIT_USD = Decimal("99.00")
+LEVEL1_BUSINESS_MODEL_UNIT_USD = Decimal("75.00")
+
+# Deprecated: prefer per-program unit prices. Kept for older imports.
+LEVEL1_CATEGORY_TOTAL_USD = LEVEL1_BUSINESS_MODEL_UNIT_USD * 11
 
 
 @dataclass(frozen=True)

@@ -40,7 +40,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     href: "https://www.tiktok.com/@followthesyndicate/video/7510422941474098454",
     alt: "Only trust God and hard work — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 2.1M views",
-    posterSrc: "/assets/most viewed/03.png",
+    posterSrc: "/assets/most viewed/03.jpg",
     frame: "purple",
   },
   {
@@ -48,7 +48,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     href: "https://www.tiktok.com/@followthesyndicate/video/7510313874315545879",
     alt: "IF YOU RISK NOTHING YOU RISK EVERYTHING — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.9M views",
-    posterSrc: "/assets/most viewed/04.png",
+    posterSrc: "/assets/most viewed/04.jpg",
     frame: "yellow",
   },
   {
@@ -88,7 +88,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     href: "https://www.tiktok.com/@followthesyndicate/video/7490639131492551958",
     alt: "Wealth is not just a luxury — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.3M views",
-    posterSrc: "/assets/most viewed/09.png",
+    posterSrc: "/assets/most viewed/09.jpg",
     frame: "purple",
   },
   {
@@ -96,7 +96,7 @@ export const TIKTOK_MOST_VIEWED: TikTokMostViewedCard[] = [
     href: "https://www.tiktok.com/@followthesyndicate/video/7490636467157388566",
     alt: "Protect your dignity, write your own story — THE SYNDICATE on TikTok",
     approxViewsLabel: "about 1.1M views",
-    posterSrc: "/assets/most viewed/10.png",
+    posterSrc: "/assets/most viewed/10.jpg",
     frame: "yellow",
   },
 ];

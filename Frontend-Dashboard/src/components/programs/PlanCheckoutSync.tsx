@@ -32,12 +32,13 @@ export function PlanCheckoutSync() {
     );
 
     const clean = new URL(window.location.href);
+    clean.pathname = "/dashboard/programs";
+    clean.searchParams.delete("section");
     clean.searchParams.delete("plan_checkout");
     clean.searchParams.delete("plan");
     clean.searchParams.delete("playlist");
     clean.searchParams.delete("playlist_id");
     clean.searchParams.delete("pack");
-    clean.searchParams.set("section", "programs");
     window.history.replaceState({}, "", clean.toString());
   }, []);
 

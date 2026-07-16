@@ -126,6 +126,14 @@ export const LEVEL1_SLUG_DISPLAY_ORDER: readonly string[] = [
   ...PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
 ];
 
+export const LEVEL1_PSYCHOLOGY_PROGRAM_TITLES: readonly string[] = LEVEL1_PSYCHOLOGY_SLUGS.map(
+  (slug) => LEVEL1_CANONICAL_TITLES[slug] ?? slug
+);
+
+export const LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES: readonly string[] = LEVEL1_BUSINESS_MODEL_SLUGS.map(
+  (slug) => LEVEL1_CANONICAL_TITLES[slug] ?? slug
+);
+
 export const LEVEL1_SLUG_THUMBNAILS: Record<string, string> = {
   "level1-psych-01": "/assets/programs/cources%20imnages/9-5.jpg",
   "level1-psych-02": "/assets/programs/cources%20imnages/0%20to%201M.jpg",

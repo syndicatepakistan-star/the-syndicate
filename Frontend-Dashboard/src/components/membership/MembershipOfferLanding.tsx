@@ -76,7 +76,7 @@ const MEMBERSHIP_PILLARS = [
     title: "Break The Gate",
     summary: "One tier. Full uplink. No partial access.",
     body: "Money Mastery is the runway. The Knight is the airlock — library, challenges, articles, and credential paths behind a single dystopian-grade unlock.",
-    image: "/assets/pawn1.png",
+    image: "/assets/pawn1.jpg",
     imageAlt: "Neon gate breaker",
     accent: "amber" as const,
   },
@@ -191,7 +191,7 @@ export function MembershipOfferSections() {
 
 export function MembershipOfferLanding({
   embedded = false,
-  checkoutReturnPath = "/dashboard?section=resources",
+  checkoutReturnPath = "/dashboard/resources",
 }: {
   embedded?: boolean;
   checkoutReturnPath?: string;

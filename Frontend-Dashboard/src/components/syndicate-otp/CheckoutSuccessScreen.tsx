@@ -105,7 +105,13 @@ function buildLoggedInCheckoutRedirect(opts: {
 }): string {
   const { origin, purchasedPlan, fallbackUrl } = opts;
   const url = new URL(fallbackUrl, origin);
-  url.searchParams.set("section", "programs");
+  // Prefer path-based programs route; strip legacy section query.
+  if (!url.pathname.includes("/dashboard/")) {
+    url.pathname = "/dashboard/programs";
+  } else if (url.pathname === "/dashboard" || url.pathname === "/dashboard/") {
+    url.pathname = "/dashboard/programs";
+  }
+  url.searchParams.delete("section");
   url.searchParams.set("plan_checkout", "success");
   if (purchasedPlan) {
     url.searchParams.set("plan", purchasedPlan);
@@ -354,14 +360,14 @@ export default function CheckoutSuccessScreen({
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan,
-            fallbackUrl: `${window.location.origin}/dashboard?section=programs`,
+            fallbackUrl: `${window.location.origin}/dashboard/programs`,
           });
         } else if (typeof window !== "undefined") {
           clearUnlockCelebrationStorage();
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan: "",
-            fallbackUrl: `${window.location.origin}/dashboard?section=programs`,
+            fallbackUrl: `${window.location.origin}/dashboard/programs`,
           });
         }
 

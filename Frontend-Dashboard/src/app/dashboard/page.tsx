@@ -2262,9 +2262,11 @@ export default function Page() {
       void import("@/components/dashboard/SupportSection");
       void import("@/components/programs/ProgramsCourseSection");
     };
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(warm, { timeout: 4000 });
-      return () => window.cancelIdleCallback(id);
+    const ric = window.requestIdleCallback?.bind(window);
+    const cic = window.cancelIdleCallback?.bind(window);
+    if (typeof ric === "function" && typeof cic === "function") {
+      const id = ric(warm, { timeout: 4000 });
+      return () => cic(id);
     }
     const t = window.setTimeout(warm, 1800);
     return () => window.clearTimeout(t);

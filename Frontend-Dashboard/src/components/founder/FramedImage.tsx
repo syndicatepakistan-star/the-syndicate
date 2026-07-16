@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { type CSSProperties } from "react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { encodePublicAssetPath, type FounderFrameName } from "@/lib/founderFrameAssets";
 
 export type FramedImageProps = {
@@ -56,7 +56,7 @@ export function FramedImage({
             src={posterSrc}
             alt={alt}
             fill
-            quality={85}
+            quality={70}
             priority={priority}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}

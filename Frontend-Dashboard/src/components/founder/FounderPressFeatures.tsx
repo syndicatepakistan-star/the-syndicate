@@ -54,64 +54,71 @@ export function FounderPressFeatures() {
       className="mx-auto w-full max-w-[min(100%,1400px)] px-3 pb-7 sm:px-6 sm:pb-10 md:px-8"
     >
       <div className="flex flex-col gap-6 sm:gap-8">
-        {PRESS_FEATURES.map((feature) => (
-          <CyberChamferFrame
-            key={feature.url}
-            accent={feature.accent}
-            chamfer={22}
-            className="w-full"
-            innerClassName="px-5 py-[70px] sm:px-7 sm:py-[78px] lg:px-9 lg:py-[86px]"
-            contentClassName="h-full"
-          >
-            <article className="flex min-h-[22rem] flex-col text-left">
-              <h2
-                className={`${publicHeadingLightning(feature.accent)} hamburger-attract mb-5 text-center text-[clamp(1.35rem,4vw,3.2rem)] font-black uppercase leading-none tracking-[0.08em] sm:mb-7`}
-              >
-                As Covered in {PRESS_NAME[feature.publisher]}
-              </h2>
+        {PRESS_FEATURES.map((feature, index) => {
+          const isLcp = index === 0;
+          return (
+            <CyberChamferFrame
+              key={feature.url}
+              accent={feature.accent}
+              chamfer={22}
+              className="w-full"
+              innerClassName="px-5 py-[70px] sm:px-7 sm:py-[78px] lg:px-9 lg:py-[86px]"
+              contentClassName="h-full"
+            >
+              <article className="flex min-h-[22rem] flex-col text-left">
+                <h2
+                  className={`${publicHeadingLightning(feature.accent)} hamburger-attract mb-5 text-center text-[clamp(1.35rem,4vw,3.2rem)] font-black uppercase leading-none tracking-[0.08em] sm:mb-7`}
+                >
+                  As Covered in {PRESS_NAME[feature.publisher]}
+                </h2>
 
-              <div className="grid flex-1 items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)] lg:gap-9">
-                <div className="flex min-w-0 flex-col justify-start px-1 py-2 sm:px-3 sm:pt-4">
+                <div className="grid flex-1 items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)] lg:gap-9">
+                  <div className="flex min-w-0 flex-col justify-start px-1 py-2 sm:px-3 sm:pt-4">
+                    <a
+                      href={feature.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                    >
+                      <h3
+                        className={`text-[clamp(0.72rem,2vw,1.8rem)] font-black uppercase leading-[1.15] tracking-[0.025em] transition-colors ${ARTICLE_ACCENT_TEXT[feature.accent]}`}
+                      >
+                        {(ARTICLE_TITLE_LINES[feature.publisher] ?? [feature.title]).map((line) => (
+                          <span key={line} className="block">
+                            {line}
+                          </span>
+                        ))}
+                      </h3>
+                    </a>
+                    <p className="mt-4 max-w-3xl text-xs leading-[1.75] text-zinc-100/90 sm:mt-6 sm:text-lg sm:leading-[1.8] lg:text-xl">
+                      {feature.description}
+                    </p>
+                  </div>
+
                   <a
                     href={feature.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                    aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
+                    className={`group relative mx-auto w-full max-w-[40rem] overflow-hidden rounded-lg border border-white/15 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${ARTICLE_SCREENSHOT_FRAME[feature.publisher] ?? "h-[min(32rem,65vh)]"}`}
                   >
-                    <h3
-                      className={`text-[clamp(0.72rem,2vw,1.8rem)] font-black uppercase leading-[1.15] tracking-[0.025em] transition-colors ${ARTICLE_ACCENT_TEXT[feature.accent]}`}
-                    >
-                      {(ARTICLE_TITLE_LINES[feature.publisher] ?? [feature.title]).map((line) => (
-                        <span key={line} className="block">
-                          {line}
-                        </span>
-                      ))}
-                    </h3>
+                    <Image
+                      src={feature.articleImageSrc}
+                      alt={`Screenshot of The Syndicate's ${feature.publisher} feature`}
+                      fill
+                      priority={isLcp}
+                      loading={isLcp ? "eager" : "lazy"}
+                      fetchPriority={isLcp ? "high" : "low"}
+                      quality={72}
+                      sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 540px"
+                      className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
+                    />
                   </a>
-                  <p className="mt-4 max-w-3xl text-xs leading-[1.75] text-zinc-100/90 sm:mt-6 sm:text-lg sm:leading-[1.8] lg:text-xl">
-                    {feature.description}
-                  </p>
                 </div>
-
-                <a
-                  href={feature.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
-                  className={`group relative mx-auto w-full max-w-[40rem] overflow-hidden rounded-lg border border-white/15 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${ARTICLE_SCREENSHOT_FRAME[feature.publisher] ?? "h-[min(32rem,65vh)]"}`}
-                >
-                  <Image
-                    src={feature.articleImageSrc}
-                    alt={`Screenshot of The Syndicate's ${feature.publisher} feature`}
-                    fill
-                    sizes="(max-width: 1024px) 94vw, 54vw"
-                    className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
-                  />
-                </a>
-              </div>
-            </article>
-          </CyberChamferFrame>
-        ))}
+              </article>
+            </CyberChamferFrame>
+          );
+        })}
       </div>
     </section>
   );

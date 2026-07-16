@@ -122,8 +122,8 @@ export function OurFounderClipsSection() {
   return (
     <section className="relative w-full min-w-0 py-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-[min(100%,1400px)] flex-col gap-8 px-3 sm:gap-12 sm:px-6 md:px-8">
-        <FounderClipGrid items={mostViewedItems} title="Most Viewed" eagerCount={5} />
-        <FounderClipGrid items={informativeItems} title="Most Informative" eagerCount={4} />
+        <FounderClipGrid items={mostViewedItems} title="Most Viewed" eagerCount={0} />
+        <FounderClipGrid items={informativeItems} title="Most Informative" eagerCount={0} />
       </div>
     </section>
   );

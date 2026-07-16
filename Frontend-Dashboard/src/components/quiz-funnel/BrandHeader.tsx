@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
 export const QUIZ_FUNNEL_TITLE = "THE SYNDICATE DIAGNOSIS";
@@ -11,18 +12,23 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
   return (
     <header className="brand-header">
       <div className="brand-logo-wrap">
-        <img
-          src="/quiz-funnel-logo.webp"
+        <Image
+          src="/quiz-funnel-logo-sm.webp"
           alt="The Syndicate logo"
           className="brand-logo"
-          width={220}
-          height={140}
+          width={176}
+          height={70}
+          priority
+          quality={68}
+          sizes="(max-width: 640px) 140px, 176px"
         />
       </div>
       <div>
         <h1 className={`${publicHeadingLightning("violet")} brand-title`}>{QUIZ_FUNNEL_TITLE}</h1>
         {subtitle ? (
-          <p className={`${publicHeadingLightning("violet")} brand-subtitle ${subtitleClassName}`.trim()}>{subtitle}</p>
+          <p className={`${publicHeadingLightning("violet")} brand-subtitle ${subtitleClassName}`.trim()}>
+            {subtitle}
+          </p>
         ) : null}
       </div>
     </header>

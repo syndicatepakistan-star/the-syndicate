@@ -48,14 +48,25 @@ export default function GlobalBottomSections() {
     : 'relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20'
 
   useEffect(() => {
-    prefetchMarketingRoutes(router, [loginHref])
+    const ric = window.requestIdleCallback
+    const run = () => prefetchMarketingRoutes(router, [loginHref])
+    if (ric) {
+      const id = ric(run, { timeout: 4000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const t = window.setTimeout(run, 2000)
+    return () => window.clearTimeout(t)
   }, [router, loginHref])
 
   return (
     <>
       <section id="joinNowSection" className={`${sectionLayoutClass} marketing-join-section`}>
         <div className="pointer-events-none absolute inset-0">
-          <ViewportDecorVideo src="/assets/v.mp4" className="h-full w-full object-cover opacity-55" />
+          <ViewportDecorVideo
+            src="/assets/v.mp4"
+            className="h-full w-full object-cover opacity-55"
+            preferStaticOnMobile
+          />
           <div className="absolute inset-0 bg-black/72" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-[min(1700px,98vw)] px-3 text-center">

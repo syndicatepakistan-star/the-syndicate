@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useId, useState } from "react";
 import { Lock, Target, X } from "lucide-react";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import {
   DASHBOARD_FAB_ICON,
   DASHBOARD_FAB_ICON_GLYPH,

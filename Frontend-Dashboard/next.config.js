@@ -144,7 +144,20 @@ const nextConfig = {
     const imageCache = "public, max-age=2592000, stale-while-revalidate=604800";
     const publicPageCache =
       "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400";
+    const securityHeaders = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+      },
+    ];
     return [
+      {
+        source: "/:path*",
+        headers: securityHeaders,
+      },
       {
         source: "/assets/:path*",
         headers: [{ key: "Cache-Control", value: immutableStatic }],
@@ -186,6 +199,14 @@ const nextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
       },
       {
+        source: "/quiz-funnel-logo.webp",
+        headers: [{ key: "Cache-Control", value: imageCache }],
+      },
+      {
+        source: "/quiz-funnel-logo-sm.webp",
+        headers: [{ key: "Cache-Control", value: imageCache }],
+      },
+      {
         source: "/",
         headers: [{ key: "Cache-Control", value: publicPageCache }],
       },
@@ -215,6 +236,10 @@ const nextConfig = {
       },
       {
         source: "/quiz",
+        headers: [{ key: "Cache-Control", value: publicPageCache }],
+      },
+      {
+        source: "/quiz/:path*",
         headers: [{ key: "Cache-Control", value: publicPageCache }],
       },
     ];

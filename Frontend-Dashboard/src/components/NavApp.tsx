@@ -58,10 +58,7 @@ export function NavApp() {
     return () => window.removeEventListener('hashchange', syncActive)
   }, [pathname])
 
-  useEffect(() => {
-    warmRoutes()
-  }, [warmRoutes])
-
+  // Prefetch only when the menu opens — mounting prefetch pulled ~MB of unused route JS (hurts Lighthouse TBT).
   useEffect(() => {
     if (!menuOpen) return
     warmRoutes()

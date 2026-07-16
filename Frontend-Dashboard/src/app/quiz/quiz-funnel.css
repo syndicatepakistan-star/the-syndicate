@@ -174,9 +174,14 @@ body.result-view .section-cards-grid {
 .page-wrap {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 24px;
+}
+
+/* Short quiz steps can still feel centered without shifting as content grows */
+.page-wrap:has(.card-quiz) {
+  align-items: center;
 }
 
 .card {
@@ -201,6 +206,11 @@ body.result-view .section-cards-grid {
   box-shadow: 0 0 0 1px rgba(120, 184, 255, 0.78), 0 0 52px rgba(61, 128, 255, 0.54),
     0 0 95px rgba(53, 132, 255, 0.35), inset 0 0 0 1px rgba(155, 214, 255, 0.4);
   clip-path: polygon(0 14px, 14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px));
+  /* Landing: no infinite border animation (CLS + main-thread). Quiz steps keep a soft pulse. */
+  animation: none;
+}
+
+.card-quiz {
   animation: borderGlowPulse 2.2s ease-in-out infinite;
 }
 
@@ -232,6 +242,13 @@ body.result-view .section-cards-grid {
 .card-landing {
   min-height: unset;
   overflow: visible;
+}
+
+/* Landing: static spectrum (no infinite filter/blur animations — CLS + non-composited). */
+.card-landing::before,
+.card-landing::after {
+  animation: none !important;
+  filter: none;
 }
 
 .card-quiz::after {
@@ -772,21 +789,25 @@ body.result-view .section-cards-grid {
 }
 
 .brand-logo-wrap {
-  min-width: 220px;
-  min-height: 120px;
+  width: 176px;
+  min-width: 140px;
+  height: 70px;
+  aspect-ratio: 176 / 70;
   display: grid;
   place-items: center;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .brand-logo {
   border-radius: 0;
   object-fit: contain;
-  width: 220px;
-  height: auto;
+  width: 176px !important;
+  height: 70px !important;
+  max-width: 100%;
 }
 
 .brand-kicker {
@@ -801,7 +822,8 @@ body.result-view .section-cards-grid {
   margin: 0;
   font-size: clamp(22px, 3.5vw, 32px);
   font-weight: 900;
-  font-family: "Rajdhani", var(--font-display), sans-serif;
+  /* Prefer already-loaded Thryon / system — avoid Rajdhani/Inter FOUT CLS */
+  font-family: var(--font-display), "Segoe UI", system-ui, sans-serif;
   letter-spacing: 0.07em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -869,35 +891,59 @@ body.result-view .section-cards-grid {
   margin: 18px 0 22px;
 }
 
+/* Transform + box-shadow only (compositor-friendly; no filter = no paint thrash). */
 @keyframes quiz-blue-attract {
   0%,
   100% {
-    transform: scale(1);
-    filter: brightness(1) drop-shadow(0 0 7px rgba(63, 127, 255, 0.55));
+    transform: translateZ(0) scale(1);
+    box-shadow:
+      0 0 0 1px rgba(120, 173, 255, 0.5),
+      0 0 22px rgba(63, 127, 255, 0.66),
+      0 0 46px rgba(47, 82, 165, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
   50% {
-    transform: scale(1.045);
-    filter: brightness(1.08) drop-shadow(0 0 15px rgba(63, 127, 255, 0.85));
+    transform: translateZ(0) scale(1.03);
+    box-shadow:
+      0 0 0 1px rgba(147, 197, 253, 0.72),
+      0 0 30px rgba(63, 127, 255, 0.86),
+      0 0 58px rgba(47, 82, 165, 0.52),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
+}
+
+.landing-top-start-link {
+  display: inline-flex;
+  text-decoration: none;
 }
 
 .landing-top-start-btn.btn-primary {
   min-width: 210px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   box-shadow:
     0 0 0 1px rgba(120, 173, 255, 0.5),
     0 0 22px rgba(63, 127, 255, 0.66),
     0 0 46px rgba(47, 82, 165, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
   animation: quiz-blue-attract 2.8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .landing-top-start-btn.btn-primary:hover,
 .landing-top-start-btn.btn-primary:focus-visible {
-  filter: brightness(1.08);
   box-shadow:
     0 0 0 1px rgba(147, 197, 253, 0.72),
     0 0 30px rgba(63, 127, 255, 0.86),
     0 0 58px rgba(47, 82, 165, 0.52);
+}
+
+/* Reserved slot prevents CLS when the marquee hydrates */
+.quiz-press-logo-strip-slot {
+  min-height: 56px;
+  width: 100%;
+  contain: layout;
 }
 
 .landing-gaming-frame {
@@ -2394,12 +2440,15 @@ body.result-view .section-cards-grid {
   }
 
   .brand-logo-wrap {
-    min-width: 170px;
-    min-height: 95px;
+    width: 160px;
+    min-width: 160px;
+    height: 64px;
+    min-height: 64px;
   }
 
   .brand-logo {
-    width: 170px;
+    width: 160px !important;
+    height: 64px !important;
   }
 
   .brand-title {
@@ -2476,13 +2525,16 @@ body.result-view .section-cards-grid {
   }
 
   .brand-logo-wrap {
+    width: 140px;
     min-width: 140px;
-    min-height: 80px;
+    height: 56px;
+    min-height: 56px;
     margin: 0 auto;
   }
 
   .brand-logo {
-    width: 140px;
+    width: 140px !important;
+    height: 56px !important;
   }
 
   .brand-kicker {
@@ -2785,4 +2837,30 @@ body.result-view .section-cards-grid {
     transform: translateX(-1.5%) translateY(-1%);
   }
 }
+
+@media (max-width: 900px) {
+  .landing-top-start-btn.btn-primary {
+    animation: none;
+    will-change: auto;
+  }
+
+  .global-letter-glitch .quiz-glitch-canvas {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-landing,
+  .card-landing::before,
+  .card-landing::after,
+  .card-quiz,
+  .card-quiz::before,
+  .card-quiz::after,
+  .landing-top-start-btn.btn-primary,
+  .featured-logos-marquee-track {
+    animation: none !important;
+  }
+}
+
+
 

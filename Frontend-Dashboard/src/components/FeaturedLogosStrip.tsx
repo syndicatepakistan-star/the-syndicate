@@ -129,6 +129,8 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
                     width={compact ? 104 : 188}
                     height={compact ? 30 : 66}
                     loading="lazy"
+                    quality={70}
+                    sizes={compact ? "104px" : "188px"}
                     className="w-auto object-contain opacity-95 transition-all duration-300 hover:opacity-100"
                     style={compact ? { height: 'clamp(14px, 2.7vw, 20px)' } : { height: 'clamp(30px, 6vw, 50px)' }}
                   />
@@ -140,6 +142,8 @@ export default function FeaturedLogosStrip({ logos, speedSeconds = 24, compact =
                   width={compact ? 104 : 188}
                   height={compact ? 30 : 66}
                   loading="lazy"
+                  quality={70}
+                  sizes={compact ? "104px" : "188px"}
                   className="w-auto object-contain opacity-95"
                   style={compact ? { height: 'clamp(14px, 2.7vw, 20px)' } : { height: 'clamp(30px, 6vw, 50px)' }}
                 />

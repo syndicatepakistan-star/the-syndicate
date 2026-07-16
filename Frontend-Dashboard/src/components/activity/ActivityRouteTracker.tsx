@@ -65,7 +65,20 @@ export function ActivityRouteTracker() {
   const dedupeRef = useRef<{ path: string; t: number }>({ path: "", t: 0 });
 
   useEffect(() => {
-    if (!pathname || pathname === "/") return;
+    // Marketing / quiz funnels don't need activity timeline I/O on every navigation.
+    if (
+      !pathname ||
+      pathname === "/" ||
+      pathname.startsWith("/quiz") ||
+      pathname.startsWith("/our-") ||
+      pathname === "/what-you-get" ||
+      pathname === "/programs" ||
+      pathname === "/membership" ||
+      pathname === "/affiliate" ||
+      pathname.startsWith("/affiliate/")
+    ) {
+      return;
+    }
     const now = Date.now();
     if (dedupeRef.current.path === pathname && now - dedupeRef.current.t < ROUTE_LOG_DEDUPE_MS) return;
     dedupeRef.current = { path: pathname, t: now };

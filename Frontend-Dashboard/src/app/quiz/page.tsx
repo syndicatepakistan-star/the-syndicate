@@ -1,7 +1,14 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
-import { HeroFeaturedLogosStrip } from "@/components/home/HeroFeaturedLogosStrip";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import { PRESS_FEATURED_LOGOS } from "@/lib/heroFeaturedLogos";
+
+/** Client marquee — lazy so landing LCP is title + CTA, not logo strip JS. */
+const FeaturedLogosStrip = dynamic(() => import("@/components/FeaturedLogosStrip"), {
+  ssr: false,
+  loading: () => <div className="quiz-press-logo-strip-slot" aria-hidden />,
+});
 
 export default function QuizFunnelLandingPage() {
   return (
@@ -16,10 +23,8 @@ export default function QuizFunnelLandingPage() {
         </p>
         <p className="landing-free-note">No strings attached. No hidden fees. No hidden obligations.</p>
         <div className="landing-top-start-wrap">
-          <Link href="/quiz/questions">
-            <button type="button" className="btn btn-primary hamburger-attract landing-top-start-btn">
-              START QUIZ
-            </button>
+          <Link href="/quiz/questions" prefetch={false} className="landing-top-start-link">
+            <span className="btn btn-primary landing-top-start-btn">START QUIZ</span>
           </Link>
         </div>
 
@@ -45,7 +50,10 @@ export default function QuizFunnelLandingPage() {
                 </li>
                 <li>
                   <strong>The Perfect Business Model</strong>
-                  <span>Match your natural business personality with the right model instead of wasting money on ideas that do not suit you.</span>
+                  <span>
+                    Match your natural business personality with the right model instead of wasting money on ideas that
+                    do not suit you.
+                  </span>
                 </li>
                 <li>
                   <strong>Real-World Business Models</strong>
@@ -57,7 +65,10 @@ export default function QuizFunnelLandingPage() {
                 </li>
                 <li>
                   <strong>Your Business Path</strong>
-                  <span>Get a fast-track blueprint that uses your natural talents and helps you work toward earning your first dollar.</span>
+                  <span>
+                    Get a fast-track blueprint that uses your natural talents and helps you work toward earning your
+                    first dollar.
+                  </span>
                 </li>
                 <li>
                   <strong>Your Growth Plan</strong>
@@ -71,7 +82,14 @@ export default function QuizFunnelLandingPage() {
             </div>
           </CyberChamferFrame>
 
-          <HeroFeaturedLogosStrip speedSeconds={40} compact className="quiz-press-logo-strip my-[5px]" />
+          <div className="quiz-press-logo-strip-slot">
+            <FeaturedLogosStrip
+              logos={[...PRESS_FEATURED_LOGOS]}
+              speedSeconds={40}
+              compact
+              className="quiz-press-logo-strip my-[5px]"
+            />
+          </div>
 
           <div className="landing-detail-card landing-detail-card--violet landing-detail-frame-double">
             <h3>How It Works</h3>
@@ -110,10 +128,8 @@ export default function QuizFunnelLandingPage() {
           </div>
         </div>
 
-        <Link href="/quiz/questions">
-          <button type="button" className="btn btn-primary">
-            START DIAGNOSIS
-          </button>
+        <Link href="/quiz/questions" prefetch={false}>
+          <span className="btn btn-primary">START DIAGNOSIS</span>
         </Link>
       </section>
     </main>

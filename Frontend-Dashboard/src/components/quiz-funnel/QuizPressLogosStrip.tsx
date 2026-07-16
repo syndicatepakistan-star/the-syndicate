@@ -16,7 +16,7 @@ export function QuizPressLogosStrip() {
         logos={[...PRESS_FEATURED_LOGOS]}
         speedSeconds={40}
         compact
-        className="quiz-press-logo-strip my-[5px]"
+        className="quiz-press-logo-strip"
       />
     </div>
   );

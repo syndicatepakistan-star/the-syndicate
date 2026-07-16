@@ -272,13 +272,13 @@ export default function AffiliateMarketingPage() {
             className="min-h-[clamp(14rem,42vh,28rem)] sm:min-h-[clamp(18rem,52vh,34rem)]"
             innerClassName="cyber-frame-mobile-pad p-[clamp(1.25rem,4vw,3rem)]"
           >
-            <div className="mx-auto w-full max-w-[min(56rem,100%)] text-left">
+            <div className="mx-auto flex w-full max-w-[min(56rem,100%)] flex-col items-start text-left">
               <h1
-                className={`font-heading public-heading-lightning public-heading-lightning--cyan marketing-card-title-oneline text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
+                className={`font-heading public-heading-lightning public-heading-lightning--cyan text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
               >
                 Turn attention into withdrawals
               </h1>
-              <p className={cx("mx-auto mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl", AFFILIATE_PAGE_BODY_CLASS)}>
+              <p className={cx("mt-[clamp(1rem,3vw,1.5rem)] max-w-3xl", AFFILIATE_PAGE_BODY_CLASS, "md:text-left")}>
                 Attention is only valuable when it creates movement. Deploy your Syndicate referral link and transform your audience into a measurable growth engine. Every journey is tracked: clicks, leads, purchases, commissions. You don&apos;t guess. You don&apos;t hope. You operate through data. The Affiliate Programme gives you visibility into the entire chain, allowing you to refine your strategy, strengthen your influence, and build a revenue stream based on execution.
               </p>
             </div>

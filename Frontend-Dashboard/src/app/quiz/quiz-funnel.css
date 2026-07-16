@@ -946,6 +946,16 @@ body.result-view .section-cards-grid {
   contain: layout;
 }
 
+/* How It Works + Built For Operators — same row, full section width, above logo strip */
+.landing-detail-pair-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+}
+
 .landing-gaming-frame {
   position: relative;
   isolation: isolate;
@@ -1238,6 +1248,13 @@ body.result-view .section-cards-grid {
   line-height: 1.35;
   letter-spacing: 0.035em;
   text-transform: uppercase;
+}
+
+.landing-detail-list--numbered strong {
+  color: rgb(var(--item-rgb));
+  text-shadow:
+    0 0 8px rgba(var(--item-rgb), 0.72),
+    0 0 18px rgba(var(--item-rgb), 0.38);
 }
 
 .landing-detail-list span {
@@ -2465,6 +2482,11 @@ body.result-view .section-cards-grid {
 
   .landing-details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .landing-detail-pair-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .landing-detail-card {

@@ -9,61 +9,6 @@ import { OurMethodsDoctrineIntro } from '@/components/our-methods/OurMethodsDoct
 import { OUR_METHODS_BLOCKS } from '@/lib/ourMethodsCopy'
 import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
-const METHOD_TIMELINE = [
-  {
-    step: '01',
-    title: 'Decode The System',
-    detail:
-      'Map the hidden incentive structures controlling outcomes in money, influence, and status.',
-    border: 'border-rose-500/90',
-    glow: 'shadow-[0_0_0_2px_rgba(244,63,94,0.82),0_0_48px_rgba(225,29,72,0.74),0_0_92px_rgba(136,19,55,0.58)]',
-    bg: 'bg-[linear-gradient(132deg,rgba(244,63,94,0.72),rgba(190,24,93,0.66),rgba(136,19,55,0.62))]',
-    aura: 'bg-[radial-gradient(90%_80%_at_50%_40%,rgba(244,63,94,0.64),rgba(136,19,55,0.5)_48%,transparent_74%)]',
-    stepBorder: 'border-rose-700/90',
-    stepText: 'text-rose-200',
-    titleText: 'text-rose-200',
-  },
-  {
-    step: '02',
-    title: 'Build Strategic Clarity',
-    detail:
-      'Convert chaos into executable frameworks with clear priorities, leverage points, and constraints.Cut vanity metrics: track commitments, lead times, and failure modes. Run red-team reviews on your own plan weekly so blind spots surface before the market charges you tuition.',
-    border: 'border-fuchsia-500/90',
-    glow: 'shadow-[0_0_0_2px_rgba(217,70,239,0.82),0_0_48px_rgba(192,38,211,0.74),0_0_92px_rgba(134,25,143,0.58)]',
-    bg: 'bg-[linear-gradient(132deg,rgba(217,70,239,0.74),rgba(162,28,175,0.68),rgba(126,34,206,0.64))]',
-    aura: 'bg-[radial-gradient(90%_80%_at_50%_40%,rgba(217,70,239,0.64),rgba(126,34,206,0.5)_48%,transparent_74%)]',
-    stepBorder: 'border-fuchsia-700/90',
-    stepText: 'text-fuchsia-200',
-    titleText: 'text-fuchsia-200',
-  },
-  {
-    step: '03',
-    title: 'Execute Relentlessly',
-    detail:
-      'Deploy disciplined daily actions, track feedback loops, and adapt faster than competitors.Protect deep-work blocks like assets; treat interruptions as debt. When variance spikes, isolate variables instead of narrating panic',
-    border: 'border-cyan-500/90',
-    glow: 'shadow-[0_0_0_2px_rgba(34,211,238,0.82),0_0_48px_rgba(6,182,212,0.74),0_0_92px_rgba(14,116,144,0.58)]',
-    bg: 'bg-[linear-gradient(132deg,rgba(34,211,238,0.74),rgba(8,145,178,0.68),rgba(14,116,144,0.64))]',
-    aura: 'bg-[radial-gradient(90%_80%_at_50%_40%,rgba(34,211,238,0.66),rgba(14,116,144,0.5)_48%,transparent_74%)]',
-    stepBorder: 'border-cyan-700/90',
-    stepText: 'text-cyan-200',
-    titleText: 'text-cyan-200',
-  },
-  {
-    step: '04',
-    title: 'Compound Power',
-    detail:
-      'Scale from isolated wins to durable systems that produce authority, capital, and autonomy.',
-    border: 'border-blue-500/90',
-    glow: 'shadow-[0_0_0_2px_rgba(59,130,246,0.82),0_0_48px_rgba(37,99,235,0.74),0_0_92px_rgba(30,64,175,0.58)]',
-    bg: 'bg-[linear-gradient(132deg,rgba(59,130,246,0.74),rgba(37,99,235,0.68),rgba(30,64,175,0.64))]',
-    aura: 'bg-[radial-gradient(90%_80%_at_50%_40%,rgba(59,130,246,0.64),rgba(30,64,175,0.5)_48%,transparent_74%)]',
-    stepBorder: 'border-blue-700/90',
-    stepText: 'text-blue-200',
-    titleText: 'text-blue-200',
-  },
-] as const
-
 export default function OurMethodsPage() {
   return (
     <div className="our-methods-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c]">
@@ -135,57 +80,6 @@ export default function OurMethodsPage() {
           </CyberChamferFrame>
         </div>
       </div>
-
-      <section className="relative z-10 px-[clamp(1rem,3vw,2.2rem)] pb-10 sm:pb-12">
-        <div className="mx-auto max-w-[96rem]">
-          <div className="mb-6">
-            <h2
-              className={`${publicHeadingLightning('amber')} text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]`}
-            >
-              Operational Sequence
-            </h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
-            {METHOD_TIMELINE.map((item, idx) => (
-              <article
-                key={item.step}
-                className={`group relative overflow-hidden rounded-2xl border-2 p-5 transition-transform duration-300 hover:-translate-y-0.5 ${
-                  idx === 1
-                    ? 'xl:col-span-4'
-                    : idx === 2
-                      ? 'xl:col-span-3'
-                      : 'xl:col-span-2'
-                } ${
-                  idx % 2 === 0
-                    ? '[clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]'
-                    : '[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]'
-                } ${item.border} ${item.glow}`}
-              >
-                <span className={`pointer-events-none absolute -inset-3 rounded-[1.2rem] opacity-85 blur-2xl ${item.aura}`} />
-                <span className={`pointer-events-none absolute inset-0 ${item.bg}`} />
-                <span className="pointer-events-none absolute inset-0 opacity-[0.17] [background-image:repeating-linear-gradient(180deg,rgba(0,0,0,0.28)_0px,rgba(0,0,0,0.28)_1px,transparent_1px,transparent_3px)]" />
-                <span className="pointer-events-none absolute inset-0 opacity-[0.2] [background-image:linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] [background-size:16px_16px]" />
-                <span className="pointer-events-none absolute inset-[6px] rounded-[12px] border-2 border-black/45" />
-                <span className={`pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-[3px] border-t-[3px] ${item.stepBorder} opacity-90`} />
-                <span className={`pointer-events-none absolute bottom-3 right-3 h-7 w-7 border-b-[3px] border-r-[3px] ${item.stepBorder} opacity-90`} />
-                <span className={`pointer-events-none absolute right-3 top-3 h-2 w-10 rounded-full ${item.stepBorder} border bg-[rgba(4,4,12,0.65)]`} />
-                <span className={`pointer-events-none absolute bottom-3 left-3 h-2 w-10 rounded-full ${item.stepBorder} border bg-[rgba(4,4,12,0.65)]`} />
-                <div className="relative z-10 rounded-lg bg-[linear-gradient(165deg,rgba(10,8,18,0.82),rgba(4,6,14,0.9))] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),inset_0_0_32px_rgba(0,0,0,0.25)] backdrop-blur-[1px] sm:p-3">
-                  <p className={`inline-flex rounded-md border-2 bg-[linear-gradient(180deg,rgba(6,4,12,0.88),rgba(2,2,8,0.92))] px-3 py-1 text-[11px] font-bold tracking-[0.24em] shadow-[0_0_16px_rgba(0,0,0,0.45)] ${item.stepBorder} text-zinc-100`}>
-                    STEP {item.step}
-                  </p>
-                  <h3
-                    className={`${publicHeadingLightning('amber')} mt-3 text-2xl font-black uppercase leading-tight tracking-[0.04em] text-zinc-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] ${item.titleText}`}
-                  >
-                    {item.title}
-                  </h3>
-                  <p className="mt-3 text-base leading-relaxed text-zinc-100/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.68)]">{item.detail}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="relative z-10 w-full px-[clamp(0.75rem,2.5vw,2.5rem)] pb-14 sm:pb-20">
         <div className="mx-auto w-full max-w-[min(100%,1920px)] space-y-8 sm:space-y-10 lg:space-y-12">

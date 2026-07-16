@@ -10,13 +10,13 @@ const ARTICLE_ACCENT_TEXT = {
 } as const;
 
 const PRESS_NAME: Record<string, string> = {
-  "Forbes Georgia": "FORBES",
+  Forbes: "FORBES",
   "GQ South Africa": "GQ",
   "Luxury Lifestyle Magazine": "LLM",
 } as const;
 
 const ARTICLE_TITLE_LINES: Record<string, string[]> = {
-  "Forbes Georgia": [
+  Forbes: [
     "How The Syndicate Uses",
     "Mastery And Empowerment",
     "To Redefine Business",
@@ -36,13 +36,13 @@ const ARTICLE_TITLE_LINES: Record<string, string[]> = {
 
 /** Fixed-height frame: full screenshot visible (scaled), still aligned with text. */
 const ARTICLE_SCREENSHOT_FRAME: Record<string, string> = {
-  "Forbes Georgia": "h-[min(34rem,70vh)] max-h-[34rem]",
+  Forbes: "h-[min(34rem,70vh)] max-h-[34rem]",
   "GQ South Africa": "h-[min(34rem,70vh)] max-h-[34rem]",
   "Luxury Lifestyle Magazine": "h-[min(28rem,60vh)] max-h-[28rem]",
 };
 
 const ARTICLE_SCREENSHOT_FIT: Record<string, string> = {
-  "Forbes Georgia": "object-contain object-top",
+  Forbes: "object-contain object-top",
   "GQ South Africa": "object-contain object-top",
   "Luxury Lifestyle Magazine": "object-contain object-center",
 };
@@ -95,25 +95,42 @@ export function FounderPressFeatures() {
                     </p>
                   </div>
 
-                  <a
-                    href={feature.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
-                    className={`group relative mx-auto w-full max-w-[40rem] overflow-hidden rounded-lg border border-white/15 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${ARTICLE_SCREENSHOT_FRAME[feature.publisher] ?? "h-[min(32rem,65vh)]"}`}
-                  >
-                    <Image
-                      src={feature.articleImageSrc}
-                      alt={`Screenshot of The Syndicate's ${feature.publisher} feature`}
-                      fill
-                      priority={isLcp}
-                      loading={isLcp ? "eager" : "lazy"}
-                      fetchPriority={isLcp ? "high" : "low"}
-                      quality={72}
-                      sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 540px"
-                      className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
-                    />
-                  </a>
+                  <div className="mx-auto flex w-full max-w-[40rem] flex-col items-center">
+                    <a
+                      href={feature.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${feature.publisher} logo`}
+                      className="mb-[5px] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                    >
+                      <Image
+                        src={feature.logoSrc}
+                        alt={`${PRESS_NAME[feature.publisher]} logo`}
+                        width={220}
+                        height={88}
+                        className="h-auto w-[min(220px,72vw)] object-contain"
+                      />
+                    </a>
+                    <a
+                      href={feature.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Read the ${feature.publisher} article: ${feature.title}`}
+                      className={`group relative w-full overflow-hidden rounded-lg border border-white/15 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${ARTICLE_SCREENSHOT_FRAME[feature.publisher] ?? "h-[min(32rem,65vh)]"}`}
+                    >
+                      <Image
+                        src={feature.articleImageSrc}
+                        alt={`Screenshot of The Syndicate's ${feature.publisher} feature`}
+                        fill
+                        priority={isLcp}
+                        loading={isLcp ? "eager" : "lazy"}
+                        fetchPriority={isLcp ? "high" : "low"}
+                        quality={72}
+                        sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 540px"
+                        className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
+                      />
+                    </a>
+                  </div>
                 </div>
               </article>
             </CyberChamferFrame>

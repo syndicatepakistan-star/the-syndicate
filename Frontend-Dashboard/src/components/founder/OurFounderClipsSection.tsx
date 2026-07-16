@@ -47,7 +47,15 @@ type ClipCard = {
   approxViewsLabel?: string;
 };
 
-function FounderClipCard({ image, eager }: { image: ClipCard; eager?: boolean }) {
+function FounderClipCard({
+  image,
+  eager,
+  cropBottomPx,
+}: {
+  image: ClipCard;
+  eager?: boolean;
+  cropBottomPx?: number;
+}) {
   return (
     <article className="flex w-full min-w-0 flex-col items-center">
       <a
@@ -66,6 +74,7 @@ function FounderClipCard({ image, eager }: { image: ClipCard; eager?: boolean })
           alt={image.alt}
           frame={image.frame}
           objectPosition={image.objectPosition}
+          cropBottomPx={cropBottomPx}
           priority={eager}
         />
         {image.approxViewsLabel ? (
@@ -82,17 +91,24 @@ function FounderClipGrid({
   items,
   title,
   eagerCount = 4,
+  cropBottomPx,
 }: {
   items: ClipCard[];
   title: string;
   eagerCount?: number;
+  cropBottomPx?: number;
 }) {
   return (
     <div className="w-full space-y-4 sm:space-y-5">
       <FounderSectionHeading title={title} />
       <div className="grid grid-cols-2 justify-items-center gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {items.map((image, index) => (
-          <FounderClipCard key={image.videoId} image={image} eager={index < eagerCount} />
+          <FounderClipCard
+            key={image.videoId}
+            image={image}
+            eager={index < eagerCount}
+            cropBottomPx={cropBottomPx}
+          />
         ))}
       </div>
     </div>
@@ -115,6 +131,7 @@ export function OurFounderClipsSection() {
     src: card.posterSrc,
     alt: card.alt,
     href: card.href,
+    approxViewsLabel: card.approxViewsLabel,
     frame: card.frame ?? founderFrameCycleAt(index + 2),
     objectPosition: card.objectPosition,
   }));
@@ -123,7 +140,7 @@ export function OurFounderClipsSection() {
     <section className="relative w-full min-w-0 py-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-[min(100%,1400px)] flex-col gap-8 px-3 sm:gap-12 sm:px-6 md:px-8">
         <FounderClipGrid items={mostViewedItems} title="Most Viewed" eagerCount={0} />
-        <FounderClipGrid items={informativeItems} title="Most Informative" eagerCount={0} />
+        <FounderClipGrid items={informativeItems} title="Most Informative" eagerCount={0} cropBottomPx={4} />
       </div>
     </section>
   );

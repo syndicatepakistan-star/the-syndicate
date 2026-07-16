@@ -14,6 +14,8 @@ export type FramedImageProps = {
   objectPosition?: string;
   /** Portrait card ratio — defaults to 9:16 for TikTok posters. */
   aspectRatio?: "3/4" | "9/16";
+  /** Clip N px from the photo bottom (hides TikTok UI baked into poster PNGs). */
+  cropBottomPx?: number;
   priority?: boolean;
   sizes?: string;
 };
@@ -30,6 +32,7 @@ export function FramedImage({
   className,
   objectPosition = "center top",
   aspectRatio = "9/16",
+  cropBottomPx,
   priority = false,
   sizes = "(max-width: 640px) 46vw, (max-width: 1024px) 31vw, 320px",
 }: FramedImageProps) {
@@ -51,7 +54,10 @@ export function FramedImage({
       style={frameStyle}
     >
       <div className="framed-image__shell h-full w-full">
-        <div className="framed-image__photo relative h-full w-full overflow-hidden">
+        <div
+          className="framed-image__photo relative h-full w-full overflow-hidden"
+          style={cropBottomPx ? { clipPath: `inset(0 0 ${cropBottomPx}px 0)` } : undefined}
+        >
           <Image
             src={posterSrc}
             alt={alt}

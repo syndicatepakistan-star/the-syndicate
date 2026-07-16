@@ -15,6 +15,8 @@ export type PressFeature = {
   url: string;
   datePublished: string;
   logoSrc: string;
+  /** Square press badge shown above the article screenshot on the founder page. */
+  logoBadgeSrc: string;
   articleImageSrc: string;
   sourceImageUrl: string;
   accent: "cyan" | "violet" | "amber";
@@ -23,15 +25,16 @@ export type PressFeature = {
 /** Independent coverage displayed on the founder page and referenced by its search markup. */
 export const PRESS_FEATURES: readonly PressFeature[] = [
   {
-    publisher: "Forbes Georgia",
+    publisher: "Forbes",
     publisherUrl: "https://forbes.ge",
     title: "How The Syndicate Uses Mastery and Empowerment to Redefine Business",
     description:
-      "Forbes Georgia explores how The Syndicate offers practical business education as an alternative to traditional courses that can leave people unprepared for real-world challenges. The feature discusses the Money Mastery Course, the 7 Levels of Power, and the organisation's focus on mastering money and influence without losing moral integrity. It also highlights a wider mission to help members build confidence, lead with purpose, and create a positive impact.",
+      "Forbes explores how The Syndicate offers practical business education as an alternative to traditional courses that can leave people unprepared for real-world challenges. The feature discusses the Money Mastery Course, the 7 Levels of Power, and the organisation's focus on mastering money and influence without losing moral integrity. It also highlights a wider mission to help members build confidence, lead with purpose, and create a positive impact.",
     url: "https://forbes.ge/en/how-the-syndicate-uses-mastery-and-empowerment-to-redefine-business/",
     datePublished: "2025-02-03",
     logoSrc: "/assets/press-forbes.png",
-    articleImageSrc: "/assets/press-forbes-feature.png",
+    logoBadgeSrc: "/assets/press-forbes-logo-badge.png",
+    articleImageSrc: "/assets/press-forbes-article.png",
     sourceImageUrl: "https://forbes.ge/wp-content/uploads/2025/02/WEB-General-25020804.jpg",
     accent: "cyan",
   },
@@ -44,7 +47,8 @@ export const PRESS_FEATURES: readonly PressFeature[] = [
     url: "https://gq.co.za/wealth/2025-02-10-how-the-syndicate-can-disrupt-the-traditional-model-of-influence-and-education-in-the-digital-age/",
     datePublished: "2025-02-10",
     logoSrc: "/assets/press-gq.png",
-    articleImageSrc: "/assets/press-gq-feature.png",
+    logoBadgeSrc: "/assets/press-gq-logo-badge.png",
+    articleImageSrc: "/assets/press-gq-article.png",
     sourceImageUrl: "https://iol-prod.appspot.com/image/223a56d96550a8cd2c1cdf3197e1825461527c83/1000/jpeg",
     accent: "violet",
   },
@@ -57,7 +61,8 @@ export const PRESS_FEATURES: readonly PressFeature[] = [
     url: "https://www.luxurylifestylemag.co.uk/money/how-the-syndicate-empowers-individuals-to-master-power-money-and-influence-in-the-money-mastery-course/",
     datePublished: "2025-02-14",
     logoSrc: "/assets/press-luxury.png",
-    articleImageSrc: "/assets/press-luxury-feature.png",
+    logoBadgeSrc: "/assets/press-luxury-logo-badge.png",
+    articleImageSrc: "/assets/press-luxury-article.png",
     sourceImageUrl: "https://www.luxurylifestylemag.co.uk/wp-content/uploads/2025/02/The-Syndicate.jpg",
     accent: "amber",
   },

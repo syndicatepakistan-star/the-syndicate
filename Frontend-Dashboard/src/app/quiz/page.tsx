@@ -17,7 +17,7 @@ export default function QuizFunnelLandingPage() {
         <p className="landing-free-note">No strings attached. No hidden fees. No hidden obligations.</p>
         <div className="landing-top-start-wrap">
           <Link href="/quiz/questions" prefetch={false} className="landing-top-start-link">
-            <span className="btn btn-primary landing-top-start-btn">START QUIZ</span>
+            <span className="btn btn-primary landing-top-start-btn">START DIAGNOSIS</span>
           </Link>
         </div>
 
@@ -77,40 +77,42 @@ export default function QuizFunnelLandingPage() {
 
           <QuizPressLogosStrip />
 
-          <div className="landing-detail-card landing-detail-card--violet landing-detail-frame-double">
-            <h3>How It Works</h3>
-            <ol className="landing-detail-list landing-detail-list--steps">
-              <li>
-                <strong>Remove the Guessing</strong>
-                <span>Answer 17 easy questions to discover what has been holding you back.</span>
-              </li>
-              <li>
-                <strong>Remove the Confusion</strong>
-                <span>Receive an online business model matched to your natural business instincts.</span>
-              </li>
-              <li>
-                <strong>Get the Blueprint</strong>
-                <span>Leave with a proven and safer real-world business model you can start building.</span>
-              </li>
-            </ol>
-          </div>
+          <div className="landing-detail-pair-row">
+            <div className="landing-detail-card landing-detail-card--violet landing-detail-frame-double">
+              <h3>How It Works</h3>
+              <ol className="landing-detail-list landing-detail-list--steps">
+                <li>
+                  <strong>Remove the Guessing</strong>
+                  <span>Answer 17 easy questions to discover what has been holding you back.</span>
+                </li>
+                <li>
+                  <strong>Remove the Confusion</strong>
+                  <span>Receive an online business model matched to your natural business instincts.</span>
+                </li>
+                <li>
+                  <strong>Get the Blueprint</strong>
+                  <span>Leave with a proven and safer real-world business model you can start building.</span>
+                </li>
+              </ol>
+            </div>
 
-          <div className="landing-detail-card landing-detail-card--gold landing-detail-frame-rail">
-            <h3>Built For Operators</h3>
-            <ul className="landing-detail-list landing-detail-list--bullets">
-              <li>
-                <strong>Real-World Action</strong>
-                <span>Receive actionable, step-by-step instructions that work in the real world.</span>
-              </li>
-              <li>
-                <strong>Professional Direction</strong>
-                <span>Build a highly respected, professional business you can be proud of.</span>
-              </li>
-              <li>
-                <strong>Long-Term Value</strong>
-                <span>Focus your effort on building something real that can last for years.</span>
-              </li>
-            </ul>
+            <div className="landing-detail-card landing-detail-card--gold landing-detail-frame-rail">
+              <h3>Built For Operators</h3>
+              <ul className="landing-detail-list landing-detail-list--bullets">
+                <li>
+                  <strong>Real-World Action</strong>
+                  <span>Receive actionable, step-by-step instructions that work in the real world.</span>
+                </li>
+                <li>
+                  <strong>Professional Direction</strong>
+                  <span>Build a highly respected, professional business you can be proud of.</span>
+                </li>
+                <li>
+                  <strong>Long-Term Value</strong>
+                  <span>Focus your effort on building something real that can last for years.</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 

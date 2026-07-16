@@ -468,7 +468,7 @@ export function CourseFlow({
             return;
           }
           if (payload.is_unlocked) {
-            router.push(`/dashboard/programs&playlist=${playlist.id}`);
+            router.push(`/dashboard/programs?playlist=${playlist.id}`);
             return;
           }
           window.location.assign(

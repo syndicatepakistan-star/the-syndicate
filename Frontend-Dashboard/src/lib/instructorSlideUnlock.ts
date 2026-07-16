@@ -19,10 +19,9 @@ function resolvePlanOffer(plan: CheckoutOfferKey) {
 }
 
 async function unlockPlaylist(legacyPlaylistId: number): Promise<{ ok: boolean; message?: string }> {
+  const programsWithPlaylist = `${PROGRAMS_RETURN}?playlist=${legacyPlaylistId}`;
   if (!hasSimpleAuthSessionClient()) {
-    window.location.assign(
-      buildPlaylistCheckoutAuthHref(legacyPlaylistId, `${PROGRAMS_RETURN}&playlist=${legacyPlaylistId}`),
-    );
+    window.location.assign(buildPlaylistCheckoutAuthHref(legacyPlaylistId, programsWithPlaylist));
     return { ok: true };
   }
 
@@ -31,7 +30,7 @@ async function unlockPlaylist(legacyPlaylistId: number): Promise<{ ok: boolean; 
   });
 
   if (checkout.is_unlocked) {
-    window.location.assign(`${PROGRAMS_RETURN}&playlist=${legacyPlaylistId}`);
+    window.location.assign(programsWithPlaylist);
     return { ok: true };
   }
 

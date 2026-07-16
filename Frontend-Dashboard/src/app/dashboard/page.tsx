@@ -250,10 +250,11 @@ function DashboardChromeLetterGlitch() {
     >
       <div className="absolute inset-0 min-h-0 min-w-0">
         <LetterGlitch
-          glitchSpeed={70}
+          glitchSpeed={90}
           centerVignette
           outerVignette
-          smooth
+          smooth={false}
+          performanceMode="chrome"
           glitchColors={["#4a2b72", "#61dca3", "#61b3dc"]}
           layerOpacity={0.022}
           className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-transparent"

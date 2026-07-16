@@ -15,6 +15,8 @@ import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { CheckoutClaimForm, type UnlockedProgramItem } from "@/components/syndicate-otp/CheckoutClaimForm";
 import { clearUnlockCartStorage } from "@/lib/unlockCart";
+import { dashboardProgramsHref } from "@/lib/dashboardRoutes";
+import { cn } from "@/components/dashboard/dashboardPrimitives";
 import toast, { Toaster } from "react-hot-toast";
 
 const SYNDICATE_URL =
@@ -101,25 +103,14 @@ function clearUnlockCartAfterPurchase() {
 function buildLoggedInCheckoutRedirect(opts: {
   origin: string;
   purchasedPlan: string;
-  fallbackUrl: string;
 }): string {
-  const { origin, purchasedPlan, fallbackUrl } = opts;
-  const url = new URL(fallbackUrl, origin);
-  // Prefer path-based programs route; strip legacy section query.
-  if (!url.pathname.includes("/dashboard/")) {
-    url.pathname = "/dashboard/programs";
-  } else if (url.pathname === "/dashboard" || url.pathname === "/dashboard/") {
-    url.pathname = "/dashboard/programs";
-  }
-  url.searchParams.delete("section");
-  url.searchParams.set("plan_checkout", "success");
-  if (purchasedPlan) {
-    url.searchParams.set("plan", purchasedPlan);
-  }
-  url.searchParams.delete("playlist");
-  url.searchParams.delete("playlist_id");
-  url.searchParams.delete("pack");
-  return url.toString();
+  const { origin, purchasedPlan } = opts;
+  const path = dashboardProgramsHref(
+    purchasedPlan
+      ? { plan_checkout: "success", plan: purchasedPlan }
+      : { plan_checkout: "success" },
+  );
+  return `${origin.replace(/\/+$/, "")}${path}`;
 }
 
 export default function CheckoutSuccessScreen({
@@ -360,14 +351,12 @@ export default function CheckoutSuccessScreen({
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan,
-            fallbackUrl: `${window.location.origin}/dashboard/programs`,
           });
         } else if (typeof window !== "undefined") {
           clearUnlockCelebrationStorage();
           nextUrl = buildLoggedInCheckoutRedirect({
             origin: window.location.origin,
             purchasedPlan: "",
-            fallbackUrl: `${window.location.origin}/dashboard/programs`,
           });
         }
 
@@ -474,7 +463,12 @@ export default function CheckoutSuccessScreen({
   }, [sessionId]);
 
   return (
-    <div className="checkout-page-wrap checkout-page-wrap--entered">
+    <div
+      className={cn(
+        "checkout-page-wrap checkout-page-wrap--entered",
+        needsClaim && "checkout-page-wrap--claim-public",
+      )}
+    >
       <Toaster
         position="top-center"
         toastOptions={{
@@ -487,22 +481,45 @@ export default function CheckoutSuccessScreen({
       />
       <LuxuryRedirectOverlay active={luxuryOpen} href={luxuryHref} delayMs={650} />
 
-      <div className="scanline" />
-      <div className="noise" />
-      <canvas id="particles" />
+      {!needsClaim ? (
+        <>
+          <div className="scanline" />
+          <div className="noise" />
+          <canvas id="particles" />
+        </>
+      ) : (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div className="absolute left-[-12%] top-[8%] h-[280px] w-[280px] rounded-full bg-cyan-400/16 blur-3xl" />
+          <div className="absolute right-[-10%] top-[18%] h-[300px] w-[300px] rounded-full bg-violet-500/14 blur-3xl" />
+          <div className="absolute bottom-[-6%] left-[28%] h-[320px] w-[320px] rounded-full bg-amber-400/12 blur-3xl" />
+          <div className="absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(34,211,238,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.18)_1px,transparent_1px)] [background-size:72px_72px,72px_72px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/55 via-[#05040c]/88 to-[#020208]/96" />
+        </div>
+      )}
 
       <div ref={scrollRef} className="checkout-success-scroll">
         <div className="checkout-success-scroll__inner">
-          <div className="login-header !mb-6 !mt-4 !min-h-[5.5rem] !items-center">
-            <span className="status-dot" />
-            <h1
-              className="glitch !text-[clamp(2rem,5vw,3.25rem)] !leading-none"
-              data-text="SUCCESS"
-            >
-              SUCCESS
-            </h1>
-            <span className="status-dot" />
-          </div>
+          {!needsClaim ? (
+            <div className="login-header !mb-6 !mt-4 !min-h-[5.5rem] !items-center">
+              <span className="status-dot" />
+              <h1
+                className="glitch !text-[clamp(2rem,5vw,3.25rem)] !leading-none"
+                data-text="SUCCESS"
+              >
+                SUCCESS
+              </h1>
+              <span className="status-dot" />
+            </div>
+          ) : (
+            <div className="mb-5 mt-2 text-center sm:mb-7">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/90 sm:text-xs">
+                The Syndicate
+              </p>
+              <h1 className="public-heading-lightning public-heading-lightning--gold mt-2 text-[clamp(1.8rem,4.5vw,3rem)] font-black uppercase tracking-[0.1em]">
+                Access unlock
+              </h1>
+            </div>
+          )}
 
           {loading ? <p className="form-message">VERIFYING PAYMENT...</p> : null}
           {!loading && message && !needsClaim ? <p className="form-message">{message}</p> : null}

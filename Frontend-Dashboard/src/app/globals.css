@@ -620,8 +620,9 @@
   scroll-behavior: auto;
 }
 
-/* Dashboard scroll performance — pause decorative chrome while any section scrolls */
-.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
+/* Dashboard scroll performance — pause decorative chrome while any section scrolls.
+   Do NOT hide `.dashboard-chrome-letter-glitch` (visibility flash = scroll "glitch").
+   LetterGlitch pauses its own RAF via useScrollPauseRef + dashboard-is-scrolling. */
 .dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
 .dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
 .dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video],
@@ -635,19 +636,28 @@
   animation: none !important;
 }
 
-.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
 .dashboard-hamburger-chrome.is-scrolling [class*="animate-pulse"],
 .dashboard-hamburger-chrome.is-scrolling [class*="animate-spin"] {
   animation-play-state: paused !important;
 }
 
+/* Keep letter rain painted (last frame) — freeze via JS, not visibility thrash */
+.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch {
+  pointer-events: none;
+}
+
 .dashboard-hamburger-chrome .dashboard-mobile-section-root > section,
-.dashboard-hamburger-chrome .dashboard-mobile-section-root > div:not(.dashboard-section-fallback),
-.dashboard-hamburger-chrome .programs-grid-shell,
-.dashboard-hamburger-chrome .programs-lesson-shell {
+.dashboard-hamburger-chrome .dashboard-mobile-section-root > div:not(.dashboard-section-fallback) {
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
+}
+
+/* Active programs shells scroll internally — content-visibility here causes jump/glitch */
+.dashboard-hamburger-chrome .programs-grid-shell,
+.dashboard-hamburger-chrome .programs-lesson-shell {
+  content-visibility: visible;
+  contain: layout style;
 }
 
 html.dashboard-is-scrolling {
@@ -7102,6 +7112,9 @@ body.syndicate-mode-active::-webkit-scrollbar {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .dashboard-hamburger-chrome .dashboard-mobile-section-root:has(.programs-lesson-shell),
@@ -12375,6 +12388,11 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 .dashboard-hamburger-chrome [data-main-shell-scroll] {
   background: transparent !important;
   contain: layout style;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .dashboard-hamburger-chrome [data-dashboard-video-shell] {

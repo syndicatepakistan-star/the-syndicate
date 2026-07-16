@@ -901,9 +901,9 @@ def _checkout_success_redirect_path(plan_slug: str = "", playlist_id: str = "") 
   plan = (plan_slug or "").strip().lower()
   pid = (playlist_id or "").strip()
   if pid.isdigit():
-    return "/dashboard?section=programs"
+    return "/dashboard/programs"
   if plan in ("king", "knight"):
-    return "/dashboard?section=resources"
+    return "/dashboard/resources"
   if (
     plan in ("bundle", "pawn")
     or plan.startswith("agentic_ai")
@@ -911,18 +911,18 @@ def _checkout_success_redirect_path(plan_slug: str = "", playlist_id: str = "") 
     or plan.startswith("trading_")
     or is_vault_course_plan_slug(plan)
   ):
-    qs = f"section=programs&plan_checkout=success"
+    qs = "plan_checkout=success"
     if plan:
       qs += f"&plan={plan}"
-    return f"/dashboard?{qs}"
+    return f"/dashboard/programs?{qs}"
   raw = (getattr(settings, "POST_LOGIN_REDIRECT_URL", "") or "").strip()
   if raw.startswith("/") and not raw.startswith("//"):
-    return raw.split("#")[0] or "/dashboard?section=programs"
+    return raw.split("#")[0] or "/dashboard/programs"
   if raw.startswith("http://") or raw.startswith("https://"):
     parsed = urlsplit(raw)
     if parsed.path and parsed.path != "/":
       return f"{parsed.path}{f'?{parsed.query}' if parsed.query else ''}"
-  return "/dashboard?section=programs"
+  return "/dashboard/programs"
 
 
 @csrf_exempt

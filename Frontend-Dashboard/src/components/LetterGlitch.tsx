@@ -18,6 +18,8 @@ type LetterGlitchProps = {
   className?: string
   /** 0–1: opacity for canvas + vignette overlays */
   layerOpacity?: number
+  /** Coarser grid + cheaper redraw — use for dashboard chrome layers */
+  performanceMode?: 'default' | 'chrome'
 }
 
 const DEFAULT_COLORS = ['#2b4539', '#61dca3', '#61b3dc']
@@ -39,7 +41,7 @@ type GridMetrics = {
   updateRatio: number
 }
 
-function readGridMetrics(): GridMetrics {
+function readGridMetrics(performanceMode: 'default' | 'chrome' = 'default'): GridMetrics {
   if (typeof window === 'undefined') {
     return {
       charWidth: CHAR_WIDTH,
@@ -52,14 +54,15 @@ function readGridMetrics(): GridMetrics {
     }
   }
   const mobile = window.matchMedia('(max-width: 767px)').matches
+  const chrome = performanceMode === 'chrome'
   return {
-    charWidth: mobile ? 14 : CHAR_WIDTH,
-    charHeight: mobile ? 26 : CHAR_HEIGHT,
-    fontSize: mobile ? 14 : FONT_SIZE,
-    dprCap: mobile ? 1.25 : 2,
-    glitchSpeedMul: mobile ? 2.5 : 1,
-    smoothEnabled: !mobile,
-    updateRatio: mobile ? 0.032 : UPDATE_RATIO,
+    charWidth: chrome ? (mobile ? 18 : 14) : mobile ? 14 : CHAR_WIDTH,
+    charHeight: chrome ? (mobile ? 32 : 26) : mobile ? 26 : CHAR_HEIGHT,
+    fontSize: chrome ? (mobile ? 12 : 13) : mobile ? 14 : FONT_SIZE,
+    dprCap: chrome || mobile ? 1.25 : 2,
+    glitchSpeedMul: chrome ? (mobile ? 3.2 : 2.2) : mobile ? 2.5 : 1,
+    smoothEnabled: chrome ? false : !mobile,
+    updateRatio: chrome ? (mobile ? 0.018 : 0.025) : mobile ? 0.032 : UPDATE_RATIO,
   }
 }
 
@@ -72,6 +75,7 @@ export default function LetterGlitch({
   characters = DEFAULT_CHARACTERS,
   className,
   layerOpacity = 1,
+  performanceMode = 'default',
 }: LetterGlitchProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
@@ -83,8 +87,10 @@ export default function LetterGlitch({
   const containerSizeRef = useRef({ width: 0, height: 0 })
   const pausedRef = useRef(false)
   const inViewRef = useRef(true)
-  const gridMetricsRef = useRef<GridMetrics>(readGridMetrics())
-  const scrollingRef = useScrollPauseRef(200)
+  const gridMetricsRef = useRef<GridMetrics>(readGridMetrics(performanceMode))
+  const scrollingRef = useScrollPauseRef(performanceMode === 'chrome' ? 280 : 220)
+  const performanceModeRef = useRef(performanceMode)
+  performanceModeRef.current = performanceMode
 
   const lettersAndSymbols = useMemo(() => Array.from(characters), [characters])
 
@@ -157,7 +163,7 @@ export default function LetterGlitch({
     const rect = parent.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) return
 
-    gridMetricsRef.current = readGridMetrics()
+    gridMetricsRef.current = readGridMetrics(performanceModeRef.current)
     const rawDpr = window.devicePixelRatio || 1
     const dpr = Math.min(rawDpr, gridMetricsRef.current.dprCap)
     const restored = restoreHeroGlitchState(canvas, dpr)
@@ -209,7 +215,7 @@ export default function LetterGlitch({
 
       letter.char = getRandomChar()
       letter.targetColor = nextColor
-      if (!smooth) {
+      if (!smooth || !gridMetricsRef.current.smoothEnabled) {
         letter.color = nextColor
         letter.colorProgress = 1
       } else {
@@ -242,6 +248,11 @@ export default function LetterGlitch({
     if (needsRedraw) drawLetters()
   }
 
+  const isScrollFrozen = () =>
+    scrollingRef.current ||
+    (typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('dashboard-is-scrolling'))
+
   useLayoutEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -269,25 +280,45 @@ export default function LetterGlitch({
         : null
     visibilityObserver?.observe(canvas)
 
-    const animate = (time: number) => {
-      const metrics = gridMetricsRef.current
-      const active = !pausedRef.current && inViewRef.current && !scrollingRef.current
-      if (active) {
-        const tickMs = glitchSpeed * metrics.glitchSpeedMul
-        if (time - lastGlitchTimeRef.current >= tickMs) {
-          updateLetters()
-          drawLetters()
-          lastGlitchTimeRef.current = time
-        } else if (smooth && metrics.smoothEnabled) {
-          handleSmoothTransitions()
+    let wakeTimer: number | null = null
+
+    const scheduleWake = () => {
+      if (wakeTimer !== null) return
+      wakeTimer = window.setTimeout(() => {
+        wakeTimer = null
+        if (animationRef.current == null && !pausedRef.current && inViewRef.current && !isScrollFrozen()) {
+          animationRef.current = window.requestAnimationFrame(animate)
+        } else if (isScrollFrozen() || pausedRef.current || !inViewRef.current) {
+          scheduleWake()
         }
+      }, 120)
+    }
+
+    const animate = (time: number) => {
+      if (pausedRef.current || !inViewRef.current || isScrollFrozen()) {
+        animationRef.current = null
+        scheduleWake()
+        return
+      }
+
+      const metrics = gridMetricsRef.current
+      const tickMs = glitchSpeed * metrics.glitchSpeedMul
+      if (time - lastGlitchTimeRef.current >= tickMs) {
+        updateLetters()
+        drawLetters()
+        lastGlitchTimeRef.current = time
+      } else if (smooth && metrics.smoothEnabled) {
+        handleSmoothTransitions()
       }
       animationRef.current = window.requestAnimationFrame(animate)
     }
 
     animationRef.current = window.requestAnimationFrame(animate)
 
-    resizeObserverRef.current = new ResizeObserver(() => resizeCanvas())
+    resizeObserverRef.current = new ResizeObserver(() => {
+      if (isScrollFrozen()) return
+      resizeCanvas()
+    })
     const parent = canvas.parentElement
     if (parent) resizeObserverRef.current.observe(parent)
 
@@ -295,6 +326,7 @@ export default function LetterGlitch({
       document.removeEventListener('visibilitychange', onVisibility)
       visibilityObserver?.disconnect()
       if (animationRef.current) window.cancelAnimationFrame(animationRef.current)
+      if (wakeTimer !== null) window.clearTimeout(wakeTimer)
       resizeObserverRef.current?.disconnect()
       if (canvas.width > 0 && canvas.height > 0) {
         captureHeroGlitchState(
@@ -307,14 +339,14 @@ export default function LetterGlitch({
         )
       }
     }
-  }, [glitchSpeed, smooth, handleSmoothTransitions, resizeCanvas, updateLetters, drawLetters])
+  }, [glitchSpeed, smooth, handleSmoothTransitions, resizeCanvas, updateLetters])
 
   const safeOpacity = Math.min(1, Math.max(0, layerOpacity))
 
   return (
     <div
       className={`relative isolate h-full w-full min-w-0 max-w-full overflow-hidden bg-black ${className ?? ''}`.trim()}
-      style={{ opacity: safeOpacity }}
+      style={{ opacity: safeOpacity, contain: 'strict', transform: 'translateZ(0)' }}
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
       {outerVignette && (

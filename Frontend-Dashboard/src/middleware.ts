@@ -89,6 +89,33 @@ export function middleware(request: NextRequest) {
     "settings",
   ]);
 
+  // Fix malformed deep links: /dashboard/programs&plan=… → /dashboard/programs?plan=…
+  // (legacy builders used & instead of ? after the path, which 404s as an unknown route).
+  const ampInPath = pathname.indexOf("&");
+  if (ampInPath > 0 && (pathname.startsWith("/dashboard/") || pathname === "/dashboard")) {
+    const pathPart = pathname.slice(0, ampInPath);
+    const queryPart = pathname.slice(ampInPath + 1);
+    const parts = pathPart.replace(/\/+$/, "").split("/").filter(Boolean);
+    const okRoot = parts.length === 1 && parts[0] === "dashboard";
+    const okSection =
+      parts.length === 2 && parts[0] === "dashboard" && dashboardSections.has(parts[1]);
+    if ((okRoot || okSection) && queryPart) {
+      const fixed = request.nextUrl.clone();
+      fixed.pathname = pathPart;
+      try {
+        const extra = new URLSearchParams(queryPart);
+        for (const [key, value] of extra.entries()) {
+          fixed.searchParams.set(key, value);
+        }
+      } catch {
+        // Fall through to normal routing if query fragment is unparseable.
+      }
+      const redirect = NextResponse.redirect(fixed);
+      applyCheckoutCurrencyCookie(request, redirect);
+      return redirect;
+    }
+  }
+
   // Clean URLs: /dashboard?section=programs → /dashboard/programs (keep other query params).
   if (pathname === "/dashboard" && dashboardSections.has(section) && section !== "dashboard") {
     const clean = request.nextUrl.clone();

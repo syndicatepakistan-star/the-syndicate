@@ -32,7 +32,7 @@ export function isFreeTicketPsychologyCourse(courseName: string): boolean {
 export function freeTicketDashboardPath(courseName: string): string {
   const programId = resolveFreeTicketProgramId(courseName);
   if (!programId) return "/dashboard/programs";
-  return `/dashboard/programs&program=${programId}`;
+  return `/dashboard/programs?program=${programId}`;
 }
 
 export function freeTicketLoginNextPath(courseName: string): string {

@@ -580,6 +580,10 @@
   filter: blur(0);
 }
 
+.checkout-page-wrap--claim-public {
+  background: #04060c;
+}
+
 /* Success claim: avoid flex-centering tall content (clips the top / can't scroll to start). */
 .checkout-success-scroll {
   position: fixed;

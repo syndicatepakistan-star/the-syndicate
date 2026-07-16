@@ -6,7 +6,7 @@ import { isDashboardMotionSuspended } from "@/lib/dashboardMotionControl";
 const SCROLL_CONTAINER_SELECTOR =
   "[data-main-shell-scroll], .programs-grid-scroll, .programs-lesson-scroll, [data-syndicate-mission-scroll], .support-thread-scroll";
 
-const SCROLL_END_MS = 100;
+const SCROLL_END_MS = 220;
 
 function pauseDashboardVideos(root: HTMLElement) {
   root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {
@@ -61,7 +61,9 @@ export function useDashboardSmoothScroll(rootRef: RefObject<HTMLElement | null>)
     const onScrollCapture = (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      if (!target.matches(SCROLL_CONTAINER_SELECTOR)) return;
+      if (!target.matches(SCROLL_CONTAINER_SELECTOR) && !target.closest(SCROLL_CONTAINER_SELECTOR)) {
+        return;
+      }
       onScroll();
     };
 

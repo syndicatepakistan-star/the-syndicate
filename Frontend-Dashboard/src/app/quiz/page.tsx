@@ -1,14 +1,7 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
-import { PRESS_FEATURED_LOGOS } from "@/lib/heroFeaturedLogos";
-
-/** Client marquee — lazy so landing LCP is title + CTA, not logo strip JS. */
-const FeaturedLogosStrip = dynamic(() => import("@/components/FeaturedLogosStrip"), {
-  ssr: false,
-  loading: () => <div className="quiz-press-logo-strip-slot" aria-hidden />,
-});
+import { QuizPressLogosStrip } from "@/components/quiz-funnel/QuizPressLogosStrip";
 
 export default function QuizFunnelLandingPage() {
   return (
@@ -82,14 +75,7 @@ export default function QuizFunnelLandingPage() {
             </div>
           </CyberChamferFrame>
 
-          <div className="quiz-press-logo-strip-slot">
-            <FeaturedLogosStrip
-              logos={[...PRESS_FEATURED_LOGOS]}
-              speedSeconds={40}
-              compact
-              className="quiz-press-logo-strip my-[5px]"
-            />
-          </div>
+          <QuizPressLogosStrip />
 
           <div className="landing-detail-card landing-detail-card--violet landing-detail-frame-double">
             <h3>How It Works</h3>

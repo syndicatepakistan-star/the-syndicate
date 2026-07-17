@@ -238,7 +238,7 @@ def seed_trading_vault(*, publish: bool, link_r2: bool, stats: VaultSeedStats) -
                 slug=unique_playlist_slug(f"trading-module-{module_slug}"),
                 vault_plan_slug=module_slug,
                 category=StreamPlaylist.Category.BUSINESS_MODEL,
-                price=Decimal("35.00"),
+                price=Decimal("99.00"),
                 rating=Decimal("4.7"),
                 description=f"Full module — {len(child_slugs)} lessons.",
                 is_published=publish,
@@ -274,7 +274,7 @@ def seed_all_vault_playlists(*, publish: bool = False, link_r2: bool = True, ret
     seed_indexed_pack(
         pack_folder="agentic_ai",
         rows=agentic_course_rows(),
-        lesson_price=Decimal("19.00"),
+        lesson_price=Decimal("14.00"),
         publish=publish,
         link_r2=link_r2,
         stats=stats,
@@ -282,7 +282,7 @@ def seed_all_vault_playlists(*, publish: bool = False, link_r2: bool = True, ret
     seed_indexed_pack(
         pack_folder="ai_content",
         rows=ai_content_course_rows(),
-        lesson_price=Decimal("15.00"),
+        lesson_price=Decimal("14.00"),
         publish=publish,
         link_r2=link_r2,
         stats=stats,

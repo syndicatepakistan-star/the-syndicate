@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isVideoWarm, warmVideo } from "@/lib/mediaWarmCache";
 
-export const DASHBOARD_MAIN_BG_VIDEO = "/assets/dashboard/bg.mp4";
+export const DASHBOARD_MAIN_BG_VIDEO = "/assets/bg.mp4";
 
 type DashboardShellBackgroundProps = {
   /** `contained` = main referral/content panel only; `viewport` = legacy full-screen (avoid). */
@@ -41,6 +40,7 @@ export function DashboardShellBackground({
     el.muted = true;
     el.defaultMuted = true;
     el.setAttribute("playsinline", "");
+    el.preload = "metadata";
 
     const startOnce = () => {
       if (document.visibilityState === "hidden") return;
@@ -59,16 +59,31 @@ export function DashboardShellBackground({
       if (el.paused) void el.play().catch(() => {});
     };
 
-    void warmVideo(DASHBOARD_MAIN_BG_VIDEO).finally(startOnce);
-
-    if (isVideoWarm(DASHBOARD_MAIN_BG_VIDEO) && el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      startOnce();
-    } else {
-      el.addEventListener("canplay", startOnce, { once: true });
-    }
+    // Defer full decode until idle so LCP/TBT are not blocked by the 18MB shell MP4.
+    // Do not call warmVideo() here — that pools preload=auto and downloads the full file early.
+    const ric =
+      window.requestIdleCallback ??
+      ((cb: IdleRequestCallback) => window.setTimeout(() => cb({} as IdleDeadline), 1200));
+    const idleId = ric.call(
+      window,
+      () => {
+        if (el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          startOnce();
+        } else {
+          el.addEventListener("canplay", startOnce, { once: true });
+          el.load();
+        }
+      },
+      { timeout: 3500 },
+    );
 
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
+      if (typeof window.cancelIdleCallback === "function" && typeof idleId === "number") {
+        window.cancelIdleCallback(idleId);
+      } else {
+        window.clearTimeout(idleId as number);
+      }
       el.removeEventListener("canplay", startOnce);
       document.removeEventListener("visibilitychange", onVisibility);
     };
@@ -96,11 +111,10 @@ export function DashboardShellBackground({
           data-dashboard-bg-video
           className="dashboard-main-shell-video absolute inset-0 z-[0] h-full min-h-full w-full min-w-full object-cover"
           style={{ opacity }}
-          autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
         >
           <source src={DASHBOARD_MAIN_BG_VIDEO} type="video/mp4" />
         </video>

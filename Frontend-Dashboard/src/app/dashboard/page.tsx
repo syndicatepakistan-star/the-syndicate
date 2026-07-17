@@ -27,7 +27,6 @@ import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/component
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import NeonTypingBadge from "@/components/NeonTypingBadge";
-import LetterGlitch from "@/components/LetterGlitch";
 import type { DashboardNavKey } from "@/components/dashboard/types";
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
@@ -235,32 +234,6 @@ function IconToggle({ open }: { open: boolean }) {
         </>
       )}
     </svg>
-  );
-}
-
-function DashboardChromeLetterGlitch() {
-  return (
-    <div
-      className={cn(
-        "dashboard-chrome-letter-glitch pointer-events-none absolute inset-0 z-0 min-h-0 min-w-0 overflow-hidden",
-        /* Abs-pos children of a CSS grid default to the first cell — span the full shell. */
-        "[grid-column:1/-1] [grid-row:1/-1]"
-      )}
-      aria-hidden
-    >
-      <div className="absolute inset-0 min-h-0 min-w-0">
-        <LetterGlitch
-          glitchSpeed={90}
-          centerVignette
-          outerVignette
-          smooth={false}
-          performanceMode="chrome"
-          glitchColors={["#4a2b72", "#61dca3", "#61b3dc"]}
-          layerOpacity={0.022}
-          className="absolute inset-0 box-border min-h-0 min-w-0 max-w-none bg-transparent"
-        />
-      </div>
-    </div>
   );
 }
 
@@ -1999,7 +1972,8 @@ export default function Page() {
             : dashboardHref(key as "programs" | "monk" | "resources" | "support" | "quickaccess" | "settings", params);
         const currentHref = `${window.location.pathname}${window.location.search}`;
         if (currentHref !== nextPath) {
-          window.history.replaceState({ dashboardSection: key }, "", nextPath);
+          // pushState so browser Back walks section-by-section (not replace → public home).
+          window.history.pushState({ dashboardSection: key }, "", nextPath);
         }
         return;
       }
@@ -2318,11 +2292,12 @@ export default function Page() {
     }
   }, [nav]);
 
-  /** Browser back/forward: sync section from URL; leaving dashboard goes to public home. */
+  /** Browser back/forward: sync section from URL one step at a time. */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const syncFromUrl = () => {
       const path = window.location.pathname;
+      // Left the private shell entirely (e.g. Back past /dashboard) — go public home.
       if (!path.startsWith("/dashboard")) {
         router.replace("/");
         return;
@@ -2334,7 +2309,15 @@ export default function Page() {
       }
       const resolved = resolveDashboardSectionFromLocation(path, params);
       const valid = new Set(nav.map((n) => n.key));
-      if (valid.has(resolved)) setNavKeyState(resolved);
+      if (!valid.has(resolved)) return;
+      // URL already changed via popstate — only sync the shell UI.
+      if (previousNavKeyRef.current !== resolved) {
+        saveDashboardSectionScroll(previousNavKeyRef.current, rootRef.current);
+      }
+      startTransition(() => {
+        setNavKeyState(resolved);
+        previousNavKeyRef.current = resolved;
+      });
     };
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);
@@ -2970,11 +2953,10 @@ export default function Page() {
     const ro = new ResizeObserver(() => update());
     ro.observe(el);
     window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, { passive: true });
+    // Do not measure on every window scroll — that forces layout (Lighthouse "forced reflow").
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update);
       document.documentElement.style.removeProperty("--topbarH");
       document.documentElement.style.removeProperty("--topbarBottom");
       document.documentElement.style.removeProperty("--topbarSearchBottom");
@@ -3091,7 +3073,6 @@ export default function Page() {
               "lg:flex lg:items-center lg:gap-[var(--fluid-nav-gap)] lg:overflow-visible"
             )}
           >
-            <DashboardChromeLetterGlitch />
             <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(900px_280px_at_30%_0%,rgba(250,204,21,0.05),rgba(0,0,0,0)_55%)] [grid-column:1/-1] [grid-row:1/-1]" />
             <div
               ref={topDockRef}
@@ -3471,7 +3452,6 @@ export default function Page() {
                           : `calc(100svh - ${tabletOverlayTopPx}px)`
                       }}
                     >
-                      <DashboardChromeLetterGlitch />
                       <div
                         className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]"
                       />
@@ -3522,7 +3502,6 @@ export default function Page() {
                   "lg:relative lg:col-span-2 lg:sticky lg:top-0 lg:z-20 lg:h-full lg:min-h-0 lg:w-auto lg:max-w-none lg:rounded-none lg:shadow-none lg:overflow-x-visible lg:overflow-y-auto"
                 )}
               >
-                <DashboardChromeLetterGlitch />
                 <div className="dashboard-shell-wash pointer-events-none absolute inset-0 z-0 [background:radial-gradient(680px_320px_at_20%_10%,rgba(250,204,21,0.04),rgba(0,0,0,0)_62%)]" />
                 <div className="sidebar-nav-dock-inner relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-black lg:min-h-full">
                   <SidebarNavRailList

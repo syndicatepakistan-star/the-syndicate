@@ -621,11 +621,8 @@
 }
 
 /* Dashboard scroll performance — pause decorative chrome while any section scrolls.
-   Do NOT hide `.dashboard-chrome-letter-glitch` (visibility flash = scroll "glitch").
-   LetterGlitch pauses its own RAF via useScrollPauseRef + dashboard-is-scrolling. */
-.dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
-.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
-.dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video],
+   Keep letter-rain + bg.mp4 painted (last frame / paused) — do NOT visibility-hide them
+   (that blank flash is what users see as a scroll "glitch"). */
 .dashboard-hamburger-chrome.is-scrolling .dashboard-shell-wash,
 .dashboard-hamburger-chrome.is-scrolling .syndicate-dash-scanlines,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-grid,
@@ -636,14 +633,16 @@
   animation: none !important;
 }
 
-.dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
 .dashboard-hamburger-chrome.is-scrolling [class*="animate-pulse"],
 .dashboard-hamburger-chrome.is-scrolling [class*="animate-spin"] {
   animation-play-state: paused !important;
 }
 
-/* Keep letter rain painted (last frame) — freeze via JS, not visibility thrash */
-.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch {
+/* Letter rain + main bg video: stay visible; JS pauses decode/RAF while scrolling */
+.dashboard-hamburger-chrome.is-scrolling .dashboard-chrome-letter-glitch,
+.dashboard-hamburger-chrome.is-scrolling .dashboard-main-shell-video,
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
+.dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video] {
   pointer-events: none;
 }
 
@@ -12032,6 +12031,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   .reveal-base,
   .reveal-visible,
   .hamburger-attract,
+  .hero-hamburger-pulse,
+  .level1-unlock-all-btn,
   .paywall-headline-attract,
   .paywall-cta-headline__line--glow,
   .program-card-hamburger-glow,
@@ -12353,6 +12354,14 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     content-visibility: auto;
     contain-intrinsic-size: auto 420px;
   }
+
+  /* Dashboard programs: skip CV — fast scroll leaves empty card shells (unlike public /programs). */
+  .dashboard-hamburger-chrome .plan-offer-card,
+  .dashboard-hamburger-chrome .program-playlist-card,
+  .dashboard-hamburger-chrome .dashboard-perf-section {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
 }
 
 /* Dashboard main column — transparent shell so bg.mp4 shows through @ 70% */
@@ -12655,16 +12664,15 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 .dashboard-hamburger-chrome .dashboard-perf-section {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 520px;
-  contain: layout style paint;
+  content-visibility: visible;
+  contain: layout style;
 }
 
 .dashboard-hamburger-chrome.is-scrolling [data-dashboard-video-shell] .dashboard-main-shell-video,
 .dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-bg-video,
 .dashboard-hamburger-chrome.is-scrolling [data-dashboard-bg-video] {
-  visibility: hidden !important;
-  opacity: 0 !important;
+  /* Keep last frame visible — pause is handled in useDashboardSmoothScroll */
+  pointer-events: none;
 }
 
 .dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-panel,
@@ -12781,6 +12789,15 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     transform-origin: center center;
     animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
     will-change: transform, box-shadow;
+  }
+
+  /* Level 1 category “Unlock All” — same amber pulse as nav hamburger */
+  .level1-unlock-all-btn.hero-hamburger-pulse {
+    animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
+  }
+
+  .dashboard-hamburger-chrome .level1-unlock-all-btn.hero-hamburger-pulse {
+    animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
   }
 }
 

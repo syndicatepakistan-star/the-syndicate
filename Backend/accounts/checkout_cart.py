@@ -22,6 +22,8 @@ _RECORDABLE_ROOT_PLANS = frozenset(
         "trading_master_strategies",
         "trading_master_setups",
         "trading_master_secrets",
+        "level1_business_psychology",
+        "level1_business_models",
     }
 )
 _KNIGHT_CHECKOUT_BLOCKED = True
@@ -34,6 +36,8 @@ _PLAN_PRODUCT_TITLES = {
     "trading_master_strategies": "Strategies of a Master Trader — lifetime access",
     "trading_master_setups": "Setups of a Master Trader — lifetime access",
     "trading_master_secrets": "Secrets of a Master Trader — lifetime access",
+    "level1_business_psychology": "Business Behaviour Psychology — unlock all",
+    "level1_business_models": "Business Models — unlock all",
 }
 
 
@@ -61,6 +65,10 @@ def _is_recordable_plan_slug(plan: str) -> bool:
     plan = (plan or "").strip().lower()
     if plan in _RECORDABLE_ROOT_PLANS:
         return True
+    from accounts.level1_category_packs import is_level1_category_pack_slug
+
+    if is_level1_category_pack_slug(plan):
+        return True
     return is_vault_course_plan_slug(plan)
 
 
@@ -78,6 +86,11 @@ def _checkout_product_name(*, plan_raw: str = "", playlist_title: str | None = N
     vault_name = vault_course_product_title(plan)
     if vault_name:
         return vault_name
+    from accounts.level1_category_packs import level1_category_pack_title
+
+    level1_title = level1_category_pack_title(plan)
+    if level1_title:
+        return level1_title
     return _PLAN_PRODUCT_TITLES.get(plan, "The Syndicate — checkout")
 
 
@@ -100,6 +113,10 @@ def is_cart_eligible_plan_slug(plan_raw: str) -> bool:
     if not plan or plan in _CART_BLOCKED_ROOT_PLANS:
         return False
     if _is_knight_subscription_plan(plan):
+        return False
+    from accounts.trading_vault_catalog import is_trading_submodule_slug
+
+    if is_trading_submodule_slug(plan):
         return False
     return _is_recordable_plan_slug(plan)
 

@@ -36,7 +36,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
     },
     {
       q: "What are the mid-ticket program packs?",
-      a: "On the Programs page you will see three larger packs. Each one lets you buy the full bundle or pick courses one at a time.\nAgentic AI is $150 for the full pack (about $200 if you bought every course separately) — about 26 courses on automation, agents, and similar tools.\nAI Content Automation is $150 for the full pack (about $200 separately) — the Syndicate faceless YouTube pack: shorts, documentaries, finance channels, that kind of machine.\nTrading Advanced Technical Analysis is $150 for the full pack (about $200 separately) — four trading programs at $50 each, or single lessons inside each module.\nHit Unlock on any of those cards and you can choose the full pack or just the courses you want.",
+      a: "On the Programs page you will see three larger packs. Each one lets you buy the full bundle or pick courses one at a time.\nAgentic AI is $150 for the full pack — individual modules are $14 each.\nAI Content Automation is $150 for the full pack — individual modules are $14 each.\nTrading Advanced Technical Analysis is $150 for the full pack — four trading programs at $99 each (buy modules as sub-packs; individual lessons come with the module, not sold separately).\nHit Unlock on any of those cards and you can choose the full pack or the module sub-packs you want.",
     },
     {
       q: "How does the affiliate program work?",
@@ -54,7 +54,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
   pricing: [
     {
       q: "How much does everything cost?",
-      a: "Check the Programs page — that is where prices are listed and where you pay.\nMoney Mastery is $333 lifetime and unlocks all features and all program packs.\nThe Knight is $19.99 a month — pick a few courses, use the dashboard, Syndicate Mode, goals, and member content.\nAgentic AI, AI Content Automation, and Trading: $150 each for the full pack (about $200 if you bought every module separately).\nLevel 1 Business Model courses are $75 each (lifetime). Business Behaviour Psychology courses are $99 each (lifetime). Buying a full vault pack is cheaper than grabbing every course inside it separately.",
+      a: "Check the Programs page — that is where prices are listed and where you pay.\nMoney Mastery is $333 lifetime and unlocks all features and all program packs.\nThe Knight is $19.99 a month — pick a few courses, use the dashboard, Syndicate Mode, goals, and member content.\nAgentic AI, AI Content Automation, and Trading: $150 each for the full pack. Agentic AI and AI Content modules are $14 each à la carte; Trading modules are $99 each.\nLevel 1 Business Model courses are $75 each (lifetime). Business Behaviour Psychology courses are $99 each (lifetime). Buying a full vault pack is cheaper than grabbing every course inside it separately.",
     },
     {
       q: "Can I buy one course inside a pack instead of the whole thing?",

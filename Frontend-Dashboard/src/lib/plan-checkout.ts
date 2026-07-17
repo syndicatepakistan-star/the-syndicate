@@ -16,7 +16,9 @@ export type SubscriptionPlanKey =
   | "trading_scalpel_protocol"
   | "trading_master_strategies"
   | "trading_master_setups"
-  | "trading_master_secrets";
+  | "trading_master_secrets"
+  | "level1_business_psychology"
+  | "level1_business_models";
 
 export type PlanCheckoutParams = {
   plan: CheckoutOfferKey;
@@ -44,6 +46,8 @@ const CORE_PLAN_KEYS: readonly SubscriptionPlanKey[] = [
   "trading_master_strategies",
   "trading_master_setups",
   "trading_master_secrets",
+  "level1_business_psychology",
+  "level1_business_models",
 ];
 
 export function isSubscriptionPlanKey(value: string): value is SubscriptionPlanKey {

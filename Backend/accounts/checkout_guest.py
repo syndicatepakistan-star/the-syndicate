@@ -121,7 +121,13 @@ def save_guest_checkout_receipt(session_id: str, payload: dict, session_meta: di
                     row["amount"] = str(pl.price)
         plan = str(row.get("plan", "") or "").strip().lower()
         if plan and not row.get("title"):
-            row["title"] = vault_course_product_title(plan) or plan.replace("_", " ").title()
+            from accounts.level1_category_packs import level1_category_pack_title
+
+            row["title"] = (
+                vault_course_product_title(plan)
+                or level1_category_pack_title(plan)
+                or plan.replace("_", " ").title()
+            )
         enriched.append(row)
 
     GuestCheckoutReceipt.objects.update_or_create(

@@ -3,9 +3,7 @@ import { resolveVaultModuleDetail, resolveVaultModuleTeaser } from "@/components
 import { TRADING_PACK_DESCRIPTION } from "@/components/programs/tradingVaultCopy";
 import {
   comparePriceForUnit,
-  distributeDollarPrices,
-  VAULT_ALACARTE_AGENTIC_USD,
-  VAULT_ALACARTE_AI_CONTENT_USD,
+  VAULT_MODULE_UNIT_USD,
 } from "@/lib/packPricing";
 import {
   allTradingSubmoduleOffers,
@@ -16,6 +14,7 @@ import {
 } from "@/components/programs/tradingVaultCatalog";
 import { VAULT_SUB_COURSE_NEON_ACCENTS } from "@/components/programs/vaultSubCourseNeonAccents";
 
+/** Agentic AI + AI Content Automation modules use flat VAULT_MODULE_UNIT_USD ($14). */
 export { VAULT_SUB_COURSE_NEON_ACCENTS };
 
 const PACKS_BASE = "/assets/programs/packs courses";
@@ -55,7 +54,7 @@ function toOffer(
     billingLabel: "/lifetime",
     checkoutAmount: price,
     billing: "monthly",
-    openLabel: isTradingModule ? "Unlock Full Pack" : "Unlock",
+    openLabel: isTradingModule ? "Buy Sub Pack" : "Unlock",
     ...(isTradingModule ? { detailsLabel: "View All Videos" } : {}),
     accent,
     detailTitle: row.title.toUpperCase().slice(0, 80),
@@ -71,8 +70,6 @@ function mapVaultCourses(rows: VaultCourseRow[], packPlan: VaultPackKey): PlanOf
     toOffer(row, VAULT_SUB_COURSE_NEON_ACCENTS[index % VAULT_SUB_COURSE_NEON_ACCENTS.length], packPlan)
   );
 }
-
-const AGENTIC_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_AGENTIC_USD, 26);
 
 const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Build a Blog Writing Agent With N8N", "blog writing n8n.jpg"],
@@ -101,18 +98,13 @@ const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Alternatives to N8N in 2026", "stop n8n.jpg"],
   ["VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity", "vibe coding.jpg"],
   ["Agentic Workflow for Businesses", "agentic workflow.jpg"],
-].map(([title, image], i) => {
-  const unitPrice = AGENTIC_UNIT_PRICES[i] ?? 8;
-  return {
-    title,
-    image: packThumb("agentic ai", image),
-    slug: slugIndex("agentic_ai", i + 1),
-    unitPrice,
-    comparePrice: comparePriceForUnit(unitPrice),
-  };
-});
-
-const AI_CONTENT_UNIT_PRICES = distributeDollarPrices(VAULT_ALACARTE_AI_CONTENT_USD, 29);
+].map(([title, image], i) => ({
+  title,
+  image: packThumb("agentic ai", image),
+  slug: slugIndex("agentic_ai", i + 1),
+  unitPrice: VAULT_MODULE_UNIT_USD,
+  comparePrice: comparePriceForUnit(VAULT_MODULE_UNIT_USD),
+}));
 
 const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Beginners Guide to Faceless YouTube in 2026 (3 hours)", "faceless youtube.jpg"],
@@ -144,19 +136,16 @@ const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Make VIRAL Life Advice Videos Using Only FREE AI Tools", "life advice.jpg"],
   ["Create Viral inspirational finance Videos with Free AI Tools", "inspirational finance.jpg"],
   ["Clone ANY YouTube Channel With AI (NotebookLM Hack)", "clone any channel.jpg"],
-].map(([title, image], i) => {
-  const unitPrice = AI_CONTENT_UNIT_PRICES[i] ?? 7;
-  return {
-    title,
-    image: packThumb("ai content automation", image),
-    slug: slugIndex("ai_content", i + 1),
-    unitPrice,
-    comparePrice: comparePriceForUnit(unitPrice),
-  };
-});
+].map(([title, image], i) => ({
+  title,
+  image: packThumb("ai content automation", image),
+  slug: slugIndex("ai_content", i + 1),
+  unitPrice: VAULT_MODULE_UNIT_USD,
+  comparePrice: comparePriceForUnit(VAULT_MODULE_UNIT_USD),
+}));
 
-const TRADING_MODULE_UNIT = 50;
-const TRADING_MODULE_COMPARE = 65;
+const TRADING_MODULE_UNIT = 99;
+const TRADING_MODULE_COMPARE = 129;
 
 const TRADING_ROWS: VaultCourseRow[] = [
   {
@@ -202,7 +191,7 @@ export const VAULT_PACK_MODAL_COPY: Record<
   agentic_ai: {
     title: "Agentic AI",
     subtitle:
-      "This is not a course drop — it is an autonomous systems vault. Unlock the full protocol stack for $150 or deploy individual modules à la carte (about $200 if bought separately). Every purchase records to your command dashboard; curriculum activates as the vault deploys.",
+      "This is not a course drop — it is an autonomous systems vault. Unlock the full protocol stack for $150 or deploy individual modules à la carte at $14 each. Every purchase records to your command dashboard; curriculum activates as the vault deploys.",
     borderClass: "border-fuchsia-400/45 shadow-[0_0_56px_rgba(236,72,153,0.35)]",
     labelClass: "text-fuchsia-300/85",
     closeBtnClass: "border-fuchsia-400/35 text-fuchsia-100 hover:border-fuchsia-300/60",
@@ -210,7 +199,7 @@ export const VAULT_PACK_MODAL_COPY: Record<
   ai_content_automation: {
     title: "AI Content Automation",
     subtitle:
-      "Content without a machine behind it is manual labour — this vault wires faceless YouTube, Shorts, documentaries, and finance niches into AI pipelines that scale. Full pack $150 or modules à la carte (about $200 separately). One checkout. Controlled entitlement under your Syndicate identity.",
+      "Content without a machine behind it is manual labour — this vault wires faceless YouTube, Shorts, documentaries, and finance niches into AI pipelines that scale. Full pack $150 or modules à la carte at $14 each. One checkout. Controlled entitlement under your Syndicate identity.",
     borderClass: "border-emerald-400/45 shadow-[0_0_56px_rgba(52,211,153,0.35)]",
     labelClass: "text-emerald-300/85",
     closeBtnClass: "border-emerald-400/35 text-emerald-100 hover:border-emerald-300/60",

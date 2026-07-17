@@ -511,11 +511,11 @@ export default function CheckoutSuccessScreen({
               <span className="status-dot" />
             </div>
           ) : (
-            <div className="mb-5 mt-2 text-center sm:mb-7">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/90 sm:text-xs">
+            <div className="mb-6 mt-2 text-center sm:mb-8">
+              <p className="font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-cyan-200/90 sm:text-[15px]">
                 The Syndicate
               </p>
-              <h1 className="public-heading-lightning public-heading-lightning--gold mt-2 text-[clamp(1.8rem,4.5vw,3rem)] font-black uppercase tracking-[0.1em]">
+              <h1 className="public-heading-lightning public-heading-lightning--gold mt-3 text-[clamp(2rem,5vw,3.25rem)] font-black uppercase tracking-[0.1em]">
                 Access unlock
               </h1>
             </div>

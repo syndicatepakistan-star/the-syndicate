@@ -92,14 +92,6 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
     unlock: { kind: "playlist", legacyPlaylistId: 19 },
   },
   {
-    src: instructorImage("Avatar - Prompt Engineering.jpg"),
-    programName: "Prompt Engineering",
-    instructorName: "LLM Workflow Lead",
-    description:
-      "Write prompts that stay on-spec across models and use cases. Chain-of-thought control, eval sets, and reusable prompt libraries for content, code, and ops automations.",
-    unlock: { kind: "playlist", legacyPlaylistId: 26 },
-  },
-  {
     src: instructorImage("Avatar 3 - A.I Automation.jpg"),
     programName: "AI Automations",
     instructorName: "Automation Architect",

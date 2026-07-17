@@ -66,10 +66,10 @@ function isTradingSubmoduleSlugLocal(value: string): boolean {
 export function isUnlockCartEligible(offer: Pick<PlanOfferDef, "plan">): boolean {
   const plan = String(offer.plan).trim();
   if (!plan || plan === "bundle" || isKnightPlanSlug(plan)) return false;
+  if (isTradingSubmoduleSlugLocal(plan)) return false;
   if (isVaultPackSlug(plan)) return true;
   if (isVaultCourseSlugLocal(plan)) return true;
   if (TRADING_MODULE_SLUGS.has(plan as CheckoutOfferKey)) return true;
-  if (isTradingSubmoduleSlugLocal(plan)) return true;
   return false;
 }
 

@@ -439,6 +439,8 @@ _PLAN_RECORDABLE_SLUGS = frozenset(
     "trading_master_strategies",
     "trading_master_setups",
     "trading_master_secrets",
+    "level1_business_psychology",
+    "level1_business_models",
   }
 )
 
@@ -446,6 +448,10 @@ _PLAN_RECORDABLE_SLUGS = frozenset(
 def _is_recordable_plan_slug(plan: str) -> bool:
   plan = (plan or "").strip().lower()
   if plan in _PLAN_RECORDABLE_SLUGS:
+    return True
+  from accounts.level1_category_packs import is_level1_category_pack_slug
+
+  if is_level1_category_pack_slug(plan):
     return True
   return is_vault_course_plan_slug(plan)
 
@@ -469,6 +475,8 @@ _PLAN_PRODUCT_TITLES = {
   "trading_master_strategies": "Strategies of a Master Trader — lifetime access",
   "trading_master_setups": "Setups of a Master Trader — lifetime access",
   "trading_master_secrets": "Secrets of a Master Trader — lifetime access",
+  "level1_business_psychology": "Business Behaviour Psychology — unlock all",
+  "level1_business_models": "Business Models — unlock all",
 }
 
 
@@ -477,6 +485,11 @@ def _checkout_plan_label(plan: str) -> str:
   vault = vault_course_billing_title(p)
   if vault:
     return vault
+  from accounts.level1_category_packs import level1_category_pack_title
+
+  level1_title = level1_category_pack_title(p)
+  if level1_title:
+    return level1_title
   if p in _PLAN_PRODUCT_TITLES:
     return _PLAN_PRODUCT_TITLES[p]
   if p == "king":
@@ -497,6 +510,11 @@ def _checkout_product_name(*, plan_raw: str, playlist_title: str | None = None) 
   vault_name = vault_course_product_title(plan)
   if vault_name:
     return vault_name
+  from accounts.level1_category_packs import level1_category_pack_title
+
+  level1_title = level1_category_pack_title(plan)
+  if level1_title:
+    return level1_title
   return _PLAN_PRODUCT_TITLES.get(plan, "The Syndicate — checkout")
 
 
@@ -564,6 +582,8 @@ def _record_user_plan_purchase(
     "trading_master_strategies": "Strategies of a Master Trader",
     "trading_master_setups": "Setups of a Master Trader",
     "trading_master_secrets": "Secrets of a Master Trader",
+    "level1_business_psychology": "Business Behaviour Psychology — unlock all",
+    "level1_business_models": "Business Models — unlock all",
   }
   try:
     amt = Decimal(str(paid_amount))
@@ -608,6 +628,22 @@ def _safe_apply_plan_and_record_purchase(
     _record_user_plan_purchase(user, session, plan_sel, paid_amount, paid_currency, cart_multi=cart_multi)
   except Exception:
     logger.exception("Checkout succeeded but plan purchase record write failed for user_id=%s plan=%s", user.id, plan_sel)
+  from accounts.level1_category_packs import grant_level1_category_pack_playlists, is_level1_category_pack_slug
+
+  if is_level1_category_pack_slug(plan_sel):
+    try:
+      grant_level1_category_pack_playlists(
+        user,
+        plan_sel,
+        session_id=str(getattr(session, "id", "") or ""),
+        paid_currency=paid_currency,
+      )
+    except Exception:
+      logger.exception(
+        "Checkout succeeded but Level 1 category unlock failed for user_id=%s plan=%s",
+        user.id,
+        plan_sel,
+      )
   if plan_sel in _PLAN_ENTITLEMENT_SLUGS:
     try:
       from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
@@ -904,11 +940,15 @@ def _checkout_success_redirect_path(plan_slug: str = "", playlist_id: str = "") 
     return "/dashboard/programs"
   if plan in ("king", "knight"):
     return "/dashboard/resources"
+  from accounts.level1_category_packs import is_level1_category_pack_slug
+
   if (
     plan in ("bundle", "pawn")
     or plan.startswith("agentic_ai")
     or plan.startswith("ai_content")
     or plan.startswith("trading_")
+    or plan.startswith("level1_")
+    or is_level1_category_pack_slug(plan)
     or is_vault_course_plan_slug(plan)
   ):
     qs = "plan_checkout=success"
@@ -1164,6 +1204,13 @@ def create_checkout_session_view(request):
         return _json_error(
           "The Knight membership is coming soon and is not available for purchase yet.",
           status=403,
+        )
+      from accounts.trading_vault_catalog import is_trading_submodule_slug
+
+      if is_trading_submodule_slug(plan_raw):
+        return _json_error(
+          "Individual trading lessons are not sold separately. Unlock the module sub-pack instead.",
+          status=400,
         )
       if user_owns_checkout_selection(checkout_user, plan_raw=plan_raw):
         return already_owned_checkout_response(plan_raw=plan_raw)

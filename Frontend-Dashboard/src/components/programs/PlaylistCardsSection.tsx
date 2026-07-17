@@ -24,6 +24,8 @@ import {
 import { programPlaylistDeepLink, programSlugDeepLink } from "@/lib/programPlaylistThumbnails";
 import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
+import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
+import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import {
   PROGRAM_CARD_FRAME,
   PROGRAM_CARD_INFO_INSET,
@@ -243,6 +245,15 @@ export function PlaylistCardsSection({
       idx,
     }));
   }, [businessPsychologyPlaylists, businessModelPlaylists]);
+
+  const psychologyPackUnlocked = useMemo(
+    () => categoryPlaylistsFullyUnlocked(visiblePlaylists, "business_psychology"),
+    [visiblePlaylists],
+  );
+  const modelsPackUnlocked = useMemo(
+    () => categoryPlaylistsFullyUnlocked(visiblePlaylists, "business_model"),
+    [visiblePlaylists],
+  );
 
   useEffect(() => {
     highlightHandledRef.current = false;
@@ -511,28 +522,48 @@ export function PlaylistCardsSection({
       {visiblePlaylists.length > 0 ? (
         <>
           <div className="mx-auto w-full max-w-[1800px] overflow-visible xl:hidden">
-            <div className="mb-3 grid grid-cols-2 items-stretch gap-3">
-              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
-                <div
-                  className={cn(
-                    PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
-                    PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
-                    "text-balance"
-                  )}
-                >
-                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+            <div className="mb-3 grid grid-cols-2 items-start gap-3">
+              <div className="flex min-w-0 flex-col gap-2">
+                <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                  <div
+                    className={cn(
+                      PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                      PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                      "text-balance"
+                    )}
+                  >
+                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                  </div>
                 </div>
+                {businessPsychologyPlaylists.length > 0 ? (
+                  <Level1CategoryUnlockAllButton
+                    category="business_psychology"
+                    compact
+                    alreadyUnlocked={psychologyPackUnlocked}
+                    postAuthNext="/programs"
+                  />
+                ) : null}
               </div>
-              <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
-                <div
-                  className={cn(
-                    PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
-                    PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
-                    "text-balance"
-                  )}
-                >
-                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+              <div className="flex min-w-0 flex-col gap-2">
+                <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                  <div
+                    className={cn(
+                      PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                      PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                      "text-balance"
+                    )}
+                  >
+                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                  </div>
                 </div>
+                {businessModelPlaylists.length > 0 ? (
+                  <Level1CategoryUnlockAllButton
+                    category="business_model"
+                    compact
+                    alreadyUnlocked={modelsPackUnlocked}
+                    postAuthNext="/programs"
+                  />
+                ) : null}
               </div>
             </div>
             <div className="relative space-y-4 overflow-visible">
@@ -562,6 +593,11 @@ export function PlaylistCardsSection({
                   {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
                 </div>
               </div>
+              <Level1CategoryUnlockAllButton
+                category="business_psychology"
+                alreadyUnlocked={psychologyPackUnlocked}
+                postAuthNext="/programs"
+              />
               <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
               <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5">
                 {businessPsychologyPlaylists.map((pl, j) => renderPlaylistCard(pl, j))}
@@ -585,6 +621,11 @@ export function PlaylistCardsSection({
                   {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
                 </div>
               </div>
+              <Level1CategoryUnlockAllButton
+                category="business_model"
+                alreadyUnlocked={modelsPackUnlocked}
+                postAuthNext="/programs"
+              />
               <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
               <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5 playlist-business-models-cards">
                 {businessModelPlaylists.map((pl, j) => renderPlaylistCard(pl, j + businessPsychologyPlaylists.length))}

@@ -70,6 +70,8 @@ import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-che
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
 import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
+import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
+import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 
 function coursesListErrorMessage(status: number, data: unknown): string {
@@ -772,6 +774,15 @@ export function ProgramsCourseSection({
     }));
   }, [showBothPlaylistColumns, visibleBusinessPsychologyPlaylists, visibleBusinessModelPlaylists]);
 
+  const psychologyPackUnlocked = useMemo(
+    () => categoryPlaylistsFullyUnlocked(businessPsychologyPlaylists, "business_psychology"),
+    [businessPsychologyPlaylists],
+  );
+  const modelsPackUnlocked = useMemo(
+    () => categoryPlaylistsFullyUnlocked(businessModelPlaylists, "business_model"),
+    [businessModelPlaylists],
+  );
+
   const handleOfferAlreadyUnlocked = useCallback(
     async (plan: CheckoutOfferKey) => {
       if (plan === "bundle" || plan === "king") {
@@ -1111,28 +1122,46 @@ export function ProgramsCourseSection({
           <div className="mx-auto max-w-[1800px]">
             {showBothPlaylistColumns ? (
               <div className="space-y-3 xl:hidden">
-                <div className="grid grid-cols-2 items-stretch gap-3">
-                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
-                    <div
-                      className={cn(
-                        PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
-                        PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
-                        "text-balance"
-                      )}
-                    >
-                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                <div className="grid grid-cols-2 items-start gap-3">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                      <div
+                        className={cn(
+                          PLAYLIST_CATEGORY_HEADING_CLASS.psychology,
+                          PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                          "text-balance"
+                        )}
+                      >
+                        {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                      </div>
                     </div>
+                    <Level1CategoryUnlockAllButton
+                      category="business_psychology"
+                      compact
+                      alreadyUnlocked={psychologyPackUnlocked}
+                      postAuthNext="/dashboard/programs"
+                      onUnlocked={reloadStreamPlaylists}
+                    />
                   </div>
-                  <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
-                    <div
-                      className={cn(
-                        PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
-                        PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
-                        "text-balance"
-                      )}
-                    >
-                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <div className={PLAYLIST_CATEGORY_HEADING_CLASS.splitHeadingSlot}>
+                      <div
+                        className={cn(
+                          PLAYLIST_CATEGORY_HEADING_CLASS.businessModels,
+                          PLAYLIST_CATEGORY_HEADING_CLASS.splitSize,
+                          "text-balance"
+                        )}
+                      >
+                        {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                      </div>
                     </div>
+                    <Level1CategoryUnlockAllButton
+                      category="business_model"
+                      compact
+                      alreadyUnlocked={modelsPackUnlocked}
+                      postAuthNext="/dashboard/programs"
+                      onUnlocked={reloadStreamPlaylists}
+                    />
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -1174,6 +1203,12 @@ export function ProgramsCourseSection({
                       {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
                     </div>
                   </div>
+                  <Level1CategoryUnlockAllButton
+                    category="business_psychology"
+                    alreadyUnlocked={psychologyPackUnlocked}
+                    postAuthNext="/dashboard/programs"
+                    onUnlocked={reloadStreamPlaylists}
+                  />
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
                   <div
                     className={cn(
@@ -1204,6 +1239,12 @@ export function ProgramsCourseSection({
                       {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
                     </div>
                   </div>
+                  <Level1CategoryUnlockAllButton
+                    category="business_model"
+                    alreadyUnlocked={modelsPackUnlocked}
+                    postAuthNext="/dashboard/programs"
+                    onUnlocked={reloadStreamPlaylists}
+                  />
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
                   <div
                     className={cn(

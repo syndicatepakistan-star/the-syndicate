@@ -218,6 +218,8 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
           </h2>
 
           <div className="mt-5 flex flex-wrap items-end gap-x-2 gap-y-1">
+            {!isTradingLesson ? (
+              <>
             <span className="font-mono text-lg text-white/40 line-through decoration-white/35 sm:text-xl">
               {localizeLabel(offer.comparePrice)}
             </span>
@@ -227,9 +229,17 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
             >
               {localizeLabel(offer.displayPrice)}
             </span>
+              </>
+            ) : null}
             <span className="pb-1 font-mono text-sm text-white/55 sm:text-base">
-              {offer.billingLabel}
-              {offer.billingLabel.includes("lifetime") ? "" : " · one-time"}
+              {isTradingLesson
+                ? "Included with module sub-pack · lifetime when unlocked"
+                : (
+                  <>
+                    {offer.billingLabel}
+                    {offer.billingLabel.includes("lifetime") ? "" : " · one-time"}
+                  </>
+                )}
             </span>
           </div>
 

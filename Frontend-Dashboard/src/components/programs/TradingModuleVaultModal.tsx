@@ -55,7 +55,7 @@ export function TradingModuleVaultModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-  const { localizeLabel, symbol } = useCurrency();
+  const { localizeLabel } = useCurrency();
 
   useModalScrollLock(!!moduleOffer);
 
@@ -174,8 +174,9 @@ export function TradingModuleVaultModal({
                   "drop-shadow-[0_0_18px_currentColor]",
                 )}
               >
-                One-time purchase — unlock the full module for {localizeLabel(moduleOffer.displayPrice)} or buy
-                individual lessons at {symbol}3 each. Lifetime access recorded to your dashboard after checkout.
+                One-time purchase — unlock this module sub-pack for {localizeLabel(moduleOffer.displayPrice)}.
+                Individual lessons are included with the module (not sold separately). Lifetime access
+                records to your dashboard after checkout.
               </p>
               {moduleUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">

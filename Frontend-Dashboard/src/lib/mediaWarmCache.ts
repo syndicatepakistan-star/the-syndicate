@@ -32,7 +32,7 @@ export const MARKETING_IMAGE_URLS = ["/assets/logo.webp"] as const;
 
 export const PROGRAMS_SECTION_VIDEO = "/assets/v.mp4";
 
-export const DASHBOARD_SHELL_VIDEO = "/assets/dashboard/bg.mp4";
+export const DASHBOARD_SHELL_VIDEO = "/assets/bg.mp4";
 
 export const MARKETING_VIDEO_URLS = [
 
@@ -40,7 +40,7 @@ export const MARKETING_VIDEO_URLS = [
 
   PROGRAMS_SECTION_VIDEO,
 
-  DASHBOARD_SHELL_VIDEO,
+  // Dashboard shell /assets/bg.mp4 (~18MB) is NOT warmed here — dashboard loads it idle-only.
 
   "/assets/video.mp4",
 
@@ -50,7 +50,7 @@ export const MARKETING_VIDEO_URLS = [
 ] as const;
 
 /** Phones / data-saver connections skip the background video warmup entirely. */
-function shouldSkipHeavyVideoWarmup(): boolean {
+export function shouldSkipHeavyVideoWarmup(): boolean {
   if (typeof window === "undefined") return true;
   if (window.matchMedia("(max-width: 767px)").matches) return true;
   type NetworkInformation = { saveData?: boolean; effectiveType?: string };

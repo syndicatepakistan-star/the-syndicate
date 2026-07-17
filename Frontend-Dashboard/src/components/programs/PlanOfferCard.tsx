@@ -185,6 +185,13 @@ export function PlanOfferCard({
   const localizedPrice = localizeLabel(offer.displayPrice);
   const isLongPackPrice = localizedPrice.length > 5;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
+  const isTradingLessonBrowseOnly = isTradingSubmoduleSlug(offer.plan);
+  const tradingLessonUnlocked =
+    isTradingLessonBrowseOnly &&
+    typeof actionLabel === "string" &&
+    /^open\b/i.test(actionLabel.trim());
+  const hideTradingLessonPrice = isTradingLessonBrowseOnly;
+  const hideTradingLessonUnlock = isTradingLessonBrowseOnly && !tradingLessonUnlocked;
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
@@ -323,6 +330,8 @@ export function PlanOfferCard({
                     ? "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 320px"
                     : "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 420px"
                 }
+                width={isModule ? 480 : 828}
+                height={isModule ? 300 : 518}
                 alt={offer.title}
                 loading={isModule || offer.plan !== "bundle" ? "lazy" : "eager"}
                 fetchPriority={offer.plan === "bundle" ? "high" : "low"}
@@ -356,6 +365,7 @@ export function PlanOfferCard({
               ) : null}
             </div>
 
+            {!hideTradingLessonPrice ? (
             <div
               className={cn(
                 "absolute z-[4]",
@@ -381,6 +391,7 @@ export function PlanOfferCard({
                 {localizedPrice}
               </span>
             </div>
+            ) : null}
 
             <div
               className={cn(
@@ -447,7 +458,7 @@ export function PlanOfferCard({
 
               <div
                 className={cn(
-                  "grid grid-cols-2",
+                  hideTradingLessonUnlock ? "grid grid-cols-1" : "grid grid-cols-2",
                   isLarge && isPack && "mt-1.5 gap-1.5 sm:gap-2",
                   isLarge && !isPack && "mt-2 gap-2 sm:gap-2.5",
                   isModule && "mt-2 gap-1",
@@ -473,6 +484,7 @@ export function PlanOfferCard({
                 >
                   {offer.detailsLabel ?? "Details"}
                 </button>
+                {!hideTradingLessonUnlock ? (
                 <button
                   type="button"
                   disabled={busy || comingSoon}
@@ -494,6 +506,7 @@ export function PlanOfferCard({
                 >
                   {busy ? "Loading…" : actionLabel ?? offer.openLabel}
                 </button>
+                ) : null}
               </div>
             </div>
           </div>

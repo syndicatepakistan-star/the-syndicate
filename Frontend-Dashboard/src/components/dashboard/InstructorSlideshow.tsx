@@ -312,24 +312,21 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             className="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.38)_100%)]"
             aria-hidden
           />
-          <div className="relative z-[2] flex h-full min-h-[inherit] w-full items-center justify-center p-4 sm:p-6">
-            <Image
-              key={active.src}
-              src={active.src}
-              alt={`${active.instructorName} — ${active.programName}`}
-              width={720}
-              height={540}
-              sizes="(max-width: 1024px) 92vw, 520px"
-              quality={isLcp ? 85 : 72}
-              priority={isLcp}
-              loading={isLcp ? undefined : "lazy"}
-              decoding="async"
-              className="instructor-slide-photo max-h-full max-w-full h-auto w-auto object-contain drop-shadow-[0_14px_48px_rgba(0,0,0,0.7)]"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-              }}
-            />
-          </div>
+          <Image
+            key={active.src}
+            src={active.src}
+            alt={`${active.instructorName} — ${active.programName}`}
+            fill
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 520px"
+            quality={isLcp ? 78 : 70}
+            priority={isLcp}
+            loading={isLcp ? undefined : "lazy"}
+            decoding="async"
+            className="instructor-slide-photo object-contain object-center p-3 sm:p-5"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "0";
+            }}
+          />
         </div>
       </div>
     </div>

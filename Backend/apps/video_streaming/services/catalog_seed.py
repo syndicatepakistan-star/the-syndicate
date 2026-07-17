@@ -333,8 +333,8 @@ def seed_vault_playlists_structure_only(*, publish: bool) -> VaultSeedStats:
     """Create vault/trading playlists without StreamVideo rows (admin links media manually)."""
     stats = VaultSeedStats()
 
-    agentic_prices = distribute_level1_prices(Decimal("230"), len(AGENTIC_AI_COURSE_TITLES))
-    ai_prices = distribute_level1_prices(Decimal("250"), len(AI_CONTENT_COURSE_TITLES))
+    agentic_prices = [Decimal("14.00")] * len(AGENTIC_AI_COURSE_TITLES)
+    ai_prices = [Decimal("14.00")] * len(AI_CONTENT_COURSE_TITLES)
 
     for (plan_slug, title, _thumb), price in zip(agentic_course_rows(), agentic_prices, strict=True):
         ensure_submodule_playlist(
@@ -375,7 +375,7 @@ def seed_vault_playlists_structure_only(*, publish: bool) -> VaultSeedStats:
                 slug=unique_playlist_slug(f"trading-module-{module_slug}"),
                 vault_plan_slug=module_slug,
                 category=StreamPlaylist.Category.BUSINESS_MODEL,
-                price=Decimal("50.00"),
+                price=Decimal("99.00"),
                 rating=Decimal("4.7"),
                 description=f"Trading module — {child_count} lessons.",
                 is_published=publish,

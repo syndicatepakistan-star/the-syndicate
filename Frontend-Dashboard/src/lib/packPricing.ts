@@ -8,10 +8,12 @@ export function distributeDollarPrices(total: number, count: number): number[] {
 
 export const VAULT_PACK_CHECKOUT_USD = 150;
 export const VAULT_PACK_COMPARE_USD = 250;
-export const VAULT_ALACARTE_AGENTIC_USD = 230;
-export const VAULT_ALACARTE_AI_CONTENT_USD = 250;
+/** Flat à la carte price for Agentic AI + AI Content Automation modules. */
+export const VAULT_MODULE_UNIT_USD = 14;
+export const VAULT_ALACARTE_AGENTIC_USD = VAULT_MODULE_UNIT_USD * 26;
+export const VAULT_ALACARTE_AI_CONTENT_USD = VAULT_MODULE_UNIT_USD * 29;
 /** @deprecated Use pack-specific totals above. */
-export const VAULT_ALACARTE_TOTAL_USD = 240;
+export const VAULT_ALACARTE_TOTAL_USD = VAULT_ALACARTE_AGENTIC_USD;
 
 export const LEVEL1_PROGRAMS_PER_CATEGORY = 11;
 
@@ -20,6 +22,17 @@ export const BUSINESS_PSYCHOLOGY_UNIT_USD = 99;
 
 /** Business Model — $75 per program. */
 export const BUSINESS_MODEL_UNIT_USD = 75;
+
+/** Unlock-all category packs (bundle vs à la carte). */
+export const BUSINESS_PSYCHOLOGY_UNLOCK_ALL_USD = 199;
+/** Display compare total for psychology unlock-all (11 × $99). */
+export const BUSINESS_PSYCHOLOGY_SEPARATE_TOTAL_USD = 1089;
+export const BUSINESS_MODELS_UNLOCK_ALL_USD = 175;
+/** Display compare total for models unlock-all (marketing copy). */
+export const BUSINESS_MODELS_SEPARATE_TOTAL_USD = 824;
+
+export const LEVEL1_BUSINESS_PSYCHOLOGY_PACK_PLAN = "level1_business_psychology" as const;
+export const LEVEL1_BUSINESS_MODELS_PACK_PLAN = "level1_business_models" as const;
 
 /** @deprecated Prefer per-program unit prices above. */
 export const LEVEL1_CATEGORY_CHECKOUT_USD =

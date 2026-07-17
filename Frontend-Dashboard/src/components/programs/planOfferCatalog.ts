@@ -33,7 +33,9 @@ export type CheckoutOfferKey =
   | PlanOfferKey
   | TradingSubOfferKey
   | `agentic_ai_c${string}`
-  | `ai_content_c${string}`;
+  | `ai_content_c${string}`
+  | "level1_business_psychology"
+  | "level1_business_models";
 
 export type PlanOfferAccent = "amber" | "cyan" | "pink" | "green" | "purple" | "red" | "orange" | "blue";
 
@@ -378,7 +380,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     teaser:
       "Manual workflows are wage labour disguised as entrepreneurship — stop babysitting tasks agents should execute. Agentic AI installs autonomous n8n pipelines, Claude Code systems, MCP servers, and RAG stacks that compound leverage while you architect the empire.",
     displayPrice: "$150",
-    comparePrice: "$230",
+    comparePrice: "$364",
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
@@ -388,7 +390,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     accent: "pink",
     detailTitle: "AGENTIC AI",
     detailDescription:
-      "Agentic AI is not a single course — it is a vault of autonomous systems. Buy once for $150 and unlock every module below: n8n agents, Claude Code doctrine, MCP workflows, RAG pipelines, and business automations built for operators who refuse manual execution. Dashboard access records immediately; full library entitlement activates as each protocol deploys. Deploy à la carte across the vault (about $200 if bought separately) if you prefer surgical strikes over total vault capture.",
+      "Agentic AI is not a single course — it is a vault of autonomous systems. Buy once for $150 and unlock every module below: n8n agents, Claude Code doctrine, MCP workflows, RAG pipelines, and business automations built for operators who refuse manual execution. Dashboard access records immediately; full library entitlement activates as each protocol deploys. Deploy à la carte across the vault at $14 per module if you prefer surgical strikes over total vault capture.",
     detailFeatures: [
       "Build a Blog Writing Agent With N8N",
       "Build a WhatsApp Agent with n8n",
@@ -426,7 +428,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     teaser:
       "Publishing without a machine behind you is invisible labour — this vault wires faceless YouTube, viral Shorts, documentary channels, and finance niches into AI pipelines that scale while you stay off camera. One checkout. Total content warfare capability.",
     displayPrice: "$150",
-    comparePrice: "$250",
+    comparePrice: "$406",
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
@@ -436,7 +438,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     accent: "green",
     detailTitle: "AI CONTENT AUTOMATION",
     detailDescription:
-      "AI Content Automation is the faceless operator's arsenal. Buy the full vault for $150 and unlock every module below — YouTube automation, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and bulk publishing blueprints. No vanity access: every purchase records to your dashboard with controlled entitlement as modules go live. Prefer precision? Deploy individual protocols à la carte (about $200 if bought separately).",
+      "AI Content Automation is the faceless operator's arsenal. Buy the full vault for $150 and unlock every module below — YouTube automation, Shorts at scale, viral documentaries, finance niches, NotebookLM clones, and bulk publishing blueprints. No vanity access: every purchase records to your dashboard with controlled entitlement as modules go live. Prefer precision? Deploy individual protocols à la carte at $14 each.",
     detailFeatures: [
       "Beginners Guide to Faceless YouTube in 2026 (3 hours)",
       "New YouTube Policy ENDS These Faceless YouTube Channels",

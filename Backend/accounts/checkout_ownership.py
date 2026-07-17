@@ -39,6 +39,11 @@ def user_owns_checkout_selection(user, *, plan_raw: str = "", playlist=None) -> 
     ).exists():
         return True
 
+    from accounts.level1_category_packs import is_level1_category_pack_slug, user_owns_level1_category_pack
+
+    if is_level1_category_pack_slug(plan):
+        return user_owns_level1_category_pack(user, plan)
+
     return user_has_vault_module_access(user, plan)
 
 

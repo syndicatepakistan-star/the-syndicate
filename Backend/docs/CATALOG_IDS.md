@@ -53,8 +53,8 @@ python manage.py seed_syndicate_catalog --with-videos --link-r2
 
 | Pack slug | Checkout | À la carte total | Module slug pattern |
 |-----------|----------|------------------|---------------------|
-| `agentic_ai` | $150 | $230 | `agentic_ai_c01` … `agentic_ai_c26` |
-| `ai_content_automation` | $150 | $250 | `ai_content_c01` … `ai_content_c29` |
+| `agentic_ai` | $150 | $364 (26 × $14) | `agentic_ai_c01` … `agentic_ai_c26` |
+| `ai_content_automation` | $150 | $406 (29 × $14) | `ai_content_c01` … `ai_content_c29` |
 | `trading_technical_analysis` | $150 | ~$200 (4 modules × $50) | see below |
 
 ### Agentic AI R2 root: `Agentic AI/{title}/{inner}/index.m3u8`

@@ -594,16 +594,16 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 2.75rem max(1rem, min(100px, 8vw)) 4.5rem;
+  padding: 3rem max(1.25rem, min(120px, 9vw)) 5rem;
   display: block;
 }
 
 .checkout-success-scroll__inner {
   width: 100%;
-  max-width: min(100%, calc(100vw - 2rem));
+  max-width: min(100%, 72rem);
   margin: 0 auto;
-  padding-top: 1rem;
-  padding-bottom: 2.5rem;
+  padding-top: 1.25rem;
+  padding-bottom: 3rem;
 }
 
 .checkout-bridge-overlay {

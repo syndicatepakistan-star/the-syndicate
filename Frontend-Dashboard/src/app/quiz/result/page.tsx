@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import {
   buildFreeTicketLoginHref,
   isFreeTicketPsychologyCourse,
@@ -111,12 +112,6 @@ function parseQuizSectionMeta(title: string) {
     shortLabel: `Section ${letter}`,
     fullTitle: titleBody,
   };
-}
-
-function scrollToQuizSection(sectionId: string) {
-  const el = document.getElementById(sectionId);
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function getCleanReportLines(report: string) {
@@ -389,24 +384,6 @@ function renderStyledReport(report: string, loginEmail: string) {
   return (
     <>
       <div className="result-report-layout">
-        <nav className="result-section-sidebar" aria-label="Report sections">
-          {sections.map((section) => {
-            const meta = parseQuizSectionMeta(section.title);
-            return (
-              <button
-                key={`nav-${section.title}`}
-                type="button"
-                className="result-section-sidebar-item"
-                onClick={() => scrollToQuizSection(meta.id)}
-              >
-                <span className="result-section-sidebar-letter">{meta.shortLabel}</span>
-                {meta.fullTitle ? (
-                  <span className="result-section-sidebar-desc">{meta.fullTitle}</span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
         <div className="section-cards-grid">
         {sections.map((section) => {
           const meta = parseQuizSectionMeta(section.title);
@@ -414,17 +391,31 @@ function renderStyledReport(report: string, loginEmail: string) {
             section.title.toLowerCase().includes("section b") ||
             section.title.toLowerCase().includes("virus");
           return (
-          <article
+          <CyberChamferFrame
             key={section.title}
-            id={meta.id}
-            className={`section-card${meta.letter ? ` section-card--${meta.letter.toLowerCase()}` : ""} scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
+            accent={
+              meta.letter === "A"
+                ? "cyan"
+                : meta.letter === "B"
+                  ? "pink"
+                  : meta.letter === "C"
+                    ? "violet"
+                    : "amber"
+            }
+            chamfer={18}
+            className="quiz-result-section-frame w-full"
+            innerClassName="p-0"
           >
-            <h3 className="result-subheading">{formatQuizSectionTitle(section.title)}</h3>
-            {isArchetypeCourseMapSection(section.title)
-              ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
-              : isExecutionStackSection(section.title)
-                ? renderExecutionStackSectionContent(section.content, section.title, loginEmail)
-                : section.content.map((line, idx) => {
+            <article
+              id={meta.id}
+              className={`section-card${meta.letter ? ` section-card--${meta.letter.toLowerCase()}` : ""} scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
+            >
+              <h3 className="result-subheading">{formatQuizSectionTitle(section.title)}</h3>
+              {isArchetypeCourseMapSection(section.title)
+                ? renderArchetypeMapSectionContent(section.content, section.title, loginEmail)
+                : isExecutionStackSection(section.title)
+                  ? renderExecutionStackSectionContent(section.content, section.title, loginEmail)
+                  : section.content.map((line, idx) => {
               if (line.startsWith("• Course:")) {
                 const courseValue = line.replace("• Course:", "").trim();
                 const showFreeTicket = isFreeTicketPsychologyCourse(courseValue);
@@ -474,8 +465,9 @@ function renderStyledReport(report: string, loginEmail: string) {
                   {line}
                 </p>
               );
-            })}
-          </article>
+              })}
+            </article>
+          </CyberChamferFrame>
         );
         })}
         </div>

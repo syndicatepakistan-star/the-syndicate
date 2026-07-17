@@ -1,6 +1,7 @@
 /**
  * Curated Setups of a Master Trader copy — vault modals and program library.
- * Section headers: Programme Introduction, Programme Description, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn,
+ * Exact Chart Patterns, Exact Setups, Exact Strategy.
  */
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 
@@ -8,391 +9,512 @@ export const TRADING_SETUPS_MODULE_TITLE = "Setups of a Master Trader";
 
 export const TRADING_SETUPS_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
   __module_pack__: `Programme Introduction
-Are you feeling lost when looking at trading charts and tired of guessing when to buy or sell? Many beginners struggle with emotional decisions and lose money because they do not know how to spot the right opportunities. This complete program will teach you step by step how to read the market and identify the highest-probability trading setups. By the end of this journey, you will know exactly how to recognize winning chart patterns and enter trades with true confidence. You will stop gambling and finally take control of your time and money.
+Are you tired of reading about trading theory and just want to know exactly what to look for? This course is your visual dictionary of the most profitable, highly tested trading setups in the world. We will show you the exact shapes, the exact lines, and the exact candles you need to see before you risk your money.
 
 Programme Description
-This entire course is a practical guide to reading chart patterns and executing smart, disciplined trades. You will learn how to spot powerful market signals like bull flags, double bottoms, gap fills, and essential candlestick shapes. The program also teaches you how to tell the difference between reliable, mature setups and risky, immature ones. It is highly worth your time because it replaces emotional reactions with a clear, rule-based trading plan. By mastering these proven strategies, you will protect your investments and build long-term wealth.
-
+This is the ultimate pattern recognition course. We focus entirely on the visual setups that happen right before a major price move. You will learn to identify classic patterns like the Head and Shoulders and the Cup and Handle. More importantly, you will learn the strict rules for validating these patterns, so you don't accidentally trade a messy, broken shape.
 
 What You Will Learn
-Manage your trading emotions and stick to a strict, disciplined game plan
-Tell the difference between safe, mature chart patterns and risky, immature setups
-Read individual candlestick signals like dojis, topping or bottoming tails, and engulfing candles
-Spot double and triple tops or bottoms to safely predict major market reversals
-Trade bull and bear flags, as well as parallel channels, to confidently follow market trends
-Recognize advanced chart formations like the cup and handle, megaphone, M-A, and W-V patterns
-Trade the Golden Cross and Death Cross to spot major, long-term shifts in market direction
-Understand market gaps and gap fills to find hidden areas of price support and resistance
-Time your trade entries and exits perfectly by understanding the power and speed of market moves
-Control your risk, cut your losses early, and secure consistent profits to build lasting wealth`,
+How to identify the most famous and reliable chart patterns in the world.
+
+The difference between a pattern that is fully "mature" and ready, versus one that is "immature" and dangerous.
+
+How the speed and power of a price drop tells you how strong the bounce will be.
+
+How to read the individual candlestick shapes (like Dojis and Engulfing candles) to see inside the minds of other traders.
+
+Exact Chart Patterns
+The Cup and Handle Pattern: A rounded bottom followed by a tiny dip, signaling a massive push higher.
+
+Double Tops and Bottoms: The reliable "M" or "W" shapes that show a price is totally exhausted and reversing.
+
+The Head and Shoulders: A distinct peak, a higher peak, and a lower peak, warning that an uptrend is officially dead.
+
+Downsloping and Upsloping Channels: Diagonal boxes that contain the price, teaching you exactly where to buy the bottom and sell the top.
+
+Exact Setups
+The Doji Setup: Finding the cross-shaped candle after a huge run-up, using it as your signal to immediately take profits.
+
+The Engulfing Candle Setup: Waiting for a massive green bar to completely cover a small red bar, giving you the green light to buy.
+
+Topping and Bottoming Tails Setup: Spotting unusually long candle wicks that prove the big banks stepped in to reverse the price.
+
+Golden and Death Cross Setups: Waiting for long-term moving averages to cross over each other for massive, multi-month trades.
+
+Exact Strategy
+The Mature Pattern Strategy: A strict rule system where you refuse to enter a trade until every single part of the visual pattern is perfectly formed.
+
+The Power of the Move Strategy: Analyzing the speed of a crash to predict the strength of the bounce; buying heavy panic and selling calm resistance.
+
+Reading the Candlestick Story: A strategy of combining multiple candlestick shapes together to build a factual story of what the market will do next, completely ignoring your own emotions.`,
 
   Introduction: `Programme Introduction
-Are you feeling lost in the world of trading? Do you struggle to make consistent profits? This course is here to help you. In "Setups of a Winning Trader," you'll learn how to read chart patterns and make better trading decisions. By the end, you'll feel more confident and ready to take control of your trading journey.
+Are you feeling lost in a sea of different chart shapes? Do you struggle to remember which shape does what? This course is your master index. Here, you will get a high-level overview of the most important winning setups. By the end, you will feel grounded and ready to dive into the specifics of each powerful pattern.
 
 Programme Description
-This course focuses on the essential setups that every successful trader needs to know. You will learn to identify high-probability trading patterns, which can help you make smarter trades and reduce stress. It's a step-by-step guide that will empower you to become a more disciplined and knowledgeable trader, making it worth your time and effort.
-
+This course serves as your roadmap to the essential setups every successful trader uses. It is a rapid-fire introduction to the shapes that give you a high probability of winning. It’s a step-by-step guide to organizing your brain so you know exactly which shapes to look for when you open your charts every morning.
 
 What You Will Learn
-Introduction to winning trading setups
-Goals and expectations for the course
-Understanding emotional control in trading
-The importance of high-probability trades
-Identifying the hidden shoulders and inverse head & shoulders patterns
-Recognizing bull and bear flag patterns and their angles
-Learning about the cup and handle formation
-Differentiating between mature and immature patterns
-Understanding the megaphone pattern formation
-Recognizing double tops and double bottoms
-Analyzing triple tops and beyond
-Learning about MA pattern formations and trading it
-Understanding the WV pattern and its inverse setup
-Mastering the gap filtrate strategy
-How the power of a move affects retraces
-Trading the golden cross and death cross setups
-Understanding doji candles and when to trade them
-Mastering bottoming tails and topping tails
-Deciphering and trading the engulfing candle formation
-Tips for improving your trading success
-Building confidence and discipline for stress-free trading
-Final thoughts and advanced tips from the instructor`,
+A clear overview of the most reliable, high-probability chart shapes.
+
+A summary of flags, cups, tops, bottoms, and moving average setups.
+
+A brief introduction to candlestick shapes like the doji and tails.
+
+The absolute necessity of keeping your emotions flat and calm.
+
+How to focus only on the shapes that have the highest mathematical chance of winning.
+
+Exact Chart Patterns
+The Master Shape Dictionary: An overview of the visual differences between M's, W's, Flags, and Megaphones, training your eyes to spot them instantly.
+
+Exact Setups
+The High-Probability Filter: Learning how to instantly scan a chart and determine if it contains a recognizable, safe setup or if it is just random noise.
+
+Exact Strategy
+The Discipline Checklist Strategy: Creating a rigid daily checklist of shapes; if you don't see one of your master shapes on the screen, you turn off the computer and refuse to trade.`,
 
   "Setups of a Master Trader — Lesson": `Programme Introduction
-Are you feeling lost when it comes to trading? Do you want to learn how to spot winning setups without wasting time? This course will guide you step by step through the process of understanding head and shoulder patterns. By the end, you'll be able to identify these patterns and use them to make informed trading decisions.
+Do you want to learn the most famous and reliable warning sign in all of trading? This course will guide you step by step through the famous "Head and Shoulders" shape. By the end, you'll be able to spot this ultimate trend-killer and use it to exit dangerous markets or make massive profits when prices fall.
 
 Programme Description
-This course focuses on head and shoulder patterns, which are important tools for traders. You will learn how to recognize these patterns and understand when they are valid or not. You'll gain practical skills to identify bearish and bullish setups, helping you trade with confidence. This course is worth your time because it equips you with the knowledge to make better trading choices.
-
+This course focuses entirely on the Head and Shoulders shape, the most respected warning signal in the financial world. You will learn the strict visual rules for identifying the left shoulder, the head, and the right shoulder. You will gain practical skills to identify this setup, ensuring you never get caught holding a crashing asset.
 
 What You Will Learn
-Understand the basics of head and shoulder patterns
-Recognize the difference between bearish and bullish setups
-Learn how to identify a valid head and shoulder pattern
-Understand the importance of the neckline in these patterns
-Discover how to calculate target prices based on pattern formations
-Learn how to spot failures in head and shoulder patterns
-Understand the significance of symmetry in patterns
-Learn how to draw trend lines to identify key points
-Gain insights into inverse head and shoulder patterns
-Practice with quizzes to reinforce your learning
-Analyze real-life examples to see how these patterns play out
-Develop the discipline to manage losses effectively`,
+The visual basics of the three-hump Head and Shoulders shape.
+
+How to draw the all-important "neckline" across the bottom of the humps.
+
+How to spot the upside-down version that signals a massive market bottom.
+
+How to calculate exactly how far the price will crash based on the height of the head.
+
+The importance of symmetry (making sure both shoulders look similar).
+
+Exact Chart Patterns
+The Head and Shoulders Shape: A visual pattern featuring a medium-sized peak (left shoulder), a massive peak in the middle (head), and a medium-sized peak on the right (right shoulder).
+
+Exact Setups
+The Neckline Break Setup: Drawing a strict line underneath the three humps, and executing your trade the exact second the price cracks below that safety line.
+
+Exact Strategy
+The Reversal Calculation Strategy: Measuring the exact distance from the top of the "head" down to the "neckline," and using that exact measurement to predict how deep the market will crash.`,
 
   "Bull and Bear Flag Setups": `Programme Introduction
-Do you feel lost when reading trading charts? Are you unsure about when to enter a trade? This course will help you understand bull and bear flag setups. After completing it, you will know how to identify these patterns and make better trading decisions. You'll gain the confidence to take control of your trading journey.
+Do you feel lost when reading charts and don't know where to jump in? This course will help you understand the most common and reliable setups in the world: Bull and Bear flags. After completing this, you will know exactly how to spot these resting phases and enter trades right before the price explodes.
 
 Programme Description
-This course focuses on bull and bear flag setups in trading. You'll learn how to read these patterns on charts and understand their importance. By the end, you will know how to recognize high-probability trades. This knowledge will save you time and help you make smarter decisions with your money.
-
+This course focuses on the visual shapes of flag patterns. You will learn how to read the exact angle of the flag to know if it is a highly probable winner or a dangerous trap. This knowledge will save you time and ensure you only risk your money on the absolute best shapes.
 
 What You Will Learn
-The basics of bull and bear flags and their significance in trading
-How to identify variations, including inside bar patterns
-The importance of the angle in flag formations
-Why a 90-degree angle indicates a higher chance of success
-The risks of taking trades with angles below 45 degrees
-How to distinguish between high-probability setups and low-probability ones
-The psychology behind maintaining discipline while trading
-Visual examples of bull and bear flags in action
-How to apply your knowledge of flag patterns to real trading scenarios
-Strategies to manage emotions and improve decision-making in trading`,
+The visual basics of how flag patterns are drawn.
+
+How to measure the angle of the flag to predict its success.
+
+Why a flag pointing too sharply in the wrong direction is dangerous.
+
+How to identify safe, small price bars resting inside the flag.
+
+How to stay disciplined and only trade perfect shapes.
+
+Exact Chart Patterns
+The Perfect Flag Pattern: A visual shape featuring a sharp, straight line up (the pole) followed by a tight, slightly downward-slanted rectangular box (the flag).
+
+Exact Setups
+The Flag Breakout Setup: Placing your buy order just above the top line of the flag box, catching the price the exact second it wakes up from its rest.
+
+Exact Strategy
+The Angle Rule Strategy: A strict visual rule where you refuse to trade any flag that is slanted deeper than a 45-degree angle, ensuring you only trade high-probability rests.`,
 
   "Cup and Handle Setups": `Programme Introduction
-Are you confused about trading patterns? Do you want to know how to spot the cup and handle setup? This course will help you understand this popular trading pattern step by step. You will learn how to identify it and know when to act. After this course, you'll feel more confident in your trading decisions and improve your chances of success.
+Are you trying to find trades that have a massive potential to go up? This course will help you understand the famous "Cup and Handle" shape. You will learn exactly how to identify it and when to act. After this course, you'll feel confident spotting this powerful launchpad on your screen.
 
 Programme Description
-This course teaches you all about the cup and handle pattern in trading. You will learn how to recognize this bullish (upward-moving) pattern and how to use it to make better trades. By the end, you will have the skills to spot this powerful setup in charts, helping you take control of your trading journey. It's worth your time because it can lead to profitable trading opportunities.
-
+This course teaches you all about the rounded cup pattern, one of the most reliable upward-moving shapes in trading. You will learn the specific rules for how the cup must look and how the handle must form. By the end, you will know how to safely board this trade before it takes off.
 
 What You Will Learn
-Understand what a cup and handle pattern is
-Learn why it's a bullish pattern
-Identify the best places for the cup to form on a chart
-Recognize the key features of a rounded cup
-Know the angle rules for the handle
-Discover what happens if the handle breaks the low of the cup
-See examples of successful cup and handle patterns
-Learn to spot inverse cup and handle patterns (bearish setups)
-Understand how to manage trades and losses
-Gain confidence in your ability to spot these patterns in real life`,
+What a cup and handle shape looks like and why it means prices want to go up.
+
+The rules for identifying a smooth, rounded bottom (the cup).
+
+The specific depth and angle rules for the small dip that follows (the handle).
+
+What happens if the handle dips too low and ruins the shape.
+
+How to spot the upside-down version for markets that are crashing.
+
+Exact Chart Patterns
+The Cup and Handle Shape: A large, U-shaped bowl on the chart, immediately followed by a much smaller, slight downward dip on the right side.
+
+Exact Setups
+The Handle Breakout Setup: Waiting patiently for the handle to finish dipping, and buying the exact moment the price breaks above the top rim of the teacup.
+
+Exact Strategy
+The Rim Target Strategy: Using the depth of the cup to mathematically calculate exactly how high the price will shoot once it breaks the rim, giving you a perfect place to sell.`,
 
   "Mature Versus Immature Patterns and Setups": `Programme Introduction
-Are you confused about why some trades succeed while others fail? Many new investors jump into trades based on early signs that may not be reliable. This course will teach you how to spot mature patterns versus immature ones in trading. After completing this course, you will have the skills to make smarter trading decisions and improve your chances of success.
+Are you confused about why a trade that looks perfect suddenly fails? Many new traders jump into trades based on shapes that are only half-finished. This course will teach you the crucial difference between a fully cooked, mature shape, and a half-baked, immature one. You will learn the ultimate skill of patience.
 
 Programme Description
-This course focuses on understanding the difference between mature and immature trading patterns. You will learn how to identify which patterns are worth your time and which to avoid. By mastering these skills, you will be able to make more informed trades and take control of your financial future. It's a valuable investment of your time that can lead to greater success in trading.
-
+This course focuses on saving you from the trap of jumping the gun. You will learn how to identify exactly when a shape is finally ready to trade, and when it still needs more time in the oven. By mastering this waiting game, you will drastically reduce your losses and stop falling for early fake-outs.
 
 What You Will Learn
-Understand the difference between mature and immature patterns
-Identify common mistakes that new investors make
-Learn the importance of waiting for patterns to fully form
-Recognize the low probability of success in immature patterns
-Discover how emotions can impact trading decisions
-Monitor immature patterns for future opportunities
-Know the signs of a mature pattern and how to act on it
-Explore different types of trading patterns, like head and shoulders, flags, and more
-Learn how to calculate potential gains and losses in trades
-Practice patience and discipline in trading decisions
-Gain insights to help you become a successful trader`,
+The visual difference between a fully formed shape and a half-formed one.
+
+The most common mistake of impatience that ruins new traders.
+
+Why trading a half-formed shape has a terrible mathematical probability of success.
+
+How to keep a shape on a "watch list" while it finishes forming.
+
+The strict rules for declaring a pattern officially "mature."
+
+Exact Chart Patterns
+The Half-Baked Shape: A visual pattern that looks like it is starting to form a famous shape (like a flag or a cup) but is missing the final, crucial lines.
+
+Exact Setups
+The Final Trigger Setup: Refusing to set any buy orders until every single visual requirement of the shape has been drawn on the screen by the market.
+
+Exact Strategy
+The Patience and Observation Strategy: A strict rule to never anticipate what a shape will become. You only trade what the shape is currently, forcing you to wait for maturity.`,
 
   "Megaphone and Consolidation Patterns": `Programme Introduction
-Are you feeling lost when looking at trading charts? Do you struggle to identify patterns like bull flags or megaphones? This course will clear up your confusion. You'll learn how to spot and understand the megaphone pattern. After this course, you'll be able to make smarter trading decisions and take control of your trading journey.
+Do you get frustrated when a chart looks wildly chaotic, making giant swings up and down that seem to make no sense? This course will clear up your confusion. You will learn how to spot the "Megaphone" shape, a pattern of growing chaos. After this course, you will know exactly how to handle wild, expanding markets safely.
 
 Programme Description
-This course focuses on the megaphone pattern and its role in trading. You will learn how to recognize both bullish and bearish megaphone patterns. You'll gain skills to improve your trading strategies and understand market movements. This knowledge is essential for anyone looking to succeed in trading. Don't miss the chance to enhance your skills and build your confidence!
-
+This course focuses on periods of market confusion that form widening, megaphone-like shapes. You will learn how to recognize these patterns and understand that they mean the market is fighting a chaotic battle. This knowledge is essential because it teaches you when the market is too dangerous to trade normally.
 
 What You Will Learn
-Understand what a megaphone pattern is
-Learn the difference between bullish and bearish megaphone patterns
-Identify key angles for valid patterns
-Recognize the similarities and differences with bull and bear flags
-Analyze real chart examples of megaphone patterns
-Learn how to draw trend lines to identify patterns
-Understand the importance of sharp moves before consolidation
-Discover how to apply this knowledge in real-time trading
-Take quizzes to test your understanding of consolidation patterns
-Gain tools to improve your trading discipline and emotional control`,
+What a widening megaphone shape looks like on a chart.
+
+Why this shape proves that buyers and sellers are both confused and acting crazy.
+
+How to draw the widening boundary lines to trap the chaos.
+
+Why you must wait for a massive, sharp move before trading this shape.
+
+How to protect your money by staying on the sidelines during the chaos.
+
+Exact Chart Patterns
+The Expanding Megaphone: A visual shape where the price swings get wider and wider, making higher peaks and lower dips simultaneously, forming the shape of a speaker cone.
+
+Exact Setups
+The Sideline Setup: Recognizing the widening chaos and actively choosing to cancel all your orders, sitting safely in cash until the confusion breaks.
+
+Exact Strategy
+The Wait-for-Clarity Strategy: A strict rule to never trade inside the middle of a megaphone; you wait until the price completely escapes the chaotic widening box before taking a position.`,
 
   "Downsloping and Upsloping Channels": `Programme Introduction
-Are you confused about how to read market trends? Many investors make mistakes by thinking downsloping channels are always bad and upsloping channels are good. This course will help you see the truth. You will learn to identify these patterns correctly and know when to take action. After this course, you'll feel more confident in your trading decisions.
+Are you confused about how to read slanted market trends? Many beginners make the mistake of thinking a downward slanted channel is always bad news. This course will show you the truth. You will learn how to identify these slanted boxes correctly and know when they are secretly preparing for a massive upward explosion.
 
 Programme Description
-This course teaches you about downsloping and upsloping channels in the market. You will learn how to recognize them and understand what they mean for your trades. By knowing how to read these patterns, you can make smarter decisions. It's worth your time because it gives you the skills to navigate the market better and take control of your trading.
-
+This course teaches you about diagonal channels in the market. You will learn how to draw them and understand what they secretly mean for the future. By knowing how to read these slanted patterns, you will stop getting tricked by the market and start anticipating massive breakouts.
 
 What You Will Learn
-Understand the difference between downsloping and upsloping channels
-Learn why downsloping channels can be bullish
-Discover why upsloping channels can be bearish
-Recognize how trends change after sudden market moves
-Know the importance of waiting for a breakout before trading
-See how to draw trend lines on your charts
-Identify bullish setups after a big drop
-Understand bearish setups after a big rise
-Learn to avoid common mistakes that new investors make
-Analyze real market charts to see these concepts in action
-Develop the skills to make more informed trading decisions`,
+The visual difference between an upward-slanted box and a downward-slanted box.
+
+Why a slow downward-slanted box is actually a secret signal that prices will explode upward.
+
+Why a slow upward-slanted box is a secret warning that prices will crash.
+
+How to draw the boundary lines correctly.
+
+The importance of waiting for the price to break out of the box before acting.
+
+Exact Chart Patterns
+The Bull and Bear Channels: Diagonal parallel lines that trap the price; recognizing that a downward-slanted trap is bullish, and an upward-slanted trap is bearish.
+
+Exact Setups
+The Slanted Breakout Setup: Waiting for the price to finally break out of the slanted boundary lines, triggering an immediate and powerful trade entry.
+
+Exact Strategy
+The Contrarian Channel Strategy: A mental rule to expect the opposite of what the channel is doing; if the channel is slowly grinding up, you prepare your strategy for a sudden crash.`,
 
   "Double Tops and Double Bottoms": `Programme Introduction
-Are you struggling to make sense of trading charts? Do you often feel confused about when to buy or sell? This course will help you understand two important patterns: double tops and double bottoms. After completing this course, you'll be able to identify these patterns and make better trading decisions. You'll gain the confidence to act on your analysis.
+Do you often feel confused about when a trend is finally over? This course will help you understand the two most important reversing shapes: Double Tops and Double Bottoms. After completing this course, you will be able to spot the exact moment the market is exhausted and ready to turn around completely.
 
 Programme Description
-This course teaches you about double tops and double bottoms in trading. These patterns can help you predict price movements in the market. You will learn how to spot them, when to take action, and when to avoid trades. This knowledge is essential for improving your trading skills and can lead to more successful trades.
-
+This course teaches you about the classic "M" and "W" shapes on a chart. These shapes are the most reliable indicators that a trend has hit a solid brick wall. You will learn how to spot them, when to take action, and how to avoid getting tricked by fake versions of this shape.
 
 What You Will Learn
-What double tops and double bottoms are
-How to identify a double top on a chart
-How to identify a double bottom on a chart
-The importance of price resistance and support
-Why the distance and height of these patterns matter
-Techniques to analyze market trends using these patterns
-The emotional aspects of trading and their impact on charts
-Real-life examples of double tops and double bottoms
-How to avoid common mistakes in identifying these patterns
-Tips for making confident trading decisions based on your analysis`,
+What the "M" (double top) and "W" (double bottom) shapes look like.
+
+Why these shapes prove that the buyers or sellers have completely given up.
+
+Why the distance and time between the two peaks is incredibly important.
+
+How human emotion causes these shapes to form perfectly.
+
+How to avoid common mistakes when trying to spot these reversals early.
+
+Exact Chart Patterns
+The M and W Patterns: A visual shape where the price hits a high/low, retreats, and then tries to hit that exact same high/low again, forming a distinct M or W letter.
+
+Exact Setups
+The Neckline Break Setup: Drawing a line across the middle of the M or W, and entering your trade the moment the price breaks through the center line.
+
+Exact Strategy
+The Double-Strike Strategy: A rule to never assume a trend is over on the first attempt; you always wait for the market to try and fail a second time before you bet on a reversal.`,
 
   "Triple Tops and Beyond": `Programme Introduction
-Are you feeling lost when it comes to trading? Do you struggle to make smart decisions? This course is here to help you gain confidence and build your skills. You will learn important lessons that professional traders live by. After this course, you will take control of your trading and make better choices for your financial future.
+Do you often find yourself stuck when a basic double-top pattern fails and the price tries a third time? This course will clear up your confusion about stubborn markets. You will learn what it means when a ceiling is hit three or four times. After completing this course, you will understand how to handle these tense, repetitive chart moments.
 
 Programme Description
-This course focuses on essential wisdom for becoming a successful trader. You will learn key strategies and mindsets that help you make better trading decisions. By mastering these lessons, you will save time and money while building your trading knowledge step by step. This course is worth your time because it provides practical tips you can use right away.
-
+This course focuses on what happens when the classic double-top or double-bottom shapes mutate into triple or quadruple shapes. You will learn why a line gets weaker every single time it is struck, and how to prepare for the eventual, explosive breakout. This knowledge will save you from betting on a tired, weakened ceiling.
 
 What You Will Learn
-Wise sayings that can guide your trading journey
-The importance of taking profits and being realistic
-Why building wealth takes time and patience
-The risks of trading fast and without discipline
-How to trade with a plan and accept that you may be wrong
-The value of investing in your education to avoid costly mistakes
-Understanding when to cut losses and recognize a win
-Why you learn more from losses than from wins
-The role of emotions in trading and how to manage them
-How to approach trading like a casino, ensuring long-term success`,
+Why a Double Top is highly reliable, but a Triple Top is highly suspicious.
+
+The visual difference between an M-shape and a flat, repetitive ceiling.
+
+Why repeated hits on a wall mean the wall is about to crumble.
+
+How to manage your emotions during these drawn-out, repetitive chart fights.
+
+How to use the depth of the dips to predict the upcoming breakout.
+
+Exact Chart Patterns
+The Flat Barrier Pattern: A visual shape where the price hits the exact same ceiling or floor three, four, or five times in a row, creating a perfectly flat boundary.
+
+Exact Setups
+The Barrier Break Setup: Switching your mindset from "betting on the bounce" to placing a trap order just past the barrier, ready to catch the explosive break.
+
+Exact Strategy
+The Weakening Wall Strategy: A strict rule to never trust a support or resistance line after it has been touched twice. On the third touch, you assume the wall will break and plan accordingly.`,
 
   "The M-A Pattern": `Programme Introduction
-Are you feeling lost in the world of trading patterns? Do you struggle to make sense of market movements? This course on the M.A. Pattern will help you understand how to read the charts better. You will learn to spot important signals that tell you when to buy or sell. After this course, you will feel more confident in your trading decisions.
+Are you feeling lost trying to connect the dots on complex, jagged charts? This course on the specific M-A shape will give you a clear roadmap. You will learn to spot this unique sequence of letters hidden in the price lines. After this course, you will have a specific, reliable shape to hunt for every single day.
 
 Programme Description
-This course teaches you about the M.A. Pattern, a key trading setup. You will learn how to identify this pattern and what it means for your trades. By the end, you will be able to recognize both the M.A. and its inverse, the W.V. Pattern. This knowledge will help you take control of your trading and make smarter decisions.
-
+This course teaches you about the M-A shape sequence, a highly specific visual roadmap used by professionals. You will learn how to identify this exact path and what it means for the future direction of the price. By the end, you will also recognize its upside-down brother, the W-V shape.
 
 What You Will Learn
-Introduction to the M.A. Pattern and its importance
-Understanding the W.V. Pattern, the opposite of the M.A. Pattern
-Recognizing angles and movements in trading charts
-Identifying key signals for bearish movements
-Learning the loose rules for the M.A. Pattern
-How to analyze the structure of the M.A. Pattern
-Understanding the significance of the middle of the M
-Recognizing the relationship between the A and M patterns
-Learning when to enter and exit trades based on the M.A. Pattern
-Understanding support and resistance levels in trading
-Identifying valid M.A. Patterns through practical examples
-Analyzing real market charts for M.A. Pattern setups
-Learning to adjust your strategy based on market conditions`,
+How to visually trace the letters M and A in the jagged price movements.
+
+How the middle peak of the "M" acts as a crucial safety line.
+
+Recognizing the strict angles required to make the shape valid.
+
+When exactly to enter and exit trades based on this letter sequence.
+
+How to hunt for these specific shapes on daily and weekly charts.
+
+Exact Chart Patterns
+The M-A Sequence: A visual shape where the price draws a distinct letter "M" (a double top), immediately followed by the price drawing a distinct letter "A" shape beneath it.
+
+Exact Setups
+The Center-Line Rejection Setup: Using the middle V-shape of the letter "M" as a concrete ceiling, and selling the market when the price comes back up to touch it.
+
+Exact Strategy
+The Letter-Tracing Strategy: A visual discipline where you literally draw the letters over the chart; if the lines do not form a perfect M followed by an A, you abandon the setup.`,
 
   "The W-V Pattern": `Programme Introduction
-Are you struggling to read charts and find profitable trading opportunities? It can be confusing to know when to buy or sell an asset. This course will teach you the W-V pattern, a powerful tool to help you identify potential market moves. After completing this course, you will confidently recognize this pattern and know when to enter trades, helping you take control of your trading journey.
+Are you struggling to spot the exact moment a crashing market is finally ready to turn around and blast higher? This course will teach you to hunt for the W-V shape, the ultimate launchpad pattern. After completing this course, you will confidently recognize this hidden letter sequence and know exactly when to buy the bottom.
 
 Programme Description
-This course focuses on the W-V pattern, a trading setup that can signal a potential price increase. You will learn how to identify this pattern in charts and understand its key features. By mastering the W-V pattern, you can improve your trading skills and make better decisions, ultimately saving you time and increasing your chances of success.
-
+This course focuses on the W-V shape sequence, the exact mirror opposite of the M-A shape. You will learn how to trace these letters at the bottom of a crashing chart to find the exact moment the buyers finally take control. By mastering this shape, you will dramatically increase your chances of buying at the absolute lowest price.
 
 What You Will Learn
-Understand the basics of the W-V pattern
-Identify the key features of a W-V pattern
-Learn the difference between bullish and bearish patterns
-Recognize the significance of market neutrality
-Discover how to use W-V patterns with various assets
-Understand the rules for entering and exiting trades
-Learn how to allocate your investment to manage risk
-Identify the importance of pattern symmetry
-Explore real-life examples of W-V patterns in charts
-Practice recognizing W-V patterns through quizzes and exercises`,
+How to visually trace the letters W and V at the bottom of a chart.
+
+How the middle point of the "W" acts as a crucial floor for the future.
+
+The importance of symmetry and timing in this specific shape.
+
+The strict rules for entering the trade safely as the "V" forms.
+
+How to practice spotting this shape in a sea of chaotic price bars.
+
+Exact Chart Patterns
+The W-V Sequence: A visual shape where the price draws a distinct letter "W" (a double bottom), immediately followed by the price drawing a distinct letter "V" shape above it.
+
+Exact Setups
+The Center-Line Support Setup: Using the middle peak of the letter "W" as a concrete floor, and buying the market when the price drops back down to touch it softly.
+
+Exact Strategy
+The Bottom-Hunting Strategy: A disciplined visual search where you ignore all crashing markets until they explicitly draw the W-V sequence, proving the crash is officially over.`,
 
   "Gaps and Gap Fills": `Programme Introduction
-Are you struggling to understand how to enter trades confidently? Do you feel lost when it comes to analyzing price movements? This course will help you master the concept of gaps and gap fills in trading. After completing this course, you will be able to identify key trading opportunities and make informed decisions based on price actions. You'll gain the skills you need to take control of your trading journey.
+Are you struggling to understand why prices sometimes magically jump overnight, leaving blank empty spaces on your screen? This course will help you master the concept of "gaps." After completing this course, you will understand why prices act like magnets, constantly trying to get pulled back to fill in those empty spaces.
 
 Programme Description
-This course is all about understanding gaps in trading. Gaps occur when the price of an asset opens at a different level than where it closed. You will learn how to identify these gaps and understand their significance in trading. By the end of the course, you will know how to use gap fills as support and resistance levels. This knowledge will help you make better trading decisions and increase your chances of success. It's worth your time because it gives you practical skills you can apply immediately.
-
+This course is all about the blank spaces on your chart. You will learn how to identify these overnight price jumps and understand why they are so important. By the end of the course, you will know how to use these empty spaces as powerful magnetic targets and invisible safety lines for your trades.
 
 What You Will Learn
-Understanding what gaps are and how they are created
-Recognizing the importance of gaps in trading
-Differentiating between support and resistance at gap fills
-Learning the psychology behind gap trading
-Analyzing charts to identify gaps and potential trades
-Understanding how gap size affects trading strategies
-Knowing when to buy or sell based on gap fills
-Exploring practical examples and real trading scenarios
-Developing a step-by-step approach to trading gaps`,
+What price gaps are and why they happen overnight.
+
+The magnetic psychology of why the market always wants to "fill the gap."
+
+How the top and bottom edges of the empty space act as concrete walls.
+
+How the size of the empty space changes how you should trade it.
+
+A step-by-step approach to buying or selling when a gap is filled.
+
+Exact Chart Patterns
+The Empty Gap Pattern: A clear visual blank space on the chart where no trading happened, created when a stock opens much higher or lower than it closed the day before.
+
+Exact Setups
+The Gap Fill Reversal Setup: Waiting for the price to slowly drift back and completely fill the blank space, and entering a trade the exact moment the space is closed.
+
+Exact Strategy
+The Magnetic Target Strategy: When a stock is moving toward a blank space on the chart, you use the edge of that empty space as your exact, mathematical target to take your profits.`,
 
   "The Power of the Move": `Programme Introduction
-Are you tired of losing money in trades? Do you feel confused about when to enter or exit a trade? This course will help you understand the key concepts that can change your trading game. You'll learn how to make smarter decisions and time your exits better. After this course, you'll be able to spot winning setups and increase your chances of making a profit.
+Are you tired of guessing if a bouncing price is going to be strong or weak? This course will teach you a simple physics lesson about the market. You will learn how the speed and violence of a price drop tells you exactly how strong the bounce will be. After this course, you will time your exits with mathematical precision.
 
 Programme Description
-This course is about understanding the "power of the move" in trading. You will learn how market movements affect your trades, especially when it comes to buying at support and selling at resistance. By mastering these concepts, you'll make better trading decisions, minimize losses, and maximize your profit potential. It's a valuable investment of your time that can lead to more successful trades.
-
+This course is about understanding the sheer momentum and "power" of a price move. You will learn why a slow, grinding market behaves totally differently than a fast, panicking market. By mastering how to read the speed of the chart, you will know exactly when to expect a massive, violent bounce.
 
 What You Will Learn
-The importance of understanding key market concepts
-How to identify winning setups in trading
-The relationship between price drops and potential bounces
-Why speed and volatility matter in trading decisions
-How to time your exit points more effectively
-The difference between high and low price assets in trading
-Why you shouldn't fear high-priced assets
-How to assess risks and returns in different markets
-The role of market conditions in your trading strategy
-The concept of proportionality in asset movements`,
+Why the speed and steepness of a drop is the most important clue on the screen.
+
+The simple physics rule: A violent, fast crash results in a violent, fast bounce.
+
+Why a slow, gentle drop usually results in a weak, pathetic bounce.
+
+Why you should never be afraid to buy high-priced, fast-moving assets.
+
+How to use the speed of the market to set your exit targets.
+
+Exact Chart Patterns
+The Rubber Band Pattern: Visually identifying a chart that drops so fast and in such a straight vertical line that it stretches like a rubber band, guaranteeing a violent snap-back.
+
+Exact Setups
+The Panic Bounce Setup: Waiting for a market to go into a full, vertical free-fall panic, and buying the absolute bottom knowing the violent bounce will be immediate.
+
+Exact Strategy
+The Proportionality Strategy: A strict rule that your profit target must be proportional to the speed of the drop; if the drop took 5 minutes, you expect the bounce to happen in 5 minutes, not 5 days.`,
 
   "Trading the Golden and Death Cross Setup": `Programme Introduction
-Are you confused about when to buy or sell stocks? Do you feel stuck in your trading journey, unsure of the right moves to make? This course will guide you through trading the Golden and Death Cross setups step by step. You will learn how to identify these important signals and make confident trading decisions. After this course, you'll know how to enter trades at the best moments for higher chances of success.
+Are you feeling stuck in your journey, unsure of how to spot massive, multi-month market trends? This course will guide you through the most famous long-term signals in the world: The Golden Cross and the Death Cross. After this course, you will know exactly when the overall stock market is healthy and when it is deeply sick.
 
 Programme Description
-This course is all about trading the Golden and Death Cross signals effectively. You will learn how to spot these signals and when to act on them. By understanding these setups, you will develop skills to make better trading choices. This course is worth your time because it teaches you to trade smartly and avoid common mistakes that can cost you money.
-
+This course is all about the grand, long-term health of the market. You will learn how to use two slow-moving lines on your chart to generate massive buy and sell signals. By understanding these rare but powerful setups, you will avoid buying into long-term crashes and confidently ride multi-year bull markets.
 
 What You Will Learn
-Understand what a Golden Cross is and its significance
-Learn how to trade the Golden Cross effectively
-Discover the meaning of the Death Cross and its implications
-Identify the right moments to enter and exit trades
-Avoid common pitfalls in trading the Golden Cross
-Recognize the importance of buying at low prices
-Master the strategy of trading the Death Cross
-Gain insights into risk management for trades
-Learn to analyze price movements in relation to moving averages
-Develop a disciplined trading mindset for better results`,
+What a Golden Cross is and why it means years of rising prices.
+
+What a Death Cross is and why it warns of a multi-year recession.
+
+How to use a 50-day moving line and a 200-day moving line.
+
+Why you must be patient, as these signals only happen rarely.
+
+How to avoid getting chopped up when the lines cross back and forth quickly.
+
+Exact Chart Patterns
+The Long-Term Crossover: A visual pattern on a daily chart where the faster, 50-day trailing line finally crosses over or under the massive, slow 200-day trailing line.
+
+Exact Setups
+The Golden Cross Pullback Setup: Waiting for the Golden Cross to happen, and then buying the very first time the price drops back down to test the crossed lines.
+
+Exact Strategy
+The Macro Health Strategy: Using this specific setup strictly as a background health check; if a Death Cross has happened, you completely alter your strategy to play defensive, long-term cash preservation.`,
 
   "Trading Doji Candle Setups": `Programme Introduction
-Are you confused about when to trade a doji candle? Do you feel stuck trying to understand its signals? This course will help you learn how to recognize doji candles and what they mean for your trades. After completing this course, you'll be able to identify high-probability trading setups that can lead to better decisions and potentially higher profits.
+Do you feel stuck trying to understand what it means when the market just stops moving and freezes? This course will help you learn about the "Doji," a specific cross-shaped price bar that means the market is holding its breath. After completing this course, you will know how to prepare for the explosive move that always follows a freeze.
 
 Programme Description
-This course focuses on doji candles and how to use them for trading. You will learn what a doji candle is, when to pay attention to it, and how to combine it with other chart factors. By the end of this course, you will have the skills to spot strong trading opportunities and make informed choices, saving you time and money in the market.
-
+This course focuses on the Doji, a tiny price bar that signals total indecision between buyers and sellers. You will learn what it looks like, when it matters most, and how to set traps on both sides of it. By the end of this course, you will have the skills to wait for the market to make a decision, and then jump on for the ride.
 
 What You Will Learn
-What a doji candle is and why it matters
-How to identify a doji candle in your charts
-When to trade a doji candle after a big price move
-The importance of other factors like moving averages and gap fills
-How to combine doji signals with other chart patterns
-Why discipline is crucial in trading doji candles
-How to manage trades when a doji signal fails
-Real-life examples of doji setups and their outcomes
-Tips for developing your trading strategy around doji candles`,
+What a cross-shaped Doji looks like and why it means a tie game.
+
+Why a Doji is only important if it happens after a massive price run.
+
+How to use the top and bottom of the cross as exact trigger lines.
+
+Why patience is absolute key when trading a frozen market.
+
+How to combine this tiny shape with other major safety lines.
+
+Exact Chart Patterns
+The Doji Cross: A visual price bar that looks like a plus sign or a cross; it has almost no colored body because the opening price and closing price were exactly the same.
+
+Exact Setups
+The Doji Breakout Setup: Drawing a line at the top of the cross and the bottom of the cross, and simply waiting to buy or sell whichever line the market breaks first.
+
+Exact Strategy
+The Indecision Strategy: A strict rule to never guess which way a frozen market will break. You let the buyers and sellers fight it out, and you only enter the trade after a clear winner emerges.`,
 
   "Topping and Bottoming Tail Setups": `Programme Introduction
-Are you confused about when to buy or sell in the market? Do you feel stuck at the beginner level and want to understand trading better? This course will help you learn about topping and bottoming tails, which are important signals in trading. After taking this course, you will be able to identify these setups and make smarter trading decisions.
+Are you confused about when to buy or sell during a wild, single-day price swing? This course will help you learn about "tails," which are long sticks on your price bars that show massive market rejection. After taking this course, you will be able to look at one single price bar and know that a major reversal has just happened.
 
 Programme Description
-This course focuses on understanding topping and bottoming tails in trading. You will learn how to spot these patterns and what they mean for your trades. By the end of the course, you will have the skills to identify when to enter or exit trades based on these signals. This knowledge can help you trade more confidently and effectively.
-
+This course focuses on understanding the long sticks (wicks or tails) on your candlesticks. You will learn how to spot when the market tries to push a price too far, and the big banks violently swat it back. By the end of this course, you will know how to use these distinct visual clues to enter a trade with extreme confidence.
 
 What You Will Learn
-Understand what topping and bottoming tails are
-Identify when a bottoming tail signals a bullish trend
-Recognize when a topping tail indicates a bearish trend
-Learn the key characteristics of a valid bottoming tail
-Learn the key characteristics of a valid topping tail
-Understand how to confirm a bottoming tail with other factors
-Understand how to confirm a topping tail with other factors
-Learn how to trade using bottoming tails
-Learn how to trade using topping tails
-Understand what to do if a topping or bottoming tail fails
-Know when to exit a trade based on tail patterns
-Explore real-life examples of topping and bottoming tails
-Practice identifying topping and bottoming tails through quizzes
-Learn strategies for reducing risk in your trades
-Discover how to use limit orders effectively
-Understand the psychology behind market movements related to tails
-Learn how to apply these skills to different trading assets`,
+What topping and bottoming tails look like on a chart.
+
+Why a long tail at the bottom means the buyers violently rejected cheap prices.
+
+Why a long tail at the top means the sellers violently killed a rally.
+
+The strict rules for how long the tail must be to be considered valid.
+
+How to place your safety stops safely behind the tip of the tail.
+
+Exact Chart Patterns
+The Pinocchio Bar: A visual where the thick colored body of the price bar is very small, but it has a massive, incredibly long stick pointing out of one side.
+
+Exact Setups
+The Tail Reversal Setup: Entering a trade in the opposite direction of the long tail, placing your absolute safety stop exactly one penny beyond the very tip of the stick.
+
+Exact Strategy
+The Rejection Strategy: Only trading when you see visual proof (the long tail) that the massive institutional money has stepped in and rejected the current price path.`,
 
   "Engulfing Candle Setups": `Programme Introduction
-Are you confused about when to buy or sell in trading? Do you find it hard to spot trends in the market? This course is here to help. We will teach you about engulfing candles and how to trade them effectively. By the end, you will know how to identify and act on these patterns, giving you more control over your trading decisions.
+Are you confused about when to jump into a trade right as a trend is changing? Do you find it hard to spot the exact moment buyers take control from sellers? This course will teach you about the powerful "Engulfing" visual clue. By the end, you will know the exact one-bar signal that proves a reversal has started.
 
 Programme Description
-This course focuses on engulfing candles, which are key signals in trading. You will learn how to recognize these patterns and what they mean for market trends. By mastering this skill, you can improve your trading strategy and make smarter decisions. It's worth your time because understanding these patterns can lead to better trading outcomes and greater financial freedom.
-
+This course focuses on a specific candlestick shape that acts as a massive flashing green light. You will learn how to recognize when a large price bar completely swallows a smaller one, proving that a massive shift in power just happened. This one simple visual trick will vastly improve your timing.
 
 What You Will Learn
-Introduction to engulfing candles
-Importance of recognizing engulfing candles in trading
-Rules for identifying engulfing candles at recent highs or lows
-Understanding the significance of candle size
-How to trade engulfing candles on different time frames
-Recognizing reversal candles and their similarities to engulfing candles
-Analyzing market extremes and their effect on trends
-Practical examples of bullish and bearish engulfing candles
-Identifying when an engulfing candle fails
-Strategies for entering trades after spotting engulfing candles
-How to manage risk and position size effectively
-Building confidence in your trading decisions through practice`,
+What an engulfing price bar looks like.
+
+Why a large bar swallowing a small bar is the ultimate sign of a power shift.
+
+The rules for finding this clue at the very bottom or top of a chart.
+
+Why the physical size of the swallowing bar is so important.
+
+How to manage your risk when entering after this powerful signal.
+
+Exact Chart Patterns
+The Engulfing Bar: A visual where a small red price bar is immediately followed by a massive green price bar that is completely taller and deeper than the red one.
+
+Exact Setups
+The Engulfing Entry Setup: Entering a trade the moment the massive engulfing bar finishes forming, placing your safety stop exactly below its bottom edge.
+
+Exact Strategy
+The Power-Shift Strategy: Only trading reversals when you see visual, mathematical proof (the massive engulfing bar) that the other side has aggressively taken control of the market.`,
 
   "Wise Words for Master Setups": `Programme Introduction
-Are you feeling lost when it comes to trading? Do you struggle to make smart decisions? This course is here to help you gain confidence and build your skills. You will learn important lessons that professional traders live by. After this course, you will take control of your trading and make better choices for your financial future.
+Are you feeling lost trying to remember all the rules of trading? This course is your mental playbook. You will learn the timeless, hard-learned lessons that professional traders live by. After this course, you will have a set of golden rules that will keep you safe, grounded, and focused on building long-term success.
 
 Programme Description
-This course focuses on essential wisdom for becoming a successful trader. You will learn key strategies and mindsets that help you make better trading decisions. By mastering these lessons, you will save time and money while building your trading knowledge step by step. This course is worth your time because it provides practical tips you can use right away.
-
+This course steps away from the charts to focus entirely on your brain. You will learn the key philosophies and mindsets that prevent you from destroying your account in a moment of panic or greed. By mastering these wise words, you will save yourself years of painful, expensive mistakes.
 
 What You Will Learn
-Wise sayings that can guide your trading journey
-The importance of taking profits and being realistic
-Why building wealth takes time and patience
-The risks of trading fast and without discipline
-How to trade with a plan and accept that you may be wrong
-The value of investing in your education to avoid costly mistakes
-Understanding when to cut losses and recognize a win
-Why you learn more from losses than from wins
-The role of emotions in trading and how to manage them
-How to approach trading like a casino, ensuring long-term success`,
+Why taking small profits consistently is better than hunting for a jackpot.
+
+The massive risks of trading too fast without a strict plan.
+
+Why you must aggressively cut your losses the second you are proven wrong.
+
+How to view your losses as expensive tuition for your trading education.
+
+How to completely remove human emotion from your daily routine.
+
+Exact Chart Patterns
+N/A (Mental Architecture): This module focuses strictly on the psychological patterns of the trader's mind, teaching you to recognize the internal feelings of greed and fear.
+
+Exact Setups
+The Routine Setup: Establishing a strict, daily mental checklist that you must complete before you are allowed to open your trading software.
+
+Exact Strategy
+The Casino Operator Strategy: Adopting the mindset of a casino owner; you don't care about the outcome of any single trade, because you know your mathematical edge guarantees a profit over 1,000 trades.`,
 };
 
 const SETUPS_SLUG_TO_KEY: Readonly<Record<string, string>> = {

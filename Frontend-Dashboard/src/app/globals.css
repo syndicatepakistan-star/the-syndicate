@@ -621,16 +621,17 @@
 }
 
 /* Dashboard scroll performance — pause decorative chrome while any section scrolls.
-   Keep letter-rain + bg.mp4 painted (last frame / paused) — do NOT visibility-hide them
-   (that blank flash is what users see as a scroll "glitch"). */
+   Keep every layer PAINTED (washes, scanlines, vignette, letter-rain, bg.mp4).
+   Visibility-hiding them mid-scroll strips the dark overlays, exposes the raw
+   letter-rain video, and forces a full repaint on scroll end — users see that
+   as a "glitch phase" / blank flash. Pause animations only. */
 .dashboard-hamburger-chrome.is-scrolling .dashboard-shell-wash,
 .dashboard-hamburger-chrome.is-scrolling .syndicate-dash-scanlines,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-grid,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-vignette,
 .dashboard-hamburger-chrome.is-scrolling .mega-game-hud-noise,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-wash {
-  visibility: hidden !important;
-  animation: none !important;
+  animation-play-state: paused !important;
 }
 
 .dashboard-hamburger-chrome.is-scrolling [class*="animate-pulse"],
@@ -650,6 +651,14 @@
 .dashboard-hamburger-chrome .dashboard-mobile-section-root > div:not(.dashboard-section-fallback) {
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
+}
+
+/* Programs library scrolls fast inside its own shell — content-visibility here skips
+   painting whole card columns mid-scroll (letter-rain bg shows through as a "glitch"). */
+.dashboard-hamburger-chrome .programs-section-root > section,
+.dashboard-hamburger-chrome .programs-section-root > div:not(.dashboard-section-fallback) {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
 }
 
 /* Active programs shells scroll internally — content-visibility here causes jump/glitch */
@@ -7109,6 +7118,7 @@ body.syndicate-mode-active::-webkit-scrollbar {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: auto;
@@ -7157,6 +7167,7 @@ body.syndicate-mode-active::-webkit-scrollbar {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     overscroll-behavior: contain;
   }
 }
@@ -12400,6 +12411,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  overflow-x: hidden;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -12675,27 +12687,20 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   pointer-events: none;
 }
 
+/* Pause (never strip) glow/lightning while scrolling — removing filters or hiding
+   frame layers mid-scroll makes headings/panels visibly vanish and re-pop, which
+   reads as a paint glitch during fast scroll. */
 .dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-panel,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-hero-neon-panel,
 .dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-panel.instructor-slideshow-lightning,
 .dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-heading--lightning,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-heading-lightning,
-.dashboard-hamburger-chrome.is-scrolling .dashboard-heading-lightning--goals {
-  animation: none !important;
-  filter: none !important;
-  transition: none !important;
-}
-
+.dashboard-hamburger-chrome.is-scrolling .dashboard-heading-lightning--goals,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-panel.cut-frame::after,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-hero-neon-panel.cut-frame::after,
-.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after {
-  animation: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-
+.dashboard-hamburger-chrome.is-scrolling .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after,
 .dashboard-hamburger-chrome.is-scrolling .dashboard-cyber-neon-wash {
-  opacity: 0 !important;
+  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -12948,6 +12953,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }

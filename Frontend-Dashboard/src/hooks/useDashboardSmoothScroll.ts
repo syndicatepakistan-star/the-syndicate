@@ -6,7 +6,9 @@ import { isDashboardMotionSuspended } from "@/lib/dashboardMotionControl";
 const SCROLL_CONTAINER_SELECTOR =
   "[data-main-shell-scroll], .programs-grid-scroll, .programs-lesson-scroll, [data-syndicate-mission-scroll], .support-thread-scroll";
 
-const SCROLL_END_MS = 220;
+/* Longer settle window: is-scrolling now only pauses animations (nothing is hidden),
+   so a generous delay avoids pause/play churn on the bg video during fast up/down scrolls. */
+const SCROLL_END_MS = 420;
 
 function pauseDashboardVideos(root: HTMLElement) {
   root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {

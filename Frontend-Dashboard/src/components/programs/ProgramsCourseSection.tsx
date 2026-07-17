@@ -1357,7 +1357,7 @@ export function ProgramsCourseSection({
   return (
     <div
       className={cn(
-        "dashboard-mobile-section-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip",
+        "dashboard-mobile-section-root programs-section-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip",
         (inProgramLessonView || inProgramGridView) && "min-h-0 flex-1 overflow-hidden"
       )}
     >
@@ -1373,7 +1373,7 @@ export function ProgramsCourseSection({
         >
           {inProgramGridView ? (
             <div className="programs-grid-shell flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="programs-grid-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 pr-0.5">
+              <div className="programs-grid-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-4 pr-0.5">
                 <div className="programs-grid-chrome space-y-3 pb-2 sm:space-y-4 sm:pb-3">
                   <div className="w-full max-w-full text-left">
                     <div

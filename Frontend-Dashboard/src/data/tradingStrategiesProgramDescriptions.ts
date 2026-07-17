@@ -1,6 +1,7 @@
 /**
  * Curated Strategies of a Master Trader copy — vault modals and program library.
- * Section headers: Programme Introduction, Programme Description, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn,
+ * Exact Chart Patterns, Exact Setups, Exact Strategy.
  */
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 
@@ -8,191 +9,246 @@ export const TRADING_STRATEGIES_MODULE_TITLE = "Strategies of a Master Trader";
 
 export const TRADING_STRATEGIES_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
   __module_pack__: `Programme Introduction
-Are you feeling lost in the trading world, letting confusion and emotions drive your investment decisions? Many beginners struggle to read market charts and often lose money by chasing risky, quick wins instead of sticking to a plan. This complete program gives you a clear, step-by-step path to understanding how the financial markets truly work. You will learn how to read price charts, use key trading indicators, and build a reliable strategy that takes the guesswork out of investing. By the end of this journey, you will trade with strict discipline, allowing you to take control of your time and money to build lasting wealth.
+Trading isn't just about reading charts; it's about managing yourself. Have you ever made a great plan, but panicked and sold too early when you saw the price wiggle? This pack is designed to build your mental toughness and your overall game plan. You will learn the overarching rules that keep professional traders rich and happy, while amateurs lose their money to fear and greed.
 
 Programme Description
-This entire course is a practical guide to mastering both the technical and mental skills needed for profitable trading. You will learn how to read candlestick patterns, identify support and resistance levels, and use popular tools like moving averages to spot hidden market trends. Beyond just reading charts, the program trains you to control your emotions, balance risk versus reward, and safely lock in consistent profits. It is highly worth your time because it replaces dangerous gambling habits with a professional, rule-based system. You will build a strong foundation that protects your money and sets you up for sustainable financial success.
-
+This course focuses on the big picture of building wealth. You will learn the strategies that govern how you manage your bankroll, how you pick which tools to use, and how you behave when the market gets crazy. We will cover the most popular indicators and explain exactly how to use them simply. You will leave this course with a rock-solid, disciplined approach to treating your trading like a real, professional business.
 
 What You Will Learn
-Read and understand candlestick patterns to spot potential market trends and price reversals early
-Identify major and minor support and resistance levels to know exactly where prices might bounce
-Set up clean, effective charts to read the human emotions that drive daily price movements
-Use key trading indicators like moving averages, Fibonacci retracements, and the RSI to make data-driven choices
-Combine multiple chart indicators to confirm your trading signals and improve your overall success rate
-Calculate visual risk versus reward to ensure every trade you take has a high probability of winning
-Master the rule of taking smaller, consistent profits instead of risking everything on one big win
-Manage your trades carefully by stepping into positions slowly and avoiding common traps
-Control your emotions and ignore distracting social media noise by sticking to a solid daily routine
-Shift your mindset from gambling to thinking like a disciplined, probability-based business owner
-Diversify your investments and set realistic expectations to build sustainable, long-term wealth`,
+Why taking small, consistent profits is the secret to getting wealthy.
+
+How to stop falling in love with a trade and learn to walk away.
+
+The difference between behaving like a gambler versus behaving like the casino.
+
+How to use the best indicators without making your screen look like a messy web.
+
+Why keeping a simple trading journal is the fastest way to fix your mistakes.
+
+Exact Chart Patterns
+Market Cycle Patterns: Understanding the broad, sweeping phases of the market—when to be aggressive and when to play defense.
+
+Consolidation Zones: Identifying periods where the market is moving completely sideways and knowing to stay out of the chop.
+
+Exact Setups
+Support and Resistance Zones: Drawing thick boxes on your chart to find the ultimate buying and selling areas.
+
+Candlestick Reversals: Reading the story of the colorful bars to see the exact moment the buyers give up and the sellers take over.
+
+Exact Strategy
+Extracting Market Capital: The patient strategy of taking small pieces of money out of the market daily, instead of aiming for one lottery ticket win.
+
+Risk vs. Reward Strategy: Only taking a trade if you stand to make at least three times the amount of money you are risking.
+
+Favorite Indicator Strategy: Using a simple combination of Moving Averages, RSI, and basic trendlines to confirm a trade before you click buy.`,
 
   "Strategies of a Master Trader — Lesson": `Programme Introduction
-Are you feeling lost in the trading world? Do you struggle with making decisions because of emotions? This course helps you gain control over your trading habits. You will learn to manage your feelings and make better choices. After this course, you will trade with confidence and discipline.
+Do you struggle with making panic decisions because of fear or greed? This course helps you gain absolute control over your trading habits. You will learn the mental strategies required to manage your feelings and operate like a machine. After this course, you will trade with the cold, calculated discipline of a master.
 
 Programme Description
-This course is all about mastering your trading discipline. You will learn how to control your emotions and create a solid plan for every trade. By the end, you will have the skills to make informed decisions and avoid costly mistakes. It's worth your time because these skills can help you achieve financial freedom.
-
+This course is the ultimate bootcamp for your brain. You will learn how to block out the noise of social media, focus entirely on the facts of the chart, and build a rigid daily routine. By the end, you will have the mental armor required to survive the stressful swings of the stock market.
 
 What You Will Learn
-Understand why discipline is crucial in trading
-Recognize how emotions can affect your trading decisions
-Learn to ignore social media noise and focus on facts
-Discover how to use social media to your advantage
-Focus on facts instead of hope when making trades
-Learn how to create a solid game plan for trading
-Develop a daily routine to improve your trading skills
-Monitor your heart rate to manage emotional responses
-Understand how algorithms affect the market
-Avoid making trades when you're emotional
-Recognize the importance of personal responsibility in trading
-Learn to analyze your mental state before investing
-Build confidence in your trading abilities through practice`,
+Why raw discipline is a hundred times more important than chart knowledge.
+
+How to completely ignore the panicked noise and rumors on social media.
+
+How to build an unbreakable daily routine and game plan before the market opens.
+
+Why tracking your physical heart rate can save you from a terrible trade.
+
+How computer algorithms hunt for emotional traders and how to avoid their traps.
+
+Exact Chart Patterns
+N/A (Routine Architecture): This focuses on the structural patterns of your daily life—how you prep in the morning, how you review in the evening, and how you behave during market hours.
+
+Exact Setups
+The Pre-Market Plan Setup: Writing down your exact buy prices, sell prices, and stop losses on a physical piece of paper before the market even opens, and refusing to deviate from that paper.
+
+Exact Strategy
+The Emotionless Execution Strategy: A rule that if you feel your heart racing, your hands sweating, or a rush of adrenaline, you must immediately walk away from the computer and cancel all orders.`,
 
   "The Keys to Building Wealth": `Programme Introduction
-Are you feeling lost about how to build real wealth? Many new investors struggle with this. They often try to hit big wins quickly, but this can lead to losses. In this course, you'll learn simple strategies for investing wisely. After completing this course, you'll know how to grow your money consistently and avoid costly mistakes.
+Are you feeling lost about how to build actual, life-changing wealth? Many beginners try to get rich on one lucky gamble, which always leads to ruin. In this course, you will learn the slow, boring, but mathematically guaranteed strategies for growing your money safely and consistently over time.
 
 Programme Description
-This course is all about building wealth step by step. You will learn how to invest smartly without risking everything you have. The main skills you'll gain are how to diversify your investments, set realistic expectations, and manage risks. This course is worth your time because it helps you create a solid financial future.
-
+This course is the ultimate guide to long-term financial survival. You will learn the stark differences between how amateur gamblers behave and how professional wealth-builders operate. You will gain the skills to set realistic expectations, diversify your money, and manage the inevitable losses safely.
 
 What You Will Learn
-The basics of creating real wealth
-Key differences between small and big investors
-Why diversifying your investments is important
-The risks of trying to hit big wins quickly
-Understanding the importance of patience in trading
-How to set proper expectations for your investments
-The value of consistent, smaller gains over time
-Managing losses and avoiding catastrophic mistakes
-The importance of a solid game plan for trading
-How to analyze risk versus reward in investments
-Tips for controlling your emotions while trading
-Understanding market signals and technical indicators
-The significance of maintaining discipline in trading
-How to develop a long-term wealth-building mindset`,
+The absolute basics of how real wealth is compounded over years.
+
+Why trying to hit a "home run" is the most dangerous thing you can do.
+
+The extreme importance of patience and letting your winning trades grow.
+
+How to handle taking a loss without letting it ruin your month.
+
+Why you must transition from a "gambler" mindset to a "wealth manager" mindset.
+
+Exact Chart Patterns
+The Equity Curve: Learning to chart your own account balance, aiming for a smooth, 45-degree upward slope, avoiding massive spikes and devastating crashes.
+
+Exact Setups
+The Defensive Diversification Setup: Ensuring that your money is spread out among different sectors and asset types so that one single chart crash cannot destroy your portfolio.
+
+Exact Strategy
+The Base-Hit Strategy: A philosophical trading rule where your only goal is to make a small, safe, consistent 1% or 2% profit over and over again, letting the math of compound interest build your wealth.`,
 
   "Favorite Trading Indicators": `Programme Introduction
-Are you feeling lost in the world of trading? Do you struggle with emotional decisions that lead to losses? This course will help you gain clarity. You will learn how to use reliable trading indicators to make informed choices. After completing this course, you will have the skills to trade with confidence and control your investments.
+Are you feeling overwhelmed by the hundreds of different indicators available on your trading software? This course cuts through the noise. You will learn the absolute favorite, most reliable indicators used by professionals. After this course, you will have a small, powerful toolkit to control your investments.
 
 Programme Description
-This course focuses on essential trading indicators that can help you make better investment decisions. You will learn how to use tools like moving averages, Fibonacci retracements, and the RSI. By the end of this course, you will know how to analyze market data to improve your chances of success. It's a valuable investment of your time that can lead to greater financial freedom.
-
+This course focuses on the top-tier tools that actually work. You will learn exactly how to use Moving Averages, Fibonacci levels, and the RSI. By mastering just these few specific indicators, you will be able to analyze massive amounts of market data in seconds, massively improving your chances of success.
 
 What You Will Learn
-What defines a disciplined trader or investor
-The importance of using facts instead of emotions in trading
-How indicators can help you make better investment decisions
-An overview of popular trading indicators
-How to use moving averages effectively
-Understanding the significance of different time frames in trading
-How moving averages act as support and resistance levels
-The concept of Fibonacci retracement and its application in trading
-How to interpret the Relative Strength Index (RSI)
-Understanding the put-call ratio and its role in market trends
-The importance of combining multiple indicators for better trading decisions
-Strategies for managing risks while trading`,
+Why using facts (indicators) is the only way to beat human emotion.
+
+Exactly which moving averages to put on your daily screen.
+
+How these specific lines act as invisible, moving safety nets.
+
+The basics of the Fibonacci tool and how it finds hidden floors.
+
+How to combine these few tools together to create a bulletproof signal.
+
+Exact Chart Patterns
+The Indicator Confluence: A visual moment on the chart where a drawn trendline, a moving average line, and a Fibonacci line all cross at the exact same price, creating an unbreakable wall.
+
+Exact Setups
+The Triple-Check Setup: Only entering a trade when three separate, independent indicators all agree that the price is at a major turning point.
+
+Exact Strategy
+The Tool-Stacking Strategy: A rule system where no single indicator is trusted on its own; you only risk your money when multiple tools form a "stack" of evidence.`,
 
   "Charting Strategies for Indicators": `Programme Introduction
-Are you confused about how to read charts and use indicators in trading? Do you feel stuck at a beginner level, unsure of what to look for? This course will help you understand charts in a simple way. By the end, you will know how to read charts, recognize patterns, and make better trading decisions.
+Are you confused about how to set up your screen without it looking like a messy spiderweb of lines? This course will help you organize your charts perfectly. By the end, you will know exactly which simple indicators to use, how to read them, and how to keep your screen clean so you can make confident decisions.
 
 Programme Description
-This course is all about understanding charts and how they connect to human emotions in trading. You will learn key skills like reading price movements, identifying trends, and using simple indicators. This knowledge will help you make informed decisions and take control of your investments.
-
+This course is all about visual clarity. You will learn how to set up your trading software with only the most essential, proven tools. You will learn how to combine moving lines, volume bars, and momentum tools to create a crystal-clear dashboard that translates raw market emotion into simple buy and sell signals.
 
 What You Will Learn
-What charts are and how they differ from indicators
-How to set up your charts simply and effectively
-The importance of reading human emotions in charts
-How to identify pivot tops and bottoms in price movements
-The role of volume in understanding market trends
-How to use moving averages and when to apply them
-Introduction to Fibonacci retracement and its importance
-Understanding the Relative Strength Index (RSI) and its signals
-How to analyze multiple factors for better trading decisions
-Tips for using TradingView software for charting and analysis`,
+How to strip away the useless noise and keep your charts clean and simple.
+
+The vital importance of reading volume (how many shares are trading).
+
+How to set up and read basic moving averages.
+
+An introduction to the RSI tool and how to use it for momentum checks.
+
+How to use the TradingView software to draw your lines professionally.
+
+Exact Chart Patterns
+The Clean Dashboard: A visual layout featuring only plain price bars, two moving average lines, a volume bar at the bottom, and one momentum tool.
+
+Exact Setups
+The Multi-Tool Confirmation Setup: Refusing to take a trade unless the price pattern, the moving average line, and the momentum tool all flash a green light at the exact same time.
+
+Exact Strategy
+The Clutter-Free Strategy: A strict rule to never add a new tool or indicator to your screen unless you fully understand its mathematical purpose, ensuring you never suffer from "analysis paralysis."`,
 
   "Support & Resistance Strategies": `Programme Introduction
-Are you feeling confused about trading? Do you struggle to understand when to buy or sell? This course on Support and Resistance Strategies will help you learn how to identify key levels on a chart. You will understand where prices tend to bounce or pull back. After completing this course, you will be able to make more informed trading decisions and take control of your financial future.
+Are you struggling to figure out where the market is going to turn around? This course will teach you the most fundamental skill in all of trading: finding the invisible floors and ceilings. After completing this course, you will be able to draw the exact boundary lines that contain the chaos of the market.
 
 Programme Description
-This course is all about understanding support and resistance in trading. You will learn how to identify important levels on charts that can help you decide when to enter or exit a trade. By mastering these strategies, you will improve your skills and increase your chances of success in the market. This course is worth your time because it provides practical knowledge you can use right away.
-
+This course is a deep dive into Support (floors) and Resistance (ceilings). You will learn how to find these massive historical levels on your weekly and monthly charts, and how to use them to make hyper-accurate daily trades. By mastering these boundary lines, you will always know exactly where you are on the map.
 
 What You Will Learn
-What support and resistance are
-How to find support and resistance levels on daily, weekly, and monthly charts
-The difference between major and minor support and resistance
-How to use past highs and lows to identify future price movements
-The role of moving averages in support and resistance
-How to recognize trends and patterns on charts
-The importance of multiple factors in making trading decisions
-How to practice drawing trend lines for better chart analysis
-Strategies for managing risk and reward in your trades
-The psychology behind market movements and investor behavior
-How to become a more confident trader through consistent practice`,
+How to find the exact prices where a stock has historically stopped falling.
+
+The difference between drawing these lines on a 5-minute chart versus a monthly chart.
+
+How to use previous historical peaks as a map for the future.
+
+How trailing moving averages act as a curved floor for the price.
+
+How to practice drawing these lines perfectly using your software tools.
+
+Exact Chart Patterns
+The Boundary Box: A clear visual where you have drawn a thick horizontal line at the top of the price action and a thick horizontal line at the bottom, creating a clear trading zone.
+
+Exact Setups
+The Boundary Reversal Setup: Selling your stock the exact moment it touches your drawn ceiling line, and buying the stock the exact moment it touches your drawn floor line.
+
+Exact Strategy
+The No-Man's Land Strategy: A strict rule to never place a trade in the middle of the chart. You only risk your money at the extreme outer edges (the floor or the ceiling) where your risk is the lowest.`,
 
   "Candlestick Trading Strategies": `Programme Introduction
-Are you feeling lost when looking at candlestick charts? Do you want to understand what those colorful bars really mean? This course is designed to help you learn the ins and outs of candlestick trading. By the end, you'll be able to read charts with confidence and make better trading decisions.
+Do you want to understand what those colorful red and green bars really mean? This course is designed to teach you the secret language of the candlestick. By the end, you'll be able to look at the shape of a single price bar and instantly know if the buyers or the sellers are in total panic.
 
 Programme Description
-This course focuses on candlestick trading strategies. You will learn how to read and analyze candlestick patterns to understand market movements. You'll gain skills that will help you spot potential trends and reversals. This knowledge can lead to smarter trading and better results.
-
+This course focuses on the microscopic details of candlestick trading. You will learn how to dissect the body, the top stick, and the bottom stick of every single bar. By understanding the story each bar tells, you will gain the skill to spot hidden reversals before the rest of the market notices.
 
 What You Will Learn
-Introduction to candlesticks and their importance in trading
-Understanding the parts of a candlestick: body, wick, and tail
-Identifying key candlestick patterns, including doji candles
-Recognizing topping and bottoming tails and their meanings
-Learning about engulfing candlesticks and reversal candles
-Understanding significant terms like golden cross and death cross
-Applying strategies to improve trading success
-Analyzing real-world examples for practical understanding
-Using a trading journal to track your learning and performance
-Developing the confidence to make informed trading decisions`,
+The anatomy of a candlestick: the colored body, the upper wick, and the lower tail.
+
+How a thick colored body shows total confidence and control.
+
+How long wicks and tails show massive rejection and fear.
+
+How to group two or three candles together to read a clear story.
+
+How to use these individual shapes to make incredibly precise trading entries.
+
+Exact Chart Patterns
+The Reversal Story: A visual sequence where a series of confident, thick-bodied candles slowly turns into thin, long-tailed candles, proving the trend is dying.
+
+Exact Setups
+The Rejection Setup: Spotting a candle with a massive tail exactly at one of your drawn safety lines, and using it as an immediate trigger to enter the trade.
+
+Exact Strategy
+The Micro-Read Strategy: A strict rule to never blindly buy a safety line. You must wait for a specific, identifiable candlestick shape (like a Doji or Engulfing bar) to form on the line to prove it is holding.`,
 
   "Risk vs Rewards & Rules to Trade": `Programme Introduction
-Do you feel confused about trading? Are you unsure how to manage risk and reward? This course is designed for you. We will break down the concepts of risk versus reward in trading. By the end, you will know how to make smarter trading decisions and take control of your money. You will feel more confident and ready to trade effectively.
+Do you feel confused about how much money you should actually risk on a single trade? This course breaks down the golden rule of survival: Risk versus Reward. By the end, you will know exactly how to calculate the math so that even if you lose half of your trades, you still make a massive profit at the end of the month.
 
 Programme Description
-This course focuses on understanding the balance between risk and reward when trading. You will learn essential strategies to evaluate potential trades and make informed decisions. You'll gain practical skills to manage your investments wisely. This course is worth your time because it teaches you how to protect your money and maximize your trading success.
-
+This course is the ultimate guide to protecting your bankroll. You will learn the strict mathematical formulas that dictate whether a trade is worth taking. You will gain practical skills in calculating where to place your safety stops and where to take your profits, completely removing guesswork from your trading.
 
 What You Will Learn
-Understand visual risk versus reward in trading
-Learn how to evaluate probabilities for better decision-making
-Discover the importance of mindset in trading before entering a trade
-Know how to identify key support and resistance levels
-Visualize the relationship between risk and reward
-Master the 10% rule for taking profits in trades
-Understand consolidation and its role in chart patterns
-Learn how to effectively leg into positions during trades
-Discover the pitfalls of options trading
-Develop strategies to manage your investments confidently`,
+How to visually calculate your risk versus your potential reward on a chart.
+
+Why you must only take trades that offer at least a 3-to-1 reward ratio.
+
+How to use the "10% rule" to lock in your profits and protect your capital.
+
+How to slowly enter a trade in small pieces (legging in) to reduce danger.
+
+The massive, hidden pitfalls of trading dangerous options contracts.
+
+Exact Chart Patterns
+The Visual Risk Box: Drawing a small red box on your chart to represent your risk (where your stop loss is), and a massive green box to represent your reward target, ensuring the green is visually much larger.
+
+Exact Setups
+The 3-to-1 Setup: Refusing to click the buy button until you have mapped out the trade and mathematically proven that the potential profit is three times larger than the potential loss.
+
+Exact Strategy
+The Capital Preservation Strategy: A rigid, unbreakable rule system where your number one goal is never to make money, but to meticulously protect the money you already have.`,
 
   "Extract the Market Capital": `Programme Introduction
-Are you feeling lost in the world of trading? Do you find yourself unsure of when to take profits or how to avoid big losses? This course will guide you step by step through important trading strategies. You'll learn how to build wealth over time, not just with big wins but with smart, consistent trades. After completing this course, you'll be confident in making informed trading decisions.
+Do you find yourself holding onto a winning trade too long, only to watch it turn into a loss? This course will guide you through the philosophy of "extracting capital." You will learn how to treat the market like an ATM, taking small, consistent withdrawals instead of trying to win the lottery.
 
 Programme Description
-This course is all about developing smart trading habits that lead to long-term success. You will learn how to manage your trades, take profits wisely, and avoid emotional mistakes. This course is worth your time because it will help you build a strong foundation in trading. With these skills, you can take control of your financial future.
-
+This course is all about developing the smart, defensive habits that lead to long-term wealth. You will learn the exact mechanics of how to secure your profits, manage your greed, and avoid the devastating emotional mistakes that wipe out beginner accounts.
 
 What You Will Learn
-Key wise words to guide your trading decisions
-The importance of taking profits when you can
-Why building wealth is a long-term game
-The value of making consistent, smaller gains
-How to avoid falling in love with a trade
-Understanding the risks of betting everything on one big win
-The role of discipline and psychology in trading
-How to expect the unexpected in the market
-The costs of learning through mistakes in trading
-Why tracking your losses is crucial for improvement
-How to manage emotions while trading
-The importance of becoming a probability-based trader
-How to behave like the house in a casino, not a gambler
-Strategies to improve your odds in trading decisions
-Why you should always have a game plan for your trades`,
+The absolute necessity of taking your profits while you have them.
+
+Why swinging for "home runs" is the fastest way to lose all your money.
+
+How to avoid falling in love with a company and ignoring the chart facts.
+
+The massive cost of learning through your own mistakes instead of studying.
+
+How to track every single loss in a journal to constantly improve.
+
+Exact Chart Patterns
+N/A (Account Management): This module focuses on the mathematical curve of your account balance, teaching you to aim for a smooth, steady upward slope rather than wild spikes and crashes.
+
+Exact Setups
+The Scheduled Profit Setup: Setting automatic, unchangeable orders to sell half of your trade the moment it hits a small, predetermined profit goal.
+
+Exact Strategy
+The ATM Strategy: A disciplined mindset where you view the market solely as a place to extract small amounts of capital daily. You never hold and hope; you extract and exit.`,
 };
 
 const STRATEGIES_SLUG_TO_KEY: Readonly<Record<string, string>> = {

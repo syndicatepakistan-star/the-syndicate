@@ -1,6 +1,7 @@
 /**
  * Curated Secrets of a Master Trader copy — vault modals and program library.
- * Section headers: Programme Introduction, Programme Description, What You Will Learn.
+ * Section headers: Programme Introduction, Programme Description, What You Will Learn,
+ * Exact Chart Patterns, Exact Setups, Exact Strategy.
  */
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 
@@ -8,379 +9,490 @@ export const TRADING_SECRETS_MODULE_TITLE = "Secrets of a Master Trader";
 
 export const TRADING_SECRETS_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
   __module_pack__: `Programme Introduction
-Are you tired of feeling confused by trading charts and losing money to unexpected market traps? Many new investors struggle to know exactly when to enter or exit a trade, letting emotions and fakeouts ruin their progress. This complete program will guide you step by step through the hidden patterns and secret strategies used by professional traders. You will learn how to read the true story behind price movements and adapt quickly when the market suddenly changes direction. By the end of this journey, you will take control of your time and money by making confident, data-driven decisions that lead to consistent profits.
+Do you want to know the hidden tricks that the professionals use to stay one step ahead of the crowd? This course pulls back the curtain on the deepest secrets of chart reading. You will learn why most beginners fail, and how you can use their failures to make money. We will teach you the hidden psychology behind every line on a chart.
 
 Programme Description
-This entire course is a masterclass in advanced chart reading and trading psychology. You will build highly profitable skills, from drawing exact trendlines and parallel channels to spotting hidden RSI divergences and time-based patterns. We focus heavily on fine-tuning your entries and exits while teaching you how to avoid the institutional fakeouts that trick most beginners. It is highly worth your time because it shifts your mindset from gambling to trading with strict, professional discipline. Ultimately, you will gain the freedom to trade any market safely using a proven, reliable framework.
-
+This course dives into the advanced, yet easy-to-understand secrets of the market. You will learn the difference between a big-picture trend and a short-term trap. We will explore the secret math of "time"—how the number of days a pattern takes to form tells you if it will succeed or fail. You will learn how to spot when the market is lying to the beginners, and how to safely trade in the opposite direction.
 
 What You Will Learn
-Develop a disciplined master trader mindset that relies on facts and probability instead of emotions
-Draw highly accurate trendlines and parallel channels to catch major price highs and lows
-Tell the exact difference between major and minor support and resistance levels on your charts
-Read both macro (long-term) and micro (short-term) patterns so you never get confused by conflicting signals
-Fine-tune your exact entry and exit prices to maximize your profits and lower your risk
-Use the "Confirmation Signal" to spot real breakouts and avoid falling for expensive market fakeouts
-Master the "scene of the crime retrace" to safely enter trades after a major price break has happened
-Understand the "Hit and Kiss" method to know how prices react when they get very close to key levels
-Identify when bull and bear flags fail and flip direction so you can adapt your trades instantly
-Turn market traps into massive profits by learning how to trade quickly after a failed move
-Track the "Multi-Hit Methodology" to predict exactly when a support or resistance line is finally going to break
-Read RSI divergences to spot hidden market weaknesses instead of just looking at basic overbought signals
-Predict future price targets using the psychology of "Measured Moves" and the "3-Tail Theory" for market reversals
-Unlock the secret of "Time Counts" and understand how the time value of a level affects its strength`,
+How to tell the difference between a minor speed bump and a major market wall.
+
+Why time is just as important as price when looking at a chart.
+
+The psychology of why the biggest price moves happen immediately after a fake-out.
+
+How to tune your entry points so you get the absolute best price possible.
+
+How to recognize when a pattern is failing and quickly change your plan.
+
+Exact Chart Patterns
+Macro vs. Micro Patterns: Learning to see the giant picture (Macro) and how the tiny daily moves (Micro) fit inside it.
+
+Bull and Bear Flag Flips: Identifying the exact moment a pattern that looks good suddenly breaks down and flips to the opposite direction.
+
+Trading Parallels: Finding hidden diagonal channels that perfectly predict where the price will swing back and forth.
+
+Exact Setups
+The Multi-Hit Trendline: Counting how many times a price hits a line, knowing that the more it hits, the weaker the line gets.
+
+The Measured Move: A setup where you take the length of a previous price move and copy-paste it to predict exactly where the next move will end.
+
+The Three-Tail Theory Setup: Finding three specific candlesticks with long tails in a row that scream a massive reversal is imminent.
+
+Exact Strategy
+Profiting from Failed Moves: A clever strategy where you wait for a popular breakout to fail, and instantly trade in the opposite direction to catch the trapped beginners.
+
+The Time Counts Strategy: Counting 7 specific price bars to magically time the exact moment a trend runs out of gas.
+
+RSI Divergence Strategy: Spotting the secret moments when the price is going up, but the hidden momentum tool is pointing down, warning you of an immediate crash.`,
 
   "The Confirmation Signal": `Programme Introduction
-Are you confused about trading? Do you often feel stuck when trying to figure out if a price movement is real or just a trick? This course will help you. You will learn about the Confirmation Signal, a powerful tool that shows you when to trust a breakout or a breakdown in the market. After this course, you will trade with confidence and avoid costly mistakes.
+Are you confused about whether a price movement is real or just a trick? This course will help you avoid falling for traps. You will learn about the Confirmation Signal, a simple green light that shows you when it is finally safe to trust a breakout. After this course, you will avoid costly fake-outs.
 
 Programme Description
-This course teaches you about the Confirmation Signal, a method that helps you identify true market movements. You'll learn step-by-step how to distinguish between real breakouts and fakeouts. By the end of the course, you'll have the skills to make smarter trading decisions, saving you time and money while boosting your chances for success.
-
+This course teaches you step-by-step how to distinguish between a real price move and a trick set by big banks. You will learn how to wait for the chart to give you a definitive confirmation signal before you risk your money. This knowledge will save you from buying at the top and selling at the bottom.
 
 What You Will Learn
-What the Confirmation Signal is and why it matters
-How to read charts and identify breakouts
-The steps to confirm a real breakout above resistance
-The steps to confirm a real breakdown below support
-How to avoid being fooled by fakeouts from institutions
-The importance of retracing to the scene of the crime in trading
-Strategies to minimize risks and maximize rewards
-How to recognize the psychology behind market movements
-Real-life examples to help you apply what you've learned
-Tips on maintaining discipline and control in trading
-How to keep a trading journal to track your progress and improve over time`,
+What a confirmation signal is and why you must wait for it.
+
+How to read the closing price of a bar to know if a move is real.
+
+How to avoid being fooled by temporary spikes (fake-outs).
+
+Strategies to minimize your risks by being slightly late to the party.
+
+Tips on maintaining the discipline to wait for the green light.
+
+Exact Chart Patterns
+The Solid Close Pattern: A visual check where you ensure the body of the price bar firmly closes above the ceiling line, rather than just poking through it with a thin tail.
+
+Exact Setups
+The Next-Bar Setup: Waiting for a second price bar to open and stay above the broken line before you are allowed to click the buy button.
+
+Exact Strategy
+The Proof Strategy: A rigid rule where you never predict what the market will do; you force the market to prove it has broken a line before you invest.`,
 
   "Drawing Proper Trendlines": `Programme Introduction
-Are you feeling lost when it comes to understanding trendlines in trading? Do you want to make better buying and selling decisions? This course will show you how to draw trendlines correctly. After completing this course, you'll be able to identify key support and resistance levels on charts. This knowledge will help you trade more effectively and confidently.
+Are you feeling lost when trying to draw lines on your charts? Do you want to make better buying and selling decisions? This course will show you exactly how to connect the dots on your screen correctly. After completing this course, you will be able to find the invisible floors and ceilings where prices stop moving.
 
 Programme Description
-This course focuses on teaching you how to draw proper trendlines in trading. You will learn how to connect highs and lows on charts to identify important price levels. By mastering this skill, you'll improve your trading decisions and increase your chances of success. It's a valuable investment of your time that will empower you to take control of your trading journey.
-
+This course focuses on teaching you the art of drawing straight lines on your screen to track price paths. You will learn how to connect the highest and lowest points to find important zones. By mastering this simple drawing skill, you will improve your trading decisions and increase your chances of success.
 
 What You Will Learn
-What trendlines are and why they matter in trading
-How to draw proper trendlines by connecting pivot highs and lows
-The difference between support and resistance trendlines
-The importance of touching multiple pivots when drawing trendlines
-How to identify major and minor resistance levels using trendlines
-The science and art behind drawing effective trendlines
-Why trendlines can weaken or strengthen over time
-Tips for checking your trendlines against chart behavior
-The role of trendlines in confirming breakouts and breakdowns
-How to use trendlines in swing trading and day trading
-Practical exercises to improve your trendline drawing skills`,
+What trendlines are and why drawing them correctly matters.
+
+How to connect the exact peak highs and deep lows on a chart.
+
+The difference between drawing a floor (support) and a ceiling (resistance).
+
+Why a line gets stronger the more times the price touches it.
+
+The science and art behind drawing lines that actually work.
+
+Why lines can weaken or break over time.
+
+Exact Chart Patterns
+The Bouncing Path: A visual channel created by drawing a line across the bottom of the price dips and the top of the price peaks.
+
+Exact Setups
+The Line Touch Setup: Waiting patiently for the price to drop down and touch your drawn floor line before you decide to buy.
+
+Exact Strategy
+The Invisible Net Strategy: Using your drawn lines as a safety net; you only buy when the price is near a safety line, keeping your risk incredibly low.`,
 
   "Scene of the Crime Retrace": `Programme Introduction
-Are you feeling lost in the world of trading? Do you often find yourself jumping into trades too quickly and then losing money? This course will help you learn a crucial trading setup called the "scene of the crime retrace." After completing this course, you'll be able to spot the right moments to enter a trade, helping you make better decisions and increase your chances of success.
+Do you often find yourself jumping into trades too quickly because you are afraid of missing out, only to lose money? This course will teach you a crucial patience trick. You will learn to spot the exact, safe moment to enter a trade after the initial excitement has died down.
 
 Programme Description
-This course is all about mastering the scene of the crime retrace setup in trading. You will learn how to identify when to enter a trade after a price breakout or breakdown. By focusing on patience and discipline, you will discover how to make smarter trading choices that can lead to better profits. Investing your time in this course is worth it because you'll gain essential skills that can change your trading game.
-
+This course is all about mastering the "scene of the crime" setup. You will learn how to wait for a price to break through a wall, let everyone else chase it, and patiently wait for the price to come back to the exact wall it just broke. By focusing on this specific patience tactic, you will make smarter choices and increase your profits.
 
 What You Will Learn
-Understand the basics of the scene of the crime retrace setup
-Learn why patience is key in trading
-Identify breakout and breakdown points on charts
-Recognize the importance of confirmation in trading
-Discover how emotions impact trading decisions
-Master the concept of support and resistance levels
-Know when to enter trades for better risk management
-Analyze chart patterns for effective trading strategies
-Explore the psychology behind market movements
-Use moving averages to enhance trading decisions
-Review real-life examples of successful trades using this setup
-Learn to avoid common trading mistakes like chasing trades
-Build your confidence as a disciplined trader`,
+Why having patience is the most important skill on the screen.
+
+How to identify the exact line where a breakout happened.
+
+Why prices almost always return to the scene of their breakout.
+
+How to avoid the common beginner mistake of chasing a fast-moving price.
+
+How to enter trades safely while everyone else is panicking.
+
+Exact Chart Patterns
+The Break and Return Pattern: A visual shape where the price shoots up through a ceiling, curves around, and slowly drops back down to touch the top of that exact same ceiling.
+
+Exact Setups
+The Patient Entry Setup: Refusing to buy the fast breakout, and instead placing your order directly on the broken line, waiting for the price to return to you.
+
+Exact Strategy
+The Anti-Chasing Strategy: A mental rule system where you completely ignore the fear of missing out (FOMO). If a price runs away from you without testing the line, you simply let it go and look for another chart.`,
 
   "Measured Move": `Programme Introduction
-Are you confused about how to read price charts? Do you often feel stuck when deciding when to buy or sell? This course will help you understand the powerful concept of measured moves. You'll learn how to identify these moves on charts, which can guide your trading decisions. After completing the course, you'll feel more confident in predicting market trends and making informed trades.
+Are you confused about how high or low a price might go? Do you often feel stuck deciding when to take your profits? This course will help you understand the powerful concept of copying and pasting previous moves. You will learn how to set clear, mathematical targets so you never have to guess again.
 
 Programme Description
-This course dives into the concept of measured moves in trading. You will learn how these moves are connected to human psychology and market behaviors. By mastering this skill, you'll be able to set clear price targets for your trades, both when prices go up and when they go down. This knowledge will save you time and help you make better trading decisions.
-
+This course dives into a trick called the measured move. You will learn how human behavior causes price jumps to repeat in the exact same sizes. By mastering this simple copying skill, you will be able to set clear, emotionless price targets for your trades. This knowledge will save you time and remove all the guesswork.
 
 What You Will Learn
-Understand what a measured move is and why it matters
-Learn how human psychology affects market movements
-Calculate measured moves using simple methods
-Identify the three parts of a measured move: the initial move, consolidation, and the second move
-Recognize key factors that confirm a measured move
-Analyze charts to spot potential trading opportunities
-Use measured moves to set targets for buying and selling
-Develop a disciplined approach to trading based on chart patterns
-Gain confidence in making trading decisions without letting emotions take over`,
+Understand what a measured move is and why it works.
+
+How human habits cause market shapes to repeat identically.
+
+How to calculate your profit target using basic, simple math.
+
+Identify the three parts of the move: the first jump, the rest period, and the second jump.
+
+How to gain confidence by setting a target and walking away.
+
+Exact Chart Patterns
+The Stair-Step Pattern: A clear visual of a price jumping up, moving sideways to rest, and then jumping up again by the exact same distance.
+
+Exact Setups
+The Copy-Paste Target Setup: Measuring the length of the first price jump with your drawing tool, and placing that exact measurement on top of the resting phase to find your future selling price.
+
+Exact Strategy
+The Set-and-Forget Strategy: A disciplined rule where you calculate your selling target before you even buy the stock, set an automatic sell order at that line, and turn off your computer.`,
 
   "Three Tail Theory": `Programme Introduction
-Are you tired of feeling lost when looking at charts? Do you want to make informed trades instead of guessing? This course on the 3-Tail Theory will give you the tools you need. You will learn how to recognize a specific pattern that can help predict market movements. After completing this course, you will feel more confident in making trading decisions that can lead to profits.
+Are you tired of feeling lost when trying to spot when a market will reverse? Do you want to stop guessing? This course on the Three Tail Theory will give you a specific visual clue to look for. You will learn how to recognize a unique pattern of three price bars that perfectly predicts when a market is exhausted.
 
 Programme Description
-This course teaches you the 3-Tail Theory, a method for reading charts effectively. You will learn how to identify three specific types of candles that signal potential market reversals. By mastering this approach, you will increase your chances of making successful trades. This course is worth your time because it breaks down complex ideas into simple steps you can easily follow.
-
+This course teaches you a highly specific method for reading chart reversals. You will learn how to identify three specific candlesticks in a row that have long wicks or "tails." By mastering this simple counting approach, you will easily spot when a price trend has hit a solid wall and is about to turn around.
 
 What You Will Learn
-Understand the 3-Tail Theory and its significance in trading
-Learn the basic rules for identifying a valid 3-Tail setup
-Recognize the importance of recent highs and lows in charts
-Identify the size and direction of candles and tails
-Discover how to position yourself for trades based on the 3-Tail Theory
-Understand the failure points of the 3-Tail Theory setup
-Learn about the relationship between 3-Tail Theory and other trading patterns
-Explore real-life examples and quizzes to test your understanding
-Gain insights into using additional factors to improve trade success
-Develop skills to analyze charts like a professional trader`,
+The basic rules for identifying a valid three-tail shape.
+
+Why long tails mean the market is aggressively rejecting a price.
+
+How to spot this clue at the very top or bottom of a chart.
+
+How to position yourself safely to catch the reversal.
+
+Understanding when this specific clue fails and what to do.
+
+Exact Chart Patterns
+The Three-Tail Reversal: A distinct visual of three price bars lined up in a row, all featuring long, thin sticks (tails) pointing in the exact same direction.
+
+Exact Setups
+The Exhaustion Entry Setup: Entering a trade in the opposite direction the moment the third consecutive tail finishes drawing on the screen.
+
+Exact Strategy
+The Rejection Strategy: Trading based purely on the visual proof that the market has tried and failed to push the price past a specific point three separate times.`,
 
   "Trading Parallels": `Programme Introduction
-Are you feeling lost in the world of trading? Do you struggle to know when to buy or sell? This course on trading parallels will help you understand how to find major highs and lows in the market. You'll learn to spot patterns that many traders miss. After completing this course, you will be able to make smarter trading decisions based on clear strategies.
+Do you struggle to know where a price will turn around when it is moving diagonally? This course on trading parallels will teach you how to draw perfect slanted channels. You will learn to spot diagonal safety lines that most beginners completely miss. After this course, you will navigate sideways and slanted markets easily.
 
 Programme Description
-This course focuses on trading parallels, which are powerful tools for understanding market movements. You will learn how to identify key support and resistance levels using parallel lines. This knowledge can help you trade with more confidence and improve your chances of making a profit. It's worth your time because it simplifies the chaos of the market into clear, actionable steps.
-
+This course focuses on finding hidden diagonal corridors in the market. You will learn how to draw two perfectly parallel lines that contain the bouncing price. This knowledge simplifies the chaos of the screen into clear, straight train tracks, showing you exactly where the price will bounce next.
 
 What You Will Learn
-Understand the concept and power of trading parallels
-Learn how human psychology affects trading decisions
-Discover how to identify major highs and lows using parallel lines
-Connect key pivot points to create trend lines
-Recognize the importance of time between hits on parallel lines
-Identify when a parallel channel is likely to break
-Apply parallel trading methods across various assets like stocks, crypto, and commodities
-Learn to use charts effectively for better trading strategies
-Understand the significance of distance between hits on parallel lines
-Explore examples of successful trades using parallel lines
-Gain insights into how to avoid emotional trading decisions
-Practice drawing and using parallel lines on real-time charts
-Discover how to combine multiple parallels for enhanced trading accuracy
-Learn to identify when to stop out of a trade for risk management`,
+How to find and draw perfectly slanted train tracks on your chart.
+
+How human psychology creates these diagonal bouncing corridors.
+
+Why the distance between the top line and bottom line is important.
+
+How to identify exactly when the price is about to derail from the tracks.
+
+How to combine slanted lines with flat lines for ultimate accuracy.
+
+Exact Chart Patterns
+The Slanted Channel: A visual pattern consisting of two perfectly parallel, diagonal lines that trap the zigzagging price inside them.
+
+Exact Setups
+The Channel Bounce Setup: Buying exactly when the price touches the bottom diagonal line, and selling exactly when it touches the top diagonal line.
+
+Exact Strategy
+The Ping-Pong Strategy: A repeatable strategy where you continuously trade back and forth between the two parallel lines until the price finally breaks outside of the channel.`,
 
   "Major vs Minor Support and Resistance": `Programme Introduction
-Are you feeling lost when it comes to trading? Do you struggle to understand why prices move in certain ways? This course will help you understand the important concepts of major and minor support and resistance levels. By the end, you'll be able to identify these levels clearly and use them to make smarter trading decisions. You'll take control of your trading strategy and improve your skills step by step.
+Are you feeling lost when trying to figure out where a price will stop falling? This course will help you understand the difference between major, unbreakable floors, and minor, weak floors. By the end, you will be able to identify these levels clearly and use them to make much safer decisions.
 
 Programme Description
-This course focuses on the key differences between major and minor support and resistance levels in trading. You'll learn how to spot these levels on charts and understand their significance. With this knowledge, you'll be able to make better trading choices, reduce emotional stress, and increase your chances of success. It's a valuable investment of your time for anyone looking to improve their trading skills.
-
+This course focuses on finding the invisible lines on your screen where prices stop. You will learn the difference between a massive, historical turning point and a small daily speed bump. With this knowledge, you will reduce your emotional stress because you will know exactly where the safest places to buy are.
 
 What You Will Learn
-The difference between major and minor support and resistance lines
-How to identify major levels that signal larger price movements
-The importance of minor levels and when to use them
-Techniques to manage emotions while trading
-How to recognize significant pivots on price charts
-The role of trendlines in defining support and resistance levels
-Understanding mid-level support and how it fits into trading strategies
-The effect of time on the strength of support and resistance levels
-How to combine multiple factors to increase trade success
-The importance of confirmation signals before entering trades
-Practical examples of analyzing charts for support and resistance levels
-Strategies for recognizing when a level changes from major to minor and vice versa`,
+The difference between a major, strong line and a minor, weak line.
+
+How to find the major levels that cause massive price reversals.
+
+How to manage your emotions when the price approaches a scary line.
+
+How time makes a floor or ceiling stronger.
+
+The importance of waiting for a clear green light before buying near a line.
+
+Exact Chart Patterns
+The Historical Wall: A visual pattern where a specific price level has acted as a massive barrier multiple times over several months or years.
+
+Exact Setups
+The Major Bounce Setup: Waiting for the price to drop all the way down to a major, historical floor before deciding to buy the bounce.
+
+Exact Strategy
+The Strength Filter Strategy: A rule to completely ignore the minor, weak lines in the middle of the screen, and only risk your money when the price reaches the major, outer edges of the chart.`,
 
   "Multi-Hit Methodology": `Programme Introduction
-Are you feeling lost when it comes to trading? Do you find it hard to know when to buy or sell? This course will help you understand a special method that can improve your trading skills. You'll learn how to read charts better and predict when prices might rise or fall. After completing this course, you will feel more confident making trading decisions.
+Are you finding it hard to know when a safety line is finally going to break? This course will help you understand a special counting method. You will learn how to read charts better and predict when a floor is about to collapse or a ceiling is about to shatter. After this course, you will feel much more confident making decisions.
 
 Programme Description
-This course teaches you the Multi-Hit Methodology, a strategy for predicting market moves. You will learn how many times a trend line can be hit before it breaks. This knowledge will help you decide when to enter or exit trades. It's a valuable skill that can lead to better trading results and help you take control of your financial future.
-
+This course teaches you the Multi-Hit method, a counting strategy for predicting big moves. You will learn exactly how many times a price can hit a safety line before that line breaks. This knowledge will help you avoid buying a bouncing asset right before it crashes through the floor.
 
 What You Will Learn
-The basics of the Multi-Hit Methodology in trading
-How to identify major trend lines and their significance
-Understanding the psychology behind trend lines
-The importance of hit counts for predicting breakouts and breakdowns
-How to analyze the angle of trend lines for better predictions
-Techniques for using the Multi-Hit Methodology in real trading scenarios
-How to assess the validity of trend line breaks
-The role of support and resistance in trading strategies
-Real-life examples of the Multi-Hit Methodology in action
-How to develop a disciplined trading mindset for success`,
+The basics of counting hits on your safety lines.
+
+The psychology of why a line gets weaker every time it is struck.
+
+How to analyze the angle of the hits to predict a breakout.
+
+How to assess if a line break is real or a fake trap.
+
+Real-life examples of counting hits to time your trades perfectly.
+
+Exact Chart Patterns
+The Hammering Pattern: A visual shape where the price repeatedly drops down to hit the exact same bottom line over and over again in a short period of time.
+
+Exact Setups
+The Final Strike Setup: Preparing to trade a massive crash or breakout when you count that a price has hit the same line for the fourth or fifth time.
+
+Exact Strategy
+The Exhaustion Strategy: A strict rule to never trust a floor if it has been hit too many times. You switch your strategy from "buying the bounce" to "preparing for the break."`,
 
   "Trading the Hit and Kiss of a Level": `Programme Introduction
-Are you feeling confused about trading and missing out on good opportunities? This course teaches you how to understand and trade using the hit and kiss levels. You will learn to recognize important price points and make smarter trading decisions. After this course, you'll be able to trade with more confidence and control over your money.
+Are you feeling confused about why sometimes a price touches your line perfectly, and other times it smashes right through it? This course teaches you how to tell the difference between a gentle "kiss" and a violent "hit." After this course, you will know which lines are safe to trade and which ones to run from.
 
 Programme Description
-This course focuses on the hit and kiss levels in trading. You'll learn how to identify key support and resistance levels and what to do when prices get close to these levels. With this knowledge, you will improve your trading skills and increase your chances of success. It's worth your time because it provides practical strategies that can help you make better trades.
-
+This course focuses on the exact moment the price reaches your safety line. You will learn how to watch the behavior of the price bar to determine if the market is gently tapping the line or aggressively trying to break it. This hyper-focused skill will massively improve the accuracy of your entries.
 
 What You Will Learn
-Understand the master trader mentality
-Learn the importance of hit and kiss levels
-Recognize how emotions affect trading decisions
-Distinguish between a hit, kiss, and pierce of a level
-Identify key support and resistance levels
-Know how to react to near misses in trading
-Use the hit and kiss methodology for better trading
-Analyze charts to find trading opportunities
-Understand the significance of moving averages
-Learn about gap fills and their importance
-Avoid poor trades by recognizing risk
-Embrace discipline and patience in trading
-Master the art of trading less to achieve more`,
+How to distinguish between a gentle kiss, a hard hit, and a violent pierce of a line.
+
+Why the speed of the approach changes the reaction.
+
+How to react to "near misses" where the price turns around just before your line.
+
+How to avoid taking poor trades by reading the aggression of the market.
+
+Why the master trader mentality requires you to be picky.
+
+Exact Chart Patterns
+The Gentle Kiss vs. The Hard Hit: Visually analyzing the final price bar as it touches your line—is it a small, quiet bar (kiss) or a massive, fast bar (hit)?
+
+Exact Setups
+The Kiss Entry Setup: Only pressing the buy button if the price approaches your safety line slowly and gently taps it with a small wick.
+
+Exact Strategy
+The Aggression Filter Strategy: A strict rule to instantly cancel your trade if the price approaches your line with massive, aggressive, large-bodied candles.`,
 
   "Macro Versus Micro Patterns": `Programme Introduction
-Are you confused about trading patterns? Do you feel stuck not knowing when to buy or sell? This course will help you understand the difference between macro (big picture) and micro (short-term) patterns. After this course, you'll be able to read charts more effectively, make better trading decisions, and potentially increase your profits.
+Are you confused about trading shapes? Do you feel stuck not knowing if a trend will last a week or just an hour? This course will help you understand the difference between the big picture (macro) and the short-term picture (micro). After this course, you will read charts much more effectively.
 
 Programme Description
-This course is all about learning how to analyze trading patterns. You'll discover how macro patterns show larger trends while micro patterns provide insights into short-term movements. By the end of the course, you'll have the skills to spot these patterns, helping you make smarter trades. This knowledge is worth your time because it can lead to better entry and exit points in your trading strategy, ultimately giving you more control over your investments.
-
+This course is all about learning how to zoom in and out of your charts. You will discover how the big, zoomed-out pictures show massive trends, while the zoomed-in pictures give you clues for today. By the end of the course, you will have the skills to combine both views to make the smartest trades possible.
 
 What You Will Learn
-The difference between macro and micro patterns
-How to identify bullish and bearish patterns
-The importance of recognizing patterns that can conflict with each other
-How to analyze charts for better trading decisions
-The role of entry prices in maximizing profits
-How to use micro patterns to predict short-term price movements
-The significance of price action in trading
-Why practicing pattern recognition is crucial for becoming a master trader
-How to combine knowledge of macro and micro patterns for optimal trading strategy
-Real-world examples of macro and micro analysis to improve your skills`,
+The difference between a giant long-term shape and a tiny daily shape.
+
+How to know when the small shape is fighting against the big shape.
+
+How to analyze both views for safer trading decisions.
+
+How to use the tiny daily shapes to get a better, cheaper entry price.
+
+Why practicing zooming in and out is crucial for mastering the screen.
+
+Exact Chart Patterns
+The Matryoshka Doll Pattern: Spotting a small, fast-moving downward shape that is secretly hiding inside a giant, slow-moving upward shape.
+
+Exact Setups
+The Aligned Setup: Waiting for the exact moment when the tiny short-term trend finally points in the same direction as the giant long-term trend.
+
+Exact Strategy
+The Big Picture Strategy: A strict rule where you always check the giant weekly chart first to find the main direction, and only use the tiny daily chart to find your exact buying price.`,
 
   "Bull and Bear Flag Flips": `Programme Introduction
-Are you feeling confused by market charts? Are you struggling to understand when to buy or sell? This course will help you make sense of bull and bear flags. You will learn how these patterns can change direction. By the end, you'll be able to adapt your trading strategy based on new market information.
+Are you feeling confused by market charts? Are you struggling to understand when to buy or sell? This course will help you make sense of simple "flag" shapes on your screen. You will learn how these shapes can suddenly change direction. By the end, you will be able to adapt your plan quickly when the market changes its mind.
 
 Programme Description
-This course teaches you about bull and bear flag patterns in trading. You'll learn how to recognize these patterns and understand when they flip from one to the other. You'll gain valuable skills that will help you make better trading decisions. By becoming more flexible with your approach, you can improve your chances of success in the market.
-
+This course teaches you about resting phases in the market, known as flag patterns. You will learn how to recognize these shapes and understand when a winning shape suddenly flips into a losing one. By becoming more flexible with your approach, you can protect your money and improve your chances of success.
 
 What You Will Learn
-The basics of bull and bear flag patterns
-How a bull flag can turn into a bear flag and vice versa
-The importance of adjusting your expectations as new market information appears
-How to interpret each candle on a chart as new information
-The significance of maintaining a healthy skepticism in trading
-Strategies for entering trades with manageable risk
-How to recognize when a pattern is failing or weakening
-The role of time in the effectiveness of flag patterns
-How to identify key levels of support and resistance in trading
-Techniques for staying nimble and responsive to market changes
-The psychology behind trading decisions and market movements`,
+The basics of how resting phases (flags) look on a screen.
+
+How a rising flag can turn into a falling flag, and vice versa.
+
+Why you must change your expectations when new information appears.
+
+How to read every single price bar as a new clue.
+
+Why it is healthy to be skeptical and never trust the market blindly.
+
+How to spot when a shape is failing or getting weak.
+
+Exact Chart Patterns
+The Flipped Flag: Watching a clear resting shape on the chart suddenly break in the wrong direction, creating a mirror image of what you expected.
+
+Exact Setups
+The Failure Trigger: The exact moment the price breaks out of the flag shape but immediately falls back inside, telling you the move was a trap.
+
+Exact Strategy
+The Quick Pivot Strategy: A strict rule to never argue with the screen. When a shape flips, you immediately close your losing trade and prepare to trade in the new direction.`,
 
   "Trading RSI Divergences": `Programme Introduction
-Are you struggling to understand how to read market trends? Do you feel lost when it comes to using the RSI indicator? This course will help you uncover the secrets of trading RSI divergences. By the end, you will confidently spot patterns that signal when to buy or sell, helping you take control of your trading journey.
+Do you feel lost when trying to figure out if a price movement is running out of steam? This course will uncover the secrets of a special tool called the RSI. By the end, you will confidently spot secret disagreements between the price and the tool, warning you of massive market crashes before they happen.
 
 Programme Description
-This course is all about understanding RSI divergences. You will learn how to identify these divergences and what they mean for price movements. By mastering this skill, you'll improve your trading strategies and make better decisions. It's a valuable investment of your time that can lead to greater success in your trading activities.
-
+This course is all about finding hidden weakness in the market. You will learn how to use a momentum tool (the RSI) to look under the hood of the price. When the price is going up, but the tool is going down, you will know the market is lying. This skill will protect you from buying at the absolute worst time.
 
 What You Will Learn
-Understanding the RSI indicator and its basic functions
-Why most traders misuse RSI by focusing only on overbought or oversold signals
-The importance of looking for divergences in RSI
-How to identify bearish divergences and what they signal
-The rules for spotting bearish divergences effectively
-How to recognize bullish divergences and their implications
-The rules for identifying bullish divergences properly
-Practical examples using real charts to analyze divergences
-The significance of looking for secondary factors to confirm trading signals
-Techniques for applying RSI divergences in your trading strategy
-Real-life case studies of successful trades using RSI divergences
-Tips for practicing and improving your skills with RSI divergences
-How to incorporate RSI divergences into your daily trading routine`,
+The simple basics of the RSI momentum tool.
+
+Why most beginners use this tool completely wrong.
+
+How to spot the secret "disagreement" (divergence) between the price and the tool.
+
+The strict rules for identifying when an upward trend is secretly dying.
+
+How to incorporate this warning signal into your daily routine.
+
+Exact Chart Patterns
+The Lying Peak Pattern: A visual setup where the price on the main chart makes a new, higher peak, but the squiggly line on the RSI tool makes a lower peak.
+
+Exact Setups
+The Momentum Warning Setup: Closing your profitable trades and refusing to buy more the exact moment you spot the tool disagreeing with the price chart.
+
+Exact Strategy
+The X-Ray Strategy: Using the RSI tool as an X-ray machine to look inside the price trend; you never trust a rising price unless the tool confirms the strength is real.`,
 
   "Time Counts": `Programme Introduction
-Are you feeling confused about trading charts? Do you want to understand what makes a successful trader? This course will help you unlock the secrets of time counts. You'll learn how to spot patterns that can guide your trading decisions. After this course, you will be able to analyze charts with confidence and improve your trading results.
+Do you want to know a hidden secret about how long a trend can last? This course will unlock the magic of counting on your charts. You will learn how to spot numerical patterns—specifically the number 7—that can magically guide your trading decisions. After this course, you will analyze charts with a completely new set of eyes.
 
 Programme Description
-This course is all about understanding time counts, especially the magic of the number 7 in trading. You will learn how to identify patterns in price movement that repeat and often lead to profitable trades. This knowledge will help you make better decisions and take control of your trading journey. It's worth your time because it can change the way you view and interact with charts completely.
-
+This course is all about the secret rhythm of the market, focusing on the magic number 7. You will learn how to count the number of price bars moving in one direction to predict when the market will get tired. This simple counting trick will help you know when a trend is fresh and when it is dying.
 
 What You Will Learn
-The significance of time counts in trading
-How the number 7 appears in nature and trading
-The concept of the Nova 7 and its implications for traders
-How to identify 7 candle patterns on charts
-The impact of color and size of candles in a time count
-The importance of secondary factors when using time counts
-How to use time counts to predict market movements
-The role of time counts in recognizing mature and immature patterns
-How to apply time counts across different time frames
-Tips for managing trades based on time counts
-How to notice time counts in your everyday life and trading`,
+The hidden significance of counting time in trading.
+
+How the number 7 appears repeatedly in market cycles.
+
+How to identify a 7-bar sequence on your screen.
+
+Why the color and size of the bars matter when you count.
+
+How to use this counting trick to know when to take your profits.
+
+Exact Chart Patterns
+The Nova 7 Pattern: A clear visual streak of seven consecutive price bars all moving aggressively in the exact same direction without a break.
+
+Exact Setups
+The 7th Bar Reversal Setup: Preparing to take your profits or reverse your trade exactly as the seventh consecutive bar finishes forming.
+
+Exact Strategy
+The Rhythm Strategy: A rule system where you stop focusing only on price numbers, and start counting the rhythm of the bars to time your market exits perfectly.`,
 
   "The Biggest Moves Come from Failed Moves": `Programme Introduction
-Do you feel lost when trading? Are you unsure why some trades go wrong while others succeed? This course will help you understand a key trading principle: the biggest market moves often come from failed moves. After completing this course, you will know how to react quickly when a trade fails. This skill will help you minimize losses and maximize profits.
+Do you feel lost when a perfect trade suddenly goes wrong? Are you unsure why some massive market moves happen right after a failure? This course will help you understand a key secret: the biggest profits often come from trapped traders. You will know how to react quickly when a setup fails to turn a loss into a massive win.
 
 Programme Description
-This course teaches you how to recognize and react to failed trading setups. You will learn how to identify when a breakout or breakdown fails and what actions to take next. By understanding these concepts, you can protect your investments and make better trades. This is worth your time because it will help you build confidence in your trading skills and improve your overall results.
-
+This course teaches you how to recognize and profit from failed setups. You will learn how to identify when a crowd of beginners gets trapped on the wrong side of the market. By understanding how panic works, you can flip your direction and make huge profits while others are rushing for the exit.
 
 What You Will Learn
-Understand the principle of failed moves in trading
-Learn to recognize when a trading pattern fails
-Discover how to react quickly to minimize losses
-Identify the signs of breakouts and breakdowns
-Understand the importance of confirmation in trading
-Analyze real-life trading charts for practical examples
-Develop strategies for trading after a failed move
-Learn about the psychology of other traders and its effect on the market
-Practice using multiple factors for higher probability trades
-Gain insights to improve your overall trading success`,
+The principle of how trapped traders cause massive price spikes.
+
+How to recognize the exact moment a normal pattern has failed.
+
+How to react quickly to close a losing trade and instantly reverse it.
+
+The psychology of panic and how it moves the market faster than greed.
+
+How to develop strategies for trading the moment the crowd is proven wrong.
+
+Exact Chart Patterns
+The Fake-Out Trap: A visual shape where the price peaks its head above a major line, drawing everyone in, and then violently reverses in the opposite direction.
+
+Exact Setups
+The Reversal Trigger Setup: Placing a trade in the opposite direction the exact second the price falls back underneath the breakout line.
+
+Exact Strategy
+The Trap-Trading Strategy: A ruthless rule to identify where the majority of beginner traders are placing their safety stops, and aiming your trades to profit when those stops get hit.`,
 
   "Time Value of a Level": `Programme Introduction
-Are you confused about why your trades sometimes fail? Do you feel stuck at a beginner level in trading? This course helps you understand the "time value of a level." You will learn how timing affects the strength of support and resistance levels. After this course, you'll know when to expect big price moves and how to make better trading decisions.
+Are you confused about why your perfectly drawn safety lines sometimes fail? This course helps you understand the missing puzzle piece: Time. You will learn how the amount of time it takes for a price to reach a line completely changes how strong that line will be.
 
 Programme Description
-This course is all about understanding how time impacts trading levels. You will learn to identify major and minor levels of support and resistance, and how the timing of price hitting these levels affects their strength. This course is worth your time because it gives you the skills to make smarter trades, increasing your chances of success.
-
+This course is all about understanding the clock. You will learn to identify why a price zooming down to a floor in five minutes is dangerous, but a price drifting down to a floor over five days is safe. This course gives you the skills to know exactly when to trust your lines and when to step away.
 
 What You Will Learn
-The importance of timing in trading
-How to differentiate between major and minor levels
-Why some trades fail even at good levels
-How to read price action as it approaches key levels
-The concept of "time value" and its impact on trades
-How to assess the probability of price movements
-Recognizing signals that indicate strong or weak bounces
-Analyzing charts for better trade setups
-Understanding the psychology behind price moves
-Applying strategies to maximize your trading success`,
+The massive importance of the clock in trading.
+
+How to read the speed of a price action as it approaches your safety line.
+
+Why a fast, violent drop breaks floors easily.
+
+How to assess the safety of a trade based purely on how long it took to get there.
+
+Recognizing the signals of a strong bounce versus a weak bounce.
+
+Exact Chart Patterns
+The Slow Drift vs. The Waterfall: Visually comparing a chart where the price slowly stair-steps down over many days, versus a chart where the price drops straight down in a straight line.
+
+Exact Setups
+The Aged Line Setup: Only entering a trade on a safety line if a significant amount of time (days or weeks) has passed since the price last touched it.
+
+Exact Strategy
+The Speed Limit Strategy: A strict rule to instantly cancel your buy order if the market approaches your safety line too fast and aggressively.`,
 
   "Fine-Tuning Entry Points": `Programme Introduction
-Do you struggle with knowing the right time to enter or exit a trade? Are you often confused about where to set your prices? This course will help you understand how to fine-tune your entry points for better trading decisions. After taking this course, you'll feel more confident in placing your buy and sell orders, maximizing your potential profits.
+Do you struggle with knowing the exact right second to enter or exit a trade? Are you often confused about what price to ask for? This course will help you fine-tune your timing. After taking this course, you will feel much more confident in choosing the exact price to click the buy or sell button.
 
 Programme Description
-This course teaches you how to identify the best entry points for your trades. You will learn key factors that influence where to place your orders, whether you're buying or selling. By understanding these concepts, you can make informed decisions that improve your chances of success in trading. This course is worth your time because it will help you take control of your trading strategy and make smarter moves in the market.
-
+This course teaches you how to pinpoint the absolute best entry prices for your trades. You will learn the hidden factors that influence where to place your orders. By understanding these concepts, you can stop buying too high and selling too low, maximizing your potential profits.
 
 What You Will Learn
-How to analyze entry points for buying and selling
-The importance of support and resistance levels
-How to use volume to guide your trading decisions
-The role of market cycles in setting your entry price
-Tips for managing emotional responses when trading
-When to use limit orders for better price control
-Methods for determining ideal entry prices in different scenarios
-Strategies for adjusting your entries based on market conditions
-How to build a defensive trading approach for bear markets
-Techniques for recognizing bullish and bearish trends
-Steps to analyze the day-to-day market action
-Understanding how news impacts market movements
-Practical examples to apply your knowledge in real trades`,
+How to analyze the exact price point for buying and selling.
+
+The importance of knowing where the invisible floors and ceilings are.
+
+How to use trading volume (how many people are buying) as a clue.
+
+Tips for managing your racing heartbeat when placing an order.
+
+When to use automatic price limits so you don't overpay.
+
+How to adjust your timing based on whether the market is calm or crazy.
+
+Exact Chart Patterns
+The Market Cycle: Recognizing whether the overall market picture is in an aggressive upward sprint or a defensive downward slide.
+
+Exact Setups
+The Limit Order Setup: Setting a trap at a specific low price and waiting for the market to come to you, instead of chasing the price higher.
+
+Exact Strategy
+The Defensive Entry Strategy: A rule system where you refuse to pay full price; you always wait for a slight dip or discount before entering the market.`,
 
   "Goals and Expectations": `Programme Introduction
-Are you feeling stuck in your trading journey? It's common to feel lost, especially when the market is unpredictable. This course will help you gain clarity and confidence. You will learn the secrets of successful traders and how to become a master investor. After taking this course, you'll be able to make smarter trading decisions and manage your investments better.
+Are you feeling stuck in your journey? It is common to feel lost, especially when the market is acting wild. This course will help you gain clarity and confidence. You will learn the hidden habits of successful traders. After taking this course, you will be able to make smarter decisions and manage your money like a professional.
 
 Programme Description
-This course is all about becoming a great trader. You will learn essential skills like analyzing market trends and understanding when to buy or sell. Each lesson builds on the last, making it easy to follow. By the end, you will have the tools to trade confidently and effectively. Investing your time here will pay off as you master your trading skills.
-
+This course is all about building the mindset of a great trader. You will learn essential mental skills, like keeping your expectations realistic and understanding that trading is about probabilities, not certainties. By the end, you will have the mental tools to trade confidently without letting fear take over.
 
 What You Will Learn
-Goals and expectations for becoming a winning trader
-How to create a complete trader mindset
-The importance of emotional control and probability analysis
-Understanding the confirmation signal for breakouts and breakdowns
-How to draw trend lines correctly
-The scene of the crime retrace and when to enter trades
-The three tail theory setup and its significance
-How to identify and use trading parallels
-Understanding major vs. minor support and resistance levels
-The multi-hit methodology for trading
-The hit kiss of a level and its importance
-The difference between macro and micro patterns
-How bull and bear flags can change
-Trading RSI divergences for better insights
-The importance of time counts in trading
-Understanding failed moves and their impact
-The time value of a level in trading
-How to fine-tune your entry points for trades`,
+How to set realistic goals so you don't get discouraged.
+
+How to build a complete, professional mindset.
+
+The importance of keeping your emotions flat and calm.
+
+Why you must view every trade as a game of odds, not a guaranteed win.
+
+A review of basic chart shapes and drawing lines to keep you grounded.
+
+Exact Chart Patterns
+The Calm Chart: Learning to look at any wild, chaotic chart pattern and seeing it simply as a math equation, removing all fear and excitement.
+
+Exact Setups
+The Mindset Check Setup: A personal setup where you evaluate your own mood and heart rate before you are allowed to look at the trading screen.
+
+Exact Strategy
+The Probability Strategy: Treating your trading account like a casino business; you know you will lose some hands, but you trust your rules will make you profitable over the whole year.`,
 };
 
 const SECRETS_SLUG_TO_KEY: Readonly<Record<string, string>> = {

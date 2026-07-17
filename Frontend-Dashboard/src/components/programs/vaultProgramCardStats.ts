@@ -75,6 +75,11 @@ export function vaultPackWatchTime(pack: VaultPackKey): string {
 export function tradingModuleStats(moduleSlug: TradingModuleSlug): ProgramCardStats {
   const submodules = tradingSubmodulesForModule(moduleSlug);
   const count = submodules.length;
+  // Prefer the reviewer-sheet module total; fall back to summing per-lesson durations.
+  const curatedTotal = lookupCuratedDurationSeconds(moduleSlug);
+  if (curatedTotal !== undefined) {
+    return { mode: "module", lessonCount: count, watchTime: formatDurationSeconds(curatedTotal) };
+  }
   const { totalSeconds, allKnown } = sumCuratedDurations(submodules.map((s) => s.slug));
   const watchTime =
     allKnown && totalSeconds > 0

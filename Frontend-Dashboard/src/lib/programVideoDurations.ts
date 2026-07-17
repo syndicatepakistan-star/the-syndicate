@@ -7,13 +7,6 @@
 export const PENDING_WATCH_DURATIONS: readonly string[] = [
   "level1-model-trading",
   "level1-model-blockchain",
-  "level1-psych-10",
-  "level1-psych-11",
-  "trading_technical_analysis",
-  "trading_scalpel_protocol",
-  "trading_master_strategies",
-  "trading_master_setups",
-  "trading_master_secrets",
 ];
 
 const S = (hours: number, minutes: number, seconds: number): number =>
@@ -30,6 +23,8 @@ const LEVEL1_DURATION_SECONDS: Record<string, number> = {
   "level1-psych-07": S(1, 14, 29),
   "level1-psych-08": S(0, 54, 21),
   "level1-psych-09": S(1, 1, 42),
+  "level1-psych-10": S(2, 0, 36),
+  "level1-psych-11": S(0, 38, 56),
   "level1-model-01": S(12, 29, 5),
   "level1-model-02": S(11, 58, 23),
   "level1-model-03": S(10, 22, 1),
@@ -106,10 +101,85 @@ const AGENTIC_MODULE_SECONDS: Record<string, number> = {
   agentic_ai_c26: S(5, 27, 58),
 };
 
+/**
+ * Trading Advanced Technical Analysis — reviewer sheet.
+ * Module/pack totals are authoritative (they reconcile: 2:19:04 + 7:33:44 + 6:10:10 + 4:43:03 ≈ 20:46).
+ */
+const TRADING_MODULE_TOTAL_SECONDS: Record<string, number> = {
+  trading_technical_analysis: S(20, 46, 0),
+  trading_scalpel_protocol: S(2, 19, 4),
+  trading_master_secrets: S(7, 33, 44),
+  trading_master_setups: S(6, 10, 10),
+  trading_master_strategies: S(4, 43, 3),
+};
+
+/** Trading lessons (slug order matches tradingVaultCatalog row order). */
+const TRADING_LESSON_SECONDS: Record<string, number> = {
+  // The Scalpel Protocol (1-minute chart) — chapters 1–10
+  trading_scalpel_01: S(0, 2, 11),
+  trading_scalpel_02: S(0, 4, 19),
+  trading_scalpel_03: S(0, 19, 5),
+  trading_scalpel_04: S(0, 3, 37),
+  trading_scalpel_05: S(0, 5, 51),
+  trading_scalpel_06: S(0, 8, 33),
+  trading_scalpel_07: S(0, 6, 38),
+  trading_scalpel_08: S(0, 7, 8),
+  trading_scalpel_09: S(0, 14, 39),
+  trading_scalpel_10: S(0, 7, 46),
+  // Secrets of a Master Trader
+  trading_secrets_01: S(1, 9, 0), // The Confirmation Signal
+  trading_secrets_02: S(0, 26, 47), // Drawing Proper Trendlines
+  trading_secrets_03: S(0, 14, 30), // Scene of the Crime Retrace
+  trading_secrets_04: S(0, 15, 36), // Measured Move
+  trading_secrets_05: S(0, 42, 2), // Three Tail Theory
+  trading_secrets_06: S(0, 29, 22), // Trading Parallels
+  trading_secrets_07: S(0, 23, 13), // Major vs Minor Support and Resistance
+  trading_secrets_08: S(0, 16, 4), // Multi-Hit Methodology
+  trading_secrets_09: S(0, 21, 3), // Trading the Hit and Kiss of a Level
+  trading_secrets_10: S(0, 29, 6), // Macro Versus Micro Patterns
+  trading_secrets_11: S(0, 27, 12), // Bull and Bear Flag Flips
+  trading_secrets_12: S(0, 23, 54), // Trading RSI Divergences
+  trading_secrets_13: S(0, 33, 42), // Time Counts
+  trading_secrets_14: S(0, 16, 17), // The Biggest Moves Come from Failed Moves
+  trading_secrets_15: S(0, 21, 10), // Time Value of a Level
+  trading_secrets_16: S(0, 26, 2), // Fine-Tuning Entry Points
+  trading_secrets_17: S(0, 17, 38), // Goals and Expectations
+  // Setups of a Master Trader
+  trading_setups_01: S(0, 19, 2), // Introduction
+  trading_setups_02: S(0, 47, 32), // Setups of a Master Trader
+  trading_setups_03: S(0, 21, 6), // Bull and Bear Flag Setups
+  trading_setups_04: S(0, 16, 45), // Cup and Handle Setups
+  trading_setups_05: S(0, 14, 52), // Mature Versus Immature Patterns and Setups
+  trading_setups_06: S(0, 11, 54), // Megaphone and Consolidation Patterns
+  trading_setups_07: S(0, 14, 0), // Downsloping and Upsloping Channels
+  trading_setups_08: S(0, 14, 40), // Double Tops and Double Bottoms
+  trading_setups_09: S(0, 15, 0), // Triple Tops and Beyond
+  trading_setups_10: S(0, 19, 36), // The M-A Pattern
+  trading_setups_11: S(0, 18, 58), // The W-V Pattern
+  trading_setups_12: S(0, 24, 12), // Gaps and Gap Fills
+  trading_setups_13: S(0, 14, 34), // The Power of the Move
+  trading_setups_14: S(0, 16, 34), // Trading the Golden and Death Cross Setup
+  trading_setups_15: S(0, 21, 14), // Trading Doji Candle Setups
+  trading_setups_16: S(0, 45, 28), // Topping and Bottoming Tail Setups
+  trading_setups_17: S(0, 23, 29), // Engulfing Candle Setups
+  trading_setups_18: S(0, 11, 2), // Wise Words for Master Setups
+  // Strategies of a Master Trader
+  trading_strategies_01: S(0, 16, 50), // Strategies of a Master Trader
+  trading_strategies_02: S(0, 26, 50), // The Keys to Building Wealth
+  trading_strategies_03: S(0, 25, 22), // Favorite Trading Indicators
+  trading_strategies_04: S(0, 51, 4), // Charting Strategies for Indicators
+  trading_strategies_05: S(0, 24, 32), // Support & Resistance Strategies
+  trading_strategies_06: S(0, 9, 3), // Candlestick Trading Strategies
+  trading_strategies_07: S(1, 1, 0), // Risk vs Rewards & Rules to Trade
+  trading_strategies_08: S(0, 7, 51), // Extract the Market Capital
+};
+
 const CURATED_DURATION_SECONDS: Record<string, number> = {
   ...LEVEL1_DURATION_SECONDS,
   ...AI_CONTENT_MODULE_SECONDS,
   ...AGENTIC_MODULE_SECONDS,
+  ...TRADING_MODULE_TOTAL_SECONDS,
+  ...TRADING_LESSON_SECONDS,
 };
 
 function sumRecordValues(record: Record<string, number>): number {
@@ -120,6 +190,7 @@ function sumRecordValues(record: Record<string, number>): number {
 export const VAULT_PACK_TOTAL_SECONDS: Record<string, number> = {
   ai_content_automation: sumRecordValues(AI_CONTENT_MODULE_SECONDS),
   agentic_ai: sumRecordValues(AGENTIC_MODULE_SECONDS),
+  trading_technical_analysis: TRADING_MODULE_TOTAL_SECONDS.trading_technical_analysis,
 };
 
 export function formatDurationSeconds(totalSeconds: number, approximate = false): string {
@@ -131,7 +202,7 @@ export function formatDurationSeconds(totalSeconds: number, approximate = false)
   if (hours > 0) {
     if (minutes === 0 && seconds === 0) return `${prefix}${hours}h`;
     if (seconds === 0) return `${prefix}${hours}h ${minutes}m`;
-    return `${prefix}${hours}h ${minutes}m`;
+    return `${prefix}${hours}h ${minutes}m ${seconds}s`;
   }
   if (minutes > 0) {
     if (seconds === 0) return `${prefix}${minutes} min`;

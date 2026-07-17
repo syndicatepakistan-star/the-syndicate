@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
+import { PurchaseValueCallout } from "@/components/programs/PurchaseValueCallout";
 import {
   VAULT_MODAL_BODY_CLASS,
   VAULT_MODAL_OVERLAY_CLASS,
@@ -167,24 +168,20 @@ export function TradingModuleVaultModal({
             </div>
 
             <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
-              <p
-                className={cn(
-                  "text-left font-mono text-[clamp(12px,2.1vw,16px)] font-black uppercase leading-snug tracking-[0.05em]",
-                  copy.labelClass,
-                  "drop-shadow-[0_0_18px_currentColor]",
-                )}
-              >
-                One-time purchase — unlock this module sub-pack for {localizeLabel(moduleOffer.displayPrice)}.
-                Individual lessons are included with the module (not sold separately). Lifetime access
-                records to your dashboard after checkout.
-              </p>
               {moduleUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
-                  Module unlocked — open any lesson below.
+                  Module unlocked — review the individual lesson details below.
                 </p>
               ) : null}
             </div>
           </section>
+
+          {!moduleUnlocked ? (
+            <PurchaseValueCallout className="mb-4 sm:mb-5">
+              One-time purchase — unlock this module sub-pack for {localizeLabel(moduleOffer.displayPrice)} ·
+              individual lessons included · lifetime access
+            </PurchaseValueCallout>
+          ) : null}
 
           <div className="mb-3 flex items-center gap-4 sm:mb-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import {
   parseStructuredDescriptionSections,
@@ -10,12 +10,73 @@ import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type { StructuredDescriptionSections };
 
-const STRUCTURED_HEADINGS: { key: keyof StructuredDescriptionSections; label: string }[] = [
-  { key: "hook", label: "Programme Introduction" },
-  { key: "core_protocol", label: "Programme Description" },
-  { key: "projects_you_will_build", label: "Projects you will build" },
-  { key: "what_you_will_learn", label: "What you will learn" },
+const STRUCTURED_HEADINGS: {
+  key: keyof StructuredDescriptionSections;
+  label: string;
+  colorClass: string;
+  color: string;
+}[] = [
+  { key: "hook", label: "Programme Introduction", colorClass: "text-[#f5c814]", color: "#f5c814" },
+  { key: "core_protocol", label: "Programme Description", colorClass: "text-cyan-300", color: "#67e8f9" },
+  { key: "projects_you_will_build", label: "Projects you will build", colorClass: "text-violet-300", color: "#c4b5fd" },
+  { key: "what_you_will_learn", label: "What you will learn", colorClass: "text-emerald-300", color: "#6ee7b7" },
 ];
+
+type ExactTradingSectionKey = "chart_patterns" | "setups" | "strategy";
+
+const EXACT_TRADING_SECTIONS: {
+  key: ExactTradingSectionKey;
+  label: string;
+  colorClass: string;
+  color: string;
+}[] = [
+  { key: "chart_patterns", label: "Exact Chart Patterns", colorClass: "text-blue-400", color: "#60a5fa" },
+  { key: "setups", label: "Exact Setups", colorClass: "text-rose-400", color: "#fb7185" },
+  { key: "strategy", label: "Exact Strategy", colorClass: "text-orange-300", color: "#fdba74" },
+];
+
+function exactTradingSectionKey(line: string): ExactTradingSectionKey | null {
+  const normalized = line.trim().toLowerCase();
+  if (normalized === "exact chart pattern" || normalized === "exact chart patterns") {
+    return "chart_patterns";
+  }
+  if (normalized === "exact setup" || normalized === "exact setups") return "setups";
+  if (normalized === "exact strategy" || normalized === "exact strategies") return "strategy";
+  return null;
+}
+
+/** Pull trading detail groups out of What You Will Learn so they can be displayed as real sections. */
+function splitExactTradingSections(raw: string): {
+  whatYouWillLearn: string;
+  exact: Record<ExactTradingSectionKey, string>;
+} {
+  const remaining: string[] = [];
+  const buckets: Record<ExactTradingSectionKey, string[]> = {
+    chart_patterns: [],
+    setups: [],
+    strategy: [],
+  };
+  let active: ExactTradingSectionKey | null = null;
+
+  for (const line of raw.replace(/\r\n/g, "\n").split("\n")) {
+    const heading = exactTradingSectionKey(line);
+    if (heading) {
+      active = heading;
+      continue;
+    }
+    if (active) buckets[active].push(line);
+    else remaining.push(line);
+  }
+
+  return {
+    whatYouWillLearn: remaining.join("\n").trim(),
+    exact: {
+      chart_patterns: buckets.chart_patterns.join("\n").trim(),
+      setups: buckets.setups.join("\n").trim(),
+      strategy: buckets.strategy.join("\n").trim(),
+    },
+  };
+}
 
 export { parseStructuredDescriptionSections };
 
@@ -172,35 +233,62 @@ function StructuredSectionsView({
 }) {
   const hidden = new Set<keyof StructuredDescriptionSections>(omitSections);
   const headingClass = prominent
-    ? "border-b border-[#f5c814]/25 pb-2.5 text-left text-[1.2rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.35rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
+    ? "border-b border-current/30 pb-2.5 text-left text-[20pt] font-bold uppercase leading-snug tracking-[0.12em] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
     : compact
-      ? "border-b border-[#f5c814]/25 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] text-[#f5c814] sm:text-[12px]"
-      : "border-b border-[#f5c814]/25 pb-2 text-left text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.15rem] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
+      ? "border-b border-current/30 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] sm:text-[12px]"
+      : "border-b border-current/30 pb-2 text-left text-[20px] font-bold uppercase tracking-[0.12em] sm:text-[20pt] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
 
   return (
     <div
       className={compact ? "flex flex-col gap-5 sm:gap-6" : "flex flex-col gap-8 sm:gap-10"}
       role="document"
     >
-      {STRUCTURED_HEADINGS.map(({ key, label }) => {
-        if (hidden.has(key)) return null;
+      {STRUCTURED_HEADINGS.map(({ key, label, colorClass, color }) => {
+        const isLearn = key === "what_you_will_learn";
+        if (hidden.has(key) && !isLearn) return null;
         const text = sections[key].trim();
         if (!text) return null;
         const isProjects = key === "projects_you_will_build";
-        const isLearn = key === "what_you_will_learn";
+        const tradingSections = isLearn ? splitExactTradingSections(text) : null;
+        const sectionText = tradingSections?.whatYouWillLearn ?? text;
         return (
-          <section key={key} className="scroll-mt-4">
-            <h3 className={headingClass}>{label}</h3>
-            <div className="mt-3 sm:mt-4">
-              {isProjects ? (
-                <ProjectsYouWillBuildBody text={text} prominent={prominent} />
-              ) : isLearn ? (
-                <WhatYouWillLearnBody text={text} prominent={prominent} />
-              ) : (
-                <ParagraphBody text={text} compact={compact} prominent={prominent} />
-              )}
-            </div>
-          </section>
+          <Fragment key={key}>
+            {tradingSections
+              ? EXACT_TRADING_SECTIONS.map((exactSection) => {
+                  const exactText = tradingSections.exact[exactSection.key];
+                  if (!exactText) return null;
+                  return (
+                    <section key={exactSection.key} className="scroll-mt-4">
+                      <h3
+                        className={cn(headingClass, exactSection.colorClass)}
+                        style={{ color: exactSection.color }}
+                      >
+                        {exactSection.label}
+                      </h3>
+                      <div className="mt-3 sm:mt-4">
+                        <WhatYouWillLearnBody text={exactText} prominent={prominent} />
+                      </div>
+                    </section>
+                  );
+                })
+              : null}
+            {!hidden.has(key) && sectionText ? (
+              <section className="scroll-mt-4">
+                <h3 className={cn(headingClass, colorClass)} style={{ color }}>
+                  {label}
+                </h3>
+                <div className="mt-3 sm:mt-4">
+                  {isProjects ? (
+                    <ProjectsYouWillBuildBody text={sectionText} prominent={prominent} />
+                  ) : isLearn ? (
+                    <WhatYouWillLearnBody text={sectionText} prominent={prominent} />
+                  ) : (
+                    <ParagraphBody text={sectionText} compact={compact} prominent={prominent} />
+                  )}
+                </div>
+              </section>
+            ) : null}
+          </Fragment>
         );
       })}
     </div>

@@ -6,6 +6,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { LazyVaultModuleCell } from "@/components/programs/LazyVaultModuleCell";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
+import { PurchaseValueCallout } from "@/components/programs/PurchaseValueCallout";
 import {
   VAULT_MODAL_BODY_CLASS,
   VAULT_MODAL_OVERLAY_CLASS,
@@ -65,7 +66,7 @@ export function PackVaultOfferModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-  const { localizeLabel, symbol } = useCurrency();
+  const { formatPrice, localizeLabel } = useCurrency();
 
   useModalScrollLock(!!packOffer);
 
@@ -139,6 +140,7 @@ export function PackVaultOfferModal({
         cardStats={isLesson ? undefined : resolveOfferCardStats(offer, "module")}
         busy={busyPlan === offer.plan}
         inCart={isInCart?.(offer.plan)}
+        detailsOnly={isTradingPack && packUnlocked}
         actionLabel={resolveActionLabel(offer)}
         onDetails={() => handleModuleDetails(offer)}
         onOpen={() => handleModuleOpen(offer)}
@@ -192,6 +194,7 @@ export function PackVaultOfferModal({
             cardStats={resolveOfferCardStats(parent, "module")}
             busy={busyPlan === parent.plan}
             inCart={isInCart?.(parent.plan)}
+            detailsOnly={isTradingPack && packUnlocked}
             actionLabel={resolveActionLabel(parent)}
             onDetails={() => handleModuleDetails(parent)}
             onOpen={() => handleModuleOpen(parent)}
@@ -302,30 +305,26 @@ export function PackVaultOfferModal({
             </div>
 
             <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
-              {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
-                <p
-                  className={cn(
-                    "text-left font-mono text-[clamp(12px,2.1vw,16px)] font-black uppercase leading-snug tracking-[0.05em]",
-                    copy.labelClass,
-                    "drop-shadow-[0_0_18px_currentColor]",
-                  )}
-                >
-                  One-time purchase — full pack {localizeLabel(packOffer.displayPrice)} (individual total {symbol}
-                  {alaCarteTotal} if bought
-                  separately).
-                </p>
-              ) : (
-                <p className="text-left font-mono text-[clamp(11px,2vw,15px)] font-black uppercase leading-snug tracking-[0.05em] text-white/88">
-                  One-time purchase — lifetime access recorded to your dashboard after checkout.
-                </p>
-              )}
               {packUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
-                  Pack unlocked — choose a module below and tap Open to watch.
+                  Pack unlocked — choose a module below and tap Details.
                 </p>
               ) : null}
             </div>
           </section>
+
+          <PurchaseValueCallout className="mb-4 sm:mb-5">
+            {alaCarteTotal > Number(packOffer.checkoutAmount) ? (
+              <>
+                One-time purchase — full pack {localizeLabel(packOffer.displayPrice)} (individual total{" "}
+                {formatPrice(alaCarteTotal)} if bought separately).
+              </>
+            ) : (
+              <>
+                One-time purchase — lifetime access recorded to your dashboard after checkout.
+              </>
+            )}
+          </PurchaseValueCallout>
 
           <div className="mb-3 flex items-center gap-4 sm:mb-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />

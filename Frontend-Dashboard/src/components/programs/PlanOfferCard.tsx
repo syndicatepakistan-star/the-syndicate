@@ -1,9 +1,10 @@
 "use client";
 
-import { type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 import { KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
+import { OfferDescriptionModal } from "@/components/programs/OfferDescriptionModal";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
@@ -27,6 +28,8 @@ type Props = {
   vaultHero?: boolean;
   /** Shows syndicate unlock-bucket badge on module/pack cards. */
   inCart?: boolean;
+  /** Browsing-only card: hide price and primary unlock/open action. */
+  detailsOnly?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -170,10 +173,12 @@ export function PlanOfferCard({
   comingSoon = false,
   vaultHero = false,
   inCart = false,
+  detailsOnly = false,
   onDetails,
   onOpen,
 }: Props) {
   const { localizeLabel } = useCurrency();
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const isLarge = size === "large";
   const isModule = size === "module";
   const isCompact = size === "compact";
@@ -186,12 +191,8 @@ export function PlanOfferCard({
   const isLongPackPrice = localizedPrice.length > 5;
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const isTradingLessonBrowseOnly = isTradingSubmoduleSlug(offer.plan);
-  const tradingLessonUnlocked =
-    isTradingLessonBrowseOnly &&
-    typeof actionLabel === "string" &&
-    /^open\b/i.test(actionLabel.trim());
-  const hideTradingLessonPrice = isTradingLessonBrowseOnly;
-  const hideTradingLessonUnlock = isTradingLessonBrowseOnly && !tradingLessonUnlocked;
+  const hidePrice = detailsOnly || isTradingLessonBrowseOnly;
+  const hidePrimaryAction = detailsOnly || isTradingLessonBrowseOnly;
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
@@ -365,7 +366,7 @@ export function PlanOfferCard({
               ) : null}
             </div>
 
-            {!hideTradingLessonPrice ? (
+            {!hidePrice ? (
             <div
               className={cn(
                 "absolute z-[4]",
@@ -452,13 +453,14 @@ export function PlanOfferCard({
                     isCompact && !isPack && "text-[9px] sm:text-[10px]"
                   )}
                   buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
+                  onReadMore={() => setDescriptionOpen(true)}
                 />
               ) : null}
               <span className="sr-only">_</span>
 
               <div
                 className={cn(
-                  hideTradingLessonUnlock ? "grid grid-cols-1" : "grid grid-cols-2",
+                  hidePrimaryAction ? "grid grid-cols-1" : "grid grid-cols-2",
                   isLarge && isPack && "mt-1.5 gap-1.5 sm:gap-2",
                   isLarge && !isPack && "mt-2 gap-2 sm:gap-2.5",
                   isModule && "mt-2 gap-1",
@@ -484,7 +486,7 @@ export function PlanOfferCard({
                 >
                   {offer.detailsLabel ?? "Details"}
                 </button>
-                {!hideTradingLessonUnlock ? (
+                {!hidePrimaryAction ? (
                 <button
                   type="button"
                   disabled={busy || comingSoon}
@@ -512,6 +514,10 @@ export function PlanOfferCard({
           </div>
         </span>
       </div>
+      <OfferDescriptionModal
+        offer={descriptionOpen ? offer : null}
+        onClose={() => setDescriptionOpen(false)}
+      />
     </article>
   );
 }

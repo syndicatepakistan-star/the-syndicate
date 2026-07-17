@@ -12,6 +12,8 @@ type Props = {
   buttonClassName?: string;
   /** Approx. character count before showing the toggle. */
   collapseThreshold?: number;
+  /** When set, "Read more" opens a popup instead of expanding inline (button always shown). */
+  onReadMore?: () => void;
 };
 
 const LINE_CLAMP: Record<5 | 6, string> = {
@@ -26,26 +28,33 @@ export function ReadMoreText({
   textClassName,
   buttonClassName,
   collapseThreshold = 260,
+  onReadMore,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const needsToggle = text.length > collapseThreshold;
+  const popupMode = typeof onReadMore === "function";
+  const showButton = popupMode || needsToggle;
 
   return (
     <div className={className}>
       <p
         className={cn(
           "leading-relaxed",
-          !expanded && needsToggle && LINE_CLAMP[maxLines],
+          (popupMode || (!expanded && needsToggle)) && LINE_CLAMP[maxLines],
           textClassName
         )}
       >
         {text}
       </p>
-      {needsToggle ? (
+      {showButton ? (
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (popupMode) {
+              onReadMore();
+              return;
+            }
             setExpanded((value) => !value);
           }}
           className={cn(
@@ -53,7 +62,7 @@ export function ReadMoreText({
             buttonClassName
           )}
         >
-          {expanded ? "Read less" : "Read more"}
+          {popupMode ? "Read more" : expanded ? "Read less" : "Read more"}
         </button>
       ) : null}
     </div>

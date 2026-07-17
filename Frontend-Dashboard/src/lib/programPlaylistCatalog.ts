@@ -26,6 +26,7 @@ import {
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
 } from "@/lib/level1ProgramCatalog";
 import { cleanProgramDescription } from "@/lib/descriptionText";
+import { BUSINESS_MODEL_UNIT_USD, BUSINESS_PSYCHOLOGY_UNIT_USD } from "@/lib/packPricing";
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
@@ -249,20 +250,17 @@ function stubPlaylistForLevel1Slug(slug: string): StreamPlaylistListItem | null 
   if (!Number.isFinite(legacyId)) return null;
   const entry = BY_ID.get(legacyId);
   if (!entry) return null;
+  const category = level1SlugCategory(slug);
   return {
     id: entry.id,
     title: getProgramDisplayTitle(entry.id, entry.title, slug),
     slug,
-    category: level1SlugCategory(slug),
+    category,
     description: entry.description,
     price:
-      entry.id === 99
-        ? "49.00"
-        : entry.id === 31
-          ? "39.00"
-          : entry.id === 30
-            ? "40.00"
-            : "40.00",
+      category === "business_model"
+        ? `${BUSINESS_MODEL_UNIT_USD}.00`
+        : `${BUSINESS_PSYCHOLOGY_UNIT_USD}.00`,
     rating: "4.0",
     cover_image_url: null,
     video_count: 0,

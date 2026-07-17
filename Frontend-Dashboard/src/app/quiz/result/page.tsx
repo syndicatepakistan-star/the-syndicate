@@ -417,7 +417,7 @@ function renderStyledReport(report: string, loginEmail: string) {
           <article
             key={section.title}
             id={meta.id}
-            className={`section-card scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
+            className={`section-card${meta.letter ? ` section-card--${meta.letter.toLowerCase()}` : ""} scroll-mt-4${isVirusSection ? " section-card-virus" : ""}`}
           >
             <h3 className="result-subheading">{formatQuizSectionTitle(section.title)}</h3>
             {isArchetypeCourseMapSection(section.title)

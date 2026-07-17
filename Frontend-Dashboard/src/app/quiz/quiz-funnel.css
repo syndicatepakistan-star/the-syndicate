@@ -114,12 +114,18 @@
 }
 
 /* Result report — plain scrollable page (no matrix overlay, no clipped card) */
-html.result-view,
+html.result-view {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto !important;
+  overflow-x: clip !important;
+}
+
 body.result-view {
   height: auto;
   min-height: 100%;
-  overflow-y: auto;
-  overflow-x: clip;
+  overflow-y: visible !important;
+  overflow-x: clip !important;
 }
 
 body.result-view .global-letter-glitch {
@@ -2202,6 +2208,67 @@ body.result-view .section-cards-grid {
   box-shadow: 0 0 0 1px rgba(148, 106, 255, 0.18), 0 0 12px rgba(148, 106, 255, 0.12);
 }
 
+/* Result Sections A and B deliberately use separate multicolor identities. */
+.section-card--a {
+  --card-glow-rgb: 56, 220, 255;
+  --card-glow-soft: rgba(56, 220, 255, 0.25);
+  --card-glow-hard: rgba(139, 92, 246, 0.18);
+  --card-streak-a: rgba(34, 211, 238, 0.22);
+  --card-streak-b: rgba(139, 92, 246, 0.2);
+  --inner-border: rgba(56, 189, 248, 0.42);
+  --inner-stroke: rgba(167, 139, 250, 0.24);
+  --inner-glow: rgba(34, 211, 238, 0.18);
+  --inner-key: #67e8f9;
+  border-color: rgba(56, 220, 255, 0.68);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(34, 211, 238, 0.16), transparent 35%),
+    radial-gradient(circle at 94% 100%, rgba(139, 92, 246, 0.17), transparent 40%),
+    linear-gradient(145deg, rgba(7, 22, 34, 0.99), rgba(17, 10, 38, 0.99));
+  box-shadow:
+    0 0 0 1px rgba(56, 220, 255, 0.2),
+    0 0 22px rgba(34, 211, 238, 0.18),
+    0 0 38px rgba(139, 92, 246, 0.12);
+}
+
+.section-card--a > .result-subheading {
+  color: #fff;
+  background: linear-gradient(90deg, #67e8f9 0%, #f8fafc 48%, #c4b5fd 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.24);
+}
+
+.section-card--b {
+  --card-glow-rgb: 244, 63, 94;
+  --card-glow-soft: rgba(244, 63, 94, 0.24);
+  --card-glow-hard: rgba(245, 158, 11, 0.18);
+  --card-streak-a: rgba(236, 72, 153, 0.22);
+  --card-streak-b: rgba(250, 204, 21, 0.2);
+  --inner-border: rgba(244, 63, 94, 0.42);
+  --inner-stroke: rgba(250, 204, 21, 0.23);
+  --inner-glow: rgba(236, 72, 153, 0.18);
+  --inner-key: #fda4af;
+  border-color: rgba(244, 63, 94, 0.68);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(236, 72, 153, 0.16), transparent 35%),
+    radial-gradient(circle at 94% 100%, rgba(245, 158, 11, 0.16), transparent 40%),
+    linear-gradient(145deg, rgba(35, 8, 24, 0.99), rgba(34, 20, 5, 0.99));
+  box-shadow:
+    0 0 0 1px rgba(244, 63, 94, 0.2),
+    0 0 22px rgba(236, 72, 153, 0.17),
+    0 0 38px rgba(245, 158, 11, 0.11);
+}
+
+.section-card--b > .result-subheading {
+  color: #fff;
+  background: linear-gradient(90deg, #fb7185 0%, #f9a8d4 46%, #fde047 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(236, 72, 153, 0.24);
+}
+
 .result-page-shell {
   background:
     radial-gradient(circle at 16% 8%, rgba(190, 153, 46, 0.14), transparent 35%),
@@ -2882,6 +2949,59 @@ body.result-view .section-cards-grid {
   .landing-top-start-btn.btn-primary,
   .featured-logos-marquee-track {
     animation: none !important;
+  }
+}
+
+/* Result header hierarchy — intentionally larger than the quiz-step header. */
+body.result-view .brand-logo-wrap {
+  width: 224px;
+  min-width: 224px;
+  height: 89px;
+  min-height: 89px;
+}
+
+body.result-view .brand-logo {
+  width: 224px !important;
+  height: 89px !important;
+}
+
+body.result-view .brand-title {
+  font-size: clamp(32px, 4.5vw, 46px);
+  line-height: 1.08;
+}
+
+body.result-view .brand-subtitle {
+  font-size: clamp(16px, 2vw, 20px);
+}
+
+body.result-view .result-subheading {
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+  body.result-view .brand-logo-wrap {
+    width: 180px;
+    min-width: 180px;
+    height: 72px;
+    min-height: 72px;
+  }
+
+  body.result-view .brand-logo {
+    width: 180px !important;
+    height: 72px !important;
+  }
+
+  body.result-view .brand-title {
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  body.result-view .brand-subtitle {
+    font-size: 15px;
+  }
+
+  body.result-view .result-subheading {
+    font-size: clamp(23px, 6.5vw, 29px);
   }
 }
 

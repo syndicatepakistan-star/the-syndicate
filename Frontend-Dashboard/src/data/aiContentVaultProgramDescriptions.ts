@@ -20,7 +20,7 @@ First Automated Channel Setup: A completely branded channel ready to post videos
 Bulk Short Video Machine: A system that creates hundreds of short, vertical videos in just a few minutes.
 Inspirational Money Video: A highly engaging video about money and success made entirely with free tools.
 One-Tool Auto Channel: A complete video channel run entirely from one single smart website.
-Digital Instagram Model: A fake, computer-generated person who looks real and attracts thousands of followers.
+Digital Instagram Model: An AI, computer-generated person who looks real and attracts thousands of followers.
 Short AI Movie: A creative, cinematic short film made with smart video tools.
 Space Documentary: A high-quality, long video exploring the universe, complete with voices and music.
 Moving Graphics Video: A professional-looking video where shapes and text move smoothly on the screen.
@@ -51,7 +51,7 @@ How to turn your written text into a realistic, human-sounding voiceover in seco
 Steps to make the computer draw pictures, 3D graphics, and moving maps for your videos.
 How to make hundreds of short, vertical videos at the exact same time to save hours of work.
 How to look at popular videos and figure out their secret formula so you can copy their success safely.
-How to create a completely fake, computer-generated influencer that looks like a real person.
+How to create a completely AI, computer-generated influencer that looks like a real person.
 The rules of the internet video platforms, so you know exactly what to do to avoid getting your channel deleted.
 How to add music, sound effects, and moving text to your videos so they look professional.
 How to pick the best topics that people actually want to watch and that advertisers want to pay for.`;
@@ -198,7 +198,7 @@ Techniques to make those flat images move so they look cinematic.
 How to edit the video to make sure the audio and pictures match perfectly.`,
 
   "Build a Viral AI Influencer (AI Instagram Models)": `Programme Introduction
-Are you curious about how some internet stars seem to come out of nowhere and gain thousands of followers? You might feel confused about how they do it. This course will show you how to create your very own digital influencer—a fake person that looks entirely real. By the end, you'll know how to build a digital model that can attract followers and make money online.
+Are you curious about how some internet stars seem to come out of nowhere and gain thousands of followers? You might feel confused about how they do it. This course will show you how to create your very own digital influencer—an AI person that looks entirely real. By the end, you'll know how to build a digital model that can attract followers and make money online.
 
 Programme Description
 This course is all about creating a successful, computer-generated internet personality. You will learn step-by-step how to build a unique online character that looks like a real photograph. You will also discover how to create pictures of them in different places and turn this character into a money-making brand.

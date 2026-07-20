@@ -35,8 +35,6 @@ export type UnlockedProgramItem = {
   already_owned?: boolean;
 };
 
-const ITEM_CARD_ACCENTS = ["amber", "cyan", "pink", "green", "purple"] as const;
-
 const LEVEL1_PACK_THUMBS = LEVEL1_CATEGORY_PACK_THUMBS;
 
 function resolveCoverImage(item: UnlockedProgramItem): string {
@@ -284,20 +282,16 @@ export function CheckoutClaimForm({
 
   return (
     <div className="checkout-claim-shell relative mx-auto w-full max-w-[min(100%,62.4rem)]">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[1.75rem]">
-        <div className="absolute left-[-18%] top-[-10%] h-[240px] w-[240px] rounded-full bg-cyan-400/18 blur-3xl" />
-        <div className="absolute right-[-14%] top-[12%] h-[260px] w-[260px] rounded-full bg-violet-500/16 blur-3xl" />
-        <div className="absolute bottom-[-8%] left-[30%] h-[220px] w-[220px] rounded-full bg-amber-400/12 blur-3xl" />
-      </div>
-
       <CyberChamferFrame
         accent="hero"
-        chamfer={22}
-        className="w-full"
-        innerClassName="cyber-frame-mobile-pad px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12"
+        chamfer={18}
+        decorSize="compact"
+        className="checkout-claim-frame w-full"
+        contentClassName="!p-0"
+        innerClassName="checkout-claim-frame__inner"
       >
-        <div className="relative z-[1] mx-auto flex w-full max-w-4xl flex-col px-1 sm:px-2">
-          <header className="px-2 text-center sm:px-4">
+        <div className="checkout-claim-layout">
+          <header className="checkout-claim-header">
             <p
               className={cn(
                 publicHeadingLightning("cyan"),
@@ -317,7 +311,7 @@ export function CheckoutClaimForm({
             <p
               className={cn(
                 publicHeadingLightning("cyan"),
-                "mt-5 font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-cyan-200/90 sm:text-[12px]",
+                "mt-4 font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-cyan-200/90 sm:text-[12px]",
               )}
             >
               Checkout confirmed
@@ -325,19 +319,19 @@ export function CheckoutClaimForm({
             <h2
               className={cn(
                 publicHeadingLightning("amber"),
-                "mt-4 text-[clamp(1.15rem,2.8vw,1.65rem)] font-black uppercase leading-[1.15] tracking-[0.06em]",
+                "mt-4 text-[clamp(1.1rem,2.6vw,1.55rem)] font-black uppercase leading-[1.2] tracking-[0.06em]",
               )}
             >
               {headline}
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl px-2 text-[15px] leading-relaxed text-zinc-100/85 sm:text-[16px]">
+            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-100/85 sm:text-[16px]">
               {step === "email"
                 ? "We will send a one-time code to this inbox so your unlock attaches to the right account."
                 : `Code sent to ${email}. Paste it below to open your vault.`}
             </p>
           </header>
 
-          <div className="mt-8 flex w-full flex-col items-center gap-5 px-2 sm:mt-10 sm:gap-6 sm:px-4">
+          <div className="checkout-claim-form-block">
             <label className="flex w-full max-w-[28rem] flex-col items-center gap-3">
               <span className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-cyan-200/95 sm:text-[13px]">
                 {fieldLabel}
@@ -417,13 +411,10 @@ export function CheckoutClaimForm({
             </button>
           </div>
 
-          <div
-            className="my-8 h-px w-full bg-gradient-to-r from-transparent via-cyan-400/45 to-transparent sm:my-10"
-            aria-hidden
-          />
+          <div className="checkout-claim-divider" aria-hidden />
 
-          <section className="w-full px-1 sm:px-3">
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3 px-2 sm:mb-6 sm:px-3">
+          <section className="checkout-claim-programs">
+            <div className="checkout-claim-programs__head">
               <div className="min-w-0 text-left">
                 <p
                   className={cn(
@@ -449,58 +440,48 @@ export function CheckoutClaimForm({
               ) : null}
             </div>
 
-            <ul className="flex max-h-[min(54.6vh,36.4rem)] flex-col gap-5 overflow-y-auto px-1 pr-1 sm:gap-6 sm:px-2">
+            <ul className="checkout-claim-programs__list">
               {displayItems.map((item, index) => {
                 const price = formatItemAmount(item.amount);
-                const accent = ITEM_CARD_ACCENTS[index % ITEM_CARD_ACCENTS.length];
                 const cover = resolveCoverImage(item);
                 const alreadyOwned = Boolean(item.already_owned);
                 return (
-                  <li key={`${item.title}-${index}`} className="px-0.5">
+                  <li key={`${item.title}-${index}`}>
                     <article
                       className={cn(
-                        "plan-offer-card w-full",
-                        `plan-offer-card--${accent}`,
-                        alreadyOwned && "opacity-80",
+                        "checkout-claim-item",
+                        alreadyOwned && "checkout-claim-item--owned",
                       )}
                     >
-                      <div className="plan-offer-card__shell overflow-hidden rounded-2xl sm:rounded-3xl">
-                        <div className="grid gap-0 sm:grid-cols-[minmax(9rem,11.5rem)_minmax(0,1fr)]">
-                          <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/80 sm:aspect-auto sm:min-h-[9.75rem] sm:self-stretch">
-                            {cover ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={cover}
-                                alt=""
-                                className="absolute inset-0 h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full min-h-[9.75rem] w-full items-center justify-center bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent px-4 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
-                                Syndicate
-                              </div>
-                            )}
+                      <div className="checkout-claim-item__media">
+                        {cover ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cover} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full min-h-[7.5rem] w-full items-center justify-center bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent px-4 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
+                            Syndicate
                           </div>
-                          <div className="flex min-w-0 flex-col justify-center gap-3 px-5 py-5 text-left sm:gap-3.5 sm:px-7 sm:py-6">
-                            <p className="text-[16px] font-semibold leading-snug text-white sm:text-[18px]">
-                              {item.title}
-                            </p>
-                            <span
-                              className={cn(
-                                "inline-flex w-fit rounded-md border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] sm:text-[11px]",
-                                alreadyOwned
-                                  ? "border-emerald-400/40 bg-emerald-950/40 text-emerald-200/90"
-                                  : "border-cyan-400/45 bg-cyan-950/35 text-cyan-100",
-                              )}
-                            >
-                              {alreadyOwned ? "Already owned" : "Lifetime unlock"}
-                            </span>
-                            {price && !alreadyOwned ? (
-                              <p className="font-mono text-[17px] font-bold text-amber-200 sm:text-[18px]">
-                                {price}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
+                        )}
+                      </div>
+                      <div className="checkout-claim-item__body">
+                        <p className="text-[16px] font-semibold leading-snug text-white sm:text-[18px]">
+                          {item.title}
+                        </p>
+                        <span
+                          className={cn(
+                            "inline-flex w-fit rounded-md border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] sm:text-[11px]",
+                            alreadyOwned
+                              ? "border-emerald-400/40 bg-emerald-950/40 text-emerald-200/90"
+                              : "border-cyan-400/45 bg-cyan-950/35 text-cyan-100",
+                          )}
+                        >
+                          {alreadyOwned ? "Already owned" : "Lifetime unlock"}
+                        </span>
+                        {price && !alreadyOwned ? (
+                          <p className="font-mono text-[17px] font-bold text-amber-200 sm:text-[18px]">
+                            {price}
+                          </p>
+                        ) : null}
                       </div>
                     </article>
                   </li>

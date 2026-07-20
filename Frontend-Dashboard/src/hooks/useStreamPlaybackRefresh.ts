@@ -18,6 +18,8 @@ const REFRESH_RETRY_MS = 30_000;
 /** Keep the current playback URL when a background fetch returns a new token but the old one still works. */
 function mergePlaybackRefresh(prev: StreamPayload | null, next: StreamPayload): StreamPayload {
   if (!prev?.playback_url) return next;
+  // Never reuse another episode's signed URL when switching videos.
+  if (prev.id !== next.id) return next;
   if (prev.playback_url === next.playback_url) return next;
   if (!isStreamPlaybackUrlStale(prev)) {
     return {

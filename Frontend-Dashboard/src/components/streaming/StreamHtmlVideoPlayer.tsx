@@ -358,6 +358,7 @@ export default function StreamHtmlVideoPlayer({
     const video = videoRef.current;
     if (!video || !isHls) return;
 
+    // Safari / iOS: use native HLS via <video src> (handled in the src effect below).
     if (!Hls.isSupported()) {
       if (!video.canPlayType("application/vnd.apple.mpegurl")) {
         setPlaybackError("HLS is not supported in this browser.");
@@ -430,7 +431,7 @@ export default function StreamHtmlVideoPlayer({
   }, [sessionKey, isHls]);
 
   useEffect(() => {
-    if (!isHls || !src) return;
+    if (!isHls || !src || !Hls.isSupported()) return;
 
     let cancelled = false;
     const ensureLoaded = () => {
@@ -457,11 +458,18 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src || isHls) return;
-    if (appliedSrcRef.current === src && appliedRevisionRef.current === srcRevision) return;
+    if (!video || !src) return;
+
+    const useNativeHls =
+      isHls && !Hls.isSupported() && Boolean(video.canPlayType("application/vnd.apple.mpegurl"));
+    // hls.js path loads via loadHlsSource — skip here.
+    if (isHls && !useNativeHls) return;
+
+    const normalized = useNativeHls ? resolveStreamPlaybackUrl(src) ?? src : src;
+    if (appliedSrcRef.current === normalized && appliedRevisionRef.current === srcRevision) return;
 
     const isHotSwap = appliedSrcRef.current !== null;
-    appliedSrcRef.current = src;
+    appliedSrcRef.current = normalized;
     appliedRevisionRef.current = srcRevision;
 
     if (isHotSwap) {
@@ -469,18 +477,20 @@ export default function StreamHtmlVideoPlayer({
       suppressNextSeekEventRef.current = true;
       const savedTime = resolveResumeSeconds(video, startAtSecondsRef.current);
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
-      if (savedTime > 0 && duration > 0) {
-        prefetchPlaybackNearTime(src, savedTime, duration);
+      if (!useNativeHls && savedTime > 0 && duration > 0) {
+        prefetchPlaybackNearTime(normalized, savedTime, duration);
       }
-      hotSwapVideoSrc(video, src);
+      hotSwapVideoSrc(video, normalized);
       return;
     }
 
     lateResumeAppliedKeyRef.current = "";
     setPlaybackError(null);
-    clearPlaybackByteLengthCache(src);
-    warmPlaybackHeader(src);
-    video.src = src;
+    if (!useNativeHls) {
+      clearPlaybackByteLengthCache(normalized);
+      warmPlaybackHeader(normalized);
+    }
+    video.src = normalized;
     video.load();
   }, [src, srcRevision, sessionKey, isHls]);
 
@@ -512,7 +522,9 @@ export default function StreamHtmlVideoPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src || isHls) return;
+    if (!video || !src) return;
+    // Skip late resume only when hls.js owns the element (it applies start position itself).
+    if (isHls && Hls.isSupported()) return;
     const start = Number(startAtSeconds || 0);
     if (!(start > 0)) return;
     const dur = Number(video.duration || 0);

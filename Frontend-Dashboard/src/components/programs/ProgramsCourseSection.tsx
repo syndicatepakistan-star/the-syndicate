@@ -1550,7 +1550,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                   />
                 ) : null}
                 {inPlaylistDetail && detailPlaylistId !== null ? (
-                  <StreamPlaylistProgramPanel playlistId={detailPlaylistId} />
+                  <StreamPlaylistProgramPanel key={detailPlaylistId} playlistId={detailPlaylistId} />
                 ) : null}
               </div>
             </div>

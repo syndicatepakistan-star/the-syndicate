@@ -561,6 +561,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const {
     playback: activePlaybackFromHook,
     srcRevision: activeSrcRevision,
+    loading: playbackLoading,
     refreshPlaybackNow,
     ensureFreshPlayback,
   } = useStreamPlaybackRefresh(activeVideo?.id, { enabled: Boolean(activeVideo?.id) });
@@ -901,6 +902,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const playbackUrl = activePlayback?.playback_url ?? null;
   /** Mount player as soon as a signed URL exists; resume position hydrates separately. */
   const ready = activePlayback?.status === "ready" && !!playbackUrl;
+  const playbackFailed = Boolean(activeVideo?.id) && !playbackLoading && !ready && activePlayback?.status !== "processing";
   const playlistPrice = parsePlaylistNumber(playlist.price);
   const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
 
@@ -915,15 +917,28 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               <span className="rounded-full border border-violet-400/35 bg-violet-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-violet-100/90">
                 {activePlayback?.status === "processing"
                   ? "Processing"
-                  : activePlayback?.status === "ready"
-                    ? "Loading video…"
-                    : activePlayback?.status ?? "Loading video…"}
+                  : playbackFailed
+                    ? "Playback unavailable"
+                    : activePlayback?.status === "ready"
+                      ? "Loading video…"
+                      : activePlayback?.status ?? "Loading video…"}
               </span>
               <p>
                 {activePlayback?.status === "processing"
                   ? "This episode is still being prepared."
-                  : "Fetching a secure playback link for this episode."}
+                  : playbackFailed
+                    ? "Could not load a secure playback link for this episode. Check access or try again."
+                    : "Fetching a secure playback link for this episode."}
               </p>
+              {playbackFailed ? (
+                <button
+                  type="button"
+                  className="mt-1 rounded-md border border-amber-300/40 bg-amber-500/15 px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-amber-100"
+                  onClick={() => void refreshPlaybackNow({ force: true })}
+                >
+                  Retry
+                </button>
+              ) : null}
             </div>
           ) : (
             <StreamHtmlVideoPlayer

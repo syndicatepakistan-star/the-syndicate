@@ -497,8 +497,16 @@ export default function CheckoutSuccessScreen({
         </div>
       )}
 
-      <div ref={scrollRef} className="checkout-success-scroll">
-        <div className="checkout-success-scroll__inner">
+      <div
+        ref={scrollRef}
+        className={cn("checkout-success-scroll", needsClaim && "checkout-success-scroll--claim")}
+      >
+        <div
+          className={cn(
+            "checkout-success-scroll__inner",
+            needsClaim && "checkout-success-scroll__inner--claim",
+          )}
+        >
           {!needsClaim ? (
             <div className="login-header !mb-6 !mt-4 !min-h-[5.5rem] !items-center">
               <span className="status-dot" />
@@ -510,16 +518,7 @@ export default function CheckoutSuccessScreen({
               </h1>
               <span className="status-dot" />
             </div>
-          ) : (
-            <div className="mb-6 mt-2 text-center sm:mb-8">
-              <p className="font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-cyan-200/90 sm:text-[15px]">
-                The Syndicate
-              </p>
-              <h1 className="public-heading-lightning public-heading-lightning--gold mt-3 text-[clamp(2rem,5vw,3.25rem)] font-black uppercase tracking-[0.1em]">
-                Access unlock
-              </h1>
-            </div>
-          )}
+          ) : null}
 
           {loading ? <p className="form-message">VERIFYING PAYMENT...</p> : null}
           {!loading && message && !needsClaim ? <p className="form-message">{message}</p> : null}

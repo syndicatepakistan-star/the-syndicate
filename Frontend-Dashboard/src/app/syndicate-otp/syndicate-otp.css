@@ -606,6 +606,28 @@
   padding-bottom: 3rem;
 }
 
+/* Claim mode: full viewport, content centered when it fits; scrolls when taller. */
+.checkout-success-scroll--claim {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(1rem, min(3vh, 1.5rem)) max(0.85rem, min(4vw, 1.5rem)) max(1.25rem, min(4vh, 2rem));
+}
+
+.checkout-success-scroll__inner--claim {
+  width: 100%;
+  max-width: min(100%, 52rem);
+  margin: auto;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.checkout-claim-shell {
+  width: 100%;
+}
+
 .checkout-bridge-overlay {
   position: fixed;
   inset: 0;

@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   CyberChamferFrame,
   CyberInsetPanel,
-  type CyberFrameAccent,
 } from "@/components/cyber/CyberChamferFrames";
 import { persistSimpleAuthSession, resolveClientApiUrl } from "@/lib/portal-api";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
@@ -17,6 +16,13 @@ import {
 } from "@/lib/unlockCart";
 import { dashboardProgramsHref } from "@/lib/dashboardRoutes";
 import type { CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
+import {
+  LEVEL1_BUSINESS_MODELS_PACK_PLAN,
+  LEVEL1_BUSINESS_PSYCHOLOGY_PACK_PLAN,
+} from "@/lib/packPricing";
+import { LEVEL1_SLUG_THUMBNAILS } from "@/lib/level1ProgramCatalog";
+import { getProgramPlaylistThumbnail } from "@/lib/programPlaylistThumbnails";
+import { OFFER_PLAN_THUMB_MONEY_MASTERY } from "@/components/programs/offerPlanThumbnails";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
@@ -29,16 +35,44 @@ export type UnlockedProgramItem = {
   already_owned?: boolean;
 };
 
-const ITEM_NEONS: readonly CyberFrameAccent[] = ["cyan", "pink", "lime", "violet", "amber"];
+const ITEM_CARD_ACCENTS = ["amber", "cyan", "pink", "green", "purple"] as const;
+
+const LEVEL1_PACK_THUMBS: Record<string, string> = {
+  [LEVEL1_BUSINESS_MODELS_PACK_PLAN]: LEVEL1_SLUG_THUMBNAILS["level1-model-01"],
+  [LEVEL1_BUSINESS_PSYCHOLOGY_PACK_PLAN]: LEVEL1_SLUG_THUMBNAILS["level1-psych-02"],
+};
 
 function resolveCoverImage(item: UnlockedProgramItem): string {
   const direct = typeof item.image === "string" ? item.image.trim() : "";
   if (direct) return direct;
-  const plan = typeof item.plan === "string" ? item.plan.trim() : "";
+
+  const playlistId =
+    typeof item.playlist_id === "number" && Number.isFinite(item.playlist_id)
+      ? item.playlist_id
+      : null;
+  if (playlistId != null) {
+    const fromPlaylist = getProgramPlaylistThumbnail(playlistId);
+    if (fromPlaylist?.trim()) return fromPlaylist.trim();
+  }
+
+  const plan = typeof item.plan === "string" ? item.plan.trim().toLowerCase() : "";
   if (plan) {
+    const packThumb = LEVEL1_PACK_THUMBS[plan];
+    if (packThumb?.trim()) return packThumb.trim();
     const offer = resolvePlanOfferBySlug(plan as CheckoutOfferKey);
     if (offer?.imageSrc?.trim()) return offer.imageSrc.trim();
   }
+
+  const title = (item.title || "").trim().toLowerCase();
+  if (title.includes("business model")) {
+    return LEVEL1_PACK_THUMBS[LEVEL1_BUSINESS_MODELS_PACK_PLAN] || OFFER_PLAN_THUMB_MONEY_MASTERY;
+  }
+  if (title.includes("psychology") || title.includes("behaviour") || title.includes("behavior")) {
+    return (
+      LEVEL1_PACK_THUMBS[LEVEL1_BUSINESS_PSYCHOLOGY_PACK_PLAN] || OFFER_PLAN_THUMB_MONEY_MASTERY
+    );
+  }
+
   const byTitle = resolvePlanOfferByTitle(item.title);
   if (byTitle?.imageSrc?.trim()) return byTitle.imageSrc.trim();
   return "";
@@ -249,45 +283,63 @@ export function CheckoutClaimForm({
   const fieldLabel = step === "email" ? "Email" : "Verification code";
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[min(100%,72rem)] flex-col gap-8 px-2 sm:gap-10 sm:px-3 lg:px-4">
+    <div className="checkout-claim-shell relative mx-auto w-full max-w-[min(100%,52rem)]">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[1.75rem]">
-        <div className="absolute left-[-18%] top-[-10%] h-[280px] w-[280px] rounded-full bg-cyan-400/18 blur-3xl" />
-        <div className="absolute right-[-14%] top-[12%] h-[300px] w-[300px] rounded-full bg-violet-500/16 blur-3xl" />
-        <div className="absolute bottom-[-8%] left-[30%] h-[260px] w-[260px] rounded-full bg-amber-400/12 blur-3xl" />
+        <div className="absolute left-[-18%] top-[-10%] h-[240px] w-[240px] rounded-full bg-cyan-400/18 blur-3xl" />
+        <div className="absolute right-[-14%] top-[12%] h-[260px] w-[260px] rounded-full bg-violet-500/16 blur-3xl" />
+        <div className="absolute bottom-[-8%] left-[30%] h-[220px] w-[220px] rounded-full bg-amber-400/12 blur-3xl" />
       </div>
 
       <CyberChamferFrame
         accent="hero"
         chamfer={22}
-        className="w-full min-h-[min(52vh,28rem)]"
-        innerClassName="cyber-frame-mobile-pad p-8 sm:p-10 lg:p-12 xl:p-14"
+        className="w-full"
+        innerClassName="cyber-frame-mobile-pad px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10"
       >
-        <div className="relative z-[1] mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-          <p
-            className={cn(
-              publicHeadingLightning("cyan"),
-              "font-mono text-[13px] font-bold uppercase tracking-[0.28em] sm:text-[15px]",
-            )}
-          >
-            Checkout confirmed
-          </p>
-          <h2
-            className={cn(
-              publicHeadingLightning("amber"),
-              "mt-4 text-[clamp(1.75rem,4vw,2.75rem)] font-black uppercase leading-[1.08] tracking-[0.06em]",
-            )}
-          >
-            {headline}
-          </h2>
-          <p className="mt-5 max-w-2xl text-[20px] leading-relaxed text-zinc-100/90">
-            {step === "email"
-              ? "We will send a one-time code to this inbox so your unlock attaches to the right account."
-              : `Code sent to ${email}. Paste it below to open your vault.`}
-          </p>
+        <div className="relative z-[1] mx-auto flex w-full max-w-3xl flex-col">
+          <header className="text-center">
+            <p
+              className={cn(
+                publicHeadingLightning("cyan"),
+                "font-mono text-[12px] font-bold uppercase tracking-[0.28em] sm:text-[13px]",
+              )}
+            >
+              The Syndicate
+            </p>
+            <h1
+              className={cn(
+                publicHeadingLightning("gold"),
+                "mt-2 text-[clamp(1.85rem,4.5vw,2.75rem)] font-black uppercase leading-[1.05] tracking-[0.1em]",
+              )}
+            >
+              Access unlock
+            </h1>
+            <p
+              className={cn(
+                publicHeadingLightning("cyan"),
+                "mt-4 font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-cyan-200/90 sm:text-[12px]",
+              )}
+            >
+              Checkout confirmed
+            </p>
+            <h2
+              className={cn(
+                publicHeadingLightning("amber"),
+                "mt-3 text-[clamp(1.15rem,2.8vw,1.65rem)] font-black uppercase leading-[1.15] tracking-[0.06em]",
+              )}
+            >
+              {headline}
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-zinc-100/85 sm:text-[16px]">
+              {step === "email"
+                ? "We will send a one-time code to this inbox so your unlock attaches to the right account."
+                : `Code sent to ${email}. Paste it below to open your vault.`}
+            </p>
+          </header>
 
-          <div className="mt-10 flex w-full flex-col items-center gap-6">
-            <label className="flex w-full max-w-[28rem] flex-col items-center gap-3">
-              <span className="font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-cyan-200/95 sm:text-[14px]">
+          <div className="mt-7 flex w-full flex-col items-center gap-4 sm:mt-8 sm:gap-5">
+            <label className="flex w-full max-w-[26rem] flex-col items-center gap-2.5">
+              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-cyan-200/95 sm:text-[13px]">
                 {fieldLabel}
               </span>
               {step === "email" ? (
@@ -297,10 +349,10 @@ export function CheckoutClaimForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={cn(
-                    "box-border h-14 w-full rounded-lg border-2 border-cyan-400/55 bg-[linear-gradient(180deg,rgba(6,12,20,0.96),rgba(2,6,12,0.99))] px-4 text-center text-[20px] text-white outline-none transition placeholder:text-white/35",
+                    "box-border h-12 w-full rounded-lg border-2 border-cyan-400/55 bg-[linear-gradient(180deg,rgba(6,12,20,0.96),rgba(2,6,12,0.99))] px-4 text-center text-[17px] text-white outline-none transition placeholder:text-white/35",
                     "hover:border-cyan-300 hover:shadow-[0_0_24px_rgba(34,211,238,0.35)]",
                     "focus-visible:border-cyan-200 focus-visible:shadow-[0_0_28px_rgba(34,211,238,0.45)]",
-                    "sm:h-16",
+                    "sm:h-14 sm:text-[18px]",
                   )}
                   placeholder="you@email.com"
                   disabled={busy}
@@ -314,10 +366,10 @@ export function CheckoutClaimForm({
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   className={cn(
-                    "box-border h-14 w-full rounded-lg border-2 border-cyan-400/55 bg-[linear-gradient(180deg,rgba(6,12,20,0.96),rgba(2,6,12,0.99))] px-4 text-center font-mono text-[22px] tracking-[0.35em] text-white outline-none transition placeholder:text-white/35",
+                    "box-border h-12 w-full rounded-lg border-2 border-cyan-400/55 bg-[linear-gradient(180deg,rgba(6,12,20,0.96),rgba(2,6,12,0.99))] px-4 text-center font-mono text-[20px] tracking-[0.35em] text-white outline-none transition placeholder:text-white/35",
                     "hover:border-cyan-300 hover:shadow-[0_0_24px_rgba(34,211,238,0.35)]",
                     "focus-visible:border-cyan-200 focus-visible:shadow-[0_0_28px_rgba(34,211,238,0.45)]",
-                    "sm:h-16",
+                    "sm:h-14 sm:text-[22px]",
                   )}
                   placeholder="······"
                   disabled={busy}
@@ -328,7 +380,7 @@ export function CheckoutClaimForm({
             {step === "otp" ? (
               <button
                 type="button"
-                className="font-mono text-[14px] font-bold uppercase tracking-[0.14em] text-fuchsia-300 transition hover:text-fuchsia-100 hover:[text-shadow:0_0_12px_rgba(232,121,249,0.65)]"
+                className="font-mono text-[13px] font-bold uppercase tracking-[0.14em] text-fuchsia-300 transition hover:text-fuchsia-100 hover:[text-shadow:0_0_12px_rgba(232,121,249,0.65)]"
                 disabled={busy}
                 onClick={() => void sendOtp()}
               >
@@ -337,13 +389,17 @@ export function CheckoutClaimForm({
             ) : null}
 
             {info ? (
-              <CyberInsetPanel variant="cyan" className="w-full max-w-2xl text-left">
-                <p className="px-1 py-1 font-mono text-[16px] leading-relaxed text-emerald-100 sm:text-[18px]">{info}</p>
+              <CyberInsetPanel variant="cyan" className="w-full max-w-xl text-left">
+                <p className="px-1 py-1 font-mono text-[14px] leading-relaxed text-emerald-100 sm:text-[15px]">
+                  {info}
+                </p>
               </CyberInsetPanel>
             ) : null}
             {error ? (
-              <CyberInsetPanel variant="blood" className="w-full max-w-2xl text-left">
-                <p className="px-1 py-1 font-mono text-[15px] uppercase tracking-[0.08em] text-rose-100 sm:text-[16px]">{error}</p>
+              <CyberInsetPanel variant="blood" className="w-full max-w-xl text-left">
+                <p className="px-1 py-1 font-mono text-[13px] uppercase tracking-[0.08em] text-rose-100 sm:text-[14px]">
+                  {error}
+                </p>
               </CyberInsetPanel>
             ) : null}
 
@@ -352,106 +408,106 @@ export function CheckoutClaimForm({
               disabled={busy}
               onClick={() => void (step === "email" ? sendOtp() : verifyOtp())}
               className={cn(
-                "method-cta-btn method-cta-btn--join mt-2 inline-flex h-14 w-full max-w-[28rem] items-center justify-center px-6 font-mono text-[15px] font-black uppercase tracking-[0.14em]",
-                "sm:h-16 sm:text-[16px]",
+                "method-cta-btn method-cta-btn--join inline-flex h-12 w-full max-w-[26rem] items-center justify-center px-6 font-mono text-[14px] font-black uppercase tracking-[0.14em]",
+                "sm:h-14 sm:text-[15px]",
                 busy && "cursor-wait opacity-70",
               )}
             >
               {busy ? "Please wait…" : step === "email" ? "Send code" : "Verify & unlock"}
             </button>
           </div>
-        </div>
-      </CyberChamferFrame>
 
-      <CyberChamferFrame
-        accent="amber"
-        chamfer={18}
-        decorSize="compact"
-        className="w-full"
-        innerClassName="cyber-frame-mobile-pad p-7 sm:p-9 lg:p-11"
-      >
-        <div className="relative z-[1] space-y-7">
-          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
-            <div className="min-w-0 text-left">
-              <p
-                className={cn(
-                  publicHeadingLightning("amber"),
-                  "font-mono text-[13px] font-bold uppercase tracking-[0.24em] sm:text-[14px]",
-                )}
-              >
-                The Syndicate
-              </p>
-              <h3
-                className={cn(
-                  publicHeadingLightning("gold"),
-                  "mt-2 text-[clamp(1.6rem,3.5vw,2.4rem)] font-black uppercase tracking-[0.08em]",
-                )}
-              >
-                Programs unlocked
-              </h3>
+          <div
+            className="my-7 h-px w-full bg-gradient-to-r from-transparent via-cyan-400/45 to-transparent sm:my-8"
+            aria-hidden
+          />
+
+          <section className="w-full">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-5">
+              <div className="min-w-0 text-left">
+                <p
+                  className={cn(
+                    publicHeadingLightning("amber"),
+                    "font-mono text-[11px] font-bold uppercase tracking-[0.22em] sm:text-[12px]",
+                  )}
+                >
+                  The Syndicate
+                </p>
+                <h3
+                  className={cn(
+                    publicHeadingLightning("gold"),
+                    "mt-1.5 text-[clamp(1.25rem,3vw,1.75rem)] font-black uppercase tracking-[0.08em]",
+                  )}
+                >
+                  Programs unlocked
+                </h3>
+              </div>
+              {amountPaid != null && Number.isFinite(amountPaid) ? (
+                <p className="shrink-0 font-mono text-[14px] font-bold uppercase tracking-[0.12em] text-cyan-200 sm:text-[16px]">
+                  Paid {currency?.toUpperCase() || "USD"} {amountPaid.toFixed(2)}
+                </p>
+              ) : null}
             </div>
-            {amountPaid != null && Number.isFinite(amountPaid) ? (
-              <p className="shrink-0 font-mono text-[18px] font-bold uppercase tracking-[0.12em] text-cyan-200 sm:text-[20px]">
-                Paid {currency?.toUpperCase() || "USD"} {amountPaid.toFixed(2)}
-              </p>
-            ) : null}
-          </div>
 
-          <ul className="max-h-[min(72vh,56rem)] space-y-6 overflow-y-auto pr-1">
-            {displayItems.map((item, index) => {
-              const price = formatItemAmount(item.amount);
-              const accent = ITEM_NEONS[index % ITEM_NEONS.length];
-              const cover = resolveCoverImage(item);
-              const alreadyOwned = Boolean(item.already_owned);
-              return (
-                <li key={`${item.title}-${index}`}>
-                  <CyberChamferFrame
-                    accent={accent}
-                    chamfer={14}
-                    decorSize="compact"
-                    className={cn("w-full", alreadyOwned && "opacity-75")}
-                    innerClassName="!p-0"
-                    contentClassName="!p-0"
-                  >
-                    <div className="grid gap-0 sm:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
-                      <div className="relative aspect-square w-full max-h-[400px] overflow-hidden bg-black/70 sm:aspect-auto sm:min-h-[280px] sm:h-[min(400px,42vw)]">
-                        {cover ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={cover}
-                            alt=""
-                            className="absolute inset-0 h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full min-h-[240px] w-full items-center justify-center bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent px-4 text-center font-mono text-[14px] font-bold uppercase tracking-[0.12em] text-white/55 sm:min-h-[280px]">
-                            Syndicate
+            <ul className="flex max-h-[min(42vh,28rem)] flex-col gap-4 overflow-y-auto pr-0.5 sm:gap-5">
+              {displayItems.map((item, index) => {
+                const price = formatItemAmount(item.amount);
+                const accent = ITEM_CARD_ACCENTS[index % ITEM_CARD_ACCENTS.length];
+                const cover = resolveCoverImage(item);
+                const alreadyOwned = Boolean(item.already_owned);
+                return (
+                  <li key={`${item.title}-${index}`}>
+                    <article
+                      className={cn(
+                        "plan-offer-card w-full",
+                        `plan-offer-card--${accent}`,
+                        alreadyOwned && "opacity-80",
+                      )}
+                    >
+                      <div className="plan-offer-card__shell overflow-hidden rounded-2xl sm:rounded-3xl">
+                        <div className="grid gap-0 sm:grid-cols-[minmax(7.5rem,9.5rem)_minmax(0,1fr)]">
+                          <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/80 sm:aspect-auto sm:min-h-[7.5rem] sm:self-stretch">
+                            {cover ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={cover}
+                                alt=""
+                                className="absolute inset-0 h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full min-h-[7.5rem] w-full items-center justify-center bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent px-3 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
+                                Syndicate
+                              </div>
+                            )}
                           </div>
-                        )}
+                          <div className="flex min-w-0 flex-col justify-center gap-2.5 px-4 py-4 text-left sm:gap-3 sm:px-5 sm:py-5">
+                            <p className="text-[16px] font-semibold leading-snug text-white sm:text-[18px]">
+                              {item.title}
+                            </p>
+                            <span
+                              className={cn(
+                                "inline-flex w-fit rounded-md border px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] sm:text-[11px]",
+                                alreadyOwned
+                                  ? "border-emerald-400/40 bg-emerald-950/40 text-emerald-200/90"
+                                  : "border-cyan-400/45 bg-cyan-950/35 text-cyan-100",
+                              )}
+                            >
+                              {alreadyOwned ? "Already owned" : "Lifetime unlock"}
+                            </span>
+                            {price && !alreadyOwned ? (
+                              <p className="font-mono text-[17px] font-bold text-amber-200 sm:text-[18px]">
+                                {price}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex min-w-0 flex-col justify-center gap-4 px-6 py-6 text-left sm:px-8 sm:py-8 lg:px-10">
-                        <p className="text-[20px] font-semibold leading-snug text-white sm:text-[22px]">
-                          {item.title}
-                        </p>
-                        <span
-                          className={cn(
-                            "inline-flex w-fit rounded-md border px-3 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.14em] sm:text-[13px]",
-                            alreadyOwned
-                              ? "border-emerald-400/40 bg-emerald-950/40 text-emerald-200/90"
-                              : "border-cyan-400/45 bg-cyan-950/35 text-cyan-100",
-                          )}
-                        >
-                          {alreadyOwned ? "Already owned" : "Lifetime unlock"}
-                        </span>
-                        {price && !alreadyOwned ? (
-                          <p className="font-mono text-[20px] font-bold text-amber-200">{price}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </CyberChamferFrame>
-                </li>
-              );
-            })}
-          </ul>
+                    </article>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
       </CyberChamferFrame>
     </div>

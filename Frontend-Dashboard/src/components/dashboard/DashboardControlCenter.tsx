@@ -288,66 +288,34 @@ function HeroStatusPanel({
           <img
             src={profileAvatar}
             alt="Profile avatar"
-            className="h-16 w-16 rounded-lg border border-[color:var(--neon-accent-border)] bg-black/30 object-cover p-0.5 shadow-[0_0_24px_var(--neon-accent-glow)]"
+            className="h-[84px] w-[84px] rounded-lg border border-[color:var(--neon-accent-border)] bg-black/30 object-cover p-0.5 shadow-[0_0_24px_var(--neon-accent-glow)]"
           />
           <div className="min-w-0">
             <div className="dashboard-neon-title font-mono text-[16px] font-black uppercase tracking-[0.15em]">
               {userName}
             </div>
             <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/84">
-              {userRole} • Level system: <span className="text-white/80">Level {s.syndicate.level}</span>
-            </div>
-            <div className="mt-2 flex flex-col gap-2 sm:max-w-md">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-md border border-[color:var(--neon-accent-border)] bg-black/40 px-2 py-1 shadow-[0_0_20px_var(--neon-accent-glow)]">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-white/22" fill="none" aria-hidden="true">
-                    <path d="M12 3.8l6.2 3.6v7.2L12 18.2l-6.2-3.6V7.4L12 3.8Z" stroke="currentColor" strokeWidth="1.6" />
-                    <path d="M7.8 9.2h8.4M7.8 12h6.2M7.8 14.8h8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
-                  </svg>
-                  <span className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--neon-accent-bright)]">
-                    Level {s.syndicate.level}
-                  </span>
-                </div>
-                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/58">Syndicate level</div>
-              </div>
-              <div className="rounded-md border border-[color:var(--neon-accent-border)] bg-black/50 px-2.5 py-2 text-[11px] leading-snug text-white/72 shadow-[0_0_20px_var(--neon-accent-glow)]">
-                <div className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--neon-accent-bright)]">
-                  Syndicate rewards
-                </div>
-                <p className="mt-1">
-                  {typeof s.syndicate.pointsToNext === "number" && s.syndicate.pointsToNext > 0 ? (
-                    <>
-                      Earn <span className="font-mono font-black text-white/90">{s.syndicate.pointsToNext}</span> more mission
-                      {s.syndicate.pointsToNext === 1 ? " point" : " points"} to reach{" "}
-                      <span className="text-[color:var(--neon-accent-bright)]">{s.syndicate.nextRankLabel}</span> (same ladder as Unlock &amp; redeem).
-                    </>
-                  ) : s.syndicate.pointsToNext === 0 ? (
-                    <>You have cleared every mission-points tier in the current ladder.</>
-                  ) : (
-                    <>Complete missions in Syndicate Mode to advance the rewards ladder.</>
-                  )}
-                </p>
-              </div>
+              {userRole}
             </div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="w-full max-w-[14rem]">
+          <div className="w-full max-w-[18rem]">
             <button
               type="button"
               onClick={() => onNavigate("programs")}
               className={cn(
-                "flex min-h-[10rem] w-full flex-col items-center justify-between rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 px-3 py-3 text-center transition duration-300",
+                "flex min-h-[7rem] w-full flex-col items-center justify-between rounded-md border-2 border-cyan-400/55 bg-gradient-to-br from-cyan-500/[0.14] to-black/65 px-3 py-2.5 text-center transition duration-300",
                 "shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_rgba(34,211,238,0.28),0_0_52px_rgba(6,182,212,0.12)]",
                 "hover:border-cyan-200/75 hover:bg-gradient-to-br hover:from-cyan-400/[0.2] hover:to-black/72",
                 "hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_0_40px_rgba(34,211,238,0.42),0_0_88px_rgba(6,182,212,0.22)]"
               )}
             >
-              <div className="w-full text-[16px] font-extrabold uppercase leading-tight tracking-[0.14em] text-cyan-100 sm:text-[17px]">
+              <div className="w-full whitespace-nowrap text-[12px] font-extrabold uppercase leading-none tracking-[0.14em] text-cyan-100 sm:text-[13px]">
                 Active programs
               </div>
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+              <div className="flex flex-1 flex-col items-center justify-center gap-1">
                 <div
                   className="font-mono text-[32px] font-black leading-none tabular-nums text-white"
                   style={{ textShadow: "0 0 22px rgba(34,211,238,0.55), 0 0 40px rgba(6,182,212,0.25)" }}

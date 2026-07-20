@@ -19,6 +19,8 @@ export type Level1CategoryPackDef = {
   accent: "psychology" | "models";
   shortLabel: string;
   buttonLead: string;
+  /** Cover art for checkout claim / unlocked-pack cards. */
+  imageSrc: string;
 };
 
 export const LEVEL1_CATEGORY_PACKS: Record<Level1CategoryPackKey, Level1CategoryPackDef> = {
@@ -31,6 +33,7 @@ export const LEVEL1_CATEGORY_PACKS: Record<Level1CategoryPackKey, Level1Category
     accent: "psychology",
     shortLabel: "Business Behaviour Psychology",
     buttonLead: "Unlock all Business Behaviour Psychology programs",
+    imageSrc: "/assets/unlock-all-business-behavioural-psychology.png",
   },
   business_model: {
     category: "business_model",
@@ -41,7 +44,15 @@ export const LEVEL1_CATEGORY_PACKS: Record<Level1CategoryPackKey, Level1Category
     accent: "models",
     shortLabel: "Business Models",
     buttonLead: "Unlock all Business Models programs",
+    imageSrc: "/assets/unlock-all-business-models.png",
   },
+};
+
+/** Plan slug → unlock-all pack cover (used on Access Unlock / claim screen). */
+export const LEVEL1_CATEGORY_PACK_THUMBS: Record<string, string> = {
+  [LEVEL1_BUSINESS_PSYCHOLOGY_PACK_PLAN]:
+    LEVEL1_CATEGORY_PACKS.business_psychology.imageSrc,
+  [LEVEL1_BUSINESS_MODELS_PACK_PLAN]: LEVEL1_CATEGORY_PACKS.business_model.imageSrc,
 };
 
 export function isLevel1CategoryPackPlan(plan: string): boolean {

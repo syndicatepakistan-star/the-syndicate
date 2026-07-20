@@ -25,9 +25,9 @@ export default function QuizFunnelLandingPage() {
           <CyberChamferFrame
             accent="cyan"
             chamfer={22}
-            className="landing-detail-unlock-frame w-full"
-            innerClassName="h-full p-0"
-            contentClassName="h-full max-lg:!p-0"
+            className="landing-detail-unlock-frame w-full min-w-0 max-w-full"
+            innerClassName="h-full min-w-0 p-0"
+            contentClassName="h-full min-w-0 max-w-full max-lg:!px-2 max-lg:!pb-1 max-lg:!pt-3"
             decorSize="compact"
           >
             <div className="landing-detail-card landing-detail-card--cyan h-full">

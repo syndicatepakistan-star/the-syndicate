@@ -178,6 +178,10 @@ body.result-view .section-cards-grid {
 .global-app-layer {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .page-wrap {
@@ -202,6 +206,7 @@ body.result-view .section-cards-grid {
 .card {
   width: 100%;
   max-width: 860px;
+  min-width: 0;
   box-sizing: border-box;
   background: linear-gradient(180deg, #111b30 0%, var(--paper) 100%);
   border-radius: 22px;
@@ -894,7 +899,26 @@ body.result-view .section-cards-grid {
   z-index: 2;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  overflow-x: clip;
+}
+
+/* Marquee track is width:max-content — without min-width:0 it blows out the grid and
+   .card { overflow:hidden } clips every section on the right (mobile “cut cards”). */
+.landing-details-grid > *,
+.landing-detail-unlock-frame,
+.landing-detail-pair-row,
+.quiz-press-logo-strip-slot,
+.quiz-press-logo-strip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.quiz-press-logo-strip-slot,
+.quiz-press-logo-strip {
+  overflow: hidden;
+  width: 100%;
 }
 
 .landing-free-offer {
@@ -994,6 +1018,9 @@ body.result-view .section-cards-grid {
   align-items: stretch;
   gap: 20px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .landing-gaming-frame {
@@ -1043,6 +1070,11 @@ body.result-view .section-cards-grid {
   z-index: 1;
   border: none;
   box-shadow: none;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .landing-detail-card--cyan {
@@ -1104,6 +1136,7 @@ body.result-view .section-cards-grid {
     0 0 0 3px rgba(12, 6, 22, 0.95),
     0 0 0 5px rgba(168, 85, 247, 0.35),
     0 0 32px rgba(217, 70, 239, 0.32);
+  box-sizing: border-box;
 }
 
 .landing-detail-frame-double::before {
@@ -1204,6 +1237,9 @@ body.result-view .section-cards-grid {
   z-index: 1;
   list-style: none;
   counter-reset: landing-detail-counter;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .landing-detail-card--cyan .landing-detail-list {
@@ -1217,6 +1253,9 @@ body.result-view .section-cards-grid {
   counter-increment: landing-detail-counter;
   position: relative;
   min-height: 94px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 15px 15px 15px 58px;
   border: 1px solid rgba(var(--item-rgb), 0.5);
   background:
@@ -1279,6 +1318,11 @@ body.result-view .section-cards-grid {
 .landing-detail-list strong,
 .landing-detail-list span {
   display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .landing-detail-list strong {
@@ -2699,12 +2743,30 @@ body.result-view .section-cards-grid {
     grid-template-columns: 1fr;
     gap: 14px;
     margin: 12px 0 18px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .landing-detail-pair-row {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .landing-detail-unlock-frame,
+  .quiz-press-logo-strip-slot,
+  .quiz-press-logo-strip,
+  .landing-detail-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .quiz-press-logo-strip-slot {
+    overflow: hidden;
   }
 
   .brand-header {
@@ -2864,6 +2926,13 @@ body.result-view .section-cards-grid {
 
   .landing-detail-card {
     padding: 12px;
+  }
+
+  .landing-detail-frame-double {
+    box-shadow:
+      0 0 0 2px rgba(12, 6, 22, 0.95),
+      0 0 0 3px rgba(168, 85, 247, 0.35),
+      0 0 18px rgba(217, 70, 239, 0.28);
   }
 
   .landing-detail-list li {

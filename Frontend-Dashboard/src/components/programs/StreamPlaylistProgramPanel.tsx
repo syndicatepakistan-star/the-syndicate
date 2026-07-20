@@ -25,6 +25,7 @@ import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { useMatchMedia } from "@/hooks/useMatchMedia";
 
 type Props = {
   playlistId: number;
@@ -37,6 +38,7 @@ const MAX_REAL_PLAYBACK_DELTA_SECONDS = 6;
 const SEEK_COOLDOWN_MS = 1400;
 const MIN_WATCHED_INCREMENT_SECONDS = 0.2;
 const DISPLAY_GAP_SMOOTH_SECONDS = 1.2;
+const MOBILE_PLAYLIST_PREVIEW_COUNT = 4;
 
 function parsePlaylistNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
@@ -175,15 +177,15 @@ function PlaylistResourcesBlock({
         aria-hidden
       />
       <span
-        className="pointer-events-none absolute inset-[3px] rounded-[13px] border border-emerald-400/25"
+        className="pointer-events-none absolute inset-[3px] rounded-[13px] border border-emerald-400/25 max-sm:hidden"
         aria-hidden
       />
-      <div className="relative px-4 py-5 sm:px-6 sm:py-6">
-        <h3 className="text-center text-[clamp(1.1rem,2.4vw,1.45rem)] font-black uppercase tracking-[0.14em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.45)]">
+      <div className="relative px-3 py-2.5 sm:px-6 sm:py-6">
+        <h3 className="hidden text-center text-[clamp(1.1rem,2.4vw,1.45rem)] font-black uppercase tracking-[0.14em] text-cyan-100 [text-shadow:0_0_22px_rgba(34,211,238,0.45)] sm:block">
           Download Resources
         </h3>
 
-        <ul className="mt-4 space-y-3 sm:mt-5 sm:space-y-3.5">
+        <ul className="space-y-2 sm:mt-5 sm:space-y-3.5">
           {attachments.map((attachment, index) => {
             const theme = RESOURCE_CARD_THEMES[index % RESOURCE_CARD_THEMES.length];
             const displayTitle = humanResourceTitle(attachment.title || attachment.file_name);
@@ -197,11 +199,12 @@ function PlaylistResourcesBlock({
                 key={attachment.id}
                 className={cn(
                   "flex flex-col gap-3 rounded-xl border-2 p-3.5 sm:flex-row sm:items-center sm:gap-4 sm:p-4",
+                  "max-sm:border max-sm:border-cyan-400/40 max-sm:bg-black/35 max-sm:p-2 max-sm:gap-0",
                   theme.border,
                   theme.panel
                 )}
               >
-                <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+                <div className="hidden min-w-0 flex-1 items-start gap-3 sm:flex sm:gap-4">
                   <span
                     className={cn(
                       "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-[13px] font-black tabular-nums",
@@ -234,8 +237,10 @@ function PlaylistResourcesBlock({
                   onClick={() => void openPlaylistAttachment(attachment)}
                   className={cn(
                     "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-[10px] font-black normal-case tracking-[0.06em] transition hover:brightness-110 sm:w-auto sm:min-w-[9.5rem]",
+                    "max-sm:py-2 max-sm:text-[11px]",
                     theme.btn
                   )}
+                  aria-label={`Download ${displayTitle}`}
                 >
                   <Download className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                   Download Pdf
@@ -369,8 +374,8 @@ function goToSettingsCertificates() {
 
 export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const { formatPrice: formatLocalizedPrice } = useCurrency();
+  const isMobile = useMatchMedia("(max-width: 1023px)");
   const [playlist, setPlaylist] = useState<StreamPlaylistDetail | null>(null);
-  const [playback, setPlayback] = useState<StreamPayload | null>(null);
   const [playbackCache, setPlaybackCache] = useState<Record<number, StreamPayload>>({});
   const [activeIdx, setActiveIdx] = useState(0);
   const [err, setErr] = useState<string | null>(null);
@@ -397,10 +402,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   /** Snapshot for HTML5 resume only; must not follow live `timeupdate` or the player reloads every tick. */
   const [resumeStartSeconds, setResumeStartSeconds] = useState(0);
   const [seekRequest, setSeekRequest] = useState<{ id: number; seconds: number; autoplay?: boolean } | null>(null);
+  const [mobileListExpanded, setMobileListExpanded] = useState(false);
   const lastPlaybackPositionRef = useRef<Record<number, number>>({});
   const ignorePlaybackUntilRef = useRef(0);
-
-  const prefetchStartedRef = useRef<string>("");
+  const pendingAutoplayRef = useRef(false);
+  const playerAnchorRef = useRef<HTMLDivElement | null>(null);
 
   const loadPlaylist = useCallback(async () => {
     setLoading(true);
@@ -409,10 +415,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       const p = await fetchStreamPlaylistDetail(playlistId);
       setPlaylist(p);
       setActiveIdx(0);
-      setPlayback(null);
       setDidAutoPickReady(false);
       setCertificateMessage(null);
+      setMobileListExpanded(false);
       lastPlaybackPositionRef.current = {};
+      pendingAutoplayRef.current = false;
 
       const videoIds = (p.items ?? [])
         .map((row) => row.stream_video?.id)
@@ -581,7 +588,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   const activePlayback =
     activeVideo?.id != null
-      ? activePlaybackFromHook ?? playbackCache[activeVideo.id] ?? playback
+      ? (activePlaybackFromHook?.id === activeVideo.id ? activePlaybackFromHook : null) ??
+        playbackCache[activeVideo.id] ??
+        null
       : null;
   const totalDuration = useMemo(
     () =>
@@ -616,21 +625,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }, [activeProgress?.durationSeconds, activeProgress?.watchedRanges]);
 
   useEffect(() => {
-    if (!activeVideo?.id) {
-      setPlayback(null);
-    }
-  }, [activeVideo?.id]);
-
-  useEffect(() => {
     if (!items.length) return;
-    const signature = items.map((row) => row.stream_video.id).join(",");
-    if (prefetchStartedRef.current === signature) return;
-    prefetchStartedRef.current = signature;
-
     const videoIds = items.map((row) => row.stream_video.id).filter(Boolean);
     const priorityId = videoIds[activeIdx] ?? videoIds[0];
+    const neighborIds = videoIds.slice(Math.max(0, activeIdx - 1), activeIdx + 4);
 
-    const neighborIds = videoIds.slice(Math.max(0, activeIdx - 1), activeIdx + 3);
     void (async () => {
       const prefetched = await prefetchStreamVideoPlaybacks(neighborIds, {
         priorityId,
@@ -641,7 +640,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         let changed = false;
         for (const [id, payload] of Object.entries(prefetched)) {
           const vid = Number(id);
-          if (!next[vid]) {
+          if (!next[vid] || next[vid]?.playback_url !== payload.playback_url) {
             next[vid] = payload;
             changed = true;
           }
@@ -650,7 +649,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       });
 
       const warmUrls = neighborIds
-        .map((id) => prefetched[id]?.playback_url ?? playbackCache[id]?.playback_url)
+        .map((id) => prefetched[id]?.playback_url ?? getCachedStreamVideoPlayback(id)?.playback_url)
         .filter((url): url is string => Boolean(url));
       warmStreamVideoMedia(warmUrls, { priority: true });
     })();
@@ -681,6 +680,45 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       setDidAutoPickReady(true);
     }
   }, [items, playbackCache, activeIdx, activePlayback?.status, didAutoPickReady]);
+
+  const selectEpisode = useCallback(
+    (index: number, opts?: { autoplay?: boolean }) => {
+      if (index < 0 || index >= items.length) return;
+      const videoId = items[index]?.stream_video.id;
+      const resumeAt =
+        videoId != null ? progressMap[videoId]?.currentPositionSeconds ?? 0 : 0;
+      pendingAutoplayRef.current = Boolean(opts?.autoplay);
+      setActiveIdx(index);
+      setResumeStartSeconds(resumeAt);
+
+      if (opts?.autoplay || isMobile) {
+        window.requestAnimationFrame(() => {
+          playerAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    },
+    [items, progressMap, isMobile],
+  );
+
+  useEffect(() => {
+    if (!pendingAutoplayRef.current) return;
+    if (!activeVideo?.id) return;
+    const url = activePlayback?.playback_url;
+    if (activePlayback?.status !== "ready" || !url) return;
+    const resumeAt = progressMap[activeVideo.id]?.currentPositionSeconds ?? resumeStartSeconds ?? 0;
+    pendingAutoplayRef.current = false;
+    setSeekRequest({
+      id: Date.now(),
+      seconds: Math.max(0, resumeAt),
+      autoplay: true,
+    });
+  }, [
+    activeVideo?.id,
+    activePlayback?.status,
+    activePlayback?.playback_url,
+    progressMap,
+    resumeStartSeconds,
+  ]);
 
   const handleTimeProgress = useCallback(
     ({ currentTime, duration }: { currentTime: number; duration: number }) => {
@@ -905,11 +943,141 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const playbackFailed = Boolean(activeVideo?.id) && !playbackLoading && !ready && activePlayback?.status !== "processing";
   const playlistPrice = parsePlaylistNumber(playlist.price);
   const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
+  const visibleItems =
+    isMobile && !mobileListExpanded ? items.slice(0, MOBILE_PLAYLIST_PREVIEW_COUNT) : items;
+  const hasMoreEpisodes = isMobile && items.length > MOBILE_PLAYLIST_PREVIEW_COUNT && !mobileListExpanded;
+
+  const renderEpisodeButton = (row: (typeof items)[number], i: number) => {
+    const v = row.stream_video;
+    const on = i === activeIdx;
+    const thumbSrc = resolveDjangoMediaUrl(v.thumbnail_url) || playlistCoverThumb;
+    return (
+      <li key={row.id}>
+        <button
+          type="button"
+          onClick={() => selectEpisode(i, { autoplay: true })}
+          className={cn(
+            "flex w-full gap-3.5 rounded-xl border p-3 text-left transition max-sm:gap-2.5 max-sm:p-2",
+            on
+              ? "border-violet-300/70 bg-violet-500/10 shadow-[0_0_0_1px_rgba(196,181,253,0.2)]"
+              : "border-transparent bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.05]"
+          )}
+        >
+          <div className="relative h-16 w-[6.4rem] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-violet-800/90 via-neutral-900 to-black max-sm:h-12 max-sm:w-[5.2rem]">
+            {thumbSrc ? (
+              <img
+                src={thumbSrc}
+                alt=""
+                loading={i < 4 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={i < 4 ? "high" : "auto"}
+                className="absolute inset-0 h-full w-full object-cover opacity-90"
+              />
+            ) : null}
+            <span className="pointer-events-none absolute inset-y-0 left-0 z-[2] flex w-7 items-center justify-center bg-gradient-to-r from-black/70 via-black/35 to-transparent max-sm:w-6">
+              <span className="text-[32px] font-black leading-none text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)] max-sm:text-[22px]">
+                {i + 1}
+              </span>
+            </span>
+            <span className="absolute inset-0 z-[1] flex items-center justify-center">
+              <Play className={cn("h-6 w-6 stroke-[1.75] max-sm:h-5 max-sm:w-5", on ? "text-white" : "text-white/55")} />
+            </span>
+          </div>
+          <div className="min-w-0 flex-1 py-0.5">
+            <div
+              className={cn(
+                "font-sans text-[14px] font-semibold leading-[1.35] tracking-normal antialiased max-sm:text-[13px]",
+                on ? "text-white" : "text-white/85"
+              )}
+            >
+              {v.title}
+            </div>
+            <div className="mt-1 text-[10px] font-semibold text-cyan-100/85">
+              {Math.round(
+                ((progressMap[v.id]?.watchedSeconds ?? 0) /
+                  Math.max(1, progressMap[v.id]?.durationSeconds ?? 0)) *
+                  100
+              )}
+              % watched
+            </div>
+          </div>
+        </button>
+      </li>
+    );
+  };
 
   return (
-    <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-hidden lg:min-h-0">
-      <div className="min-w-0 shrink-0 space-y-4 lg:shrink lg:space-y-5">
-        <div className="space-y-2">
+    <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-3 overflow-hidden max-sm:gap-2.5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-hidden lg:min-h-0">
+      {/* Mobile: playlist first (order-1). Desktop: sidebar column. */}
+      <aside
+        aria-label="Playlist"
+        className="order-1 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-none lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
+      >
+        <div className="border-b border-white/10 px-1 pb-2 lg:pb-3">
+          <div className="text-[13px] font-bold text-[#f5c814] max-sm:text-[12px]">{playlist.title}</div>
+          <div className="mt-1.5 flex items-center gap-2 text-[11px] lg:mt-2">
+            <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
+              {formatLocalizedPrice(playlistPrice)}
+            </span>
+          </div>
+          <div className="mt-2 space-y-1.5 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-2 lg:mt-3 lg:space-y-3 lg:p-3.5">
+            <div className="flex items-center justify-between text-[11px] lg:text-[13px]">
+              <span className="font-black uppercase tracking-[0.12em] text-cyan-100">Progress</span>
+              <span className="font-black text-cyan-100">{completionPercent.toFixed(0)}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-black/55 lg:h-3">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.85),rgba(129,140,248,0.85),rgba(232,121,249,0.85))] transition-[width] duration-300"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+            <div className="hidden items-center justify-between text-[12px] font-semibold text-white/90 lg:flex">
+              <span>{formatDuration(watchedDuration)} watched</span>
+              <span>{formatDuration(totalDuration)} total</span>
+            </div>
+            <div className="text-[10px] font-bold text-emerald-200 lg:text-[12px]">
+              {completedCount}/{items.length} videos
+            </div>
+          </div>
+          {isPlaylistCompleted ? (
+            <button
+              type="button"
+              onClick={() => {
+                setCertificateName("");
+                setCertificateMessage(null);
+                setShowApplyModal(true);
+              }}
+              className="mt-2 w-full rounded-lg border border-emerald-300/45 bg-emerald-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100 shadow-[0_0_16px_rgba(16,185,129,0.28)] transition hover:bg-emerald-500/25 lg:mt-3 lg:py-2 lg:text-[11px]"
+            >
+              Apply for SYN token for this course
+            </button>
+          ) : null}
+        </div>
+        <ul className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain pr-1 lg:mt-3 lg:gap-2">
+          {visibleItems.map((row, i) => renderEpisodeButton(row, i))}
+        </ul>
+        {hasMoreEpisodes ? (
+          <button
+            type="button"
+            onClick={() => setMobileListExpanded(true)}
+            className="mt-2 w-full rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-white/85 lg:hidden"
+          >
+            Show all {items.length} episodes
+          </button>
+        ) : null}
+        {isMobile && mobileListExpanded && items.length > MOBILE_PLAYLIST_PREVIEW_COUNT ? (
+          <button
+            type="button"
+            onClick={() => setMobileListExpanded(false)}
+            className="mt-2 w-full rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-white/60 lg:hidden"
+          >
+            Show less
+          </button>
+        ) : null}
+      </aside>
+
+      <div className="order-2 min-w-0 shrink-0 space-y-3 lg:order-1 lg:shrink lg:space-y-5">
+        <div ref={playerAnchorRef} className="scroll-mt-16 space-y-2">
           {!ready ? (
             <div
               className={`flex aspect-video max-h-[min(58vh,640px)] w-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-white/65 sm:max-h-[min(62vh,720px)] ${playerShell}`}
@@ -942,7 +1110,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </div>
           ) : (
             <StreamHtmlVideoPlayer
-              sessionKey={activeVideo.id}
+              sessionKey={`playlist-${playlistId}`}
+              episodeKey={activeVideo.id}
               src={playbackUrl}
               playbackType={activePlayback?.playback_type}
               srcRevision={activeSrcRevision}
@@ -960,13 +1129,13 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             />
           )}
           {activeProgress?.durationSeconds ? (
-            <div className="mt-2 rounded-md border border-cyan-300/25 bg-cyan-950/12 p-2">
-              <div className="mb-1 flex items-center justify-between text-[10px]">
+            <div className="mt-2 rounded-md border border-cyan-300/25 bg-cyan-950/12 p-1.5 max-sm:p-1 lg:p-2">
+              <div className="mb-1 flex items-center justify-between text-[10px] max-sm:mb-0.5">
                 <span className="font-bold uppercase tracking-[0.1em] text-cyan-100/90">Video Timeline</span>
-                <span className="text-rose-100/85">red = not watched</span>
+                <span className="hidden text-rose-100/85 sm:inline">red = not watched</span>
               </div>
               <div
-                className="relative h-2.5 cursor-pointer overflow-hidden rounded-full bg-black/60"
+                className="relative h-2 cursor-pointer overflow-hidden rounded-full bg-black/60 lg:h-2.5"
                 onClick={(event) => {
                   const duration = Math.max(activeProgress.durationSeconds, 1);
                   const rect = event.currentTarget.getBoundingClientRect();
@@ -992,7 +1161,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                       const pos = Math.max(0, activeProgress.currentPositionSeconds ?? 0);
                       const rawPct = (pos / dur) * 100;
                       if (pos <= 0) return 0;
-                      // Long videos: ~1 min / ~4 h is &lt;1% — keep a small minimum so progress is visible.
                       const minPct = rawPct > 0 && rawPct < 1.25 ? 1.25 : rawPct;
                       return Math.min(100, minPct);
                     })()}%`,
@@ -1025,7 +1193,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[clamp(1.15rem,2.2vw+0.5rem,1.65rem)] font-black leading-tight tracking-tight text-[#f5c814]">
+            <h2 className="text-[clamp(1.05rem,2.2vw+0.5rem,1.65rem)] font-black leading-tight tracking-tight text-[#f5c814]">
               {activeVideo?.title ?? "Episode"}
             </h2>
             <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-black text-emerald-200">
@@ -1033,120 +1201,18 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </span>
           </div>
           {playlistAttachments.length > 0 ? (
-            <PlaylistResourcesBlock attachments={playlistAttachments} className="mt-4 w-full" />
+            <PlaylistResourcesBlock attachments={playlistAttachments} className="mt-2 w-full sm:mt-4" />
           ) : null}
           {(activeVideo?.description || "").trim() ? (
-            <div className="mt-3 max-w-4xl rounded-xl border border-white/12 bg-black/35 px-4 py-3">
+            <div className="mt-3 max-w-4xl rounded-xl border border-white/12 bg-black/35 px-4 py-3 max-sm:mt-2 max-sm:px-3 max-sm:py-2">
               <div className="mb-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#f5c814]">Description</div>
-              <p className="font-sans whitespace-pre-line break-words [overflow-wrap:anywhere] text-left text-[15px] font-normal leading-7 tracking-normal text-white/92 antialiased">
+              <p className="font-sans whitespace-pre-line break-words [overflow-wrap:anywhere] text-left text-[15px] font-normal leading-7 tracking-normal text-white/92 antialiased max-sm:text-[13px] max-sm:leading-6">
                 {(activeVideo?.description || "").trim()}
               </p>
             </div>
           ) : null}
         </div>
       </div>
-
-      <aside
-        aria-label="Playlist"
-        className="flex min-h-0 max-h-[min(46vh,420px)] min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-3 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start"
-      >
-        <div className="border-b border-white/10 px-1 pb-3">
-          <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
-          <div className="mt-2 flex items-center gap-2 text-[11px]">
-            <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
-              {formatLocalizedPrice(playlistPrice)}
-            </span>
-          </div>
-          <div className="mt-3 space-y-3 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-3.5">
-            <div className="flex items-center justify-between text-[13px]">
-              <span className="font-black uppercase tracking-[0.12em] text-cyan-100">Playlist Progress</span>
-              <span className="font-black text-cyan-100">{completionPercent.toFixed(0)}%</span>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full bg-black/55">
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.85),rgba(129,140,248,0.85),rgba(232,121,249,0.85))] transition-[width] duration-300"
-                style={{ width: `${completionPercent}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[12px] font-semibold text-white/90">
-              <span>{formatDuration(watchedDuration)} watched</span>
-              <span>{formatDuration(totalDuration)} total</span>
-            </div>
-            <div className="text-[12px] font-bold text-emerald-200">{completedCount}/{items.length} videos completed</div>
-          </div>
-          {isPlaylistCompleted ? (
-            <button
-              type="button"
-              onClick={() => {
-                setCertificateName("");
-                setCertificateMessage(null);
-                setShowApplyModal(true);
-              }}
-              className="mt-3 w-full rounded-lg border border-emerald-300/45 bg-emerald-500/15 px-3 py-2 text-[11px] font-black uppercase tracking-[0.1em] text-emerald-100 shadow-[0_0_16px_rgba(16,185,129,0.28)] transition hover:bg-emerald-500/25"
-            >
-              Apply for SYN token for this course
-            </button>
-          ) : null}
-        </div>
-        <ul className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
-          {items.map((row, i) => {
-            const v = row.stream_video;
-            const on = i === activeIdx;
-            const thumbSrc = resolveDjangoMediaUrl(v.thumbnail_url) || playlistCoverThumb;
-            return (
-              <li key={row.id}>
-                <button
-                  type="button"
-                  onClick={() => setActiveIdx(i)}
-                  className={cn(
-                    "flex w-full gap-3.5 rounded-xl border p-3 text-left transition",
-                    on ? "border-violet-300/70 bg-violet-500/10 shadow-[0_0_0_1px_rgba(196,181,253,0.2)]" : "border-transparent bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.05]"
-                  )}
-                >
-                  <div className="relative h-16 w-[6.4rem] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-violet-800/90 via-neutral-900 to-black">
-                    {thumbSrc ? (
-                      <img
-                        src={thumbSrc}
-                        alt=""
-                        loading={i < 3 ? "eager" : "lazy"}
-                        decoding="async"
-                        fetchPriority={i < 3 ? "high" : "auto"}
-                        className="absolute inset-0 h-full w-full object-cover opacity-90"
-                      />
-                    ) : null}
-                    <span className="pointer-events-none absolute inset-y-0 left-0 z-[2] flex w-7 items-center justify-center bg-gradient-to-r from-black/70 via-black/35 to-transparent">
-                      <span className="text-[32px] font-black leading-none text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">
-                        {i + 1}
-                      </span>
-                    </span>
-                    <span className="absolute inset-0 z-[1] flex items-center justify-center">
-                      <Play className={cn("h-6 w-6 stroke-[1.75]", on ? "text-white" : "text-white/55")} />
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1 py-0.5">
-                    <div
-                      className={cn(
-                        "font-sans text-[14px] font-semibold leading-[1.35] tracking-normal antialiased",
-                        on ? "text-white" : "text-white/85"
-                      )}
-                    >
-                      {v.title}
-                    </div>
-                    <div className="mt-1 text-[10px] font-semibold text-cyan-100/85">
-                      {Math.round(
-                        ((progressMap[v.id]?.watchedSeconds ?? 0) /
-                          Math.max(1, progressMap[v.id]?.durationSeconds ?? 0)) *
-                          100
-                      )}
-                      % watched
-                    </div>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
       {showApplyModal ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl border border-emerald-300/40 bg-[#040a12] p-4 shadow-[0_0_26px_rgba(16,185,129,0.26)]">

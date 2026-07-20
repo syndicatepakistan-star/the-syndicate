@@ -18,6 +18,8 @@ type Props = {
   /** MP4 single-file vs HLS manifest URL. */
   playbackType?: StreamPlaybackType;
   sessionKey?: string | number;
+  /** Changes when the episode changes — forces a fresh load (not a signed-URL hot-swap). */
+  episodeKey?: string | number;
   /** Increment when ``src`` is rotated in-place (preserves watch position). */
   srcRevision?: number;
   className?: string;
@@ -80,6 +82,7 @@ export default function StreamHtmlVideoPlayer({
   src,
   playbackType,
   sessionKey = "default",
+  episodeKey,
   srcRevision = 0,
   className,
   onMetadata,
@@ -208,6 +211,16 @@ export default function StreamHtmlVideoPlayer({
       seekPrefetchTimerRef.current = null;
     }
   }, [sessionKey]);
+
+  // Episode change: fresh load at the new resume position (do not hot-swap prior episode time).
+  useEffect(() => {
+    if (episodeKey === undefined) return;
+    appliedSrcRef.current = null;
+    appliedRevisionRef.current = -1;
+    lateResumeAppliedKeyRef.current = "";
+    initialResumeDoneRef.current = false;
+    setPlaybackError(null);
+  }, [episodeKey]);
 
   useEffect(() => {
     if (src) return;

@@ -38,13 +38,14 @@ const ARTICLE_TITLE_LINES: Record<string, string[]> = {
 const ARTICLE_SCREENSHOT_FRAME: Record<string, string> = {
   Forbes: "h-[min(34rem,70vh)] max-h-[34rem]",
   "GQ South Africa": "h-[min(34rem,70vh)] max-h-[34rem]",
-  "Luxury Lifestyle Magazine": "h-[min(34rem,70vh)] max-h-[34rem]",
+  /** LLM shot is wider (1024×838) — match aspect so object-contain does not leave white below. */
+  "Luxury Lifestyle Magazine": "aspect-[1024/838] h-auto max-h-none",
 };
 
 const ARTICLE_SCREENSHOT_FIT: Record<string, string> = {
   Forbes: "object-contain object-top",
   "GQ South Africa": "object-contain object-top",
-  "Luxury Lifestyle Magazine": "object-contain object-top",
+  "Luxury Lifestyle Magazine": "object-contain object-center",
 };
 
 export function FounderPressFeatures() {

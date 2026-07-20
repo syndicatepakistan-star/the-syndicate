@@ -1001,22 +1001,36 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         className="order-2 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-[min(48vh,420px)] lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
       >
         <div className="border-b border-white/10 px-1 pb-2 lg:pb-3">
-          <div className="text-[13px] font-bold text-[#f5c814] max-sm:text-[12px]">{playlist.title}</div>
-          <div className="mt-1.5 flex items-center gap-2 text-[11px] lg:mt-2">
-            <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
-              {formatLocalizedPrice(playlistPrice)}
-            </span>
+          <div className="hidden lg:block">
+            <div className="text-[13px] font-bold text-[#f5c814]">{playlist.title}</div>
+            <div className="mt-2 flex items-center gap-2 text-[11px]">
+              <span className="rounded-full border border-emerald-300/45 bg-emerald-500/12 px-2 py-0.5 font-sans font-extrabold tracking-normal text-emerald-200">
+                {formatLocalizedPrice(playlistPrice)}
+              </span>
+            </div>
           </div>
-          <div className="mt-2 space-y-1.5 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-2 lg:mt-3 lg:space-y-3 lg:p-3.5">
+          <p className="rounded-lg border border-amber-300/35 bg-amber-950/25 px-2.5 py-2 text-[11px] font-semibold leading-snug text-amber-100/95 lg:hidden">
+            To get a certificate, watch the entire video completely.
+          </p>
+          <div className="group/progress relative mt-2 space-y-1.5 rounded-lg border border-cyan-300/35 bg-cyan-950/20 p-2 lg:mt-3 lg:space-y-3 lg:p-3.5">
             <div className="flex items-center justify-between text-[11px] lg:text-[13px]">
               <span className="font-black uppercase tracking-[0.12em] text-cyan-100">Progress</span>
               <span className="font-black text-cyan-100">{completionPercent.toFixed(0)}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-black/55 lg:h-3">
+            <div
+              className="h-1.5 overflow-hidden rounded-full bg-black/55 lg:h-3"
+              title="To get a certificate, watch the entire video completely."
+            >
               <div
                 className="h-full rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.85),rgba(129,140,248,0.85),rgba(232,121,249,0.85))] transition-[width] duration-300"
                 style={{ width: `${completionPercent}%` }}
               />
+            </div>
+            <div
+              role="tooltip"
+              className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-[min(100%,18rem)] -translate-x-1/2 rounded-md border border-amber-300/40 bg-black/95 px-2.5 py-1.5 text-center text-[11px] font-semibold leading-snug text-amber-100 opacity-0 shadow-lg transition-opacity lg:block lg:group-hover/progress:opacity-100"
+            >
+              To get a certificate, watch the entire video completely.
             </div>
             <div className="hidden items-center justify-between text-[12px] font-semibold text-white/90 lg:flex">
               <span>{formatDuration(watchedDuration)} watched</span>
@@ -1098,13 +1112,14 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             />
           )}
           {activeProgress?.durationSeconds ? (
-            <div className="mt-2 rounded-md border border-cyan-300/25 bg-cyan-950/12 p-1.5 max-sm:p-1 lg:p-2">
+            <div className="group/timeline relative mt-2 rounded-md border border-cyan-300/25 bg-cyan-950/12 p-1.5 max-sm:p-1 lg:p-2">
               <div className="mb-1 flex items-center justify-between text-[10px] max-sm:mb-0.5">
                 <span className="font-bold uppercase tracking-[0.1em] text-cyan-100/90">Video Timeline</span>
                 <span className="hidden text-rose-100/85 sm:inline">red = not watched</span>
               </div>
               <div
                 className="relative h-2 cursor-pointer overflow-hidden rounded-full bg-black/60 lg:h-2.5"
+                title="To get a certificate, watch the entire video completely."
                 onClick={(event) => {
                   const duration = Math.max(activeProgress.durationSeconds, 1);
                   const rect = event.currentTarget.getBoundingClientRect();
@@ -1120,7 +1135,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                   const duration = Math.max(activeProgress.durationSeconds, 1);
                   handleTimelineSeek((activeProgress.currentPositionSeconds ?? 0) + duration * 0.03);
                 }}
-                aria-label="Seek video from timeline"
+                aria-label="Seek video from timeline. To get a certificate, watch the entire video completely."
               >
                 <span
                   className="absolute left-0 top-0 h-full bg-white/75"
@@ -1143,6 +1158,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                     <span
                       key={`skip-${idx}-${range.start}-${range.end}`}
                       className="absolute top-0 h-full cursor-pointer bg-rose-500/95"
+                      title="To get a certificate, watch the entire video completely."
                       style={{ left: `${left}%`, width: `${Math.max(width, 0.8)}%` }}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -1155,6 +1171,12 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                     />
                   );
                 })}
+              </div>
+              <div
+                role="tooltip"
+                className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-[min(100%,20rem)] -translate-x-1/2 rounded-md border border-amber-300/40 bg-black/95 px-2.5 py-1.5 text-center text-[11px] font-semibold leading-snug text-amber-100 opacity-0 shadow-lg transition-opacity lg:block lg:group-hover/timeline:opacity-100"
+              >
+                To get a certificate, watch the entire video completely.
               </div>
             </div>
           ) : null}

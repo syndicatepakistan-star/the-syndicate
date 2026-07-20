@@ -3539,6 +3539,7 @@ export default function DashboardPageClient({
           >
             <DashboardMainVideoBackground opacity={0.9} />
             <div
+              role="main"
               data-main-shell-scroll
               data-dashboard-video-scroll
               className={cn(

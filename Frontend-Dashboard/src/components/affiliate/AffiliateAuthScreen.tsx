@@ -458,6 +458,15 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
 
       <div className="login-container">
         <div className="login-box">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="brand-logo"
+            src="/assets/logo.webp"
+            alt="The Syndicate"
+            width={600}
+            height={240}
+          />
+
           <div className="login-header">
             <span className="status-dot" />
             <h1 className="glitch" data-text={heading}>
@@ -520,6 +529,12 @@ export default function AffiliateAuthScreen({ mode, prefilledEmail = "" }: { mod
 
             {error ? <p className="form-error">{error}</p> : null}
             {!error && message ? <p className="form-message">{message}</p> : null}
+
+            {!isOtp ? (
+              <p className="form-hint">
+                No password — we email you a one-time code after we recognise your address.
+              </p>
+            ) : null}
 
             <button className="cyber-btn hamburger-attract" type="submit" disabled={loading || resendBusy}>
               <span className="cyber-btn__text">

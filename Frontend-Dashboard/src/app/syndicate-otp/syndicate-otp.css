@@ -23,13 +23,21 @@
 
 #syndicate-otp-mount {
   width: 100%;
-  min-height: 100%;
+  min-height: 100dvh;
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   font-family: "Share Tech Mono", monospace;
   background: var(--bg);
   color: var(--gold-pale);
+  isolation: isolate;
+}
+
+#syndicate-otp-mount .public-heading-lightning,
+#syndicate-otp-mount .public-heading-lightning--gold {
+  animation: none;
+  filter: none;
+  color: var(--gold);
 }
 
 .scanline {
@@ -300,6 +308,13 @@
   font-size: clamp(1.35rem, 2.8vw + 0.6rem, 3rem);
   font-weight: 900;
   letter-spacing: clamp(0.12em, 0.08em + 1vw, 0.35em);
+  color: var(--gold);
+  text-transform: uppercase;
+  animation: none;
+  filter: none;
+  text-shadow:
+    0 0 8px rgba(212, 175, 55, 0.45),
+    0 0 18px rgba(212, 175, 55, 0.25);
 }
 
 .login-form {
@@ -496,10 +511,11 @@
   transform: translateY(10px);
   border-radius: 4px;
   box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.8),
-    0 0 10px rgba(212, 175, 55, 0.8),
-    0 0 22px rgba(156, 124, 28, 0.55),
-    inset 0 0 10px rgba(212, 175, 55, 0.18);
+    0 0 0 1px rgba(212, 175, 55, 0.85),
+    0 0 14px rgba(212, 175, 55, 0.85),
+    0 0 32px rgba(212, 175, 55, 0.55),
+    0 0 54px rgba(156, 124, 28, 0.35),
+    inset 0 0 12px rgba(212, 175, 55, 0.2);
   transition: box-shadow 0.28s ease, border-color 0.28s ease, transform 0.28s ease;
 }
 

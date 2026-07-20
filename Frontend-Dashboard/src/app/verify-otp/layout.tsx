@@ -3,12 +3,12 @@ import { buildPageMetadata } from "@/lib/seo";
 import "../syndicate-otp/syndicate-otp.css";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Login",
-  description: "Sign in to your Syndicate account.",
-  path: "/login",
+  title: "Verify code",
+  description: "Enter your Syndicate one-time code.",
+  path: "/verify-otp",
   noIndex: true,
 });
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function VerifyOtpLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

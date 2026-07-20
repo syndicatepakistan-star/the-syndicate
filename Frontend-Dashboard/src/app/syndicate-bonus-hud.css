@@ -1,5 +1,6 @@
-/* Bonus mission — dystopian red HUD (Syndicate Mode). */
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap");
+/* Bonus mission — dystopian red HUD (Syndicate Mode).
+   Orbitron / Share Tech Mono load via syndicate-otp.css on auth routes;
+   do not @import Google Fonts here — this file is pulled mid-globals.css. */
 
 .syndicate-bonus-hud-wrap {
   --hud-bg: #1a0000;

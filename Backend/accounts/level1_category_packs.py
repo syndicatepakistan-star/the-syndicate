@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 LEVEL1_CATEGORY_PACK_SLUGS = frozenset(
@@ -37,8 +38,32 @@ def category_for_level1_pack(plan: str) -> str | None:
     return LEVEL1_CATEGORY_BY_PLAN.get((plan or "").strip().lower())
 
 
+def _level1_playlists_qs(category: str):
+    """
+    Only the 11 Level 1 programs in a category.
+
+    Vault packs (Agentic AI, AI Content, Trading, etc.) are also stored with
+    category=business_model — they must NEVER be granted by Unlock All Models.
+    """
+    from accounts.level1_program_catalog import LEVEL1_BUSINESS_MODEL_PROGRAMS, LEVEL1_PSYCHOLOGY_PROGRAMS
+    from apps.video_streaming.models import StreamPlaylist
+
+    catalog_slugs = (
+        {row.catalog_slug for row in LEVEL1_PSYCHOLOGY_PROGRAMS}
+        if category == "business_psychology"
+        else {row.catalog_slug for row in LEVEL1_BUSINESS_MODEL_PROGRAMS}
+    )
+
+    return StreamPlaylist.objects.filter(
+        is_published=True,
+        is_coming_soon=False,
+        category=category,
+        slug__in=catalog_slugs,
+    ).filter(Q(vault_plan_slug="") | Q(vault_plan_slug__isnull=True))
+
+
 def user_owns_level1_category_pack(user, plan: str) -> bool:
-    """True when the pack was purchased or every published playlist in the category is unlocked."""
+    """True when the pack was purchased or every Level 1 playlist in the category is unlocked."""
     from apps.portal.models import UserPlanPurchase
     from apps.video_streaming.entitlements import unlocked_stream_playlist_ids_for_user
     from apps.video_streaming.models import StreamPlaylist
@@ -55,13 +80,18 @@ def user_owns_level1_category_pack(user, plan: str) -> bool:
     ).exists():
         return True
 
-    playlist_ids = list(
-        StreamPlaylist.objects.filter(
-            is_published=True,
-            is_coming_soon=False,
-            category=category,
-        ).values_list("id", flat=True)
-    )
+    playlist_ids = list(_level1_playlists_qs(category).values_list("id", flat=True))
+    if not playlist_ids:
+        # Legacy DBs without level1-* slugs: still never grant/count vault-linked rows.
+        playlist_ids = list(
+            StreamPlaylist.objects.filter(
+                is_published=True,
+                is_coming_soon=False,
+                category=category,
+            )
+            .filter(Q(vault_plan_slug="") | Q(vault_plan_slug__isnull=True))
+            .values_list("id", flat=True)
+        )
     if not playlist_ids:
         return False
 
@@ -76,7 +106,7 @@ def grant_level1_category_pack_playlists(
     session_id: str = "",
     paid_currency: str = "",
 ) -> int:
-    """Mark every published playlist in the pack category as paid for this user. Returns count granted/updated."""
+    """Mark only the 11 Level 1 playlists in the pack category as paid. Returns count granted/updated."""
     from apps.video_streaming.models import StreamPlaylist, StreamPlaylistPurchase
 
     category = category_for_level1_pack(plan)
@@ -88,7 +118,17 @@ def grant_level1_category_pack_playlists(
     now = timezone.now()
     granted = 0
 
-    for playlist in StreamPlaylist.objects.filter(is_published=True, category=category):
+    playlists = list(_level1_playlists_qs(category))
+    if not playlists:
+        # Legacy DBs may use different slugs — still never grant vault-linked rows.
+        playlists = list(
+            StreamPlaylist.objects.filter(
+                is_published=True,
+                category=category,
+            ).filter(Q(vault_plan_slug="") | Q(vault_plan_slug__isnull=True))
+        )
+
+    for playlist in playlists:
         purchase, created = StreamPlaylistPurchase.objects.get_or_create(
             user=user,
             playlist=playlist,

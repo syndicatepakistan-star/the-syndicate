@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import "../syndicate-otp/syndicate-otp.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Sign Up",

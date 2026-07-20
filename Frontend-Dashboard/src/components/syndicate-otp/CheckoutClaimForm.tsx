@@ -327,7 +327,7 @@ export function CheckoutClaimForm({
             >
               {headline}
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-100/85 sm:text-[16px]">
+            <p className="mx-auto mt-4 max-w-2xl text-center text-[15px] leading-relaxed text-zinc-100/85 sm:text-[16px]">
               {step === "email"
                 ? "We will send a one-time code to this inbox so your unlock attaches to the right account."
                 : `Code sent to ${email}. Paste it below to open your vault.`}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export const COOKIE_CONSENT_KEY = "syndicate_cookie_consent";
@@ -27,17 +28,34 @@ export function writeCookieConsent(value: CookieConsentValue): void {
   window.dispatchEvent(new CustomEvent("syndicate-cookie-consent", { detail: value }));
 }
 
-/** Bottom consent bar — gates analytics until the visitor accepts. */
+const POLICY_BULLETS = [
+  "Essential cookies keep you signed in, remember currency, and protect checkout / OTP flows.",
+  "Analytics cookies (optional) help us understand which pages work well — only after you Accept all.",
+  "We do not sell your personal data. You can clear site data in your browser anytime to reset this choice.",
+  "Affiliate attribution may use a visitor id so referrals can be credited when you complete a purchase.",
+] as const;
+
+/** Bottom consent bar — gates analytics until the visitor accepts. Hidden on OTP login/signup. */
 export function CookieConsentBanner() {
+  const pathname = usePathname() || "";
   const [visible, setVisible] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
+
+  const hideOnAuth =
+    pathname.startsWith("/syndicate-otp") ||
+    pathname.startsWith("/affiliate-login") ||
+    pathname.startsWith("/checkout");
 
   useEffect(() => {
-    if (readCookieConsent()) return;
+    if (hideOnAuth || readCookieConsent()) {
+      setVisible(false);
+      return;
+    }
     const id = window.setTimeout(() => setVisible(true), 600);
     return () => window.clearTimeout(id);
-  }, []);
+  }, [hideOnAuth]);
 
-  if (!visible) return null;
+  if (!visible || hideOnAuth) return null;
 
   const choose = (value: CookieConsentValue) => {
     writeCookieConsent(value);
@@ -68,6 +86,23 @@ export function CookieConsentBanner() {
             We use essential cookies to run The Syndicate and optional analytics cookies to improve
             the site. You can change this anytime by clearing site data.
           </p>
+          <button
+            type="button"
+            onClick={() => setShowPolicy((v) => !v)}
+            className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300 underline-offset-2 transition hover:text-cyan-100 hover:underline"
+            aria-expanded={showPolicy}
+          >
+            {showPolicy ? "Hide policies" : "Read policies"}
+          </button>
+          {showPolicy ? (
+            <ul className="mt-2 space-y-1.5 border-t border-white/10 pt-2 text-[12px] leading-relaxed text-zinc-300/90 sm:text-[13px]">
+              {POLICY_BULLETS.map((line) => (
+                <li key={line.slice(0, 28)} className="pl-3 relative before:absolute before:left-0 before:content-['•'] before:text-amber-300/80">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch">
           <button

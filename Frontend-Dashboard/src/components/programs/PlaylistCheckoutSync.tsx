@@ -43,14 +43,16 @@ export function PlaylistCheckoutSync() {
         if (cancelled) return;
         if (!confirmed) return;
         const clean = new URL(window.location.href);
+        clean.pathname = "/dashboard/programs";
         clean.searchParams.delete("playlist_checkout");
         clean.searchParams.delete("session_id");
         clean.searchParams.delete("playlist_id");
         clean.searchParams.delete("playlist");
         clean.searchParams.delete("pack");
-        clean.searchParams.set("section", "programs");
+        clean.searchParams.delete("section");
         markDashboardCheckoutReturn();
-        window.history.replaceState({}, "", clean.toString());
+        const qs = clean.searchParams.toString();
+        window.history.replaceState({}, "", qs ? `${clean.pathname}?${qs}` : clean.pathname);
       }
     })();
     return () => {

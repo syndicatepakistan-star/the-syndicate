@@ -137,10 +137,11 @@ export function navigateToDashboardProgramCard(programId: number): void {
 
   const applyUrl = () => {
     const url = new URL(window.location.href);
-    url.pathname = "/dashboard";
-    url.searchParams.set("section", "programs");
+    url.pathname = "/dashboard/programs";
+    url.searchParams.delete("section");
     url.searchParams.set("playlist", String(programId));
-    window.history.replaceState({}, "", `${url.pathname}?${url.search}`);
+    const qs = url.searchParams.toString();
+    window.history.replaceState({}, "", qs ? `${url.pathname}?${qs}` : url.pathname);
   };
 
   const focus = () => {

@@ -1,16 +1,25 @@
 "use client";
 
-import LetterGlitch from "@/components/LetterGlitch";
-import type { ComponentProps } from "react";
+import { LoopBgVideo } from "@/components/marketing/LoopBgVideo";
 
-type HeroGlitchBackgroundProps = ComponentProps<typeof LetterGlitch>;
+type HeroGlitchBackgroundProps = {
+  className?: string;
+  /** Kept for call-site compatibility; canvas glitch was replaced by bg.mp4. */
+  glitchSpeed?: number;
+  centerVignette?: boolean;
+  outerVignette?: boolean;
+  smooth?: boolean;
+  glitchColors?: string[];
+  layerOpacity?: number;
+};
 
-/** Animated glitch canvas (placeholder is server-rendered in page.tsx for instant paint). */
-export function HeroGlitchBackground({ className, ...glitchProps }: HeroGlitchBackgroundProps) {
+/** Hero background — compressed looping `/assets/bg.mp4` (replaces LetterGlitch canvas). */
+export function HeroGlitchBackground({ className }: HeroGlitchBackgroundProps) {
   return (
-    <LetterGlitch
-      {...glitchProps}
-      className={`absolute inset-0 z-[1] h-full w-full min-w-0 ${className ?? ""}`.trim()}
+    <LoopBgVideo
+      className={`z-[1] h-full w-full min-w-0 ${className ?? ""}`.trim()}
+      scrimOpacity={0.45}
+      videoOpacity={0.9}
     />
   );
 }

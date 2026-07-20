@@ -4,9 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { HelpCircle } from 'lucide-react'
-
-const VIMEO_EMBED =
-  'https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1'
+import { LoopBgVideo } from '@/components/marketing/LoopBgVideo'
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -59,23 +57,9 @@ export function AffiliatePublicSection({ className }: { className?: string }) {
       )}
       aria-labelledby="affiliate-program-heading"
     >
-      {/* Vimeo background — [Falling Money on Vimeo](https://player.vimeo.com/video/988922121) */}
+      {/* Local compressed loop — replaces third-party Vimeo background */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <iframe
-          title=""
-          src={VIMEO_EMBED}
-          className="pointer-events-none absolute left-1/2 top-1/2 opacity-50 md:opacity-45"
-          style={{
-            border: 'none',
-            width: '100vw',
-            height: '56.25vw',
-            minHeight: '100%',
-            minWidth: '177.77vh',
-            transform: 'translate(-50%, -50%)',
-          }}
-          allow="autoplay; fullscreen; picture-in-picture"
-          loading="lazy"
-        />
+        <LoopBgVideo className="absolute inset-0 h-full w-full" scrimOpacity={0.72} videoOpacity={0.5} />
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-[1] bg-black/72" aria-hidden />

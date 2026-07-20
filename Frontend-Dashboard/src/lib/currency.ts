@@ -176,7 +176,7 @@ export function formatMoney(
   const min = options?.minimumFractionDigits ?? 2;
   const max = options?.maximumFractionDigits ?? 2;
   const symbol = currencySymbolForCode(options?.currency ?? getActiveCurrency());
-  return `${symbol}${safe.toLocaleString(undefined, {
+  return `${symbol}${safe.toLocaleString("en-US", {
     minimumFractionDigits: min,
     maximumFractionDigits: max,
   })}`;

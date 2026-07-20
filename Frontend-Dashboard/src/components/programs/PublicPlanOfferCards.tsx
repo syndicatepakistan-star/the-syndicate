@@ -1,12 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
-import { PlanOfferDetailModal } from "@/components/programs/PlanOfferDetailModal";
-import { PackVaultOfferModal } from "@/components/programs/PackVaultOfferModal";
-import { TradingModuleVaultModal } from "@/components/programs/TradingModuleVaultModal";
 import {
   PLAN_OFFERS,
   PLAN_OFFERS_PRIMARY,
@@ -42,6 +40,67 @@ import { UnlockCartPanel } from "@/components/programs/UnlockCartPanel";
 import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
 import toast, { Toaster } from "react-hot-toast";
+
+const PlanOfferDetailModal = dynamic(
+  () => import("@/components/programs/PlanOfferDetailModal").then((m) => m.PlanOfferDetailModal),
+  { ssr: false },
+);
+const PackVaultOfferModal = dynamic(
+  () => import("@/components/programs/PackVaultOfferModal").then((m) => m.PackVaultOfferModal),
+  { ssr: false },
+);
+const TradingModuleVaultModal = dynamic(
+  () => import("@/components/programs/TradingModuleVaultModal").then((m) => m.TradingModuleVaultModal),
+  { ssr: false },
+);
+
+function LazyVaultOffersRow({
+  offers,
+  renderOffer,
+}: {
+  offers: readonly PlanOfferDef[];
+  renderOffer: (offer: PlanOfferDef) => ReactNode;
+}) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || visible) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px 0px", threshold: 0.01 },
+    );
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <div
+      ref={hostRef}
+      className="plan-offers-vault-grid grid w-full grid-cols-1 items-stretch gap-5 overflow-visible sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 lg:gap-12"
+    >
+      {visible
+        ? offers.map((offer) => (
+            <div key={offer.plan} className="plan-offers-vault-cell">
+              {renderOffer(offer)}
+            </div>
+          ))
+        : offers.map((offer) => (
+            <div
+              key={offer.plan}
+              className="plan-offers-vault-cell min-h-[18rem] animate-pulse rounded-2xl bg-white/[0.04]"
+              aria-hidden
+            />
+          ))}
+    </div>
+  );
+}
 
 const PACK_SPOTLIGHT: Record<
   PlanOfferDef["accent"],
@@ -399,8 +458,7 @@ function PublicPlanOfferCardsInner({
   };
 
   return (
-    <section
-      id="syndicate-elite-offers"
+    <div
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
       style={sectionSpotlightStyle}
       className={cn(
@@ -421,59 +479,59 @@ function PublicPlanOfferCardsInner({
           <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8">
             {PLAN_OFFERS_PRIMARY.map(renderOffer)}
           </div>
-          <div className="plan-offers-vault-grid grid w-full grid-cols-1 items-stretch gap-5 overflow-visible sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 lg:gap-12">
-            {PLAN_OFFERS_VAULT.map((offer) => (
-              <div key={offer.plan} className="plan-offers-vault-cell">
-                {renderOffer(offer)}
-              </div>
-            ))}
-          </div>
+          <LazyVaultOffersRow offers={PLAN_OFFERS_VAULT} renderOffer={renderOffer} />
         </div>
       ) : (
         <div className="flex w-full flex-row flex-wrap items-start justify-center gap-2 sm:gap-3">
           {PLAN_OFFERS.map(renderOffer)}
         </div>
       )}
-      <PlanOfferDetailModal
-        offer={detailOffer}
-        onClose={() => setDetailOffer(null)}
-        onUnlock={(offer) => void joinOffer(offer)}
-        unlockBusy={busyPlan === "bundle"}
-      />
-      <PackVaultOfferModal
-        packOffer={vaultPackOffer}
-        busyPlan={busyPlan}
-        purchasedSlugs={purchasedSet}
-        accessTier={accessTier}
-        moneyMasteryActive={moneyMasteryActive}
-        selectionMode={unlockCart.selectionMode}
-        isInCart={unlockCart.isInCart}
-        onClose={() => setVaultPackOffer(null)}
-        onDetails={setDetailOffer}
-        onModuleDetails={(offer) => {
-          if (isTradingModuleSlug(offer.plan)) {
-            setTradingModuleOffer(offer);
-            return;
-          }
-          setDetailOffer(offer);
-        }}
-        onUnlock={(offer) => void joinOffer(offer)}
-        onOpenUnlocked={openUnlocked}
-        onExploreTradingModule={(offer) => setTradingModuleOffer(offer)}
-      />
-      <TradingModuleVaultModal
-        moduleOffer={tradingModuleOffer}
-        busyPlan={busyPlan}
-        purchasedSlugs={purchasedSet}
-        accessTier={accessTier}
-        moneyMasteryActive={moneyMasteryActive}
-        selectionMode={unlockCart.selectionMode}
-        isInCart={unlockCart.isInCart}
-        onClose={() => setTradingModuleOffer(null)}
-        onDetails={setDetailOffer}
-        onUnlock={(offer) => void joinOffer(offer)}
-        onOpenUnlocked={openUnlocked}
-      />
+      {detailOffer ? (
+        <PlanOfferDetailModal
+          offer={detailOffer}
+          onClose={() => setDetailOffer(null)}
+          onUnlock={(offer) => void joinOffer(offer)}
+          unlockBusy={busyPlan === "bundle"}
+        />
+      ) : null}
+      {vaultPackOffer ? (
+        <PackVaultOfferModal
+          packOffer={vaultPackOffer}
+          busyPlan={busyPlan}
+          purchasedSlugs={purchasedSet}
+          accessTier={accessTier}
+          moneyMasteryActive={moneyMasteryActive}
+          selectionMode={unlockCart.selectionMode}
+          isInCart={unlockCart.isInCart}
+          onClose={() => setVaultPackOffer(null)}
+          onDetails={setDetailOffer}
+          onModuleDetails={(offer) => {
+            if (isTradingModuleSlug(offer.plan)) {
+              setTradingModuleOffer(offer);
+              return;
+            }
+            setDetailOffer(offer);
+          }}
+          onUnlock={(offer) => void joinOffer(offer)}
+          onOpenUnlocked={openUnlocked}
+          onExploreTradingModule={(offer) => setTradingModuleOffer(offer)}
+        />
+      ) : null}
+      {tradingModuleOffer ? (
+        <TradingModuleVaultModal
+          moduleOffer={tradingModuleOffer}
+          busyPlan={busyPlan}
+          purchasedSlugs={purchasedSet}
+          accessTier={accessTier}
+          moneyMasteryActive={moneyMasteryActive}
+          selectionMode={unlockCart.selectionMode}
+          isInCart={unlockCart.isInCart}
+          onClose={() => setTradingModuleOffer(null)}
+          onDetails={setDetailOffer}
+          onUnlock={(offer) => void joinOffer(offer)}
+          onOpenUnlocked={openUnlocked}
+        />
+      ) : null}
       {!shellHosted ? (
         <>
           <Toaster
@@ -495,6 +553,6 @@ function PublicPlanOfferCardsInner({
           />
         </>
       ) : null}
-    </section>
+    </div>
   );
 }

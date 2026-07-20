@@ -334,7 +334,7 @@ export function PlanOfferCard({
                 width={isModule ? 480 : 828}
                 height={isModule ? 300 : 518}
                 alt={offer.title}
-                loading={isModule || offer.plan !== "bundle" ? "lazy" : "eager"}
+                loading={offer.plan === "bundle" ? "eager" : "lazy"}
                 fetchPriority={offer.plan === "bundle" ? "high" : "low"}
                 decoding="async"
                 onError={(e) => {

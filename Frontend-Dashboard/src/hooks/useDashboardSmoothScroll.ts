@@ -8,7 +8,7 @@ const SCROLL_CONTAINER_SELECTOR =
 
 /* Longer settle window: is-scrolling now only pauses animations (nothing is hidden),
    so a generous delay avoids pause/play churn on the bg video during fast up/down scrolls. */
-const SCROLL_END_MS = 420;
+const SCROLL_END_MS = 600;
 
 function pauseDashboardVideos(root: HTMLElement) {
   root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import DomeGallery from "@/components/DomeGallery";
 import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import { HomeSectionPlaceholder } from "@/components/home/HomeSectionPlaceholder";
 import type { ComponentProps } from "react";
@@ -30,6 +29,14 @@ const GlobalBottomSections = dynamic(() => import("@/components/GlobalBottomSect
   ssr: false,
   loading: () => <HomeSectionPlaceholder minHeight="100dvh" titleWidth="12rem" />,
 });
+const DomeGallery = dynamic(() => import("@/components/DomeGallery"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full min-h-[280px] w-full items-center justify-center bg-transparent" aria-hidden>
+      <div className="h-3 w-40 animate-pulse rounded-full bg-amber-400/20" />
+    </div>
+  ),
+});
 
 type DomeGalleryProps = ComponentProps<typeof DomeGallery>;
 
@@ -45,7 +52,7 @@ export function HomePricingSection() {
   return (
     <LazyWhenVisible
       className="home-lazy-section bg-black"
-      rootMargin="480px 0px"
+      rootMargin="200px 0px"
       minHeight="60dvh"
       placeholder={<PricingPageSkeleton />}
     >

@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import { cookies } from "next/headers";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { DeferredGtm } from "@/components/DeferredGtm";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { CheckoutCurrency } from "@/lib/currency";
 import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
@@ -15,9 +16,7 @@ import {
   DEFAULT_SITE_TITLE,
 } from "@/lib/structuredData";
 import "./globals.css";
-import "./syndicate-otp/syndicate-otp.css";
-
-const GTM_ID = "GTM-WBW2KZV6";
+/* syndicate-otp.css is loaded only in OTP / checkout / affiliate-login layouts — not on marketing pages. */
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -107,36 +106,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <link rel="preload" href="/fonts/Thryon.otf" as="font" type="font/otf" crossOrigin="anonymous" />
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body
         className={`${jetbrainsMono.variable} min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased`}
         suppressHydrationWarning
       >
-        {/* GTM after first paint — avoids render-blocking / TBT hit on marketing + quiz. */}
-        <Script id="google-tag-manager" strategy="lazyOnload">{`
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','${GTM_ID}');
-        `}</Script>
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-            title="Google Tag Manager"
-          />
-        </noscript>
-        {/* End Google Tag Manager (noscript) */}
+        <DeferredGtm />
         <Providers initialCurrency={initialCurrency}>
           <ServiceWorkerRegister />
           <RouteWarmup />
           {children}
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>

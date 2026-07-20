@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -10,10 +11,10 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import dynamic from "next/dynamic";
 import { ChevronLeft, Lock } from "lucide-react";
 import toast from "react-hot-toast";
-import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
-import { CourseVideoPlaylist } from "@/components/programs/CourseVideoPlaylist";
+import type { ChromaItem } from "@/components/ChromaGrid";
 import {
   ProgramPlaylistDescriptionModal,
   PROGRAM_DETAIL_TRIGGER_ATTR,
@@ -25,7 +26,6 @@ import { isVaultCourseSlug, isVaultPackKey, vaultCourseBySlug } from "@/componen
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { markDashboardCheckoutReturn, resetProgramsInnerScrollOnly } from "@/lib/dashboardShellScroll";
-import { StreamPlaylistProgramPanel } from "@/components/programs/StreamPlaylistProgramPanel";
 import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
@@ -73,6 +73,28 @@ import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
+
+const lessonPanelFallback = (
+  <div className="min-h-[12rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+);
+
+const CourseVideoPlaylist = dynamic(
+  () => import("@/components/programs/CourseVideoPlaylist").then((m) => m.CourseVideoPlaylist),
+  { ssr: false, loading: () => lessonPanelFallback },
+);
+
+const StreamPlaylistProgramPanel = dynamic(
+  () =>
+    import("@/components/programs/StreamPlaylistProgramPanel").then(
+      (m) => m.StreamPlaylistProgramPanel,
+    ),
+  { ssr: false, loading: () => lessonPanelFallback },
+);
+
+const ChromaGrid = dynamic(() => import("@/components/ChromaGrid"), {
+  ssr: false,
+  loading: () => <div className="min-h-[280px] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />,
+});
 
 function coursesListErrorMessage(status: number, data: unknown): string {
   if (typeof data === "object" && data && "detail" in data) {
@@ -243,8 +265,8 @@ type Course = {
 };
 
 type Props = {
-  /** Hero slideshow (e.g. InstructorSlideshow) rendered above the grid */
-  instructorHero: ReactNode;
+  /** Optional hero slideshow — not shown on dashboard programs grid. */
+  instructorHero?: ReactNode;
   chromaItems: ChromaItem[];
   selectedCourseId: string | null;
   onSelectCourse: (id: string) => void;
@@ -259,7 +281,7 @@ type Props = {
   sectionActive?: boolean;
 };
 
-export function ProgramsCourseSection({
+export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   instructorHero,
   chromaItems,
   selectedCourseId,
@@ -335,7 +357,7 @@ export function ProgramsCourseSection({
         }
         clearStreamPlaylistsCache();
         await reloadApiCourses();
-        if (!cancelled) await reloadStreamPlaylists({ forceRefresh: true });
+        if (!cancelled) await reloadStreamPlaylists();
       } catch {
         if (!cancelled) setStaff(false);
       }
@@ -590,9 +612,10 @@ export function ProgramsCourseSection({
     void prefetchStreamPlaylistExperience(id, { context: "programs" });
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.searchParams.set("section", "programs");
+      url.pathname = "/dashboard/programs";
+      url.searchParams.delete("section");
       url.searchParams.set("playlist", String(id));
-      window.history.replaceState({}, "", url.toString());
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
   };
   openStreamPlaylistRef.current = openStreamPlaylist;
@@ -839,10 +862,11 @@ export function ProgramsCourseSection({
     void prefetchStreamPlaylistExperience(playlistIdFromUrl, { context: "programs" });
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.searchParams.set("section", "programs");
+      url.pathname = "/dashboard/programs";
+      url.searchParams.delete("section");
       url.searchParams.set("playlist", String(playlistIdFromUrl));
       url.searchParams.delete("playlist_id");
-      window.history.replaceState({}, "", url.toString());
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
   }, [detailPlaylistId, secureView]);
 
@@ -1575,4 +1599,4 @@ export function ProgramsCourseSection({
     </>
     </div>
   );
-}
+});

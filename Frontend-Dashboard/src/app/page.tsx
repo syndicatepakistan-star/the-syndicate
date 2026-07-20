@@ -80,6 +80,8 @@ export default async function Home() {
               height={720}
               priority
               fetchPriority="high"
+              sizes="(max-width: 768px) 90vw, 720px"
+              quality={75}
               className="block h-auto w-full max-w-full object-contain"
               style={{
                 maxHeight: 'clamp(160px, 76dvh, 720px)',

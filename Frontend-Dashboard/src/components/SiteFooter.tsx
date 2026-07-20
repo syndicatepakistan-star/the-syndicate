@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import LetterGlitch from '@/components/LetterGlitch'
+import { LoopBgVideo } from '@/components/marketing/LoopBgVideo'
 import NeonTypingBadge from '@/components/NeonTypingBadge'
 
 const footerLinkClass =
@@ -29,16 +29,7 @@ export default function SiteFooter({
       }}
     >
       <div className="pointer-events-none absolute inset-0">
-        <LetterGlitch
-          glitchSpeed={70}
-          centerVignette
-          outerVignette
-          smooth
-          glitchColors={['#4a2b72', '#61dca3', '#61b3dc']}
-          layerOpacity={0.8}
-          className="absolute inset-0 h-full w-full"
-        />
-        <div className="absolute inset-0 bg-black/62" />
+        <LoopBgVideo className="absolute inset-0 h-full w-full" scrimOpacity={0.62} videoOpacity={0.88} />
       </div>
       <div className="site-footer-inner relative z-10 mx-auto flex w-full max-w-[min(1700px,97vw)] flex-col gap-[clamp(1.7rem,4vw,3.25rem)]">
         {/* Logo + slogan + quick links: one row on md, vertically centered to the same row height (footer vh band). */}

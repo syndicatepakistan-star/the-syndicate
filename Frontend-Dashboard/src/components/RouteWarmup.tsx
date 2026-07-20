@@ -25,16 +25,17 @@ export default function RouteWarmup() {
     const isHome = pathname === "/";
     const isFounder = pathname === "/our-founder";
     const isQuiz = pathname === "/quiz" || pathname.startsWith("/quiz/");
+    const isPrograms = pathname === "/programs" || pathname.startsWith("/programs/");
 
-    // Founder + quiz: skip marketing media warmup (competes with LCP / unused network).
-    if (!isFounder && !isQuiz) {
+    // Skip marketing media warmup on light pages + programs (competes with LCP).
+    if (!isFounder && !isQuiz && !isPrograms) {
       scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
     }
 
     runWhenIdle(() => {
-      router.prefetch("/programs");
+      if (!isPrograms) router.prefetch("/programs");
       router.prefetch("/membership");
-    }, isFounder || isQuiz ? 2800 : 1200);
+    }, isFounder || isQuiz || isPrograms ? 2800 : 1200);
   }, [router, pathname]);
 
   return null;

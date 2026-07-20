@@ -7007,7 +7007,9 @@ figcaption {
   }
 }
 
-/* Syndicate scroll performance — pause heavy FX while the main column scrolls */
+/* Syndicate scroll performance — pause heavy FX while the main column scrolls.
+   Keep layers painted (visibility:hidden / filter:none stripped neon and caused
+   a “colors vanish” flash). Pause animations only. */
 .syndicate-mood-context.is-scrolling .syndicate-dash-scanlines,
 .syndicate-mood-context.is-scrolling .mega-game-hud-grid,
 .syndicate-mood-context.is-scrolling .mega-game-hud-vignette,
@@ -7016,8 +7018,7 @@ figcaption {
 .syndicate-mood-context.is-scrolling .mega-neon-deck::after,
 .syndicate-mood-context.is-scrolling .mega-neon-deck__glow,
 .syndicate-mood-context.is-scrolling .syndicate-mega-command.syndicate-game-vault--mega::after {
-  visibility: hidden !important;
-  animation: none !important;
+  animation-play-state: paused !important;
 }
 
 .syndicate-mood-context.is-scrolling,
@@ -7034,7 +7035,8 @@ figcaption {
 .syndicate-mood-context.is-scrolling .syndicate-game-vault--mega,
 .syndicate-mood-context.is-scrolling .mega-alert-countdown,
 .syndicate-mood-context.is-scrolling .syndicate-hud-deck.syndicate-game-vault {
-  filter: none !important;
+  /* Keep glow filters painted; only pause motion via rules above. */
+  will-change: auto;
 }
 
 .syndicate-mood-context .syndicate-mode-section,
@@ -12369,7 +12371,12 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   /* Dashboard programs: skip CV — fast scroll leaves empty card shells (unlike public /programs). */
   .dashboard-hamburger-chrome .plan-offer-card,
   .dashboard-hamburger-chrome .program-playlist-card,
-  .dashboard-hamburger-chrome .dashboard-perf-section {
+  .dashboard-hamburger-chrome .dashboard-perf-section,
+  .dashboard-hamburger-chrome .programs-section-root,
+  .dashboard-hamburger-chrome .programs-grid-shell,
+  .dashboard-hamburger-chrome .programs-lesson-shell,
+  .dashboard-hamburger-chrome .chroma-grid,
+  .dashboard-hamburger-chrome [data-plan-offer] {
     content-visibility: visible;
     contain-intrinsic-size: none;
   }

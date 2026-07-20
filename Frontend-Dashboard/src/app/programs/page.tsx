@@ -1,15 +1,36 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
 import { NavApp } from '@/components/NavApp'
-import SiteFooter from '@/components/SiteFooter'
-import { ProgramsLibrarySection } from '@/components/programs/ProgramsLibrarySection'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
-import { PublicGoalPathSection } from '@/components/programs/PublicGoalPathSection'
 import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { buildPageMetadata } from '@/lib/seo'
+
+const ProgramsLibrarySection = dynamic(
+  () =>
+    import('@/components/programs/ProgramsLibrarySection').then((m) => m.ProgramsLibrarySection),
+  {
+    loading: () => (
+      <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    ),
+  },
+)
+
+const PublicGoalPathSection = dynamic(
+  () => import('@/components/programs/PublicGoalPathSection').then((m) => m.PublicGoalPathSection),
+  {
+    loading: () => (
+      <div className="mx-auto my-8 min-h-[18rem] w-full max-w-5xl animate-pulse rounded-xl bg-white/5" aria-hidden />
+    ),
+  },
+)
+
+const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
+  loading: () => <div className="min-h-[260px] w-full bg-[#02050b]" aria-hidden />,
+})
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',
@@ -49,7 +70,11 @@ export default async function ProgramsPage() {
       >
         <ProgramsGoldPillHeading as="h2" title="Programs" />
         <div className="mx-auto w-full max-w-[1400px] overflow-x-clip">
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+            }
+          >
             <ProgramsLibrarySection
               title="Programs Library"
               subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."

@@ -1,4 +1,5 @@
-/* Bonus mission — dystopian red HUD (Syndicate Mode). Orbitron loads via syndicate-otp.css in layout. */
+/* Bonus mission — dystopian red HUD (Syndicate Mode). */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap");
 
 .syndicate-bonus-hud-wrap {
   --hud-bg: #1a0000;

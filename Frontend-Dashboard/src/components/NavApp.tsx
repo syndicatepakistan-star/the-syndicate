@@ -1,15 +1,20 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { RadialNav } from '@/components/RadialNav'
 import type { NavSectionId } from '@/lib/marketing-nav-routes'
 import {
   MARKETING_NAV_HREF,
   MARKETING_PREFETCH_ROUTES,
   prefetchMarketingRoutes,
 } from '@/lib/marketing-nav-routes'
+
+const RadialNav = dynamic(
+  () => import('@/components/RadialNav').then((m) => m.RadialNav),
+  { ssr: false },
+)
 
 function getActiveNavId(pathname: string, hash: string): NavSectionId {
   if (hash === '#joinNowSection') return 'joinNow'
@@ -129,13 +134,15 @@ export function NavApp() {
               : 'pointer-events-none h-0 min-h-0 overflow-hidden opacity-0'
           }
         >
-          <RadialNav
-            open={menuOpen}
-            activeId={activeId}
-            onClose={handleClose}
-            onSelect={handleSelect}
-            onPrefetch={handlePrefetch}
-          />
+          {menuOpen ? (
+            <RadialNav
+              open={menuOpen}
+              activeId={activeId}
+              onClose={handleClose}
+              onSelect={handleSelect}
+              onPrefetch={handlePrefetch}
+            />
+          ) : null}
         </div>
       </div>
       <div className="sr-only" aria-hidden>

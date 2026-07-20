@@ -13,6 +13,7 @@ import {
   LEVEL1_SLUG_TITLE_OVERRIDES,
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
 } from "@/lib/level1ProgramCatalog";
+import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
 const COURSE_IMAGES = "/assets/programs/cources%20imnages";
@@ -262,6 +263,11 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("unreal engine.jpg"), alt: "Building Games Using Unreal Engine", fileName: "unreal engine.jpg", href: programPlaylistDeepLink(20), programId: 20 },
   { src: courseThumb("consistency.jpg"), alt: "Mastering Consistency", fileName: "consistency.jpg", href: programPlaylistDeepLink(6), programId: 6 },
   { src: courseThumb("print on demand.jpg"), alt: "Print On Demand", fileName: "print on demand.jpg", href: programPlaylistDeepLink(19), programId: 19 },
+  { src: courseThumb("ai automations.jpg"), alt: "AI Automations", fileName: "ai automations.jpg", href: programPlaylistDeepLink(16), programId: 16 },
+  { src: courseThumb("N8N Ai.jpg"), alt: "N8N AI Automation", fileName: "N8N Ai.jpg", href: programPlaylistDeepLink(17), programId: 17 },
+  { src: courseThumb("13rules.jpg"), alt: "Syndicate 13 Business Rules", fileName: "13rules.jpg", href: programPlaylistDeepLink(7), programId: 7 },
+  { src: courseThumb("money-philosophy.jpg"), alt: "Syndicate Money Philosophy", fileName: "money-philosophy.jpg", href: programPlaylistDeepLink(8), programId: 8 },
+  { src: courseThumb("warfare.jpg"), alt: "Business Warfare", fileName: "warfare.jpg", href: programPlaylistDeepLink(99), programId: 99 },
 ];
 
 /** All unique globe tile URLs — used for parallel preload on the home page. */
@@ -278,18 +284,22 @@ export const MOBILE_GLOBE_PACK_KEYS: readonly GlobePackKey[] = [
   "trading_technical_analysis",
 ];
 
-/** Mobile globe — curated Business Psychology highlights. */
-export const MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS: readonly number[] = [2, 3, 12, 6];
+/** Mobile globe — all 11 Business Psychology programs (lighter optimized thumbs). */
+export const MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS: readonly number[] = [
+  ...PUBLIC_PSYCHOLOGY_PROGRAM_ORDER,
+];
 
-/** Mobile globe — curated Business Model highlights. */
-export const MOBILE_GLOBE_BUSINESS_PROGRAM_IDS: readonly number[] = [20, 14, 24];
+/** Mobile globe — all 11 Business Model programs (lighter optimized thumbs). */
+export const MOBILE_GLOBE_BUSINESS_PROGRAM_IDS: readonly number[] = [
+  ...PUBLIC_BUSINESS_MODEL_PROGRAM_ORDER,
+];
 
 export const MOBILE_GLOBE_TILE_COUNT =
   MOBILE_GLOBE_PACK_KEYS.length +
   MOBILE_GLOBE_PSYCHOLOGY_PROGRAM_IDS.length +
   MOBILE_GLOBE_BUSINESS_PROGRAM_IDS.length;
 
-/** Pick the 12 mobile globe tiles (packs + psychology + business models). */
+/** Pick packs + 11 psychology + 11 business model tiles for mobile. */
 export function filterCuratedGlobeTilesForMobile(
   tiles: readonly CuratedGlobeTile[] = CURATED_GLOBE_TILES,
 ): CuratedGlobeTile[] {
@@ -305,6 +315,14 @@ export function filterCuratedGlobeTilesForMobile(
   ) as CuratedGlobeTile[];
 
   return [...packs, ...psychology, ...business];
+}
+
+/** Serve smaller Next-optimized URLs for mobile globe tiles (less decode / bandwidth). */
+export function lightenGlobeTilesForMobile<T extends { src: string }>(tiles: readonly T[]): T[] {
+  return tiles.map((tile) => ({
+    ...tile,
+    src: nextOptimizedImageUrl(tile.src, 256, 60),
+  }));
 }
 
 export const MOBILE_GLOBE_GALLERY_IMAGE_URLS: readonly string[] = [

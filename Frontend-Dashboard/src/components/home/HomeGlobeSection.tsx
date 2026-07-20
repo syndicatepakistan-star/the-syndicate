@@ -6,10 +6,12 @@ import type { ComponentProps } from "react";
 import { HomeDomeGallerySection } from "@/components/home/HomeBelowFoldSections";
 import { useMatchMedia } from "@/hooks/useMatchMedia";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
+import { LoopBgVideo } from "@/components/marketing/LoopBgVideo";
 import { warmProgramsSectionAssets } from "@/lib/mediaWarmCache";
 import {
   filterCuratedGlobeTilesForMobile,
   GLOBE_GALLERY_IMAGE_URLS,
+  lightenGlobeTilesForMobile,
   MOBILE_GLOBE_GALLERY_IMAGE_URLS,
   MOBILE_GLOBE_TILE_COUNT,
 } from "@/lib/programPlaylistThumbnails";
@@ -19,10 +21,6 @@ type DomeProps = ComponentProps<typeof HomeDomeGallerySection>;
 type HomeGlobeSectionProps = {
   images: DomeProps["images"];
 };
-
-/** Falling money — same Vimeo asset as affiliate band (background mode). */
-const VIMEO_MONEY_FALLING_EMBED =
-  "https://player.vimeo.com/video/988922121?background=1&autoplay=1&loop=1&muted=1&controls=0&playsinline=1";
 
 function GlobeSkeleton() {
   return (
@@ -53,10 +51,29 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
       const src = typeof item === "string" ? item : item.src;
       return mobileSrc.has(src);
     });
-    return filtered.length > 0 ? filtered : filterCuratedGlobeTilesForMobile();
+    const base =
+      filtered.length > 0
+        ? filtered
+        : filterCuratedGlobeTilesForMobile().map((tile) => ({
+            src: tile.src,
+            alt: tile.alt,
+            href: tile.href,
+          }));
+    return lightenGlobeTilesForMobile(
+      base.map((item) =>
+        typeof item === "string"
+          ? { src: item }
+          : { src: item.src, alt: item.alt, href: item.href },
+      ),
+    );
   }, [images, isMobile]);
 
-  const warmUrls = isMobile ? MOBILE_GLOBE_GALLERY_IMAGE_URLS : GLOBE_GALLERY_IMAGE_URLS;
+  const warmUrls = useMemo(() => {
+    if (!isMobile) return GLOBE_GALLERY_IMAGE_URLS;
+    return lightenGlobeTilesForMobile(
+      filterCuratedGlobeTilesForMobile().map((t) => ({ src: t.src })),
+    ).map((t) => t.src);
+  }, [isMobile]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -114,23 +131,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
     >
       {active ? (
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-          <iframe
-            title=""
-            src={VIMEO_MONEY_FALLING_EMBED}
-            className="pointer-events-none absolute left-1/2 top-1/2 opacity-[0.42] sm:opacity-45"
-            style={{
-              border: "none",
-              width: "100vw",
-              height: "56.25vw",
-              minHeight: "100%",
-              minWidth: "177.77vh",
-              transform: "translate(-50%, -50%)",
-            }}
-            allow="autoplay; fullscreen; picture-in-picture"
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-          <div className="absolute inset-0 bg-black/58" />
+          <LoopBgVideo className="absolute inset-0 h-full w-full" scrimOpacity={0.58} videoOpacity={0.55} />
         </div>
       ) : null}
       <div

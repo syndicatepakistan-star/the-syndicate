@@ -584,6 +584,19 @@
   background: #04060c;
 }
 
+/* Parent centers the claim card in the middle of the screen. */
+.checkout-page-wrap--claim-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
 /* Success claim: avoid flex-centering tall content (clips the top / can't scroll to start). */
 .checkout-success-scroll {
   position: fixed;
@@ -606,38 +619,85 @@
   padding-bottom: 3rem;
 }
 
-/* Claim mode: full viewport, content centered when it fits; scrolls when taller. */
-.checkout-success-scroll--claim {
-  display: block;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: max(1.75rem, min(4.5vh, 2.5rem)) max(1.25rem, min(5.5vw, 2.5rem))
-    max(2rem, min(5.5vh, 3rem));
+/*
+ * Claim mode: force a centered 90vw × 90vh panel.
+ * Use !important to beat base .checkout-success-scroll / __inner rules.
+ */
+.checkout-success-scroll.checkout-success-scroll--claim {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 90vw !important;
+  height: 90vh !important;
+  height: 90dvh !important;
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+  max-height: 90dvh !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
-.checkout-success-scroll__inner--claim {
-  width: 100%;
-  max-width: min(100%, 62.4rem);
-  margin: 0 auto;
-  padding: 0.5rem 0 1.25rem;
+.checkout-success-scroll__inner.checkout-success-scroll__inner--claim {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
 }
 
 .checkout-claim-shell {
-  width: 100%;
-  margin: 0 auto;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
 }
 
-/* Keep claim content clear of CyberChamferFrame absolute inset borders / corners. */
+.checkout-claim-frame {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
 .checkout-claim-frame > div {
-  overflow: visible !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 .checkout-claim-frame__inner {
-  /* Override .cyber-frame-mobile-pad !important padding that cramped this screen. */
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   padding: 0 !important;
+  overflow: hidden !important;
 }
 
-/* Hide absolute inset borders / corner brackets that were cutting through claim text. */
+/* Hide absolute inset borders / corner brackets that cut through claim text. */
 .checkout-claim-frame__inner > span[aria-hidden="true"].absolute.border,
 .checkout-claim-frame__inner > span[aria-hidden="true"].absolute.border-l-2,
 .checkout-claim-frame__inner > span[aria-hidden="true"].absolute.border-b-2,
@@ -645,37 +705,55 @@
   display: none !important;
 }
 
+.checkout-claim-frame__content {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
 .checkout-claim-layout {
   position: relative;
   z-index: 2;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0;
   width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   box-sizing: border-box;
-  /* Clear absolute inset-[8px]/[16px] borders + corner brackets inside the frame. */
-  padding: clamp(2.75rem, 5vw, 3.75rem) clamp(1.35rem, 4vw, 2.75rem)
-    clamp(2.75rem, 5vw, 3.5rem);
+  padding: clamp(1.5rem, 3.2vh, 2.5rem) clamp(1.15rem, 3.2vw, 2.5rem)
+    clamp(1.35rem, 2.8vh, 2.25rem);
+  overflow: hidden;
 }
 
 .checkout-claim-header {
+  flex: 0 0 auto;
   text-align: center;
-  padding: 0 0.5rem 1.75rem;
+  padding: 0 0.75rem 1.15rem;
 }
 
 .checkout-claim-form-block {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1rem;
   width: 100%;
-  padding: 0.25rem 0.5rem 1.75rem;
+  padding: 0.25rem 0.75rem 1.15rem;
 }
 
 .checkout-claim-divider {
+  flex: 0 0 auto;
   width: 100%;
   height: 1px;
-  margin: 0.35rem 0 1.75rem;
+  margin: 0.1rem 0 1.15rem;
   background: linear-gradient(
     to right,
     transparent,
@@ -685,31 +763,39 @@
 }
 
 .checkout-claim-programs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   width: 100%;
-  padding: 0.25rem 0 0.5rem;
+  min-height: 0;
+  padding: 0.1rem 0 0;
+  overflow: hidden;
 }
 
 .checkout-claim-programs__head {
   display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.85rem 1rem;
-  margin-bottom: 1.15rem;
-  padding: 0 0.25rem;
+  gap: 0.85rem 1.25rem;
+  margin-bottom: 1rem;
+  padding: 0 0.35rem;
 }
 
 .checkout-claim-programs__list {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  max-height: min(54.6vh, 36.4rem);
+  min-height: 0;
+  max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.15rem 0.2rem 0.35rem;
+  padding: 0.2rem 0.35rem 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
 }
@@ -745,13 +831,13 @@
   flex-direction: column;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1.1rem 1.15rem 1.25rem;
+  padding: 1.15rem 1.25rem 1.35rem;
   text-align: left;
 }
 
 @media (min-width: 640px) {
   .checkout-claim-item {
-    grid-template-columns: minmax(10rem, 12.5rem) minmax(0, 1fr);
+    grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
   }
 
   .checkout-claim-item__media {
@@ -761,20 +847,20 @@
   }
 
   .checkout-claim-item__body {
-    padding: 1.25rem 1.5rem;
-    gap: 0.85rem;
+    padding: 1.35rem 1.75rem;
+    gap: 0.9rem;
   }
 }
 
 @media (max-width: 639px) {
   .checkout-claim-layout {
-    padding: 2.6rem 1.15rem 2.4rem;
+    padding: 1.35rem 0.95rem 1.2rem;
   }
 
   .checkout-claim-header,
   .checkout-claim-form-block {
-    padding-left: 0.15rem;
-    padding-right: 0.15rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
 }
 

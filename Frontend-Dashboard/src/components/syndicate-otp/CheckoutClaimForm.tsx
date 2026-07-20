@@ -281,13 +281,16 @@ export function CheckoutClaimForm({
   const fieldLabel = step === "email" ? "Email" : "Verification code";
 
   return (
-    <div className="checkout-claim-shell relative mx-auto w-full max-w-[min(100%,62.4rem)]">
+    <div
+      className="checkout-claim-shell"
+      style={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0 }}
+    >
       <CyberChamferFrame
         accent="hero"
         chamfer={18}
         decorSize="compact"
-        className="checkout-claim-frame w-full"
-        contentClassName="!p-0"
+        className="checkout-claim-frame"
+        contentClassName="checkout-claim-frame__content"
         innerClassName="checkout-claim-frame__inner"
       >
         <div className="checkout-claim-layout">
@@ -332,7 +335,7 @@ export function CheckoutClaimForm({
           </header>
 
           <div className="checkout-claim-form-block">
-            <label className="flex w-full max-w-[28rem] flex-col items-center gap-3">
+            <label className="flex w-full max-w-[min(36rem,85%)] flex-col items-center gap-3">
               <span className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-cyan-200/95 sm:text-[13px]">
                 {fieldLabel}
               </span>
@@ -402,7 +405,7 @@ export function CheckoutClaimForm({
               disabled={busy}
               onClick={() => void (step === "email" ? sendOtp() : verifyOtp())}
               className={cn(
-                "method-cta-btn method-cta-btn--join inline-flex h-12 w-full max-w-[28rem] items-center justify-center px-6 font-mono text-[14px] font-black uppercase tracking-[0.14em]",
+                "method-cta-btn method-cta-btn--join inline-flex h-12 w-full max-w-[min(36rem,85%)] items-center justify-center px-6 font-mono text-[14px] font-black uppercase tracking-[0.14em]",
                 "sm:h-14 sm:text-[15px]",
                 busy && "cursor-wait opacity-70",
               )}

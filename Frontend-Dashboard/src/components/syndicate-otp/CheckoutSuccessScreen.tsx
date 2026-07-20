@@ -466,7 +466,7 @@ export default function CheckoutSuccessScreen({
     <div
       className={cn(
         "checkout-page-wrap checkout-page-wrap--entered",
-        needsClaim && "checkout-page-wrap--claim-public",
+        needsClaim && "checkout-page-wrap--claim-public checkout-page-wrap--claim-center",
       )}
     >
       <Toaster
@@ -499,7 +499,10 @@ export default function CheckoutSuccessScreen({
 
       <div
         ref={scrollRef}
-        className={cn("checkout-success-scroll", needsClaim && "checkout-success-scroll--claim")}
+        className={cn(
+          "checkout-success-scroll",
+          needsClaim && "checkout-success-scroll--claim",
+        )}
       >
         <div
           className={cn(

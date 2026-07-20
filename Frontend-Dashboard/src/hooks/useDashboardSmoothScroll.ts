@@ -12,6 +12,8 @@ const SCROLL_END_MS = 600;
 
 function pauseDashboardVideos(root: HTMLElement) {
   root.querySelectorAll<HTMLVideoElement>("video").forEach((video) => {
+    // Lesson / stream players must keep playing while the user scrolls the programs panel.
+    if (video.dataset.keepPlayingOnScroll === "1") return;
     if (video.paused) return;
     video.dataset.dashboardScrollPaused = "1";
     video.pause();

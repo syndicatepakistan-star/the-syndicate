@@ -1006,7 +1006,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       {/* Mobile: video column first; playlist below. Desktop: video | sidebar. */}
       <aside
         aria-label="Playlist"
-        className="order-2 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-none lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
+        className="order-2 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-[min(48vh,420px)] lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
       >
         <div className="border-b border-white/10 px-1 pb-2 lg:pb-3">
           <div className="text-[13px] font-bold text-[#f5c814] max-sm:text-[12px]">{playlist.title}</div>
@@ -1048,7 +1048,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
             </button>
           ) : null}
         </div>
-        <ul className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain pr-1 lg:mt-3 lg:gap-2">
+        <ul className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-y-contain pr-1 touch-pan-y lg:mt-3 lg:gap-2">
           {visibleItems.map((row, i) => renderEpisodeButton(row, i))}
         </ul>
         {hasMoreEpisodes ? (

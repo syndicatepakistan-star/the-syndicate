@@ -598,6 +598,7 @@ export default function StreamHtmlVideoPlayer({
       ) : null}
       <video
         ref={videoRef}
+        data-keep-playing-on-scroll="1"
         className="relative z-[1] h-full w-full bg-transparent object-contain [accent-color:#ef4444]"
         controls
         preload={isHls ? "auto" : "metadata"}

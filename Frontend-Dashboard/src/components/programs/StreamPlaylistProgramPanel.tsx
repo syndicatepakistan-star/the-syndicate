@@ -690,14 +690,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       pendingAutoplayRef.current = Boolean(opts?.autoplay);
       setActiveIdx(index);
       setResumeStartSeconds(resumeAt);
-
-      if (opts?.autoplay || isMobile) {
-        window.requestAnimationFrame(() => {
-          playerAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      }
+      // Do not scroll — jumping hides the fixed dashboard navbar on mobile.
     },
-    [items, progressMap, isMobile],
+    [items, progressMap],
   );
 
   useEffect(() => {
@@ -1008,10 +1003,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   return (
     <div className="programs-playlist-lesson-root flex min-h-0 w-full max-w-full flex-col gap-3 overflow-hidden max-sm:gap-2.5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8 lg:overflow-hidden lg:min-h-0">
-      {/* Mobile: playlist first (order-1). Desktop: sidebar column. */}
+      {/* Mobile: video column first; playlist below. Desktop: video | sidebar. */}
       <aside
         aria-label="Playlist"
-        className="order-1 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-none lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
+        className="order-2 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12 bg-black/40 p-2.5 max-sm:max-h-none lg:order-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:shrink-0 lg:self-start lg:p-3"
       >
         <div className="border-b border-white/10 px-1 pb-2 lg:pb-3">
           <div className="text-[13px] font-bold text-[#f5c814] max-sm:text-[12px]">{playlist.title}</div>
@@ -1076,8 +1071,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         ) : null}
       </aside>
 
-      <div className="order-2 min-w-0 shrink-0 space-y-3 lg:order-1 lg:shrink lg:space-y-5">
-        <div ref={playerAnchorRef} className="scroll-mt-16 space-y-2">
+      <div className="order-1 min-w-0 shrink-0 space-y-3 lg:order-1 lg:shrink lg:space-y-5">
+        <div ref={playerAnchorRef} className="space-y-2">
           {!ready ? (
             <div
               className={`flex aspect-video max-h-[min(58vh,640px)] w-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-white/65 sm:max-h-[min(62vh,720px)] ${playerShell}`}
@@ -1191,6 +1186,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           ) : null}
         </div>
 
+        {playlistAttachments.length > 0 ? (
+          <PlaylistResourcesBlock attachments={playlistAttachments} className="w-full" />
+        ) : null}
+
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-[clamp(1.05rem,2.2vw+0.5rem,1.65rem)] font-black leading-tight tracking-tight text-[#f5c814]">
@@ -1200,9 +1199,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
               {formatLocalizedPrice(playlistPrice)}
             </span>
           </div>
-          {playlistAttachments.length > 0 ? (
-            <PlaylistResourcesBlock attachments={playlistAttachments} className="mt-2 w-full sm:mt-4" />
-          ) : null}
           {(activeVideo?.description || "").trim() ? (
             <div className="mt-3 max-w-4xl rounded-xl border border-white/12 bg-black/35 px-4 py-3 max-sm:mt-2 max-sm:px-3 max-sm:py-2">
               <div className="mb-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#f5c814]">Description</div>

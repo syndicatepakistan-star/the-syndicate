@@ -25,7 +25,6 @@ import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { useMatchMedia } from "@/hooks/useMatchMedia";
 
 type Props = {
   playlistId: number;
@@ -38,7 +37,6 @@ const MAX_REAL_PLAYBACK_DELTA_SECONDS = 6;
 const SEEK_COOLDOWN_MS = 1400;
 const MIN_WATCHED_INCREMENT_SECONDS = 0.2;
 const DISPLAY_GAP_SMOOTH_SECONDS = 1.2;
-const MOBILE_PLAYLIST_PREVIEW_COUNT = 4;
 
 function parsePlaylistNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
@@ -374,7 +372,6 @@ function goToSettingsCertificates() {
 
 export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const { formatPrice: formatLocalizedPrice } = useCurrency();
-  const isMobile = useMatchMedia("(max-width: 1023px)");
   const [playlist, setPlaylist] = useState<StreamPlaylistDetail | null>(null);
   const [playbackCache, setPlaybackCache] = useState<Record<number, StreamPayload>>({});
   const [activeIdx, setActiveIdx] = useState(0);
@@ -402,7 +399,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   /** Snapshot for HTML5 resume only; must not follow live `timeupdate` or the player reloads every tick. */
   const [resumeStartSeconds, setResumeStartSeconds] = useState(0);
   const [seekRequest, setSeekRequest] = useState<{ id: number; seconds: number; autoplay?: boolean } | null>(null);
-  const [mobileListExpanded, setMobileListExpanded] = useState(false);
   const lastPlaybackPositionRef = useRef<Record<number, number>>({});
   const ignorePlaybackUntilRef = useRef(0);
   const pendingAutoplayRef = useRef(false);
@@ -417,7 +413,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       setActiveIdx(0);
       setDidAutoPickReady(false);
       setCertificateMessage(null);
-      setMobileListExpanded(false);
       lastPlaybackPositionRef.current = {};
       pendingAutoplayRef.current = false;
 
@@ -938,9 +933,6 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const playbackFailed = Boolean(activeVideo?.id) && !playbackLoading && !ready && activePlayback?.status !== "processing";
   const playlistPrice = parsePlaylistNumber(playlist.price);
   const playlistCoverThumb = resolveProgramPlaylistThumbnail(playlist);
-  const visibleItems =
-    isMobile && !mobileListExpanded ? items.slice(0, MOBILE_PLAYLIST_PREVIEW_COUNT) : items;
-  const hasMoreEpisodes = isMobile && items.length > MOBILE_PLAYLIST_PREVIEW_COUNT && !mobileListExpanded;
 
   const renderEpisodeButton = (row: (typeof items)[number], i: number) => {
     const v = row.stream_video;
@@ -1049,26 +1041,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           ) : null}
         </div>
         <ul className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-y-contain pr-1 touch-pan-y lg:mt-3 lg:gap-2">
-          {visibleItems.map((row, i) => renderEpisodeButton(row, i))}
+          {items.map((row, i) => renderEpisodeButton(row, i))}
         </ul>
-        {hasMoreEpisodes ? (
-          <button
-            type="button"
-            onClick={() => setMobileListExpanded(true)}
-            className="mt-2 w-full rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-white/85 lg:hidden"
-          >
-            Show all {items.length} episodes
-          </button>
-        ) : null}
-        {isMobile && mobileListExpanded && items.length > MOBILE_PLAYLIST_PREVIEW_COUNT ? (
-          <button
-            type="button"
-            onClick={() => setMobileListExpanded(false)}
-            className="mt-2 w-full rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-white/60 lg:hidden"
-          >
-            Show less
-          </button>
-        ) : null}
       </aside>
 
       <div className="order-1 min-w-0 shrink-0 space-y-3 lg:order-1 lg:shrink lg:space-y-5">

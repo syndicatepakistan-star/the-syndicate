@@ -75,6 +75,24 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
   return Number.isFinite(n) ? n : fallback
 }
 
+/** Unwrap accidental `/_next/image?...` srcs so next/image does not double-optimize. */
+function resolveDomeImageSrc(src: string): string {
+  const trimmed = (src || '').trim()
+  if (!trimmed) return '/assets/logo.webp'
+  if (!trimmed.includes('/_next/image')) return trimmed
+  try {
+    const parsed = new URL(trimmed, 'https://local.invalid')
+    const inner = parsed.searchParams.get('url')
+    if (inner) {
+      const decoded = decodeURIComponent(inner)
+      if (decoded.startsWith('/') && !decoded.includes('/_next/image')) return decoded
+    }
+  } catch {
+    /* keep trimmed */
+  }
+  return trimmed
+}
+
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2)
   const evenYs = [-4, -2, 0, 2, 4]
@@ -89,8 +107,8 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const normalizedImages = pool.length
     ? pool.map((image) =>
         typeof image === 'string'
-          ? { src: image, alt: '', href: undefined }
-          : { src: image.src || '', alt: image.alt || '', href: image.href }
+          ? { src: resolveDomeImageSrc(image), alt: '', href: undefined }
+          : { src: resolveDomeImageSrc(image.src || ''), alt: image.alt || '', href: image.href }
       )
     : [{ src: '', alt: '', href: undefined }]
   const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[i % normalizedImages.length]!)
@@ -281,10 +299,11 @@ export default function DomeGallery({
         setCompactViewport(isMobile)
       }
       const poolLen = images.length
+      // Keep enough longitude segments so the front hemisphere shows ≥10 tiles on phones.
       const mobileSegments =
         poolLen > 0 && poolLen <= 12
-          ? Math.max(6, Math.min(8, poolLen))
-          : Math.max(12, Math.round(segments * 0.62))
+          ? Math.max(10, Math.min(12, poolLen))
+          : Math.max(10, Math.min(14, Math.round(segments >= 12 ? segments : 12)))
       const nextSegments = isMobile ? mobileSegments : segments
       if (activeSegmentsRef.current !== nextSegments) {
         activeSegmentsRef.current = nextSegments
@@ -915,7 +934,7 @@ export default function DomeGallery({
                       draggable={false}
                       alt={it.alt}
                       fill
-                      quality={compactViewport ? 42 : 55}
+                      quality={55}
                       loading={eagerImages ? 'eager' : 'lazy'}
                       fetchPriority={eagerImages ? 'high' : 'low'}
                       decoding="async"

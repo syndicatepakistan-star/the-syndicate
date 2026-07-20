@@ -317,12 +317,14 @@ export function filterCuratedGlobeTilesForMobile(
   return [...packs, ...psychology, ...business];
 }
 
-/** Serve smaller Next-optimized URLs for mobile globe tiles (less decode / bandwidth). */
+/** Keep raw static paths for next/image — do not pre-wrap `/_next/image` (double-encode 400s). */
 export function lightenGlobeTilesForMobile<T extends { src: string }>(tiles: readonly T[]): T[] {
-  return tiles.map((tile) => ({
-    ...tile,
-    src: nextOptimizedImageUrl(tile.src, 256, 60),
-  }));
+  return tiles.map((tile) => ({ ...tile }));
+}
+
+/** Smaller optimizer URLs for `<img>` / fetch warm only (not for next/image `src`). */
+export function warmGlobeTileUrls(tiles: readonly { src: string }[]): string[] {
+  return [...new Set(tiles.map((tile) => nextOptimizedImageUrl(tile.src, 256, 60)))];
 }
 
 export const MOBILE_GLOBE_GALLERY_IMAGE_URLS: readonly string[] = [

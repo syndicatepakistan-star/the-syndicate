@@ -20,7 +20,7 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
           height={70}
           priority
           quality={68}
-          sizes="(max-width: 640px) 140px, 176px"
+          sizes="(max-width: 380px) 120px, (max-width: 640px) 140px, (max-width: 900px) 160px, 176px"
         />
       </div>
       <div>

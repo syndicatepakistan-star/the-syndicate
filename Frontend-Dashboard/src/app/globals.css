@@ -12843,9 +12843,9 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
-    height: clamp(480px, 62dvh, 580px);
-    min-height: clamp(460px, 60dvh, 560px);
-    max-height: clamp(500px, 64dvh, 600px);
+    height: clamp(540px, 72dvh, 680px);
+    min-height: clamp(520px, 70dvh, 660px);
+    max-height: clamp(560px, 76dvh, 720px);
   }
 
   .home-social-clips-section {

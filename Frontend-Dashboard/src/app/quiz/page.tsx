@@ -116,8 +116,8 @@ export default function QuizFunnelLandingPage() {
           </div>
         </div>
 
-        <Link href="/quiz/questions" prefetch={false}>
-          <span className="btn btn-primary">START DIAGNOSIS</span>
+        <Link href="/quiz/questions" prefetch={false} className="landing-bottom-start-link">
+          <span className="btn btn-primary landing-top-start-btn">START DIAGNOSIS</span>
         </Link>
       </section>
     </main>

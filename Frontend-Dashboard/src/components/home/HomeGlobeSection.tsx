@@ -13,7 +13,7 @@ import {
   GLOBE_GALLERY_IMAGE_URLS,
   lightenGlobeTilesForMobile,
   MOBILE_GLOBE_GALLERY_IMAGE_URLS,
-  MOBILE_GLOBE_TILE_COUNT,
+  warmGlobeTileUrls,
 } from "@/lib/programPlaylistThumbnails";
 
 type DomeProps = ComponentProps<typeof HomeDomeGallerySection>;
@@ -51,14 +51,13 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
       const src = typeof item === "string" ? item : item.src;
       return mobileSrc.has(src);
     });
-    const base =
-      filtered.length > 0
-        ? filtered
-        : filterCuratedGlobeTilesForMobile().map((tile) => ({
-            src: tile.src,
-            alt: tile.alt,
-            href: tile.href,
-          }));
+    const curated = filterCuratedGlobeTilesForMobile().map((tile) => ({
+      src: tile.src,
+      alt: tile.alt,
+      href: tile.href,
+    }));
+    // Prefer filtered props when they cover ≥10 tiles; otherwise use the curated mobile set.
+    const base = filtered.length >= 10 ? filtered : curated;
     return lightenGlobeTilesForMobile(
       base.map((item) =>
         typeof item === "string"
@@ -70,9 +69,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
 
   const warmUrls = useMemo(() => {
     if (!isMobile) return GLOBE_GALLERY_IMAGE_URLS;
-    return lightenGlobeTilesForMobile(
-      filterCuratedGlobeTilesForMobile().map((t) => ({ src: t.src })),
-    ).map((t) => t.src);
+    return warmGlobeTileUrls(filterCuratedGlobeTilesForMobile());
   }, [isMobile]);
 
   useEffect(() => {
@@ -107,13 +104,13 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
       usedIdle = true;
       idleHandle = ric(
         () => {
-          void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(MOBILE_GLOBE_TILE_COUNT));
+          void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(12));
         },
         { timeout: 4000 },
       );
     } else {
       idleHandle = window.setTimeout(() => {
-        void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(MOBILE_GLOBE_TILE_COUNT));
+        void warmProgramsSectionAssets(GLOBE_GALLERY_IMAGE_URLS.slice(12));
       }, 1200);
     }
     return () => {
@@ -158,15 +155,16 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
           {active ? (
             <HomeDomeGallerySection
               images={globeImages}
-              fit={isMobile ? 0.54 : 0.58}
-              minRadius={isMobile ? 220 : 260}
-              segments={isMobile ? MOBILE_GLOBE_TILE_COUNT : 18}
+              fit={isMobile ? 0.44 : 0.58}
+              minRadius={isMobile ? 128 : 260}
+              maxRadius={isMobile ? 210 : Number.POSITIVE_INFINITY}
+              segments={isMobile ? 12 : 18}
               dragSensitivity={isMobile ? 12 : 14}
               dragDampening={isMobile ? 4.2 : 3.6}
-              maxVerticalRotationDeg={isMobile ? 28 : 32}
+              maxVerticalRotationDeg={isMobile ? 26 : 32}
               grayscale={false}
-              autoRotateSpeedDeg={isMobile ? 1.1 : 2.4}
-              tileInsetPx={isMobile ? 10 : 12}
+              autoRotateSpeedDeg={isMobile ? 1.25 : 2.4}
+              tileInsetPx={isMobile ? 6 : 12}
               navigateOnClick
               eagerImages={!isMobile}
             />

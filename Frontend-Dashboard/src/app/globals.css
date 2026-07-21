@@ -668,6 +668,50 @@
   contain: layout style;
 }
 
+/*
+ * Desktop program cards: keep title/actions painted while scrolling.
+ * Mobile already uses a flush solid info face; translucent backdrop-blur on
+ * desktop drops the info layer mid-scroll (letter-rain shows through).
+ */
+.dashboard-hamburger-chrome .program-playlist-card__info,
+.dashboard-hamburger-chrome .program-playlist-card__info-wrap,
+.dashboard-hamburger-chrome [data-program-playlist-id] .program-playlist-card__info,
+.dashboard-hamburger-chrome [data-program-playlist-id] .program-playlist-card__info-wrap {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #04060d !important;
+  background-image: none !important;
+  filter: none !important;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+}
+
+.dashboard-hamburger-chrome .program-playlist-card,
+.dashboard-hamburger-chrome [data-program-playlist-id] {
+  content-visibility: visible !important;
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .program-playlist-card,
+.dashboard-hamburger-chrome.is-scrolling [data-program-playlist-id] {
+  transition: none !important;
+}
+
+.dashboard-hamburger-chrome.is-scrolling .program-playlist-card__info,
+.dashboard-hamburger-chrome.is-scrolling .program-playlist-card__info-wrap,
+.dashboard-hamburger-chrome.is-scrolling [data-program-playlist-id] .program-playlist-card__info {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #04060d !important;
+}
+
 html.dashboard-is-scrolling {
   scroll-behavior: auto;
 }

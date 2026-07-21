@@ -440,7 +440,7 @@ export function PlaylistCardsSection({
                 PROGRAM_CARD_MOBILE_INFO_FACE,
                 "rounded-xl border-2 px-2.5 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-3 sm:py-2.5",
                 theme.infoPanel,
-                "bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
+                "bg-[#04060d] shadow-[0_10px_30px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.12)]"
               )}
             >
               <div

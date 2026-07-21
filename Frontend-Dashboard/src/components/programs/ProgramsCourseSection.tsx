@@ -1005,7 +1005,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
           void prefetchStreamPlaylistExperience(pl.id);
         }}
         className={cn(
-          "group/card relative flex h-full w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
+          "program-playlist-card group/card relative flex h-full w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
           "min-h-0 max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[clamp(14rem,32vh,17rem)]",
           "rounded-2xl border-2 scroll-mt-32 transition-[transform,box-shadow] duration-300 ease-out",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
@@ -1061,8 +1061,8 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                 PROGRAM_CARD_MOBILE_INFO_FACE,
                 "justify-end gap-1.5 rounded-xl border px-2 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-2.5 sm:py-2",
                 theme.infoPanel,
-                "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
-                "backdrop-blur-md transition duration-300 group-hover/card:brightness-125 group-hover/card:saturate-125"
+                // Solid fill (no backdrop-blur) — blur + translucent bg drops paint mid-scroll on desktop.
+                "bg-[#04060d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
               )}
             >
               <div
@@ -1396,7 +1396,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                             PROGRAM_CARD_INFO_PANEL,
                             "justify-end gap-1.5 rounded-xl border px-2 py-2 max-lg:px-1 max-lg:py-1.5 sm:px-2.5 sm:py-2",
                             theme.body,
-                            "bg-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                            "bg-[#04060d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                           )}
                         >
                           <div

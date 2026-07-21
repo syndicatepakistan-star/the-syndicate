@@ -32,7 +32,7 @@ export const PROGRAM_CARD_MOBILE_INFO_FACE =
   "max-xl:min-h-0 max-xl:justify-end max-xl:rounded-none max-xl:border-x-0 max-xl:border-t-0 max-xl:px-1 max-xl:py-1.5";
 
 export const PROGRAM_CARD_MOBILE_TITLE_FACE =
-  "max-xl:line-clamp-2 max-xl:text-[clamp(10px,2.4vw,17px)]";
+  "max-xl:line-clamp-2 max-xl:text-[clamp(13px,3.4vw,18px)] max-xl:leading-snug";
 
 export const PROGRAM_CARD_MOBILE_ACTIONS_FACE = "max-xl:mt-auto max-xl:gap-1.5";
 

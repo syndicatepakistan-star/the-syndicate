@@ -9399,23 +9399,41 @@ body {
 /* Program playlist cards — compact library layout on mobile / iPad / laptop (< xl) */
 @media (max-width: 1279px) {
   #programs-library {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    /* Keep a slim inset so left/right card borders + glow aren’t clipped */
+    padding-left: max(0.55rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.55rem, env(safe-area-inset-right, 0px)) !important;
   }
 
   .program-playlist-library-band {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
   }
 
   .program-playlist-mobile-grid {
-    gap: 0.375rem !important;
+    gap: 0.45rem !important;
+    padding-inline: 0.15rem;
+  }
+
+  /* Real World Business Models — two lines under xl, one line on xl+ */
+  .playlist-business-models-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.05em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  .playlist-business-models-heading__lead,
+  .playlist-business-models-heading__tail {
+    display: block;
   }
 
   .dashboard-hamburger-chrome .dashboard-main-scroll:has([data-programs-grid-active]),
   .dashboard-hamburger-chrome .dashboard-bounded-main-scroll:has([data-programs-grid-active]) {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
   }
 
   .dashboard-hamburger-chrome .programs-grid-chrome > :not(#dashboard-programs-library) {
@@ -9445,6 +9463,22 @@ body {
   [data-program-playlist-id].rounded-3xl,
   [data-program-playlist-id].rounded-2xl {
     border-radius: 0.85rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .playlist-business-models-heading {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .playlist-business-models-heading__lead::after {
+    content: " ";
+  }
+
+  .playlist-business-models-heading__lead,
+  .playlist-business-models-heading__tail {
+    display: inline;
   }
 }
 

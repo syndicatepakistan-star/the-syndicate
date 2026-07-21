@@ -1069,7 +1069,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
             >
               <div
                 className={cn(
-                  "text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
+                  "text-left text-[clamp(13px,3.4vw,18px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:text-[clamp(14px,2.2vw,15px)] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
                   PROGRAM_CARD_TITLE_SLOT,
                   theme.title
@@ -1321,7 +1321,10 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                         "text-balance transition hover:brightness-110",
                       )}
                     >
-                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                      <span className="playlist-business-models-heading">
+                        <span className="playlist-business-models-heading__lead">Real World</span>
+                        <span className="playlist-business-models-heading__tail">Business Models</span>
+                      </span>
                     </button>
                   </div>
                   <Level1CategoryUnlockAllButton

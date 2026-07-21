@@ -2,7 +2,7 @@ import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
 /** User-facing playlist column / filter labels (DB key stays `business_psychology`). */
 export const STREAM_PLAYLIST_CATEGORY_LABELS = {
-  business_model: "Business Models",
+  business_model: "Real World Business Models",
   business_psychology: "Business Behaviour Psychology",
 } as const;
 

@@ -32,7 +32,7 @@ export const LEVEL1_CATEGORY_PACKS: Record<Level1CategoryPackKey, Level1Category
     separateTotalUsd: BUSINESS_PSYCHOLOGY_SEPARATE_TOTAL_USD,
     accent: "psychology",
     shortLabel: "Business Behaviour Psychology",
-    buttonLead: "Unlock all Business Behaviour Psychology programs",
+    buttonLead: "Unlock all Business Behaviour Psychology programs for",
     imageSrc: "/assets/unlock-all-business-behavioural-psychology.png",
   },
   business_model: {
@@ -42,8 +42,8 @@ export const LEVEL1_CATEGORY_PACKS: Record<Level1CategoryPackKey, Level1Category
     unlockAllUsd: BUSINESS_MODELS_UNLOCK_ALL_USD,
     separateTotalUsd: BUSINESS_MODELS_SEPARATE_TOTAL_USD,
     accent: "models",
-    shortLabel: "Business Models",
-    buttonLead: "Unlock all Business Models programs",
+    shortLabel: "Real World Business Models",
+    buttonLead: "Unlock all Business Models programs for",
     imageSrc: "/assets/unlock-all-business-models.png",
   },
 };

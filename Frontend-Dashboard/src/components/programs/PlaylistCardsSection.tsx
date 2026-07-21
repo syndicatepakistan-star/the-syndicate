@@ -447,7 +447,7 @@ export function PlaylistCardsSection({
             >
               <div
                 className={cn(
-                  "text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  "text-left text-[clamp(13px,3.4vw,18px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:text-[clamp(14px,2.2vw,17px)] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
                   PROGRAM_CARD_TITLE_SLOT,
                   theme.title,
@@ -507,7 +507,7 @@ export function PlaylistCardsSection({
   return (
     <section
       className={cn(
-        "program-playlist-library-band relative space-y-5 overflow-visible rounded-3xl px-[clamp(0.65rem,2.8vw,1.75rem)] py-2 max-lg:rounded-none max-lg:px-0 max-lg:py-1 sm:px-4 sm:py-3",
+        "program-playlist-library-band relative space-y-5 overflow-visible rounded-3xl px-[clamp(0.65rem,2.8vw,1.75rem)] py-2 max-lg:rounded-none max-lg:px-1.5 max-lg:py-1 sm:px-4 sm:py-3",
         className,
       )}
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
@@ -560,7 +560,10 @@ export function PlaylistCardsSection({
                       "text-balance"
                     )}
                   >
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                    <span className="playlist-business-models-heading">
+                      <span className="playlist-business-models-heading__lead">Real World</span>
+                      <span className="playlist-business-models-heading__tail">Business Models</span>
+                    </span>
                   </div>
                 </div>
                 {businessModelPlaylists.length > 0 ? (
@@ -629,7 +632,10 @@ export function PlaylistCardsSection({
                     "text-balance"
                   )}
                 >
-                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_model}
+                  <span className="playlist-business-models-heading">
+                    <span className="playlist-business-models-heading__lead">Real World</span>
+                    <span className="playlist-business-models-heading__tail">Business Models</span>
+                  </span>
                 </div>
               </div>
               <Level1CategoryUnlockAllButton

@@ -165,29 +165,27 @@ export function QuizResultProgramCard({
         </div>
         <div className="result-program-card__body">
           <h3 className="result-program-card__title">{meta.title}</h3>
+          <button
+            type="button"
+            className="result-program-card__details-btn"
+            onClick={() => setDetailsOpen(true)}
+          >
+            Details
+          </button>
           <p className="result-program-card__desc">{meta.description}</p>
-          <div className="result-program-card__actions">
-            <button
-              type="button"
-              className="result-program-card__details-btn"
-              onClick={() => setDetailsOpen(true)}
+          {href ? (
+            <a
+              id={meta.unlockButtonId}
+              className={
+                isFree
+                  ? `result-ticket-btn result-ticket-btn--${btnTheme} result-program-card__cta`
+                  : `result-unlock-btn result-unlock-btn--${btnTheme} result-program-card__cta`
+              }
+              href={href}
             >
-              Details
-            </button>
-            {href ? (
-              <a
-                id={meta.unlockButtonId}
-                className={
-                  isFree
-                    ? `result-ticket-btn result-ticket-btn--${btnTheme} result-program-card__cta`
-                    : `result-unlock-btn result-unlock-btn--${btnTheme} result-program-card__cta`
-                }
-                href={href}
-              >
-                {isFree ? "Get For Free" : "Unlock"}
-              </a>
-            ) : null}
-          </div>
+              {isFree ? "Get For Free" : "Unlock"}
+            </a>
+          ) : null}
         </div>
       </article>
       {detailsModal}

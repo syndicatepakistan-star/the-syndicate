@@ -1854,20 +1854,15 @@ body.result-view .section-cards-grid {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 1;
-}
-
-.result-program-card__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-top: auto;
+  order: 5;
 }
 
 .result-program-card__details-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  order: 2;
+  width: 100%;
   min-height: 36px;
   padding: 6px 10px;
   border-radius: 999px;
@@ -1889,8 +1884,12 @@ body.result-view .section-cards-grid {
 }
 
 .result-program-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  order: 4;
   margin-left: 0 !important;
-  margin-top: 0;
+  margin-top: auto;
   align-self: stretch;
   width: 100%;
   min-height: 36px;
@@ -1899,7 +1898,16 @@ body.result-view .section-cards-grid {
   text-decoration: none;
   font-size: 11px !important;
   box-sizing: border-box;
-  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Legacy actions wrapper (if present) — stack vertically */
+.result-program-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  order: 4;
 }
 
 .result-program-card--neon-gold {
@@ -2061,11 +2069,6 @@ body.result-view .section-cards-grid {
     font-size: clamp(0.68rem, 2.8vw, 0.8rem);
   }
 
-  .result-program-card__actions {
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-  }
-
   .result-program-card__details-btn,
   .result-program-card__cta {
     min-height: 32px;
@@ -2114,15 +2117,11 @@ body.result-view .section-cards-grid {
     font-size: clamp(0.7rem, 2.2vw, 0.88rem);
   }
 
-  .result-program-card__actions {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-
   .result-program-card__details-btn,
   .result-program-card__cta.result-ticket-btn,
   .result-program-card__cta.result-unlock-btn {
     margin-left: 0;
+    width: 100%;
     min-height: 34px;
     border-radius: 10px;
     font-size: 10px;

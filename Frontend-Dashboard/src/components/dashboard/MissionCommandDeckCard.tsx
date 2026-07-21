@@ -427,8 +427,8 @@ function DeckEmptyCta({
   ctaTone = "gold"
 }: {
   message: string;
-  actionLabel: string;
-  onAction: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
   accentClass: string;
   ctaTone?: DeckEmptyCtaTone;
 }) {
@@ -440,17 +440,19 @@ function DeckEmptyCta({
       )}
     >
       <p className={cn(DECK_TYPO.emptyPrimary, DECK_EMPTY_CTA_MSG[ctaTone])}>{message}</p>
-      <button
-        type="button"
-        onClick={onAction}
-        className={cn(
-          "mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg px-4 transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
-          DECK_TYPO.btn,
-          DECK_EMPTY_CTA_BTN[ctaTone]
-        )}
-      >
-        {actionLabel}
-      </button>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className={cn(
+            "mt-4 inline-flex min-h-[44px] w-full max-w-[16rem] items-center justify-center rounded-lg px-4 transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]",
+            DECK_TYPO.btn,
+            DECK_EMPTY_CTA_BTN[ctaTone]
+          )}
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -1394,8 +1396,6 @@ export function MissionCommandDeckCard({
                   ) : (
                     <DeckEmptyCta
                       message="Nothing in the active queue yet."
-                      actionLabel="Create a mission"
-                      onAction={focusMissionComposer}
                       accentClass="border-[color:var(--goals-milestones-line)] bg-black/40"
                       ctaTone="gold"
                     />
@@ -1501,8 +1501,6 @@ export function MissionCommandDeckCard({
                   ) : (
                     <DeckEmptyCta
                       message="No missed missions in the deck."
-                      actionLabel="Create a mission"
-                      onAction={focusMissionComposer}
                       accentClass="border-rose-400/38 bg-black/40"
                       ctaTone="rose"
                     />
@@ -1603,8 +1601,6 @@ export function MissionCommandDeckCard({
                   ) : (
                     <DeckEmptyCta
                       message="No completed missions in the deck yet — finish one from Active or Missed above."
-                      actionLabel="Create a mission"
-                      onAction={focusMissionComposer}
                       accentClass="border-emerald-500/28 bg-black/35"
                       ctaTone="emerald"
                     />

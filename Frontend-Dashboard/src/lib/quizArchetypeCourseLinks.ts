@@ -6,6 +6,7 @@ import {
   LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
 } from "@/lib/level1ProgramCatalog";
 import {
+  resolveProgramPlaylistDescription,
   resolveProgramPlaylistSummary,
   resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
@@ -234,6 +235,7 @@ export function normalizeExecutionStackLines(lines: string[]): string[] {
 export type QuizResultProgramCardMeta = {
   title: string;
   description: string;
+  detailDescription: string;
   thumbnailSrc?: string;
   unlockHref?: string;
   isFree: boolean;
@@ -256,11 +258,13 @@ export function resolveQuizResultProgramCardMeta(
   const pack = MID_TICKET_PACK_BY_COURSE[titleKey];
   if (pack) {
     const offer = planOfferByKey(pack);
+    const detailDescription =
+      (offer?.detailDescription ?? offer?.teaser ?? "").trim() ||
+      `Unlock ${title} inside the Syndicate vault.`;
     return {
       title,
-      description:
-        (offer?.teaser ?? offer?.detailDescription ?? "").trim() ||
-        `Unlock ${title} inside the Syndicate vault.`,
+      description: (offer?.teaser ?? detailDescription).trim(),
+      detailDescription,
       thumbnailSrc: offer?.imageSrc,
       unlockHref: planOfferDeepLink(pack),
       isFree: false,
@@ -277,6 +281,7 @@ export function resolveQuizResultProgramCardMeta(
     title: mappedCanonical || title,
   };
   const displayTitle = resolveProgramPlaylistTitle(playlistLike) || mappedCanonical || title;
+  const fullDescription = resolveProgramPlaylistDescription(playlistLike);
   const description = resolveProgramPlaylistSummary(playlistLike);
   const thumbnailSrc = resolveProgramPlaylistThumbnail(playlistLike);
 
@@ -288,6 +293,7 @@ export function resolveQuizResultProgramCardMeta(
   return {
     title: displayTitle,
     description,
+    detailDescription: fullDescription || description,
     thumbnailSrc,
     unlockHref,
     isFree,

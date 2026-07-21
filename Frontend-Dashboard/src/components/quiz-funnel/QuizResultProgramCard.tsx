@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import {
   buildFreeTicketLoginHref,
   isFreeTicketPsychologyCourse,
@@ -26,6 +25,14 @@ type Props = {
   rowThemeOverride?: CourseNeonTheme;
 };
 
+function CloseIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function QuizResultProgramCard({
   courseValue,
   category,
@@ -45,13 +52,15 @@ export function QuizResultProgramCard({
   const rawThumb = (meta.thumbnailSrc ?? "").trim();
   const thumbSrc = rawThumb
     ? rawThumb.startsWith("/")
-      ? nextOptimizedImageUrl(rawThumb, 480)
-      : optimizeCoverImageSrc(rawThumb, 480) ?? rawThumb
+      ? nextOptimizedImageUrl(rawThumb, 320)
+      : optimizeCoverImageSrc(rawThumb, 320) ?? rawThumb
     : "";
 
   const href = isFree
     ? buildFreeTicketLoginHref(loginEmail, courseTitle)
     : meta.unlockHref;
+
+  const priceLabel = isFree ? "Free" : meta.priceLabel;
 
   useEffect(() => {
     if (!detailsOpen) return;
@@ -91,7 +100,7 @@ export function QuizResultProgramCard({
                   aria-label="Close"
                   onClick={() => setDetailsOpen(false)}
                 >
-                  <X className="h-5 w-5" aria-hidden />
+                  <CloseIcon />
                 </button>
               </div>
               <div className="result-program-details-body">
@@ -136,12 +145,23 @@ export function QuizResultProgramCard({
               className="result-program-card__img"
               loading="lazy"
               decoding="async"
+              width={240}
+              height={320}
             />
           ) : (
             <div className="result-program-card__img-fallback" aria-hidden />
           )}
           <div className="result-program-card__media-overlay" aria-hidden />
-          {isFree ? <span className="result-program-card__free-badge">Free</span> : null}
+          <span
+            className={
+              isFree
+                ? "result-program-card__price-badge result-program-card__price-badge--free"
+                : "result-program-card__price-badge"
+            }
+          >
+            {priceLabel}
+            {!isFree ? <span className="result-program-card__price-suffix">lifetime</span> : null}
+          </span>
         </div>
         <div className="result-program-card__body">
           <h3 className="result-program-card__title">{meta.title}</h3>

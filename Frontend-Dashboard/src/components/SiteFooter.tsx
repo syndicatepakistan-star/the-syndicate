@@ -45,7 +45,7 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className="site-footer-slogan flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.35rem,1.2vw,0.85rem)] py-[clamp(0.35rem,1.2vw,0.75rem)] text-center md:ml-[150px] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0">
+          <div className="site-footer-slogan flex min-w-0 w-full max-w-[min(96vw,56rem)] justify-center self-center px-[clamp(0.35rem,1.2vw,0.85rem)] py-[clamp(0.35rem,1.2vw,0.75rem)] text-center md:ml-[clamp(1rem,4vw,150px)] md:w-auto md:max-w-[min(96vw,56rem)] md:justify-self-center md:px-[clamp(0.35rem,1.2vw,0.75rem)] md:py-0 lg:ml-[150px]">
             <NeonTypingBadge
               phrases={['HONOUR · MONEY · POWER · FREEDOM']}
               typingSpeed={sloganTypingSpeed ?? 24}
@@ -56,7 +56,7 @@ export default function SiteFooter({
             />
           </div>
 
-          <div className="w-full max-w-[min(20rem,92vw)] justify-self-center rounded-xl p-[clamp(0.4rem,1vw,0.75rem)] text-center md:min-w-0 md:max-w-[min(36rem,100%)] md:justify-self-end md:self-center md:shrink-0 md:pl-6 md:pr-0 md:text-right">
+          <div className="w-full max-w-[min(20rem,92vw)] justify-self-center rounded-xl p-[clamp(0.4rem,1vw,0.75rem)] text-center md:min-w-0 md:max-w-[min(36rem,100%)] md:justify-self-end md:self-center md:shrink-0 md:pl-4 md:pr-0 md:text-right lg:pl-6">
             <p
               className="text-sm font-semibold uppercase tracking-[0.22em] sm:text-base"
               style={{ color: 'rgba(253, 230, 138, 0.95)', textShadow: '0 0 10px rgba(251, 191, 36, 0.35)' }}

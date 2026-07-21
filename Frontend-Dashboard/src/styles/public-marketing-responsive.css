@@ -1,0 +1,269 @@
+/**
+ * Public marketing pages — mobile / iPad / desktop / big-screen.
+ * Covers: home, programs, what-you-get, our-methods, our-founder,
+ * affiliate, membership, quiz shell containment, affiliate portal,
+ * shared footer / join CTAs. Does not restyle private /dashboard.
+ */
+
+/* ── Shared shell tokens ─────────────────────────────────────────────────── */
+:root {
+  --public-page-px: clamp(0.75rem, 2.8vw, 2.2rem);
+  --public-section-gap: clamp(1.25rem, 3.5vw, 2.75rem);
+  --public-hero-pad-top: clamp(4.75rem, 12vw, 7rem);
+  --public-content-max: min(96rem, 100%);
+  --public-content-max-xl: min(110rem, 100%);
+}
+
+.public-page-shell,
+.home-page-root,
+.what-you-get-page,
+.our-methods-page,
+.membership-marketing-page,
+.program-playlist-library-band {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ── Phone (≤639) ────────────────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  :root {
+    --public-page-px: clamp(0.65rem, 3.2vw, 1rem);
+    --public-section-gap: clamp(1rem, 4vw, 1.5rem);
+    --public-hero-pad-top: clamp(4.5rem, 16vw, 5.75rem);
+  }
+
+  .what-you-get-hero {
+    min-height: auto !important;
+    padding-top: calc(var(--public-hero-pad-top) + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: clamp(2rem, 8vw, 3rem) !important;
+    padding-left: var(--public-page-px) !important;
+    padding-right: var(--public-page-px) !important;
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(2.15rem, 11.5vw, 3.35rem) !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.01em;
+  }
+
+  .what-you-get-hero-lede {
+    margin-top: 1rem !important;
+    font-size: clamp(0.95rem, 3.8vw, 1.1rem) !important;
+    line-height: 1.55 !important;
+  }
+
+  .our-methods-hero-title {
+    font-size: clamp(1.85rem, 9.5vw, 2.75rem) !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  .our-methods-page .cyber-frame-mobile-pad {
+    padding: clamp(1rem, 4vw, 1.35rem) !important;
+  }
+
+  .founder-section-coin {
+    height: clamp(2.25rem, 12vw, 3rem) !important;
+    width: clamp(2.25rem, 12vw, 3rem) !important;
+  }
+
+  .site-footer-root {
+    padding-left: max(0.85rem, env(safe-area-inset-left)) !important;
+    padding-right: max(0.85rem, env(safe-area-inset-right)) !important;
+  }
+
+  .site-footer-slogan {
+    margin-left: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .marketing-join-headline {
+    font-size: clamp(1.65rem, 8.5vw, 2.35rem) !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .affiliate-portal-root,
+  .affiliate-portal-standalone {
+    padding: 0.65rem !important;
+  }
+
+  .affiliate-portal-root main,
+  .affiliate-portal-standalone main {
+    padding: 0.75rem !important;
+    min-height: calc(100dvh - 1.25rem) !important;
+  }
+
+  .affiliate-portal-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .affiliate-portal-stats-grid > :nth-child(n + 5) {
+    grid-column: 1 / -1;
+  }
+
+  .affiliate-portal-table-wrap {
+    margin-inline: -0.25rem;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .program-playlist-mobile-grid {
+    gap: 0.45rem !important;
+  }
+
+  .membership-marketing-page main {
+    padding-top: clamp(4.5rem, 14vw, 5.5rem) !important;
+    padding-bottom: clamp(2rem, 6vw, 3rem) !important;
+  }
+}
+
+/* ── Large phone / small tablet (640–767) ────────────────────────────────── */
+@media (min-width: 640px) and (max-width: 767px) {
+  .what-you-get-hero {
+    min-height: auto !important;
+    padding-top: clamp(5.5rem, 12vw, 6.5rem) !important;
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(3rem, 8.5vw, 4.25rem) !important;
+  }
+
+  .founder-section-coin {
+    height: 3.5rem !important;
+    width: 3.5rem !important;
+  }
+}
+
+/* ── iPad portrait / tablet (768–1023) ───────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --public-page-px: clamp(1rem, 2.5vw, 1.75rem);
+    --public-content-max: min(56rem, 100%);
+  }
+
+  .what-you-get-hero {
+    min-height: min(100svh, 920px) !important;
+    padding-top: clamp(6rem, 10vw, 7.5rem) !important;
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(3.75rem, 7.2vw, 5.5rem) !important;
+  }
+
+  .what-you-get-page section,
+  .our-methods-page section,
+  .membership-marketing-page main > div,
+  .affiliate-page-content {
+    padding-left: var(--public-page-px);
+    padding-right: var(--public-page-px);
+  }
+
+  .site-footer-slogan {
+    margin-left: clamp(1rem, 4vw, 3.5rem) !important;
+  }
+
+  .founder-section-coin {
+    height: 4rem !important;
+    width: 4rem !important;
+  }
+
+  .affiliate-portal-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .program-playlist-library-band {
+    padding-left: clamp(0.75rem, 2vw, 1.25rem) !important;
+    padding-right: clamp(0.75rem, 2vw, 1.25rem) !important;
+  }
+}
+
+/* ── iPad Pro / landscape tablet quirks ──────────────────────────────────── */
+@media (max-width: 1023px), ((width: 1024px) and (height: 1366px)) {
+  .public-page-shell,
+  .home-page-root,
+  .what-you-get-page,
+  .our-methods-page,
+  .membership-marketing-page {
+    overflow-x: clip;
+  }
+
+  .our-methods-hero-media {
+    height: clamp(14rem, 42vw, 22rem) !important;
+  }
+}
+
+/* ── Desktop (1024–1535) ─────────────────────────────────────────────────── */
+@media (min-width: 1024px) and (max-width: 1535px) {
+  :root {
+    --public-content-max: min(90rem, 96vw);
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(4.5rem, 5.8vw, 6.2rem) !important;
+  }
+
+  .what-you-get-hero-inner,
+  .affiliate-page-content > div,
+  .membership-marketing-page main > div,
+  .our-methods-page .mx-auto.max-w-\[96rem\] {
+    max-width: var(--public-content-max);
+  }
+}
+
+/* ── Big / ultra-wide (≥1536) ────────────────────────────────────────────── */
+@media (min-width: 1536px) {
+  :root {
+    --public-page-px: clamp(1.5rem, 2vw, 2.75rem);
+    --public-content-max: min(100rem, 94vw);
+    --public-content-max-xl: min(112rem, 92vw);
+  }
+
+  .what-you-get-hero {
+    min-height: min(100svh, 1100px);
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(5.5rem, 5vw, 7.25rem) !important;
+  }
+
+  .what-you-get-hero-inner,
+  .programs-library-max,
+  .affiliate-page-content > div,
+  .membership-marketing-page main > div {
+    max-width: var(--public-content-max-xl);
+    margin-inline: auto;
+  }
+
+  .site-footer-inner {
+    max-width: min(1800px, 94vw) !important;
+  }
+
+  .affiliate-portal-standalone main {
+    max-width: min(1900px, 96vw);
+  }
+}
+
+/* ── Ultra-wide (≥1920) ──────────────────────────────────────────────────── */
+@media (min-width: 1920px) {
+  :root {
+    --public-content-max-xl: min(120rem, 90vw);
+  }
+
+  .what-you-get-hero-title {
+    font-size: clamp(6.5rem, 4.2vw, 8rem) !important;
+  }
+}
+
+/* ── Short viewports (landscape phones / short tablets) ──────────────────── */
+@media (max-height: 520px) and (orientation: landscape) {
+  .what-you-get-hero,
+  .our-methods-page section:first-of-type .min-h-\[72vh\] {
+    min-height: auto !important;
+  }
+
+  .what-you-get-hero {
+    padding-top: 4.25rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+}

@@ -26,7 +26,7 @@ export type MethodSplitCardProps = {
 
 /** Matches Our Methods hero h1 scale and rhythm */
 const METHOD_TITLE_BASE =
-  "text-[clamp(2.2rem,5.4vw,5.2rem)] font-black uppercase leading-[0.9] tracking-[0.1em]";
+  "text-[clamp(1.65rem,7.5vw,2.4rem)] font-black uppercase leading-[0.9] tracking-[0.08em] sm:text-[clamp(2.2rem,5.4vw,5.2rem)] sm:tracking-[0.1em]";
 
 const TITLE_CLASS: Record<MethodSplitAccent, string> = {
   cyan: "text-cyan-100 drop-shadow-[0_0_18px_rgba(34,211,238,0.52)]",
@@ -62,7 +62,7 @@ export function MethodSplitCard({
       className="w-full"
       innerClassName="cyber-frame-mobile-pad p-6 sm:p-8 lg:p-10"
     >
-      <div className="grid gap-6 text-left lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)] lg:items-stretch xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] xl:gap-10">
+      <div className="grid gap-6 text-left lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-stretch xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] xl:gap-10">
         <div className="flex min-w-0 flex-col justify-center">
           <h2 className={`${publicHeadingLightning("amber")} marketing-card-title-oneline mt-1 ${METHOD_TITLE_BASE} ${TITLE_CLASS[accent]}`}>{title}</h2>
 

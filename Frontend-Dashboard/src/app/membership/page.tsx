@@ -9,7 +9,7 @@ const MEMBERSHIP_BG_VIDEO = "/assets/bg-video%201.mp4";
 
 export default function MembershipMarketingPage() {
   return (
-    <div className="membership-marketing-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] text-white">
+    <div className="membership-marketing-page public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] text-white">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <ViewportDecorVideo
           src={MEMBERSHIP_BG_VIDEO}
@@ -27,8 +27,8 @@ export default function MembershipMarketingPage() {
       </div>
 
       <NavApp />
-      <main className="relative z-10 w-full min-w-0 overflow-x-clip pb-14 pt-[88px] sm:pb-20 sm:pt-[106px]">
-        <div className="mx-auto w-full max-w-[96rem] space-y-10 px-[clamp(1rem,3vw,2.2rem)] sm:space-y-12">
+      <main className="relative z-10 w-full min-w-0 overflow-x-clip pb-[clamp(2.5rem,6vw,5rem)] pt-[clamp(4.5rem,12vw,6.625rem)] sm:pb-20">
+        <div className="mx-auto w-full max-w-[96rem] space-y-8 px-[clamp(0.85rem,3vw,2.2rem)] sm:space-y-12 2xl:max-w-[min(110rem,94vw)]">
           <MembershipKnightHero>
             <MembershipKnightHeroOffer />
           </MembershipKnightHero>

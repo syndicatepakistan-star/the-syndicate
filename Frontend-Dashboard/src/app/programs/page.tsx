@@ -42,21 +42,21 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
-    <div className="mobile-viewport-contain relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
+    <div className="mobile-viewport-contain public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-12%] top-[10%] h-[320px] w-[320px] rounded-full bg-fuchsia-500/20 blur-[120px] sm:h-[520px] sm:w-[520px]" />
         <div className="absolute right-[-8%] top-[38%] h-[300px] w-[300px] rounded-full bg-amber-400/20 blur-[110px] sm:h-[460px] sm:w-[460px]" />
         <div className="absolute bottom-[-10%] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-cyan-400/15 blur-[130px] sm:h-[560px] sm:w-[560px]" />
       </div>
       <NavApp />
-      <main>
+      <main className="w-full min-w-0 overflow-x-clip">
       <ProgramsUnlockShell>
       <section
         id="syndicate-elite-offers"
-        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10"
+        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
       >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
-        <p className="mx-auto max-w-3xl px-1 text-center font-mono text-xs leading-relaxed text-zinc-300/90 sm:text-sm">
+        <p className="mx-auto max-w-3xl px-1 text-center font-mono text-[clamp(0.7rem,2.8vw,0.875rem)] leading-relaxed text-zinc-300/90 sm:text-sm xl:max-w-4xl">
           This is The Syndicate vault floor — Money Mastery, Syndicate Trading, Agentic AI, and the Syndicate
           faceless YouTube pack under AI Content Automation, plus Level 1 Syndicate business models and
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
@@ -66,10 +66,10 @@ export default async function ProgramsPage() {
       </section>
       <section
         id="programs-library"
-        className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-0 sm:space-y-8 sm:px-6 sm:py-14"
+        className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-0 sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
       >
         <ProgramsGoldPillHeading as="h2" title="Programs" />
-        <div className="mx-auto w-full max-w-[1400px] overflow-x-clip">
+        <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
           <Suspense
             fallback={
               <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />

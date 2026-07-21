@@ -2,10 +2,9 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 import { QuizResultProgramCard } from "@/components/quiz-funnel/QuizResultProgramCard";
-import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
+import dynamic from "next/dynamic";
 import {
   buildFreeTicketLoginHref,
   isFreeTicketPsychologyCourse,
@@ -30,6 +29,12 @@ import {
   resolveWeaponNeonTheme,
   type CourseNeonTheme,
 } from "@/lib/quizResultCourseNeon";
+
+const CyberChamferFrame = dynamic(
+  () =>
+    import("@/components/cyber/CyberChamferFrames").then((m) => m.CyberChamferFrame),
+  { ssr: true },
+);
 
 const PDF_VIRUS_HEADING_PREFIXES = new Set([
   "THE STING:",
@@ -551,6 +556,7 @@ export default function ResultPage() {
   const [result, setResult] = useState<QuizResultPayload | null>(null);
   const [quizEmail, setQuizEmail] = useState("");
   const [downloadReady, setDownloadReady] = useState(false);
+  const [downloadBusy, setDownloadBusy] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("quiz_result");
@@ -609,7 +615,10 @@ export default function ResultPage() {
 
   async function downloadReportPdf() {
     const snapshot = result;
-    if (!snapshot) return;
+    if (!snapshot || downloadBusy) return;
+    setDownloadBusy(true);
+    try {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -1019,6 +1028,9 @@ export default function ResultPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(downloadUrl);
     setDownloadReady(true);
+    } finally {
+      setDownloadBusy(false);
+    }
   }
 
   return (
@@ -1028,8 +1040,12 @@ export default function ResultPage() {
         {renderStyledReport(result.ai_report ?? "", quizEmail)}
 
         <div className="result-actions-footer">
-          <button className="btn btn-primary result-download-btn" onClick={() => void downloadReportPdf()}>
-            DOWNLOAD SYNDICATE DIAGNOSIS REPORT
+          <button
+            className="btn btn-primary result-download-btn"
+            disabled={downloadBusy}
+            onClick={() => void downloadReportPdf()}
+          >
+            {downloadBusy ? "PREPARING REPORT…" : "DOWNLOAD SYNDICATE DIAGNOSIS REPORT"}
           </button>
           {downloadReady ? (
             <p className="result-download-confirm">Report saved as &ldquo;Syndicate Diagnosis Report.pdf&rdquo;</p>

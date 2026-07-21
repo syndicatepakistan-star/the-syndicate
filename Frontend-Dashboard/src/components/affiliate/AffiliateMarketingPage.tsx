@@ -248,7 +248,7 @@ function AffiliateShowcaseBlock({ index, width, height, accent, title, body, src
 
 export default function AffiliateMarketingPage() {
   return (
-    <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] font-[family-name:var(--font-body)]">
+    <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] font-[family-name:var(--font-body)] public-page-shell">
       <AffiliateDeferredBackdrop />
 
       <NavApp />
@@ -263,8 +263,8 @@ export default function AffiliateMarketingPage() {
         </Link>
       </div>
 
-      <section className="relative z-10 px-[clamp(0.75rem,3vw,2.2rem)] pb-[clamp(2rem,6vw,2.75rem)] pt-[clamp(4.75rem,12vw,6.75rem)] sm:pt-[clamp(5.5rem,10vw,6.65rem)]">
-        <div className="mx-auto w-full max-w-[min(96rem,100%)]">
+      <section className="affiliate-page-content relative z-10 px-[clamp(0.75rem,3vw,2.2rem)] pb-[clamp(2rem,6vw,2.75rem)] pt-[clamp(4.75rem,12vw,6.75rem)] sm:pt-[clamp(5.5rem,10vw,6.65rem)] 2xl:px-[clamp(1.5rem,2vw,2.75rem)]">
+        <div className="mx-auto w-full max-w-[min(96rem,100%)] 2xl:max-w-[min(110rem,94vw)]">
           <CyberChamferFrame
             accent="hero"
             chamfer={24}
@@ -272,9 +272,9 @@ export default function AffiliateMarketingPage() {
             className="min-h-[clamp(14rem,42vh,28rem)] sm:min-h-[clamp(18rem,52vh,34rem)]"
             innerClassName="cyber-frame-mobile-pad p-[clamp(1.25rem,4vw,3rem)]"
           >
-            <div className="mx-auto flex w-full max-w-[min(56rem,100%)] flex-col items-start text-left">
+            <div className="mx-auto flex w-full max-w-[min(56rem,100%)] flex-col items-start text-left xl:max-w-[min(64rem,100%)]">
               <h1
-                className={`font-heading public-heading-lightning public-heading-lightning--cyan text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em]`}
+                className={`font-heading public-heading-lightning public-heading-lightning--cyan text-[clamp(1.75rem,5.5vw,3.6rem)] font-black uppercase leading-[0.95] tracking-[0.08em] sm:tracking-[0.1em] 2xl:text-[clamp(2.75rem,3.2vw,4rem)]`}
               >
                 Turn attention into withdrawals
               </h1>
@@ -286,8 +286,8 @@ export default function AffiliateMarketingPage() {
         </div>
       </section>
 
-      <div className="relative z-10 space-y-[clamp(1.75rem,5vw,3rem)] px-[clamp(0.75rem,3vw,2.2rem)] pb-[clamp(2.5rem,8vw,5rem)]">
-        <div className="mx-auto w-full max-w-[min(96rem,100%)] space-y-[clamp(1.75rem,5vw,3rem)]">
+      <div className="affiliate-page-content relative z-10 space-y-[clamp(1.75rem,5vw,3rem)] px-[clamp(0.75rem,3vw,2.2rem)] pb-[clamp(2.5rem,8vw,5rem)] 2xl:px-[clamp(1.5rem,2vw,2.75rem)]">
+        <div className="mx-auto w-full max-w-[min(96rem,100%)] space-y-[clamp(1.75rem,5vw,3rem)] 2xl:max-w-[min(110rem,94vw)]">
           {SHOWCASE.map((block, i) => (
             <AffiliateShowcaseBlock key={block.src} {...block} index={i} />
           ))}

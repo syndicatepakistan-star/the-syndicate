@@ -11,7 +11,7 @@ import { publicHeadingLightning } from '@/lib/publicHeadingLightning'
 
 export default function OurMethodsPage() {
   return (
-    <div className="our-methods-page relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c]">
+    <div className="our-methods-page public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <ViewportDecorVideo
           src="/assets/video.mp4"
@@ -45,13 +45,13 @@ export default function OurMethodsPage() {
               </div>
               <div className="grid gap-4">
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" innerClassName="p-2">
-                  <div className="relative z-10 h-[360px] w-full sm:h-[440px] lg:h-[500px]">
+                  <div className="our-methods-hero-media relative z-10 h-[clamp(14rem,48vw,22.5rem)] w-full sm:h-[clamp(18rem,42vw,27.5rem)] lg:h-[clamp(22rem,32vw,31.25rem)] xl:h-[500px]">
                     <Image
                       src="/assets/our-1.jpg"
                       alt="Control the operating system — Syndicate doctrine"
                       fill
                       priority
-                      sizes="(max-width: 1024px) 100vw, 42vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 42vw"
                       className="object-cover object-center"
                     />
                   </div>

@@ -11,17 +11,17 @@ const FOUNDER_COIN_SRC = "/assets/coin-gold.png";
 
 function FounderSectionHeading({ title }: { title: string }) {
   return (
-    <div className="mx-auto flex w-full max-w-[min(100%,1200px)] items-center justify-center px-[25px]">
+    <div className="mx-auto flex w-full max-w-[min(100%,1200px)] items-center justify-center px-3 sm:px-5 md:px-[25px]">
       <Image
         src={FOUNDER_COIN_SRC}
         alt=""
         aria-hidden
         width={80}
         height={80}
-        className="founder-section-coin h-[80px] w-[80px] shrink-0 object-contain drop-shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+        className="founder-section-coin h-[clamp(2.25rem,12vw,3rem)] w-[clamp(2.25rem,12vw,3rem)] shrink-0 object-contain drop-shadow-[0_0_18px_rgba(251,191,36,0.45)] sm:h-14 sm:w-14 md:h-[80px] md:w-[80px]"
       />
       <h2
-        className={`${publicHeadingLightning("amber")} min-w-0 flex-1 px-3 text-center text-2xl font-black uppercase tracking-[0.16em] sm:px-4 sm:text-3xl md:text-4xl`}
+        className={`${publicHeadingLightning("amber")} min-w-0 flex-1 px-2 text-center text-[clamp(1.05rem,4.5vw,1.5rem)] font-black uppercase tracking-[0.1em] sm:px-4 sm:text-3xl sm:tracking-[0.16em] md:text-4xl`}
       >
         {title}
       </h2>
@@ -31,7 +31,7 @@ function FounderSectionHeading({ title }: { title: string }) {
         aria-hidden
         width={80}
         height={80}
-        className="founder-section-coin h-[80px] w-[80px] shrink-0 object-contain drop-shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+        className="founder-section-coin h-[clamp(2.25rem,12vw,3rem)] w-[clamp(2.25rem,12vw,3rem)] shrink-0 object-contain drop-shadow-[0_0_18px_rgba(251,191,36,0.45)] sm:h-14 sm:w-14 md:h-[80px] md:w-[80px]"
       />
     </div>
   );

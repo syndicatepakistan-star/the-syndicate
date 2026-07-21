@@ -179,12 +179,12 @@ export default function WhatYouGetPage() {
   }, [])
 
   return (
-    <div className="what-you-get-page relative min-h-screen w-full min-w-0 overflow-x-clip bg-black">
+    <div className="what-you-get-page public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
       <NavApp />
 
-      <main className="relative z-10">
-        {/* Hero — unchanged structure vs. prior What You Get */}
-        <section className="what-you-get-hero relative min-h-[112svh] w-full px-4 pb-14 pt-[116px] sm:px-6 sm:pb-20 sm:pt-[130px]">
+      <main className="relative z-10 w-full min-w-0 overflow-x-clip">
+        {/* Hero — fluid type + height across phone / iPad / desktop / ultra-wide */}
+        <section className="what-you-get-hero relative min-h-[min(100svh,112svh)] w-full px-[clamp(1rem,3vw,1.5rem)] pb-[clamp(2.5rem,6vw,5rem)] pt-[clamp(5.5rem,14vw,8.125rem)] sm:px-6">
           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
             <ViewportDecorVideo
               src="/assets/bg-video.mp4"
@@ -196,7 +196,7 @@ export default function WhatYouGetPage() {
             <div className="absolute inset-0 bg-black/32" aria-hidden />
           </div>
           <div className="relative z-10">
-          <div className="mx-auto flex w-full max-w-[min(1650px,96vw)] flex-col what-you-get-hero-inner">
+          <div className="mx-auto flex w-full max-w-[min(1650px,96vw)] flex-col what-you-get-hero-inner 2xl:max-w-[min(1800px,92vw)]">
             <div className="flex justify-center pb-6 pt-2 sm:pb-8 sm:pt-4">
               <NeonTypingBadge
                 phrases={['HONOUR · MONEY · POWER · FREEDOM']}
@@ -208,14 +208,14 @@ export default function WhatYouGetPage() {
               />
             </div>
             <div className="what-you-get-hero-copy min-w-0">
-              <h1 className="what-you-get-hero-title hamburger-attract text-6xl font-black leading-[0.98] text-zinc-100 sm:text-7xl md:text-8xl lg:text-[6.8rem]">
+              <h1 className="what-you-get-hero-title hamburger-attract text-[clamp(2.15rem,11.5vw,3.35rem)] font-black leading-[0.98] text-zinc-100 sm:text-[clamp(3rem,8.5vw,4.25rem)] md:text-[clamp(3.75rem,7.2vw,5.5rem)] lg:text-[clamp(4.5rem,5.8vw,6.2rem)] xl:text-[clamp(5.25rem,5vw,6.8rem)] 2xl:text-[clamp(5.75rem,4.5vw,7.25rem)]">
                 Access to a powerful
                 <br />
                 network
                 <br />
                 and alliance.
               </h1>
-              <p className="what-you-get-hero-lede mt-6 max-w-3xl text-lg leading-relaxed text-zinc-100/88 sm:text-xl">
+              <p className="what-you-get-hero-lede mt-4 max-w-3xl text-[clamp(0.95rem,3.2vw,1.125rem)] leading-relaxed text-zinc-100/88 sm:mt-6 sm:text-xl md:text-[1.25rem]">
                 {ALLIANCE_HERO_LEDE}
               </p>
             </div>
@@ -249,7 +249,7 @@ export default function WhatYouGetPage() {
                 >
                   {ALLIANCE_SECTION_HEADLINE}
                 </h2>
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:items-stretch sm:gap-5">
+                <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3 md:items-stretch md:gap-5">
                   {ACCESS_PILLARS.map((p) => (
                     <CyberChamferFrame
                       key={p.title}
@@ -258,13 +258,13 @@ export default function WhatYouGetPage() {
                       decorSize="compact"
                       flatPanel
                       className="h-full min-h-0 w-full min-w-0"
-                      innerClassName="cyber-frame-mobile-pad flex h-full min-h-0 flex-col p-6 sm:p-6"
+                      innerClassName="cyber-frame-mobile-pad flex h-full min-h-0 flex-col p-5 sm:p-6"
                       contentClassName="flex min-h-0 flex-1 flex-col"
                     >
                       <h3
                         className={cx(
                           publicHeadingLightning('amber'),
-                          'marketing-card-title-oneline text-xl font-black uppercase tracking-[0.06em] sm:text-2xl',
+                          'marketing-card-title-oneline text-[clamp(1.1rem,3.5vw,1.5rem)] font-black uppercase tracking-[0.06em] sm:text-2xl',
                           pillarTitleClass[p.accent]
                         )}
                       >
@@ -279,7 +279,7 @@ export default function WhatYouGetPage() {
 
             <section className="px-[clamp(1rem,3vw,2.2rem)] pb-10 sm:pb-14">
               <div className="mx-auto max-w-[96rem]">
-                <div className="grid items-start gap-6 lg:grid-cols-[1fr_220px] xl:grid-cols-[1fr_260px]">
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,220px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,260px)]">
                   <CyberChamferFrame accent="violet" chamfer={22} className="min-h-0" innerClassName="cyber-frame-mobile-pad p-6 sm:p-8">
                     <h2
                       className={cx(

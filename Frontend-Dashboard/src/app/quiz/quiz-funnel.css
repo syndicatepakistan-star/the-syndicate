@@ -38,6 +38,7 @@
   text-rendering: optimizeLegibility;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: clip;
 }
 
@@ -1784,6 +1785,44 @@ body.result-view .section-cards-grid {
   box-shadow: 0 0 14px rgba(52, 211, 153, 0.35);
 }
 
+.result-program-card__price-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 231, 183, 0.55);
+  background: rgba(3, 20, 13, 0.94);
+  color: #d1fae5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.28);
+}
+
+.result-program-card__price-badge--free {
+  border-color: rgba(110, 231, 183, 0.85);
+  color: #a7f3d0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+.result-program-card__price-suffix {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.78);
+}
+
 .result-program-card__body {
   display: flex;
   flex: 1;
@@ -2002,17 +2041,116 @@ body.result-view .section-cards-grid {
   }
 
   .result-program-card__media {
-    width: calc(100% - 20px);
-    max-height: calc(220px - 30px);
+    width: calc(100% - 16px);
+    max-height: 118px;
+    aspect-ratio: 16 / 10;
+    margin-top: 6px;
+  }
+
+  .result-program-card__body {
+    padding: 6px 8px 8px;
+    gap: 6px;
+  }
+
+  .result-program-card__desc {
+    display: none;
+  }
+
+  .result-program-card__title {
+    -webkit-line-clamp: 2;
+    font-size: clamp(0.68rem, 2.8vw, 0.8rem);
+  }
+
+  .result-program-card__actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .result-program-card__details-btn,
+  .result-program-card__cta {
+    min-height: 32px;
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+
+  .result-program-card__price-badge {
+    top: 6px;
+    right: 6px;
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  .result-program-card__price-suffix {
+    font-size: 6px;
+  }
+}
+
+/* Mobile / iPad — compact cards: title + price + buttons only (no blurb) */
+@media (max-width: 900px) {
+  .result-program-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 220px;
+  }
+
+  .result-program-card__media {
+    width: calc(100% - 18px);
+    aspect-ratio: 16 / 10;
+    max-height: 132px;
     margin-top: 8px;
   }
 
   .result-program-card__body {
-    padding: 8px 8px 10px;
+    padding: 8px 10px 10px;
+    gap: 6px;
+  }
+
+  .result-program-card__desc {
+    display: none;
+  }
+
+  .result-program-card__title {
+    -webkit-line-clamp: 2;
+    min-height: 0;
+    font-size: clamp(0.7rem, 2.2vw, 0.88rem);
   }
 
   .result-program-card__actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .result-program-card__details-btn,
+  .result-program-card__cta.result-ticket-btn,
+  .result-program-card__cta.result-unlock-btn {
+    margin-left: 0;
+    min-height: 34px;
+    border-radius: 10px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .result-program-card-stack {
+    gap: 10px;
+  }
+}
+
+@media (min-width: 901px) {
+  .result-program-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
+  }
+
+  .result-program-card__media {
+    max-height: 200px;
+  }
+
+  .result-program-card__title {
+    -webkit-line-clamp: 2;
+  }
+
+  .result-program-card__desc {
+    -webkit-line-clamp: 2;
   }
 }
 
@@ -2915,15 +3053,17 @@ body.result-view .section-cards-grid {
   }
 
   .brand-logo-wrap {
-    width: 160px;
-    min-width: 160px;
-    height: 64px;
-    min-height: 64px;
+    width: min(148px, 42vw);
+    min-width: 0;
+    height: auto;
+    aspect-ratio: 176 / 70;
+    min-height: 52px;
   }
 
   .brand-logo {
-    width: 160px !important;
-    height: 64px !important;
+    width: min(148px, 42vw) !important;
+    height: auto !important;
+    max-height: 58px !important;
   }
 
   .brand-title {
@@ -3521,15 +3661,17 @@ body.result-view .section-cards-grid {
   }
 
   .brand-logo-wrap {
-    width: 120px;
-    min-width: 120px;
-    height: 48px;
-    min-height: 48px;
+    width: min(120px, 38vw);
+    min-width: 0;
+    height: auto;
+    aspect-ratio: 176 / 70;
+    min-height: 44px;
   }
 
   .brand-logo {
-    width: 120px !important;
-    height: 48px !important;
+    width: min(120px, 38vw) !important;
+    height: auto !important;
+    max-height: 48px !important;
   }
 
   .section-title,
@@ -3635,15 +3777,17 @@ body.result-view .result-subheading {
 
 @media (max-width: 640px) {
   body.result-view .brand-logo-wrap {
-    width: 180px;
-    min-width: 180px;
-    height: 72px;
-    min-height: 72px;
+    width: min(156px, 48vw);
+    min-width: 0;
+    height: auto;
+    aspect-ratio: 176 / 70;
+    min-height: 56px;
   }
 
   body.result-view .brand-logo {
-    width: 180px !important;
-    height: 72px !important;
+    width: min(156px, 48vw) !important;
+    height: auto !important;
+    max-height: 62px !important;
   }
 
   body.result-view .brand-title {
@@ -3727,6 +3871,52 @@ body.result-view .result-report-layout {
 .quiz-result-section-frame .result-line-rich:nth-of-type(5n) {
   --result-inner-border: rgba(248, 113, 113, 0.88);
   --result-inner-glow: rgba(239, 68, 68, 0.48);
+}
+
+/* iPad / desktop / big-screen quiz shell */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .page-wrap {
+    padding-left: clamp(1rem, 3vw, 1.75rem);
+    padding-right: clamp(1rem, 3vw, 1.75rem);
+  }
+
+  .card-landing,
+  .card-quiz,
+  .card.result-page-shell {
+    max-width: min(52rem, 100%);
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-wrap {
+    padding-left: clamp(1.25rem, 2.5vw, 2.5rem);
+    padding-right: clamp(1.25rem, 2.5vw, 2.5rem);
+  }
+
+  .card-landing,
+  .card-quiz {
+    max-width: min(64rem, 100%);
+  }
+
+  body.result-view .page-wrap.result-page-wrap > .card.result-page-shell {
+    max-width: min(72rem, 100%);
+  }
+}
+
+@media (min-width: 1536px) {
+  .card-landing,
+  .card-quiz {
+    max-width: min(72rem, 94vw);
+  }
+
+  body.result-view .page-wrap.result-page-wrap > .card.result-page-shell {
+    max-width: min(84rem, 92vw);
+  }
+
+  body.result-view .brand-title {
+    font-size: clamp(36px, 3.2vw, 52px);
+  }
 }
 
 

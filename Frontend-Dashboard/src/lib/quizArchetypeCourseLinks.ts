@@ -6,6 +6,10 @@ import {
   LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
 } from "@/lib/level1ProgramCatalog";
 import {
+  BUSINESS_MODEL_UNIT_USD,
+  BUSINESS_PSYCHOLOGY_UNIT_USD,
+} from "@/lib/packPricing";
+import {
   resolveProgramPlaylistDescription,
   resolveProgramPlaylistSummary,
   resolveProgramPlaylistThumbnail,
@@ -239,6 +243,8 @@ export type QuizResultProgramCardMeta = {
   thumbnailSrc?: string;
   unlockHref?: string;
   isFree: boolean;
+  /** Short price label for card badge (e.g. "$99", "Free", "$150"). */
+  priceLabel: string;
   unlockButtonId?: string;
 };
 
@@ -268,6 +274,7 @@ export function resolveQuizResultProgramCardMeta(
       thumbnailSrc: offer?.imageSrc,
       unlockHref: planOfferDeepLink(pack),
       isFree: false,
+      priceLabel: (offer?.displayPrice ?? "$150").trim() || "$150",
       unlockButtonId: resolveQuizStackUnlockButtonId(title),
     };
   }
@@ -290,6 +297,17 @@ export function resolveQuizResultProgramCardMeta(
     unlockHref = buildUnlockNowProgramsHref(title);
   }
 
+  let priceLabel = "Free";
+  if (!isFree) {
+    if (category === "paid_psychology") {
+      priceLabel = `$${BUSINESS_PSYCHOLOGY_UNIT_USD}`;
+    } else if (category === "business") {
+      priceLabel = `$${BUSINESS_MODEL_UNIT_USD}`;
+    } else {
+      priceLabel = `$${BUSINESS_MODEL_UNIT_USD}`;
+    }
+  }
+
   return {
     title: displayTitle,
     description,
@@ -297,6 +315,7 @@ export function resolveQuizResultProgramCardMeta(
     thumbnailSrc,
     unlockHref,
     isFree,
+    priceLabel,
     unlockButtonId: resolveQuizStackUnlockButtonId(title),
   };
 }

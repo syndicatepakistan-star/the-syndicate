@@ -99,7 +99,7 @@ export default function GlobalBottomSections() {
             </div>
           )}
           {isProgramsPage ? (
-            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[30ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
+            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[30ch] text-[clamp(1.65rem,8vw,2.25rem)] font-black uppercase leading-[1.08] tracking-[0.04em] text-amber-100 sm:text-6xl sm:tracking-[0.05em] md:text-7xl">
               <span className="block">
                 IF YOU WANT
                 <span className="hamburger-attract mx-2 inline-block text-amber-200 drop-shadow-[0_0_30px_rgba(251,191,36,0.9)]">FREEDOM</span>
@@ -112,7 +112,7 @@ export default function GlobalBottomSections() {
               </span>
             </h2>
           ) : (
-            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[26ch] text-4xl font-black uppercase leading-[1.08] tracking-[0.05em] text-amber-100 sm:text-6xl md:text-7xl">
+            <h2 className="marketing-join-headline mx-auto mt-3 max-w-[26ch] text-[clamp(1.65rem,8vw,2.25rem)] font-black uppercase leading-[1.08] tracking-[0.04em] text-amber-100 sm:text-6xl sm:tracking-[0.05em] md:text-7xl">
               <span className="block">IF YOU WANT TO</span>
               <span className="mt-1.5 block">
                 <span className="hamburger-attract mx-2 inline-block text-amber-200 drop-shadow-[0_0_30px_rgba(251,191,36,0.9)]">{actionWord}</span>
@@ -121,7 +121,7 @@ export default function GlobalBottomSections() {
               </span>
             </h2>
           )}
-          <div className="mt-10 flex flex-wrap justify-center gap-x-7 gap-y-4 sm:mt-12">
+          <div className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-3 sm:mt-12 sm:gap-x-7 sm:gap-y-4">
             {isWhatYouGetPage ? (
               <>
                 <div className="cyber-chip-animate group relative bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 p-[1px] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]">
@@ -129,7 +129,7 @@ export default function GlobalBottomSections() {
                   <Link
                     href="/membership"
                     prefetch
-                    className="hamburger-attract relative inline-flex min-h-[58px] min-w-[240px] items-center justify-center bg-[#05070c]/92 px-10 py-4 text-lg font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95"
+                    className="hamburger-attract relative inline-flex min-h-[52px] min-w-[min(240px,86vw)] items-center justify-center bg-[#05070c]/92 px-8 py-3.5 text-base font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95 sm:min-h-[58px] sm:min-w-[240px] sm:px-10 sm:py-4 sm:text-lg"
                   >
                     JOIN NOW
                   </Link>
@@ -139,7 +139,7 @@ export default function GlobalBottomSections() {
                   <Link
                     href="/programs"
                     prefetch
-                    className="hamburger-attract relative inline-flex min-h-[58px] min-w-[240px] items-center justify-center bg-[#05070c]/92 px-10 py-4 text-lg font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95"
+                    className="hamburger-attract relative inline-flex min-h-[52px] min-w-[min(240px,86vw)] items-center justify-center bg-[#05070c]/92 px-8 py-3.5 text-base font-bold tracking-[0.08em] text-zinc-100 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)] transition duration-300 hover:scale-[1.04] hover:bg-[#070b14]/95 sm:min-h-[58px] sm:min-w-[240px] sm:px-10 sm:py-4 sm:text-lg"
                   >
                     EXPLORE PROGRAMS
                   </Link>
@@ -150,14 +150,14 @@ export default function GlobalBottomSections() {
                 <Link
                   href="/membership"
                   prefetch
-                  className="hamburger-attract inline-flex min-h-[56px] min-w-[220px] items-center justify-center rounded-xl border border-amber-300/80 bg-black/80 px-10 py-4 text-lg font-bold tracking-[0.03em] text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.45)] transition hover:scale-[1.04] hover:bg-black/95 hover:shadow-[0_0_36px_rgba(251,191,36,0.68)]"
+                  className="hamburger-attract inline-flex min-h-[52px] min-w-[min(220px,86vw)] items-center justify-center rounded-xl border border-amber-300/80 bg-black/80 px-8 py-3.5 text-base font-bold tracking-[0.03em] text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.45)] transition hover:scale-[1.04] hover:bg-black/95 hover:shadow-[0_0_36px_rgba(251,191,36,0.68)] sm:min-h-[56px] sm:min-w-[220px] sm:px-10 sm:py-4 sm:text-lg"
                 >
                   JOIN NOW
                 </Link>
                 <Link
                   href="/programs"
                   prefetch
-                  className="hamburger-attract inline-flex min-h-[56px] min-w-[220px] items-center justify-center rounded-xl border border-amber-300/80 bg-black/80 px-10 py-4 text-lg font-bold tracking-[0.03em] text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.45)] transition hover:scale-[1.04] hover:bg-black/95 hover:shadow-[0_0_36px_rgba(251,191,36,0.68)]"
+                  className="hamburger-attract inline-flex min-h-[52px] min-w-[min(220px,86vw)] items-center justify-center rounded-xl border border-amber-300/80 bg-black/80 px-8 py-3.5 text-base font-bold tracking-[0.03em] text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.45)] transition hover:scale-[1.04] hover:bg-black/95 hover:shadow-[0_0_36px_rgba(251,191,36,0.68)] sm:min-h-[56px] sm:min-w-[220px] sm:px-10 sm:py-4 sm:text-lg"
                 >
                   EXPLORE PROGRAMS
                 </Link>

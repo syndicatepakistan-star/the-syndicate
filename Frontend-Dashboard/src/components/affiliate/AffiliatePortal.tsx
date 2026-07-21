@@ -751,20 +751,20 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
     <div
       className={
         embedded
-          ? "affiliate-portal-embed w-full bg-transparent p-0 font-sans text-white"
-          : "min-h-screen w-full bg-[#090909] p-3 font-sans text-white md:p-5"
+          ? "affiliate-portal-embed affiliate-portal-root w-full min-w-0 bg-transparent p-0 font-sans text-white"
+          : "affiliate-portal-standalone affiliate-portal-root min-h-screen w-full min-w-0 overflow-x-clip bg-[#090909] p-3 font-sans text-white sm:p-4 md:p-5"
       }
     >
       <main
         className={
           embedded
             ? "cut-frame glass-dark mx-auto flex h-auto min-h-[min(58vh,560px)] max-h-[min(82vh,920px)] w-full max-w-none flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-4 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:p-5"
-            : "cut-frame glass-dark mx-auto flex min-h-[calc(100dvh-1.5rem)] w-full max-w-[1800px] flex-col overflow-hidden border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-3 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:min-h-[calc(100dvh-2.5rem)] sm:p-5"
+            : "cut-frame glass-dark mx-auto flex min-h-[calc(100dvh-1.5rem)] w-full max-w-[1800px] flex-col overflow-x-hidden overflow-y-auto border border-amber-300/70 bg-[radial-gradient(1200px_420px_at_0%_0%,rgba(252,211,77,0.10),rgba(0,0,0,0)_55%),radial-gradient(980px_420px_at_100%_0%,rgba(193,120,255,0.12),rgba(0,0,0,0)_58%),#060608] p-3 shadow-[0_0_0_1px_rgba(252,211,77,0.62),0_0_12px_rgba(252,211,77,0.2),0_0_28px_rgba(193,120,255,0.28),0_0_48px_rgba(56,236,255,0.16),0_0_72px_rgba(56,236,255,0.12)] sm:min-h-[calc(100dvh-2.5rem)] sm:p-5 2xl:max-w-[min(1900px,96vw)]"
         }
       >
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-heading text-2xl font-black uppercase tracking-[0.08em] text-[#f8efc0] drop-shadow-[0_0_12px_rgba(252,211,77,0.55)] sm:text-3xl">Affiliate Dashboard</h2>
+          <div className="min-w-0">
+            <h2 className="font-heading text-[clamp(1.35rem,5vw,1.75rem)] font-black uppercase tracking-[0.08em] text-[#f8efc0] drop-shadow-[0_0_12px_rgba(252,211,77,0.55)] sm:text-3xl">Affiliate Dashboard</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div
@@ -869,7 +869,7 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="text-sm font-black uppercase tracking-[0.2em] text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Performance Snapshot</div>
             </div>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+            <div className="affiliate-portal-stats-grid grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
               {[
                 { label: "Clicks", value: overallStats?.click_count ?? "-", tone: "border-orange-300/80 bg-[linear-gradient(180deg,rgba(255,146,43,0.2),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(253,186,116,0.92),0_0_24px_rgba(251,146,60,0.86),0_0_58px_rgba(251,146,60,0.66),0_0_108px_rgba(251,146,60,0.48),inset_0_0_20px_rgba(253,186,116,0.3)]" },
                 { label: "Leads", value: overallStats?.lead_count ?? "-", tone: "border-emerald-300/80 bg-[linear-gradient(180deg,rgba(34,197,94,0.18),rgba(0,0,0,0.32))] shadow-[0_0_0_1px_rgba(110,231,183,0.92),0_0_24px_rgba(16,185,129,0.82),0_0_58px_rgba(16,185,129,0.62),0_0_108px_rgba(16,185,129,0.46),inset_0_0_20px_rgba(110,231,183,0.28)]" },
@@ -1090,8 +1090,8 @@ export default function AffiliatePortal({ displayName, referralIds, onLogout, em
                 </div>
 
                 {syndicateStatementRows.length ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+                  <div className="affiliate-portal-table-wrap overflow-x-auto">
+                    <table className="w-full min-w-[640px] border-collapse text-left text-sm md:min-w-[720px]">
                       <thead>
                         <tr className="border-b border-cyan-500/45 font-mono text-[10px] font-black uppercase tracking-[0.16em] [text-shadow:0_0_8px_rgba(34,211,238,0.35)]">
                           <th className="border-r border-cyan-500/35 px-3 py-2 text-cyan-200/95">User</th>

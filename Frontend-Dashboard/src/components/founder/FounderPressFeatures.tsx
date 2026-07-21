@@ -63,17 +63,17 @@ export function FounderPressFeatures() {
               accent={feature.accent}
               chamfer={22}
               className="w-full"
-              innerClassName="px-5 py-[70px] sm:px-7 sm:py-[78px] lg:px-9 lg:py-[86px]"
+              innerClassName="px-4 py-10 sm:px-7 sm:py-[78px] lg:px-9 lg:py-[86px]"
               contentClassName="h-full"
             >
-              <article className="flex min-h-[22rem] flex-col text-left">
+              <article className="flex min-h-0 flex-col text-left sm:min-h-[22rem]">
                 <h2
                   className={`${publicHeadingLightning(feature.accent)} hamburger-attract mb-5 text-center text-[clamp(1.35rem,4vw,3.2rem)] font-black uppercase leading-none tracking-[0.08em] sm:mb-7`}
                 >
                   As Covered in {PRESS_NAME[feature.publisher]}
                 </h2>
 
-                <div className="grid flex-1 items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)] lg:gap-9">
+                <div className="grid flex-1 items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] xl:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)] lg:gap-9">
                   <div className="flex min-w-0 flex-col justify-start px-1 py-2 sm:px-3 sm:pt-4">
                     <a
                       href={feature.url}
@@ -96,7 +96,7 @@ export function FounderPressFeatures() {
                     </p>
                   </div>
 
-                  <div className="mx-auto flex w-full max-w-[40rem] flex-col items-center">
+                  <div className="mx-auto flex w-full max-w-[min(40rem,100%)] min-w-0 flex-col items-center">
                     <a
                       href={feature.url}
                       target="_blank"

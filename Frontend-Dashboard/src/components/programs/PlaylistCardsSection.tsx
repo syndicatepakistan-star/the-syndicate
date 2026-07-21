@@ -37,6 +37,8 @@ import {
   PROGRAM_CARD_MOBILE_INFO_FACE,
   PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE,
   PROGRAM_CARD_MOBILE_TITLE_FACE,
+  PROGRAM_CARD_TITLE_SLOT,
+  PROGRAM_CARD_STATS_SLOT,
 } from "@/components/programs/programCardMedia";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
@@ -351,7 +353,7 @@ export function PlaylistCardsSection({
         key={`playlist-${pl.id}`}
         style={spotlightStyle}
         className={cn(
-          "group/card relative flex h-full min-h-0 w-full flex-col text-left max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[16.5rem]",
+          "program-playlist-card group/card relative flex h-full min-h-0 w-full flex-col text-left max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[16.5rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
@@ -402,11 +404,11 @@ export function PlaylistCardsSection({
         <span
           className={cn(
             PROGRAM_CARD_FRAME,
-            "z-[2]",
+            "z-[2] h-full",
             isSpotlight && "program-card-globe-spotlight border-2",
           )}
         >
-          <div className={PROGRAM_CARD_INNER_SHELL}>
+          <div className={cn(PROGRAM_CARD_INNER_SHELL, "h-full")}>
             <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
               <ProgramPlaylistCoverImage
                 playlist={pl}
@@ -445,21 +447,26 @@ export function PlaylistCardsSection({
             >
               <div
                 className={cn(
-                  "line-clamp-2 text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  "text-left text-[clamp(10px,2.4vw,17px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
+                  PROGRAM_CARD_TITLE_SLOT,
                   theme.title,
                 )}
               >
                 {cardTitle}
               </div>
               {!comingSoon ? (
-                <ProgramCardStatsLines
-                  stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
-                  size="stream"
-                  denseMobile
-                  className="max-xl:mt-0.5"
-                />
-              ) : null}
+                <div className={PROGRAM_CARD_STATS_SLOT}>
+                  <ProgramCardStatsLines
+                    stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
+                    size="stream"
+                    denseMobile
+                    className="max-xl:mt-0.5"
+                  />
+                </div>
+              ) : (
+                <div className={PROGRAM_CARD_STATS_SLOT} aria-hidden />
+              )}
               <div className={cn("mt-auto grid grid-cols-2 gap-1.5 sm:gap-2", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
                 <button
                   type="button"
@@ -572,9 +579,9 @@ export function PlaylistCardsSection({
                 aria-hidden
               />
               {mobilePairedRows.map((row) => (
-                <div key={`mobile-row-${row.idx}`} className="program-playlist-mobile-grid grid grid-cols-2 justify-items-stretch gap-2 overflow-visible max-lg:gap-1.5 sm:gap-4">
-                  <div className="min-w-0 w-full">{row.psychology ? renderPlaylistCard(row.psychology, row.idx * 2) : <div aria-hidden />}</div>
-                  <div className="min-w-0 w-full">{row.model ? renderPlaylistCard(row.model, row.idx * 2 + 1) : <div aria-hidden />}</div>
+                <div key={`mobile-row-${row.idx}`} className="program-playlist-mobile-grid grid grid-cols-2 items-stretch justify-items-stretch gap-2 overflow-visible max-lg:gap-1.5 sm:gap-4">
+                  <div className="flex min-h-0 min-w-0 h-full w-full">{row.psychology ? renderPlaylistCard(row.psychology, row.idx * 2) : <div aria-hidden className="h-full w-full" />}</div>
+                  <div className="flex min-h-0 min-w-0 h-full w-full">{row.model ? renderPlaylistCard(row.model, row.idx * 2 + 1) : <div aria-hidden className="h-full w-full" />}</div>
                 </div>
               ))}
             </div>
@@ -599,8 +606,12 @@ export function PlaylistCardsSection({
                 postAuthNext="/programs"
               />
               <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5">
-                {businessPsychologyPlaylists.map((pl, j) => renderPlaylistCard(pl, j))}
+              <div className="grid grid-cols-1 items-stretch gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5">
+                {businessPsychologyPlaylists.map((pl, j) => (
+                  <div key={`psychology-slot-${pl.id}`} className="flex min-h-0 min-w-0 h-full w-full">
+                    {renderPlaylistCard(pl, j)}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -627,8 +638,12 @@ export function PlaylistCardsSection({
                 postAuthNext="/programs"
               />
               <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
-              <div className="grid grid-cols-1 gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5 playlist-business-models-cards">
-                {businessModelPlaylists.map((pl, j) => renderPlaylistCard(pl, j + businessPsychologyPlaylists.length))}
+              <div className="grid grid-cols-1 items-stretch gap-4 overflow-visible min-[560px]:grid-cols-2 min-[560px]:gap-5 playlist-business-models-cards">
+                {businessModelPlaylists.map((pl, j) => (
+                  <div key={`models-slot-${pl.id}`} className="flex min-h-0 min-w-0 h-full w-full">
+                    {renderPlaylistCard(pl, j + businessPsychologyPlaylists.length)}
+                  </div>
+                ))}
               </div>
             </div>
           </div>

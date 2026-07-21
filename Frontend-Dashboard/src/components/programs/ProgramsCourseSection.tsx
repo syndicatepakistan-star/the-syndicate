@@ -53,6 +53,8 @@ import {
   PROGRAM_CARD_MOBILE_ACTIONS_FACE,
   PROGRAM_CARD_MOBILE_INFO_FACE,
   PROGRAM_CARD_MOBILE_TITLE_FACE,
+  PROGRAM_CARD_TITLE_SLOT,
+  PROGRAM_CARD_STATS_SLOT,
 } from "@/components/programs/programCardMedia";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
@@ -1025,7 +1027,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
         <span
           className={cn(
             PROGRAM_CARD_FRAME,
-            "z-[1] rounded-[1.12rem] max-lg:rounded-[0.85rem]",
+            "z-[1] h-full rounded-[1.12rem] max-lg:rounded-[0.85rem]",
             isSpotlight && "program-card-globe-spotlight border-2"
           )}
         >
@@ -1036,7 +1038,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
             className="pointer-events-none absolute inset-0 z-[2] rounded-[1.28rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]"
             aria-hidden
           />
-            <div className={PROGRAM_CARD_INNER_SHELL}>
+            <div className={cn(PROGRAM_CARD_INNER_SHELL, "h-full")}>
             <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
               <ProgramPlaylistCoverImage
                 playlist={pl}
@@ -1067,21 +1069,26 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
             >
               <div
                 className={cn(
-                  "line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
+                  "text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
+                  PROGRAM_CARD_TITLE_SLOT,
                   theme.title
                 )}
               >
                 {cardTitle}
               </div>
               {!comingSoon ? (
-                <ProgramCardStatsLines
-                  stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
-                  size="stream"
-                  denseMobile
-                  className="max-xl:mt-0.5 shrink-0"
-                />
-              ) : null}
+                <div className={PROGRAM_CARD_STATS_SLOT}>
+                  <ProgramCardStatsLines
+                    stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
+                    size="stream"
+                    denseMobile
+                    className="max-xl:mt-0.5 shrink-0"
+                  />
+                </div>
+              ) : (
+                <div className={PROGRAM_CARD_STATS_SLOT} aria-hidden />
+              )}
               {!comingSoon ? (
                 <div className={cn("mt-auto grid shrink-0 grid-cols-2 gap-1.5", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
                   <button
@@ -1243,9 +1250,9 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                           <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[5] w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-transparent via-[color:var(--gold)] to-transparent shadow-[0_0_16px_rgba(245,200,20,0.95),0_0_38px_rgba(245,200,20,0.75)]" />
                         </>
                       ) : null}
-                      <div className="program-playlist-mobile-grid grid grid-cols-2 justify-items-stretch gap-2 max-lg:gap-1.5 sm:gap-4">
-                        <div className="min-w-0 w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
-                        <div className="min-w-0 w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
+                      <div className="program-playlist-mobile-grid grid grid-cols-2 items-stretch justify-items-stretch gap-2 max-lg:gap-1.5 sm:gap-4">
+                        <div className="flex min-h-0 min-w-0 h-full w-full">{row.psychology ? renderStreamPlaylistCard(row.psychology, row.idx * 2) : null}</div>
+                        <div className="flex min-h-0 min-w-0 h-full w-full">{row.model ? renderStreamPlaylistCard(row.model, row.idx * 2 + 1) : null}</div>
                       </div>
                     </div>
                   ))}
@@ -1284,11 +1291,15 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-300/90 to-transparent shadow-[0_0_14px_rgba(232,121,249,0.55)]" />
                   <div
                     className={cn(
-                      "grid justify-items-stretch gap-3 sm:gap-4 md:gap-5",
+                      "grid items-stretch justify-items-stretch gap-3 sm:gap-4 md:gap-5",
                       showBothPlaylistColumns ? "grid-cols-1 min-[560px]:grid-cols-2" : "grid-cols-1 min-[440px]:grid-cols-2"
                     )}
                   >
-                    {visibleBusinessPsychologyPlaylists.map((pl, j) => renderStreamPlaylistCard(pl, j))}
+                    {visibleBusinessPsychologyPlaylists.map((pl, j) => (
+                      <div key={`psychology-slot-${pl.id}`} className="flex min-h-0 min-w-0 h-full w-full">
+                        {renderStreamPlaylistCard(pl, j)}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : null}
@@ -1322,13 +1333,15 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_14px_rgba(103,232,249,0.55)]" />
                   <div
                     className={cn(
-                      "grid justify-items-stretch gap-3 sm:gap-4 md:gap-5",
+                      "grid items-stretch justify-items-stretch gap-3 sm:gap-4 md:gap-5",
                       showBothPlaylistColumns ? "grid-cols-1 min-[560px]:grid-cols-2 playlist-business-models-cards" : "grid-cols-1 min-[440px]:grid-cols-2"
                     )}
                   >
-                    {visibleBusinessModelPlaylists.map((pl, j) =>
-                      renderStreamPlaylistCard(pl, j + visibleBusinessPsychologyPlaylists.length)
-                    )}
+                    {visibleBusinessModelPlaylists.map((pl, j) => (
+                      <div key={`models-slot-${pl.id}`} className="flex min-h-0 min-w-0 h-full w-full">
+                        {renderStreamPlaylistCard(pl, j + visibleBusinessPsychologyPlaylists.length)}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : null}

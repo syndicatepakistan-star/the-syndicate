@@ -18,14 +18,21 @@ export const PROGRAM_CARD_INFO_INSET =
 
 /** Text + action buttons panel below the thumbnail. */
 export const PROGRAM_CARD_INFO_PANEL =
-  "program-playlist-card__info flex min-h-0 flex-1 flex-col overflow-hidden max-xl:min-h-0 max-xl:justify-end";
+  "program-playlist-card__info flex min-h-0 flex-1 flex-col justify-end overflow-hidden";
+
+/** Fixed slot heights so psychology + business model cards align in the library grid. */
+export const PROGRAM_CARD_TITLE_SLOT =
+  "program-playlist-card__title-slot line-clamp-2 min-h-[2.35rem] sm:min-h-[2.65rem]";
+
+export const PROGRAM_CARD_STATS_SLOT =
+  "program-playlist-card__stats-slot min-h-[2.1rem] shrink-0 sm:min-h-[2.35rem]";
 
 /** Mobile + iPad (< xl) — match trading vault module card info block. */
 export const PROGRAM_CARD_MOBILE_INFO_FACE =
   "max-xl:min-h-0 max-xl:justify-end max-xl:rounded-none max-xl:border-x-0 max-xl:border-t-0 max-xl:px-1 max-xl:py-1.5";
 
 export const PROGRAM_CARD_MOBILE_TITLE_FACE =
-  "max-xl:line-clamp-2 max-xl:min-h-0 max-xl:text-[clamp(10px,2.4vw,17px)]";
+  "max-xl:line-clamp-2 max-xl:text-[clamp(10px,2.4vw,17px)]";
 
 export const PROGRAM_CARD_MOBILE_ACTIONS_FACE = "max-xl:mt-auto max-xl:gap-1.5";
 

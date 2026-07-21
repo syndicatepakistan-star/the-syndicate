@@ -133,24 +133,20 @@ export function streamPlaylistCardStats(
   options?: { slug?: string; title?: string }
 ): ProgramCardStats {
   const slug = options?.slug ?? "";
+  const title = options?.title ?? "";
   const curatedSeconds = slug ? lookupCuratedDurationSeconds(slug) : undefined;
-
-  if (videoCount <= 1) {
-    const videoLength =
-      curatedSeconds !== undefined
-        ? formatDurationSeconds(curatedSeconds)
-        : formatTotalWatchTime(1);
-    return { mode: "lesson", videoLength };
-  }
+  const count = Math.max(1, videoCount);
 
   const watchTime =
     curatedSeconds !== undefined
       ? formatDurationSeconds(curatedSeconds)
-      : formatTotalWatchTime(videoCount);
+      : count === 1
+        ? estimateVideoLengthFromTitle(title)
+        : formatTotalWatchTime(count);
 
   return {
     mode: "module",
-    lessonCount: videoCount,
+    lessonCount: count,
     watchTime,
   };
 }

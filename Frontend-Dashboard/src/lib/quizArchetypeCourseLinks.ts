@@ -1,9 +1,15 @@
 import catalogEntries from "@/data/stream-playlist-catalog.json";
+import { planOfferByKey } from "@/components/programs/planOfferCatalog";
 import {
   LEVEL1_CANONICAL_TITLES,
   LEVEL1_SLUG_TITLE_OVERRIDES,
   LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
 } from "@/lib/level1ProgramCatalog";
+import {
+  resolveProgramPlaylistSummary,
+  resolveProgramPlaylistThumbnail,
+  resolveProgramPlaylistTitle,
+} from "@/lib/programPlaylistCatalog";
 import {
   planOfferDeepLink,
   programPlaylistDeepLink,
@@ -77,6 +83,10 @@ function normalizeTitle(value: string): string {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function mappedCanonicalTitle(courseName: string): string | undefined {
+  return QUIZ_COURSE_TO_CANONICAL_TITLE[courseName.trim().toLowerCase()];
 }
 
 const CANONICAL_TITLE_TO_SLUG = new Map<string, string>();
@@ -219,4 +229,68 @@ export function normalizeExecutionStackLines(lines: string[]): string[] {
     }
     return `• ${title}`;
   });
+}
+
+export type QuizResultProgramCardMeta = {
+  title: string;
+  description: string;
+  thumbnailSrc?: string;
+  unlockHref?: string;
+  isFree: boolean;
+  unlockButtonId?: string;
+};
+
+/** Resolve thumbnail + summary + CTA target for a Section C / map course row. */
+export function resolveQuizResultProgramCardMeta(
+  courseName: string,
+  category: ArchetypeMapLineCategory,
+): QuizResultProgramCardMeta {
+  const title = parseStackCourseTitle(courseName);
+  const titleKey = normalizeTitle(title);
+  const access = parseStackCourseAccess(courseName);
+  const isFree =
+    access === "free" ||
+    category === "free_psychology" ||
+    KNOWN_FREE_STACK_COURSES.has(titleKey);
+
+  const pack = MID_TICKET_PACK_BY_COURSE[titleKey];
+  if (pack) {
+    const offer = planOfferByKey(pack);
+    return {
+      title,
+      description:
+        (offer?.teaser ?? offer?.detailDescription ?? "").trim() ||
+        `Unlock ${title} inside the Syndicate vault.`,
+      thumbnailSrc: offer?.imageSrc,
+      unlockHref: planOfferDeepLink(pack),
+      isFree: false,
+      unlockButtonId: resolveQuizStackUnlockButtonId(title),
+    };
+  }
+
+  const slug = resolveQuizCatalogCourseSlug(title);
+  const programId = resolveQuizCatalogCourseProgramId(title) ?? 0;
+  const mappedCanonical = mappedCanonicalTitle(title);
+  const playlistLike = {
+    id: programId,
+    slug: slug ?? null,
+    title: mappedCanonical || title,
+  };
+  const displayTitle = resolveProgramPlaylistTitle(playlistLike) || mappedCanonical || title;
+  const description = resolveProgramPlaylistSummary(playlistLike);
+  const thumbnailSrc = resolveProgramPlaylistThumbnail(playlistLike);
+
+  let unlockHref: string | undefined;
+  if (!isFree && (category === "business" || category === "paid_psychology")) {
+    unlockHref = buildUnlockNowProgramsHref(title);
+  }
+
+  return {
+    title: displayTitle,
+    description,
+    thumbnailSrc,
+    unlockHref,
+    isFree,
+    unlockButtonId: resolveQuizStackUnlockButtonId(title),
+  };
 }

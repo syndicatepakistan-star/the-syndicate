@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { jsPDF } from "jspdf";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import { QuizResultProgramCard } from "@/components/quiz-funnel/QuizResultProgramCard";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import {
   buildFreeTicketLoginHref,
   isFreeTicketPsychologyCourse,
 } from "@/lib/quizFreeTicketCourses";
 import {
-  buildUnlockNowProgramsHref,
   classifyArchetypeMapLine,
   classifyExecutionStackLine,
   executionStackCategoryToActionCategory,
@@ -19,7 +19,6 @@ import {
   normalizeExecutionStackLines,
   parseStackCourseAccess,
   parseStackCourseTitle,
-  resolveQuizStackUnlockButtonId,
   type ArchetypeMapLineCategory,
   type ExecutionStackLineCategory,
 } from "@/lib/quizArchetypeCourseLinks";
@@ -28,8 +27,6 @@ import {
   normalizeQuizReportLines,
 } from "@/lib/quizResultReportFormat";
 import {
-  courseActionButtonTheme,
-  resolveCourseNeonTheme,
   resolveWeaponNeonTheme,
   type CourseNeonTheme,
 } from "@/lib/quizResultCourseNeon";
@@ -140,51 +137,6 @@ function getCleanReportLines(report: string) {
   return normalizeQuizReportLines(lines);
 }
 
-function renderCourseActionButton(
-  courseValue: string,
-  category: ArchetypeMapLineCategory,
-  loginEmail: string,
-  buttonTheme: CourseNeonTheme
-) {
-  const showFree =
-    category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
-  if (showFree) {
-    return (
-      <a
-        className={`result-ticket-btn result-ticket-btn--${buttonTheme}`}
-        href={buildFreeTicketLoginHref(loginEmail, courseValue)}
-      >
-        Get For Free
-      </a>
-    );
-  }
-  if (category === "business" || category === "paid_psychology") {
-    const unlockHref = buildUnlockNowProgramsHref(courseValue);
-    if (unlockHref) {
-      const unlockId = resolveQuizStackUnlockButtonId(courseValue);
-      return (
-        <a
-          id={unlockId}
-          className={`result-unlock-btn result-unlock-btn--${buttonTheme}`}
-          href={unlockHref}
-        >
-          Unlock
-        </a>
-      );
-    }
-  }
-  return null;
-}
-
-function renderStackFreeTag() {
-  return (
-    <span className="result-stack-free-tag">
-      {" "}
-      (<span className="result-stack-access result-stack-access--free">FREE</span>)
-    </span>
-  );
-}
-
 function renderNeonCourseLine(
   key: string,
   displayLabel: string,
@@ -193,18 +145,14 @@ function renderNeonCourseLine(
   loginEmail: string,
   rowThemeOverride?: CourseNeonTheme
 ) {
-  const rowTheme = rowThemeOverride ?? resolveCourseNeonTheme(displayLabel);
-  const isFree =
-    category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
-  const btnTheme = courseActionButtonTheme(displayLabel, isFree, rowThemeOverride);
   return (
-    <p
+    <QuizResultProgramCard
       key={key}
-      className={`result-line result-line-rich result-course-line result-course-line--${rowTheme}`}
-    >
-      <span className={`result-course-pill result-course-pill--${rowTheme}`}>{displayLabel}</span>
-      {renderCourseActionButton(courseValue, category, loginEmail, btnTheme)}
-    </p>
+      courseValue={courseValue || displayLabel}
+      category={category}
+      loginEmail={loginEmail}
+      rowThemeOverride={rowThemeOverride}
+    />
   );
 }
 
@@ -216,22 +164,27 @@ function renderExecutionStackCourseLine(
   loginEmail: string,
   rowThemeOverride?: CourseNeonTheme
 ) {
+  return (
+    <QuizResultProgramCard
+      key={key}
+      courseValue={rawCourse || courseValue}
+      category={category}
+      loginEmail={loginEmail}
+      rowThemeOverride={rowThemeOverride}
+    />
+  );
+}
+
+function isStackCourseFree(
+  rawCourse: string,
+  category: ArchetypeMapLineCategory,
+): boolean {
+  const courseValue = parseStackCourseTitle(rawCourse);
   const access = parseStackCourseAccess(rawCourse);
-  const rowTheme = rowThemeOverride ?? resolveCourseNeonTheme(courseValue);
-  const isFree =
+  return (
     access === "free" ||
     category === "free_psychology" ||
-    isFreeTicketPsychologyCourse(courseValue);
-  const btnTheme = courseActionButtonTheme(courseValue, isFree, rowThemeOverride);
-  return (
-    <p
-      key={key}
-      className={`result-line result-line-rich result-course-line result-course-line--${rowTheme}`}
-    >
-      <span className="result-stack-course-title">{courseValue}</span>
-      {access === "free" ? renderStackFreeTag() : null}
-      {renderCourseActionButton(courseValue, category, loginEmail, btnTheme)}
-    </p>
+    isFreeTicketPsychologyCourse(courseValue)
   );
 }
 
@@ -240,75 +193,143 @@ function renderExecutionStackSectionContent(
   sectionTitle: string,
   loginEmail: string
 ) {
+  type CourseBlock = {
+    kind: "course";
+    key: string;
+    rawCourse: string;
+    courseValue: string;
+    category: ArchetypeMapLineCategory;
+    weaponTheme?: CourseNeonTheme;
+    isFree: boolean;
+  };
+  type OtherBlock = {
+    kind: "other";
+    node: ReactNode;
+    key: string;
+    isCategoryHeader?: boolean;
+  };
+
+  const freeCourses: CourseBlock[] = [];
+  const rest: Array<CourseBlock | OtherBlock> = [];
   let stackCategory: ExecutionStackLineCategory = "other";
   let weaponRowIndex = 0;
-  return normalizeExecutionStackLines(content).map((line, idx) => {
+
+  normalizeExecutionStackLines(content).forEach((line, idx) => {
     const headerCategory = classifyExecutionStackLine(line);
     if (headerCategory) {
       stackCategory = headerCategory;
       const matchedPrefix = ["1. THE WEAPON", "2. THE SHIELD", "3. THE PROTOCOL"].find((prefix) =>
         line.startsWith(prefix)
       );
-      if (matchedPrefix) {
-        return (
-          <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich">
-            <span className="result-key">{matchedPrefix}</span>{" "}
-            {line.replace(matchedPrefix, "").trim()}
-          </p>
-        );
-      }
-      return (
+      const node = matchedPrefix ? (
+        <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich">
+          <span className="result-key">{matchedPrefix}</span>{" "}
+          {line.replace(matchedPrefix, "").trim()}
+        </p>
+      ) : (
         <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich result-map-category">
           {line}
         </p>
       );
+      rest.push({
+        kind: "other",
+        node,
+        key: `${sectionTitle}-hdr-${idx}`,
+        isCategoryHeader: true,
+      });
+      return;
     }
-    if (line.startsWith("• Course:")) {
-      const rawCourse = line.replace("• Course:", "").trim();
+
+    if (line.startsWith("• Course:") || line.startsWith("• ")) {
+      const rawCourse = line.startsWith("• Course:")
+        ? line.replace("• Course:", "").trim()
+        : line.replace("• ", "").trim();
       const courseValue = parseStackCourseTitle(rawCourse);
       const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
       const weaponTheme =
         stackCategory === "weapon" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
-      return renderExecutionStackCourseLine(
-        `${sectionTitle}-${idx}`,
+      const block: CourseBlock = {
+        kind: "course",
+        key: `${sectionTitle}-${idx}`,
         rawCourse,
         courseValue,
-        actionCategory,
-        loginEmail,
-        weaponTheme
-      );
+        category: actionCategory,
+        weaponTheme,
+        isFree: isStackCourseFree(rawCourse, actionCategory),
+      };
+      if (block.isFree) freeCourses.push(block);
+      else rest.push(block);
+      return;
     }
-    if (line.startsWith("• ")) {
-      const rawCourse = line.replace("• ", "").trim();
-      const courseValue = parseStackCourseTitle(rawCourse);
-      const actionCategory = executionStackCategoryToActionCategory(stackCategory, rawCourse);
-      const weaponTheme =
-        stackCategory === "weapon" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
-      return renderExecutionStackCourseLine(
-        `${sectionTitle}-${idx}`,
-        rawCourse,
-        courseValue,
-        actionCategory,
-        loginEmail,
-        weaponTheme
-      );
-    }
+
     const keyPrefixes = ["Why:"];
     const matchedPrefix = keyPrefixes.find((prefix) => line.startsWith(prefix));
     if (matchedPrefix) {
-      return (
-        <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich">
-          <span className="result-key">{matchedPrefix}</span>{" "}
-          {line.replace(matchedPrefix, "").trim()}
-        </p>
-      );
+      rest.push({
+        kind: "other",
+        key: `${sectionTitle}-${idx}`,
+        node: (
+          <p key={`${sectionTitle}-${idx}`} className="result-line result-line-rich">
+            <span className="result-key">{matchedPrefix}</span>{" "}
+            {line.replace(matchedPrefix, "").trim()}
+          </p>
+        ),
+      });
+      return;
     }
-    return (
-      <p key={`${sectionTitle}-${idx}`} className="result-line">
-        {line}
-      </p>
-    );
+    rest.push({
+      kind: "other",
+      key: `${sectionTitle}-${idx}`,
+      node: (
+        <p key={`${sectionTitle}-${idx}`} className="result-line">
+          {line}
+        </p>
+      ),
+    });
   });
+
+  const prunedRest: Array<CourseBlock | OtherBlock> = [];
+  for (let i = 0; i < rest.length; i += 1) {
+    const block = rest[i]!;
+    if (block.kind === "other" && block.isCategoryHeader) {
+      let hasCourse = false;
+      for (let j = i + 1; j < rest.length; j += 1) {
+        const next = rest[j]!;
+        if (next.kind === "course") {
+          hasCourse = true;
+          break;
+        }
+        if (next.kind === "other" && next.isCategoryHeader) break;
+      }
+      if (!hasCourse) continue;
+    }
+    prunedRest.push(block);
+  }
+
+  const renderCourse = (block: CourseBlock) =>
+    renderExecutionStackCourseLine(
+      block.key,
+      block.rawCourse,
+      block.courseValue,
+      block.category,
+      loginEmail,
+      block.weaponTheme,
+    );
+
+  return (
+    <>
+      {freeCourses.length > 0 ? (
+        <div className="result-program-card-stack result-program-card-stack--free">
+          {freeCourses.map(renderCourse)}
+        </div>
+      ) : null}
+      <div className="result-program-card-stack">
+        {prunedRest.map((block) =>
+          block.kind === "course" ? renderCourse(block) : block.node,
+        )}
+      </div>
+    </>
+  );
 }
 
 function renderArchetypeMapSectionContent(
@@ -316,37 +337,87 @@ function renderArchetypeMapSectionContent(
   sectionTitle: string,
   loginEmail: string
 ) {
+  type CourseBlock = {
+    kind: "course";
+    key: string;
+    courseValue: string;
+    category: ArchetypeMapLineCategory;
+    weaponTheme?: CourseNeonTheme;
+    isFree: boolean;
+  };
+  type OtherBlock = { kind: "other"; node: ReactNode };
+
+  const freeCourses: CourseBlock[] = [];
+  const rest: Array<CourseBlock | OtherBlock> = [];
   let category: ArchetypeMapLineCategory = "other";
   let weaponRowIndex = 0;
-  return content.map((line, idx) => {
+
+  content.forEach((line, idx) => {
     const headerCategory = classifyArchetypeMapLine(line);
     if (headerCategory) {
       category = headerCategory;
-      return (
-        <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich result-map-category">
-          {line}
-        </p>
-      );
+      rest.push({
+        kind: "other",
+        node: (
+          <p key={`${sectionTitle}-hdr-${idx}`} className="result-line result-line-rich result-map-category">
+            {line}
+          </p>
+        ),
+      });
+      return;
     }
     if (line.startsWith("• ")) {
       const courseValue = line.replace("• ", "").trim();
       const weaponTheme =
         category === "business" ? resolveWeaponNeonTheme(weaponRowIndex++) : undefined;
-      return renderNeonCourseLine(
-        `${sectionTitle}-${idx}`,
-        courseValue,
+      const isFree =
+        category === "free_psychology" || isFreeTicketPsychologyCourse(courseValue);
+      const block: CourseBlock = {
+        kind: "course",
+        key: `${sectionTitle}-${idx}`,
         courseValue,
         category,
-        loginEmail,
-        weaponTheme
-      );
+        weaponTheme,
+        isFree,
+      };
+      if (isFree) freeCourses.push(block);
+      else rest.push(block);
+      return;
     }
-    return (
-      <p key={`${sectionTitle}-${idx}`} className="result-line">
-        {line}
-      </p>
-    );
+    rest.push({
+      kind: "other",
+      node: (
+        <p key={`${sectionTitle}-${idx}`} className="result-line">
+          {line}
+        </p>
+      ),
+    });
   });
+
+  const renderCourse = (block: CourseBlock) =>
+    renderNeonCourseLine(
+      block.key,
+      block.courseValue,
+      block.courseValue,
+      block.category,
+      loginEmail,
+      block.weaponTheme,
+    );
+
+  return (
+    <>
+      {freeCourses.length > 0 ? (
+        <div className="result-program-card-stack result-program-card-stack--free">
+          {freeCourses.map(renderCourse)}
+        </div>
+      ) : null}
+      <div className="result-program-card-stack">
+        {rest.map((block, i) =>
+          block.kind === "course" ? renderCourse(block) : <span key={`map-other-${i}`}>{block.node}</span>,
+        )}
+      </div>
+    </>
+  );
 }
 
 function renderStyledReport(report: string, loginEmail: string) {

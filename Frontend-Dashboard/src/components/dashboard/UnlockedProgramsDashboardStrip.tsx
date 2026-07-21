@@ -21,6 +21,7 @@ import {
 } from "@/data/instructorSlideNeonThemes";
 import { parseDashboardProgramRef, requestDashboardProgramOpen } from "@/lib/programUnlockFlow";
 import { prefetchStreamPlaylistExperience } from "@/lib/streaming-api";
+import { nextOptimizedImageUrl, optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 
 const SCROLL_STEP_PX = 266;
 
@@ -176,6 +177,12 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate, embedded 
                     const grad = CARD_BACKGROUNDS[index % CARD_BACKGROUNDS.length];
                     const ref = parseDashboardProgramRef(program.id);
                     const progress = Math.max(0, Math.min(100, program.progressPct ?? 0));
+                    const rawCover = program.imageSrc?.trim() || "";
+                    const coverSrc = rawCover
+                      ? rawCover.startsWith("/")
+                        ? nextOptimizedImageUrl(rawCover, 400)
+                        : optimizeCoverImageSrc(rawCover, 400) ?? rawCover
+                      : "";
 
                     return (
                       <li key={program.id} className="w-[250px] shrink-0">
@@ -188,15 +195,16 @@ export function UnlockedProgramsDashboardStrip({ programs, onNavigate, embedded 
                           <span className={PROGRAM_CARD_FRAME}>
                             <span className={PROGRAM_CARD_INNER_SHELL}>
                               <div className={PROGRAM_CARD_LANDSCAPE_MEDIA}>
-                                {program.imageSrc ? (
+                                {coverSrc ? (
                                   <img
-                                    src={program.imageSrc}
+                                    src={coverSrc}
                                     alt=""
                                     width={400}
                                     height={225}
                                     className="program-playlist-card__cover-img absolute inset-0 h-full w-full object-cover object-center"
                                     loading="lazy"
                                     decoding="async"
+                                    fetchPriority="low"
                                   />
                                 ) : (
                                   <div className={cn("absolute inset-0 bg-gradient-to-br", grad)} aria-hidden />

@@ -59,12 +59,32 @@ function waitForDimensions(element: HTMLElement): Promise<void> {
 }
 
 function triggerPngDownload(dataUrl: string, filenameStem: string) {
+  const shell = typeof document !== 'undefined'
+    ? (document.querySelector('[data-main-shell-scroll]') as HTMLElement | null)
+    : null
+  const savedShellTop = shell?.scrollTop ?? 0
+  const savedWinX = typeof window !== 'undefined' ? window.scrollX : 0
+  const savedWinY = typeof window !== 'undefined' ? window.scrollY : 0
+
   const a = document.createElement('a')
   a.href = dataUrl
   a.download = `${filenameStem}.png`
+  a.rel = 'noopener'
+  a.style.position = 'fixed'
+  a.style.left = '0'
+  a.style.top = '0'
+  a.style.width = '1px'
+  a.style.height = '1px'
+  a.style.opacity = '0'
+  a.style.pointerEvents = 'none'
   document.body.appendChild(a)
   a.click()
   a.remove()
+
+  if (shell) shell.scrollTop = savedShellTop
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ left: savedWinX, top: savedWinY, behavior: 'auto' })
+  }
 }
 
 /** Capture a mounted certificate card element and download as PNG. */
@@ -210,6 +230,14 @@ export async function downloadSynCertificateSvgFallback(
   const a = document.createElement('a')
   a.href = url
   a.download = `${input.filenameStem}.svg`
+  a.rel = 'noopener'
+  a.style.position = 'fixed'
+  a.style.left = '0'
+  a.style.top = '0'
+  a.style.width = '1px'
+  a.style.height = '1px'
+  a.style.opacity = '0'
+  a.style.pointerEvents = 'none'
   document.body.appendChild(a)
   a.click()
   a.remove()

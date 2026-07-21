@@ -22,6 +22,11 @@ import { useStreamPlaylists } from "@/hooks/useStreamPlaylists";
 import { MissionCommandDeckCard } from "./MissionCommandDeckCard";
 import { UnlockedProgramsDashboardStrip } from "./UnlockedProgramsDashboardStrip";
 import { Lock, Activity } from "lucide-react";
+import {
+  parseDashboardProgramRef,
+  requestDashboardProgramOpen,
+} from "@/lib/programUnlockFlow";
+import { resolveContinuePlaylistId } from "@/lib/continueProgramResume";
 export type { ThemeMode };
 
 
@@ -247,7 +252,6 @@ function ActivityEventDetailBlock({ a, size = "default" }: { a: ActivityItem; si
 function HeroStatusPanel({
   themeMode,
   userName,
-  userRole,
   profileAvatar,
   snapshots,
   courses,
@@ -257,7 +261,6 @@ function HeroStatusPanel({
 }: {
   themeMode: ThemeMode;
   userName: string;
-  userRole: string;
   profileAvatar: string;
   snapshots: DashboardSnapshots;
   courses: DashboardCourseLike[];
@@ -270,6 +273,47 @@ function HeroStatusPanel({
   const activePrograms = s.programStats?.unlocked ?? s.programs.length;
   const ongoingPrograms = s.programStats?.inProgress ?? s.programs.filter((p) => p.progressPct > 0).length;
   const heroNeon = getInstructorSlideNeonTheme(6);
+
+  const continueProgram = () => {
+    const unlockedPlaylistIds = courses
+      .filter((c) => c.unlocked !== false)
+      .map((c) => parseDashboardProgramRef(c.id))
+      .filter((ref): ref is { type: "playlist"; id: number } => ref?.type === "playlist")
+      .map((ref) => ref.id);
+
+    const playlistId = resolveContinuePlaylistId(unlockedPlaylistIds);
+    if (playlistId) {
+      requestDashboardProgramOpen({
+        playlistId,
+        onNavigate: (section) => onNavigate(section),
+      });
+      return;
+    }
+
+    const withProgress = courses.find(
+      (c) => c.unlocked !== false && (c.progressPct ?? 0) > 0,
+    );
+    if (withProgress) {
+      const ref = parseDashboardProgramRef(withProgress.id);
+      if (ref?.type === "playlist") {
+        requestDashboardProgramOpen({
+          playlistId: ref.id,
+          onNavigate: (section) => onNavigate(section),
+        });
+        return;
+      }
+      if (ref?.type === "course") {
+        requestDashboardProgramOpen({
+          courseId: ref.id,
+          onNavigate: (section) => onNavigate(section),
+        });
+        return;
+      }
+    }
+
+    onNavigate("programs");
+  };
+
   return (
     <div
       style={neonAccentStyleVars(heroNeon)}
@@ -293,9 +337,6 @@ function HeroStatusPanel({
           <div className="min-w-0">
             <div className="dashboard-neon-title font-mono text-[16px] font-black uppercase tracking-[0.15em]">
               {userName}
-            </div>
-            <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/84">
-              {userRole}
             </div>
           </div>
         </div>
@@ -352,7 +393,7 @@ function HeroStatusPanel({
         <div className="flex flex-wrap gap-2">
           <motion.button
             type="button"
-            onClick={() => onNavigate("programs")}
+            onClick={continueProgram}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
             className="rounded-md border border-[color:var(--neon-accent-border)] bg-black/30 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--neon-accent-bright)] hover:bg-black/45 hover:shadow-[0_0_20px_var(--neon-accent-glow)]"
@@ -751,7 +792,6 @@ function ActivityTimelineCard({ themeMode }: { themeMode: ThemeMode }) {
 export type DashboardControlCenterProps = {
   themeMode: ThemeMode;
   userName: string;
-  userRole: string;
   profileAvatar: string;
   courses: DashboardCourseLike[];
   onNavigate: (nav: DashboardNavKey) => void;
@@ -765,7 +805,6 @@ export type DashboardControlCenterProps = {
 export function DashboardHeroStatusPanel({
   themeMode,
   userName,
-  userRole,
   profileAvatar,
   courses,
   onNavigate,
@@ -773,7 +812,6 @@ export function DashboardHeroStatusPanel({
 }: {
   themeMode: ThemeMode;
   userName: string;
-  userRole: string;
   profileAvatar: string;
   courses: DashboardCourseLike[];
   onNavigate: (nav: DashboardNavKey) => void;
@@ -784,7 +822,6 @@ export function DashboardHeroStatusPanel({
     <HeroStatusPanel
       themeMode={themeMode}
       userName={userName}
-      userRole={userRole}
       profileAvatar={profileAvatar}
       snapshots={snapshots}
       courses={courses}
@@ -798,7 +835,6 @@ export function DashboardHeroStatusPanel({
 export default function DashboardControlCenter({
   themeMode,
   userName,
-  userRole,
   profileAvatar,
   courses,
   onNavigate,
@@ -824,7 +860,6 @@ export default function DashboardControlCenter({
             <HeroStatusPanel
               themeMode={themeMode}
               userName={userName}
-              userRole={userRole}
               profileAvatar={profileAvatar}
               snapshots={snapshots}
               courses={courses}

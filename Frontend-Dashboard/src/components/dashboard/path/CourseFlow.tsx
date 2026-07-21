@@ -544,6 +544,62 @@ export function CourseFlow({
       ? PROGRAM_OPPORTUNITY_MIN_H
       : "min-h-[clamp(13rem,26vh,16rem)]";
 
+  const renderBrowseControls = (opts?: { compact?: boolean }) => {
+    if (browseCount <= 1) return null;
+    return (
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2 sm:gap-2.5",
+          opts?.compact && "justify-center",
+        )}
+      >
+        <button
+          type="button"
+          onClick={goPrev}
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
+          aria-label="Previous programs in this path"
+        >
+          <ChevronLeft className="h-5 w-5" strokeWidth={2.4} aria-hidden />
+        </button>
+        <span className="min-w-[4.5rem] text-center font-mono text-[11px] font-bold tabular-nums uppercase tracking-[0.12em] text-white/70 sm:text-xs">
+          {slideIndex + 1} / {browseCount}
+        </span>
+        <button
+          type="button"
+          onClick={goNext}
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
+          aria-label="Next programs in this path"
+        >
+          <ChevronRight className="h-5 w-5" strokeWidth={2.4} aria-hidden />
+        </button>
+        <div
+          className="max-w-[min(100%,14rem)] overflow-x-auto overflow-y-hidden py-0.5 [scrollbar-color:rgba(255,215,0,0.35)_transparent] [scrollbar-width:thin] sm:max-w-[18rem]"
+          role="tablist"
+          aria-label="Browse programs in this path"
+        >
+          <div className="flex items-center gap-1.5 px-0.5">
+            {programPool.map((prog, i) => (
+              <button
+                key={prog.programId ?? prog.id}
+                type="button"
+                role="tab"
+                aria-selected={i === slideIndex}
+                title={prog.title}
+                className={cn(
+                  "h-1.5 shrink-0 rounded-full transition-all duration-300",
+                  i === slideIndex
+                    ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]"
+                    : "w-1.5 bg-white/25 hover:w-2 hover:bg-white/40",
+                )}
+                onClick={() => goToSlide(i)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <motion.div className="relative mt-[clamp(1.5rem,4vw+0.5rem,2.75rem)] border-t border-[rgba(197,179,88,0.22)] pt-[clamp(1rem,2.5vw+0.35rem,2rem)]">
       {contentMode === "program" ? (
@@ -575,51 +631,7 @@ export function CourseFlow({
           ) : null}
         </div>
         {browseCount > 1 ? (
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5">
-            <button
-              type="button"
-              onClick={goPrev}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
-              aria-label="Previous programs in this path"
-            >
-              <ChevronLeft className="h-5 w-5" strokeWidth={2.4} aria-hidden />
-            </button>
-            <span className="min-w-[4.5rem] text-center font-mono text-[11px] font-bold tabular-nums uppercase tracking-[0.12em] text-white/70 sm:text-xs">
-              {slideIndex + 1} / {browseCount}
-            </span>
-            <button
-              type="button"
-              onClick={goNext}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(255,215,0,0.45)] bg-black/50 text-[color:var(--gold-neon)] shadow-[0_0_16px_rgba(255,215,0,0.18)] transition hover:border-[rgba(255,215,0,0.7)] hover:bg-black/65 hover:shadow-[0_0_22px_rgba(255,215,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(255,215,0,0.55)]"
-              aria-label="Next programs in this path"
-            >
-              <ChevronRight className="h-5 w-5" strokeWidth={2.4} aria-hidden />
-            </button>
-            <div
-              className="max-w-[min(100%,14rem)] overflow-x-auto overflow-y-hidden py-0.5 [scrollbar-color:rgba(255,215,0,0.35)_transparent] [scrollbar-width:thin] sm:max-w-[18rem]"
-              role="tablist"
-              aria-label="Browse programs in this path"
-            >
-              <div className="flex items-center gap-1.5 px-0.5">
-                {programPool.map((prog, i) => (
-                  <button
-                    key={prog.programId ?? prog.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={i === slideIndex}
-                    title={prog.title}
-                    className={cn(
-                      "h-1.5 shrink-0 rounded-full transition-all duration-300",
-                      i === slideIndex
-                        ? "w-7 bg-[color:var(--gold)] shadow-[0_0_12px_rgba(250,204,21,0.45)]"
-                        : "w-1.5 bg-white/25 hover:w-2 hover:bg-white/40",
-                    )}
-                    onClick={() => goToSlide(i)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          <div className="flex flex-wrap items-center justify-end">{renderBrowseControls()}</div>
         ) : null}
       </div>
 
@@ -746,6 +758,12 @@ export function CourseFlow({
             </AnimatePresence>
         </div>
       </div>
+
+      {browseCount > 1 ? (
+        <div className="mt-4 flex justify-center lg:hidden" aria-label="Browse programs from bottom">
+          {renderBrowseControls({ compact: true })}
+        </div>
+      ) : null}
     </motion.div>
   );
 }

@@ -317,8 +317,8 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             src={active.src}
             alt={`${active.instructorName} — ${active.programName}`}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 520px"
-            quality={isLcp ? 78 : 70}
+            sizes="(max-width: 767px) 94vw, (max-width: 1024px) 46vw, 480px"
+            quality={isLcp ? 70 : 62}
             priority={isLcp}
             loading={isLcp ? undefined : "lazy"}
             decoding="async"

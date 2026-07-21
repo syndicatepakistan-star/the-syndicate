@@ -133,7 +133,9 @@ class StreamPlaylistListSerializer(serializers.ModelSerializer):
         if cover_url:
             return cover_url
         for item in obj.items.all():
-            sv = item.stream_video
+            sv = getattr(item, "stream_video", None)
+            if sv is None:
+                continue
             thumb_url = _safe_media_url_for_field(sv.thumbnail, request)
             if thumb_url:
                 return thumb_url

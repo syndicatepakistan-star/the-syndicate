@@ -43,16 +43,25 @@ function lateResumeKey(src: string, startSeconds: number): string {
   return `${src}::${Number(startSeconds).toFixed(3)}`;
 }
 
-function resolveResumeSeconds(video: HTMLVideoElement, startAtSeconds: number): number {
+function resolveResumeSeconds(
+  video: HTMLVideoElement,
+  startAtSeconds: number,
+  livePositionSeconds = 0
+): number {
   const fromVideo = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const fromLive = Number(livePositionSeconds || 0);
   const fromStart = Number(startAtSeconds || 0);
+  // Prefer the element's time, then the last known playhead (survives src hot-swaps that briefly zero currentTime).
   if (fromVideo > 1) return fromVideo;
+  if (fromLive > 1) return fromLive;
   if (fromStart > 1) return fromStart;
   return 0;
 }
 
-function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string): void {
-  const savedTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+function hotSwapVideoSrc(video: HTMLVideoElement, newSrc: string, resumeAtSeconds?: number): void {
+  const fromVideo = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const savedTime =
+    typeof resumeAtSeconds === "number" && resumeAtSeconds > 1 ? resumeAtSeconds : fromVideo;
   const wasPaused = video.paused;
   const savedRate = video.playbackRate;
 
@@ -115,6 +124,8 @@ export default function StreamHtmlVideoPlayer({
   const appliedRevisionRef = useRef(-1);
   const srcRevisionRef = useRef(srcRevision);
   const initialResumeDoneRef = useRef(false);
+  /** Last known playhead — used when hot-swapping signed URLs so mid-watch does not restart at 0. */
+  const livePositionRef = useRef(0);
   const hlsRef = useRef<Hls | null>(null);
   const hlsManifestParsedRef = useRef<(() => void) | null>(null);
   const hlsNetworkRetriesRef = useRef(0);
@@ -142,7 +153,7 @@ export default function StreamHtmlVideoPlayer({
       }
 
       const isHotSwap = opts?.isHotSwap ?? appliedSrcRef.current !== null;
-      const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current);
+      const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current, livePositionRef.current);
       const resumeFromStart = !isHotSwap ? Number(startAtSecondsRef.current || 0) : 0;
       const wasPaused = video.paused;
       const savedRate = video.playbackRate;
@@ -206,6 +217,7 @@ export default function StreamHtmlVideoPlayer({
     hlsNetworkRetriesRef.current = 0;
     freshSrcCooldownRef.current = 0;
     hlsManifestParsedRef.current = null;
+    livePositionRef.current = 0;
     if (seekPrefetchTimerRef.current) {
       clearTimeout(seekPrefetchTimerRef.current);
       seekPrefetchTimerRef.current = null;
@@ -219,6 +231,7 @@ export default function StreamHtmlVideoPlayer({
     appliedRevisionRef.current = -1;
     lateResumeAppliedKeyRef.current = "";
     initialResumeDoneRef.current = false;
+    livePositionRef.current = Number(startAtSecondsRef.current || 0);
     setPlaybackError(null);
   }, [episodeKey]);
 
@@ -266,9 +279,14 @@ export default function StreamHtmlVideoPlayer({
       const currentTime = Number(video.currentTime || 0);
       const duration = Number(video.duration || 0);
       if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) return;
+      if (currentTime > 0.25) livePositionRef.current = currentTime;
       onTimeProgressRef.current?.({ currentTime, duration });
     };
     const emitEnded = () => {
+      const duration = Number(video.duration || 0);
+      if (Number.isFinite(duration) && duration > 0) {
+        livePositionRef.current = duration;
+      }
       onPlaybackEndedRef.current?.();
     };
     const onSeeking = () => {
@@ -292,7 +310,9 @@ export default function StreamHtmlVideoPlayer({
         if (!isHls) return;
         const hls = hlsRef.current;
         if (!hls || !video) return;
-        const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current);
+        const resumeAt = resolveResumeSeconds(video, startAtSecondsRef.current, livePositionRef.current);
+        // Only correct a near-zero playhead when we know we should be further along.
+        // Avoid yanking mid-playback if currentTime briefly dips during a buffer stall.
         if (resumeAt > 1 && video.currentTime < 2) {
           const duration = Number(video.duration || 0);
           hls.startLoad(Math.max(0, resumeAt - 0.25));
@@ -402,8 +422,8 @@ export default function StreamHtmlVideoPlayer({
 
       if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
         const resumeAt = videoEl
-          ? resolveResumeSeconds(videoEl, startAtSecondsRef.current)
-          : Number(startAtSecondsRef.current || 0);
+          ? resolveResumeSeconds(videoEl, startAtSecondsRef.current, livePositionRef.current)
+          : Math.max(Number(startAtSecondsRef.current || 0), Number(livePositionRef.current || 0));
         hlsNetworkRetriesRef.current += 1;
         if (hlsNetworkRetriesRef.current <= 2 && resumeAt > 0) {
           hls.startLoad(Math.max(0, resumeAt - 0.25));
@@ -488,12 +508,12 @@ export default function StreamHtmlVideoPlayer({
     if (isHotSwap) {
       setPlaybackError(null);
       suppressNextSeekEventRef.current = true;
-      const savedTime = resolveResumeSeconds(video, startAtSecondsRef.current);
+      const savedTime = resolveResumeSeconds(video, startAtSecondsRef.current, livePositionRef.current);
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       if (!useNativeHls && savedTime > 0 && duration > 0) {
         prefetchPlaybackNearTime(normalized, savedTime, duration);
       }
-      hotSwapVideoSrc(video, normalized);
+      hotSwapVideoSrc(video, normalized, savedTime);
       return;
     }
 
@@ -549,18 +569,21 @@ export default function StreamHtmlVideoPlayer({
     if (lateResumeAppliedKeyRef.current === key) return;
 
     const cur = Number(video.currentTime || 0);
+    const live = Number(livePositionRef.current || 0);
     if (!Number.isFinite(cur)) return;
-    if (Math.abs(cur - target) < 2.5) {
+    // Already past initial resume (or mid-watch after a URL rotate) — do not yank backwards/to start.
+    if (live > 8 || cur > 8) {
       lateResumeAppliedKeyRef.current = key;
       return;
     }
-    if (cur > 8) {
+    if (Math.abs(cur - target) < 2.5) {
       lateResumeAppliedKeyRef.current = key;
       return;
     }
 
     suppressNextSeekEventRef.current = true;
     video.currentTime = target;
+    livePositionRef.current = target;
     lateResumeAppliedKeyRef.current = key;
   }, [startAtSeconds, src, isHls]);
 

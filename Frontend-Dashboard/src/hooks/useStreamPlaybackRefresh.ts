@@ -82,16 +82,13 @@ export function useStreamPlaybackRefresh(
             const next = await fetchStreamVideoPlayback(vid, { context, forceRefresh: true });
             if (videoIdRef.current !== vid) return;
             if (!next.playback_url) return;
-            const prevUrl = playbackRef.current?.playback_url;
-            setPlayback((prev) => {
-              if (!prev) return next;
-              if (prev.playback_url === next.playback_url) return prev;
-              return next;
-            });
-            if (prevUrl && next.playback_url && prevUrl !== next.playback_url) {
+            const prev = playbackRef.current;
+            const merged = mergePlaybackRefresh(prev, next);
+            setPlayback(merged);
+            if (prev?.playback_url && merged.playback_url && prev.playback_url !== merged.playback_url) {
               setSrcRevision((r) => r + 1);
             }
-            scheduleRefresh(next.playback_expires_at ?? null, vid);
+            scheduleRefresh(merged.playback_expires_at ?? next.playback_expires_at ?? null, vid);
           } catch {
             if (videoIdRef.current !== vid) return;
             timerRef.current = setTimeout(() => {
@@ -105,9 +102,7 @@ export function useStreamPlaybackRefresh(
   );
 
   const applyPlaybackRefresh = useCallback((next: StreamPayload, prev: StreamPayload | null) => {
-    if (!prev) return next;
-    if (prev.playback_url === next.playback_url) return prev;
-    return next;
+    return mergePlaybackRefresh(prev, next);
   }, []);
 
   const refreshPlaybackNow = useCallback(async (options?: { force?: boolean }) => {
@@ -121,13 +116,14 @@ export function useStreamPlaybackRefresh(
       const next = await fetchStreamVideoPlayback(vid, { context, forceRefresh: true });
       if (videoIdRef.current !== vid) return;
       if (!next.playback_url) return;
-      const prevUrl = playbackRef.current?.playback_url;
-      setPlayback((prev) => applyPlaybackRefresh(next, prev));
-      if (prevUrl && next.playback_url && prevUrl !== next.playback_url) {
+      const prev = playbackRef.current;
+      const merged = applyPlaybackRefresh(next, prev);
+      setPlayback(merged);
+      if (prev?.playback_url && merged.playback_url && prev.playback_url !== merged.playback_url) {
         setSrcRevision((r) => r + 1);
       }
-      if (next.status === "ready" && next.playback_url) {
-        scheduleRefresh(next.playback_expires_at ?? null, vid);
+      if (merged.status === "ready" && merged.playback_url) {
+        scheduleRefresh(merged.playback_expires_at ?? null, vid);
       }
     } catch {
       // Caller may retry on next playback error.
@@ -236,13 +232,14 @@ export function useStreamPlaybackRefresh(
       try {
         const next = await fetchStreamVideoPlayback(vid, { context, forceRefresh: true });
         if (videoIdRef.current !== vid) return;
-        const prevUrl = playbackRef.current?.playback_url;
-        setPlayback((prev) => mergePlaybackRefresh(prev, next));
-        if (prevUrl && next.playback_url && prevUrl !== next.playback_url) {
+        const prev = playbackRef.current;
+        const merged = mergePlaybackRefresh(prev, next);
+        setPlayback(merged);
+        if (prev?.playback_url && merged.playback_url && prev.playback_url !== merged.playback_url) {
           setSrcRevision((r) => r + 1);
         }
-        if (next.status === "ready" && next.playback_url) {
-          scheduleRefresh(next.playback_expires_at ?? null, vid);
+        if (merged.status === "ready" && merged.playback_url) {
+          scheduleRefresh(merged.playback_expires_at ?? null, vid);
         }
       } catch {
         timerRef.current = setTimeout(() => refreshIfStale(), REFRESH_RETRY_MS);

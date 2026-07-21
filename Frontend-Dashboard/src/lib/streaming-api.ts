@@ -139,6 +139,7 @@ export type StreamPlaylistPurchaseHistoryItem = {
 
 const PLAYLISTS_CACHE_TTL_MS = 2 * 60 * 1000;
 const PLAYLIST_DETAIL_CACHE_TTL_MS = 2 * 60 * 1000;
+const PLAYLIST_DETAIL_FAIL_TTL_MS = 20 * 1000;
 const PLAYBACK_CACHE_TTL_MS = 45 * 60 * 1000;
 /** Client treats URL as stale this many ms before server expiry (matches useStreamPlaybackRefresh buffer). */
 const PLAYBACK_EXPIRY_BUFFER_MS = 90 * 1000;
@@ -149,6 +150,7 @@ const SESSION_PLAYLISTS_CACHE_KEY = "syn:streaming:playlists:v2";
 let playlistsCache: { at: number; data: StreamPlaylistListItem[] } | null = null;
 let playlistsFetchInflight: Promise<StreamPlaylistListItem[]> | null = null;
 const playlistDetailCache = new Map<number, { at: number; data: StreamPlaylistDetail }>();
+const playlistDetailFailCache = new Map<number, { at: number; message: string; status: number }>();
 const playbackCache = new Map<string, { at: number; data: StreamPayload }>();
 
 function playbackCacheKey(id: number, context: "programs" | "membership"): string {
@@ -252,12 +254,18 @@ export function clearStreamPlaylistsCache(): void {
   playlistsCache = null;
   playlistsFetchInflight = null;
   playlistDetailCache.clear();
+  playlistDetailFailCache.clear();
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.removeItem(SESSION_PLAYLISTS_CACHE_KEY);
   } catch {
     // Ignore storage errors.
   }
+}
+
+/** Allow an immediate retry after a hard playlist detail failure (404/5xx). */
+export function clearStreamPlaylistDetailFailure(id: number): void {
+  playlistDetailFailCache.delete(id);
 }
 
 export async function fetchStreamVideosList(): Promise<StreamVideoListItem[]> {
@@ -442,16 +450,29 @@ export async function fetchStreamPlaylistDetail(id: number): Promise<StreamPlayl
   if (cached && isFresh(cached.at, PLAYLIST_DETAIL_CACHE_TTL_MS)) {
     return normalizePlaylistItem(cached.data);
   }
+  const failed = playlistDetailFailCache.get(id);
+  if (failed && isFresh(failed.at, PLAYLIST_DETAIL_FAIL_TTL_MS)) {
+    throw new Error(failed.message);
+  }
   const res = await portalFetch<StreamPlaylistDetail>(`/api/streaming/playlists/${id}/`);
   if (!res.ok) {
-    throw new Error(
-      errMessage(
-        res.status,
-        res.data,
-        res.status === 401 || res.status === 403 ? "Sign in to open this playlist." : "Could not load playlist."
-      )
+    const message = errMessage(
+      res.status,
+      res.data,
+      res.status === 401 || res.status === 403
+        ? "Sign in to open this playlist."
+        : res.status === 404
+          ? "Playlist not found or not available for your account."
+          : res.status >= 500
+            ? "Playlist temporarily unavailable. Try again in a moment."
+            : "Could not load playlist."
     );
+    if (res.status === 404 || res.status === 403 || res.status >= 500) {
+      playlistDetailFailCache.set(id, { at: Date.now(), message, status: res.status });
+    }
+    throw new Error(message);
   }
+  playlistDetailFailCache.delete(id);
   const raw = res.data as StreamPlaylistDetail;
   const detail: StreamPlaylistDetail = {
     ...raw,
@@ -626,12 +647,12 @@ export async function prefetchStreamPlaylistExperience(
       }
     }
 
-    const eagerCount = ids.length > 12 ? 1 : Math.min(3, ids.length);
+    const eagerCount = ids.length > 12 ? 1 : Math.min(2, ids.length);
     const eagerIds = ids.slice(0, eagerCount);
     const prefetched = await prefetchStreamVideoPlaybacks(eagerIds, {
       context: options?.context,
       priorityId,
-      concurrency: 3,
+      concurrency: 2,
     });
     warmStreamVideoMedia(
       eagerIds
@@ -644,20 +665,7 @@ export async function prefetchStreamPlaylistExperience(
       { priority: true }
     );
 
-    const restIds = ids.slice(eagerCount);
-    if (restIds.length > 0) {
-      const warmRest = () => {
-        void prefetchStreamVideoPlaybacks(restIds, {
-          context: options?.context,
-          concurrency: 4,
-        });
-      };
-      if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(warmRest, { timeout: 4000 });
-      } else {
-        window.setTimeout(warmRest, 1200);
-      }
-    }
+    // Skip warming the full remainder — detail panel loads neighbors on demand.
   } catch {
     // Best-effort warm-up; panel still loads normally.
   }

@@ -42,6 +42,7 @@ import { useDockMagnification } from "@/hooks/useDockMagnification";
 import {
   clearProgramsMainShellScrollLock,
   ensureDashboardMainShellScrollable,
+  getDashboardMainShellScrollElement,
   isDashboardCheckoutReturnGraceActive,
   markDashboardCheckoutReturn,
   resetDashboardDocumentScroll,
@@ -1617,9 +1618,6 @@ function SettingsBillingSection() {
           >
             Billing History
           </h2>
-          <p className="mt-1 text-[14px] text-white/72 sm:text-[15px]">
-            Courses, stream playlists, and plan bundles (e.g. Money Mastery) with amount, status, and paid date.
-          </p>
         </div>
 
         {loading ? <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-[14px] text-white/70">Loading billing history...</div> : null}
@@ -1629,7 +1627,17 @@ function SettingsBillingSection() {
         ) : null}
 
         {!loading && !error && rows.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-white/10">
+          <div
+            className={cn(
+              "rounded-lg border border-white/10",
+              // Mobile: keep horizontal scrollbar visible so the table can be panned left→right.
+              "max-lg:overflow-x-auto max-lg:overscroll-x-contain max-lg:pb-1",
+              "max-lg:[scrollbar-width:thin] max-lg:[scrollbar-color:rgba(163,230,53,0.55)_rgba(0,0,0,0.45)]",
+              "max-lg:[&::-webkit-scrollbar]:h-2 max-lg:[&::-webkit-scrollbar-thumb]:rounded-full",
+              "max-lg:[&::-webkit-scrollbar-thumb]:bg-lime-400/55 max-lg:[&::-webkit-scrollbar-track]:bg-black/40",
+              "lg:overflow-x-auto",
+            )}
+          >
             <table className="min-w-[760px] w-full border-collapse text-left text-[14px] sm:text-[15px]">
               <thead className="bg-[#111111] text-[color:var(--gold)]/92">
                 <tr>
@@ -1680,6 +1688,17 @@ function SettingsCertificatesSection() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const exportCardRef = useRef<HTMLDivElement | null>(null);
   const downloadSessionRef = useRef(0);
+  const scrollLockRef = useRef<{ shellTop: number; winX: number; winY: number } | null>(null);
+
+  const restoreCertificateDownloadScroll = useCallback(() => {
+    const locked = scrollLockRef.current;
+    if (!locked) return;
+    const shell = getDashboardMainShellScrollElement();
+    if (shell) shell.scrollTop = locked.shellTop;
+    if (typeof window !== "undefined") {
+      window.scrollTo({ left: locked.winX, top: locked.winY, behavior: "auto" });
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1740,6 +1759,12 @@ function SettingsCertificatesSection() {
     };
   }, []);
 
+  // Re-pin shell scroll as soon as the offscreen export card mounts (before paint settles).
+  useLayoutEffect(() => {
+    if (!downloadTarget) return;
+    restoreCertificateDownloadScroll();
+  }, [downloadTarget, restoreCertificateDownloadScroll]);
+
   useEffect(() => {
     if (!downloadTarget) return;
 
@@ -1756,15 +1781,19 @@ function SettingsCertificatesSection() {
     };
 
     const runDownload = async () => {
+      restoreCertificateDownloadScroll();
+
       let card: HTMLDivElement | null = null;
       for (let attempt = 0; attempt < 30 && !card; attempt += 1) {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         if (session !== downloadSessionRef.current) return;
         card = exportCardRef.current;
         if (!card) await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+        restoreCertificateDownloadScroll();
       }
 
       if (session !== downloadSessionRef.current) return;
+      restoreCertificateDownloadScroll();
 
       try {
         const format = await downloadSynCertificate(card, cardInput, window.location.origin);
@@ -1775,6 +1804,14 @@ function SettingsCertificatesSection() {
         console.error("Certificate download failed:", err);
         toast.error("Could not download certificate. Please try again.");
       } finally {
+        restoreCertificateDownloadScroll();
+        // Capture libs can nudge scroll asynchronously after click — re-pin shortly after.
+        window.setTimeout(restoreCertificateDownloadScroll, 0);
+        window.setTimeout(restoreCertificateDownloadScroll, 120);
+        window.setTimeout(() => {
+          restoreCertificateDownloadScroll();
+          scrollLockRef.current = null;
+        }, 280);
         if (session === downloadSessionRef.current) {
           setDownloadingId(null);
           setDownloadTarget(null);
@@ -1783,9 +1820,15 @@ function SettingsCertificatesSection() {
     };
 
     void runDownload();
-  }, [downloadTarget]);
+  }, [downloadTarget, restoreCertificateDownloadScroll]);
 
   const requestDownload = (cert: IssuedCertificate) => {
+    const shell = getDashboardMainShellScrollElement();
+    scrollLockRef.current = {
+      shellTop: shell?.scrollTop ?? 0,
+      winX: typeof window !== "undefined" ? window.scrollX : 0,
+      winY: typeof window !== "undefined" ? window.scrollY : 0,
+    };
     setDownloadingId(cert.certificateId);
     setDownloadTarget(cert);
   };
@@ -1795,8 +1838,9 @@ function SettingsCertificatesSection() {
       ? createPortal(
           <div
             aria-hidden
-            className="pointer-events-none fixed left-0 top-0 z-[9999] w-[760px]"
-            style={{ transform: 'translateX(-200vw)' }}
+            className="pointer-events-none fixed left-0 top-0 z-[-1] w-[760px]"
+            // Transform keeps the card off-screen without expanding document / shell scroll.
+            style={{ transform: "translateY(-120vh)" }}
           >
             <SynCertificateCard
               ref={exportCardRef}
@@ -2228,11 +2272,11 @@ export default function DashboardPageClient({
     closeQuickAccessPanel();
   }, [selectedNavKey, closeGoalsPanel, closeQuickAccessPanel]);
 
-  /** Warm lazy section chunks after idle — skip on small phones to save data/CPU. */
+  /** Warm lazy section chunks after idle — skip phones/tablets to save data/CPU. */
   useEffect(() => {
     if (!authChecked || !portalUser) return;
     if (typeof window === "undefined") return;
-    const narrow = window.matchMedia("(max-width: 640px)").matches;
+    const narrow = window.matchMedia("(max-width: 767px)").matches;
     if (narrow) return;
     const warm = () => {
       void import("@/features/productivity/control-center/QuickAccessGrid");
@@ -2244,10 +2288,10 @@ export default function DashboardPageClient({
     const ric = window.requestIdleCallback?.bind(window);
     const cic = window.cancelIdleCallback?.bind(window);
     if (typeof ric === "function" && typeof cic === "function") {
-      const id = ric(warm, { timeout: 4000 });
+      const id = ric(warm, { timeout: 5500 });
       return () => cic(id);
     }
-    const t = window.setTimeout(warm, 1800);
+    const t = window.setTimeout(warm, 2800);
     return () => window.clearTimeout(t);
   }, [authChecked, portalUser]);
 
@@ -3704,7 +3748,6 @@ export default function DashboardPageClient({
                       <DashboardControlCenter
                         themeMode={themeMode}
                         userName={profileName}
-                        userRole="Operator"
                         profileAvatar={profileAvatar}
                         courses={dashboardCoursesForSnapshots}
                         dashboardNavLocks={portalUser?.dashboard_nav_locks}

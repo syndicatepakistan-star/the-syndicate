@@ -859,7 +859,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     setDetailCourseId(null);
     setDetailPlaylistId(playlistIdFromUrl);
     setSecureView("detail");
-    void prefetchStreamPlaylistExperience(playlistIdFromUrl, { context: "programs" });
+    // Panel loads detail itself — skip prefetch here to avoid duplicate /404/500 storms.
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.pathname = "/dashboard/programs";
@@ -1001,14 +1001,6 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
           playlistCardPrimary();
         }}
         onMouseEnter={() => {
-          if (comingSoon || locked) return;
-          void prefetchStreamPlaylistExperience(pl.id);
-        }}
-        onTouchStart={() => {
-          if (comingSoon || locked) return;
-          void prefetchStreamPlaylistExperience(pl.id);
-        }}
-        onFocus={() => {
           if (comingSoon || locked) return;
           void prefetchStreamPlaylistExperience(pl.id);
         }}

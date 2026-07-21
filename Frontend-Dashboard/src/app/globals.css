@@ -12721,6 +12721,41 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 }
 
+/* Phones: keep neon colors, stop continuous filter/box-shadow lightning (main scroll jank source). */
+@media (max-width: 767px) {
+  .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning,
+  .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after,
+  .dashboard-hamburger-chrome .instructor-slideshow-heading--lightning,
+  .dashboard-hamburger-chrome .dashboard-heading-lightning,
+  .dashboard-hamburger-chrome .dashboard-heading-lightning--goals,
+  .dashboard-hamburger-chrome .dashboard-hero-neon-panel.cut-frame::after,
+  .dashboard-hamburger-chrome .dashboard-cyber-neon-panel.cut-frame::after {
+    animation: none !important;
+  }
+
+  .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning {
+    filter: none;
+    box-shadow:
+      0 0 0 1px var(--instructor-neon-border),
+      0 0 14px var(--instructor-neon-glow),
+      0 0 28px var(--instructor-neon-haze);
+  }
+
+  .dashboard-hamburger-chrome .instructor-slideshow-panel.instructor-slideshow-lightning.cut-frame::after {
+    filter: none;
+    opacity: 0.9;
+  }
+
+  .dashboard-hamburger-chrome .instructor-slideshow-heading--lightning,
+  .dashboard-hamburger-chrome .dashboard-heading-lightning,
+  .dashboard-hamburger-chrome .dashboard-heading-lightning--goals {
+    filter: none;
+    text-shadow:
+      0 0 8px var(--heading-neon-glow, var(--instructor-neon-glow, rgba(62, 184, 181, 0.5))),
+      0 0 18px var(--heading-neon-haze, var(--instructor-neon-haze, rgba(13, 107, 106, 0.22)));
+  }
+}
+
 /* ── Homepage hero logo + hamburger: scale breathe + gold glow (must stay last for cascade) ── */
 @keyframes hero-logo-breathe {
   0%,

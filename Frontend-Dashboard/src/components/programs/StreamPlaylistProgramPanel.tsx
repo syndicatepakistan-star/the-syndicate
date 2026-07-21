@@ -11,6 +11,7 @@ import {
   getCachedStreamVideoPlayback,
   prefetchStreamVideoPlaybacks,
   purgeExpiredStreamPlaybackCache,
+  clearStreamPlaylistDetailFailure,
   warmStreamVideoMedia,
   type StreamPayload,
   type StreamPlaylistAttachment,
@@ -25,18 +26,25 @@ import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
+import {
+  resolveResumeEpisodeIndex,
+  readPlaylistLastEpisodeId,
+  readContinueProgramResume,
+  WATCH_PROGRESS_PREFIX,
+  writeContinueProgramResume,
+} from "@/lib/continueProgramResume";
 
 type Props = {
   playlistId: number;
 };
 
 const playerShell = "overflow-hidden rounded-xl border border-white/10 bg-black/50";
-const WATCH_PROGRESS_PREFIX = "syn_playlist_watch_progress_v1";
 const CERTIFICATE_PREFIX = "syn_playlist_certificate_v1";
 const MAX_REAL_PLAYBACK_DELTA_SECONDS = 6;
 const SEEK_COOLDOWN_MS = 1400;
 const MIN_WATCHED_INCREMENT_SECONDS = 0.2;
 const DISPLAY_GAP_SMOOTH_SECONDS = 1.2;
+const CONTINUE_RESUME_WRITE_MS = 2500;
 
 function parsePlaylistNumber(value: string | number | null | undefined): number {
   const n = typeof value === "number" ? value : Number.parseFloat(String(value ?? "0"));
@@ -403,10 +411,15 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   const ignorePlaybackUntilRef = useRef(0);
   const pendingAutoplayRef = useRef(false);
   const playerAnchorRef = useRef<HTMLDivElement | null>(null);
+  const advanceGuardRef = useRef(0);
+  const didApplyEpisodeResumeRef = useRef(false);
+  const lastContinueWriteAtRef = useRef(0);
 
   const loadPlaylist = useCallback(async () => {
+    clearStreamPlaylistDetailFailure(playlistId);
     setLoading(true);
     setErr(null);
+    didApplyEpisodeResumeRef.current = false;
     try {
       const p = await fetchStreamPlaylistDetail(playlistId);
       setPlaylist(p);
@@ -427,9 +440,14 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       setPlaybackCache(seededCache);
 
       if (videoIds.length > 0) {
-        const priorityId = videoIds[0]!;
-        const eagerCount = videoIds.length > 12 ? 1 : Math.min(3, videoIds.length);
-        const eagerIds = videoIds.slice(0, eagerCount);
+        const resume = readContinueProgramResume();
+        const preferredId =
+          (resume?.playlistId === playlistId ? resume.videoId : null) ??
+          readPlaylistLastEpisodeId(playlistId);
+        const priorityId =
+          preferredId && videoIds.includes(preferredId) ? preferredId : videoIds[0]!;
+        // Only warm the active episode first — avoid spamming playback APIs on open.
+        const eagerIds = [priorityId];
 
         try {
           const firstPb =
@@ -444,7 +462,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         void prefetchStreamVideoPlaybacks(eagerIds, {
           context: "programs",
           priorityId,
-          concurrency: eagerCount,
+          concurrency: 1,
         }).then((prefetched) => {
           setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
           warmStreamVideoMedia(
@@ -458,17 +476,17 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           );
         });
 
-        const restIds = videoIds.slice(eagerCount);
+        const restIds = videoIds.filter((id) => id !== priorityId).slice(0, 3);
         if (restIds.length > 0) {
           const warmRest = () => {
-            void prefetchStreamVideoPlaybacks(restIds, { context: "programs", concurrency: 3 }).then((prefetched) => {
+            void prefetchStreamVideoPlaybacks(restIds, { context: "programs", concurrency: 2 }).then((prefetched) => {
               setPlaybackCache((prev) => ({ ...prev, ...prefetched }));
             });
           };
           if (typeof window.requestIdleCallback === "function") {
-            window.requestIdleCallback(warmRest, { timeout: 4000 });
+            window.requestIdleCallback(warmRest, { timeout: 5000 });
           } else {
-            window.setTimeout(warmRest, 1200);
+            window.setTimeout(warmRest, 1800);
           }
         }
       }
@@ -549,6 +567,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     void loadPlaylist();
   }, [loadPlaylist]);
 
+  useEffect(() => {
+    didApplyEpisodeResumeRef.current = false;
+    lastContinueWriteAtRef.current = 0;
+  }, [playlistId]);
+
   useTabResume(() => {
     purgeExpiredStreamPlaybackCache();
   });
@@ -557,6 +580,39 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     if (!playlist?.items?.length) return [];
     return [...playlist.items].sort((a, b) => a.order - b.order || a.id - b.id);
   }, [playlist]);
+
+  // Open on the episode the viewer left, then seek via resumeStartSeconds from progressMap.
+  useEffect(() => {
+    if (loading || !playlist || playlist.id !== playlistId) return;
+    if (!items.length || !progressHydrated || didApplyEpisodeResumeRef.current) return;
+    didApplyEpisodeResumeRef.current = true;
+    const resumeIdx = resolveResumeEpisodeIndex(items, playlistId, progressMap);
+    setActiveIdx(resumeIdx);
+    setDidAutoPickReady(true);
+    const videoId = items[resumeIdx]?.stream_video?.id;
+    if (videoId) {
+      const progress = progressMap[videoId];
+      const continuePtr = readContinueProgramResume();
+      const duration = Math.max(0, progress?.durationSeconds ?? 0);
+      const position = Math.max(
+        0,
+        progress?.currentPositionSeconds ??
+          (continuePtr?.playlistId === playlistId && continuePtr.videoId === videoId
+            ? continuePtr.positionSeconds
+            : 0),
+      );
+      const nearEnd = duration > 0 && position >= duration * 0.95;
+      const resumeAt = progress?.completed || nearEnd ? 0 : position;
+      setResumeStartSeconds(resumeAt);
+      writeContinueProgramResume({
+        playlistId,
+        videoId,
+        positionSeconds: resumeAt,
+      });
+    }
+    // Only apply once per playlist open — progressMap live updates must not re-select episodes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot resume
+  }, [items, loading, playlist, playlistId, progressHydrated]);
 
   const activeVideo: StreamVideoListItem | null = items[activeIdx]?.stream_video ?? null;
 
@@ -578,7 +634,13 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       setResumeStartSeconds(0);
       return;
     }
-    setResumeStartSeconds(progressMap[activeVideo.id]?.currentPositionSeconds ?? 0);
+    const progress = progressMap[activeVideo.id];
+    const duration = Math.max(0, progress?.durationSeconds ?? 0);
+    const position = Math.max(0, progress?.currentPositionSeconds ?? 0);
+    const nearEnd = duration > 0 && position >= duration * 0.95;
+    // Only on episode switch — do not follow live progress (that reloads the player).
+    setResumeStartSeconds(progress?.completed || nearEnd ? 0 : position);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: snapshot resume only when the episode changes
   }, [activeVideo?.id, activeIdx, progressHydrated]);
 
   const activePlayback =
@@ -662,8 +724,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
   }, [activeVideo?.id, activeIdx, items, playbackCache, activePlayback?.playback_url]);
 
   useEffect(() => {
-    if (!items.length) return;
-    if (didAutoPickReady) return;
+    if (!items.length || !progressHydrated) return;
+    if (didAutoPickReady || didApplyEpisodeResumeRef.current) return;
     const currentStatus = activePlayback?.status ?? "";
     if (currentStatus === "ready") {
       setDidAutoPickReady(true);
@@ -674,20 +736,31 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       setActiveIdx(firstReadyIdx);
       setDidAutoPickReady(true);
     }
-  }, [items, playbackCache, activeIdx, activePlayback?.status, didAutoPickReady]);
+  }, [items, playbackCache, activeIdx, activePlayback?.status, didAutoPickReady, progressHydrated]);
 
   const selectEpisode = useCallback(
     (index: number, opts?: { autoplay?: boolean }) => {
       if (index < 0 || index >= items.length) return;
       const videoId = items[index]?.stream_video.id;
-      const resumeAt =
-        videoId != null ? progressMap[videoId]?.currentPositionSeconds ?? 0 : 0;
+      const progress = videoId != null ? progressMap[videoId] : undefined;
+      const duration = Math.max(0, progress?.durationSeconds ?? 0);
+      const position = Math.max(0, progress?.currentPositionSeconds ?? 0);
+      // Completed (or scrubbed to the end) → play from the start so auto-advance does not instantly re-end.
+      const nearEnd = duration > 0 && position >= duration * 0.95;
+      const resumeAt = progress?.completed || nearEnd ? 0 : position;
       pendingAutoplayRef.current = Boolean(opts?.autoplay);
       setActiveIdx(index);
       setResumeStartSeconds(resumeAt);
+      if (videoId) {
+        writeContinueProgramResume({
+          playlistId,
+          videoId,
+          positionSeconds: resumeAt,
+        });
+      }
       // Do not scroll — jumping hides the fixed dashboard navbar on mobile.
     },
-    [items, progressMap],
+    [items, playlistId, progressMap],
   );
 
   useEffect(() => {
@@ -695,7 +768,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     if (!activeVideo?.id) return;
     const url = activePlayback?.playback_url;
     if (activePlayback?.status !== "ready" || !url) return;
-    const resumeAt = progressMap[activeVideo.id]?.currentPositionSeconds ?? resumeStartSeconds ?? 0;
+    const progress = progressMap[activeVideo.id];
+    const duration = Math.max(0, progress?.durationSeconds ?? 0);
+    const position = Math.max(0, progress?.currentPositionSeconds ?? resumeStartSeconds ?? 0);
+    const nearEnd = duration > 0 && position >= duration * 0.95;
+    const resumeAt = progress?.completed || nearEnd ? 0 : position;
     pendingAutoplayRef.current = false;
     setSeekRequest({
       id: Date.now(),
@@ -756,21 +833,34 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
           },
         };
       });
+
+      const nowMs = Date.now();
+      if (nowMs - lastContinueWriteAtRef.current >= CONTINUE_RESUME_WRITE_MS || hasMeaningfulPlayback) {
+        lastContinueWriteAtRef.current = nowMs;
+        writeContinueProgramResume({
+          playlistId,
+          videoId,
+          positionSeconds: now,
+        });
+      }
     },
-    [activeVideo?.id]
+    [activeVideo?.id, playlistId]
   );
 
   const handlePlaybackEnded = useCallback(() => {
     if (!activeVideo?.id) return;
+    const endedVideoId = activeVideo.id;
+    const endedIdx = activeIdx;
+
     setProgressMap((prev) => {
-      const existing = prev[activeVideo.id];
+      const existing = prev[endedVideoId];
       const duration = Math.max(existing?.durationSeconds ?? 0, 1);
       const watchedRanges = mergeRanges([...(existing?.watchedRanges ?? []), { start: 0, end: duration }]);
       const watched = totalRangeDuration(watchedRanges, duration);
       const completed = watched >= duration * 0.98;
       return {
         ...prev,
-        [activeVideo.id]: {
+        [endedVideoId]: {
           watchedSeconds: watched,
           durationSeconds: duration,
           currentPositionSeconds: duration,
@@ -780,7 +870,17 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         },
       };
     });
-  }, [activeVideo?.id]);
+
+    const nextIdx = endedIdx + 1;
+    if (nextIdx >= items.length) return;
+    // Guard against double `ended` events from HLS/MP4 after a URL rotate.
+    const token = Date.now();
+    if (token - advanceGuardRef.current < 800) return;
+    advanceGuardRef.current = token;
+    window.setTimeout(() => {
+      selectEpisode(nextIdx, { autoplay: true });
+    }, 120);
+  }, [activeVideo?.id, activeIdx, items.length, selectEpisode]);
 
   const handleSeekSegment = useCallback(
     ({ from, to, duration }: { from: number; to: number; duration: number }) => {
@@ -873,7 +973,7 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-10 text-center text-sm text-white/60">
+      <div className="rounded-xl border border-white/10 bg-black/50 px-4 py-6 text-center text-sm text-white/70">
         Loading playlist…
       </div>
     );
@@ -881,7 +981,16 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   if (err) {
     return (
-      <div className="rounded-xl border border-red-500/35 bg-red-950/20 px-4 py-6 text-[14px] text-red-100/90">{err}</div>
+      <div className="space-y-3 rounded-xl border border-red-500/35 bg-red-950/20 px-4 py-6 text-[14px] text-red-100/90">
+        <p>{err}</p>
+        <button
+          type="button"
+          onClick={() => void loadPlaylist()}
+          className="rounded-md border border-amber-300/40 bg-amber-500/15 px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-amber-100"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 

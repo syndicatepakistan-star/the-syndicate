@@ -7091,10 +7091,36 @@ body.syndicate-mode-active::-webkit-scrollbar {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.45) 72%, rgba(0, 0, 0, 0) 100%);
 }
 
-.dashboard-hamburger-chrome[data-dashboard-bounded-shell] .programs-grid-chrome {
-  position: relative;
-  z-index: 2;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.45) 72%, rgba(0, 0, 0, 0) 100%);
+/* Mobile: category heading-buttons + search stick while scrolling the programs grid */
+@media (max-width: 1279px) {
+  .programs-playlist-filter-bar--sticky-mobile {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    margin-bottom: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.65rem;
+    background: linear-gradient(
+      180deg,
+      rgba(2, 4, 10, 0.97) 0%,
+      rgba(2, 4, 10, 0.92) 78%,
+      rgba(2, 4, 10, 0.55) 100%
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  }
+
+  .programs-playlist-filter-bar--sticky-mobile .playlist-category-filter-heading {
+    min-height: 3.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .programs-playlist-filter-bar {
+    margin-bottom: 1rem;
+    padding-top: 0.25rem;
+  }
 }
 
 .dashboard-hamburger-chrome .programs-lesson-shell,

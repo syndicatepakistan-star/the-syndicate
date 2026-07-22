@@ -59,7 +59,7 @@ const DEFAULT_IMAGES: ImageItem[] = [
 const DEFAULTS = {
   maxVerticalRotationDeg: 5,
   dragSensitivity: 20,
-  enlargeTransitionMs: 300,
+  enlargeTransitionMs: 480,
   segments: 35,
 }
 
@@ -508,7 +508,7 @@ export default function DomeGallery({
 
     const overlay = document.createElement('div')
     overlay.className = 'enlarge globe-enlarge-glow'
-    overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden;`
+    overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1); border-radius:${openedImageBorderRadius}; overflow:hidden;`
 
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement | null)?.src || ''
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement | null)?.alt || ''
@@ -556,7 +556,7 @@ export default function DomeGallery({
         overlay.style.width = `${frameR.width}px`
         overlay.style.height = `${frameR.height}px`
         void overlay.offsetWidth
-        overlay.style.transition = `left ${enlargeTransitionMs}ms ease, top ${enlargeTransitionMs}ms ease, width ${enlargeTransitionMs}ms ease, height ${enlargeTransitionMs}ms ease`
+        overlay.style.transition = `left ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1), top ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1), width ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1), height ${enlargeTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1)`
         const centeredLeft = frameR.left - mainR.left + (frameR.width - newRect.width) / 2
         const centeredTop = frameR.top - mainR.top + (frameR.height - newRect.height) / 2
         requestAnimationFrame(() => {

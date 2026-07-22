@@ -168,16 +168,75 @@ export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefin
   return VAULT_MODULE_THUMBNAILS[key];
 }
 
-/** Deep link from homepage globe → public programs library card (stable level1 slug when mapped). */
-export function programSlugDeepLink(slug: string): string {
-  return `/programs?slug=${encodeURIComponent(slug)}#programs-library`;
+/** Business Warfare — dual deep links (zoom vs details) for globe / testing. */
+export const BUSINESS_WARFARE_LEGACY_ID = 99;
+export const BUSINESS_WARFARE_LEVEL1_SLUG = "level1-psych-09";
+export const PROGRAM_DETAILS_HASH = "details";
+export const PROGRAM_LIBRARY_HASH = "programs-library";
+
+export function isBusinessWarfareProgram(meta: {
+  id?: number | null;
+  slug?: string | null;
+  title?: string | null;
+}): boolean {
+  if (meta.id === BUSINESS_WARFARE_LEGACY_ID) return true;
+  const slug = (meta.slug ?? "").trim().toLowerCase();
+  if (slug === BUSINESS_WARFARE_LEVEL1_SLUG) return true;
+  if (LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[meta.id ?? -1] === BUSINESS_WARFARE_LEVEL1_SLUG) return true;
+  const title = (meta.title ?? "").trim().toLowerCase();
+  return title === "business warfare";
 }
 
-/** Deep link from homepage globe → public programs library card. */
-export function programPlaylistDeepLink(programId: number): string {
+export function readProgramDetailsHash(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.location.hash.replace(/^#/, "").toLowerCase() === PROGRAM_DETAILS_HASH;
+}
+
+/** Sync address bar to `#details` (Business Warfare details modal open). */
+export function writeProgramDetailsHash(): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (url.hash.replace(/^#/, "").toLowerCase() === PROGRAM_DETAILS_HASH) return;
+  url.hash = PROGRAM_DETAILS_HASH;
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+/** Drop `#details` when leaving the details modal. */
+export function clearProgramDetailsHash(): void {
+  if (typeof window === "undefined") return;
+  if (!readProgramDetailsHash()) return;
+  const url = new URL(window.location.href);
+  url.hash = PROGRAM_LIBRARY_HASH;
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+/** Deep link from homepage globe → public programs library card (stable level1 slug when mapped). */
+export function programSlugDeepLink(slug: string, options?: { details?: boolean }): string {
+  const hash =
+    options?.details && slug.trim().toLowerCase() === BUSINESS_WARFARE_LEVEL1_SLUG
+      ? PROGRAM_DETAILS_HASH
+      : PROGRAM_LIBRARY_HASH;
+  return `/programs?slug=${encodeURIComponent(slug)}#${hash}`;
+}
+
+/** Deep link from homepage globe → public programs library card (zoom + glow). */
+export function programPlaylistDeepLink(programId: number, options?: { details?: boolean }): string {
   const slug = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[programId];
-  if (slug) return programSlugDeepLink(slug);
-  return `/programs?program=${programId}#programs-library`;
+  if (slug) return programSlugDeepLink(slug, options);
+  const hash =
+    options?.details && programId === BUSINESS_WARFARE_LEGACY_ID
+      ? PROGRAM_DETAILS_HASH
+      : PROGRAM_LIBRARY_HASH;
+  return `/programs?program=${programId}#${hash}`;
+}
+
+/**
+ * Business Warfare only (for now): same query as the globe zoom link, but `#details`
+ * opens the description modal with unlock CTAs.
+ * Example: `/programs?slug=level1-psych-09#details`
+ */
+export function programPlaylistDetailsDeepLink(programId: number): string {
+  return programPlaylistDeepLink(programId, { details: true });
 }
 
 /** Deep link from homepage globe → Syndicate Elite offer card. */
@@ -268,6 +327,7 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("13rules.jpg"), alt: "Syndicate 13 Business Rules", fileName: "13rules.jpg", href: programPlaylistDeepLink(7), programId: 7 },
   { src: courseThumb("money-philosophy.jpg"), alt: "Syndicate Money Philosophy", fileName: "money-philosophy.jpg", href: programPlaylistDeepLink(8), programId: 8 },
   { src: courseThumb("warfare.jpg"), alt: "Business Warfare", fileName: "warfare.jpg", href: programPlaylistDeepLink(99), programId: 99 },
+  // Details deep link (Business Warfare only): programPlaylistDetailsDeepLink(99) → …#details
 ];
 
 /** All unique globe tile URLs — used for parallel preload on the home page. */

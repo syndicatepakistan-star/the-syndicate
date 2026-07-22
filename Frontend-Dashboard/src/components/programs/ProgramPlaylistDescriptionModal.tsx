@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
+import { isBusinessWarfareProgram } from "@/lib/programPlaylistThumbnails";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { parseStructuredDescriptionSections } from "@/lib/structuredDescription";
@@ -16,6 +17,10 @@ export const PROGRAM_DETAIL_TRIGGER_ATTR = "data-program-playlist-detail";
 type Props = {
   playlist: StreamPlaylistListItem | null;
   onClose: () => void;
+  /** Optional unlock CTA (shown above and below the description body). */
+  onUnlock?: () => void;
+  unlockLabel?: string;
+  unlockDisabled?: boolean;
 };
 
 function isTopLevelSectionHeading(line: string): boolean {
@@ -524,7 +529,13 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
   );
 }
 
-export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
+export function ProgramPlaylistDescriptionModal({
+  playlist,
+  onClose,
+  onUnlock,
+  unlockLabel = "Unlock",
+  unlockDisabled = false,
+}: Props) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -561,6 +572,43 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
   }, [body, structured]);
 
   if (!displayPlaylist || typeof document === "undefined") return null;
+
+  const showUnlock = typeof onUnlock === "function";
+  /** Business Warfare details — match AI Content Automation vault unlock (emerald). */
+  const useAiContentUnlockStyle = isBusinessWarfareProgram({
+    id: displayPlaylist.id,
+    slug: displayPlaylist.slug,
+    title: displayPlaylist.title,
+  });
+  const unlockButton = showUnlock ? (
+    <button
+      type="button"
+      disabled={unlockDisabled}
+      onClick={() => {
+        if (unlockDisabled) return;
+        onUnlock();
+      }}
+      className={cn(
+        "inline-flex w-full max-w-md items-center justify-center rounded-xl border font-black uppercase transition",
+        useAiContentUnlockStyle
+          ? cn(
+              "border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100",
+              "px-2 py-2 text-[clamp(10px,2vw,12px)] tracking-[0.15em] sm:px-2.5 sm:py-2.5 sm:text-[13px]",
+              "shadow-[0_0_24px_rgba(52,211,153,0.65),0_0_48px_rgba(16,185,129,0.35),inset_0_0_0_1px_rgba(74,222,128,0.45)]",
+              "hover:scale-[1.02] hover:shadow-[0_0_36px_rgba(52,211,153,0.85),0_0_72px_rgba(16,185,129,0.55),inset_0_0_0_1px_rgba(74,222,128,0.65)]",
+            )
+          : cn(
+              "border-2 border-amber-300/70 bg-[linear-gradient(180deg,rgba(251,191,36,0.22),rgba(180,83,9,0.35))]",
+              "px-5 py-3.5 font-mono text-[12px] tracking-[0.16em] text-amber-50 sm:text-[13px]",
+              "shadow-[0_0_28px_rgba(251,191,36,0.28)] hover:border-amber-200 hover:bg-amber-400/25",
+            ),
+        unlockDisabled &&
+          "cursor-not-allowed opacity-60 hover:scale-100 hover:border-inherit hover:bg-inherit hover:shadow-none",
+      )}
+    >
+      {unlockLabel}
+    </button>
+  ) : null;
 
   const tree = (
     <div
@@ -599,6 +647,7 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
           </button>
         </div>
         <div className="vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-10 sm:py-9 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [&_strong]:font-semibold [&_strong]:text-white/95">
+          {unlockButton ? <div className="mb-6 flex justify-start">{unlockButton}</div> : null}
           {structured || body ? (
             <div className="w-full max-w-none pb-2">
               <StructuredDescriptionBody text={body} prominent />
@@ -614,6 +663,9 @@ export function ProgramPlaylistDescriptionModal({ playlist, onClose }: Props) {
               text for each section below.
             </p>
           )}
+          {unlockButton ? (
+            <div className="mt-10 flex justify-start border-t border-white/10 pt-8">{unlockButton}</div>
+          ) : null}
         </div>
       </div>
     </div>

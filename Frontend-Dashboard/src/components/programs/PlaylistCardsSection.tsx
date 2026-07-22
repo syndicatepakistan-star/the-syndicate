@@ -21,8 +21,15 @@ import {
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
 } from "@/lib/level1ProgramCatalog";
-import { programPlaylistDeepLink, programSlugDeepLink } from "@/lib/programPlaylistThumbnails";
-import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
+import {
+  programPlaylistDeepLink,
+  programSlugDeepLink,
+  isBusinessWarfareProgram,
+  readProgramDetailsHash,
+  writeProgramDetailsHash,
+  clearProgramDetailsHash,
+} from "@/lib/programPlaylistThumbnails";
+import { PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
@@ -170,6 +177,7 @@ export function PlaylistCardsSection({
   const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
   const unlockCart = useUnlockCartOptional();
   const highlightHandledRef = useRef(false);
+  const detailsOpenedFromHashRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -259,6 +267,7 @@ export function PlaylistCardsSection({
 
   useEffect(() => {
     highlightHandledRef.current = false;
+    detailsOpenedFromHashRef.current = false;
   }, [highlightPlaylistId]);
 
   useEffect(() => {
@@ -270,8 +279,19 @@ export function PlaylistCardsSection({
     if (highlightHandledRef.current) return;
 
     highlightHandledRef.current = true;
-    setHighlightedPlaylistId(target.id);
 
+    const openDetailsFromHash =
+      readProgramDetailsHash() &&
+      isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title });
+
+    // `#details` deep link: open modal immediately — no zoom/glow (avoids screen glitch).
+    if (openDetailsFromHash) {
+      detailsOpenedFromHashRef.current = true;
+      setDescriptionModalPlaylist(target);
+      return;
+    }
+
+    setHighlightedPlaylistId(target.id);
     const cancelScroll = focusProgramCardWithRetries(target.id);
     const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
 
@@ -280,6 +300,18 @@ export function PlaylistCardsSection({
       window.clearTimeout(clearHighlight);
     };
   }, [highlightPlaylistId, visiblePlaylists, playlists]);
+
+  const openProgramDetails = (pl: StreamPlaylistListItem) => {
+    setDescriptionModalPlaylist(pl);
+    if (isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title })) {
+      writeProgramDetailsHash();
+    }
+  };
+
+  const closeDescriptionModal = () => {
+    setDescriptionModalPlaylist(null);
+    clearProgramDetailsHash();
+  };
 
   const spotlightActive = highlightedPlaylistId != null;
 
@@ -334,6 +366,16 @@ export function PlaylistCardsSection({
     }
     setError("This program cannot be added to the unlock bucket right now.");
   };
+
+  const descriptionUnlockLabel = (() => {
+    const pl = descriptionModalPlaylist;
+    if (!pl) return "Unlock";
+    if (pl.is_coming_soon) return "Coming Soon";
+    if (pl.is_unlocked) return "Open Program";
+    const title = resolveProgramPlaylistTitle(pl);
+    if (unlockCart?.isInCartKey(cartItemKey(playlistToCartItem(pl, title)))) return "In bucket";
+    return "Unlock";
+  })();
 
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
@@ -477,7 +519,7 @@ export function PlaylistCardsSection({
               <div className={cn("mt-auto grid grid-cols-2 gap-1.5 sm:gap-2", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
                 <button
                   type="button"
-                  onClick={() => setDescriptionModalPlaylist(pl)}
+                  onClick={() => openProgramDetails(pl)}
                   className="min-w-0 rounded-xl border border-white/40 bg-black/55 px-1.5 py-1.5 text-[clamp(9px,2.3vw,11px)] font-black uppercase tracking-[0.09em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#f5c814]/55 hover:text-[#ffe9a3] sm:px-2 sm:py-2 sm:tracking-[0.14em]"
                 >
                   Details
@@ -520,7 +562,22 @@ export function PlaylistCardsSection({
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
       style={sectionSpotlightStyle}
     >
-      <ProgramPlaylistDescriptionModal playlist={descriptionModalPlaylist} onClose={() => setDescriptionModalPlaylist(null)} />
+      <ProgramPlaylistDescriptionModal
+        playlist={descriptionModalPlaylist}
+        onClose={closeDescriptionModal}
+        onUnlock={
+          descriptionModalPlaylist
+            ? () => {
+                const pl = descriptionModalPlaylist;
+                const title = resolveProgramPlaylistTitle(pl);
+                closeDescriptionModal();
+                requestPlaylistUnlock(pl, title);
+              }
+            : undefined
+        }
+        unlockLabel={descriptionUnlockLabel}
+        unlockDisabled={!!descriptionModalPlaylist?.is_coming_soon}
+      />
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="absolute left-[-8%] top-[12%] h-[250px] w-[250px] rounded-full bg-fuchsia-500/20 blur-[90px] sm:h-[380px] sm:w-[380px] sm:blur-[125px]" />
         <div className="absolute right-[-10%] top-[20%] h-[260px] w-[260px] rounded-full bg-cyan-400/18 blur-[95px] sm:h-[400px] sm:w-[400px] sm:blur-[130px]" />
@@ -546,7 +603,14 @@ export function PlaylistCardsSection({
                       "text-balance"
                     )}
                   >
-                    {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                        {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[0]}
+                      </span>
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                        {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[1]}
+                      </span>
+                    </span>
                   </div>
                 </div>
                 {businessPsychologyPlaylists.length > 0 ? (
@@ -567,9 +631,13 @@ export function PlaylistCardsSection({
                       "text-balance"
                     )}
                   >
-                    <span className="playlist-business-models-heading">
-                      <span className="playlist-business-models-heading__lead">Real World</span>
-                      <span className="playlist-business-models-heading__tail">Business Models</span>
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                        {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[0]}
+                      </span>
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                        {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[1]}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -607,7 +675,14 @@ export function PlaylistCardsSection({
                     "text-balance"
                   )}
                 >
-                  {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                  <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                      {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[0]}
+                    </span>
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                      {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[1]}
+                    </span>
+                  </span>
                 </div>
               </div>
               <Level1CategoryUnlockAllButton
@@ -639,9 +714,13 @@ export function PlaylistCardsSection({
                     "text-balance"
                   )}
                 >
-                  <span className="playlist-business-models-heading">
-                    <span className="playlist-business-models-heading__lead">Real World</span>
-                    <span className="playlist-business-models-heading__tail">Business Models</span>
+                  <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                      {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[0]}
+                    </span>
+                    <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                      {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[1]}
+                    </span>
                   </span>
                 </div>
               </div>

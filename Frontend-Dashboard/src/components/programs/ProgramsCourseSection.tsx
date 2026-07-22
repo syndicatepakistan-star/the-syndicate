@@ -41,7 +41,7 @@ import {
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
   LEVEL1_CANONICAL_TITLES,
 } from "@/lib/level1ProgramCatalog";
-import { GLOBE_PACK_KEYS, isHiddenProgramPlaylist, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { GLOBE_PACK_KEYS, isBusinessWarfareProgram, isHiddenProgramPlaylist, readProgramDetailsHash, writeProgramDetailsHash, clearProgramDetailsHash, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import {
   PROGRAM_CARD_FRAME,
@@ -71,7 +71,7 @@ import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-ap
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
-import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS } from "@/lib/streamPlaylistCategoryLabels";
+import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
@@ -541,8 +541,20 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       return;
     }
     highlightHandledRef.current = true;
+
+    const openDetailsFromHash =
+      readProgramDetailsHash() &&
+      isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title });
+
+    // `#details` deep link: open modal immediately — no zoom/glow (avoids screen glitch).
+    if (openDetailsFromHash) {
+      setPlaylistDescriptionModal(target);
+      return;
+    }
+
     setHighlightedPlaylistId(resolvedId);
     scrollToProgramLibrary("dashboard");
+
     const cancelScroll = focusProgramCardWithRetries(resolvedId, undefined, {
       delays: [0, 120, 400, 900, 1400, 2200, 3200],
     });
@@ -1104,6 +1116,9 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                     onClick={(e) => {
                       e.stopPropagation();
                       setPlaylistDescriptionModal(pl);
+                      if (isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title })) {
+                        writeProgramDetailsHash();
+                      }
                     }}
                     className="min-w-0 rounded-lg border border-white/40 bg-black/55 px-1.5 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/95 transition hover:border-cyan-300/55 hover:text-cyan-100 sm:px-2 sm:py-2 sm:text-[10px] sm:tracking-[0.12em]"
                   >
@@ -1290,7 +1305,14 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                         "text-balance transition hover:brightness-110",
                       )}
                     >
-                      {STREAM_PLAYLIST_CATEGORY_LABELS.business_psychology}
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                        <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                          {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[0]}
+                        </span>
+                        <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                          {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_psychology[1]}
+                        </span>
+                      </span>
                     </button>
                   </div>
                   <Level1CategoryUnlockAllButton
@@ -1332,9 +1354,13 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                         "text-balance transition hover:brightness-110",
                       )}
                     >
-                      <span className="playlist-business-models-heading">
-                        <span className="playlist-business-models-heading__lead">Real World</span>
-                        <span className="playlist-business-models-heading__tail">Business Models</span>
+                      <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineStack}>
+                        <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineLead}>
+                          {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[0]}
+                        </span>
+                        <span className={PLAYLIST_CATEGORY_HEADING_CLASS.twoLineTail}>
+                          {STREAM_PLAYLIST_CATEGORY_HEADING_LINES.business_model[1]}
+                        </span>
                       </span>
                     </button>
                   </div>
@@ -1615,7 +1641,38 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       )}
       <ProgramPlaylistDescriptionModal
         playlist={playlistDescriptionModal}
-        onClose={() => setPlaylistDescriptionModal(null)}
+        onClose={() => {
+          setPlaylistDescriptionModal(null);
+          clearProgramDetailsHash();
+        }}
+        onUnlock={
+          playlistDescriptionModal
+            ? () => {
+                const pl = playlistDescriptionModal;
+                setPlaylistDescriptionModal(null);
+                clearProgramDetailsHash();
+                if (pl.is_coming_soon) return;
+                if (pl.is_unlocked) {
+                  openStreamPlaylist(pl.id);
+                  return;
+                }
+                void startPlaylistCheckout(pl.id);
+              }
+            : undefined
+        }
+        unlockLabel={
+          playlistDescriptionModal?.is_coming_soon
+            ? "Coming Soon"
+            : playlistDescriptionModal?.is_unlocked
+              ? "Open Program"
+              : checkoutBusyPlaylistId === playlistDescriptionModal?.id
+                ? "Loading…"
+                : "Unlock"
+        }
+        unlockDisabled={
+          !!playlistDescriptionModal?.is_coming_soon ||
+          checkoutBusyPlaylistId === playlistDescriptionModal?.id
+        }
       />
     </>
     </div>

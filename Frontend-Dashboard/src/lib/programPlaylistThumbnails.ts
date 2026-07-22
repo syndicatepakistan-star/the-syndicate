@@ -171,7 +171,12 @@ export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefin
 /** Business Warfare — dual deep links (zoom vs details) for globe / testing. */
 export const BUSINESS_WARFARE_LEGACY_ID = 99;
 export const BUSINESS_WARFARE_LEVEL1_SLUG = "level1-psych-09";
+/** Stable public cover (same file as program cards / globe). */
+export const BUSINESS_WARFARE_COVER_SRC = courseThumb("warfare.jpg");
 export const PROGRAM_DETAILS_HASH = "details";
+/** Zoom/glow deep link — must NOT match a DOM id (avoids browser hash scroll buzz). */
+export const PROGRAM_SPOTLIGHT_HASH = "spotlight";
+/** @deprecated Prefer PROGRAM_SPOTLIGHT_HASH for URLs; DOM section id remains `programs-library`. */
 export const PROGRAM_LIBRARY_HASH = "programs-library";
 
 export function isBusinessWarfareProgram(meta: {
@@ -201,12 +206,12 @@ export function writeProgramDetailsHash(): void {
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
-/** Drop `#details` when leaving the details modal. */
+/** Drop `#details` when leaving the details modal (restore spotlight hash, no DOM-id jump). */
 export function clearProgramDetailsHash(): void {
   if (typeof window === "undefined") return;
   if (!readProgramDetailsHash()) return;
   const url = new URL(window.location.href);
-  url.hash = PROGRAM_LIBRARY_HASH;
+  url.hash = PROGRAM_SPOTLIGHT_HASH;
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
@@ -215,7 +220,7 @@ export function programSlugDeepLink(slug: string, options?: { details?: boolean 
   const hash =
     options?.details && slug.trim().toLowerCase() === BUSINESS_WARFARE_LEVEL1_SLUG
       ? PROGRAM_DETAILS_HASH
-      : PROGRAM_LIBRARY_HASH;
+      : PROGRAM_SPOTLIGHT_HASH;
   return `/programs?slug=${encodeURIComponent(slug)}#${hash}`;
 }
 
@@ -226,7 +231,7 @@ export function programPlaylistDeepLink(programId: number, options?: { details?:
   const hash =
     options?.details && programId === BUSINESS_WARFARE_LEGACY_ID
       ? PROGRAM_DETAILS_HASH
-      : PROGRAM_LIBRARY_HASH;
+      : PROGRAM_SPOTLIGHT_HASH;
   return `/programs?program=${programId}#${hash}`;
 }
 

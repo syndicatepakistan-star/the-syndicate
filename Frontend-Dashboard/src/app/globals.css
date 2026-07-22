@@ -10292,11 +10292,11 @@ body {
 /* Keep scale modest — large zoom was clipped by overflow-x on library/page shells */
 @keyframes program-card-globe-spotlight-enter {
   0% {
-    transform: scale(0.94);
+    transform: scale(1);
     box-shadow:
-      0 0 0 0 rgba(var(--spotlight-a), 0),
-      0 0 0 rgba(var(--spotlight-a), 0);
-    filter: brightness(0.92);
+      0 0 0 1px rgba(var(--spotlight-a), 0.55),
+      0 0 12px rgba(var(--spotlight-a), 0.35);
+    filter: brightness(1);
   }
   100% {
     transform: scale(1.04);
@@ -10320,7 +10320,7 @@ body {
       0 0 78px rgba(var(--spotlight-b), 0.22);
   }
   50% {
-    transform: scale(1.055);
+    transform: scale(1.045);
     box-shadow:
       0 0 0 3px rgba(var(--spotlight-a), 1),
       0 0 20px rgba(var(--spotlight-a), 0.9),
@@ -10394,8 +10394,8 @@ body.nav-menu-open .program-card-spotlight-aura {
   transform-origin: center center;
   border-color: rgba(var(--spotlight-a), 0.98) !important;
   animation:
-    program-card-globe-spotlight-enter 0.75s cubic-bezier(0.22, 1, 0.36, 1) both,
-    program-card-globe-spotlight 2.8s cubic-bezier(0.45, 0, 0.55, 1) 0.75s infinite;
+    program-card-globe-spotlight-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+    program-card-globe-spotlight 2.8s cubic-bezier(0.45, 0, 0.55, 1) 0.45s infinite;
   will-change: transform, box-shadow;
 }
 
@@ -10419,37 +10419,13 @@ article[data-globe-spotlight="true"] {
 }
 
 /*
- * Globe → program card: ancestors use overflow-x-clip which shears scaled cards.
- * While spotlight is active, open the clip path and add side padding.
+ * Globe → program card: keep overflow alone so toggling spotlight does not
+ * resize scrollbars / reflow the page (that caused the up-down buzz).
+ * Glow paints via card z-index + overflow:visible on the spotlight host only.
  */
-body.globe-program-spotlight .home-page-root,
-body.globe-program-spotlight .public-page-shell,
-body.globe-program-spotlight .mobile-viewport-contain,
-body.globe-program-spotlight #programs-library,
-body.globe-program-spotlight .programs-library-max,
-body.globe-program-spotlight .program-playlist-library-band,
-body.globe-program-spotlight .programs-section-root,
-body.globe-program-spotlight .programs-grid-scroll,
-body.globe-program-spotlight .program-playlist-mobile-grid {
-  overflow-x: visible !important;
-}
-
-body.globe-program-spotlight #programs-library,
-body.globe-program-spotlight #dashboard-programs-library,
-body.globe-program-spotlight .program-playlist-library-band {
-  padding-left: max(1.15rem, env(safe-area-inset-left, 0px)) !important;
-  padding-right: max(1.15rem, env(safe-area-inset-right, 0px)) !important;
-}
-
-@media (max-width: 1279px) {
-  body.globe-program-spotlight .program-playlist-mobile-grid {
-    gap: 0.65rem !important;
-    padding-inline: 0.4rem;
-  }
-
-  body.globe-program-spotlight article[data-globe-spotlight="true"] {
-    margin-inline: 0.15rem;
-  }
+body.globe-program-spotlight article[data-globe-spotlight="true"],
+body.globe-program-spotlight .program-card-globe-spotlight-host {
+  scroll-margin-block: 20vh;
 }
 
 /* Pack offer cards — glow must stack above neighboring cards */

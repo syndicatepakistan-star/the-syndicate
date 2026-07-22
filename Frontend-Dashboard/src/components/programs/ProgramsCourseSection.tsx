@@ -70,7 +70,7 @@ import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
-import { focusProgramCardWithRetries, scrollToProgramLibrary } from "@/lib/programCardScroll";
+import { focusProgramCardWithRetries, scrollProgramCardIntoView } from "@/lib/programCardScroll";
 import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
@@ -524,13 +524,12 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     highlightHandledRef.current = false;
   }, [highlightProgramId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!highlightProgramId || streamPlaylists.length === 0) return;
     const resolvedId = resolveProgramPlaylistHighlightId(streamPlaylists, highlightProgramId);
     if (!resolvedId) return;
     const target = effectiveStreamPlaylists.find((pl) => pl.id === resolvedId);
     if (!target) return;
-    if (highlightHandledRef.current) return;
     if (skipHighlightScrollRef.current) {
       skipHighlightScrollRef.current = false;
       highlightHandledRef.current = true;
@@ -540,30 +539,72 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       highlightHandledRef.current = true;
       return;
     }
-    highlightHandledRef.current = true;
 
     const openDetailsFromHash =
       readProgramDetailsHash() &&
       isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title });
 
-    // `#details` deep link: open modal immediately — no zoom/glow (avoids screen glitch).
     if (openDetailsFromHash) {
+      highlightHandledRef.current = true;
+      setHighlightedPlaylistId(null);
       setPlaylistDescriptionModal(target);
       return;
     }
 
-    setHighlightedPlaylistId(resolvedId);
-    scrollToProgramLibrary("dashboard");
+    if (highlightHandledRef.current) return;
+    highlightHandledRef.current = true;
 
-    const cancelScroll = focusProgramCardWithRetries(resolvedId, undefined, {
-      delays: [0, 120, 400, 900, 1400, 2200, 3200],
-    });
+    const hit = () => {
+      if (scrollProgramCardIntoView(resolvedId, { behavior: "auto" })) {
+        setHighlightedPlaylistId(resolvedId);
+        return true;
+      }
+      return false;
+    };
+
+    if (hit()) {
+      const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
+      return () => window.clearTimeout(clearHighlight);
+    }
+
+    const cancelScroll = focusProgramCardWithRetries(
+      resolvedId,
+      () => setHighlightedPlaylistId(resolvedId),
+      { behavior: "auto", delays: [50, 150, 350, 700, 1400] },
+    );
     const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
     return () => {
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
   }, [highlightProgramId, streamPlaylists, effectiveStreamPlaylists, secureView, detailPlaylistId]);
+
+  // Re-open Business Warfare details on `#details` every time (hash re-entry / address bar Enter).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const openFromHash = () => {
+      if (!readProgramDetailsHash()) return;
+      const target = effectiveStreamPlaylists.find((pl) =>
+        isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }),
+      );
+      if (!target) return;
+      highlightHandledRef.current = false;
+      setHighlightedPlaylistId(null);
+      setPlaylistDescriptionModal(null);
+      window.requestAnimationFrame(() => {
+        setPlaylistDescriptionModal(target);
+      });
+    };
+    if (readProgramDetailsHash()) openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+    window.addEventListener("popstate", openFromHash);
+    window.addEventListener("pageshow", openFromHash);
+    return () => {
+      window.removeEventListener("hashchange", openFromHash);
+      window.removeEventListener("popstate", openFromHash);
+      window.removeEventListener("pageshow", openFromHash);
+    };
+  }, [effectiveStreamPlaylists]);
 
   useEffect(() => {
     if (!globeSpotlightActive) return;

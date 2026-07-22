@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
-import { isBusinessWarfareProgram } from "@/lib/programPlaylistThumbnails";
+import { enrichProgramPlaylist, resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
+import {
+  BUSINESS_WARFARE_COVER_SRC,
+  isBusinessWarfareProgram,
+} from "@/lib/programPlaylistThumbnails";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { parseStructuredDescriptionSections } from "@/lib/structuredDescription";
@@ -571,15 +574,42 @@ export function ProgramPlaylistDescriptionModal({
     return body ? parseDescriptionToBlocks(body) : null;
   }, [body, structured]);
 
-  if (!displayPlaylist || typeof document === "undefined") return null;
-
-  const showUnlock = typeof onUnlock === "function";
-  /** Business Warfare details — match AI Content Automation vault unlock (emerald). */
-  const useAiContentUnlockStyle = isBusinessWarfareProgram({
+  const isWarfareDetails = !!displayPlaylist && isBusinessWarfareProgram({
     id: displayPlaylist.id,
     slug: displayPlaylist.slug,
     title: displayPlaylist.title,
   });
+
+  const warfareCoverCandidates = useMemo(() => {
+    const list = [BUSINESS_WARFARE_COVER_SRC];
+    if (!displayPlaylist || !isWarfareDetails) return list;
+    const resolved = resolveProgramPlaylistThumbnail(
+      displayPlaylist,
+      displayPlaylist.cover_image_url,
+    );
+    // Prefer the known static file first — API covers can 404 and hide the hero.
+    if (resolved && resolved !== BUSINESS_WARFARE_COVER_SRC) {
+      list.push(resolved);
+    }
+    const decoded = BUSINESS_WARFARE_COVER_SRC.replace(/%20/g, " ");
+    if (decoded !== BUSINESS_WARFARE_COVER_SRC) list.push(decoded);
+    return list;
+  }, [displayPlaylist, isWarfareDetails]);
+
+  const [warfareCoverFailIdx, setWarfareCoverFailIdx] = useState(0);
+
+  useEffect(() => {
+    setWarfareCoverFailIdx(0);
+  }, [displayPlaylist?.id, isWarfareDetails]);
+
+  if (!displayPlaylist || typeof document === "undefined") return null;
+
+  const showUnlock = typeof onUnlock === "function";
+  const useAiContentUnlockStyle = isWarfareDetails;
+  const warfareCoverSrc =
+    warfareCoverCandidates[Math.min(warfareCoverFailIdx, warfareCoverCandidates.length - 1)] ??
+    BUSINESS_WARFARE_COVER_SRC;
+
   const unlockButton = showUnlock ? (
     <button
       type="button"
@@ -589,26 +619,66 @@ export function ProgramPlaylistDescriptionModal({
         onUnlock();
       }}
       className={cn(
-        "inline-flex w-full max-w-md items-center justify-center rounded-xl border font-black uppercase transition",
+        "inline-flex shrink-0 items-center justify-center rounded-xl border font-black uppercase transition",
         useAiContentUnlockStyle
           ? cn(
-              "border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100",
-              "px-2 py-2 text-[clamp(10px,2vw,12px)] tracking-[0.15em] sm:px-2.5 sm:py-2.5 sm:text-[13px]",
-              "shadow-[0_0_24px_rgba(52,211,153,0.65),0_0_48px_rgba(16,185,129,0.35),inset_0_0_0_1px_rgba(74,222,128,0.45)]",
-              "hover:scale-[1.02] hover:shadow-[0_0_36px_rgba(52,211,153,0.85),0_0_72px_rgba(16,185,129,0.55),inset_0_0_0_1px_rgba(74,222,128,0.65)]",
+              "h-9 w-[120px] border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100",
+              "px-1.5 text-[10px] tracking-[0.08em] sm:h-10 sm:w-[220px] sm:px-2 sm:text-[12px] sm:tracking-[0.14em]",
+              "shadow-[0_0_20px_rgba(52,211,153,0.55),inset_0_0_0_1px_rgba(74,222,128,0.4)]",
+              "hover:shadow-[0_0_30px_rgba(52,211,153,0.75),0_0_52px_rgba(16,185,129,0.4),inset_0_0_0_1px_rgba(74,222,128,0.55)]",
             )
           : cn(
-              "border-2 border-amber-300/70 bg-[linear-gradient(180deg,rgba(251,191,36,0.22),rgba(180,83,9,0.35))]",
+              "w-full max-w-md border-2 border-amber-300/70 bg-[linear-gradient(180deg,rgba(251,191,36,0.22),rgba(180,83,9,0.35))]",
               "px-5 py-3.5 font-mono text-[12px] tracking-[0.16em] text-amber-50 sm:text-[13px]",
               "shadow-[0_0_28px_rgba(251,191,36,0.28)] hover:border-amber-200 hover:bg-amber-400/25",
             ),
         unlockDisabled &&
-          "cursor-not-allowed opacity-60 hover:scale-100 hover:border-inherit hover:bg-inherit hover:shadow-none",
+          "cursor-not-allowed opacity-60 hover:border-inherit hover:bg-inherit hover:shadow-none",
       )}
     >
       {unlockLabel}
     </button>
   ) : null;
+
+  const warfareCover = useAiContentUnlockStyle ? (
+    <div
+      className={cn(
+        "relative shrink-0 overflow-hidden rounded-xl border border-emerald-300/40 bg-[#041208]",
+        "shadow-[0_0_18px_rgba(52,211,153,0.22)]",
+        "h-[120px] w-[180px] sm:h-[240px] sm:w-[380px] md:h-[280px] md:w-[440px]",
+      )}
+    >
+      {/* Plain public JPG (~100KB) — skip Next Image optimizer (was failing silently in this portal). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={warfareCoverSrc}
+        src={warfareCoverSrc}
+        alt={displayPlaylist.title}
+        width={440}
+        height={280}
+        decoding="async"
+        loading="eager"
+        fetchPriority="high"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        draggable={false}
+        onError={() => {
+          setWarfareCoverFailIdx((i) =>
+            i + 1 < warfareCoverCandidates.length ? i + 1 : i,
+          );
+        }}
+      />
+    </div>
+  ) : null;
+
+  const warfareUnlockBlock =
+    useAiContentUnlockStyle && showUnlock ? (
+      <div className="flex flex-col items-start gap-2.5 sm:gap-3">
+        {warfareCover}
+        {unlockButton}
+      </div>
+    ) : unlockButton ? (
+      <div className="flex justify-start">{unlockButton}</div>
+    ) : null;
 
   const tree = (
     <div
@@ -647,7 +717,7 @@ export function ProgramPlaylistDescriptionModal({
           </button>
         </div>
         <div className="vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-10 sm:py-9 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [&_strong]:font-semibold [&_strong]:text-white/95">
-          {unlockButton ? <div className="mb-6 flex justify-start">{unlockButton}</div> : null}
+          {warfareUnlockBlock ? <div className="mb-5 flex justify-start">{warfareUnlockBlock}</div> : null}
           {structured || body ? (
             <div className="w-full max-w-none pb-2">
               <StructuredDescriptionBody text={body} prominent />
@@ -663,8 +733,8 @@ export function ProgramPlaylistDescriptionModal({
               text for each section below.
             </p>
           )}
-          {unlockButton ? (
-            <div className="mt-10 flex justify-start border-t border-white/10 pt-8">{unlockButton}</div>
+          {warfareUnlockBlock ? (
+            <div className="mt-8 flex justify-start border-t border-white/10 pt-6">{warfareUnlockBlock}</div>
           ) : null}
         </div>
       </div>

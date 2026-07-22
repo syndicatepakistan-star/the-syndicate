@@ -3,7 +3,7 @@ import { programPlaylistDeepLink, planOfferDeepLink, type GlobePackKey } from "@
 
 export type ProgramLibraryScrollTarget = "public" | "dashboard";
 
-const DEFAULT_FOCUS_DELAYS_MS = [0, 120, 400, 900] as const;
+const DEFAULT_FOCUS_DELAYS_MS = [0, 80, 200, 450, 900] as const;
 const DASHBOARD_FOCUS_DELAYS_MS = [0, 120, 400, 900, 1400, 2200, 3200] as const;
 
 /** Find the program card node that is visible (mobile or desktop layout). */
@@ -29,7 +29,7 @@ function scrollWithinProgramsPanel(
   options?: { behavior?: ScrollBehavior; block?: "start" | "center" | "end" },
 ) {
   const panel = programsGridScrollEl();
-  const behavior = options?.behavior ?? "smooth";
+  const behavior = options?.behavior ?? "auto";
   if (!panel) {
     el.scrollIntoView({ behavior, block: options?.block ?? "center", inline: "nearest" });
     return;
@@ -59,41 +59,25 @@ export function isProgramCardInView(el: HTMLElement): boolean {
   );
 }
 
+export type ScrollProgramCardOptions = {
+  /** Prefer `auto` for deep links — smooth multi-scrolls cause screen buzz. */
+  behavior?: ScrollBehavior;
+};
+
 /**
- * Scroll up or down so the card sits near the viewport center.
- * Returns false when the card is not in the DOM yet.
+ * Scroll so the card sits near the viewport/panel center.
+ * Single scroll path — no competing window + panel smooth scrolls.
  */
-export function scrollProgramCardIntoView(programId: number): boolean {
+export function scrollProgramCardIntoView(
+  programId: number,
+  options?: ScrollProgramCardOptions,
+): boolean {
   const el = findVisibleProgramCard(programId);
   if (!el) return false;
 
-  if (isProgramCardInView(el)) {
-    const rect = el.getBoundingClientRect();
-    const cardMid = rect.top + rect.height / 2;
-    const viewportMid = window.innerHeight / 2;
-    const delta = cardMid - viewportMid;
-    if (Math.abs(delta) > 48) {
-      const panel = programsGridScrollEl();
-      if (panel) {
-        panel.scrollBy({ top: delta, behavior: "smooth" });
-      } else {
-        window.scrollBy({ top: delta, behavior: "smooth" });
-      }
-    }
-    try {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    } catch {
-      // ignore
-    }
-    return true;
-  }
-
-  scrollWithinProgramsPanel(el, { behavior: "smooth", block: "center" });
-  try {
-    el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  } catch {
-    // ignore
-  }
+  const behavior = options?.behavior ?? "auto";
+  // Always one centered scroll — avoid "already in view" micro-nudges that buzz the page.
+  scrollWithinProgramsPanel(el, { behavior, block: "center" });
   return true;
 }
 
@@ -103,18 +87,16 @@ export function scrollToProgramLibrary(target: ProgramLibraryScrollTarget = "pub
   const id = target === "dashboard" ? "dashboard-programs-library" : "programs-library";
   const el = document.getElementById(id);
   if (el) {
-    scrollWithinProgramsPanel(el, { behavior: "smooth", block: "start" });
+    scrollWithinProgramsPanel(el, { behavior: "auto", block: "start" });
     return;
   }
   if (target === "dashboard") {
     requestDashboardShellNav("programs");
     window.setTimeout(() => {
       const library = document.getElementById(id);
-      if (library) scrollWithinProgramsPanel(library, { behavior: "smooth", block: "start" });
+      if (library) scrollWithinProgramsPanel(library, { behavior: "auto", block: "start" });
     }, 450);
-    return;
   }
-  window.location.hash = "programs-library";
 }
 
 function isDashboardProgramsSection(): boolean {
@@ -125,26 +107,46 @@ function isDashboardProgramsSection(): boolean {
   );
 }
 
-/** Retry scroll while layout/images load after route change. */
+/**
+ * Retry until the card exists, then scroll once (instant) and stop.
+ * Avoids repeated smooth scrolls that make the viewport buzz up/down.
+ */
 export function focusProgramCardWithRetries(
   programId: number,
   onComplete?: () => void,
-  options?: { delays?: readonly number[] },
+  options?: { delays?: readonly number[]; behavior?: ScrollBehavior },
 ): () => void {
   const delays = options?.delays ?? DEFAULT_FOCUS_DELAYS_MS;
-  const timers = delays.map((ms) =>
+  const behavior = options?.behavior ?? "auto";
+  let settled = false;
+  const timers: number[] = [];
+
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    onComplete?.();
+  };
+
+  for (const ms of delays) {
+    timers.push(
+      window.setTimeout(() => {
+        if (settled) return;
+        if (scrollProgramCardIntoView(programId, { behavior })) {
+          finish();
+        }
+      }, ms),
+    );
+  }
+
+  timers.push(
     window.setTimeout(() => {
-      scrollProgramCardIntoView(programId);
-    }, ms)
+      finish();
+    }, delays[delays.length - 1]! + 200),
   );
 
-  const doneTimer = window.setTimeout(() => {
-    onComplete?.();
-  }, delays[delays.length - 1]! + 400);
-
   return () => {
+    settled = true;
     timers.forEach((id) => window.clearTimeout(id));
-    window.clearTimeout(doneTimer);
   };
 }
 
@@ -164,6 +166,7 @@ export function navigateToDashboardProgramCard(programId: number): void {
   const focus = () => {
     focusProgramCardWithRetries(programId, undefined, {
       delays: isDashboardProgramsSection() ? DEFAULT_FOCUS_DELAYS_MS : DASHBOARD_FOCUS_DELAYS_MS,
+      behavior: "auto",
     });
   };
 
@@ -237,7 +240,7 @@ export function findVisiblePlanOfferCard(pack: GlobePackKey): HTMLElement | unde
 export function scrollPlanOfferCardIntoView(pack: GlobePackKey): boolean {
   const el = findVisiblePlanOfferCard(pack);
   if (!el) return false;
-  scrollWithinProgramsPanel(el, { behavior: "smooth", block: "center" });
+  scrollWithinProgramsPanel(el, { behavior: "auto", block: "center" });
   return true;
 }
 
@@ -248,18 +251,34 @@ export function focusPlanOfferCardWithRetries(
   options?: { delays?: readonly number[] },
 ): () => void {
   const delays = options?.delays ?? DEFAULT_FOCUS_DELAYS_MS;
-  const timers = delays.map((ms) =>
+  let settled = false;
+  const timers: number[] = [];
+
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    onComplete?.();
+  };
+
+  for (const ms of delays) {
+    timers.push(
+      window.setTimeout(() => {
+        if (settled) return;
+        if (scrollPlanOfferCardIntoView(pack)) {
+          finish();
+        }
+      }, ms),
+    );
+  }
+
+  timers.push(
     window.setTimeout(() => {
-      scrollPlanOfferCardIntoView(pack);
-    }, ms)
+      finish();
+    }, delays[delays.length - 1]! + 200),
   );
 
-  const doneTimer = window.setTimeout(() => {
-    onComplete?.();
-  }, delays[delays.length - 1]! + 400);
-
   return () => {
+    settled = true;
     timers.forEach((id) => window.clearTimeout(id));
-    window.clearTimeout(doneTimer);
   };
 }

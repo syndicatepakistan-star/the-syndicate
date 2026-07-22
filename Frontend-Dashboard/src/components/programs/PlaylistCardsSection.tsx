@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import {
   confirmPlaylistCheckoutSuccess,
@@ -8,7 +8,7 @@ import {
   fetchStreamPlaylists,
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
-import { focusProgramCardWithRetries } from "@/lib/programCardScroll";
+import { focusProgramCardWithRetries, scrollProgramCardIntoView } from "@/lib/programCardScroll";
 import {
   fillMissingPublicProgramPlaylists,
   normalizeLevel1ProgramPlaylists,
@@ -178,6 +178,7 @@ export function PlaylistCardsSection({
   const unlockCart = useUnlockCartOptional();
   const highlightHandledRef = useRef(false);
   const detailsOpenedFromHashRef = useRef(false);
+  const pendingDetailsHashRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -270,36 +271,108 @@ export function PlaylistCardsSection({
     detailsOpenedFromHashRef.current = false;
   }, [highlightPlaylistId]);
 
-  useEffect(() => {
+  const openBusinessWarfareDetailsFromHash = useCallback(() => {
+    if (!readProgramDetailsHash() || !visiblePlaylists.length) return false;
+    const fromHighlight =
+      highlightPlaylistId != null
+        ? resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId
+        : null;
+    const target =
+      visiblePlaylists.find(
+        (pl) =>
+          isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }) &&
+          (fromHighlight == null || pl.id === fromHighlight),
+      ) ??
+      visiblePlaylists.find((pl) =>
+        isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }),
+      );
+    if (!target) return false;
+    detailsOpenedFromHashRef.current = true;
+    pendingDetailsHashRef.current = false;
+    setHighlightedPlaylistId(null);
+    // Force remount so re-entering the same `#details` URL always reopens the modal.
+    setDescriptionModalPlaylist(null);
+    window.requestAnimationFrame(() => {
+      setDescriptionModalPlaylist(target);
+    });
+    return true;
+  }, [visiblePlaylists, playlists, highlightPlaylistId]);
+
+  useLayoutEffect(() => {
     if (!highlightPlaylistId || !visiblePlaylists.length) return;
     const resolved =
       resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId;
     const target = visiblePlaylists.find((pl) => pl.id === resolved);
     if (!target) return;
-    if (highlightHandledRef.current) return;
 
-    highlightHandledRef.current = true;
-
-    const openDetailsFromHash =
-      readProgramDetailsHash() &&
-      isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title });
-
-    // `#details` deep link: open modal immediately — no zoom/glow (avoids screen glitch).
-    if (openDetailsFromHash) {
-      detailsOpenedFromHashRef.current = true;
-      setDescriptionModalPlaylist(target);
+    if (readProgramDetailsHash() && isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title })) {
+      highlightHandledRef.current = true;
+      openBusinessWarfareDetailsFromHash();
       return;
     }
 
-    setHighlightedPlaylistId(target.id);
-    const cancelScroll = focusProgramCardWithRetries(target.id);
-    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
+    if (highlightHandledRef.current) return;
+    highlightHandledRef.current = true;
 
+    // One instant center + glow in the same layout pass (no delayed re-scrolls).
+    const hit = () => {
+      if (scrollProgramCardIntoView(target.id, { behavior: "auto" })) {
+        setHighlightedPlaylistId(target.id);
+        return true;
+      }
+      return false;
+    };
+
+    if (hit()) {
+      const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
+      return () => window.clearTimeout(clearHighlight);
+    }
+
+    const cancelScroll = focusProgramCardWithRetries(
+      target.id,
+      () => setHighlightedPlaylistId(target.id),
+      { behavior: "auto", delays: [50, 150, 350, 700] },
+    );
+    const clearHighlight = window.setTimeout(() => setHighlightedPlaylistId(null), 22000);
     return () => {
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
-  }, [highlightPlaylistId, visiblePlaylists, playlists]);
+  }, [highlightPlaylistId, visiblePlaylists, playlists, openBusinessWarfareDetailsFromHash]);
+
+  // Retry `#details` once playlists are ready, and on every hash re-entry / address-bar navigation.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.history.scrollRestoration = "manual";
+    } catch {
+      // ignore
+    }
+
+    const syncFromHash = () => {
+      if (!readProgramDetailsHash()) {
+        pendingDetailsHashRef.current = false;
+        return;
+      }
+      pendingDetailsHashRef.current = true;
+      detailsOpenedFromHashRef.current = false;
+      highlightHandledRef.current = false;
+      openBusinessWarfareDetailsFromHash();
+    };
+
+    if (readProgramDetailsHash() || pendingDetailsHashRef.current) {
+      openBusinessWarfareDetailsFromHash();
+    }
+
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    window.addEventListener("pageshow", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+      window.removeEventListener("pageshow", syncFromHash);
+    };
+  }, [openBusinessWarfareDetailsFromHash, visiblePlaylists.length]);
 
   const openProgramDetails = (pl: StreamPlaylistListItem) => {
     setDescriptionModalPlaylist(pl);
@@ -310,6 +383,8 @@ export function PlaylistCardsSection({
 
   const closeDescriptionModal = () => {
     setDescriptionModalPlaylist(null);
+    detailsOpenedFromHashRef.current = false;
+    pendingDetailsHashRef.current = false;
     clearProgramDetailsHash();
   };
 

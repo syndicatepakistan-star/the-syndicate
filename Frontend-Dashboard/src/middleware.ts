@@ -156,7 +156,7 @@ export function middleware(request: NextRequest) {
     dest.pathname = "/programs";
     dest.search = "";
     dest.searchParams.set("program", programDeepLink[1]);
-    dest.hash = "programs-library";
+    dest.hash = "spotlight";
     const redirect = NextResponse.redirect(dest);
     applyCheckoutCurrencyCookie(request, redirect);
     return redirect;

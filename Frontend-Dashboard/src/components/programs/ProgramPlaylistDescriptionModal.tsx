@@ -24,6 +24,10 @@ type Props = {
   onUnlock?: () => void;
   unlockLabel?: string;
   unlockDisabled?: boolean;
+  /** Formatted price for the cover badge (e.g. "$99"). */
+  priceLabel?: string | null;
+  /** When false, closing does not jump the window scroll (parent will spotlight-scroll). */
+  restoreScrollOnClose?: boolean;
 };
 
 function isTopLevelSectionHeading(line: string): boolean {
@@ -538,9 +542,13 @@ export function ProgramPlaylistDescriptionModal({
   onUnlock,
   unlockLabel = "Unlock",
   unlockDisabled = false,
+  priceLabel = null,
+  restoreScrollOnClose = true,
 }: Props) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const restoreScrollRef = useRef(restoreScrollOnClose);
+  restoreScrollRef.current = restoreScrollOnClose;
 
   useModalScrollLock(!!playlist);
 
@@ -553,6 +561,7 @@ export function ProgramPlaylistDescriptionModal({
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      if (!restoreScrollRef.current) return;
       requestAnimationFrame(() => {
         window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
       });
@@ -667,16 +676,35 @@ export function ProgramPlaylistDescriptionModal({
           );
         }}
       />
+      {priceLabel ? (
+        <div className="absolute right-2 top-2 z-[2] sm:right-2.5 sm:top-2.5">
+          <span
+            className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
+            style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+          >
+            <span className="program-playlist-card__pack-price-badge__amount">{priceLabel}</span>
+            <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">
+              lifetime
+            </span>
+          </span>
+        </div>
+      ) : null}
     </div>
   ) : null;
 
-  const warfareUnlockBlock =
+  /** Top: cover + price + unlock. Bottom: unlock only (no image). */
+  const warfareTopBlock =
     useAiContentUnlockStyle && showUnlock ? (
       <div className="flex flex-col items-start gap-2.5 sm:gap-3">
         {warfareCover}
         {unlockButton}
       </div>
     ) : unlockButton ? (
+      <div className="flex justify-start">{unlockButton}</div>
+    ) : null;
+
+  const warfareBottomUnlock =
+    showUnlock && unlockButton ? (
       <div className="flex justify-start">{unlockButton}</div>
     ) : null;
 
@@ -717,7 +745,7 @@ export function ProgramPlaylistDescriptionModal({
           </button>
         </div>
         <div className="vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-10 sm:py-9 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [&_strong]:font-semibold [&_strong]:text-white/95">
-          {warfareUnlockBlock ? <div className="mb-5 flex justify-start">{warfareUnlockBlock}</div> : null}
+          {warfareTopBlock ? <div className="mb-5 flex justify-start">{warfareTopBlock}</div> : null}
           {structured || body ? (
             <div className="w-full max-w-none pb-2">
               <StructuredDescriptionBody text={body} prominent />
@@ -733,8 +761,8 @@ export function ProgramPlaylistDescriptionModal({
               text for each section below.
             </p>
           )}
-          {warfareUnlockBlock ? (
-            <div className="mt-8 flex justify-start border-t border-white/10 pt-6">{warfareUnlockBlock}</div>
+          {warfareBottomUnlock ? (
+            <div className="mt-8 flex justify-start border-t border-white/10 pt-6">{warfareBottomUnlock}</div>
           ) : null}
         </div>
       </div>

@@ -75,6 +75,7 @@ import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS, STREA
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const lessonPanelFallback = (
   <div className="min-h-[12rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
@@ -296,6 +297,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   activeCoursePanel,
   sectionActive = true,
 }: Props) {
+  const { formatPrice: formatLocalizedPrice } = useCurrency();
   const sectionActiveRef = useRef(sectionActive);
   sectionActiveRef.current = sectionActive;
 
@@ -320,8 +322,40 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const [highlightPack, setHighlightPack] = useState<GlobePackKey | undefined>(undefined);
   const highlightHandledRef = useRef(false);
   const skipHighlightScrollRef = useRef(false);
+  const spotlightClearTimerRef = useRef<number | null>(null);
   const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
   const globeSpotlightActive = highlightedPlaylistId != null;
+
+  const applyProgramSpotlight = useCallback((programId: number) => {
+    if (spotlightClearTimerRef.current != null) {
+      window.clearTimeout(spotlightClearTimerRef.current);
+      spotlightClearTimerRef.current = null;
+    }
+    const run = () => {
+      scrollProgramCardIntoView(programId, { behavior: "auto" });
+      setHighlightedPlaylistId(programId);
+      spotlightClearTimerRef.current = window.setTimeout(() => {
+        setHighlightedPlaylistId(null);
+        spotlightClearTimerRef.current = null;
+      }, 22000);
+    };
+    window.requestAnimationFrame(() => {
+      run();
+      window.setTimeout(run, 40);
+    });
+  }, []);
+
+  const closePlaylistDescriptionModal = useCallback(() => {
+    const pl = playlistDescriptionModal;
+    const spotlightAfterClose =
+      !!pl && isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title });
+    setPlaylistDescriptionModal(null);
+    clearProgramDetailsHash();
+    if (spotlightAfterClose && pl) {
+      highlightHandledRef.current = true;
+      applyProgramSpotlight(pl.id);
+    }
+  }, [playlistDescriptionModal, applyProgramSpotlight]);
 
   const reloadApiCourses = useCallback(async () => {
     const res = await fetchCoursesList();
@@ -1682,16 +1716,27 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       )}
       <ProgramPlaylistDescriptionModal
         playlist={playlistDescriptionModal}
-        onClose={() => {
-          setPlaylistDescriptionModal(null);
-          clearProgramDetailsHash();
-        }}
+        onClose={closePlaylistDescriptionModal}
+        priceLabel={
+          playlistDescriptionModal
+            ? formatLocalizedPrice(Number.parseFloat(String(playlistDescriptionModal.price ?? "0")) || 0)
+            : null
+        }
+        restoreScrollOnClose={
+          !(
+            playlistDescriptionModal &&
+            isBusinessWarfareProgram({
+              id: playlistDescriptionModal.id,
+              slug: playlistDescriptionModal.slug,
+              title: playlistDescriptionModal.title,
+            })
+          )
+        }
         onUnlock={
           playlistDescriptionModal
             ? () => {
                 const pl = playlistDescriptionModal;
-                setPlaylistDescriptionModal(null);
-                clearProgramDetailsHash();
+                closePlaylistDescriptionModal();
                 if (pl.is_coming_soon) return;
                 if (pl.is_unlocked) {
                   openStreamPlaylist(pl.id);

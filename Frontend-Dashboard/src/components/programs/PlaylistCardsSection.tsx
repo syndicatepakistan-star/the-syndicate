@@ -374,6 +374,28 @@ export function PlaylistCardsSection({
     };
   }, [openBusinessWarfareDetailsFromHash, visiblePlaylists.length]);
 
+  const spotlightClearTimerRef = useRef<number | null>(null);
+
+  const applyProgramSpotlight = useCallback((programId: number) => {
+    if (spotlightClearTimerRef.current != null) {
+      window.clearTimeout(spotlightClearTimerRef.current);
+      spotlightClearTimerRef.current = null;
+    }
+    const run = () => {
+      scrollProgramCardIntoView(programId, { behavior: "auto" });
+      setHighlightedPlaylistId(programId);
+      spotlightClearTimerRef.current = window.setTimeout(() => {
+        setHighlightedPlaylistId(null);
+        spotlightClearTimerRef.current = null;
+      }, 22000);
+    };
+    // After modal unmount / scroll-lock release, center + glow.
+    window.requestAnimationFrame(() => {
+      run();
+      window.setTimeout(run, 40);
+    });
+  }, []);
+
   const openProgramDetails = (pl: StreamPlaylistListItem) => {
     setDescriptionModalPlaylist(pl);
     if (isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title })) {
@@ -382,10 +404,17 @@ export function PlaylistCardsSection({
   };
 
   const closeDescriptionModal = () => {
+    const pl = descriptionModalPlaylist;
+    const spotlightAfterClose =
+      !!pl && isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title });
     setDescriptionModalPlaylist(null);
     detailsOpenedFromHashRef.current = false;
     pendingDetailsHashRef.current = false;
     clearProgramDetailsHash();
+    if (spotlightAfterClose && pl) {
+      highlightHandledRef.current = true;
+      applyProgramSpotlight(pl.id);
+    }
   };
 
   const spotlightActive = highlightedPlaylistId != null;
@@ -451,6 +480,19 @@ export function PlaylistCardsSection({
     if (unlockCart?.isInCartKey(cartItemKey(playlistToCartItem(pl, title)))) return "In bucket";
     return "Unlock";
   })();
+
+  const descriptionPriceLabel = descriptionModalPlaylist
+    ? formatLocalizedPrice(parseNumber(descriptionModalPlaylist.price))
+    : null;
+
+  const descriptionRestoreScroll = !(
+    descriptionModalPlaylist &&
+    isBusinessWarfareProgram({
+      id: descriptionModalPlaylist.id,
+      slug: descriptionModalPlaylist.slug,
+      title: descriptionModalPlaylist.title,
+    })
+  );
 
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
@@ -640,6 +682,8 @@ export function PlaylistCardsSection({
       <ProgramPlaylistDescriptionModal
         playlist={descriptionModalPlaylist}
         onClose={closeDescriptionModal}
+        priceLabel={descriptionPriceLabel}
+        restoreScrollOnClose={descriptionRestoreScroll}
         onUnlock={
           descriptionModalPlaylist
             ? () => {

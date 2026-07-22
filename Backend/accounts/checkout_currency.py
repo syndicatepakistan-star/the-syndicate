@@ -39,20 +39,26 @@ def _is_uk_phone(value: str) -> bool:
 
 def resolve_checkout_currency(request=None, payload: dict | None = None) -> str:
   """
-  Prefer explicit payload currency (usd|gbp), then UK phone, then UK IP country.
-  Falls back to settings.DEFAULT_CURRENCY (usd).
+  UK only → gbp; rest of world → usd.
+
+  Order: UK phone → UK IP → non-UK IP (force usd) → explicit payload → default usd.
+  Client-sent gbp is ignored when the request country is known and not GB.
   """
   data = payload if isinstance(payload, dict) else {}
-  explicit = str(data.get("currency") or "").strip().lower()
-  if explicit in ALLOWED_CHECKOUT_CURRENCIES:
-    return explicit
 
   for key in ("phone", "customer_phone", "lead_phone"):
     if _is_uk_phone(str(data.get(key) or "")):
       return "gbp"
 
-  if _request_country(request) == "GB":
+  country = _request_country(request)
+  if country == "GB":
     return "gbp"
+  if country and country != "GB":
+    return "usd"
+
+  explicit = str(data.get("currency") or "").strip().lower()
+  if explicit in ALLOWED_CHECKOUT_CURRENCIES:
+    return explicit
 
   default = str(getattr(settings, "DEFAULT_CURRENCY", "usd") or "usd").strip().lower()
   if default in ALLOWED_CHECKOUT_CURRENCIES:

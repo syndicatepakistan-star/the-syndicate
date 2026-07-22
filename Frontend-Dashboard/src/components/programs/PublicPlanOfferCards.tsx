@@ -234,6 +234,13 @@ function PublicPlanOfferCardsInner({
 
   const purchasedSet = useMemo(() => purchasedSlugs, [purchasedSlugs]);
   const spotlightActive = highlightedPack != null;
+
+  useEffect(() => {
+    if (!spotlightActive) return;
+    document.body.classList.add("globe-program-spotlight");
+    return () => document.body.classList.remove("globe-program-spotlight");
+  }, [spotlightActive]);
+
   const activeSpotlightOffer = useMemo(
     () => (highlightedPack ? PLAN_OFFERS.find((offer) => offer.plan === highlightedPack) : undefined),
     [highlightedPack]

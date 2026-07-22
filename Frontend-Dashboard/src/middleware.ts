@@ -52,8 +52,8 @@ function applyCheckoutCurrencyCookie(request: NextRequest, response: NextRespons
   const country = countryFromRequest(request);
   const ukIp = country === "GB";
 
-  // Strong UK signals always win.
-  if (ukCitizen || ukIp) {
+  // Location first: UK IP → GBP; any other known country → USD.
+  if (ukIp) {
     response.cookies.set("syndicate_currency", "gbp", {
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
@@ -62,7 +62,6 @@ function applyCheckoutCurrencyCookie(request: NextRequest, response: NextRespons
     return;
   }
 
-  // Positive non-UK country from CDN/edge → USD.
   if (country && country !== "GB") {
     response.cookies.set("syndicate_currency", "usd", {
       path: "/",
@@ -72,7 +71,14 @@ function applyCheckoutCurrencyCookie(request: NextRequest, response: NextRespons
     return;
   }
 
-  // No geo header (localhost / plain Node): do not overwrite — client IP lookup may set GBP via VPN.
+  // No geo header (localhost / plain Node): UK phone/citizen signal may set GBP.
+  if (ukCitizen) {
+    response.cookies.set("syndicate_currency", "gbp", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+    });
+  }
 }
 
 export function middleware(request: NextRequest) {

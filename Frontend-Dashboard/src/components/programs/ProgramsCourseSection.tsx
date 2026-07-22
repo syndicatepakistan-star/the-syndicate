@@ -321,6 +321,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const highlightHandledRef = useRef(false);
   const skipHighlightScrollRef = useRef(false);
   const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
+  const globeSpotlightActive = highlightedPlaylistId != null;
 
   const reloadApiCourses = useCallback(async () => {
     const res = await fetchCoursesList();
@@ -551,6 +552,12 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       window.clearTimeout(clearHighlight);
     };
   }, [highlightProgramId, streamPlaylists, effectiveStreamPlaylists, secureView, detailPlaylistId]);
+
+  useEffect(() => {
+    if (!globeSpotlightActive) return;
+    document.body.classList.add("globe-program-spotlight");
+    return () => document.body.classList.remove("globe-program-spotlight");
+  }, [globeSpotlightActive]);
 
   useEffect(() => {
     if (apiCourses.length === 0) {
@@ -1215,7 +1222,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const renderProgramsLibraryGrid = () => {
     if (!hasCatalogItems || secureView !== "grid") return null;
     return (
-      <div id="dashboard-programs-library" className="program-playlist-library-band scroll-mt-24 space-y-6 max-lg:space-y-4">
+      <div
+        id="dashboard-programs-library"
+        className="program-playlist-library-band scroll-mt-24 space-y-6 max-lg:space-y-4"
+        data-globe-spotlight-active={globeSpotlightActive ? "true" : undefined}
+      >
         {visibleStreamPlaylistCount === 0 && streamPlaylists.length > 0 ? (
           <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">
             No playlists found in this category yet.

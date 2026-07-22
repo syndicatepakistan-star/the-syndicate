@@ -281,6 +281,14 @@ export function PlaylistCardsSection({
     };
   }, [highlightPlaylistId, visiblePlaylists, playlists]);
 
+  const spotlightActive = highlightedPlaylistId != null;
+
+  useEffect(() => {
+    if (!spotlightActive) return;
+    document.body.classList.add("globe-program-spotlight");
+    return () => document.body.classList.remove("globe-program-spotlight");
+  }, [spotlightActive]);
+
   useEffect(() => {
     // Warm first visible cover images so public route transitions feel snappier.
     const topCovers = visiblePlaylists
@@ -294,7 +302,6 @@ export function PlaylistCardsSection({
     });
   }, [visiblePlaylists]);
 
-  const spotlightActive = highlightedPlaylistId != null;
   const activeSpotlightTheme = useMemo(() => {
     if (highlightedPlaylistId == null) return null;
     const idx = visiblePlaylists.findIndex((pl) => pl.id === highlightedPlaylistId);

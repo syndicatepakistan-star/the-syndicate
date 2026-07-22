@@ -153,14 +153,28 @@ export async function detectPublicIpCountry(): Promise<string | null> {
 
 /** Detect UK via public IP and persist currency cookie. Returns resolved currency. */
 export async function resolveCurrencyFromPublicIp(): Promise<CheckoutCurrency> {
+  const country = await detectPublicIpCountry();
+
+  // Known UK location → GBP.
+  if (country === "GB") {
+    setActiveCurrency("gbp");
+    return "gbp";
+  }
+
+  // Any other known country → USD (overrides stale GBP cookie).
+  if (country && country !== "GB") {
+    setActiveCurrency("usd");
+    return "usd";
+  }
+
+  // No country detected: UK phone/citizen cookie may still force GBP; else USD.
   if (readCookie(UK_CITIZEN_COOKIE) === "1") {
     setActiveCurrency("gbp");
     return "gbp";
   }
-  const country = await detectPublicIpCountry();
-  const next: CheckoutCurrency = country === "GB" ? "gbp" : "usd";
-  setActiveCurrency(next);
-  return next;
+
+  setActiveCurrency("usd");
+  return "usd";
 }
 
 export function formatMoney(

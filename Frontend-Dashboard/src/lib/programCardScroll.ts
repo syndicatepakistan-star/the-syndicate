@@ -17,6 +17,7 @@ export function findVisibleProgramCard(programId: number): HTMLElement | undefin
 
 const VIEWPORT_PAD_TOP = 96;
 const VIEWPORT_PAD_BOTTOM = 32;
+const VIEWPORT_PAD_X = 20;
 
 function programsGridScrollEl(): HTMLElement | null {
   if (typeof document === "undefined") return null;
@@ -45,11 +46,17 @@ function scrollWithinProgramsPanel(
   panel.scrollTo({ top: Math.max(0, target), behavior });
 }
 
-/** True when the card is comfortably in view (not clipped above/below). */
+/** True when the card is comfortably in view (not clipped above/below/sides). */
 export function isProgramCardInView(el: HTMLElement): boolean {
   const rect = el.getBoundingClientRect();
   const vh = window.innerHeight;
-  return rect.top >= VIEWPORT_PAD_TOP && rect.bottom <= vh - VIEWPORT_PAD_BOTTOM;
+  const vw = window.innerWidth;
+  return (
+    rect.top >= VIEWPORT_PAD_TOP &&
+    rect.bottom <= vh - VIEWPORT_PAD_BOTTOM &&
+    rect.left >= VIEWPORT_PAD_X &&
+    rect.right <= vw - VIEWPORT_PAD_X
+  );
 }
 
 /**
@@ -73,10 +80,20 @@ export function scrollProgramCardIntoView(programId: number): boolean {
         window.scrollBy({ top: delta, behavior: "smooth" });
       }
     }
+    try {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    } catch {
+      // ignore
+    }
     return true;
   }
 
   scrollWithinProgramsPanel(el, { behavior: "smooth", block: "center" });
+  try {
+    el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  } catch {
+    // ignore
+  }
   return true;
 }
 

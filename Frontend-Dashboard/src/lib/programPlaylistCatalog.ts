@@ -265,7 +265,7 @@ function stubPlaylistForLevel1Slug(slug: string): StreamPlaylistListItem | null 
     cover_image_url: null,
     video_count: 0,
     is_published: true,
-    is_coming_soon: entry.id === 99,
+    is_coming_soon: false,
     created_at: "1970-01-01T00:00:00.000Z",
   };
 }
@@ -328,6 +328,8 @@ export function normalizeLevel1ProgramPlaylists(
         slug,
         category: level1SlugCategory(slug),
         title: getProgramDisplayTitle(match.id, match.title, slug),
+        // Live Level-1 catalogue programs are always purchasable (never “Coming Soon”).
+        is_coming_soon: false,
       };
     } else {
       const stub = stubPlaylistForLevel1Slug(slug);

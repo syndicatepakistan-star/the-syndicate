@@ -168,16 +168,17 @@ export function getVaultModuleThumbnail(vaultPlanSlug: string): string | undefin
   return VAULT_MODULE_THUMBNAILS[key];
 }
 
-/** Business Warfare — dual deep links (zoom vs details) for globe / testing. */
-export const BUSINESS_WARFARE_LEGACY_ID = 99;
-export const BUSINESS_WARFARE_LEVEL1_SLUG = "level1-psych-09";
-/** Stable public cover (same file as program cards / globe). */
-export const BUSINESS_WARFARE_COVER_SRC = courseThumb("warfare.jpg");
+/** Dual deep-link hashes: `#spotlight` (zoom+glow) vs `#details` (description modal). */
 export const PROGRAM_DETAILS_HASH = "details";
 /** Zoom/glow deep link — must NOT match a DOM id (avoids browser hash scroll buzz). */
 export const PROGRAM_SPOTLIGHT_HASH = "spotlight";
 /** @deprecated Prefer PROGRAM_SPOTLIGHT_HASH for URLs; DOM section id remains `programs-library`. */
 export const PROGRAM_LIBRARY_HASH = "programs-library";
+
+/** Business Warfare — stable public cover (same file as program cards / globe). */
+export const BUSINESS_WARFARE_LEGACY_ID = 99;
+export const BUSINESS_WARFARE_LEVEL1_SLUG = "level1-psych-09";
+export const BUSINESS_WARFARE_COVER_SRC = courseThumb("warfare.jpg");
 
 export function isBusinessWarfareProgram(meta: {
   id?: number | null;
@@ -192,35 +193,124 @@ export function isBusinessWarfareProgram(meta: {
   return title === "business warfare";
 }
 
+/**
+ * Level-1 library programs support `#spotlight` / `#details`.
+ * Mid-ticket vault single modules (Agentic / AI Content / Trading lessons, etc.) are excluded.
+ */
+export function supportsProgramHashDeepLink(meta: {
+  id?: number | null;
+  slug?: string | null;
+  title?: string | null;
+  vault_plan_slug?: string | null;
+}): boolean {
+  if (isVaultSubmoduleStreamPlaylist(meta.vault_plan_slug)) return false;
+  const slug = (meta.slug ?? "").trim().toLowerCase();
+  if (slug && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug)) return true;
+  if (meta.id != null && meta.id > 0 && LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[meta.id]) return true;
+  if (meta.id != null && PUBLIC_PROGRAMS_PAGE_IDS.has(meta.id)) return true;
+  return false;
+}
+
 export function readProgramDetailsHash(): boolean {
   if (typeof window === "undefined") return false;
   return window.location.hash.replace(/^#/, "").toLowerCase() === PROGRAM_DETAILS_HASH;
 }
 
-/** Sync address bar to `#details` (Business Warfare details modal open). */
-export function writeProgramDetailsHash(): void {
-  if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
-  if (url.hash.replace(/^#/, "").toLowerCase() === PROGRAM_DETAILS_HASH) return;
-  url.hash = PROGRAM_DETAILS_HASH;
-  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+export function readProgramSpotlightHash(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hash.replace(/^#/, "").toLowerCase();
+  return h === PROGRAM_SPOTLIGHT_HASH || h === PROGRAM_LIBRARY_HASH || h === "";
 }
 
-/** Drop `#details` when leaving the details modal (restore spotlight hash, no DOM-id jump). */
-export function clearProgramDetailsHash(): void {
-  if (typeof window === "undefined") return;
-  if (!readProgramDetailsHash()) return;
+type ProgramDeepLinkMeta = {
+  id?: number | null;
+  slug?: string | null;
+};
+
+/** Stable public slug for `?slug=` deep links (Level-1 catalog). */
+export function resolveProgramDeepLinkSlug(meta: ProgramDeepLinkMeta): string | null {
+  const raw = (meta.slug ?? "").trim().toLowerCase();
+  if (raw && PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(raw)) return raw;
+  if (meta.id != null && meta.id > 0) {
+    const mapped = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[meta.id];
+    if (mapped) return mapped;
+  }
+  return null;
+}
+
+/**
+ * Apply program identity (`?slug=` / `?program=` / dashboard `?playlist=`) + hash
+ * onto a URL. Used so switching Details always updates the address bar at runtime.
+ */
+export function applyProgramDeepLinkToUrl(
+  url: URL,
+  meta: ProgramDeepLinkMeta,
+  mode: "details" | "spotlight",
+): void {
+  const nextSlug = resolveProgramDeepLinkSlug(meta);
+  const onDashboard = url.pathname.includes("/dashboard");
+
+  if (nextSlug) {
+    url.searchParams.set("slug", nextSlug);
+    url.searchParams.delete("program");
+  } else if (meta.id != null && meta.id > 0) {
+    if (onDashboard) {
+      url.searchParams.set("playlist", String(meta.id));
+    } else {
+      url.searchParams.set("program", String(meta.id));
+      url.searchParams.delete("slug");
+    }
+  }
+
+  if (onDashboard && meta.id != null && meta.id > 0) {
+    url.searchParams.set("playlist", String(meta.id));
+  }
+
+  url.hash = mode === "details" ? PROGRAM_DETAILS_HASH : PROGRAM_SPOTLIGHT_HASH;
+}
+
+function replaceProgramDeepLink(meta: ProgramDeepLinkMeta, mode: "details" | "spotlight"): string | null {
+  if (typeof window === "undefined") return null;
+  const url = new URL(window.location.href);
+  const before = `${url.pathname}${url.search}${url.hash}`;
+  applyProgramDeepLinkToUrl(url, meta, mode);
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  if (next !== before) {
+    window.history.replaceState({}, "", next);
+  }
+  return next;
+}
+
+/**
+ * Sync address bar to the open program's query + `#details`.
+ * Pass the playlist every time so switching cards updates `?slug=` at runtime.
+ */
+export function writeProgramDetailsHash(meta: ProgramDeepLinkMeta): string | null {
+  return replaceProgramDeepLink(meta, "details");
+}
+
+/**
+ * Drop `#details` when leaving the details modal (restore `#spotlight` for that same program).
+ */
+export function clearProgramDetailsHash(meta?: ProgramDeepLinkMeta): string | null {
+  if (typeof window === "undefined") return null;
+  if (meta) return replaceProgramDeepLink(meta, "spotlight");
+  if (!readProgramDetailsHash()) return null;
   const url = new URL(window.location.href);
   url.hash = PROGRAM_SPOTLIGHT_HASH;
-  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, "", next);
+  return next;
+}
+
+function programSupportsDetailsOption(programId: number, slug?: string | null): boolean {
+  return supportsProgramHashDeepLink({ id: programId > 0 ? programId : null, slug });
 }
 
 /** Deep link from homepage globe → public programs library card (stable level1 slug when mapped). */
 export function programSlugDeepLink(slug: string, options?: { details?: boolean }): string {
-  const hash =
-    options?.details && slug.trim().toLowerCase() === BUSINESS_WARFARE_LEVEL1_SLUG
-      ? PROGRAM_DETAILS_HASH
-      : PROGRAM_SPOTLIGHT_HASH;
+  const eligible = PUBLIC_LEVEL1_PLAYLIST_SLUGS.has(slug.trim().toLowerCase());
+  const hash = options?.details && eligible ? PROGRAM_DETAILS_HASH : PROGRAM_SPOTLIGHT_HASH;
   return `/programs?slug=${encodeURIComponent(slug)}#${hash}`;
 }
 
@@ -228,16 +318,13 @@ export function programSlugDeepLink(slug: string, options?: { details?: boolean 
 export function programPlaylistDeepLink(programId: number, options?: { details?: boolean }): string {
   const slug = LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG[programId];
   if (slug) return programSlugDeepLink(slug, options);
-  const hash =
-    options?.details && programId === BUSINESS_WARFARE_LEGACY_ID
-      ? PROGRAM_DETAILS_HASH
-      : PROGRAM_SPOTLIGHT_HASH;
+  const eligible = programSupportsDetailsOption(programId);
+  const hash = options?.details && eligible ? PROGRAM_DETAILS_HASH : PROGRAM_SPOTLIGHT_HASH;
   return `/programs?program=${programId}#${hash}`;
 }
 
 /**
- * Business Warfare only (for now): same query as the globe zoom link, but `#details`
- * opens the description modal with unlock CTAs.
+ * Same query as the globe zoom link, but `#details` opens the description modal.
  * Example: `/programs?slug=level1-psych-09#details`
  */
 export function programPlaylistDetailsDeepLink(programId: number): string {

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { Check } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
-import { KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
+import { KNIGHT_CARD_FEATURES, KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
 import { OfferDescriptionModal } from "@/components/programs/OfferDescriptionModal";
+import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
+import { MidTicketPackInclusions } from "@/components/programs/MidTicketPackInclusions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
+import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
@@ -193,6 +197,14 @@ export function PlanOfferCard({
   const isTradingLessonBrowseOnly = isTradingSubmoduleSlug(offer.plan);
   const hidePrice = detailsOnly || isTradingLessonBrowseOnly;
   const hidePrimaryAction = detailsOnly || isTradingLessonBrowseOnly;
+  const isElitePrimary = offer.plan === "bundle" || offer.plan === "king";
+  const midTicketPack = isVaultPackKey(offer.plan) ? offer.plan : null;
+  const boostMobileType =
+    offer.plan === "bundle" ||
+    offer.plan === "king" ||
+    offer.plan === "agentic_ai" ||
+    offer.plan === "ai_content_automation" ||
+    offer.plan === "trading_technical_analysis";
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
@@ -216,6 +228,8 @@ export function PlanOfferCard({
         cardKind === "module" && "plan-offer-card--vault-module",
         highlighted && "program-card-globe-spotlight-host",
         isLarge && !isVaultHero && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
+        isElitePrimary && isLarge && !isVaultHero && "sm:min-h-[34rem]",
+        midTicketPack && isLarge && !isVaultHero && "sm:min-h-[34rem]",
         isVaultHero && "plan-offer-card--vault-hero mr-auto w-full max-w-[min(100%,20.5rem)] min-h-0 sm:max-w-[24rem]",
         isModule && "mx-auto h-full w-full min-h-[13rem] max-h-full sm:min-h-[15rem]",
         tradingMobileProgramFace && "max-xl:min-h-0",
@@ -296,7 +310,26 @@ export function PlanOfferCard({
                 "relative w-full overflow-hidden",
                 !isVaultPackCard && "rounded-2xl border-2 border-white/20",
                 isVaultPackCard && "plan-offer-card__media plan-offer-card__media--vault-pack-fill rounded-t-[1.35rem] border-0",
-                isLarge && isPack && !isVaultHero && "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
+                isElitePrimary &&
+                  isLarge &&
+                  !isVaultHero &&
+                  "plan-offer-card__media aspect-[4/3] min-h-0 max-h-[13.5rem] shrink-0 sm:max-h-[15rem]",
+                midTicketPack &&
+                  isLarge &&
+                  !isVaultHero &&
+                  !portraitCoverArt &&
+                  "plan-offer-card__media aspect-[4/3] min-h-[16.5rem] max-h-[20rem] shrink-0 sm:min-h-[18.5rem] sm:max-h-[22rem]",
+                midTicketPack &&
+                  isLarge &&
+                  !isVaultHero &&
+                  portraitCoverArt &&
+                  "plan-offer-card__media plan-offer-card__media--portrait-cover bg-[#050508] aspect-[3/4] min-h-[16.5rem] max-h-[20rem] shrink-0 sm:min-h-[18.5rem] sm:max-h-[22rem]",
+                isLarge &&
+                  isPack &&
+                  !isVaultHero &&
+                  !isElitePrimary &&
+                  !midTicketPack &&
+                  "plan-offer-card__media min-h-[min(28dvh,9.5rem)] flex-1 sm:min-h-[18.5rem]",
                 isVaultHero &&
                   isPack &&
                   "plan-offer-card__media plan-offer-card__media--vault-hero min-h-[8rem] max-h-[10rem] shrink-0 sm:min-h-[9rem] sm:max-h-[11rem]",
@@ -304,6 +337,7 @@ export function PlanOfferCard({
                   isLarge &&
                   isPack &&
                   !isVaultHero &&
+                  !midTicketPack &&
                   "plan-offer-card__media--portrait-cover bg-[#050508] max-xl:aspect-[4/5] max-xl:min-h-[min(52dvh,16.5rem)] max-xl:max-h-[min(62dvh,22rem)] sm:max-xl:aspect-[3/4] sm:max-xl:min-h-[min(48dvh,20rem)] xl:aspect-[3/4] xl:max-h-[22rem] xl:min-h-[18.5rem]",
                 portraitCoverArt &&
                   isVaultHero &&
@@ -396,11 +430,27 @@ export function PlanOfferCard({
 
             <div
               className={cn(
-                "plan-offer-card__info-panel flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                "plan-offer-card__info-panel flex min-h-0 flex-col rounded-2xl border-2 px-2.5 py-2 sm:px-3 sm:py-2.5",
+                "overflow-hidden",
+                isElitePrimary && "shrink-0",
                 theme.infoPanel,
                 isVaultPackCard && "plan-offer-card__vault-pack-body mx-2 mb-2 mt-2 sm:mx-3 sm:mb-3 sm:mt-2.5",
-                isLarge && isPack && !isVaultHero && !isVaultPackCard && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
-                isVaultPackCard && "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
+                isLarge &&
+                  isPack &&
+                  !isVaultHero &&
+                  !isVaultPackCard &&
+                  !isElitePrimary &&
+                  "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
+                isLarge &&
+                  isPack &&
+                  isElitePrimary &&
+                  "min-h-0 flex-1 px-2 py-1.5 sm:px-2.5 sm:py-2",
+                isVaultPackCard &&
+                  midTicketPack &&
+                  "min-h-0 flex-1 px-2 py-1.5 sm:px-2.5 sm:py-2",
+                isVaultPackCard &&
+                  !midTicketPack &&
+                  "min-h-[8.5rem] shrink-0 px-2 py-1.5 sm:min-h-[9.25rem] sm:px-2.5 sm:py-2",
                 isVaultHero && isPack && "min-h-0 shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2",
                 isLarge && !isPack && !isVaultHero && "min-h-[12rem] sm:min-h-[13rem]",
                 isVaultHero && !isPack && "min-h-0 shrink-0",
@@ -412,57 +462,146 @@ export function PlanOfferCard({
             >
               <div
                 className={cn(
-                  "line-clamp-3 text-left font-extrabold uppercase leading-snug tracking-[0.04em] text-white sm:tracking-[0.07em]",
-                  isLarge && isPack && "min-h-[2.2em] text-[clamp(11px,2.2vw,18px)]",
-                  isLarge && !isPack && "min-h-[2.75em] text-[clamp(11px,2.2vw,18px)]",
+                  "shrink-0 line-clamp-3 font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  offer.plan === "bundle"
+                    ? "w-full text-center text-[#f5c814]"
+                    : midTicketPack
+                      ? "w-full text-center text-[#f5c814]"
+                      : "text-left text-white",
+                  offer.plan === "bundle" &&
+                    isLarge &&
+                    "min-h-[2.4em] text-[clamp(20px,5.5vw,28px)] sm:text-[clamp(18px,2.8vw,26px)]",
+                  midTicketPack &&
+                    isLarge &&
+                    "min-h-[2.4em] text-[clamp(20px,5.2vw,28px)] sm:text-[clamp(20px,2.6vw,28px)]",
+                  offer.plan === "ai_content_automation" && "line-clamp-none",
+                  offer.plan !== "bundle" &&
+                    !midTicketPack &&
+                    boostMobileType &&
+                    isLarge &&
+                    isPack &&
+                    "min-h-[2.2em] text-[clamp(16px,4.6vw,22px)] sm:text-[clamp(11px,2.2vw,18px)]",
+                  offer.plan !== "bundle" &&
+                    !midTicketPack &&
+                    !boostMobileType &&
+                    isLarge &&
+                    isPack &&
+                    "min-h-[2.2em] text-[clamp(11px,2.2vw,18px)]",
+                  offer.plan !== "bundle" &&
+                    !midTicketPack &&
+                    isLarge &&
+                    !isPack &&
+                    "min-h-[2.75em] text-[clamp(11px,2.2vw,18px)]",
+                  boostMobileType &&
+                    !midTicketPack &&
+                    isLarge &&
+                    !isPack &&
+                    "max-sm:text-[clamp(15px,4.2vw,20px)]",
                   isModule && "min-h-[2.75em] text-[10px] sm:text-[11px]",
                   tradingMobileProgramFace && "max-xl:line-clamp-2 max-xl:min-h-0 max-xl:text-[clamp(10px,2.4vw,17px)]",
                   isCompact && "text-[10px] sm:text-[11px]"
                 )}
               >
-                {offer.title}
+                {offer.plan === "ai_content_automation" ? (
+                  <>
+                    <span className="block">AI CONTENT</span>
+                    <span className="block">AUTOMATION</span>
+                  </>
+                ) : (
+                  offer.title
+                )}
               </div>
 
-              {cardStats ? (
+              {cardStats && !midTicketPack ? (
                 <ProgramCardStatsLines
                   stats={cardStats}
                   size={size}
                   denseMobile={tradingMobileProgramFace}
-                  className={cn("mt-1", tradingMobileProgramFace && "max-xl:mt-0.5")}
+                  boostMobile={boostMobileType}
+                  className={cn(
+                    "mt-1 shrink-0",
+                    offer.plan === "bundle" && "text-center",
+                    tradingMobileProgramFace && "max-xl:mt-0.5",
+                  )}
                 />
               ) : null}
 
               {!isVaultHero ? (
-                <ReadMoreText
-                  text={offer.teaser}
-                  maxLines={isLarge && isPack ? 6 : isModule ? 5 : 5}
-                  className={cn(
-                    isLarge && isPack && "mt-1",
-                    isLarge && !isPack && "mt-1.5",
-                    isModule && "mt-1.5",
-                    isCompact && "mt-1",
-                    tradingMobileProgramFace && "hidden xl:block"
-                  )}
-                  textClassName={cn(
-                    "text-left font-medium text-white/72",
-                    offer.plan === "bundle" && "text-[13px] leading-relaxed sm:text-[15px]",
-                    isLarge && isPack && offer.plan !== "bundle" && "text-[11px] sm:text-[12px]",
-                    isLarge && !isPack && "text-[11px] sm:text-[13px]",
-                    isModule && "text-[9px] sm:text-[10px]",
-                    isCompact && isPack && "text-[9px] sm:text-[10px]",
-                    isCompact && !isPack && "text-[9px] sm:text-[10px]"
-                  )}
-                  buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
-                  onReadMore={() => setDescriptionOpen(true)}
-                />
+                offer.plan === "bundle" ? (
+                  <MoneyMasteryCardInclusions
+                    compact={isModule || isCompact}
+                    headingTone="white"
+                    className={cn(
+                      "min-h-0 flex-1",
+                      isLarge && isPack && "mt-1",
+                      isLarge && !isPack && "mt-1.5",
+                      isModule && "mt-1.5",
+                      isCompact && "mt-1",
+                      tradingMobileProgramFace && "hidden xl:block",
+                    )}
+                  />
+                ) : midTicketPack ? (
+                  <MidTicketPackInclusions
+                    pack={midTicketPack}
+                    compact={isModule || isCompact}
+                    headingTone="white"
+                    className={cn(
+                      "min-h-0 flex-1",
+                      isLarge && isPack && "mt-1",
+                      isLarge && !isPack && "mt-1.5",
+                      isModule && "mt-1.5",
+                      isCompact && "mt-1",
+                    )}
+                  />
+                ) : offer.plan === "king" ? (
+                  <div
+                    className={cn(
+                      "mt-1.5 flex min-h-0 flex-1 flex-col gap-1.5",
+                      tradingMobileProgramFace && "hidden xl:flex",
+                    )}
+                  >
+                    {KNIGHT_CARD_FEATURES.map((f) => (
+                      <div
+                        key={f}
+                        className="flex items-start gap-2 rounded-lg border border-cyan-300/40 bg-cyan-950/30 px-2.5 py-2"
+                      >
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                        <span className="text-[11px] leading-snug text-white/80 sm:text-[12px]">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ReadMoreText
+                    text={offer.teaser}
+                    maxLines={isLarge && isPack ? 6 : isModule ? 5 : 5}
+                    className={cn(
+                      isLarge && isPack && "mt-1",
+                      isLarge && !isPack && "mt-1.5",
+                      isModule && "mt-1.5",
+                      isCompact && "mt-1",
+                      tradingMobileProgramFace && "hidden xl:block"
+                    )}
+                    textClassName={cn(
+                      "text-left font-medium text-white/72",
+                      isLarge && isPack && "text-[11px] sm:text-[12px]",
+                      isLarge && !isPack && "text-[11px] sm:text-[13px]",
+                      isModule && "text-[9px] sm:text-[10px]",
+                      isCompact && isPack && "text-[9px] sm:text-[10px]",
+                      isCompact && !isPack && "text-[9px] sm:text-[10px]"
+                    )}
+                    buttonClassName={isModule || isCompact ? "text-[9px]" : undefined}
+                    onReadMore={() => setDescriptionOpen(true)}
+                  />
+                )
               ) : null}
               <span className="sr-only">_</span>
 
               <div
                 className={cn(
                   hidePrimaryAction ? "grid grid-cols-1" : "grid grid-cols-2",
-                  isLarge && isPack && "mt-1.5 gap-1.5 sm:gap-2",
-                  isLarge && !isPack && "mt-2 gap-2 sm:gap-2.5",
+                  "relative z-10 mt-auto shrink-0",
+                  isLarge && isPack && "gap-1.5 pt-2 sm:gap-2",
+                  isLarge && !isPack && "gap-2 pt-2 sm:gap-2.5",
                   isModule && "mt-2 gap-1",
                   tradingMobileProgramFace && "max-xl:mt-auto max-xl:gap-1.5",
                   isCompact && isPack && "mt-1.5 gap-1",

@@ -41,7 +41,7 @@ import {
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
   LEVEL1_CANONICAL_TITLES,
 } from "@/lib/level1ProgramCatalog";
-import { GLOBE_PACK_KEYS, isBusinessWarfareProgram, isHiddenProgramPlaylist, readProgramDetailsHash, writeProgramDetailsHash, clearProgramDetailsHash, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { GLOBE_PACK_KEYS, supportsProgramHashDeepLink, isHiddenProgramPlaylist, readProgramDetailsHash, writeProgramDetailsHash, clearProgramDetailsHash, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import {
   PROGRAM_CARD_FRAME,
@@ -52,6 +52,7 @@ import {
   PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY,
   PROGRAM_CARD_MOBILE_ACTIONS_FACE,
   PROGRAM_CARD_MOBILE_INFO_FACE,
+  PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE,
   PROGRAM_CARD_MOBILE_TITLE_FACE,
   PROGRAM_CARD_TITLE_SLOT,
   PROGRAM_CARD_STATS_SLOT,
@@ -322,6 +323,9 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const [highlightPack, setHighlightPack] = useState<GlobePackKey | undefined>(undefined);
   const highlightHandledRef = useRef(false);
   const skipHighlightScrollRef = useRef(false);
+  /** Skip deep-link scroll/open when URL was updated from an in-app Details click. */
+  const skipHighlightDeepLinkRef = useRef(false);
+  const playlistDescriptionModalRef = useRef<StreamPlaylistListItem | null>(null);
   const spotlightClearTimerRef = useRef<number | null>(null);
   const openStreamPlaylistRef = useRef<(id: number) => void>(() => {});
   const globeSpotlightActive = highlightedPlaylistId != null;
@@ -348,12 +352,23 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const closePlaylistDescriptionModal = useCallback(() => {
     const pl = playlistDescriptionModal;
     const spotlightAfterClose =
-      !!pl && isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title });
+      !!pl &&
+      supportsProgramHashDeepLink({
+        id: pl.id,
+        slug: pl.slug,
+        title: pl.title,
+        vault_plan_slug: pl.vault_plan_slug,
+      });
     setPlaylistDescriptionModal(null);
-    clearProgramDetailsHash();
+    playlistDescriptionModalRef.current = null;
+    skipHighlightDeepLinkRef.current = true;
+    highlightHandledRef.current = true;
+    clearProgramDetailsHash(pl ? { id: pl.id, slug: pl.slug } : undefined);
+    window.setTimeout(() => {
+      skipHighlightDeepLinkRef.current = false;
+    }, 100);
     if (spotlightAfterClose && pl) {
-      highlightHandledRef.current = true;
-      applyProgramSpotlight(pl.id);
+      window.setTimeout(() => applyProgramSpotlight(pl.id), 240);
     }
   }, [playlistDescriptionModal, applyProgramSpotlight]);
 
@@ -560,6 +575,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
 
   useLayoutEffect(() => {
     if (!highlightProgramId || streamPlaylists.length === 0) return;
+    if (skipHighlightDeepLinkRef.current) {
+      skipHighlightDeepLinkRef.current = false;
+      highlightHandledRef.current = true;
+      return;
+    }
     const resolvedId = resolveProgramPlaylistHighlightId(streamPlaylists, highlightProgramId);
     if (!resolvedId) return;
     const target = effectiveStreamPlaylists.find((pl) => pl.id === resolvedId);
@@ -576,11 +596,18 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
 
     const openDetailsFromHash =
       readProgramDetailsHash() &&
-      isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title });
+      supportsProgramHashDeepLink({
+        id: target.id,
+        slug: target.slug,
+        title: target.title,
+        vault_plan_slug: target.vault_plan_slug,
+      });
 
     if (openDetailsFromHash) {
       highlightHandledRef.current = true;
+      if (playlistDescriptionModalRef.current?.id === target.id) return;
       setHighlightedPlaylistId(null);
+      playlistDescriptionModalRef.current = target;
       setPlaylistDescriptionModal(target);
       return;
     }
@@ -613,23 +640,42 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     };
   }, [highlightProgramId, streamPlaylists, effectiveStreamPlaylists, secureView, detailPlaylistId]);
 
-  // Re-open Business Warfare details on `#details` every time (hash re-entry / address bar Enter).
+  // Re-open Level-1 details on `#details` every time (hash re-entry / address bar Enter).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const openFromHash = () => {
+      if (skipHighlightDeepLinkRef.current) return;
       if (!readProgramDetailsHash()) return;
-      const target = effectiveStreamPlaylists.find((pl) =>
-        isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }),
-      );
+      const params = new URLSearchParams(window.location.search);
+      const slugParam = (params.get("slug") || "").trim().toLowerCase();
+      const programParam = Number.parseInt(params.get("program") || params.get("playlist") || "", 10);
+      const fromUrlSlug = slugParam
+        ? resolveProgramPlaylistHighlightSlug(streamPlaylists, slugParam)
+        : null;
+      const fromUrlId =
+        Number.isFinite(programParam) && programParam > 0
+          ? resolveProgramPlaylistHighlightId(streamPlaylists, programParam) ?? programParam
+          : null;
+      const preferredId = fromUrlSlug ?? fromUrlId ?? highlightProgramId;
+      const eligible = (pl: (typeof effectiveStreamPlaylists)[number]) =>
+        supportsProgramHashDeepLink({
+          id: pl.id,
+          slug: pl.slug,
+          title: pl.title,
+          vault_plan_slug: pl.vault_plan_slug,
+        });
+      const target =
+        (preferredId != null
+          ? effectiveStreamPlaylists.find((pl) => pl.id === preferredId && eligible(pl))
+          : undefined) ?? effectiveStreamPlaylists.find(eligible);
       if (!target) return;
-      highlightHandledRef.current = false;
+      if (playlistDescriptionModalRef.current?.id === target.id) return;
+      highlightHandledRef.current = true;
       setHighlightedPlaylistId(null);
-      setPlaylistDescriptionModal(null);
-      window.requestAnimationFrame(() => {
-        setPlaylistDescriptionModal(target);
-      });
+      playlistDescriptionModalRef.current = target;
+      setPlaylistDescriptionModal(target);
     };
-    if (readProgramDetailsHash()) openFromHash();
+    if (readProgramDetailsHash() && !playlistDescriptionModalRef.current) openFromHash();
     window.addEventListener("hashchange", openFromHash);
     window.addEventListener("popstate", openFromHash);
     window.addEventListener("pageshow", openFromHash);
@@ -638,7 +684,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       window.removeEventListener("popstate", openFromHash);
       window.removeEventListener("pageshow", openFromHash);
     };
-  }, [effectiveStreamPlaylists]);
+  }, [effectiveStreamPlaylists, streamPlaylists, highlightProgramId]);
+
+  useEffect(() => {
+    playlistDescriptionModalRef.current = playlistDescriptionModal;
+  }, [playlistDescriptionModal]);
 
   useEffect(() => {
     if (!globeSpotlightActive) return;
@@ -758,7 +808,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       const result = await startPlanCheckout({
         plan: "bundle",
         billing: "monthly",
-        amount: "333",
+        amount: "0.50", // TEMP Stripe live test — revert to "333"
         postAuthNext: "/dashboard/programs",
       });
       if (result.status === "checkout" || result.status === "auth_required") {
@@ -1148,6 +1198,26 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
               {comingSoon ? (
                 <span className="pointer-events-none absolute inset-0 z-[4] bg-black/35" aria-hidden />
               ) : null}
+              {!comingSoon ? (
+                <div
+                  className={cn(
+                    "program-playlist-card__price-badge absolute bottom-2 left-2 z-[6] sm:bottom-2.5 sm:left-2.5",
+                    PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE,
+                  )}
+                >
+                  <span
+                    className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
+                    style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
+                  >
+                    <span className="program-playlist-card__pack-price-badge__amount">
+                      {formatLocalizedPrice(Number.parseFloat(String(pl.price ?? "0")) || 0)}
+                    </span>
+                    <span className="program-playlist-card__pack-price-badge__suffix text-emerald-200/80">
+                      lifetime
+                    </span>
+                  </span>
+                </div>
+              ) : null}
               <ProgramThumbnailAccessBadge comingSoon={comingSoon} locked={locked} />
             </div>
             <div
@@ -1191,8 +1261,21 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                     onClick={(e) => {
                       e.stopPropagation();
                       setPlaylistDescriptionModal(pl);
-                      if (isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title })) {
-                        writeProgramDetailsHash();
+                      playlistDescriptionModalRef.current = pl;
+                      if (
+                        supportsProgramHashDeepLink({
+                          id: pl.id,
+                          slug: pl.slug,
+                          title: pl.title,
+                          vault_plan_slug: pl.vault_plan_slug,
+                        })
+                      ) {
+                        skipHighlightDeepLinkRef.current = true;
+                        highlightHandledRef.current = true;
+                        writeProgramDetailsHash({ id: pl.id, slug: pl.slug });
+                        window.setTimeout(() => {
+                          skipHighlightDeepLinkRef.current = false;
+                        }, 100);
                       }
                     }}
                     className="min-w-0 rounded-lg border border-white/40 bg-black/55 px-1.5 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/95 transition hover:border-cyan-300/55 hover:text-cyan-100 sm:px-2 sm:py-2 sm:text-[10px] sm:tracking-[0.12em]"
@@ -1725,10 +1808,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
         restoreScrollOnClose={
           !(
             playlistDescriptionModal &&
-            isBusinessWarfareProgram({
+            supportsProgramHashDeepLink({
               id: playlistDescriptionModal.id,
               slug: playlistDescriptionModal.slug,
               title: playlistDescriptionModal.title,
+              vault_plan_slug: playlistDescriptionModal.vault_plan_slug,
             })
           )
         }

@@ -151,7 +151,7 @@ export function ProgramOpportunityCardContent({
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-b from-black/20 via-transparent to-black/50" />
         <span
           className={cn(
-            "program-playlist-card__price-badge pointer-events-none absolute right-2 top-2 z-[3]",
+            "program-playlist-card__price-badge pointer-events-none absolute bottom-2 left-2 z-[3]",
             isPlanCard
               ? cn(
                   "plan-offer-card__pack-price-badge inline-flex shrink-0 items-center justify-center rounded-md border border-emerald-300/50 bg-[#03140d]/95 font-black tabular-nums leading-none text-emerald-100 shadow-[0_0_14px_rgba(52,211,153,0.28)]",

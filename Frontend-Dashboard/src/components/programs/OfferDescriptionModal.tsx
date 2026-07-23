@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
+import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
@@ -85,11 +86,15 @@ export function OfferDescriptionModal({ offer, onClose }: Props) {
           className="vault-modal-scroll min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-scroll overscroll-contain px-4 py-6 sm:px-8 sm:py-9 [-webkit-overflow-scrolling:touch] [scroll-behavior:auto]"
           tabIndex={0}
         >
-          <StructuredDescriptionBody
-            text={description || offer.detailDescription || offer.teaser}
-            prominent
-            className={cn("w-full max-w-none pb-2", DESCRIPTION_TYPOGRAPHY)}
-          />
+          {offer.plan === "bundle" ? (
+            <MoneyMasteryCardInclusions className="mx-auto max-w-xl" />
+          ) : (
+            <StructuredDescriptionBody
+              text={description || offer.detailDescription || offer.teaser}
+              prominent
+              className={cn("w-full max-w-none pb-2", DESCRIPTION_TYPOGRAPHY)}
+            />
+          )}
         </div>
       </div>
     </div>

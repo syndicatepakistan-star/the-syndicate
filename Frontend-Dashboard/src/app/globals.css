@@ -9887,12 +9887,57 @@ body {
 }
 
 .program-playlist-card__pack-price-badge__suffix {
-  margin-top: 1px;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  margin-top: 0;
+  font-size: 5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   line-height: 1;
   text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* Mobile 2-col cards — compact price chip so it doesn't dominate the thumbnail */
+@media (max-width: 1279px) {
+  .program-playlist-card__pack-price-badge {
+    width: 48px !important;
+    height: 26px !important;
+    min-width: 48px !important;
+    min-height: 26px !important;
+    max-width: 48px !important;
+    max-height: 26px !important;
+    border-radius: 4px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__amount {
+    font-size: 11px !important;
+    font-weight: 800;
+  }
+
+  .program-playlist-card__pack-price-badge__suffix {
+    font-size: 4px !important;
+    letter-spacing: 0.04em;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .program-playlist-card__pack-price-badge {
+    width: 42px !important;
+    height: 22px !important;
+    min-width: 42px !important;
+    min-height: 22px !important;
+    max-width: 42px !important;
+    max-height: 22px !important;
+    border-radius: 3px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__amount {
+    font-size: 10px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__suffix {
+    font-size: 3.5px !important;
+  }
 }
 
 #syndicate-elite-offers .plan-offer-card,

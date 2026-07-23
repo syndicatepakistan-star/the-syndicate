@@ -13,6 +13,7 @@ import {
   fillMissingPublicProgramPlaylists,
   normalizeLevel1ProgramPlaylists,
   resolveProgramPlaylistHighlightId,
+  resolveProgramPlaylistHighlightSlug,
   resolveProgramPlaylistThumbnail,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
@@ -24,7 +25,7 @@ import {
 import {
   programPlaylistDeepLink,
   programSlugDeepLink,
-  isBusinessWarfareProgram,
+  supportsProgramHashDeepLink,
   readProgramDetailsHash,
   writeProgramDetailsHash,
   clearProgramDetailsHash,
@@ -179,6 +180,9 @@ export function PlaylistCardsSection({
   const highlightHandledRef = useRef(false);
   const detailsOpenedFromHashRef = useRef(false);
   const pendingDetailsHashRef = useRef(false);
+  /** Skip globe deep-link scroll/open when URL was updated from an in-app Details click. */
+  const skipHighlightDeepLinkRef = useRef(false);
+  const descriptionModalPlaylistRef = useRef<StreamPlaylistListItem | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -267,47 +271,85 @@ export function PlaylistCardsSection({
   );
 
   useEffect(() => {
+    // Don't wipe handled flags when we intentionally synced the URL from Details UI.
+    if (skipHighlightDeepLinkRef.current) return;
     highlightHandledRef.current = false;
     detailsOpenedFromHashRef.current = false;
   }, [highlightPlaylistId]);
 
-  const openBusinessWarfareDetailsFromHash = useCallback(() => {
+  useEffect(() => {
+    descriptionModalPlaylistRef.current = descriptionModalPlaylist;
+  }, [descriptionModalPlaylist]);
+
+  const openProgramDetailsFromHash = useCallback(() => {
     if (!readProgramDetailsHash() || !visiblePlaylists.length) return false;
+    // Prefer live address-bar query (updated on every Details open) over React searchParams.
+    const params = new URLSearchParams(window.location.search);
+    const slugParam = params.get("slug")?.trim().toLowerCase() ?? "";
+    const programParam = Number.parseInt(params.get("program") || "", 10);
+    const fromUrlSlug = slugParam
+      ? resolveProgramPlaylistHighlightSlug(playlists, slugParam)
+      : null;
+    const fromUrlProgram =
+      Number.isFinite(programParam) && programParam > 0
+        ? resolveProgramPlaylistHighlightId(playlists, programParam) ?? programParam
+        : null;
     const fromHighlight =
       highlightPlaylistId != null
         ? resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId
         : null;
-    const target =
-      visiblePlaylists.find(
-        (pl) =>
-          isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }) &&
-          (fromHighlight == null || pl.id === fromHighlight),
-      ) ??
-      visiblePlaylists.find((pl) =>
-        isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title }),
-      );
-    if (!target) return false;
+    const preferredId = fromUrlSlug ?? fromUrlProgram ?? fromHighlight;
+    const eligible = (pl: StreamPlaylistListItem) =>
+      supportsProgramHashDeepLink({
+        id: pl.id,
+        slug: pl.slug,
+        title: pl.title,
+        vault_plan_slug: pl.vault_plan_slug,
+      });
+    const resolvedTarget =
+      (preferredId != null
+        ? visiblePlaylists.find((pl) => pl.id === preferredId && eligible(pl))
+        : undefined) ??
+      (preferredId == null ? visiblePlaylists.find(eligible) : undefined);
+    if (!resolvedTarget) return false;
+    // Already showing this program — don't clear/reopen (avoids flicker when URL syncs).
+    if (descriptionModalPlaylistRef.current?.id === resolvedTarget.id) {
+      detailsOpenedFromHashRef.current = true;
+      pendingDetailsHashRef.current = false;
+      return true;
+    }
     detailsOpenedFromHashRef.current = true;
     pendingDetailsHashRef.current = false;
     setHighlightedPlaylistId(null);
-    // Force remount so re-entering the same `#details` URL always reopens the modal.
-    setDescriptionModalPlaylist(null);
-    window.requestAnimationFrame(() => {
-      setDescriptionModalPlaylist(target);
-    });
+    descriptionModalPlaylistRef.current = resolvedTarget;
+    setDescriptionModalPlaylist(resolvedTarget);
     return true;
   }, [visiblePlaylists, playlists, highlightPlaylistId]);
 
   useLayoutEffect(() => {
     if (!highlightPlaylistId || !visiblePlaylists.length) return;
+    // In-app Details/spotlight URL sync must not re-run globe deep-link scroll/open.
+    if (skipHighlightDeepLinkRef.current) {
+      skipHighlightDeepLinkRef.current = false;
+      highlightHandledRef.current = true;
+      return;
+    }
     const resolved =
       resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId;
     const target = visiblePlaylists.find((pl) => pl.id === resolved);
     if (!target) return;
 
-    if (readProgramDetailsHash() && isBusinessWarfareProgram({ id: target.id, slug: target.slug, title: target.title })) {
+    if (
+      readProgramDetailsHash() &&
+      supportsProgramHashDeepLink({
+        id: target.id,
+        slug: target.slug,
+        title: target.title,
+        vault_plan_slug: target.vault_plan_slug,
+      })
+    ) {
       highlightHandledRef.current = true;
-      openBusinessWarfareDetailsFromHash();
+      openProgramDetailsFromHash();
       return;
     }
 
@@ -338,7 +380,7 @@ export function PlaylistCardsSection({
       cancelScroll();
       window.clearTimeout(clearHighlight);
     };
-  }, [highlightPlaylistId, visiblePlaylists, playlists, openBusinessWarfareDetailsFromHash]);
+  }, [highlightPlaylistId, visiblePlaylists, playlists, openProgramDetailsFromHash]);
 
   // Retry `#details` once playlists are ready, and on every hash re-entry / address-bar navigation.
   useEffect(() => {
@@ -350,6 +392,7 @@ export function PlaylistCardsSection({
     }
 
     const syncFromHash = () => {
+      if (skipHighlightDeepLinkRef.current) return;
       if (!readProgramDetailsHash()) {
         pendingDetailsHashRef.current = false;
         return;
@@ -357,11 +400,15 @@ export function PlaylistCardsSection({
       pendingDetailsHashRef.current = true;
       detailsOpenedFromHashRef.current = false;
       highlightHandledRef.current = false;
-      openBusinessWarfareDetailsFromHash();
+      openProgramDetailsFromHash();
     };
 
-    if (readProgramDetailsHash() || pendingDetailsHashRef.current) {
-      openBusinessWarfareDetailsFromHash();
+    // Initial / playlist-ready open only — not on every callback identity change while modal is open.
+    if (
+      (readProgramDetailsHash() || pendingDetailsHashRef.current) &&
+      !descriptionModalPlaylistRef.current
+    ) {
+      openProgramDetailsFromHash();
     }
 
     window.addEventListener("hashchange", syncFromHash);
@@ -372,7 +419,7 @@ export function PlaylistCardsSection({
       window.removeEventListener("popstate", syncFromHash);
       window.removeEventListener("pageshow", syncFromHash);
     };
-  }, [openBusinessWarfareDetailsFromHash, visiblePlaylists.length]);
+  }, [openProgramDetailsFromHash, visiblePlaylists.length]);
 
   const spotlightClearTimerRef = useRef<number | null>(null);
 
@@ -398,22 +445,50 @@ export function PlaylistCardsSection({
 
   const openProgramDetails = (pl: StreamPlaylistListItem) => {
     setDescriptionModalPlaylist(pl);
-    if (isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title })) {
-      writeProgramDetailsHash();
+    descriptionModalPlaylistRef.current = pl;
+    if (
+      supportsProgramHashDeepLink({
+        id: pl.id,
+        slug: pl.slug,
+        title: pl.title,
+        vault_plan_slug: pl.vault_plan_slug,
+      })
+    ) {
+      // replaceState only — avoid router.replace (re-triggers highlight deep-link → modal flicker).
+      skipHighlightDeepLinkRef.current = true;
+      highlightHandledRef.current = true;
+      detailsOpenedFromHashRef.current = true;
+      writeProgramDetailsHash({ id: pl.id, slug: pl.slug });
+      // Expire skip so a later real globe deep-link still works.
+      window.setTimeout(() => {
+        skipHighlightDeepLinkRef.current = false;
+      }, 100);
     }
   };
 
   const closeDescriptionModal = () => {
     const pl = descriptionModalPlaylist;
     const spotlightAfterClose =
-      !!pl && isBusinessWarfareProgram({ id: pl.id, slug: pl.slug, title: pl.title });
+      !!pl &&
+      supportsProgramHashDeepLink({
+        id: pl.id,
+        slug: pl.slug,
+        title: pl.title,
+        vault_plan_slug: pl.vault_plan_slug,
+      });
     setDescriptionModalPlaylist(null);
+    descriptionModalPlaylistRef.current = null;
     detailsOpenedFromHashRef.current = false;
     pendingDetailsHashRef.current = false;
-    clearProgramDetailsHash();
+    skipHighlightDeepLinkRef.current = true;
+    highlightHandledRef.current = true;
+    clearProgramDetailsHash(pl ? { id: pl.id, slug: pl.slug } : undefined);
+    window.setTimeout(() => {
+      skipHighlightDeepLinkRef.current = false;
+    }, 100);
     if (spotlightAfterClose && pl) {
-      highlightHandledRef.current = true;
-      applyProgramSpotlight(pl.id);
+      // Wait for modal exit fade + scroll unlock, then spotlight (avoids close jump).
+      window.setTimeout(() => applyProgramSpotlight(pl.id), 240);
     }
   };
 
@@ -487,10 +562,11 @@ export function PlaylistCardsSection({
 
   const descriptionRestoreScroll = !(
     descriptionModalPlaylist &&
-    isBusinessWarfareProgram({
+    supportsProgramHashDeepLink({
       id: descriptionModalPlaylist.id,
       slug: descriptionModalPlaylist.slug,
       title: descriptionModalPlaylist.title,
+      vault_plan_slug: descriptionModalPlaylist.vault_plan_slug,
     })
   );
 
@@ -591,7 +667,7 @@ export function PlaylistCardsSection({
                 </span>
               ) : null}
               <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
-              <div className={cn("program-playlist-card__price-badge absolute right-2 top-2 z-[6] sm:right-2.5 sm:top-2.5", PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE)}>
+              <div className={cn("program-playlist-card__price-badge absolute bottom-2 left-2 z-[6] sm:bottom-2.5 sm:left-2.5", PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE)}>
                 <span
                   className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
                   style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}

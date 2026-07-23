@@ -2,11 +2,13 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
-import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
 import {
   eliteOfferBenefitPanelProps,
   type PrimaryElitePlanKey,
 } from "@/components/programs/planOfferCatalog";
+import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
+import { highlightOfferStatFigures } from "@/components/programs/highlightOfferStatFigures";
+import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
 
 type Props = {
   plan: PrimaryElitePlanKey;
@@ -69,18 +71,15 @@ function WhatYouGetManifest({
         initial="hidden"
         animate="show"
       >
-        {items.map((item, index) => (
+        {items.map((item) => (
           <motion.li
             key={item.title}
             variants={manifestRowVariants}
-            className={cn("elite-mm-manifest__row", `elite-mm-manifest__row--${item.tone}`)}
+            className={cn("elite-mm-manifest__row elite-mm-manifest__row--card", `elite-mm-manifest__row--${item.tone}`)}
           >
-            <span className="elite-mm-manifest__index" aria-hidden>
-              {String(index + 1).padStart(2, "0")}
-            </span>
             <div className="elite-mm-manifest__body">
               <strong className="elite-mm-manifest__pack">{item.title}</strong>
-              <p className="elite-mm-manifest__meta">{item.desc}</p>
+              <p className="elite-mm-manifest__meta">{highlightOfferStatFigures(item.desc)}</p>
             </div>
           </motion.li>
         ))}
@@ -136,12 +135,12 @@ function LifetimeAccessSection({
                 <h4 className="elite-mm-lifetime__card-title">{item.title}</h4>
               </header>
               {item.desc.trim() && item.desc.trim() !== item.title.trim() ? (
-                <p className="elite-mm-lifetime__card-desc">{item.desc}</p>
+                <p className="elite-mm-lifetime__card-desc">{highlightOfferStatFigures(item.desc)}</p>
               ) : null}
               {hasBullets ? (
                 <ul className="elite-mm-lifetime__bullets">
                   {item.bullets!.map((line) => (
-                    <li key={line}>{line}</li>
+                    <li key={line}>{highlightOfferStatFigures(line)}</li>
                   ))}
                 </ul>
               ) : null}
@@ -161,7 +160,17 @@ export function EliteOfferBenefitsDetail({ plan, className }: Props) {
 
   return (
     <div className={cn("elite-benefit-detail", className)}>
-      {hasWhatYouGet ? (
+      {plan === "bundle" ? (
+        <section aria-labelledby={whatYouGetId} className="mb-6">
+          <h3 id={whatYouGetId} className="sr-only">
+            {config.whatYouGetTitle ?? "What You Get"}
+          </h3>
+          <MoneyMasteryCardInclusions className="mx-auto max-w-2xl" />
+          {config.whatYouGetFooter ? (
+            <p className="elite-mm-manifest__footer mt-4">{config.whatYouGetFooter}</p>
+          ) : null}
+        </section>
+      ) : hasWhatYouGet ? (
         <WhatYouGetManifest
           headingId={whatYouGetId}
           title={config.whatYouGetTitle!}

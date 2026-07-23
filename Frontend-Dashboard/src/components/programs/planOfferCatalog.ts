@@ -5,7 +5,7 @@ import {
   OFFER_PLAN_THUMB_THE_KNIGHT,
   OFFER_PLAN_THUMB_TRADING,
 } from "@/components/programs/offerPlanThumbnails";
-import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
+import type { GamingBenefitItem, GamingBenefitTone } from "@/components/GamingBenefitCards";
 import {
   LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES,
   LEVEL1_PSYCHOLOGY_PROGRAM_TITLES,
@@ -100,9 +100,29 @@ export const MONEY_MASTERY_FOUNDATION_COPY =
   "Money Mastery is the complete foundation — a lifetime vault built to sharpen your understanding of wealth creation, financial systems, and strategic execution. One commitment unlocks permanent access to the knowledge, frameworks, and tools required to build your financial advantage.";
 
 export const MONEY_MASTERY_WHAT_YOU_GET_TITLE = "What You Get";
+export const MONEY_MASTERY_PLUS_YOU_GET_TITLE = "Plus You Get";
 
 export const MONEY_MASTERY_WHAT_YOU_GET_FOOTER =
   "133 videos in total · One lifetime price — no hidden fees, no strings attached, no hidden obligation.";
+
+/** Card / teaser stats grid — large neon figure + unit + label (matches What You Get layout). */
+export type MoneyMasteryStatBlock = {
+  value: string;
+  unit: string;
+  label: string;
+  tone: GamingBenefitTone;
+};
+
+export const MONEY_MASTERY_CARD_WHAT_YOU_GET: readonly MoneyMasteryStatBlock[] = [
+  { value: "11", unit: "Videos", label: "Business Models Programmes", tone: "gold" },
+  { value: "26", unit: "Videos", label: "A.I Agentic Pack", tone: "green" },
+  { value: "29", unit: "Videos", label: "A.I Content Automation Pack", tone: "pink" },
+  { value: "11", unit: "Videos", label: "Business Behaviour Psychology", tone: "violet" },
+];
+
+export const MONEY_MASTERY_CARD_PLUS_YOU_GET: readonly MoneyMasteryStatBlock[] = [
+  { value: "53", unit: "Videos", label: "Technical Trading Pack", tone: "cyan" },
+];
 
 /** Summary pack overview shown at the top of Money Mastery details (separate from lifetime-access cards). */
 export const MONEY_MASTERY_WHAT_YOU_GET_ITEMS: readonly GamingBenefitItem[] = [
@@ -137,6 +157,14 @@ export const MONEY_MASTERY_WHAT_YOU_GET_ITEMS: readonly GamingBenefitItem[] = [
     desc: "Syndicate Dashboard · Syndicate Affiliate Programmes · Syndicate Certification",
   },
 ];
+
+/** Plain-text card teaser mirroring the What You Get / Plus You Get stats grid. */
+export const MONEY_MASTERY_CARD_TEASER = [
+  MONEY_MASTERY_WHAT_YOU_GET_TITLE,
+  ...MONEY_MASTERY_CARD_WHAT_YOU_GET.map((b) => `${b.value} ${b.unit} — ${b.label}`),
+  MONEY_MASTERY_PLUS_YOU_GET_TITLE,
+  ...MONEY_MASTERY_CARD_PLUS_YOU_GET.map((b) => `${b.value} ${b.unit} — ${b.label}`),
+].join("\n");
 
 export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
   "133 Individual Video Lessons Total",
@@ -281,6 +309,9 @@ export const KNIGHT_MEMBERSHIP_FEATURES: readonly string[] = [
   "Exclusive opportunities to receive investment for your business venture",
 ];
 
+/** Compact card face — keeps Money Mastery / Knight equal height with buttons visible. */
+export const KNIGHT_CARD_FEATURES: readonly string[] = KNIGHT_MEMBERSHIP_FEATURES.slice(0, 4);
+
 const KNIGHT_BENEFIT_TONES = ["green", "cyan", "violet", "gold", "pink", "amber"] as const;
 
 export const KNIGHT_MEMBERSHIP_BENEFIT_ITEMS = KNIGHT_MEMBERSHIP_FEATURES.map((feature, index) => ({
@@ -337,11 +368,11 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     plan: "bundle",
     title: "Money Mastery Bundle",
     imageSrc: OFFER_PLAN_THUMB_MONEY_MASTERY,
-    teaser: MONEY_MASTERY_FOUNDATION_COPY,
-    displayPrice: "$333",
+    teaser: MONEY_MASTERY_CARD_TEASER,
+    displayPrice: "$0.50", // TEMP Stripe live test — revert to "$333"
     comparePrice: "$555",
     billingLabel: "/lifetime",
-    checkoutAmount: "333",
+    checkoutAmount: "0.50", // TEMP Stripe live test — revert to "333"
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     accent: "amber",

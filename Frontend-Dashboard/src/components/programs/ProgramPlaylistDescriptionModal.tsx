@@ -8,7 +8,9 @@ import { enrichProgramPlaylist, resolveProgramPlaylistThumbnail } from "@/lib/pr
 import {
   BUSINESS_WARFARE_COVER_SRC,
   isBusinessWarfareProgram,
+  supportsProgramHashDeepLink,
 } from "@/lib/programPlaylistThumbnails";
+import { LEVEL1_SLUG_THUMBNAILS } from "@/lib/level1ProgramCatalog";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { parseStructuredDescriptionSections } from "@/lib/structuredDescription";
@@ -550,11 +552,43 @@ export function ProgramPlaylistDescriptionModal({
   const restoreScrollRef = useRef(restoreScrollOnClose);
   restoreScrollRef.current = restoreScrollOnClose;
 
-  useModalScrollLock(!!playlist);
+  /** Keep content mounted through exit so close can fade instead of hard-unmount. */
+  const [displayPlaylistRaw, setDisplayPlaylistRaw] = useState(playlist);
+  const [entered, setEntered] = useState(false);
+  const exitTimerRef = useRef<number | null>(null);
+  const openScrollYRef = useRef(0);
 
   useEffect(() => {
-    if (!playlist || typeof document === "undefined") return;
-    const scrollY = window.scrollY;
+    if (playlist) {
+      if (exitTimerRef.current != null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+      openScrollYRef.current = window.scrollY;
+      setDisplayPlaylistRaw(playlist);
+      setEntered(false);
+      const enterId = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setEntered(true));
+      });
+      return () => window.cancelAnimationFrame(enterId);
+    }
+    setEntered(false);
+    exitTimerRef.current = window.setTimeout(() => {
+      setDisplayPlaylistRaw(null);
+      exitTimerRef.current = null;
+    }, 220);
+    return () => {
+      if (exitTimerRef.current != null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+    };
+  }, [playlist]);
+
+  useModalScrollLock(!!displayPlaylistRaw);
+
+  useEffect(() => {
+    if (!displayPlaylistRaw || typeof document === "undefined") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCloseRef.current();
     };
@@ -562,15 +596,16 @@ export function ProgramPlaylistDescriptionModal({
     return () => {
       document.removeEventListener("keydown", onKey);
       if (!restoreScrollRef.current) return;
+      const y = openScrollYRef.current;
       requestAnimationFrame(() => {
-        window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+        window.scrollTo({ top: y, left: 0, behavior: "auto" });
       });
     };
-  }, [playlist?.id]);
+  }, [displayPlaylistRaw?.id]);
 
   const displayPlaylist = useMemo(
-    () => (playlist ? enrichProgramPlaylist(playlist) : null),
-    [playlist]
+    () => (displayPlaylistRaw ? enrichProgramPlaylist(displayPlaylistRaw) : null),
+    [displayPlaylistRaw]
   );
 
   const body = (displayPlaylist?.description || "").trim();
@@ -583,41 +618,49 @@ export function ProgramPlaylistDescriptionModal({
     return body ? parseDescriptionToBlocks(body) : null;
   }, [body, structured]);
 
-  const isWarfareDetails = !!displayPlaylist && isBusinessWarfareProgram({
-    id: displayPlaylist.id,
-    slug: displayPlaylist.slug,
-    title: displayPlaylist.title,
-  });
+  const useHashDetailsChrome =
+    !!displayPlaylist &&
+    supportsProgramHashDeepLink({
+      id: displayPlaylist.id,
+      slug: displayPlaylist.slug,
+      title: displayPlaylist.title,
+      vault_plan_slug: displayPlaylist.vault_plan_slug,
+    });
 
-  const warfareCoverCandidates = useMemo(() => {
-    const list = [BUSINESS_WARFARE_COVER_SRC];
-    if (!displayPlaylist || !isWarfareDetails) return list;
+  const coverCandidates = useMemo(() => {
+    if (!displayPlaylist || !useHashDetailsChrome) return [] as string[];
+    const list: string[] = [];
     const resolved = resolveProgramPlaylistThumbnail(
       displayPlaylist,
       displayPlaylist.cover_image_url,
     );
-    // Prefer the known static file first — API covers can 404 and hide the hero.
-    if (resolved && resolved !== BUSINESS_WARFARE_COVER_SRC) {
-      list.push(resolved);
+    if (resolved) list.push(resolved);
+    const slug = displayPlaylist.slug?.trim().toLowerCase();
+    if (slug && LEVEL1_SLUG_THUMBNAILS[slug] && !list.includes(LEVEL1_SLUG_THUMBNAILS[slug])) {
+      list.push(LEVEL1_SLUG_THUMBNAILS[slug]);
     }
-    const decoded = BUSINESS_WARFARE_COVER_SRC.replace(/%20/g, " ");
-    if (decoded !== BUSINESS_WARFARE_COVER_SRC) list.push(decoded);
+    if (isBusinessWarfareProgram(displayPlaylist)) {
+      if (!list.includes(BUSINESS_WARFARE_COVER_SRC)) list.push(BUSINESS_WARFARE_COVER_SRC);
+      const decoded = BUSINESS_WARFARE_COVER_SRC.replace(/%20/g, " ");
+      if (!list.includes(decoded)) list.push(decoded);
+    }
     return list;
-  }, [displayPlaylist, isWarfareDetails]);
+  }, [displayPlaylist, useHashDetailsChrome]);
 
-  const [warfareCoverFailIdx, setWarfareCoverFailIdx] = useState(0);
+  const [coverFailIdx, setCoverFailIdx] = useState(0);
 
   useEffect(() => {
-    setWarfareCoverFailIdx(0);
-  }, [displayPlaylist?.id, isWarfareDetails]);
+    setCoverFailIdx(0);
+  }, [displayPlaylist?.id, useHashDetailsChrome]);
 
   if (!displayPlaylist || typeof document === "undefined") return null;
 
   const showUnlock = typeof onUnlock === "function";
-  const useAiContentUnlockStyle = isWarfareDetails;
-  const warfareCoverSrc =
-    warfareCoverCandidates[Math.min(warfareCoverFailIdx, warfareCoverCandidates.length - 1)] ??
-    BUSINESS_WARFARE_COVER_SRC;
+  const useEmeraldUnlock = useHashDetailsChrome;
+  const coverSrc =
+    coverCandidates.length > 0
+      ? coverCandidates[Math.min(coverFailIdx, coverCandidates.length - 1)]!
+      : null;
 
   const unlockButton = showUnlock ? (
     <button
@@ -629,7 +672,7 @@ export function ProgramPlaylistDescriptionModal({
       }}
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-xl border font-black uppercase transition",
-        useAiContentUnlockStyle
+        useEmeraldUnlock
           ? cn(
               "h-9 w-[120px] border-emerald-300/90 bg-[linear-gradient(135deg,rgba(52,211,153,0.32),rgba(4,47,28,0.98))] text-emerald-100",
               "px-1.5 text-[10px] tracking-[0.08em] sm:h-10 sm:w-[220px] sm:px-2 sm:text-[12px] sm:tracking-[0.14em]",
@@ -649,7 +692,7 @@ export function ProgramPlaylistDescriptionModal({
     </button>
   ) : null;
 
-  const warfareCover = useAiContentUnlockStyle ? (
+  const detailsCover = useHashDetailsChrome && coverSrc ? (
     <div
       className={cn(
         "relative shrink-0 overflow-hidden rounded-xl border border-emerald-300/40 bg-[#041208]",
@@ -657,11 +700,10 @@ export function ProgramPlaylistDescriptionModal({
         "h-[120px] w-[180px] sm:h-[240px] sm:w-[380px] md:h-[280px] md:w-[440px]",
       )}
     >
-      {/* Plain public JPG (~100KB) — skip Next Image optimizer (was failing silently in this portal). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        key={warfareCoverSrc}
-        src={warfareCoverSrc}
+        key={coverSrc}
+        src={coverSrc}
         alt={displayPlaylist.title}
         width={440}
         height={280}
@@ -671,13 +713,11 @@ export function ProgramPlaylistDescriptionModal({
         className="absolute inset-0 h-full w-full object-cover object-center"
         draggable={false}
         onError={() => {
-          setWarfareCoverFailIdx((i) =>
-            i + 1 < warfareCoverCandidates.length ? i + 1 : i,
-          );
+          setCoverFailIdx((i) => (i + 1 < coverCandidates.length ? i + 1 : i));
         }}
       />
       {priceLabel ? (
-        <div className="absolute right-2 top-2 z-[2] sm:right-2.5 sm:top-2.5">
+        <div className="absolute bottom-2 left-2 z-[2] sm:bottom-2.5 sm:left-2.5">
           <span
             className="program-playlist-card__pack-price-badge shrink-0 border border-emerald-300/50 bg-[#03140d]/95 tabular-nums text-emerald-100 shadow-[0_0_16px_rgba(52,211,153,0.28)]"
             style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
@@ -693,17 +733,17 @@ export function ProgramPlaylistDescriptionModal({
   ) : null;
 
   /** Top: cover + price + unlock. Bottom: unlock only (no image). */
-  const warfareTopBlock =
-    useAiContentUnlockStyle && showUnlock ? (
+  const detailsTopBlock =
+    useHashDetailsChrome && showUnlock ? (
       <div className="flex flex-col items-start gap-2.5 sm:gap-3">
-        {warfareCover}
+        {detailsCover}
         {unlockButton}
       </div>
     ) : unlockButton ? (
       <div className="flex justify-start">{unlockButton}</div>
     ) : null;
 
-  const warfareBottomUnlock =
+  const detailsBottomUnlock =
     showUnlock && unlockButton ? (
       <div className="flex justify-start">{unlockButton}</div>
     ) : null;
@@ -717,7 +757,10 @@ export function ProgramPlaylistDescriptionModal({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/75 backdrop-blur-[2px]"
+        className={cn(
+          "absolute inset-0 bg-black/75 backdrop-blur-[2px] transition-opacity duration-200 ease-out",
+          entered ? "opacity-100" : "opacity-0",
+        )}
         onClick={onClose}
         aria-label="Close description"
       />
@@ -726,6 +769,8 @@ export function ProgramPlaylistDescriptionModal({
           "relative z-[1] flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50",
           "bg-[linear-gradient(180deg,rgba(18,18,18,0.98),rgba(6,6,8,0.99))] shadow-[0_0_40px_rgba(245,200,20,0.25),0_24px_80px_rgba(0,0,0,0.85)]",
           "[&_h3]:scroll-mt-4 font-[family-name:var(--font-body)]",
+          "transition-[opacity,transform] duration-200 ease-out will-change-transform",
+          entered ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-[0.985] opacity-0",
         )}
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-10 sm:py-6">
@@ -745,7 +790,7 @@ export function ProgramPlaylistDescriptionModal({
           </button>
         </div>
         <div className="vault-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-10 sm:py-9 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [&_strong]:font-semibold [&_strong]:text-white/95">
-          {warfareTopBlock ? <div className="mb-5 flex justify-start">{warfareTopBlock}</div> : null}
+          {detailsTopBlock ? <div className="mb-5 flex justify-start">{detailsTopBlock}</div> : null}
           {structured || body ? (
             <div className="w-full max-w-none pb-2">
               <StructuredDescriptionBody text={body} prominent />
@@ -761,8 +806,8 @@ export function ProgramPlaylistDescriptionModal({
               text for each section below.
             </p>
           )}
-          {warfareBottomUnlock ? (
-            <div className="mt-8 flex justify-start border-t border-white/10 pt-6">{warfareBottomUnlock}</div>
+          {detailsBottomUnlock ? (
+            <div className="mt-8 flex justify-start border-t border-white/10 pt-6">{detailsBottomUnlock}</div>
           ) : null}
         </div>
       </div>

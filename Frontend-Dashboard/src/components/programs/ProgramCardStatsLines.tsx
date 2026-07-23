@@ -9,10 +9,18 @@ type Props = {
   size?: "large" | "compact" | "module" | "stream";
   /** Smaller labels on mobile/iPad (max-xl) — trading vault module cards. */
   denseMobile?: boolean;
+  /** Larger video/time type on phone only (named program packs). */
+  boostMobile?: boolean;
   className?: string;
 };
 
-export function ProgramCardStatsLines({ stats, size = "large", denseMobile = false, className }: Props) {
+export function ProgramCardStatsLines({
+  stats,
+  size = "large",
+  denseMobile = false,
+  boostMobile = false,
+  className,
+}: Props) {
   const compact = size === "compact" || size === "module" || size === "stream";
   const inlineOnMobile = compact || denseMobile;
   const shortWatchLabel = compact;
@@ -31,7 +39,9 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
         <p
           className={cn(
             compact ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-[13px]",
+            boostMobile && !inlineOnMobile && "text-[13px] sm:text-[13px]",
             inlineOnMobile && "max-xl:contents max-xl:text-[8px] max-xl:leading-tight",
+            boostMobile && inlineOnMobile && "max-xl:text-[11px]",
           )}
         >
           No. of Videos:{" "}
@@ -39,7 +49,9 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
             className={cn(
               "font-bold tabular-nums text-white/95",
               compact ? "text-[11px] sm:text-[12px]" : "text-[13px] sm:text-[15px]",
+              boostMobile && !inlineOnMobile && "text-[16px] sm:text-[15px]",
               inlineOnMobile && "max-xl:text-[9px]",
+              boostMobile && inlineOnMobile && "max-xl:text-[12px]",
             )}
           >
             {stats.lessonCount}
@@ -55,7 +67,9 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
         <p
           className={cn(
             compact ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-[12px]",
+            boostMobile && !inlineOnMobile && "text-[12px] sm:text-[12px]",
             inlineOnMobile && "max-xl:contents max-xl:text-[8px] max-xl:leading-tight",
+            boostMobile && inlineOnMobile && "max-xl:text-[10px]",
           )}
         >
           {shortWatchLabel ? "Watch time:" : "All videos watch time:"}{" "}
@@ -63,7 +77,9 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
             className={cn(
               "font-bold tabular-nums text-white/95",
               compact ? "text-[10px] sm:text-[11px]" : "text-[12px] sm:text-[14px]",
+              boostMobile && !inlineOnMobile && "text-[15px] sm:text-[14px]",
               inlineOnMobile && "max-xl:text-[8px]",
+              boostMobile && inlineOnMobile && "max-xl:text-[11px]",
             )}
           >
             {stats.watchTime}
@@ -78,7 +94,9 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
       className={cn(
         "font-mono uppercase tracking-[0.08em] text-cyan-200/88",
         compact ? "text-[8px] sm:text-[9px]" : "text-[9px] sm:text-[10px]",
+        boostMobile && "text-[11px] sm:text-[10px]",
         denseMobile && "max-xl:text-[7px] max-xl:leading-tight",
+        boostMobile && denseMobile && "max-xl:text-[10px]",
         className,
       )}
     >
@@ -87,10 +105,12 @@ export function ProgramCardStatsLines({ stats, size = "large", denseMobile = fal
         className={cn(
           "font-bold tabular-nums text-white/95",
           denseMobile && "max-xl:text-[8px]",
+          boostMobile && "text-[13px] sm:text-[inherit]",
+          boostMobile && denseMobile && "max-xl:text-[11px]",
         )}
       >
         {stats.videoLength}
       </span>
     </p>
   );
-};
+}

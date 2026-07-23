@@ -56,7 +56,8 @@ def _parse_pence_from_amount_payload(raw) -> int | None:
         return None
     try:
         v = float(s)
-        return int(max(50, round(v * 100)))
+        # TEMP Stripe live test — floor was 50¢; allow 1¢ so $0.001 test charges $0.01. Revert to max(50, ...).
+        return int(max(1, round(v * 100))) if v > 0 else None
     except ValueError:
         return None
 

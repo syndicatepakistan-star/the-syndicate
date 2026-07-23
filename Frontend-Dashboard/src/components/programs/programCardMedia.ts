@@ -37,4 +37,4 @@ export const PROGRAM_CARD_MOBILE_TITLE_FACE =
 export const PROGRAM_CARD_MOBILE_ACTIONS_FACE = "max-xl:mt-auto max-xl:gap-1.5";
 
 export const PROGRAM_CARD_MOBILE_PRICE_BADGE_FACE =
-  "max-xl:right-1.5 max-xl:top-1.5 max-xl:[&_span]:px-1.5 max-xl:[&_span]:py-0.5 max-xl:[&_span]:text-[10px] max-xl:[&_span_span]:text-[8px]";
+  "max-xl:bottom-1 max-xl:left-1 max-xl:right-auto max-xl:top-auto";

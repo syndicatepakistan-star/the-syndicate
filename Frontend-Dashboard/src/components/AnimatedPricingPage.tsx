@@ -12,11 +12,12 @@ import {
   KNIGHT_LAUNCHING_SOON_MESSAGE,
   MONEY_MASTERY_FOUNDATION_COPY,
   MONEY_MASTERY_LIFETIME_FEATURES,
-  KNIGHT_MEMBERSHIP_FEATURES,
+  KNIGHT_CARD_FEATURES,
   KNIGHT_SUBSCRIPTION_COPY,
   PLAN_OFFERS_PRIMARY,
   type PlanOfferDef,
 } from '@/components/programs/planOfferCatalog'
+import { MoneyMasteryCardInclusions } from '@/components/programs/MoneyMasteryCardInclusions'
 import { navigateToAlreadyUnlockedProgram } from '@/lib/programUnlockFlow'
 import { hasSimpleAuthSessionClient } from '@/lib/portal-api'
 import { AffiliatePublicSection } from '@/components/affiliate/AffiliatePublicSection'
@@ -56,7 +57,7 @@ function primaryElitePlanKey(planKey: PlanKey): 'bundle' | 'king' | null {
 
 const pricingData: Record<PlanKey, PricingTier> = {
   bundle: {
-    price: { monthly: '$333', yearly: '$3,330' },
+    price: { monthly: '$0.50', yearly: '$0.50' }, // TEMP Stripe live test — revert to $333 / $3,330
     oldPrice: { monthly: '$555', yearly: '$5,550' },
     badge: 'MONEY MASTERY',
     title: 'MONEY MASTERY',
@@ -113,7 +114,7 @@ const pricingData: Record<PlanKey, PricingTier> = {
     badge: 'THE KNIGHT',
     title: 'The Knight',
     description: KNIGHT_SUBSCRIPTION_COPY,
-    features: [...KNIGHT_MEMBERSHIP_FEATURES],
+    features: [...KNIGHT_CARD_FEATURES],
     accent: 'gold',
     icon: <Crown className="h-4 w-4" />,
     cta: 'Join The Knight',
@@ -309,16 +310,26 @@ function TierCard({
             </div>
           )}
         </div>
-        <h3 className={cn('mt-3 shrink-0 text-2xl font-semibold tracking-wide sm:text-[2rem]', accentText)} style={{ textShadow: '0 0 18px rgba(255,255,255,0.12)' }}>
+        <h3
+          className={cn(
+            'mt-3 shrink-0 font-semibold tracking-wide',
+            isBundle
+              ? 'text-center text-[1.85rem] text-yellow-300 sm:text-[2.35rem]'
+              : 'text-left text-2xl sm:text-[2rem]',
+            !isBundle && accentText,
+          )}
+          style={{ textShadow: '0 0 18px rgba(255,255,255,0.12)' }}
+        >
           {tier.title}
         </h3>
 
-        <div className="mt-4 flex shrink-0 items-end justify-between gap-4">
+        <div className="mt-4 flex min-h-0 w-full flex-1 flex-col">
           <motion.div
             key={`${planKey}-${billing}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22 }}
+            className="w-full shrink-0"
           >
             <div className="flex items-center gap-3">
               {tier.oldPrice?.[activeBilling] && (
@@ -342,37 +353,54 @@ function TierCard({
                 /{isLifetime ? 'lifetime' : billing === 'monthly' ? 'mo' : 'yr'}
               </div>
             </div>
-
-            <div
-              className={cn(
-                "mt-2 max-w-none font-body text-white/70",
-                elitePlanKey ? "text-base leading-relaxed sm:max-w-[52ch] sm:text-lg" : "text-sm sm:max-w-[52ch]",
-              )}
-            >
-              <p className={cn(elitePlanKey && "line-clamp-4")}>{tier.description}</p>
-            </div>
           </motion.div>
 
-        </div>
-
-        {!elitePlanKey ? (
-          <div className="mt-5 flex min-h-0 flex-1 flex-col gap-2">
-            {tier.features.map((f) => (
-              <div
-                key={f}
-                className={cn(
-                  'flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5',
-                  hudThemeByPlan[planKey].row,
-                )}
-              >
-                <Check className={cn('mt-0.5 h-4 w-4 shrink-0', accentText)} />
-                <span className="text-[13px] leading-snug text-white/80 drop-shadow-[0_0_8px_rgba(34,211,238,0.15)]">{f}</span>
+          <div className="mt-3 flex min-h-0 w-full flex-1 flex-col">
+            {planKey === 'bundle' ? (
+              <MoneyMasteryCardInclusions className="w-full text-center" headingTone="white" />
+            ) : planKey === 'king' ? (
+              <div className="mt-1 flex min-h-0 w-full flex-1 flex-col gap-2">
+                {tier.features.map((f) => (
+                  <div
+                    key={f}
+                    className={cn(
+                      'flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5',
+                      hudThemeByPlan[planKey].row,
+                    )}
+                  >
+                    <Check className={cn('mt-0.5 h-4 w-4 shrink-0', accentText)} />
+                    <span className="text-[13px] leading-snug text-white/80 drop-shadow-[0_0_8px_rgba(34,211,238,0.15)]">
+                      {f}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : !elitePlanKey ? (
+              <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2">
+                <p className="text-sm text-white/70 sm:max-w-[52ch]">{tier.description}</p>
+                {tier.features.map((f) => (
+                  <div
+                    key={f}
+                    className={cn(
+                      'flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5',
+                      hudThemeByPlan[planKey].row,
+                    )}
+                  >
+                    <Check className={cn('mt-0.5 h-4 w-4 shrink-0', accentText)} />
+                    <span className="text-[13px] leading-snug text-white/80 drop-shadow-[0_0_8px_rgba(34,211,238,0.15)]">
+                      {f}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="line-clamp-4 text-base leading-relaxed text-white/70 sm:max-w-[52ch] sm:text-lg">
+                {tier.description}
+              </p>
+            )}
           </div>
-        ) : null}
 
-          <div className={cn('mt-6 grid shrink-0 gap-2', elitePlanKey ? 'grid-cols-2' : 'grid-cols-1')}>
+          <div className={cn('mt-auto grid w-full shrink-0 gap-2 pt-6', elitePlanKey ? 'grid-cols-2' : 'grid-cols-1')}>
             {elitePlanKey ? (
               <button
                 type="button"
@@ -382,19 +410,20 @@ function TierCard({
                 Details
               </button>
             ) : null}
-          <button
-            type="button"
-            disabled={knightComingSoon}
-            onClick={() => onJoin?.(planKey, activeBilling, tier.price[activeBilling])}
-            className={cn(
-              'hamburger-attract w-full shrink-0 rounded-2xl border border-[#bd9b4f]/70 bg-[linear-gradient(180deg,rgba(189,155,79,0.18)_0%,rgba(0,0,0,0.22)_100%)] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#f6e7bf] shadow-[0_0_0_1px_rgba(189,155,79,0.55),0_0_20px_rgba(189,155,79,0.38),inset_0_0_16px_rgba(189,155,79,0.12)] transition-all hover:scale-[1.02] hover:shadow-[0_0_0_1px_rgba(189,155,79,0.72),0_0_30px_rgba(189,155,79,0.52),inset_0_0_18px_rgba(189,155,79,0.18)] active:scale-[0.99]',
-              knightComingSoon && 'cursor-not-allowed opacity-60 hover:scale-100',
-              elitePlanKey && 'col-span-1',
-            )}
-          >
-            {knightComingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : tier.cta}
-          </button>
+            <button
+              type="button"
+              disabled={knightComingSoon}
+              onClick={() => onJoin?.(planKey, activeBilling, tier.price[activeBilling])}
+              className={cn(
+                'hamburger-attract w-full shrink-0 rounded-2xl border border-[#bd9b4f]/70 bg-[linear-gradient(180deg,rgba(189,155,79,0.18)_0%,rgba(0,0,0,0.22)_100%)] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#f6e7bf] shadow-[0_0_0_1px_rgba(189,155,79,0.55),0_0_20px_rgba(189,155,79,0.38),inset_0_0_16px_rgba(189,155,79,0.12)] transition-all hover:scale-[1.02] hover:shadow-[0_0_0_1px_rgba(189,155,79,0.72),0_0_30px_rgba(189,155,79,0.52),inset_0_0_18px_rgba(189,155,79,0.18)] active:scale-[0.99]',
+                knightComingSoon && 'cursor-not-allowed opacity-60 hover:scale-100',
+                elitePlanKey && 'col-span-1',
+              )}
+            >
+              {knightComingSoon ? KNIGHT_LAUNCHING_SOON_LABEL : tier.cta}
+            </button>
           </div>
+        </div>
         </div>
       </div>
     </div>

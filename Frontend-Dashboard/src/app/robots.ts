@@ -28,6 +28,7 @@ const PUBLIC_PATHS = [
   "/membership",
   "/affiliate",
   "/quiz",
+  "/syndicate-guarantee",
 ];
 
 /**

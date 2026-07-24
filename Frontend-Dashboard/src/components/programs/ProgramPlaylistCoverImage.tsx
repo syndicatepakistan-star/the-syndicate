@@ -28,7 +28,7 @@ export function ProgramPlaylistCoverImage({
   objectFit = "cover",
   loading = "lazy",
   fetchPriority,
-  displayWidth = 640,
+  displayWidth = 480,
 }: Props) {
   const djangoCover = resolveDjangoMediaUrl(playlist.cover_image_url ?? null);
   const staticThumb = resolveProgramPlaylistThumbnail(playlist);
@@ -55,7 +55,7 @@ export function ProgramPlaylistCoverImage({
             alt=""
             fill
             sizes="(max-width: 640px) 48vw, (max-width: 1024px) 34vw, 360px"
-            quality={72}
+            quality={60}
             loading={loading}
             priority={loading === "eager"}
             fetchPriority={fetchPriority}

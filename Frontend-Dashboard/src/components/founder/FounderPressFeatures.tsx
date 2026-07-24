@@ -126,7 +126,7 @@ export function FounderPressFeatures() {
                         priority={isLcp}
                         loading={isLcp ? "eager" : "lazy"}
                         fetchPriority={isLcp ? "high" : "low"}
-                        quality={72}
+                        quality={isLcp ? 70 : 58}
                         sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 540px"
                         className={`transition-transform duration-500 group-hover:scale-[1.012] ${ARTICLE_SCREENSHOT_FIT[feature.publisher] ?? "object-contain object-center"}`}
                       />

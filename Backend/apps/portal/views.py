@@ -6,6 +6,7 @@ from rest_framework import generics, status, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+import logging
 
 from apps.portal.entitlements import reconcile_dashboard_entitlement_from_plan_purchases
 from apps.portal.king_access import king_selection_completed, king_selection_required
@@ -26,6 +27,8 @@ from apps.portal.serializers import (
     SyndicateTokenObtainPairSerializer,
     UserMeSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -134,6 +137,306 @@ class PlanPurchaseSlugsView(views.APIView):
             .distinct()
         )
         return Response({"plan_slugs": slugs})
+
+
+def _user_paid_purchases(user) -> list[dict]:
+    """Structured paid packs/programs for guarantee apply selection (unique, newest first)."""
+    plan_rows = list(
+        UserPlanPurchase.objects.filter(user=user, status=UserPlanPurchase.Status.PAID)
+        .order_by("-paid_at", "-id")
+        .values_list("plan_slug", "product_title", "amount_paid", "currency", "paid_at")[:80]
+    )
+    playlist_rows = list(
+        StreamPlaylistPurchase.objects.filter(user=user, status=StreamPlaylistPurchase.Status.PAID)
+        .select_related("playlist")
+        .order_by("-paid_at", "-id")[:80]
+    )
+    items: list[dict] = []
+    seen_keys: set[str] = set()
+    seen_labels: set[str] = set()
+
+    def _add(item: dict) -> None:
+        key = str(item.get("key") or "").strip()
+        label_norm = str(item.get("label") or "").strip().casefold()
+        if not key or key in seen_keys:
+            return
+        # Same course title from multiple paid rows / plan+playlist overlap → keep newest only.
+        if label_norm and label_norm in seen_labels:
+            return
+        seen_keys.add(key)
+        if label_norm:
+            seen_labels.add(label_norm)
+        items.append(item)
+
+    for slug, title, amount, currency, paid_at in plan_rows:
+        label = (title or slug or "plan").strip()
+        _add(
+            {
+                "key": f"plan:{slug}",
+                "kind": "plan",
+                "label": label,
+                "amount": str(amount),
+                "currency": (currency or "").upper(),
+                "paid_at": paid_at.isoformat() if paid_at else None,
+            }
+        )
+    for row in playlist_rows:
+        title = getattr(row.playlist, "title", None) or f"Playlist #{row.playlist_id}"
+        _add(
+            {
+                "key": f"playlist:{row.playlist_id}",
+                "kind": "playlist",
+                "label": title,
+                "amount": str(row.amount_paid),
+                "currency": (row.currency or "").upper(),
+                "paid_at": row.paid_at.isoformat() if row.paid_at else None,
+            }
+        )
+    return items[:40]
+
+
+def _user_has_paid_purchase(user) -> tuple[bool, str]:
+    """Return (eligible, human summary of paid items)."""
+    items = _user_paid_purchases(user)
+    lines = [
+        f"{'Plan' if i['kind'] == 'plan' else 'Playlist'}: {i['label']} ({i['amount']} {i['currency']})".strip()
+        for i in items
+    ]
+    return (len(items) > 0, "\n".join(lines) if lines else "")
+
+
+def _resolve_guarantee_user(request):
+    """Resolve user from public guarantee_token or authenticated session."""
+    from django.contrib.auth import get_user_model
+    from accounts.guarantee_auth import parse_guarantee_token
+
+    User = get_user_model()
+    data = request.data if isinstance(request.data, dict) else {}
+    token = str(data.get("guarantee_token") or request.headers.get("X-Guarantee-Token") or "").strip()
+    if token:
+        parsed = parse_guarantee_token(token)
+        if not parsed:
+            return None, "Verification expired. Please verify your email again."
+        user_id, email = parsed
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None, "Account not found."
+        if (user.email or "").strip().lower() != email:
+            return None, "Verification mismatch. Please verify your email again."
+        return user, None
+
+    if getattr(request.user, "is_authenticated", False):
+        return request.user, None
+    return None, "Verify your email with the OTP before applying."
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class GuaranteeSendOtpView(views.APIView):
+    """Public: send OTP to a registered member email for guarantee apply."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        from django.core.exceptions import ValidationError
+        from django.core.validators import validate_email
+        from accounts.guarantee_auth import create_and_email_guarantee_otp
+        from accounts.views import _canonical_user_for_email
+
+        data = request.data if isinstance(request.data, dict) else {}
+        email = str(data.get("email") or "").strip().lower()
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response({"detail": "Enter a valid email address."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = _canonical_user_for_email(email)
+        if user is None:
+            return Response(
+                {
+                    "detail": "No account found for this email. Use the email you purchased with.",
+                    "code": "ACCOUNT_NOT_FOUND",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            create_and_email_guarantee_otp(email, user.username or "Operator")
+        except Exception:
+            logger.exception("Guarantee OTP send failed for %s", email)
+            return Response(
+                {"detail": "Could not send verification code. Please try again shortly."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(
+            {
+                "ok": True,
+                "email": email,
+                "otp_required": True,
+                "message": "Verification code sent to your email. Check your Gmail inbox (and spam).",
+            }
+        )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class GuaranteeVerifyOtpView(views.APIView):
+    """Public: verify OTP; return short-lived guarantee token + purchases if eligible."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        from accounts.guarantee_auth import make_guarantee_token, verify_guarantee_otp
+        from accounts.views import _canonical_user_for_email
+
+        data = request.data if isinstance(request.data, dict) else {}
+        email = str(data.get("email") or "").strip().lower()
+        otp = str(data.get("otp") or "").strip()
+        if not email or not otp:
+            return Response({"detail": "Email and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(otp) != 6 or not otp.isdigit():
+            return Response({"detail": "OTP must be a 6-digit code."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = _canonical_user_for_email(email)
+        if user is None:
+            return Response(
+                {"detail": "No account found for this email.", "code": "ACCOUNT_NOT_FOUND"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not verify_guarantee_otp(email, otp):
+            return Response(
+                {"detail": "Invalid or expired verification code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        purchases = _user_paid_purchases(user)
+        eligible = len(purchases) > 0
+        summary = "\n".join(
+            f"{'Plan' if p['kind'] == 'plan' else 'Playlist'}: {p['label']} ({p['amount']} {p['currency']})"
+            for p in purchases
+        )
+        member_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip() or user.username
+        token = make_guarantee_token(user_id=user.id, email=user.email) if eligible else ""
+
+        payload = {
+            "ok": True,
+            "email": user.email,
+            "member_name": member_name,
+            "eligible": eligible,
+            "purchases": purchases,
+            "purchases_summary": summary,
+            "guarantee_token": token,
+        }
+        if not eligible:
+            payload["detail"] = (
+                "We verified your email, but no paid pack or program was found on this account. "
+                "Only purchased members can apply for the Syndicate Guarantee."
+            )
+            return Response(payload, status=status.HTTP_403_FORBIDDEN)
+
+        return Response(payload)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class GuaranteeApplyView(views.APIView):
+    """
+    Public apply after email OTP verification (guarantee_token), or authenticated session.
+    POST emails intelligence@the-syndicate.com with member + issue details.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        user, err = _resolve_guarantee_user(request)
+        if user is None:
+            return Response({"detail": err or "Unauthorized."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        purchases = _user_paid_purchases(user)
+        if not purchases:
+            return Response(
+                {
+                    "detail": "You need at least one paid purchase before applying for the Syndicate Guarantee.",
+                    "eligible": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        summary = "\n".join(
+            f"{'Plan' if p['kind'] == 'plan' else 'Playlist'}: {p['label']} ({p['amount']} {p['currency']})"
+            for p in purchases
+        )
+
+        data = request.data if isinstance(request.data, dict) else {}
+        request_type = str(data.get("request_type") or "Founder Audit").strip()[:80]
+        allowed = {
+            "Founder Audit",
+            "Full Refund",
+            "Replacement Program",
+        }
+        if request_type not in allowed:
+            request_type = "Founder Audit"
+
+        purchase_key = str(data.get("purchase_key") or "").strip()[:120]
+        program_label = str(data.get("program_label") or "").strip()[:200]
+        if purchase_key:
+            match = next((p for p in purchases if p["key"] == purchase_key), None)
+            if match:
+                program_label = match["label"]
+            elif not program_label:
+                return Response(
+                    {"detail": "Select a purchased pack or program."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if not program_label:
+            return Response(
+                {"detail": "Select which pack or program this request is about."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        message = str(data.get("message") or "").strip()
+        if len(message) < 20:
+            return Response(
+                {"detail": "Please describe what went wrong (at least 20 characters)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(message) > 4000:
+            return Response(
+                {"detail": "Message is too long (max 4000 characters)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        member_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip() or user.username
+        try:
+            from accounts.guarantee_mailer import send_guarantee_apply_email
+
+            send_guarantee_apply_email(
+                member_email=user.email,
+                member_name=member_name,
+                member_id=user.id,
+                request_type=request_type,
+                program_label=program_label,
+                message=message,
+                purchases_summary=summary,
+            )
+        except Exception:
+            logger.exception("Guarantee apply email failed for user_id=%s", user.id)
+            return Response(
+                {"detail": "Could not send your request right now. Please try again shortly."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(
+            {
+                "ok": True,
+                "message": "Your guarantee request was sent. Our team will review it at intelligence@the-syndicate.com.",
+            }
+        )
 
 
 class SocialLinkListCreateView(generics.ListCreateAPIView):

@@ -36,6 +36,7 @@ const defaultItems: RadialNavItem[] = [
   { id: 'joinNow', label: 'Login' },
   { id: 'programs', label: 'Programs' },
   { id: 'membership', label: 'Membership' },
+  { id: 'syndicateGuarantee', label: 'Syndicate Guarantee' },
   { id: 'affiliate', label: 'Affiliate' },
 ]
 
@@ -63,6 +64,12 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
     border: 'rgba(253,164,175,0.5)',
     glow: 'rgba(251, 113, 133, 0.42)',
   },
+  syndicateGuarantee: {
+    color: '#c084fc',
+    bg: 'rgba(192,132,252,0.14)',
+    border: 'rgba(168,85,247,0.55)',
+    glow: 'rgba(168, 85, 247, 0.45)',
+  },
   affiliate: {
     color: '#34d399',
     bg: 'rgba(52,211,153,0.12)',
@@ -72,7 +79,7 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
 }
 
 /** Horizontal gap between Login + Syn Diagnosis on mobile / iPad (below lg). */
-const RADIAL_NAV_BOTTOM_PAIR_GAP_PX = 20
+const RADIAL_NAV_BOTTOM_PAIR_GAP_PX = 36
 
 /** Mobile + iPad (below lg) layout tweaks */
 const RADIAL_NAV_COMPACT_MAX_WIDTH = 1024
@@ -83,30 +90,30 @@ function getBottomPairHalfGap(): number {
 
 /** Slot radius by viewport: smaller on mobile so buttons stay on screen */
 function getSlotRadius(itemCount: number): number {
-  if (typeof window === 'undefined') return itemCount >= 6 ? 175 : 195
+  if (typeof window === 'undefined') return itemCount >= 6 ? 185 : 205
   const w = window.innerWidth
   if (itemCount >= 7) {
-    // Fold / narrow-mobile: tighten horizontal spread without changing layout.
-    if (w < 360) return 114
-    if (w < 420) return 124
-    if (w < 480) return 136
-    if (w < 640) return 160
-    if (w < 768) return 198
-    if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return 218
-    return 236
+    // Slightly larger radius so neon glows don't overlap neighboring pills.
+    if (w < 360) return itemCount >= 10 ? 118 : 124
+    if (w < 420) return itemCount >= 10 ? 128 : 134
+    if (w < 480) return itemCount >= 10 ? 140 : 148
+    if (w < 640) return itemCount >= 10 ? 162 : 172
+    if (w < 768) return itemCount >= 10 ? 200 : 210
+    if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return itemCount >= 10 ? 220 : 230
+    return itemCount >= 10 ? 242 : 250
   }
   if (itemCount >= 6) {
-    if (w < 380) return 92
-    if (w < 480) return 108
-    if (w < 640) return 124
-    if (w < 768) return 148
-    return 175
+    if (w < 380) return 100
+    if (w < 480) return 118
+    if (w < 640) return 134
+    if (w < 768) return 158
+    return 185
   }
-  if (w < 380) return 85
-  if (w < 480) return 110
-  if (w < 640) return 145
-  if (w < 768) return 165
-  return 195
+  if (w < 380) return 92
+  if (w < 480) return 118
+  if (w < 640) return 155
+  if (w < 768) return 175
+  return 205
 }
 
 function getSlots(radius: number, count: number) {
@@ -115,18 +122,19 @@ function getSlots(radius: number, count: number) {
   if (typeof window !== 'undefined' && count >= 7) {
     const w = window.innerWidth
     if (w < 420) {
-      // Fold / narrow-mobile: add more vertical breathing room between rows.
-      // Keep horizontal separation so bottom cards don't touch.
-      xScale = 1
-      yScale = 1.34
+      xScale = 1.04
+      yScale = 1.42
     } else if (w < 640) {
-      xScale = 0.98
-      yScale = 1.22
-    } else if (w < 768) {
-      xScale = 1
-      yScale = 1.14
-    } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       xScale = 1.02
+      yScale = 1.3
+    } else if (w < 768) {
+      xScale = 1.04
+      yScale = 1.2
+    } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
+      xScale = 1.06
+      yScale = 1.14
+    } else {
+      xScale = 1.04
       yScale = 1.08
     }
   }
@@ -137,17 +145,18 @@ function getSlots(radius: number, count: number) {
     if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       const w = window.innerWidth
       if (count >= 9) {
-        // Keep Login + Syn Diagnosis on the natural bottom arc (same spacing as other nav pairs).
-        const bottomRowY = w < 640 ? 8 : w < 768 ? 10 : 12
+        // Push Login + Syn Diagnosis down/apart so glows clear Programs / neighbors.
+        const bottomRowY = w < 640 ? 16 : w < 768 ? 18 : 20
         const bottomPairHalfGap = getBottomPairHalfGap()
         if (i === 4 || i === 5) y += bottomRowY
-        // Syn Diagnosis (4) right, Login (5) left — spread by 20px total on compact viewports.
         if (i === 4) x += bottomPairHalfGap
         if (i === 5) x -= bottomPairHalfGap
-        if (i === 6) y -= 6
+        if (i === 6) y -= 10
+        // Home sits higher; Affiliate / What You Get sit lower for a clearer V gap.
+        if (i === 0) y -= 8
       } else if (w < 420) {
-        if (i === 3) x += 8
-        if (i === 4) x -= 8
+        if (i === 3) x += 12
+        if (i === 4) x -= 12
       }
     }
     return {
@@ -168,22 +177,23 @@ function getMobileItemNudge(id: NavSectionId, itemCount: number): {
   if (typeof window === 'undefined' || itemCount < 7) return {}
   const w = window.innerWidth
   if (w >= RADIAL_NAV_COMPACT_MAX_WIDTH) return {}
-  if (id === 'home') return { marginBottom: '26px', marginLeft: '5px' }
-  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '26px' }
-  if (id === 'ourMethods' || id === 'membership') return { marginTop: '8px' }
-  // Bottom pair: 20px horizontal gap on mobile + iPad (Login left, Syn Diagnosis right).
+  if (id === 'home') return { marginBottom: '36px', marginLeft: '5px' }
+  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '34px' }
+  if (id === 'ourMethods' || id === 'membership') return { marginTop: '12px' }
+  // Bottom pair: horizontal gap on mobile + iPad (Login left, Syn Diagnosis right).
   if (id === 'joinNow') {
     return {
-      marginTop: '5px',
+      marginTop: '10px',
       marginRight: `${RADIAL_NAV_BOTTOM_PAIR_GAP_PX}px`,
       position: 'relative',
       zIndex: 10,
     }
   }
   if (id === 'syndicateAnalysis') {
-    return { marginTop: '5px', position: 'relative', zIndex: 20 }
+    return { marginTop: '10px', position: 'relative', zIndex: 20 }
   }
-  if (id === 'programs') return { marginTop: '8px', marginBottom: '5px' }
+  if (id === 'programs') return { marginTop: '12px', marginBottom: '10px' }
+  if (id === 'syndicateGuarantee') return { marginTop: '14px' }
   return {}
 }
 
@@ -479,9 +489,11 @@ export function RadialNav({
                             ? 'min-w-[104px] max-w-[min(188px,84vw)]'
                             : 'min-w-[136px] max-w-[min(220px,88vw)]',
                           // Mobile/Fold: keep a small visual gap between neighboring pills.
-                          useCompactButtons ? 'mx-[2.5px] sm:mx-0' : '',
+                          useCompactButtons ? 'mx-[5px] sm:mx-1' : 'mx-0.5',
                           'rounded-lg border-2 px-3.5 py-2.5 overflow-visible',
-                          'text-[12px] font-bold uppercase tracking-[0.1em] whitespace-nowrap',
+                          it.id === 'syndicateGuarantee'
+                            ? 'text-[10px] font-bold uppercase tracking-[0.06em] whitespace-normal text-center leading-tight sm:text-[11px]'
+                            : 'text-[12px] font-bold uppercase tracking-[0.1em] whitespace-nowrap',
                           useCompactButtons
                             ? 'sm:min-w-[138px] sm:px-3.5 sm:py-2.5 sm:text-[12px]'
                             : 'sm:min-w-[160px] sm:px-4 sm:py-2.5 sm:text-[13px]',

@@ -176,7 +176,9 @@ export function middleware(request: NextRequest) {
     pathname === "/programs" ||
     pathname.startsWith("/programs/") ||
     pathname === "/membership" ||
-    pathname === "/membership/";
+    pathname === "/membership/" ||
+    pathname === "/syndicate-guarantee" ||
+    pathname.startsWith("/syndicate-guarantee/");
   const protectedMembershipAppPath =
     pathname.startsWith("/membership/content") ||
     pathname.startsWith("/membership/articles") ||

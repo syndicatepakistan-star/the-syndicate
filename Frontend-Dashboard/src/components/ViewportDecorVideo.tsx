@@ -17,6 +17,8 @@ type ViewportDecorVideoProps = {
   alwaysOn?: boolean;
   /** On phones, skip MP4 decode and render a lightweight static backdrop instead. */
   preferStaticOnMobile?: boolean;
+  /** Always use the static gradient (no MP4) — use on light marketing pages. */
+  forceStatic?: boolean;
   /** Hero/section backdrop: fill parent with absolute inset-0 video (no extra wrapper opacity). */
   fill?: boolean;
   /** Skip the static gradient layer behind the video (lighter mobile programs band). */
@@ -59,12 +61,14 @@ export function ViewportDecorVideo({
   priority = false,
   alwaysOn = false,
   preferStaticOnMobile = false,
+  forceStatic = false,
   fill = false,
   plainBackdrop = false,
 }: ViewportDecorVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const cachedOnMount = useRef(isVideoWarm(src));
-  const useStaticBackdrop = usePreferStaticBackdrop(preferStaticOnMobile);
+  const preferMobileStatic = usePreferStaticBackdrop(preferStaticOnMobile);
+  const useStaticBackdrop = forceStatic || preferMobileStatic;
   const resolvedVideoClass = [videoClassName, opacityClassName].filter(Boolean).join(" ");
   const showImmediately = cachedOnMount.current || priority || alwaysOn;
   const [videoReady, setVideoReady] = useState(showImmediately);

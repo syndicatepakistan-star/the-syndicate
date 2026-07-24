@@ -78,7 +78,7 @@ function FounderClipCard({
           priority={eager}
         />
         {image.approxViewsLabel ? (
-          <span className="absolute bottom-3 left-1/2 z-[3] max-w-[calc(100%-1.5rem)] -translate-x-1/2 truncate rounded-full border border-white/30 bg-black/85 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white/95 backdrop-blur-[2px] sm:bottom-4 sm:text-[10px]">
+          <span className="absolute bottom-3 left-1/2 z-[3] max-w-[calc(100%-1.5rem)] -translate-x-1/2 truncate rounded-full border border-white/30 bg-black/90 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white/95 sm:bottom-4 sm:text-[10px]">
             {image.approxViewsLabel}
           </span>
         ) : null}

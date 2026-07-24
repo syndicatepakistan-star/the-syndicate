@@ -78,6 +78,7 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/membership",
   "/affiliate",
   "/quiz",
+  "/syndicate-guarantee",
 ] as const;
 
 export function getSiteUrl(): string {

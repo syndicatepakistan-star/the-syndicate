@@ -369,10 +369,10 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     title: "Money Mastery Bundle",
     imageSrc: OFFER_PLAN_THUMB_MONEY_MASTERY,
     teaser: MONEY_MASTERY_CARD_TEASER,
-    displayPrice: "$0.50", // TEMP Stripe live test — revert to "$333"
+    displayPrice: "$333",
     comparePrice: "$555",
     billingLabel: "/lifetime",
-    checkoutAmount: "0.50", // TEMP Stripe live test — revert to "333"
+    checkoutAmount: "333",
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     accent: "amber",

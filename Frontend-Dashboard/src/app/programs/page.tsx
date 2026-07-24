@@ -3,11 +3,19 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
-import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { buildPageMetadata } from '@/lib/seo'
+
+const ProgramsOfferSection = dynamic(
+  () => import('@/components/programs/ProgramsOfferSection').then((m) => m.ProgramsOfferSection),
+  {
+    loading: () => (
+      <div className="mx-auto min-h-[28rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    ),
+  },
+)
 
 const ProgramsLibrarySection = dynamic(
   () =>
@@ -62,7 +70,7 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        <ProgramsOfferSection size="large" shellHosted />
+        <ProgramsOfferSection size="large" shellHosted omitKnight />
       </section>
       <section
         id="programs-library"
@@ -82,8 +90,15 @@ export default async function ProgramsPage() {
           </Suspense>
         </div>
       </section>
-      </ProgramsUnlockShell>
       <PublicGoalPathSection playlists={playlists} alwaysVisible />
+      <section
+        id="the-knight-offer"
+        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pb-8 pt-4 sm:space-y-6 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pb-12 sm:pt-6 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
+      >
+        <ProgramsGoldPillHeading as="h2" title="The Knight" size="compact" />
+        <ProgramsOfferSection size="large" shellHosted knightOnly />
+      </section>
+      </ProgramsUnlockShell>
       </main>
       <SiteFooter />
     </div>

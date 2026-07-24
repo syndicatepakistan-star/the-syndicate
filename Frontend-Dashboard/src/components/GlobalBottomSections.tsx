@@ -42,6 +42,9 @@ export default function GlobalBottomSections() {
   const loginHref = syndicateOtpLoginHref()
   const isProgramsPage = pathname === '/programs'
   const isWhatYouGetPage = pathname === '/what-you-get'
+  const isGuaranteePage =
+    pathname === '/syndicate-guarantee' || pathname.startsWith('/syndicate-guarantee/')
+  const staticJoinBackdrop = pathname === '/our-founder' || isGuaranteePage
   const actionWord = pathname === '/what-you-get' ? 'BE POWERFUL' : pathname === '/our-methods' ? 'BE RICH' : 'MASTER MONEY'
   const sectionLayoutClass = isWhatYouGetPage
     ? 'relative flex h-[100dvh] min-h-[100dvh] w-full items-center overflow-hidden px-4 py-12 sm:px-6 sm:py-14'
@@ -60,12 +63,14 @@ export default function GlobalBottomSections() {
 
   return (
     <>
+      {!isGuaranteePage ? (
       <section id="joinNowSection" className={`${sectionLayoutClass} marketing-join-section`}>
         <div className="pointer-events-none absolute inset-0">
           <ViewportDecorVideo
             src="/assets/v.mp4"
             className="h-full w-full object-cover opacity-55"
             preferStaticOnMobile
+            forceStatic={staticJoinBackdrop}
           />
           <div className="absolute inset-0 bg-black/72" />
         </div>
@@ -166,7 +171,8 @@ export default function GlobalBottomSections() {
           </div>
         </div>
       </section>
-      <FeaturedLogosStrip logos={FEATURED_LOGOS} speedSeconds={40} />
+      ) : null}
+      {!isGuaranteePage ? <FeaturedLogosStrip logos={FEATURED_LOGOS} speedSeconds={40} /> : null}
       <SiteFooter />
     </>
   )

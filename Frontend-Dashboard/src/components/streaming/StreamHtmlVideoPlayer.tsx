@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Hls from "hls.js";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { resolveStreamPlaybackUrl, type StreamPlaybackType } from "@/lib/streaming-api";
 import {
@@ -10,6 +9,18 @@ import {
   warmPlaybackHeader,
 } from "@/lib/streamPlaybackSeek";
 
+type HlsConstructor = typeof import("hls.js").default;
+type HlsInstance = InstanceType<HlsConstructor>;
+type HlsModule = { default: HlsConstructor };
+
+let hlsModulePromise: Promise<HlsModule> | null = null;
+
+function loadHlsModule(): Promise<HlsModule> {
+  if (!hlsModulePromise) {
+    hlsModulePromise = import("hls.js") as Promise<HlsModule>;
+  }
+  return hlsModulePromise;
+}
 export type StreamHtmlPlayerLayoutMode = "auto" | "landscape" | "portrait";
 
 type Props = {
@@ -126,7 +137,8 @@ export default function StreamHtmlVideoPlayer({
   const initialResumeDoneRef = useRef(false);
   /** Last known playhead — used when hot-swapping signed URLs so mid-watch does not restart at 0. */
   const livePositionRef = useRef(0);
-  const hlsRef = useRef<Hls | null>(null);
+  const hlsRef = useRef<HlsInstance | null>(null);
+  const HlsClassRef = useRef<HlsConstructor | null>(null);
   const hlsManifestParsedRef = useRef<(() => void) | null>(null);
   const hlsNetworkRetriesRef = useRef(0);
   const freshSrcCooldownRef = useRef(0);
@@ -182,10 +194,12 @@ export default function StreamHtmlVideoPlayer({
       };
 
       if (hlsManifestParsedRef.current) {
-        hls.off(Hls.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
+        const HlsClass = HlsClassRef.current;
+        if (HlsClass) hls.off(HlsClass.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
       }
       hlsManifestParsedRef.current = onManifestParsed;
-      hls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      const HlsClass = HlsClassRef.current;
+      if (HlsClass) hls.once(HlsClass.Events.MANIFEST_PARSED, onManifestParsed);
       hls.loadSource(manifestUrl);
 
       if (!isHotSwap) {
@@ -391,84 +405,108 @@ export default function StreamHtmlVideoPlayer({
     const video = videoRef.current;
     if (!video || !isHls) return;
 
-    // Safari / iOS: use native HLS via <video src> (handled in the src effect below).
-    if (!Hls.isSupported()) {
-      if (!video.canPlayType("application/vnd.apple.mpegurl")) {
-        setPlaybackError("HLS is not supported in this browser.");
-      }
-      return;
-    }
+    let cancelled = false;
+    let created: HlsInstance | null = null;
 
-    const hls = new Hls({
-      autoStartLoad: true,
-      enableWorker: false,
-      lowLatencyMode: false,
-      maxBufferHole: 0.6,
-      startFragPrefetch: true,
-    });
-    hlsRef.current = hls;
-    hls.attachMedia(video);
-    hls.on(Hls.Events.ERROR, (_event, data) => {
-      const videoEl = videoRef.current;
-      if (!data.fatal) return;
+    void (async () => {
+      const { default: Hls } = await loadHlsModule();
+      if (cancelled) return;
+      HlsClassRef.current = Hls;
 
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-        hlsNetworkRetriesRef.current += 1;
-        if (hlsNetworkRetriesRef.current <= 3) {
-          hls.recoverMediaError();
-          return;
+      if (!Hls.isSupported()) {
+        if (!video.canPlayType("application/vnd.apple.mpegurl")) {
+          setPlaybackError("HLS is not supported in this browser.");
         }
+        return;
       }
 
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-        const resumeAt = videoEl
-          ? resolveResumeSeconds(videoEl, startAtSecondsRef.current, livePositionRef.current)
-          : Math.max(Number(startAtSecondsRef.current || 0), Number(livePositionRef.current || 0));
-        hlsNetworkRetriesRef.current += 1;
-        if (hlsNetworkRetriesRef.current <= 2 && resumeAt > 0) {
-          hls.startLoad(Math.max(0, resumeAt - 0.25));
-          return;
-        }
-        const now = Date.now();
-        if (hlsNetworkRetriesRef.current <= 4 && now - freshSrcCooldownRef.current > 8000) {
-          freshSrcCooldownRef.current = now;
-          setBuffering(true);
-          onNeedFreshSrcRef.current?.();
-          return;
-        }
+      const hls = new Hls({
+        autoStartLoad: true,
+        enableWorker: false,
+        lowLatencyMode: false,
+        maxBufferHole: 0.6,
+        startFragPrefetch: true,
+      });
+      if (cancelled) {
+        hls.destroy();
+        return;
       }
+      created = hls;
+      hlsRef.current = hls;
+      hls.attachMedia(video);
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        const videoEl = videoRef.current;
+        if (!data.fatal) return;
 
-      const detail =
-        data.type === Hls.ErrorTypes.NETWORK_ERROR
-          ? "Network error loading HLS — check the video R2 path in admin (index.m3u8 + segments) and that R2 credentials are set on the backend."
-          : data.type === Hls.ErrorTypes.MEDIA_ERROR
-            ? "Media error — check segment files in R2 match the manifest."
-            : "HLS playback error — try refreshing the page.";
-      setPlaybackError(detail);
-      hls.destroy();
-      hlsRef.current = null;
-    });
-    hls.on(Hls.Events.FRAG_LOADED, () => {
-      hlsNetworkRetriesRef.current = 0;
-      setBuffering(false);
-    });
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hlsNetworkRetriesRef.current += 1;
+          if (hlsNetworkRetriesRef.current <= 3) {
+            hls.recoverMediaError();
+            return;
+          }
+        }
+
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          const resumeAt = videoEl
+            ? resolveResumeSeconds(videoEl, startAtSecondsRef.current, livePositionRef.current)
+            : Math.max(Number(startAtSecondsRef.current || 0), Number(livePositionRef.current || 0));
+          hlsNetworkRetriesRef.current += 1;
+          if (hlsNetworkRetriesRef.current <= 2 && resumeAt > 0) {
+            hls.startLoad(Math.max(0, resumeAt - 0.25));
+            return;
+          }
+          const now = Date.now();
+          if (hlsNetworkRetriesRef.current <= 4 && now - freshSrcCooldownRef.current > 8000) {
+            freshSrcCooldownRef.current = now;
+            setBuffering(true);
+            onNeedFreshSrcRef.current?.();
+            return;
+          }
+        }
+
+        const detail =
+          data.type === Hls.ErrorTypes.NETWORK_ERROR
+            ? "Network error loading HLS — check the video R2 path in admin (index.m3u8 + segments) and that R2 credentials are set on the backend."
+            : data.type === Hls.ErrorTypes.MEDIA_ERROR
+              ? "Media error — check segment files in R2 match the manifest."
+              : "HLS playback error — try refreshing the page.";
+        setPlaybackError(detail);
+        hls.destroy();
+        if (hlsRef.current === hls) hlsRef.current = null;
+      });
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        hlsNetworkRetriesRef.current = 0;
+        setBuffering(false);
+      });
+    })();
 
     return () => {
-      if (hlsManifestParsedRef.current && hlsRef.current) {
-        hlsRef.current.off(Hls.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
+      cancelled = true;
+      const HlsClass = HlsClassRef.current;
+      if (hlsManifestParsedRef.current && hlsRef.current && HlsClass) {
+        hlsRef.current.off(HlsClass.Events.MANIFEST_PARSED, hlsManifestParsedRef.current);
         hlsManifestParsedRef.current = null;
       }
-      hls.destroy();
-      hlsRef.current = null;
+      const target = created ?? hlsRef.current;
+      if (target) {
+        target.destroy();
+        if (hlsRef.current === target) hlsRef.current = null;
+      }
     };
   }, [sessionKey, isHls]);
 
   useEffect(() => {
-    if (!isHls || !src || !Hls.isSupported()) return;
+    if (!isHls || !src) return;
 
     let cancelled = false;
     const ensureLoaded = () => {
       if (cancelled) return;
+      const Hls = HlsClassRef.current;
+      if (!Hls) {
+        window.requestAnimationFrame(ensureLoaded);
+        return;
+      }
+      if (!Hls.isSupported()) return;
       const hls = hlsRef.current;
       if (!hls) {
         window.requestAnimationFrame(ensureLoaded);
@@ -493,10 +531,12 @@ export default function StreamHtmlVideoPlayer({
     const video = videoRef.current;
     if (!video || !src) return;
 
+    const Hls = HlsClassRef.current;
+    if (isHls && !Hls) return;
     const useNativeHls =
-      isHls && !Hls.isSupported() && Boolean(video.canPlayType("application/vnd.apple.mpegurl"));
+      isHls && !!Hls && !Hls.isSupported() && Boolean(video.canPlayType("application/vnd.apple.mpegurl"));
     // hls.js path loads via loadHlsSource — skip here.
-    if (isHls && !useNativeHls) return;
+    if (isHls && Hls?.isSupported()) return;
 
     const normalized = useNativeHls ? resolveStreamPlaybackUrl(src) ?? src : src;
     if (appliedSrcRef.current === normalized && appliedRevisionRef.current === srcRevision) return;
@@ -557,7 +597,7 @@ export default function StreamHtmlVideoPlayer({
     const video = videoRef.current;
     if (!video || !src) return;
     // Skip late resume only when hls.js owns the element (it applies start position itself).
-    if (isHls && Hls.isSupported()) return;
+    if (isHls && HlsClassRef.current?.isSupported()) return;
     const start = Number(startAtSeconds || 0);
     if (!(start > 0)) return;
     const dur = Number(video.duration || 0);

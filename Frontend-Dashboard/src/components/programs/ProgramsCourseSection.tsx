@@ -19,8 +19,6 @@ import {
   ProgramPlaylistDescriptionModal,
   PROGRAM_DETAIL_TRIGGER_ATTR,
 } from "@/components/programs/ProgramPlaylistDescriptionModal";
-import { PublicGoalPathSection } from "@/components/programs/PublicGoalPathSection";
-import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
 import { planOfferByKey, type CheckoutOfferKey, type PlanOfferKey } from "@/components/programs/planOfferCatalog";
 import { isVaultCourseSlug, isVaultPackKey, vaultCourseBySlug } from "@/components/programs/vaultPackCatalog";
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
@@ -93,6 +91,24 @@ const StreamPlaylistProgramPanel = dynamic(
       (m) => m.StreamPlaylistProgramPanel,
     ),
   { ssr: false, loading: () => lessonPanelFallback },
+);
+
+const PublicPlanOfferCards = dynamic(
+  () =>
+    import("@/components/programs/PublicPlanOfferCards").then((m) => m.PublicPlanOfferCards),
+  {
+    ssr: false,
+    loading: () => <div className="min-h-[20rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />,
+  },
+);
+
+const PublicGoalPathSection = dynamic(
+  () =>
+    import("@/components/programs/PublicGoalPathSection").then((m) => m.PublicGoalPathSection),
+  {
+    ssr: false,
+    loading: () => <div className="min-h-[16rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />,
+  },
 );
 
 const ChromaGrid = dynamic(() => import("@/components/ChromaGrid"), {
@@ -808,7 +824,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       const result = await startPlanCheckout({
         plan: "bundle",
         billing: "monthly",
-        amount: "0.50", // TEMP Stripe live test — revert to "333"
+        amount: "333",
         postAuthNext: "/dashboard/programs",
       });
       if (result.status === "checkout" || result.status === "auth_required") {

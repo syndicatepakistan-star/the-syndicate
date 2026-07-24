@@ -7,7 +7,8 @@ export type NavSectionId =
   | "programs"
   | "membership"
   | "affiliate"
-  | "syndicateAnalysis";
+  | "syndicateAnalysis"
+  | "syndicateGuarantee";
 
 /** Radial nav + marketing CTAs */
 export const MARKETING_NAV_HREF: Record<NavSectionId, string> = {
@@ -18,6 +19,7 @@ export const MARKETING_NAV_HREF: Record<NavSectionId, string> = {
   programs: "/programs",
   membership: "/membership",
   syndicateAnalysis: "/quiz",
+  syndicateGuarantee: "/syndicate-guarantee",
   joinNow: "/login",
   affiliate: "/affiliate",
 };
@@ -30,6 +32,7 @@ export const MARKETING_PREFETCH_ROUTES = [
   "/programs",
   "/membership",
   "/quiz",
+  "/syndicate-guarantee",
   "/affiliate",
   "/affiliate-login",
   "/login",

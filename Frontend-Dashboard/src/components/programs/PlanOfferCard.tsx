@@ -358,15 +358,15 @@ export function PlanOfferCard({
               )}
             >
               <img
-                src={nextOptimizedImageUrl(offer.imageSrc, isModule ? 480 : 828)}
-                srcSet={nextOptimizedImageSrcSet(offer.imageSrc)}
+                src={nextOptimizedImageUrl(offer.imageSrc, isModule ? 384 : 640, 60)}
+                srcSet={nextOptimizedImageSrcSet(offer.imageSrc, 60)}
                 sizes={
                   isModule
                     ? "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 320px"
                     : "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 420px"
                 }
-                width={isModule ? 480 : 828}
-                height={isModule ? 300 : 518}
+                width={isModule ? 384 : 640}
+                height={isModule ? 240 : 400}
                 alt={offer.title}
                 loading={offer.plan === "bundle" ? "eager" : "lazy"}
                 fetchPriority={offer.plan === "bundle" ? "high" : "low"}

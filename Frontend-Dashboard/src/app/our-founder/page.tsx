@@ -10,14 +10,14 @@ const OurFounderClipsSection = dynamic(
   () =>
     import("@/components/founder/OurFounderClipsSection").then((m) => m.OurFounderClipsSection),
   {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="min-h-[40vh] w-full" aria-hidden />,
   },
 );
 
 const GlobalBottomSections = dynamic(() => import("@/components/GlobalBottomSections"), {
-  ssr: true,
-  loading: () => <div className="min-h-[50vh] w-full bg-black" aria-hidden />,
+  ssr: false,
+  loading: () => <div className="min-h-[40vh] w-full bg-black" aria-hidden />,
 });
 
 export default function OurFounderPage() {
@@ -25,10 +25,8 @@ export default function OurFounderPage() {
     <div className="public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
       <JsonLd data={buildFounderPageJsonLd()} />
 
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-10%] top-[8%] h-[280px] w-[280px] rounded-full bg-amber-400/18 blur-[110px] sm:h-[420px] sm:w-[420px]" />
-        <div className="absolute right-[-8%] top-[32%] h-[260px] w-[260px] rounded-full bg-fuchsia-500/16 blur-[100px] sm:h-[400px] sm:w-[400px]" />
-        <div className="absolute bottom-[-8%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-cyan-400/12 blur-[120px] sm:h-[460px] sm:w-[460px]" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute left-1/2 top-[18%] h-[min(420px,55vw)] w-[min(420px,70vw)] -translate-x-1/2 rounded-full bg-amber-400/14 blur-[90px]" />
       </div>
 
       <NavApp />

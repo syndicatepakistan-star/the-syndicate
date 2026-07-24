@@ -200,7 +200,7 @@ export function CyberChamferFrame({
       }
     >
       <div
-        className={cx('relative overflow-hidden backdrop-blur-[2px]', innerClassName)}
+        className={cx('relative overflow-hidden', innerClassName)}
         style={{
           clipPath: innerClip,
           background: flatPanel ? FLAT_PANEL_FILL : f.panelFill,

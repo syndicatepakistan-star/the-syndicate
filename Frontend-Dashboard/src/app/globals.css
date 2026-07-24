@@ -9581,7 +9581,7 @@ body {
 .founder-section-coin {
   animation: founder-section-coin-spin 10s linear infinite;
   transform-origin: center center;
-  will-change: transform;
+  transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -11561,6 +11561,30 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   --heading-neon-haze: rgba(148, 163, 184, 0.22);
 }
 
+/* Syndicate Guarantee — absolute 32pt titles (bypass rem/html fluid scaling). */
+.guarantee-page-title {
+  font-size: 32pt !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0.06em;
+}
+
+.guarantee-page-title--hero-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.guarantee-page-title--hero-stack > * {
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .guarantee-page-title--hero-stack {
+    gap: 1.1rem;
+  }
+}
+
 /* Back-compat: existing pill / affiliate classes pick up gold lightning */
 .programs-heading-glow {
   --heading-neon-bright: #e8c96a;
@@ -13208,5 +13232,15 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     height: 2.25rem !important;
     width: 2.25rem !important;
   }
+}
+
+/* === LAST WIN: Syndicate Guarantee titles (32pt) — must stay after all other font-size rules === */
+html body .public-page-shell .guarantee-page-title,
+html body .public-page-shell h1.guarantee-page-title,
+html body .public-page-shell h2.guarantee-page-title,
+html body .public-page-shell p.guarantee-page-title {
+  font-size: 32pt !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0.06em !important;
 }
 

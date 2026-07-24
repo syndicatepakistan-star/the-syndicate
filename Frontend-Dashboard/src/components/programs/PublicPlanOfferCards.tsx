@@ -133,6 +133,8 @@ function PublicPlanOfferCardsInner({
   shellHosted = false,
   size = "large",
   highlightPack,
+  omitKnight = false,
+  knightOnly = false,
   onAlreadyUnlocked,
   onCheckoutError,
   onOpenPlaylist,
@@ -142,6 +144,10 @@ function PublicPlanOfferCardsInner({
   shellHosted?: boolean;
   size?: "large" | "compact";
   highlightPack?: GlobePackKey;
+  /** Hide The Knight from the primary row (programs page moves it below). */
+  omitKnight?: boolean;
+  /** Render only The Knight card. */
+  knightOnly?: boolean;
   onAlreadyUnlocked?: (plan: CheckoutOfferKey) => void | Promise<void>;
   onCheckoutError?: (message: string) => void;
   /** Dashboard programs: open lesson view immediately (router.push alone is a no-op when URL unchanged). */
@@ -464,6 +470,18 @@ function PublicPlanOfferCardsInner({
     );
   };
 
+  const primaryOffers = useMemo(() => {
+    if (knightOnly) return PLAN_OFFERS_PRIMARY.filter((o) => isKnightPlanSlug(String(o.plan)));
+    if (omitKnight) return PLAN_OFFERS_PRIMARY.filter((o) => !isKnightPlanSlug(String(o.plan)));
+    return PLAN_OFFERS_PRIMARY;
+  }, [knightOnly, omitKnight]);
+
+  const compactOffers = useMemo(() => {
+    if (knightOnly) return PLAN_OFFERS.filter((o) => isKnightPlanSlug(String(o.plan)));
+    if (omitKnight) return PLAN_OFFERS.filter((o) => !isKnightPlanSlug(String(o.plan)));
+    return PLAN_OFFERS;
+  }, [knightOnly, omitKnight]);
+
   return (
     <div
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
@@ -483,14 +501,23 @@ function PublicPlanOfferCardsInner({
       ) : null}
       {isLarge ? (
         <div className="flex w-full max-w-full flex-col gap-4 sm:gap-8 lg:gap-10">
-          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-stretch gap-4 overflow-x-clip sm:grid-cols-2 sm:gap-8">
-            {PLAN_OFFERS_PRIMARY.map(renderOffer)}
-          </div>
-          <LazyVaultOffersRow offers={PLAN_OFFERS_VAULT} renderOffer={renderOffer} />
+          {primaryOffers.length > 0 ? (
+            <div
+              className={cn(
+                "mx-auto grid w-full items-stretch gap-4 overflow-x-clip sm:gap-8",
+                primaryOffers.length === 1
+                  ? "max-w-lg grid-cols-1"
+                  : "max-w-4xl grid-cols-1 sm:grid-cols-2",
+              )}
+            >
+              {primaryOffers.map(renderOffer)}
+            </div>
+          ) : null}
+          {!knightOnly ? <LazyVaultOffersRow offers={PLAN_OFFERS_VAULT} renderOffer={renderOffer} /> : null}
         </div>
       ) : (
         <div className="flex w-full flex-row flex-wrap items-start justify-center gap-2 sm:gap-3">
-          {PLAN_OFFERS.map(renderOffer)}
+          {compactOffers.map(renderOffer)}
         </div>
       )}
       {detailOffer ? (

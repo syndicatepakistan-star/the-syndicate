@@ -57,7 +57,7 @@ function primaryElitePlanKey(planKey: PlanKey): 'bundle' | 'king' | null {
 
 const pricingData: Record<PlanKey, PricingTier> = {
   bundle: {
-    price: { monthly: '$0.50', yearly: '$0.50' }, // TEMP Stripe live test — revert to $333 / $3,330
+    price: { monthly: '$333', yearly: '$3,330' },
     oldPrice: { monthly: '$555', yearly: '$5,550' },
     badge: 'MONEY MASTERY',
     title: 'MONEY MASTERY',

@@ -1,24 +1,10 @@
-import dynamic from "next/dynamic";
 import { NavApp } from "@/components/NavApp";
+import GlobalBottomSections from "@/components/GlobalBottomSections";
 import { FounderPressFeatures } from "@/components/founder/FounderPressFeatures";
+import { OurFounderClipsSection } from "@/components/founder/OurFounderClipsSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 import { buildFounderPageJsonLd } from "@/lib/structuredData";
-
-/** Below-fold TikTok grids — keep out of initial JS/image budget for mobile LCP. */
-const OurFounderClipsSection = dynamic(
-  () =>
-    import("@/components/founder/OurFounderClipsSection").then((m) => m.OurFounderClipsSection),
-  {
-    ssr: false,
-    loading: () => <div className="min-h-[40vh] w-full" aria-hidden />,
-  },
-);
-
-const GlobalBottomSections = dynamic(() => import("@/components/GlobalBottomSections"), {
-  ssr: false,
-  loading: () => <div className="min-h-[40vh] w-full bg-black" aria-hidden />,
-});
 
 export default function OurFounderPage() {
   return (

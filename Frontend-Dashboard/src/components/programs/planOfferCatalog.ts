@@ -412,7 +412,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     teaser:
       "Manual workflows are wage labour disguised as entrepreneurship — stop babysitting tasks agents should execute. Agentic AI installs autonomous n8n pipelines, Claude Code systems, MCP servers, and RAG stacks that compound leverage while you architect the empire.",
     displayPrice: "$150",
-    comparePrice: "$364",
+    comparePrice: "$222",
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
@@ -460,7 +460,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     teaser:
       "Publishing without a machine behind you is invisible labour — this vault wires faceless YouTube, viral Shorts, documentary channels, and finance niches into AI pipelines that scale while you stay off camera. One checkout. Total content warfare capability.",
     displayPrice: "$150",
-    comparePrice: "$406",
+    comparePrice: "$222",
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",
@@ -511,7 +511,7 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     teaser:
       "The financial markets are a battlefield engineered to transfer wealth from the emotional to the disciplined. This protocol is your definitive strategic weapon — master-level technical analysis, high-leverage indicators, and cold, mathematical execution across stocks and crypto.",
     displayPrice: "$150",
-    comparePrice: "$200",
+    comparePrice: "$222",
     billingLabel: "/lifetime",
     checkoutAmount: "150",
     billing: "monthly",

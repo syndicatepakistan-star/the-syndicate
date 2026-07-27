@@ -16,6 +16,19 @@ const RadialNav = dynamic(
   { ssr: false },
 )
 
+const RADIAL_NAV_ITEMS = [
+  { id: 'home' as const, label: 'Home' },
+  { id: 'membership' as const, label: 'Membership' },
+  { id: 'syndicateAnalysis' as const, label: 'Syn Diagnosis' },
+  { id: 'ourFounder' as const, label: 'Our Founder' },
+  { id: 'whatYouGet' as const, label: 'What You Get' },
+  { id: 'joinNow' as const, label: 'Login' },
+  { id: 'ourMethods' as const, label: 'Our Methods' },
+  { id: 'syndicateGuarantee' as const, label: 'Refund' },
+  { id: 'affiliate' as const, label: 'Affiliate' },
+  { id: 'programs' as const, label: 'Programs' },
+]
+
 function getActiveNavId(pathname: string, hash: string): NavSectionId {
   if (hash === '#joinNowSection') return 'joinNow'
   if (pathname === '/affiliate-login' || pathname.startsWith('/affiliate-login/')) return 'affiliate'
@@ -146,6 +159,7 @@ export function NavApp() {
           {menuOpen ? (
             <RadialNav
               open={menuOpen}
+              items={RADIAL_NAV_ITEMS}
               activeId={activeId}
               onClose={handleClose}
               onSelect={handleSelect}

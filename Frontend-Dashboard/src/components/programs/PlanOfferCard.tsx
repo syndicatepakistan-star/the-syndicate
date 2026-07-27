@@ -199,14 +199,19 @@ export function PlanOfferCard({
   const isVaultPackCard = cardKind === "pack" && isLarge && !isVaultHero;
   const isPack = !isModule;
   const showPackPriceBadge = (isLarge && isPack) || isVaultPackCard;
+  const isElitePrimary = offer.plan === "bundle" || offer.plan === "king";
+  const midTicketPack = isVaultPackKey(offer.plan) ? offer.plan : null;
   const localizedPrice = localizeLabel(offer.displayPrice);
-  const isLongPackPrice = localizedPrice.length > 5;
+  const localizedComparePrice = offer.comparePrice ? localizeLabel(offer.comparePrice) : null;
+  const showComparePrice =
+    Boolean(localizedComparePrice) &&
+    (offer.plan === "bundle" || midTicketPack != null) &&
+    showPackPriceBadge;
+  const isLongPackPrice = localizedPrice.length > 5 || Boolean(showComparePrice);
   const tradingMobileProgramFace = isTradingVaultModuleCard(offer, isModule);
   const isTradingLessonBrowseOnly = isTradingSubmoduleSlug(offer.plan);
   const hidePrice = detailsOnly || isTradingLessonBrowseOnly;
   const hidePrimaryAction = detailsOnly || isTradingLessonBrowseOnly;
-  const isElitePrimary = offer.plan === "bundle" || offer.plan === "king";
-  const midTicketPack = isVaultPackKey(offer.plan) ? offer.plan : null;
   const boostMobileType =
     offer.plan === "bundle" ||
     offer.plan === "king" ||
@@ -427,21 +432,72 @@ export function PlanOfferCard({
             >
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center whitespace-nowrap border font-black tabular-nums tracking-normal",
+                  "inline-flex shrink-0 items-center justify-center border font-black tabular-nums tracking-normal",
                   theme.priceBadge,
                   showPackPriceBadge
                     ? cn(
                         "plan-offer-card__pack-price-badge rounded-md leading-none",
-                        isLongPackPrice && "plan-offer-card__pack-price-badge--long",
+                        showComparePrice && "plan-offer-card__pack-price-badge--compare",
+                        isLongPackPrice && !showComparePrice && "plan-offer-card__pack-price-badge--long",
                       )
                     : isVaultSubmoduleCard
                       ? "plan-offer-card__vault-price-badge rounded-md leading-none"
                       : cn("rounded-full px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-[12px]"),
-                  isModule && !isVaultSubmoduleCard && !isLarge && "text-[10px] sm:text-[11px]"
+                  isModule && !isVaultSubmoduleCard && !isLarge && "text-[10px] sm:text-[11px]",
+                  showComparePrice ? "flex-col whitespace-normal" : "whitespace-nowrap",
                 )}
                 style={{ fontFeatureSettings: '"tnum" 1, "lnum" 1' }}
               >
-                {localizedPrice}
+                {showComparePrice && localizedComparePrice ? (
+                  <>
+                    <span
+                      className="plan-offer-card__pack-price-badge__compare"
+                      style={{
+                        position: "relative",
+                        display: "inline-block",
+                        color: "rgba(255, 245, 220, 0.55)",
+                        textDecoration: "line-through",
+                        textDecorationColor: "#ffffff",
+                        textDecorationThickness: "2.5px",
+                        textDecorationSkipInk: "none",
+                      }}
+                    >
+                      {localizedComparePrice}
+                      <svg
+                        className="plan-offer-card__pack-price-badge__strike"
+                        aria-hidden
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                        style={{
+                          position: "absolute",
+                          left: "-6%",
+                          top: 0,
+                          width: "112%",
+                          height: "100%",
+                          pointerEvents: "none",
+                          zIndex: 3,
+                          overflow: "visible",
+                        }}
+                      >
+                        <line
+                          x1="0"
+                          y1="50"
+                          x2="100"
+                          y2="50"
+                          stroke="#ffffff"
+                          strokeWidth="3"
+                          strokeLinecap="square"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </svg>
+                    </span>
+                    <span className="plan-offer-card__pack-price-badge__amount">{localizedPrice}</span>
+                  </>
+                ) : (
+                  localizedPrice
+                )}
               </span>
             </div>
             ) : null}

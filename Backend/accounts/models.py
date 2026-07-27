@@ -85,3 +85,62 @@ class GuestCheckoutReceipt(models.Model):
 
   def __str__(self) -> str:
     return f"GuestCheckoutReceipt<{self.stripe_checkout_session_id}>"
+
+
+class RefundApplication(models.Model):
+  """Syndicate Guarantee / refund applications for admin review."""
+
+  class RequestType(models.TextChoices):
+    FOUNDER_AUDIT = "Founder Audit", "Founder Audit"
+    FULL_REFUND = "Full Refund", "Full Refund"
+    FULL_REPLACEMENT = "Full Replacement", "Full Replacement"
+    # Legacy value still accepted from older submissions
+    REPLACEMENT = "Replacement Program", "Full Replacement (legacy)"
+
+  class Status(models.TextChoices):
+    PENDING = "pending", "Pending"
+    IN_REVIEW = "in_review", "In Review"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+    COMPLETED = "completed", "Completed"
+
+  user = models.ForeignKey(
+    "auth.User",
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name="refund_applications",
+    verbose_name="Linked account",
+  )
+  member_email = models.EmailField(db_index=True, verbose_name="Applicant email")
+  member_name = models.CharField(max_length=200, blank=True, verbose_name="Applicant name")
+  request_type = models.CharField(
+    max_length=80,
+    choices=RequestType.choices,
+    default=RequestType.FULL_REFUND,
+    db_index=True,
+    verbose_name="Category",
+  )
+  program_label = models.CharField(max_length=200, verbose_name="Purchase / program")
+  purchase_key = models.CharField(max_length=120, blank=True, verbose_name="Purchase key")
+  message = models.TextField(verbose_name="Description")
+  purchases_summary = models.TextField(blank=True, verbose_name="All paid purchases")
+  status = models.CharField(
+    max_length=20,
+    choices=Status.choices,
+    default=Status.PENDING,
+    db_index=True,
+    verbose_name="Review status",
+  )
+  admin_notes = models.TextField(blank=True, verbose_name="Admin notes")
+  email_sent = models.BooleanField(default=False, verbose_name="Notify email sent")
+  created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  class Meta:
+    ordering = ["-created_at"]
+    verbose_name = "Refund application"
+    verbose_name_plural = "Refund applications"
+
+  def __str__(self) -> str:
+    return f"{self.member_email} · {self.request_type} · {self.status}"

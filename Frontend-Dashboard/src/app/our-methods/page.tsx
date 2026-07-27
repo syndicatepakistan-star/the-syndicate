@@ -47,7 +47,7 @@ export default function OurMethodsPage() {
                 <CyberChamferFrame accent="video" chamfer={18} decorSize="compact" innerClassName="p-2">
                   <div className="our-methods-hero-media relative z-10 h-[clamp(14rem,48vw,22.5rem)] w-full sm:h-[clamp(18rem,42vw,27.5rem)] lg:h-[clamp(22rem,32vw,31.25rem)] xl:h-[500px]">
                     <Image
-                      src="/assets/our-1.jpg"
+                      src="/assets/refund.jpg"
                       alt="Control the operating system — Syndicate doctrine"
                       fill
                       priority

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { NavApp } from "@/components/NavApp";
 import GlobalBottomSections from "@/components/GlobalBottomSections";
 import { SyndicateGuaranteeContent } from "@/components/guarantee/SyndicateGuaranteeContent";
-import { GuaranteeApplyPanel } from "@/components/guarantee/GuaranteeApplyPanel";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -26,9 +25,8 @@ export default function SyndicateGuaranteePage() {
 
       <NavApp />
 
-      <main className="relative z-[2] mx-auto w-[85vw] max-w-[85vw] min-w-0 space-y-8 px-0 pb-[clamp(2.5rem,6vw,4rem)] pt-[clamp(5.5rem,14vw,7rem)] sm:space-y-10">
+      <main className="guarantee-page-main relative z-[2] mx-auto w-full min-w-0 px-[clamp(1rem,3vw,2.2rem)]">
         <SyndicateGuaranteeContent />
-        <GuaranteeApplyPanel />
       </main>
 
       <GlobalBottomSections />

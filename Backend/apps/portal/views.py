@@ -376,10 +376,13 @@ class GuaranteeApplyView(views.APIView):
         allowed = {
             "Founder Audit",
             "Full Refund",
-            "Replacement Program",
+            "Full Replacement",
+            "Replacement Program",  # legacy label from older clients
         }
         if request_type not in allowed:
-            request_type = "Founder Audit"
+            request_type = "Full Refund"
+        if request_type == "Replacement Program":
+            request_type = "Full Replacement"
 
         purchase_key = str(data.get("purchase_key") or "").strip()[:120]
         program_label = str(data.get("program_label") or "").strip()[:200]
@@ -412,6 +415,7 @@ class GuaranteeApplyView(views.APIView):
             )
 
         member_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip() or user.username
+        email_sent = False
         try:
             from accounts.guarantee_mailer import send_guarantee_apply_email
 
@@ -424,8 +428,33 @@ class GuaranteeApplyView(views.APIView):
                 message=message,
                 purchases_summary=summary,
             )
+            email_sent = True
         except Exception:
             logger.exception("Guarantee apply email failed for user_id=%s", user.id)
+
+        try:
+            from accounts.models import RefundApplication
+
+            RefundApplication.objects.create(
+                user=user,
+                member_email=user.email,
+                member_name=member_name,
+                request_type=request_type,
+                program_label=program_label,
+                purchase_key=purchase_key,
+                message=message,
+                purchases_summary=summary,
+                email_sent=email_sent,
+            )
+        except Exception:
+            logger.exception("Failed to persist refund application for user_id=%s", user.id)
+            if not email_sent:
+                return Response(
+                    {"detail": "Could not save your request right now. Please try again shortly."},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+        if not email_sent:
             return Response(
                 {"detail": "Could not send your request right now. Please try again shortly."},
                 status=status.HTTP_502_BAD_GATEWAY,

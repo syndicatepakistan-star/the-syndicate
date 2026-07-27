@@ -1,14 +1,8 @@
-import type { CSSProperties } from "react";
+import type { ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
-import { GuaranteeFeaturedLogos } from "@/components/guarantee/GuaranteeFeaturedLogos";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
-
-/** 32pt locked — rem-based Tailwind was crushed by html { font-size: 14–16px }. */
-const TITLE_32PT: CSSProperties = {
-  fontSize: "32pt",
-  lineHeight: 1.45,
-  letterSpacing: "0.06em",
-};
 
 function IconFounderAudit({ className }: { className?: string }) {
   return (
@@ -59,91 +53,153 @@ function IconHandshake({ className }: { className?: string }) {
   );
 }
 
-const CARDS = [
+const CHILD_CARDS: Array<{
+  title: ReactNode;
+  body: ReactNode;
+  Icon: typeof IconFounderAudit;
+  accent: "amber" | "cyan" | "violet";
+  iconClass: string;
+  titleLightning: "amber" | "cyan" | "violet";
+}> = [
   {
-    title: "Founder's Audit",
-    body: "A private call directly with our Founder to examine exactly what went wrong.",
+    title: (
+      <>
+        Founder&apos;s <span className="text-amber-100">Audit</span>
+      </>
+    ),
+    body: (
+      <>
+        Private <span className="font-semibold text-amber-200">founder call</span> to review what went wrong.
+      </>
+    ),
     Icon: IconFounderAudit,
-    accent: "amber" as const,
+    accent: "amber",
     iconClass: "text-amber-200",
-    titleLightning: "amber" as const,
+    titleLightning: "amber",
   },
   {
-    title: "Full Refund or Replacement",
-    body: "A 100% refund processed within 48 hours, OR a free replacement program of your choice.",
+    title: (
+      <>
+        <span className="text-cyan-100">Refund</span> or Replace
+      </>
+    ),
+    body: (
+      <>
+        <span className="font-semibold text-cyan-200">100% refund</span> in{" "}
+        <span className="font-semibold text-cyan-200">48 hours</span>, or a free replacement program.
+      </>
+    ),
     Icon: IconRefund,
-    accent: "cyan" as const,
+    accent: "cyan",
     iconClass: "text-cyan-200",
-    titleLightning: "cyan" as const,
+    titleLightning: "cyan",
   },
   {
-    title: "No Hidden Cost, No Hidden Obligations",
-    body: "",
+    title: (
+      <>
+        No <span className="text-violet-100">Hidden</span> Costs
+      </>
+    ),
+    body: (
+      <>
+        No <span className="font-semibold text-violet-200">hidden fees</span>. No{" "}
+        <span className="font-semibold text-violet-200">hidden obligations</span>.
+      </>
+    ),
     Icon: IconHandshake,
-    accent: "violet" as const,
+    accent: "violet",
     iconClass: "text-violet-200",
-    titleLightning: "violet" as const,
+    titleLightning: "violet",
   },
-] as const;
+];
+
+/** Mobile/tablet portrait: keep emblem + cards on the same centered width (+10px). */
+const GUARANTEE_MOBILE_COL =
+  "mx-auto w-[min(58vw,calc(11.5rem+10px))] sm:w-[min(42vw,calc(15rem+10px))] md:w-full";
 
 export function SyndicateGuaranteeContent() {
   return (
-    <div className="w-full space-y-8 sm:space-y-10">
+    <div className="guarantee-stack mx-auto flex w-full max-w-[96rem] flex-col gap-8 sm:gap-10 lg:gap-12">
+      {/* Title */}
       <header className="text-center">
-        <CyberChamferFrame accent="hero" chamfer={22} className="w-full" innerClassName="px-5 py-9 sm:px-10 sm:py-14">
-          <div className="guarantee-page-title--hero-stack">
-            <p
-              className={`guarantee-page-title ${publicHeadingLightning("gold")} font-black uppercase`}
-              style={TITLE_32PT}
-            >
-              The Syndicate
-            </p>
-            <h1
-              className={`guarantee-page-title ${publicHeadingLightning("amber")} font-black uppercase`}
-              style={TITLE_32PT}
-            >
-              Bulletproof
-            </h1>
-            <p
-              className={`guarantee-page-title ${publicHeadingLightning("gold")} font-black uppercase`}
-              style={TITLE_32PT}
-            >
-              Guarantee
-            </p>
-          </div>
-          <p className="mx-auto mt-8 max-w-4xl text-lg font-medium leading-[1.75] text-zinc-50 sm:mt-10 sm:text-xl sm:leading-[1.8] md:text-2xl md:leading-[1.85]">
-            Operator protection built into every purchase — founder review, full refund or replacement, zero hidden
-            strings.
-          </p>
-        </CyberChamferFrame>
+        <h1 className="guarantee-page-title guarantee-page-title--hero font-black uppercase tracking-[0.08em]">
+          <span className={publicHeadingLightning("cyan")}>Syndicate</span>{" "}
+          <span className={publicHeadingLightning("amber")}>Bulletproof</span>{" "}
+          <span className={publicHeadingLightning("violet")}>Guarantee</span>
+        </h1>
       </header>
 
-      <GuaranteeFeaturedLogos />
+      {/* Emblem + cards share one width column on mobile */}
+      <div className={`guarantee-emblem-cards flex flex-col gap-5 sm:gap-6 md:gap-8 lg:gap-10 ${GUARANTEE_MOBILE_COL} md:max-w-none`}>
+        <div className="mx-auto w-full md:w-[calc(16.5rem+10px)] lg:w-[calc(18rem+10px)]">
+          <CyberChamferFrame accent="video" chamfer={14} decorSize="compact" className="w-full" innerClassName="p-1.5 sm:p-2">
+            <div className="guarantee-refund-media relative aspect-square w-full overflow-hidden">
+              <Image
+                src="/assets/guarantee/syndicate-guarantee-refund.png"
+                alt="Syndicate Guarantee Refund — secure digital protection emblem"
+                fill
+                className="object-cover object-center"
+                priority
+                sizes="(max-width: 640px) 194px, (max-width: 768px) 250px, (max-width: 1024px) 274px, 298px"
+              />
+            </div>
+          </CyberChamferFrame>
+        </div>
 
-      <section aria-label="Guarantee details" className="grid gap-6 sm:gap-7">
-        {CARDS.map(({ title, body, Icon, accent, iconClass, titleLightning }) => (
-          <CyberChamferFrame
-            key={title}
-            accent={accent}
-            chamfer={18}
-            className="w-full"
-            innerClassName="px-6 py-8 text-center sm:px-10 sm:py-11"
-          >
-            <Icon className={`mx-auto h-24 w-24 sm:h-28 sm:w-28 ${iconClass}`} />
-            <h2
-              className={`guarantee-page-title ${publicHeadingLightning(titleLightning)} mt-6 font-black uppercase sm:mt-7`}
-              style={TITLE_32PT}
+        <section
+          aria-label="Guarantee details"
+          className="grid w-full grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch md:gap-5"
+        >
+          {CHILD_CARDS.map(({ title, body, Icon, accent, iconClass, titleLightning }, index) => (
+            <CyberChamferFrame
+              key={index}
+              accent={accent}
+              chamfer={18}
+              decorSize="compact"
+              flatPanel
+              className="guarantee-square-card aspect-square h-auto w-full min-w-0"
+              innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col"
+              contentClassName="flex min-h-0 flex-1 flex-col items-center justify-center text-center"
             >
-              {title}
-            </h2>
-            {body ? (
-              <p className="mx-auto mt-5 max-w-4xl text-lg font-medium leading-[1.75] text-zinc-50 sm:mt-6 sm:text-xl sm:leading-[1.8] md:text-[1.4rem] md:leading-[1.85]">
+              <Icon className={`h-8 w-8 shrink-0 sm:h-9 sm:w-9 md:h-11 md:w-11 ${iconClass}`} />
+              <h2
+                className={`guarantee-page-title guarantee-page-title--card ${publicHeadingLightning(titleLightning)} mt-2 font-black uppercase tracking-[0.06em] sm:mt-2.5`}
+              >
+                {title}
+              </h2>
+              <p className="guarantee-page-card-body mt-2 font-medium leading-snug text-zinc-100/88 sm:mt-2.5">
                 {body}
               </p>
-            ) : null}
-          </CyberChamferFrame>
-        ))}
-      </section>
+            </CyberChamferFrame>
+          ))}
+        </section>
+
+        <CyberChamferFrame
+          accent="hero"
+          chamfer={16}
+          decorSize="compact"
+          className="guarantee-square-card aspect-square w-full md:aspect-auto md:min-h-0"
+          innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col justify-center"
+        >
+          <div
+            id="guarantee-apply"
+            className="flex flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row md:flex-wrap md:gap-6"
+          >
+            <p className="guarantee-page-apply-copy max-w-xl text-center text-zinc-300">
+              Apply via <span className="font-semibold text-fuchsia-200">email OTP</span> — no login.{" "}
+              <span className="font-semibold break-all text-cyan-200 sm:break-normal">
+                intelligence@the-syndicate.com
+              </span>
+            </p>
+            <Link
+              href="/syndicate-guarantee/apply"
+              className="hamburger-attract inline-flex min-h-[48px] w-full max-w-[240px] shrink-0 items-center justify-center rounded-lg border border-fuchsia-300/80 bg-black/80 px-8 py-2.5 text-base font-bold uppercase tracking-[0.08em] text-fuchsia-100 shadow-[0_0_18px_rgba(232,121,249,0.4)] transition hover:scale-[1.03] hover:bg-black/95 hover:shadow-[0_0_28px_rgba(232,121,249,0.6)] sm:w-auto sm:max-w-none"
+            >
+              Apply
+            </Link>
+          </div>
+        </CyberChamferFrame>
+      </div>
     </div>
   );
 }

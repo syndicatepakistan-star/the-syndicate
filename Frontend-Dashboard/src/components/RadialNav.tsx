@@ -27,18 +27,39 @@ export type RadialNavProps = {
   onPrefetch?: (id: NavSectionId) => void
 }
 
-const defaultItems: RadialNavItem[] = [
-  { id: 'home', label: 'Home' },
-  { id: 'whatYouGet', label: 'What You Get' },
-  { id: 'ourMethods', label: 'Our Methods' },
-  { id: 'ourFounder', label: 'Our Founder' },
-  { id: 'syndicateAnalysis', label: 'Syn Diagnosis' },
-  { id: 'joinNow', label: 'Login' },
-  { id: 'programs', label: 'Programs' },
-  { id: 'membership', label: 'Membership' },
-  { id: 'syndicateGuarantee', label: 'Syndicate Guarantee' },
-  { id: 'affiliate', label: 'Affiliate' },
-]
+/**
+ * Clockwise from top (user order):
+ * 1 Home → 2 Membership → 3 Syn Diagnosis → 4 Our Founder → 5 Affiliate
+ * → 6 Login → 7 Our Methods → 8 What You Get → 9 Syndicate Guarantee → 10 Programs
+ */
+export const RADIAL_SLOT_ORDER: readonly NavSectionId[] = [
+  'home',
+  'membership',
+  'syndicateAnalysis',
+  'ourFounder',
+  'whatYouGet',
+  'joinNow',
+  'ourMethods',
+  'syndicateGuarantee',
+  'affiliate',
+  'programs',
+] as const
+
+const defaultItems: RadialNavItem[] = RADIAL_SLOT_ORDER.map((id) => {
+  const labels: Record<NavSectionId, string> = {
+    home: 'Home',
+    membership: 'Membership',
+    syndicateAnalysis: 'Syn Diagnosis',
+    ourFounder: 'Our Founder',
+    affiliate: 'Affiliate',
+    joinNow: 'Login',
+    ourMethods: 'Our Methods',
+    whatYouGet: 'What You Get',
+    syndicateGuarantee: 'Refund',
+    programs: 'Programs',
+  }
+  return { id, label: labels[id] }
+})
 
 const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; glow: string }> = {
   home: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.5)', glow: 'rgba(96,165,250,0.42)' },
@@ -78,15 +99,8 @@ const THEMES: Record<NavSectionId, { color: string; bg: string; border: string; 
   },
 }
 
-/** Horizontal gap between Login + Syn Diagnosis on mobile / iPad (below lg). */
-const RADIAL_NAV_BOTTOM_PAIR_GAP_PX = 36
-
 /** Mobile + iPad (below lg) layout tweaks */
 const RADIAL_NAV_COMPACT_MAX_WIDTH = 1024
-
-function getBottomPairHalfGap(): number {
-  return RADIAL_NAV_BOTTOM_PAIR_GAP_PX / 2
-}
 
 /** Slot radius by viewport: smaller on mobile so buttons stay on screen */
 function getSlotRadius(itemCount: number): number {
@@ -94,12 +108,12 @@ function getSlotRadius(itemCount: number): number {
   const w = window.innerWidth
   if (itemCount >= 7) {
     // Slightly larger radius so neon glows don't overlap neighboring pills.
-    if (w < 360) return itemCount >= 10 ? 118 : 124
-    if (w < 420) return itemCount >= 10 ? 128 : 134
-    if (w < 480) return itemCount >= 10 ? 140 : 148
-    if (w < 640) return itemCount >= 10 ? 162 : 172
-    if (w < 768) return itemCount >= 10 ? 200 : 210
-    if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return itemCount >= 10 ? 220 : 230
+    if (w < 360) return itemCount >= 10 ? 126 : 132
+    if (w < 420) return itemCount >= 10 ? 138 : 144
+    if (w < 480) return itemCount >= 10 ? 150 : 158
+    if (w < 640) return itemCount >= 10 ? 172 : 182
+    if (w < 768) return itemCount >= 10 ? 210 : 220
+    if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return itemCount >= 10 ? 232 : 242
     return itemCount >= 10 ? 242 : 250
   }
   if (itemCount >= 6) {
@@ -117,84 +131,51 @@ function getSlotRadius(itemCount: number): number {
 }
 
 function getSlots(radius: number, count: number) {
-  let xScale = 1
-  let yScale = 1
-  if (typeof window !== 'undefined' && count >= 7) {
+  // Stronger vertical stretch on phones/iPads so Home↔Programs/Membership
+  // and Our Methods/What You Get↔Login read as separate rows (not glow-stacked).
+  let xScale = 1.06
+  let yScale = 1.12
+  if (typeof window !== 'undefined') {
     const w = window.innerWidth
     if (w < 420) {
-      xScale = 1.04
-      yScale = 1.42
+      xScale = 1.08
+      yScale = 1.58
     } else if (w < 640) {
-      xScale = 1.02
-      yScale = 1.3
+      xScale = 1.07
+      yScale = 1.48
     } else if (w < 768) {
-      xScale = 1.04
-      yScale = 1.2
+      xScale = 1.06
+      yScale = 1.4
     } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       xScale = 1.06
-      yScale = 1.14
+      yScale = 1.34
     } else {
-      xScale = 1.04
+      xScale = 1.05
       yScale = 1.08
     }
   }
+
+  // Even ellipse, Home at top, then clockwise — mirrored left/right pairs share the same |y|.
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
-    let x = radius * xScale * Math.cos(angle)
-    let y = radius * yScale * Math.sin(angle)
-    if (typeof window !== 'undefined' && count >= 7 && window.innerWidth < RADIAL_NAV_COMPACT_MAX_WIDTH) {
-      const w = window.innerWidth
-      if (count >= 9) {
-        // Push Login + Syn Diagnosis down/apart so glows clear Programs / neighbors.
-        const bottomRowY = w < 640 ? 16 : w < 768 ? 18 : 20
-        const bottomPairHalfGap = getBottomPairHalfGap()
-        if (i === 4 || i === 5) y += bottomRowY
-        if (i === 4) x += bottomPairHalfGap
-        if (i === 5) x -= bottomPairHalfGap
-        if (i === 6) y -= 10
-        // Home sits higher; Affiliate / What You Get sit lower for a clearer V gap.
-        if (i === 0) y -= 8
-      } else if (w < 420) {
-        if (i === 3) x += 12
-        if (i === 4) x -= 12
-      }
-    }
     return {
-      x,
-      y,
+      x: radius * xScale * Math.cos(angle),
+      y: radius * yScale * Math.sin(angle),
     }
   })
 }
 
-function getMobileItemNudge(id: NavSectionId, itemCount: number): {
-  marginLeft?: string;
-  marginRight?: string;
-  marginTop?: string;
-  marginBottom?: string;
-  position?: 'relative';
-  zIndex?: number;
-} {
-  if (typeof window === 'undefined' || itemCount < 7) return {}
+function slotIndexForId(id: NavSectionId, fallbackIndex: number): number {
+  const idx = RADIAL_SLOT_ORDER.indexOf(id)
+  return idx >= 0 ? idx : fallbackIndex
+}
+
+function getItemMargins(): { marginTop: string; marginBottom: string } {
+  if (typeof window === 'undefined') return { marginTop: '12px', marginBottom: '12px' }
   const w = window.innerWidth
-  if (w >= RADIAL_NAV_COMPACT_MAX_WIDTH) return {}
-  if (id === 'home') return { marginBottom: '36px', marginLeft: '5px' }
-  if (id === 'affiliate' || id === 'whatYouGet') return { marginTop: '34px' }
-  if (id === 'ourMethods' || id === 'membership') return { marginTop: '12px' }
-  // Bottom pair: horizontal gap on mobile + iPad (Login left, Syn Diagnosis right).
-  if (id === 'joinNow') {
-    return {
-      marginTop: '10px',
-      marginRight: `${RADIAL_NAV_BOTTOM_PAIR_GAP_PX}px`,
-      position: 'relative',
-      zIndex: 10,
-    }
-  }
-  if (id === 'syndicateAnalysis') {
-    return { marginTop: '10px', position: 'relative', zIndex: 20 }
-  }
-  if (id === 'programs') return { marginTop: '12px', marginBottom: '10px' }
-  if (id === 'syndicateGuarantee') return { marginTop: '14px' }
-  return {}
+  if (w < 640) return { marginTop: '14px', marginBottom: '14px' }
+  if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) return { marginTop: '16px', marginBottom: '16px' }
+  return { marginTop: '14px', marginBottom: '14px' }
 }
 
 export function RadialNav({
@@ -211,16 +192,27 @@ export function RadialNav({
   const tlRef = useRef<gsap.core.Timeline | null>(null)
   const glowRef = useRef<gsap.core.Tween | null>(null)
 
+  const orderedItems = useMemo(() => {
+    const byId = new Map(items.map((it) => [it.id, it]))
+    const ordered = RADIAL_SLOT_ORDER.map((id) => byId.get(id)).filter(Boolean) as RadialNavItem[]
+    // Append any unexpected extras at the end (should not happen for marketing nav).
+    for (const it of items) {
+      if (!RADIAL_SLOT_ORDER.includes(it.id)) ordered.push(it)
+    }
+    return ordered.length ? ordered : items
+  }, [items])
+
   const placed = useMemo(() => {
-    const count = items.length
-    return items.map((it, idx) => {
-      const baseAngleRad = (idx / count) * Math.PI * 2 - Math.PI / 2
+    const count = orderedItems.length
+    return orderedItems.map((it, idx) => {
+      const slot = slotIndexForId(it.id, idx)
+      const baseAngleRad = (slot / count) * Math.PI * 2 - Math.PI / 2
       const x = Math.cos(baseAngleRad)
       const y = Math.sin(baseAngleRad)
-      return { ...it, x, y, baseAngleRad }
+      return { ...it, x, y, baseAngleRad, slot }
     })
-  }, [items])
-  const useCompactButtons = items.length >= 7
+  }, [orderedItems])
+  const useCompactButtons = orderedItems.length >= 7
 
   useLayoutEffect(() => {
     if (!open || !rootRef.current) return
@@ -260,12 +252,14 @@ export function RadialNav({
     }
 
     if (prefersReducedMotion) {
-      const n = items.length
+      const n = orderedItems.length
       const slots = getSlots(getSlotRadius(n), n)
       const backdrop = rootRef.current.querySelector('[data-rnav="backdrop"]')
       if (backdrop) gsap.set(backdrop, { autoAlpha: 1 })
-      rootRef.current.querySelectorAll<HTMLElement>('[data-rnav="item"]').forEach((el, i) => {
-        const slot = slots[i % slots.length]
+      rootRef.current.querySelectorAll<HTMLElement>('[data-rnav="item"]').forEach((el) => {
+        const id = el.dataset.rnavId as NavSectionId | undefined
+        const slotIdx = id ? slotIndexForId(id, 0) : 0
+        const slot = slots[slotIdx % slots.length]
         if (!slot) return
         gsap.set(el, {
           xPercent: -50,
@@ -302,7 +296,7 @@ export function RadialNav({
       startY = logoCy - centerCy
     }
 
-    const n = items.length
+    const n = orderedItems.length
     const slots = getSlots(getSlotRadius(n), n)
 
     nodes.forEach((el) => {
@@ -339,8 +333,16 @@ export function RadialNav({
         {
           xPercent: -50,
           yPercent: -50,
-          x: (i) => slots[i % slots.length]?.x ?? 0,
-          y: (i) => slots[i % slots.length]?.y ?? 0,
+          x: (_i, el) => {
+            const id = (el as HTMLElement).dataset.rnavId as NavSectionId | undefined
+            const slotIdx = id ? slotIndexForId(id, 0) : 0
+            return slots[slotIdx % slots.length]?.x ?? 0
+          },
+          y: (_i, el) => {
+            const id = (el as HTMLElement).dataset.rnavId as NavSectionId | undefined
+            const slotIdx = id ? slotIndexForId(id, 0) : 0
+            return slots[slotIdx % slots.length]?.y ?? 0
+          },
           scale: 1,
           rotate: 0,
           autoAlpha: 1,
@@ -357,7 +359,7 @@ export function RadialNav({
     glowRef.current = null
 
     return
-  }, [open, prefersReducedMotion, placed, items.length])
+  }, [open, prefersReducedMotion, placed, orderedItems.length])
 
   // When cursor leaves section: cards assemble to center, then close
   useLayoutEffect(() => {
@@ -458,7 +460,7 @@ export function RadialNav({
           <div className="absolute inset-0 grid place-items-center overflow-visible p-3 sm:p-4">
             <div
               data-rnav="center"
-              className="relative h-full min-h-[240px] max-h-[48vh] w-[min(94vw,360px)] max-w-[360px] sm:min-h-[40vh] md:max-w-[400px] lg:min-h-[38vh] lg:max-h-[42vh] lg:w-[min(92vw,340px)] lg:max-w-[340px]"
+              className="relative h-full min-h-[260px] max-h-[58vh] w-[min(94vw,360px)] max-w-[360px] sm:min-h-[44vh] sm:max-h-[56vh] md:max-w-[400px] md:max-h-[54vh] lg:min-h-[38vh] lg:max-h-[42vh] lg:w-[min(92vw,340px)] lg:max-w-[340px]"
             >
               <div
                 data-rnav="ring"
@@ -471,6 +473,8 @@ export function RadialNav({
                     <div
                       key={it.id}
                       data-rnav="item"
+                      data-rnav-id={it.id}
+                      data-rnav-slot={it.slot}
                       className="absolute left-1/2 top-1/2 pointer-events-none overflow-visible"
                       style={{ transformOrigin: '50% 50%' }}
                     >
@@ -500,7 +504,7 @@ export function RadialNav({
                           'transition-[filter,box-shadow] duration-500 ease-in-out',
                         ].join(' ')}
                         style={{
-                          ...getMobileItemNudge(it.id, items.length),
+                          ...getItemMargins(),
                           color: theme.color,
                           backgroundColor: theme.bg,
                           borderColor: activeId === it.id ? 'rgba(255,255,255,0.9)' : theme.border,

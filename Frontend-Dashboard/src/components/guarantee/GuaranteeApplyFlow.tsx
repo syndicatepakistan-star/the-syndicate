@@ -14,7 +14,7 @@ type PurchaseItem = {
   currency: string;
 };
 
-const REQUEST_TYPES = ["Founder Audit", "Full Refund", "Replacement Program"] as const;
+const REQUEST_TYPES = ["Founder Audit", "Full Refund", "Full Replacement"] as const;
 
 type Step = "email" | "otp" | "form" | "done";
 

@@ -94,6 +94,16 @@ function StatCell({
       >
         {block.label}
       </div>
+      {block.label2 ? (
+        <div
+          className={cn(
+            "mt-0.5 max-w-[11rem] font-medium leading-snug text-white/65",
+            compact ? "text-[8px]" : "text-[9px] sm:text-[10px]",
+          )}
+        >
+          {block.label2}
+        </div>
+      ) : null}
     </div>
   );
 }

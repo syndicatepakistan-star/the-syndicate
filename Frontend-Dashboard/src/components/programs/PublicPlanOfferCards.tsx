@@ -39,6 +39,7 @@ import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockC
 import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
 import toast from "react-hot-toast";
+import { useDeferredChrome } from "@/hooks/useDeferredChrome";
 
 const PlanOfferDetailModal = dynamic(
   () => import("@/components/programs/PlanOfferDetailModal").then((m) => m.PlanOfferDetailModal),
@@ -174,6 +175,10 @@ function PublicPlanOfferCardsInner({
   const packModalOpenedRef = useRef(false);
   const isLarge = size === "large";
   const unlockCart = useUnlockCart();
+  const showUnlockChrome = useDeferredChrome(
+    !shellHosted &&
+      (unlockCart.count > 0 || unlockCart.selectionMode || cartCheckoutBusy || !!cartError),
+  );
 
   const reloadUnlockState = useCallback(async () => {
     if (!getAuthorizationHeader()) {
@@ -429,6 +434,7 @@ function PublicPlanOfferCardsInner({
         highlighted={highlightedPack === offer.plan}
         comingSoon={comingSoon}
         inCart={inCart}
+        priorityImage={isLarge && !knightOnly && offer.plan === "bundle"}
         actionLabel={
           bucketActionLabel ??
           (offer.openAction === "vault_picker" && vaultPack
@@ -570,7 +576,7 @@ function PublicPlanOfferCardsInner({
           onOpenUnlocked={openUnlocked}
         />
       ) : null}
-      {!shellHosted ? (
+      {!shellHosted && showUnlockChrome ? (
         <>
           <Toaster
             position="bottom-center"

@@ -32,11 +32,13 @@ export default function RouteWarmup() {
       scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
     }
 
+    // On /programs: no idle route prefetch — Lighthouse unused-JS / TBT on mobile.
+    if (isPrograms) return;
+
     runWhenIdle(() => {
-      // On programs, prefer membership only — avoid fighting LCP/TBT with more route JS.
-      if (!isPrograms) router.prefetch("/programs");
-      if (!isPrograms && !isFounder) router.prefetch("/membership");
-    }, isFounder || isQuiz || isPrograms ? 2800 : 1200);
+      router.prefetch("/programs");
+      if (!isFounder) router.prefetch("/membership");
+    }, isFounder || isQuiz ? 2800 : 1200);
   }, [router, pathname]);
 
   return null;

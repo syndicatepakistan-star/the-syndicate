@@ -48,6 +48,59 @@ const TONE_NEON: Record<GamingBenefitTone, { figure: string; glow: string }> = {
   },
 };
 
+function highlightCorePhrases({
+  text,
+  neon,
+  compact,
+  variant,
+}: {
+  text: string;
+  neon: { figure: string; glow: string };
+  compact: boolean | undefined;
+  variant: "label" | "label2";
+}) {
+  // Highlights only the requested parts to keep layout/design unchanged.
+  // Targets (examples):
+  // - "Build 30 AI Projects" => 30 + Projects
+  // - "Learn 23 Advanced Trading Strategies" => 23 + Trading Strategies
+  const tokenRe = /(\b30\b|\b28\b|\b23\b|\bProjects\b|Trading\s+Strategies)/gi;
+  const highlightSize =
+    variant === "label"
+      ? compact
+        ? "text-[13px]"
+        : "text-[14px] sm:text-[15px]"
+      : compact
+        ? "text-[12px]"
+        : "text-[13px] sm:text-[14px]";
+
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  // eslint-disable-next-line no-cond-assign
+  while ((match = tokenRe.exec(text))) {
+    const start = match.index;
+    const end = start + match[0].length;
+
+    if (start > lastIndex) parts.push(text.slice(lastIndex, start));
+
+    parts.push(
+      <span
+        key={`hl-${key++}`}
+        className={cn("font-black leading-snug", neon.figure, neon.glow, highlightSize)}
+      >
+        {text.slice(start, end)}
+      </span>,
+    );
+
+    lastIndex = end;
+  }
+
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return <>{parts}</>;
+}
+
 function StatCell({
   block,
   compact,
@@ -92,7 +145,12 @@ function StatCell({
           compact ? "text-[9px]" : "text-[10px] sm:text-[11px]",
         )}
       >
-        {block.label}
+        {highlightCorePhrases({
+          text: block.label,
+          neon,
+          compact,
+          variant: "label",
+        })}
       </div>
       {block.label2 ? (
         <div
@@ -101,7 +159,12 @@ function StatCell({
             compact ? "text-[8px]" : "text-[9px] sm:text-[10px]",
           )}
         >
-          {block.label2}
+          {highlightCorePhrases({
+            text: block.label2,
+            neon,
+            compact,
+            variant: "label2",
+          })}
         </div>
       ) : null}
     </div>

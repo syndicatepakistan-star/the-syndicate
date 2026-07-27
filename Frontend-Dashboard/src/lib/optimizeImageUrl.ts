@@ -48,9 +48,16 @@ export function nextOptimizedImageUrl(src: string, width: number, quality = 70):
 }
 
 /** srcSet across optimizer widths for plain `<img>` tags (pair with a `sizes` attr). */
-export function nextOptimizedImageSrcSet(src: string, quality = 70): string | undefined {
+export function nextOptimizedImageSrcSet(
+  src: string,
+  quality = 70,
+  /** Cap candidate widths so mobile does not download oversized variants. */
+  maxWidth = 1200,
+): string | undefined {
   if (!isNextOptimizableStatic(src)) return undefined;
-  return NEXT_IMAGE_WIDTHS.map(
-    (w) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${quality} ${w}w`
-  ).join(", ");
+  const widths = NEXT_IMAGE_WIDTHS.filter((w) => w <= maxWidth);
+  const list = widths.length > 0 ? widths : [NEXT_IMAGE_WIDTHS[0]];
+  return list
+    .map((w) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${quality} ${w}w`)
+    .join(", ");
 }

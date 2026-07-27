@@ -5,8 +5,10 @@ import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
+import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
+import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from '@/lib/optimizeImageUrl'
 import { buildPageMetadata } from '@/lib/seo'
 
 const ProgramsOfferSection = dynamic(
@@ -41,6 +43,10 @@ const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
   loading: () => <div className="min-h-[260px] w-full bg-[#02050b]" aria-hidden />,
 })
 
+const LCP_IMAGE_SIZES = '(max-width: 640px) 92vw, (max-width: 1024px) 480px, 512px'
+const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 640, 62)
+const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 62, 828)
+
 export const metadata: Metadata = buildPageMetadata({
   title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',
   description:
@@ -52,6 +58,15 @@ export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
     <div className="mobile-viewport-contain public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
+      {/* Discover Money Mastery art early — LCP candidate on mobile. */}
+      <link
+        rel="preload"
+        as="image"
+        href={LCP_IMAGE_HREF}
+        imageSrcSet={LCP_IMAGE_SRCSET}
+        imageSizes={LCP_IMAGE_SIZES}
+        fetchPriority="high"
+      />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-12%] top-[10%] h-[320px] w-[320px] rounded-full bg-fuchsia-500/20 blur-[120px] sm:h-[520px] sm:w-[520px]" />
         <div className="absolute right-[-8%] top-[38%] h-[300px] w-[300px] rounded-full bg-amber-400/20 blur-[110px] sm:h-[460px] sm:w-[460px]" />

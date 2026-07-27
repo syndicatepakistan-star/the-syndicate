@@ -51,7 +51,7 @@ export function midTicketWhatYouGetBlocks(pack: VaultPackKey): readonly MoneyMas
       ? {
           value: String(tradingKeyStrategiesCount()),
           unit: "Strategies",
-          label: "Learn 23 Strategies to Earn Real Money",
+          label: "Learn 23 Advanced Trading Strategies",
           tone: "green",
         }
       : {

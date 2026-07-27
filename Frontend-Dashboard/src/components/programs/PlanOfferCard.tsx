@@ -39,6 +39,8 @@ type Props = {
   inCart?: boolean;
   /** Browsing-only card: hide price and primary unlock/open action. */
   detailsOnly?: boolean;
+  /** First-viewport LCP candidate (Money Mastery on /programs). */
+  priorityImage?: boolean;
   onDetails: () => void;
   onOpen: () => void;
 };
@@ -183,6 +185,7 @@ export function PlanOfferCard({
   vaultHero = false,
   inCart = false,
   detailsOnly = false,
+  priorityImage = false,
   onDetails,
   onOpen,
 }: Props) {
@@ -363,19 +366,29 @@ export function PlanOfferCard({
               )}
             >
               <img
-                src={nextOptimizedImageUrl(offer.imageSrc, isModule ? 384 : 640, 60)}
-                srcSet={nextOptimizedImageSrcSet(offer.imageSrc, 60)}
+                src={nextOptimizedImageUrl(
+                  offer.imageSrc,
+                  isModule ? 384 : priorityImage ? 640 : 480,
+                  priorityImage ? 62 : 55,
+                )}
+                srcSet={nextOptimizedImageSrcSet(
+                  offer.imageSrc,
+                  priorityImage ? 62 : 55,
+                  isModule ? 480 : priorityImage ? 828 : 640,
+                )}
                 sizes={
                   isModule
                     ? "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 320px"
-                    : "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 420px"
+                    : priorityImage
+                      ? "(max-width: 640px) 92vw, (max-width: 1024px) 480px, 512px"
+                      : "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 380px"
                 }
-                width={isModule ? 384 : 640}
-                height={isModule ? 240 : 400}
+                width={isModule ? 384 : priorityImage ? 640 : 480}
+                height={isModule ? 240 : priorityImage ? 400 : 300}
                 alt={offer.title}
-                loading={offer.plan === "bundle" ? "eager" : "lazy"}
-                fetchPriority={offer.plan === "bundle" ? "high" : "low"}
-                decoding="async"
+                loading={priorityImage || offer.plan === "bundle" ? "eager" : "lazy"}
+                fetchPriority={priorityImage || offer.plan === "bundle" ? "high" : "low"}
+                decoding={priorityImage || offer.plan === "bundle" ? "sync" : "async"}
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
@@ -658,10 +671,9 @@ export function PlanOfferCard({
           </div>
         </span>
       </div>
-      <OfferDescriptionModal
-        offer={descriptionOpen ? offer : null}
-        onClose={() => setDescriptionOpen(false)}
-      />
+      {descriptionOpen ? (
+        <OfferDescriptionModal offer={offer} onClose={() => setDescriptionOpen(false)} />
+      ) : null}
     </article>
   );
 }

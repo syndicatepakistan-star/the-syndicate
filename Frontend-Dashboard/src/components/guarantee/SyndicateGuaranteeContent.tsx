@@ -4,61 +4,12 @@ import Link from "next/link";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 
-function IconFounderAudit({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} fill="none" aria-hidden>
-      <circle cx="32" cy="20" r="9" stroke="currentColor" strokeWidth="2.2" />
-      <path
-        d="M18 54c2-13 10-19 14-19s12 6 14 19"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path d="M22 16c0-5 4-9 10-9s10 4 10 9v3H22v-3Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M28 10h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M24 14h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconRefund({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} fill="none" aria-hidden>
-      <rect x="8" y="20" width="38" height="24" rx="3" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M14 30h26M14 36h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="46" cy="40" r="11" fill="#050505" stroke="currentColor" strokeWidth="2.2" />
-      <path
-        d="M46 33.5v13M42.2 36.8c1.1-1 2.3-1.5 3.8-1.5 2.4 0 3.8 1.1 3.8 2.8 0 1.6-1.3 2.5-3.5 2.9l-2 .4c-1.8.4-2.7 1-2.7 2.2 0 1.4 1.3 2.3 3.5 2.3 1.6 0 2.9-.5 3.9-1.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function IconHandshake({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} fill="none" aria-hidden>
-      <rect x="16" y="8" width="32" height="42" rx="3" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M24 18h16M24 26h16M24 34h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path
-        d="M14 46c5-7 12-9 18-4 6-5 13-3 18 4"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path d="M26 44c2.5 2.5 5 3.5 6 3.5s3.5-1 6-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 const CHILD_CARDS: Array<{
   title: ReactNode;
   body: ReactNode;
-  Icon: typeof IconFounderAudit;
+  iconSrc: string;
+  iconAlt: string;
   accent: "amber" | "cyan" | "violet";
-  iconClass: string;
   titleLightning: "amber" | "cyan" | "violet";
 }> = [
   {
@@ -72,9 +23,9 @@ const CHILD_CARDS: Array<{
         Private <span className="font-semibold text-amber-200">founder call</span> to review what went wrong.
       </>
     ),
-    Icon: IconFounderAudit,
+    iconSrc: "/assets/guarantee/audit.png",
+    iconAlt: "Founder's Audit",
     accent: "amber",
-    iconClass: "text-amber-200",
     titleLightning: "amber",
   },
   {
@@ -89,9 +40,9 @@ const CHILD_CARDS: Array<{
         <span className="font-semibold text-cyan-200">48 hours</span>, or a free replacement program.
       </>
     ),
-    Icon: IconRefund,
+    iconSrc: "/assets/guarantee/replace_or_refund.png",
+    iconAlt: "Refund or Replace",
     accent: "cyan",
-    iconClass: "text-cyan-200",
     titleLightning: "cyan",
   },
   {
@@ -106,9 +57,9 @@ const CHILD_CARDS: Array<{
         <span className="font-semibold text-violet-200">hidden obligations</span>.
       </>
     ),
-    Icon: IconHandshake,
+    iconSrc: "/assets/guarantee/icon-no-hidden-costs.png",
+    iconAlt: "No Hidden Costs",
     accent: "violet",
-    iconClass: "text-violet-200",
     titleLightning: "violet",
   },
 ];
@@ -120,12 +71,14 @@ const GUARANTEE_MOBILE_COL =
 export function SyndicateGuaranteeContent() {
   return (
     <div className="guarantee-stack mx-auto flex w-full max-w-[96rem] flex-col gap-8 sm:gap-10 lg:gap-12">
-      {/* Title */}
+      {/* Title — two centered rows */}
       <header className="text-center">
-        <h1 className="guarantee-page-title guarantee-page-title--hero font-black uppercase tracking-[0.08em]">
-          <span className={publicHeadingLightning("cyan")}>Syndicate</span>{" "}
-          <span className={publicHeadingLightning("amber")}>Bulletproof</span>{" "}
-          <span className={publicHeadingLightning("violet")}>Guarantee</span>
+        <h1 className="guarantee-page-title guarantee-page-title--hero guarantee-page-title--hero-stack text-center font-black uppercase tracking-[0.08em]">
+          <span className={publicHeadingLightning("cyan")}>Syndicate</span>
+          <span className="text-center">
+            <span className={publicHeadingLightning("amber")}>Bulletproof</span>{" "}
+            <span className={publicHeadingLightning("violet")}>Guarantee</span>
+          </span>
         </h1>
       </header>
 
@@ -150,7 +103,7 @@ export function SyndicateGuaranteeContent() {
           aria-label="Guarantee details"
           className="grid w-full grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch md:gap-5"
         >
-          {CHILD_CARDS.map(({ title, body, Icon, accent, iconClass, titleLightning }, index) => (
+          {CHILD_CARDS.map(({ title, body, iconSrc, iconAlt, accent, titleLightning }, index) => (
             <CyberChamferFrame
               key={index}
               accent={accent}
@@ -161,7 +114,15 @@ export function SyndicateGuaranteeContent() {
               innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col"
               contentClassName="flex min-h-0 flex-1 flex-col items-center justify-center text-center"
             >
-              <Icon className={`h-8 w-8 shrink-0 sm:h-9 sm:w-9 md:h-11 md:w-11 ${iconClass}`} />
+              <span className="guarantee-card-icon relative block h-10 w-10 shrink-0 sm:h-11 sm:w-11 md:h-12 md:w-12">
+                <Image
+                  src={iconSrc}
+                  alt={iconAlt}
+                  fill
+                  className="object-contain object-center"
+                  sizes="48px"
+                />
+              </span>
               <h2
                 className={`guarantee-page-title guarantee-page-title--card ${publicHeadingLightning(titleLightning)} mt-2 font-black uppercase tracking-[0.06em] sm:mt-2.5`}
               >

@@ -110,18 +110,19 @@ export type MoneyMasteryStatBlock = {
   value: string;
   unit: string;
   label: string;
+  label2?: string;
   tone: GamingBenefitTone;
 };
 
 export const MONEY_MASTERY_CARD_WHAT_YOU_GET: readonly MoneyMasteryStatBlock[] = [
   { value: "11", unit: "Videos", label: "Business Models Programmes", tone: "gold" },
-  { value: "26", unit: "Videos", label: "A.I Agentic Pack", tone: "green" },
-  { value: "29", unit: "Videos", label: "A.I Content Automation Pack", tone: "pink" },
+  { value: "26", unit: "Videos", label: "A.I Agentic Pack", label2: "Build 30 AI projects", tone: "green" },
+  { value: "29", unit: "Videos", label: "A.I Content Automation Pack", label2: "Build 28 Real Projects", tone: "pink" },
   { value: "11", unit: "Videos", label: "Business Behaviour Psychology", tone: "violet" },
 ];
 
 export const MONEY_MASTERY_CARD_PLUS_YOU_GET: readonly MoneyMasteryStatBlock[] = [
-  { value: "53", unit: "Videos", label: "Technical Trading Pack", tone: "cyan" },
+  { value: "53", unit: "Videos", label: "Technical Trading Pack", label2 : "Learn 23 Strategies to Earn Real Money", tone: "cyan" },
 ];
 
 /** Summary pack overview shown at the top of Money Mastery details (separate from lifetime-access cards). */

@@ -94,9 +94,7 @@ export function HomeGlobeSection({ images }: HomeGlobeSectionProps) {
     void warmProgramsSectionAssets(warmUrls);
     if (isMobile) return;
 
-    // Prefetch below-fold bundles while globe warms so pricing/paywall load in parallel.
-    void import("@/components/AnimatedPricingPage");
-    void import("@/components/PaywallSnapshotsSection");
+    // Below-fold pricing/paywall load via LazyWhenVisible — do not force their JS while globe warms.
     const ric = window.requestIdleCallback;
     let idleHandle: number | undefined;
     let usedIdle = false;

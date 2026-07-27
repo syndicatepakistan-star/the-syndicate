@@ -1,7 +1,6 @@
 import { NavApp } from "@/components/NavApp";
-import GlobalBottomSections from "@/components/GlobalBottomSections";
 import { FounderPressFeatures } from "@/components/founder/FounderPressFeatures";
-import { OurFounderClipsSection } from "@/components/founder/OurFounderClipsSection";
+import { OurFounderBelowFold } from "@/components/founder/OurFounderBelowFold";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { publicHeadingLightning } from "@/lib/publicHeadingLightning";
 import { buildFounderPageJsonLd } from "@/lib/structuredData";
@@ -27,10 +26,9 @@ export default function OurFounderPage() {
         </header>
 
         <FounderPressFeatures />
-        <OurFounderClipsSection />
       </main>
 
-      <GlobalBottomSections />
+      <OurFounderBelowFold />
     </div>
   );
 }

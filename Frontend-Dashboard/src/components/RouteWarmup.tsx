@@ -33,8 +33,9 @@ export default function RouteWarmup() {
     }
 
     runWhenIdle(() => {
+      // On programs, prefer membership only — avoid fighting LCP/TBT with more route JS.
       if (!isPrograms) router.prefetch("/programs");
-      router.prefetch("/membership");
+      if (!isPrograms && !isFounder) router.prefetch("/membership");
     }, isFounder || isQuiz || isPrograms ? 2800 : 1200);
   }, [router, pathname]);
 

@@ -1,12 +1,23 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { GoalPathSystem } from "@/components/dashboard/path/GoalPathSystem";
+import dynamic from "next/dynamic";
+import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import type { DashboardCourseLike } from "@/components/dashboard/useDashboardSnapshots";
 import { enrichProgramPlaylist } from "@/lib/programPlaylistCatalog";
 import { scrollToProgramLibrary, type ProgramLibraryScrollTarget } from "@/lib/programCardScroll";
 import { isPublicProgramsLibraryPlaylist } from "@/lib/programPlaylistThumbnails";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
+
+const GoalPathSystem = dynamic(
+  () => import("@/components/dashboard/path/GoalPathSystem").then((m) => m.GoalPathSystem),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto min-h-[18rem] w-full max-w-5xl animate-pulse rounded-xl bg-white/5" aria-hidden />
+    ),
+  },
+);
 
 type Props = {
   playlists: StreamPlaylistListItem[];
@@ -63,15 +74,23 @@ export function PublicGoalPathSection({
         "relative mx-auto w-full max-w-[1400px] px-[clamp(1rem,3.2vw,1.5rem)] pb-8 pt-2 sm:px-6 sm:pb-12 sm:pt-4"
       }
     >
-      <GoalPathSystem
-        themeMode="default"
-        courses={courses}
-        playlists={enrichedPlaylists}
-        opportunityCardFrame="methods"
-        opportunityContentMode="program"
-        manualScrollOnly
-        onContinue={onContinue}
-      />
+      <LazyWhenVisible
+        minHeight="18rem"
+        rootMargin="160px 0px"
+        placeholder={
+          <div className="mx-auto min-h-[18rem] w-full max-w-5xl animate-pulse rounded-xl bg-white/5" aria-hidden />
+        }
+      >
+        <GoalPathSystem
+          themeMode="default"
+          courses={courses}
+          playlists={enrichedPlaylists}
+          opportunityCardFrame="methods"
+          opportunityContentMode="program"
+          manualScrollOnly
+          onContinue={onContinue}
+        />
+      </LazyWhenVisible>
     </section>
   );
 }

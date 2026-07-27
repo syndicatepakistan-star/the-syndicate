@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
+import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { buildPageMetadata } from '@/lib/seo'
@@ -72,32 +73,63 @@ export default async function ProgramsPage() {
         </p>
         <ProgramsOfferSection size="large" shellHosted omitKnight />
       </section>
-      <section
-        id="programs-library"
-        className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
-      >
-        <ProgramsGoldPillHeading as="h2" title="Programs" />
-        <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
-          <Suspense
-            fallback={
-              <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
-            }
+      <LazyWhenVisible
+        minHeight="24rem"
+        rootMargin="120px 0px"
+        eagerOnHash="programs-library"
+        placeholder={
+          <section
+            id="programs-library"
+            className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
+            aria-hidden
           >
-            <ProgramsLibrarySection
-              title="Programs Library"
-              subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
-            />
-          </Suspense>
-        </div>
-      </section>
-      <PublicGoalPathSection playlists={playlists} alwaysVisible />
-      <section
-        id="the-knight-offer"
-        className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pb-8 pt-4 sm:space-y-6 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pb-12 sm:pt-6 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
+            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" />
+          </section>
+        }
       >
-        <ProgramsGoldPillHeading as="h2" title="The Knight" size="compact" />
-        <ProgramsOfferSection size="large" shellHosted knightOnly />
-      </section>
+        <section
+          id="programs-library"
+          className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
+        >
+          <ProgramsGoldPillHeading as="h2" title="Programs" />
+          <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
+            <Suspense
+              fallback={
+                <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+              }
+            >
+              <ProgramsLibrarySection
+                title="Programs Library"
+                subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
+              />
+            </Suspense>
+          </div>
+        </section>
+      </LazyWhenVisible>
+      <LazyWhenVisible
+        minHeight="18rem"
+        rootMargin="180px 0px"
+        placeholder={
+          <div className="mx-auto my-8 min-h-[18rem] w-full max-w-5xl animate-pulse rounded-xl bg-white/5" aria-hidden />
+        }
+      >
+        <PublicGoalPathSection playlists={playlists} alwaysVisible />
+      </LazyWhenVisible>
+      <LazyWhenVisible
+        minHeight="32rem"
+        rootMargin="200px 0px"
+        placeholder={
+          <div className="mx-auto min-h-[32rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+        }
+      >
+        <section
+          id="the-knight-offer"
+          className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pb-8 pt-4 sm:space-y-6 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pb-12 sm:pt-6 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
+        >
+          <ProgramsGoldPillHeading as="h2" title="The Knight" size="compact" />
+          <ProgramsOfferSection size="large" shellHosted knightOnly />
+        </section>
+      </LazyWhenVisible>
       </ProgramsUnlockShell>
       </main>
       <SiteFooter />

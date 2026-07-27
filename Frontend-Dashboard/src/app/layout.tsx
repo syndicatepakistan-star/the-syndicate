@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
-import { cookies } from "next/headers";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { DeferredGtm } from "@/components/DeferredGtm";
 import { JsonLd } from "@/components/seo/JsonLd";
-import type { CheckoutCurrency } from "@/lib/currency";
 import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
 import {
   buildOrganizationJsonLd,
@@ -92,10 +90,6 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const currencyCookie = cookieStore.get("syndicate_currency")?.value;
-  const initialCurrency: CheckoutCurrency = currencyCookie === "gbp" ? "gbp" : "usd";
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -108,7 +102,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         suppressHydrationWarning
       >
         <DeferredGtm />
-        <Providers initialCurrency={initialCurrency}>
+        <Providers>
           <ServiceWorkerRegister />
           <RouteWarmup />
           {children}

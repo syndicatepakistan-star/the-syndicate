@@ -1,10 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useState, type ReactNode } from "react";
-import { Toaster } from "react-hot-toast";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
-import { UnlockCartPanel } from "@/components/programs/UnlockCartPanel";
 import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
+
+const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
+const UnlockCartPanel = dynamic(
+  () => import("@/components/programs/UnlockCartPanel").then((m) => m.UnlockCartPanel),
+  { ssr: false },
+);
 
 function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
   const unlockCart = useUnlockCart();

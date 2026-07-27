@@ -59,6 +59,7 @@ const nextConfig = {
       "gsap",
       "@use-gesture/react",
       "qrcode.react",
+      "react-hot-toast",
     ],
   },
   devIndicators: {

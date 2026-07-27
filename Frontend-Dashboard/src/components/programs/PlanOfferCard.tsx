@@ -1,11 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, type CSSProperties } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 import { KNIGHT_CARD_FEATURES, KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
-import { OfferDescriptionModal } from "@/components/programs/OfferDescriptionModal";
 import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
 import { MidTicketPackInclusions } from "@/components/programs/MidTicketPackInclusions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
@@ -15,6 +15,11 @@ import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
+
+const OfferDescriptionModal = dynamic(
+  () => import("@/components/programs/OfferDescriptionModal").then((m) => m.OfferDescriptionModal),
+  { ssr: false },
+);
 
 type Props = {
   offer: PlanOfferDef;

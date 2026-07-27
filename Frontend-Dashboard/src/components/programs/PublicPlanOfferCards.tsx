@@ -36,10 +36,9 @@ import {
 } from "@/lib/vaultPlaylistMap";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
-import { UnlockCartPanel } from "@/components/programs/UnlockCartPanel";
 import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const PlanOfferDetailModal = dynamic(
   () => import("@/components/programs/PlanOfferDetailModal").then((m) => m.PlanOfferDetailModal),
@@ -53,6 +52,11 @@ const TradingModuleVaultModal = dynamic(
   () => import("@/components/programs/TradingModuleVaultModal").then((m) => m.TradingModuleVaultModal),
   { ssr: false },
 );
+const UnlockCartPanel = dynamic(
+  () => import("@/components/programs/UnlockCartPanel").then((m) => m.UnlockCartPanel),
+  { ssr: false },
+);
+const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
 
 function LazyVaultOffersRow({
   offers,

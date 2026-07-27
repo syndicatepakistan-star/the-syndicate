@@ -11634,7 +11634,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   box-shadow: 0 0 40px rgba(34, 211, 238, 0.18);
 }
 
-/* Match emblem: square cards, 5px top pad (beats .cyber-frame-mobile-pad) */
+/* Match emblem on mobile: square cards, 5px top pad (beats .cyber-frame-mobile-pad) */
 .guarantee-square-card__pad {
   padding: 5px 12px 12px !important;
   box-sizing: border-box;
@@ -11642,13 +11642,13 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
 @media (min-width: 768px) {
   .guarantee-square-card__pad {
-    padding: 5px 1.25rem 1.25rem !important;
+    padding: 5px 1rem 0.85rem !important;
   }
 }
 
 @media (min-width: 1024px) {
   .guarantee-square-card__pad {
-    padding: 5px 1.5rem 1.5rem !important;
+    padding: 5px 1.15rem 1rem !important;
   }
 }
 

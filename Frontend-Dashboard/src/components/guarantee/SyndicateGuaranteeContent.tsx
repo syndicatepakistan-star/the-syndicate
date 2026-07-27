@@ -110,11 +110,11 @@ export function SyndicateGuaranteeContent() {
               chamfer={18}
               decorSize="compact"
               flatPanel
-              className="guarantee-square-card aspect-square h-auto w-full min-w-0"
-              innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col"
-              contentClassName="flex min-h-0 flex-1 flex-col items-center justify-center text-center"
+              className="guarantee-square-card aspect-square h-auto w-full min-w-0 md:aspect-auto md:h-auto"
+              innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col md:h-auto"
+              contentClassName="flex min-h-0 flex-1 flex-col items-center justify-center text-center md:flex-none md:justify-start"
             >
-              <span className="guarantee-card-icon relative block h-10 w-10 shrink-0 sm:h-11 sm:w-11 md:h-12 md:w-12">
+              <span className="guarantee-card-icon relative block h-10 w-10 shrink-0 sm:h-11 sm:w-11 md:h-11 md:w-11">
                 <Image
                   src={iconSrc}
                   alt={iconAlt}
@@ -124,42 +124,25 @@ export function SyndicateGuaranteeContent() {
                 />
               </span>
               <h2
-                className={`guarantee-page-title guarantee-page-title--card ${publicHeadingLightning(titleLightning)} mt-2 font-black uppercase tracking-[0.06em] sm:mt-2.5`}
+                className={`guarantee-page-title guarantee-page-title--card ${publicHeadingLightning(titleLightning)} mt-2 font-black uppercase tracking-[0.06em] sm:mt-2.5 md:mt-2`}
               >
                 {title}
               </h2>
-              <p className="guarantee-page-card-body mt-2 font-medium leading-snug text-zinc-100/88 sm:mt-2.5">
+              <p className="guarantee-page-card-body mt-2 font-medium leading-snug text-zinc-100/88 sm:mt-2.5 md:mt-2">
                 {body}
               </p>
             </CyberChamferFrame>
           ))}
         </section>
 
-        <CyberChamferFrame
-          accent="hero"
-          chamfer={16}
-          decorSize="compact"
-          className="guarantee-square-card aspect-square w-full md:aspect-auto md:min-h-0"
-          innerClassName="guarantee-square-card__pad flex h-full min-h-0 flex-col justify-center"
-        >
-          <div
-            id="guarantee-apply"
-            className="flex flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row md:flex-wrap md:gap-6"
+        <div id="guarantee-apply" className="flex w-full items-center justify-center">
+          <Link
+            href="/syndicate-guarantee/apply"
+            className="hamburger-attract inline-flex min-h-[48px] w-full max-w-[240px] shrink-0 items-center justify-center rounded-lg border border-fuchsia-300/80 bg-black/80 px-8 py-2.5 text-base font-bold uppercase tracking-[0.08em] text-fuchsia-100 shadow-[0_0_18px_rgba(232,121,249,0.4)] transition hover:scale-[1.03] hover:bg-black/95 hover:shadow-[0_0_28px_rgba(232,121,249,0.6)] sm:w-auto sm:max-w-none"
           >
-            <p className="guarantee-page-apply-copy max-w-xl text-center text-zinc-300">
-              Apply via <span className="font-semibold text-fuchsia-200">email OTP</span> — no login.{" "}
-              <span className="font-semibold break-all text-cyan-200 sm:break-normal">
-                intelligence@the-syndicate.com
-              </span>
-            </p>
-            <Link
-              href="/syndicate-guarantee/apply"
-              className="hamburger-attract inline-flex min-h-[48px] w-full max-w-[240px] shrink-0 items-center justify-center rounded-lg border border-fuchsia-300/80 bg-black/80 px-8 py-2.5 text-base font-bold uppercase tracking-[0.08em] text-fuchsia-100 shadow-[0_0_18px_rgba(232,121,249,0.4)] transition hover:scale-[1.03] hover:bg-black/95 hover:shadow-[0_0_28px_rgba(232,121,249,0.6)] sm:w-auto sm:max-w-none"
-            >
-              Apply
-            </Link>
-          </div>
-        </CyberChamferFrame>
+            Apply
+          </Link>
+        </div>
       </div>
     </div>
   );

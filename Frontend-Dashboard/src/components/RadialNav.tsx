@@ -29,8 +29,8 @@ export type RadialNavProps = {
 
 /**
  * Clockwise from top (user order):
- * 1 Home → 2 Membership → 3 Syn Diagnosis → 4 Our Founder → 5 Affiliate
- * → 6 Login → 7 Our Methods → 8 What You Get → 9 Syndicate Guarantee → 10 Programs
+ * 1 Home → 2 Membership → 3 Syn Diagnosis → 4 Our Founder → 5 What You Get
+ * → 6 Login → 7 Our Methods → 8 Refund → 9 Affiliate → 10 Programs
  */
 export const RADIAL_SLOT_ORDER: readonly NavSectionId[] = [
   'home',
@@ -135,33 +135,44 @@ function getSlots(radius: number, count: number) {
   // and Our Methods/What You Get↔Login read as separate rows (not glow-stacked).
   let xScale = 1.06
   let yScale = 1.12
+  let poleGapExtra = 0
   if (typeof window !== 'undefined') {
     const w = window.innerWidth
     if (w < 420) {
       xScale = 1.08
       yScale = 1.58
+      poleGapExtra = 14
     } else if (w < 640) {
       xScale = 1.07
       yScale = 1.48
+      poleGapExtra = 12
     } else if (w < 768) {
       xScale = 1.06
       yScale = 1.4
+      poleGapExtra = 10
     } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       xScale = 1.06
       yScale = 1.34
+      poleGapExtra = 8
     } else {
       xScale = 1.05
       yScale = 1.08
+      poleGapExtra = 0
     }
   }
 
   // Even ellipse, Home at top, then clockwise — mirrored left/right pairs share the same |y|.
+  // Extra pole gap only separates row1↔row2 and row5↔row6; middle row spacing stays unchanged.
+  const bottomSlot = count >= 2 ? Math.floor(count / 2) : -1
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
-    return {
-      x: radius * xScale * Math.cos(angle),
-      y: radius * yScale * Math.sin(angle),
+    let x = radius * xScale * Math.cos(angle)
+    let y = radius * yScale * Math.sin(angle)
+    if (poleGapExtra > 0 && count >= 10) {
+      if (i === 0) y -= poleGapExtra
+      else if (i === bottomSlot) y += poleGapExtra
     }
+    return { x, y }
   })
 }
 
@@ -460,7 +471,7 @@ export function RadialNav({
           <div className="absolute inset-0 grid place-items-center overflow-visible p-3 sm:p-4">
             <div
               data-rnav="center"
-              className="relative h-full min-h-[260px] max-h-[58vh] w-[min(94vw,360px)] max-w-[360px] sm:min-h-[44vh] sm:max-h-[56vh] md:max-w-[400px] md:max-h-[54vh] lg:min-h-[38vh] lg:max-h-[42vh] lg:w-[min(92vw,340px)] lg:max-w-[340px]"
+              className="relative h-full min-h-[300px] max-h-[68vh] w-[min(94vw,360px)] max-w-[360px] sm:min-h-[48vh] sm:max-h-[62vh] md:max-w-[400px] md:max-h-[58vh] lg:min-h-[38vh] lg:max-h-[42vh] lg:w-[min(92vw,340px)] lg:max-w-[340px]"
             >
               <div
                 data-rnav="ring"

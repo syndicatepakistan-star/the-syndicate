@@ -456,10 +456,7 @@ export function PlanOfferCard({
                         position: "relative",
                         display: "inline-block",
                         color: "rgba(255, 245, 220, 0.55)",
-                        textDecoration: "line-through",
-                        textDecorationColor: "#ffffff",
-                        textDecorationThickness: "2.5px",
-                        textDecorationSkipInk: "none",
+                        textDecoration: "none",
                       }}
                     >
                       {localizedComparePrice}
@@ -487,7 +484,7 @@ export function PlanOfferCard({
                           x2="100"
                           y2="50"
                           stroke="#ffffff"
-                          strokeWidth="3"
+                          strokeWidth="1"
                           strokeLinecap="square"
                           vectorEffect="non-scaling-stroke"
                         />

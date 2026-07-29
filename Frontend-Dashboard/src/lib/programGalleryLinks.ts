@@ -9,13 +9,25 @@ export type ProgramGalleryImage = CuratedGlobeTile;
 
 /** Filename → playlist title hints when auto-match is ambiguous. */
 const FILE_HINTS: Record<string, string> = {
-  "wordpress-blog": "WordPress Blog",
-  "canvics-to-canva": "Graphics Design Using Canva",
-  "flutter-app-building": "App Building (using Flutter)",
-  "automaton-name-change": "AI Automations",
-  "N8N Ai": "N8N Ai Automation",
-  "cyber-dystopian-city": "Amazon KDP",
-  "print on demand": "Print On Demand",
+  "wordpress-blog": "The Profitable Blogging Blueprint",
+  "profitable-blogging-blueprint": "The Profitable Blogging Blueprint",
+  "canvics-to-canva": "Graphics Design for Business (Graphics That Convert to Sales)",
+  "graphics-design-for-business": "Graphics Design for Business (Graphics That Convert to Sales)",
+  "flutter-app-building": "App Building for Business (Vibe Coding)",
+  "app-building-vibe-coding": "App Building for Business (Vibe Coding)",
+  "automaton-name-change": "A.I Content Automation for Business",
+  "ai-content-automation-business": "A.I Content Automation for Business",
+  "ai automations": "A.I Content Automation for Business",
+  "N8N Ai": "Business and Content A.I Automation",
+  "business-content-n8n-ai-automation": "Business and Content A.I Automation",
+  "cyber-dystopian-city": "eBook Business Blueprint (Monetize Your Knowledge)",
+  "ebook-business-blueprint": "eBook Business Blueprint (Monetize Your Knowledge)",
+  "print on demand": "The Zero-Inventory Clothing Business Blueprint",
+  "zero-inventory-clothing-blueprint": "The Zero-Inventory Clothing Business Blueprint",
+  "gaming-business-blueprint": "The Gaming Business Blueprint (Build, Launch, and Sell)",
+  "custom-app-blueprint": "The Custom App Blueprint for Business",
+  "basics-python-small-business": "Basics Python for Small Business",
+  "rapid-noncode-web-building": "Rapid Non-code Web Building (For Business)",
 };
 
 function normalizeTitle(value: string): string {

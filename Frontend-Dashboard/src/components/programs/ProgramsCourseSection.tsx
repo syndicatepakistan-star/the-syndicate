@@ -39,7 +39,7 @@ import {
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
   LEVEL1_CANONICAL_TITLES,
 } from "@/lib/level1ProgramCatalog";
-import { GLOBE_PACK_KEYS, supportsProgramHashDeepLink, isHiddenProgramPlaylist, readProgramDetailsHash, writeProgramDetailsHash, clearProgramDetailsHash, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { GLOBE_PACK_KEYS, supportsProgramHashDeepLink, isHiddenProgramPlaylist, readProgramDetailsHash, writeProgramDetailsHash, clearProgramDetailsHash, parsePackDeepLinkSlug, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import {
   PROGRAM_CARD_FRAME,
@@ -557,10 +557,14 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const pack = (new URLSearchParams(window.location.search).get("pack") || "").trim();
-    if (GLOBE_PACK_KEYS.has(pack as GlobePackKey)) {
-      setHighlightPack(pack as GlobePackKey);
-    }
+    const params = new URLSearchParams(window.location.search);
+    const pack =
+      (params.get("pack") || "").trim() ||
+      "";
+    const fromPack = GLOBE_PACK_KEYS.has(pack as GlobePackKey) ? (pack as GlobePackKey) : undefined;
+    const fromSlug = parsePackDeepLinkSlug(params.get("slug"));
+    const resolved = fromPack ?? fromSlug;
+    if (resolved) setHighlightPack(resolved);
   }, []);
 
   useEffect(() => {
@@ -568,6 +572,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     const params = new URLSearchParams(window.location.search);
     const slug = (params.get("slug") || "").trim().toLowerCase();
     if (slug) {
+      if (parsePackDeepLinkSlug(slug)) return;
       const resolved = resolveProgramPlaylistHighlightSlug(streamPlaylists, slug);
       if (resolved) {
         setHighlightProgramId(resolved);

@@ -334,7 +334,7 @@ function TierCard({
             <div className="flex items-center gap-3">
               {tier.oldPrice?.[activeBilling] && (
                 <div
-                  className="text-lg font-semibold text-white/40 line-through sm:text-xl"
+                  className="text-lg font-semibold text-white/40 line-through decoration-1 decoration-white/55 sm:text-xl"
                   style={{ fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif' }}
                 >
                   {tier.oldPrice[activeBilling]}

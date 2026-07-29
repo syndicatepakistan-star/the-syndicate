@@ -91,10 +91,17 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
 ]);
 
 export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
-  16: "AI Automations",
-  17: "N8N AI Automation",
-  19: "Print On Demand",
-  25: "Amazon KDP",
+  13: "The Profitable Blogging Blueprint",
+  14: "Rapid Non-code Web Building (For Business)",
+  16: "A.I Content Automation for Business",
+  17: "Business and Content A.I Automation",
+  19: "The Zero-Inventory Clothing Business Blueprint",
+  20: "The Gaming Business Blueprint (Build, Launch, and Sell)",
+  21: "App Building for Business (Vibe Coding)",
+  23: "Graphics Design for Business (Graphics That Convert to Sales)",
+  24: "Basics Python for Small Business",
+  25: "eBook Business Blueprint (Monetize Your Knowledge)",
+  28: "The Custom App Blueprint for Business",
   30: "Mastering Risk and Uncertainty",
   31: "Micro Business Protocols",
 };
@@ -126,24 +133,24 @@ export const PROGRAM_PLAYLIST_THUMBNAILS: Record<number, string> = {
   10: courseThumb("empire.png"),
   11: courseThumb("persussation.png"),
   12: courseThumb("compound effect.jpg"),
-  13: courseThumb("wordpress-blog.jpg"),
-  14: courseThumb("framer.jpg"),
+  13: courseThumb("profitable-blogging-blueprint.png"),
+  14: courseThumb("rapid-noncode-web-building.png"),
   15: courseThumb("faceless youtube.jpeg"),
-  16: courseThumb("ai automations.jpg"),
-  17: courseThumb("N8N Ai.jpg"),
+  16: courseThumb("ai-content-automation-business.png"),
+  17: courseThumb("business-content-n8n-ai-automation.png"),
   18: courseThumb("trading with technical analysis.jpg"),
-  19: courseThumb("print on demand.jpg"),
-  20: courseThumb("unreal engine.jpg"),
-  21: courseThumb("flutter-app-building.jpg"),
+  19: courseThumb("zero-inventory-clothing-blueprint.png"),
+  20: courseThumb("gaming-business-blueprint.png"),
+  21: courseThumb("app-building-vibe-coding.png"),
   22: courseThumb(
     "make_best_thumbnails_or_cover_image_of_program_block_chain_and_smart_contract_building_with_solidit_c2ffy9e3r8tpkd09kzrk_2.png"
   ),
-  23: courseThumb("canvics-to-canva.jpg"),
-  24: courseThumb("python.jpg"),
-  25: courseThumb("cyber-dystopian-city.jpg"),
+  23: courseThumb("graphics-design-for-business.png"),
+  24: courseThumb("basics-python-small-business.png"),
+  25: courseThumb("ebook-business-blueprint.png"),
   26: courseThumb("prompt engineering.jpg"),
   27: courseThumb("affiliate-marketing.jpg"),
-  28: courseThumb("react.jpg"),
+  28: courseThumb("custom-app-blueprint.png"),
   29: courseThumb("1 minute scalpel.jpeg"),
   30: courseThumb("uncertainty.jpg"),
   31: courseThumb("micro business.jpg"),
@@ -348,7 +355,86 @@ export const GLOBE_PACK_KEYS = new Set<GlobePackKey>([
 ]);
 
 export function planOfferDeepLink(pack: GlobePackKey): string {
-  return `/programs?pack=${encodeURIComponent(pack)}#syndicate-elite-offers`;
+  const slug = PLAN_OFFER_DETAILS_SLUG[pack];
+  return `/programs?slug=${encodeURIComponent(slug)}#syndicate-elite-offers`;
+}
+
+/** Friendly `?slug=` aliases for Klaviyo / marketing pack details deep links. */
+const PACK_SLUG_ALIASES: Record<string, GlobePackKey> = {
+  bundle: "bundle",
+  "money-mastery": "bundle",
+  money_mastery: "bundle",
+  moneymastery: "bundle",
+  king: "king",
+  "the-knight": "king",
+  the_knight: "king",
+  knight: "king",
+  agentic_ai: "agentic_ai",
+  "agentic-ai": "agentic_ai",
+  agenticai: "agentic_ai",
+  ai_content_automation: "ai_content_automation",
+  "ai-content-automation": "ai_content_automation",
+  aicontentautomation: "ai_content_automation",
+  trading_technical_analysis: "trading_technical_analysis",
+  "trading-technical-analysis": "trading_technical_analysis",
+  trading: "trading_technical_analysis",
+};
+
+/** Public slug used in `?slug=` for pack details URLs (Klaviyo-friendly). */
+export const PLAN_OFFER_DETAILS_SLUG: Record<GlobePackKey, string> = {
+  bundle: "money-mastery",
+  king: "the-knight",
+  agentic_ai: "agentic-ai",
+  ai_content_automation: "ai-content-automation",
+  trading_technical_analysis: "trading-technical-analysis",
+};
+
+export function parsePackDeepLinkSlug(raw: string | null | undefined): GlobePackKey | undefined {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (!value) return undefined;
+  return PACK_SLUG_ALIASES[value];
+}
+
+/**
+ * Same shape as Level-1 program details links — opens pack details modal.
+ * Example: `/programs?slug=money-mastery#details`
+ */
+export function planOfferDetailsDeepLink(pack: GlobePackKey): string {
+  const slug = PLAN_OFFER_DETAILS_SLUG[pack];
+  return `/programs?slug=${encodeURIComponent(slug)}#${PROGRAM_DETAILS_HASH}`;
+}
+
+function replacePlanOfferDeepLink(pack: GlobePackKey, mode: "details" | "spotlight"): string | null {
+  if (typeof window === "undefined") return null;
+  const url = new URL(window.location.href);
+  const before = `${url.pathname}${url.search}${url.hash}`;
+  url.searchParams.set("slug", PLAN_OFFER_DETAILS_SLUG[pack]);
+  url.searchParams.delete("pack");
+  url.searchParams.delete("program");
+  url.hash = mode === "details" ? PROGRAM_DETAILS_HASH : "syndicate-elite-offers";
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  if (next !== before) window.history.replaceState({}, "", next);
+  return next;
+}
+
+export function writePlanOfferDetailsHash(pack: GlobePackKey): string | null {
+  return replacePlanOfferDeepLink(pack, "details");
+}
+
+/** Unique pack slug in the address bar while focusing the card / vault (not the details modal). */
+export function writePlanOfferSpotlightHash(pack: GlobePackKey): string | null {
+  return replacePlanOfferDeepLink(pack, "spotlight");
+}
+
+export function clearPlanOfferDetailsHash(pack?: GlobePackKey): string | null {
+  if (typeof window === "undefined") return null;
+  if (pack) return replacePlanOfferDeepLink(pack, "spotlight");
+  if (!readProgramDetailsHash()) return null;
+  const url = new URL(window.location.href);
+  url.hash = "syndicate-elite-offers";
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, "", next);
+  return next;
 }
 
 export type CuratedGlobeTile = {
@@ -366,7 +452,7 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
     src: OFFER_PLAN_THUMB_MONEY_MASTERY,
     alt: "Money Mastery",
     fileName: "money-mastery-v2.jpg",
-    href: planOfferDeepLink("bundle"),
+    href: planOfferDetailsDeepLink("bundle"),
     packKey: "bundle",
   },
   {
@@ -380,21 +466,21 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
     src: OFFER_PLAN_THUMB_AGENTIC_AI,
     alt: "Agentic AI",
     fileName: "Agentic Ai.jpeg",
-    href: planOfferDeepLink("agentic_ai"),
+    href: planOfferDetailsDeepLink("agentic_ai"),
     packKey: "agentic_ai",
   },
   {
     src: OFFER_PLAN_THUMB_AI_CONTENT_AUTOMATION,
     alt: "AI Content Automation",
     fileName: "Ai Content Automation.jpeg",
-    href: planOfferDeepLink("ai_content_automation"),
+    href: planOfferDetailsDeepLink("ai_content_automation"),
     packKey: "ai_content_automation",
   },
   {
     src: OFFER_PLAN_THUMB_TRADING,
     alt: "Trading Advanced Technical Analysis",
     fileName: "trading.jpg",
-    href: planOfferDeepLink("trading_technical_analysis"),
+    href: planOfferDetailsDeepLink("trading_technical_analysis"),
     packKey: "trading_technical_analysis",
   },
   { src: courseThumb("0 to 1M.jpg"), alt: "Zero to One Million", fileName: "0 to 1M.jpg", href: programPlaylistDeepLink(2), programId: 2 },
@@ -403,19 +489,19 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("hustle.jpg"), alt: "Hustle Hard", fileName: "hustle.jpg", href: programPlaylistDeepLink(3), programId: 3 },
   { src: courseThumb("micro business.jpg"), alt: "Micro Business Protocols", fileName: "micro business.jpg", href: programPlaylistDeepLink(31), programId: 31 },
   { src: courseThumb("secret.jpg"), alt: "The Secret To Transformation", fileName: "secret.jpg", href: programPlaylistDeepLink(9), programId: 9 },
-  { src: courseThumb("flutter-app-building.jpg"), alt: "App Building (using Flutter)", fileName: "flutter-app-building.jpg", href: programPlaylistDeepLink(21), programId: 21 },
-  { src: courseThumb("canvics-to-canva.jpg"), alt: "Graphics Design Using Canva", fileName: "canvics-to-canva.jpg", href: programPlaylistDeepLink(23), programId: 23 },
-  { src: courseThumb("cyber-dystopian-city.jpg"), alt: "Amazon KDP", fileName: "cyber-dystopian-city.jpg", href: programPlaylistDeepLink(25), programId: 25 },
-  { src: courseThumb("wordpress-blog.jpg"), alt: "WordPress Blog", fileName: "wordpress-blog.jpg", href: programPlaylistDeepLink(13), programId: 13 },
-  { src: courseThumb("react.jpg"), alt: "Building Apps using React JS", fileName: "react.jpg", href: programPlaylistDeepLink(28), programId: 28 },
-  { src: courseThumb("python.jpg"), alt: "Python Programming", fileName: "python.jpg", href: programPlaylistDeepLink(24), programId: 24 },
-  { src: courseThumb("framer.jpg"), alt: "Framer Crash Course", fileName: "framer.jpg", href: programPlaylistDeepLink(14), programId: 14 },
-  { src: courseThumb("uncertainty.jpg"), alt: "Mastering Risk and Uncertainty", fileName: "uncertainty.jpg", href: programPlaylistDeepLink(30), programId: 30 },
-  { src: courseThumb("unreal engine.jpg"), alt: "Building Games Using Unreal Engine", fileName: "unreal engine.jpg", href: programPlaylistDeepLink(20), programId: 20 },
   { src: courseThumb("consistency.jpg"), alt: "Mastering Consistency", fileName: "consistency.jpg", href: programPlaylistDeepLink(6), programId: 6 },
-  { src: courseThumb("print on demand.jpg"), alt: "Print On Demand", fileName: "print on demand.jpg", href: programPlaylistDeepLink(19), programId: 19 },
-  { src: courseThumb("ai automations.jpg"), alt: "AI Automations", fileName: "ai automations.jpg", href: programPlaylistDeepLink(16), programId: 16 },
-  { src: courseThumb("N8N Ai.jpg"), alt: "N8N AI Automation", fileName: "N8N Ai.jpg", href: programPlaylistDeepLink(17), programId: 17 },
+  { src: courseThumb("uncertainty.jpg"), alt: "Mastering Risk and Uncertainty", fileName: "uncertainty.jpg", href: programPlaylistDeepLink(30), programId: 30 },
+  { src: courseThumb("app-building-vibe-coding.png"), alt: "App Building for Business (Vibe Coding)", fileName: "app-building-vibe-coding.png", href: programPlaylistDeepLink(21), programId: 21 },
+  { src: courseThumb("graphics-design-for-business.png"), alt: "Graphics Design for Business (Graphics That Convert to Sales)", fileName: "graphics-design-for-business.png", href: programPlaylistDeepLink(23), programId: 23 },
+  { src: courseThumb("ebook-business-blueprint.png"), alt: "eBook Business Blueprint (Monetize Your Knowledge)", fileName: "ebook-business-blueprint.png", href: programPlaylistDeepLink(25), programId: 25 },
+  { src: courseThumb("profitable-blogging-blueprint.png"), alt: "The Profitable Blogging Blueprint", fileName: "profitable-blogging-blueprint.png", href: programPlaylistDeepLink(13), programId: 13 },
+  { src: courseThumb("custom-app-blueprint.png"), alt: "The Custom App Blueprint for Business", fileName: "custom-app-blueprint.png", href: programPlaylistDeepLink(28), programId: 28 },
+  { src: courseThumb("basics-python-small-business.png"), alt: "Basics Python for Small Business", fileName: "basics-python-small-business.png", href: programPlaylistDeepLink(24), programId: 24 },
+  { src: courseThumb("rapid-noncode-web-building.png"), alt: "Rapid Non-code Web Building (For Business)", fileName: "rapid-noncode-web-building.png", href: programPlaylistDeepLink(14), programId: 14 },
+  { src: courseThumb("gaming-business-blueprint.png"), alt: "The Gaming Business Blueprint (Build, Launch, and Sell)", fileName: "gaming-business-blueprint.png", href: programPlaylistDeepLink(20), programId: 20 },
+  { src: courseThumb("zero-inventory-clothing-blueprint.png"), alt: "The Zero-Inventory Clothing Business Blueprint", fileName: "zero-inventory-clothing-blueprint.png", href: programPlaylistDeepLink(19), programId: 19 },
+  { src: courseThumb("ai-content-automation-business.png"), alt: "A.I Content Automation for Business", fileName: "ai-content-automation-business.png", href: programPlaylistDeepLink(16), programId: 16 },
+  { src: courseThumb("business-content-n8n-ai-automation.png"), alt: "Business and Content A.I Automation", fileName: "business-content-n8n-ai-automation.png", href: programPlaylistDeepLink(17), programId: 17 },
   { src: courseThumb("13rules.jpg"), alt: "Syndicate 13 Business Rules", fileName: "13rules.jpg", href: programPlaylistDeepLink(7), programId: 7 },
   { src: courseThumb("money-philosophy.jpg"), alt: "Syndicate Money Philosophy", fileName: "money-philosophy.jpg", href: programPlaylistDeepLink(8), programId: 8 },
   { src: courseThumb("warfare.jpg"), alt: "Business Warfare", fileName: "warfare.jpg", href: programPlaylistDeepLink(99), programId: 99 },

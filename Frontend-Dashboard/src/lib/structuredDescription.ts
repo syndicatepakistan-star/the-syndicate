@@ -29,22 +29,33 @@ export function parseStructuredDescriptionSections(body: string): StructuredDesc
   const t = body.replace(/\r\n/g, "\n").trim();
   if (!t) return null;
 
+  const nextHeading =
+    "Programme Introduction|Introduction|The Hook|Programme Description|The Core Protocol|Projects You Will Build|What You Will Learn";
+
   const introMatch = t.match(
     new RegExp(
-      `${PROGRAMME_INTRO_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Programme Description|The Core Protocol|Projects You Will Build|What You Will Learn)\\s*\\n)`,
+      `${PROGRAMME_INTRO_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Programme Description|The Core Protocol|Projects You Will Build|What You Will Learn)\\s*\\n|$)`,
       "i",
     ),
   );
   const descMatch = t.match(
     new RegExp(
-      `${PROGRAMME_DESC_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Projects You Will Build|What You Will Learn)\\s*\\n)`,
+      `${PROGRAMME_DESC_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:Projects You Will Build|What You Will Learn|Programme Introduction|Introduction|The Hook)\\s*\\n|$)`,
       "i",
     ),
   );
   const projectsMatch = t.match(
-    new RegExp(`${PROJECTS_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*What You Will Learn\\s*\\n|$)`, "i"),
+    new RegExp(
+      `${PROJECTS_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:What You Will Learn|Programme Introduction|Introduction|The Hook|Programme Description|The Core Protocol)\\s*\\n|$)`,
+      "i",
+    ),
   );
-  const learnMatch = t.match(new RegExp(`${LEARN_HEADING_RE.source}([\\s\\S]*)$`, "i"));
+  const learnMatch = t.match(
+    new RegExp(
+      `${LEARN_HEADING_RE.source}([\\s\\S]*?)(?=\\n\\s*(?:${nextHeading})\\s*\\n|$)`,
+      "i",
+    ),
+  );
 
   let hook = introMatch?.[1]?.trim() ?? "";
   let core = descMatch?.[1]?.trim() ?? "";
@@ -94,9 +105,9 @@ export function formatStructuredDescription(
   const learn = learnItems.map((item) => item.trim()).filter(Boolean).join("\n");
 
   const parts: string[] = [];
+  if (projects) parts.push(`Projects You Will Build\n${projects}`);
   if (intro) parts.push(`Programme Introduction\n${intro}`);
   if (desc) parts.push(`Programme Description\n${desc}`);
-  if (projects) parts.push(`Projects You Will Build\n${projects}`);
   if (learn) parts.push(`What You Will Learn\n${learn}`);
   return parts.join("\n\n");
 }

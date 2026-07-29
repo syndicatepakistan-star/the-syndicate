@@ -8,6 +8,7 @@ import {
   resolveProgramPlaylistHighlightSlug,
 } from '@/lib/programPlaylistCatalog'
 import { fetchPublicStreamPlaylists, type StreamPlaylistListItem } from '@/lib/streaming-api'
+import { parsePackDeepLinkSlug } from '@/lib/programPlaylistThumbnails'
 
 type Props = {
   title?: string
@@ -17,6 +18,7 @@ type Props = {
 export function ProgramsLibrarySection({ title, subtitle }: Props) {
   const searchParams = useSearchParams()
   const slugParam = searchParams.get('slug')?.trim().toLowerCase() ?? undefined
+  const packSlug = Boolean(parsePackDeepLinkSlug(slugParam))
   const raw = searchParams.get('program')
   const legacyId = raw ? Number.parseInt(raw, 10) : undefined
   const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>([])
@@ -36,12 +38,14 @@ export function ProgramsLibrarySection({ title, subtitle }: Props) {
   }, [])
 
   const highlightPlaylistId = useMemo(() => {
+    // Pack marketing URLs reuse `?slug=` (e.g. money-mastery) — leave library alone.
+    if (packSlug) return undefined
     if (slugParam) {
       return resolveProgramPlaylistHighlightSlug(playlists, slugParam)
     }
     if (legacyId == null || !Number.isFinite(legacyId) || legacyId <= 0) return undefined
     return resolveProgramPlaylistHighlightId(playlists, legacyId) ?? legacyId
-  }, [slugParam, legacyId, playlists])
+  }, [slugParam, packSlug, legacyId, playlists])
 
   return (
     <PlaylistCardsSection

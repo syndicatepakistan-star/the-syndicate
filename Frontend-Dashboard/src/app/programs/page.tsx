@@ -5,6 +5,7 @@ import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
+import { ProgramsBackStepGuard } from '@/app/programs/ProgramsBackStepGuard'
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
@@ -73,6 +74,7 @@ export default async function ProgramsPage() {
         <div className="absolute bottom-[-10%] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-cyan-400/15 blur-[130px] sm:h-[560px] sm:w-[560px]" />
       </div>
       <NavApp />
+      <ProgramsBackStepGuard />
       <main className="w-full min-w-0 overflow-x-clip">
       <ProgramsUnlockShell>
       <section

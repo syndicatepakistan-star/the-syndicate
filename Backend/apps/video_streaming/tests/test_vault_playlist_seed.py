@@ -46,7 +46,7 @@ class VaultPlaylistSeedTests(TestCase):
 
     def test_retire_legacy_unpublishes_fixture_slug(self):
         legacy = StreamPlaylist.objects.create(
-            title="AI Automations",
+            title="A.I Content Automation for Business",
             slug="ai-automations",
             category="business_model",
             is_published=True,

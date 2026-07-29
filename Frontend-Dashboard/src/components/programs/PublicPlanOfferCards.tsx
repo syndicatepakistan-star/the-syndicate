@@ -28,6 +28,13 @@ import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import {
+  clearPlanOfferDetailsHash,
+  GLOBE_PACK_KEYS,
+  readProgramDetailsHash,
+  writePlanOfferDetailsHash,
+  writePlanOfferSpotlightHash,
+} from "@/lib/programPlaylistThumbnails";
 import { fetchStreamPlaylists } from "@/lib/streaming-api";
 import {
   buildVaultModulePlaylistHref,
@@ -226,6 +233,15 @@ function PublicPlanOfferCardsInner({
     packModalOpenedRef.current = false;
   }, [highlightPack]);
 
+  // Strict URL behavior: if the deep-link params disappear, close any open offer modals.
+  useEffect(() => {
+    if (highlightPack) return;
+    packModalOpenedRef.current = false;
+    setVaultPackOffer(null);
+    setDetailOffer(null);
+    setTradingModuleOffer(null);
+  }, [highlightPack]);
+
   useEffect(() => {
     if (!highlightPack) return;
     if (highlightHandledRef.current) return;
@@ -239,12 +255,54 @@ function PublicPlanOfferCardsInner({
     };
   }, [highlightPack]);
 
+  // `?slug=money-mastery#details` / `?pack=bundle#details` → open pack details modal (Klaviyo).
   useEffect(() => {
-    if (!highlightPack || packModalOpenedRef.current) return;
+    if (!highlightPack) return;
+
+    const openFromHash = () => {
+      if (!readProgramDetailsHash()) return false;
+      const offer = PLAN_OFFERS.find((item) => item.plan === highlightPack);
+      if (!offer) return false;
+      packModalOpenedRef.current = true;
+      setVaultPackOffer(null);
+      setDetailOffer(offer);
+      writePlanOfferDetailsHash(highlightPack);
+      return true;
+    };
+
+    if (openFromHash()) return;
+
+    if (packModalOpenedRef.current) return;
     const offer = PLAN_OFFERS.find((item) => item.plan === highlightPack);
     if (!offer || offer.openAction !== "vault_picker") return;
+
+    // Spotlight hash is the only time we auto-open the vault browser.
+    // (Without this, just `?slug=` would unexpectedly open details.)
+    if (typeof window !== "undefined") {
+      const h = window.location.hash.replace(/^#/, "").toLowerCase();
+      if (h !== "syndicate-elite-offers") return;
+    }
+
     packModalOpenedRef.current = true;
     setVaultPackOffer(offer);
+  }, [highlightPack]);
+
+  useEffect(() => {
+    if (!highlightPack) return;
+    const onHash = () => {
+      if (!readProgramDetailsHash()) return;
+      const offer = PLAN_OFFERS.find((item) => item.plan === highlightPack);
+      if (!offer) return;
+      setVaultPackOffer(null);
+      setDetailOffer(offer);
+      writePlanOfferDetailsHash(highlightPack);
+    };
+    window.addEventListener("hashchange", onHash);
+    window.addEventListener("popstate", onHash);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("popstate", onHash);
+    };
   }, [highlightPack]);
 
   const purchasedSet = useMemo(() => purchasedSlugs, [purchasedSlugs]);
@@ -451,8 +509,15 @@ function PublicPlanOfferCardsInner({
         }
         onDetails={() => {
           if (offer.openAction === "vault_picker") {
+            if (GLOBE_PACK_KEYS.has(offer.plan as GlobePackKey)) {
+              // Unique mid-ticket URL, then open vault browser
+              writePlanOfferSpotlightHash(offer.plan as GlobePackKey);
+            }
             setVaultPackOffer(offer);
             return;
+          }
+          if (GLOBE_PACK_KEYS.has(offer.plan as GlobePackKey)) {
+            writePlanOfferDetailsHash(offer.plan as GlobePackKey);
           }
           setDetailOffer(offer);
         }}
@@ -533,7 +598,11 @@ function PublicPlanOfferCardsInner({
       {detailOffer ? (
         <PlanOfferDetailModal
           offer={detailOffer}
-          onClose={() => setDetailOffer(null)}
+          onClose={() => {
+            const pack = detailOffer.plan as GlobePackKey;
+            setDetailOffer(null);
+            if (GLOBE_PACK_KEYS.has(pack)) clearPlanOfferDetailsHash(pack);
+          }}
           onUnlock={(offer) => void joinOffer(offer)}
           unlockBusy={busyPlan === "bundle"}
         />

@@ -9865,14 +9865,10 @@ body {
   line-height: 1.2 !important;
   letter-spacing: 0.02em !important;
   color: rgba(255, 245, 220, 0.55) !important;
-  text-decoration: line-through !important;
-  text-decoration-color: #ffffff !important;
-  text-decoration-thickness: 2.5px !important;
-  text-decoration-skip-ink: none !important;
-  -webkit-text-decoration-skip: none !important;
+  text-decoration: none !important;
 }
 
-/* SVG strikethrough overlay — scales with the price text */
+/* SVG strikethrough overlay — 1px line so compare prices stay readable */
 .plan-offer-card__pack-price-badge__strike {
   position: absolute !important;
   left: -6% !important;
@@ -9882,6 +9878,10 @@ body {
   z-index: 3 !important;
   pointer-events: none !important;
   overflow: visible !important;
+}
+
+.plan-offer-card__pack-price-badge__strike line {
+  stroke-width: 1px !important;
 }
 
 .plan-offer-card__pack-price-badge__amount {

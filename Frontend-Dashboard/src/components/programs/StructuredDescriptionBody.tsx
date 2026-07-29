@@ -16,9 +16,9 @@ const STRUCTURED_HEADINGS: {
   colorClass: string;
   color: string;
 }[] = [
+  { key: "projects_you_will_build", label: "Projects you will build", colorClass: "text-violet-300", color: "#c4b5fd" },
   { key: "hook", label: "Programme Introduction", colorClass: "text-[#f5c814]", color: "#f5c814" },
   { key: "core_protocol", label: "Programme Description", colorClass: "text-cyan-300", color: "#67e8f9" },
-  { key: "projects_you_will_build", label: "Projects you will build", colorClass: "text-violet-300", color: "#c4b5fd" },
   { key: "what_you_will_learn", label: "What you will learn", colorClass: "text-emerald-300", color: "#6ee7b7" },
 ];
 
@@ -169,19 +169,185 @@ function WhatYouWillLearnBody({ text, prominent }: { text: string; prominent?: b
   );
 }
 
-function ProjectsYouWillBuildBody({ text, prominent }: { text: string; prominent?: boolean }) {
-  const firstGroup = text.search(/^\s*(?:module|chapter)\s+\d+/im);
-  if (firstGroup < 0) {
-    return <WhatYouWillLearnBody text={text} prominent={prominent} />;
-  }
+/** Rotating neon colors for each project title in pack / program details. */
+const PROJECT_TITLE_NEONS = [
+  "#67e8f9", // cyan
+  "#f5c814", // gold
+  "#f0abfc", // fuchsia
+  "#6ee7b7", // emerald
+  "#c4b5fd", // violet
+  "#fb7185", // rose
+  "#fdba74", // orange
+  "#93c5fd", // sky
+  "#f9a8d4", // pink
+  "#a3e635", // lime
+  "#22d3ee", // bright cyan
+  "#e879f9", // bright fuchsia
+] as const;
 
-  const introduction = text.slice(0, firstGroup).trim();
-  const projects = text.slice(firstGroup).trim();
+type ProjectItem = { title: string; description: string };
+
+function splitProjectTitleDescription(raw: string): ProjectItem {
+  const cleaned = stripLessonPrefix(raw.replace(/^\s*[-*•·\d.)]+\s*/, "").trim());
+  const withoutBold = cleaned.replace(/^\*\*(.+?)\*\*\s*:?\s*/u, "$1: ").replace(/\*\*/g, "");
+  const colonIdx = withoutBold.indexOf(":");
+  if (colonIdx > 0 && colonIdx < 120) {
+    return {
+      title: withoutBold.slice(0, colonIdx).trim(),
+      description: withoutBold.slice(colonIdx + 1).trim(),
+    };
+  }
+  return { title: withoutBold, description: "" };
+}
+
+function isProjectGroupHeading(line: string): boolean {
+  const t = line.trim().replace(/^\*\*(.+)\*\*$/u, "$1").trim();
+  if (!t) return false;
+  if (/^(?:module|chapter)\s+\d+/i.test(t)) return true;
+  if (/^beginner/i.test(t) || /^advanced/i.test(t) || /^intermediate/i.test(t)) return true;
+  if (/projects?$/i.test(t) && t.length < 80 && !t.includes(":")) return true;
+  return false;
+}
+
+/** Detect "Project Title: description" lines (with or without bullets). */
+function isProjectEntryLine(line: string): boolean {
+  if (isProjectGroupHeading(line)) return false;
+  if (/^\s*[-*•·]\s+/.test(line) || /^\s*\d+[.)]\s+/.test(line)) return true;
+  const cleaned = stripLessonPrefix(line.replace(/^\s*[-*•·\d.)]+\s*/, "").trim());
+  const withoutBold = cleaned.replace(/^\*\*(.+?)\*\*\s*:?\s*/u, "$1: ").replace(/\*\*/g, "");
+  const colonIdx = withoutBold.indexOf(":");
+  if (colonIdx <= 0 || colonIdx > 110) return false;
+  const title = withoutBold.slice(0, colonIdx).trim();
+  if (!title || title.split(/\s+/).length > 14) return false;
+  // Require some description after the colon so prose paragraphs aren't treated as projects.
+  return withoutBold.slice(colonIdx + 1).trim().length > 0;
+}
+
+type ProjectBlock = { intro: string[]; heading: string | null; items: ProjectItem[] };
+
+function parseProjectsYouWillBuild(raw: string): ProjectBlock[] {
+  const lines = raw
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return [];
+
+  const blocks: ProjectBlock[] = [];
+  let intro: string[] = [];
+  let heading: string | null = null;
+  let items: ProjectItem[] = [];
+  let startedItems = false;
+
+  const flush = () => {
+    if (intro.length || heading || items.length) {
+      blocks.push({ intro, heading, items });
+    }
+    intro = [];
+    heading = null;
+    items = [];
+  };
+
+  for (const line of lines) {
+    if (isProjectGroupHeading(line)) {
+      // Keep intro with the first group; only flush when a prior group already has content.
+      if (items.length > 0 || heading) flush();
+      heading = stripLessonPrefix(line.replace(/^\*\*(.+)\*\*$/u, "$1").trim());
+      startedItems = false;
+      continue;
+    }
+    if (isProjectEntryLine(line)) {
+      startedItems = true;
+      items.push(splitProjectTitleDescription(line));
+      continue;
+    }
+    if (!startedItems && items.length === 0) {
+      intro.push(line.replace(/^\*\*(.+)\*\*$/u, "$1").trim());
+      continue;
+    }
+    // Continuation line for previous project description
+    if (items.length > 0) {
+      const last = items[items.length - 1]!;
+      last.description = `${last.description} ${line}`.trim();
+    } else {
+      intro.push(line);
+    }
+  }
+  flush();
+
+  if (blocks.length === 0) {
+    return [{ intro: [], heading: null, items: lines.map(splitProjectTitleDescription) }];
+  }
+  return blocks;
+}
+
+export function ProjectsYouWillBuildBody({ text, prominent }: { text: string; prominent?: boolean }) {
+  const blocks = parseProjectsYouWillBuild(text);
+  if (blocks.length === 0) return null;
+
+  const bodyClass = prominent
+    ? "text-[17px] leading-relaxed text-white/95 sm:text-[18px] font-[family-name:var(--font-body)]"
+    : "text-[15px] leading-relaxed text-white/95 sm:text-[16px] font-[family-name:var(--font-body)]";
+  // Titles +4pt larger than body copy for clear scan hierarchy.
+  const titleClass = prominent
+    ? "text-[calc(17px+4pt)] font-bold leading-snug sm:text-[calc(18px+4pt)] font-[family-name:var(--font-heading)]"
+    : "text-[calc(15px+4pt)] font-bold leading-snug sm:text-[calc(16px+4pt)] font-[family-name:var(--font-heading)]";
+  const numberClass = prominent
+    ? "text-[calc(17px+4pt)] font-black tabular-nums sm:text-[calc(18px+4pt)]"
+    : "text-[calc(15px+4pt)] font-black tabular-nums sm:text-[calc(16px+4pt)]";
+
+  let projectIndex = 0;
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7">
-      {introduction ? <ParagraphBody text={introduction} prominent={prominent} /> : null}
-      <WhatYouWillLearnBody text={projects} prominent={prominent} />
+      {blocks.map((block, bi) => (
+        <div key={bi} className="min-w-0">
+          {block.intro.length > 0 ? (
+            <div className="mb-4 flex flex-col gap-3 sm:mb-5">
+              {block.intro.map((p, i) => (
+                <p key={i} className={cn("text-left", bodyClass)}>
+                  {p}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {block.heading ? (
+            <p
+              className={cn(
+                "mb-3 text-left font-semibold text-white/95 font-[family-name:var(--font-body)]",
+                prominent ? "text-[17px] sm:text-[18px]" : "text-[15px] sm:text-[16px]",
+              )}
+            >
+              {block.heading}
+            </p>
+          ) : null}
+          {block.items.length > 0 ? (
+            <ol className="m-0 list-none space-y-4 p-0 sm:space-y-5">
+              {block.items.map((item, ii) => {
+                const color = PROJECT_TITLE_NEONS[projectIndex % PROJECT_TITLE_NEONS.length]!;
+                const n = projectIndex + 1;
+                projectIndex += 1;
+                return (
+                  <li key={ii} className="flex gap-3 text-left sm:gap-3.5">
+                    <span className={cn("shrink-0", numberClass)} style={{ color }} aria-hidden>
+                      {n}.
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className={titleClass} style={{ color, textShadow: `0 0 14px ${color}55` }}>
+                        {item.title}
+                      </p>
+                      {item.description ? (
+                        <p className={cn("mt-1.5", bodyClass)}>{item.description}</p>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 }

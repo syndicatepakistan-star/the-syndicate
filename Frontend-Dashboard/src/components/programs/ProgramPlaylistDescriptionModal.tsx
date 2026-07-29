@@ -12,7 +12,7 @@ import {
 } from "@/lib/programPlaylistThumbnails";
 import { LEVEL1_SLUG_THUMBNAILS } from "@/lib/level1ProgramCatalog";
 import { stripLessonPrefix } from "@/lib/descriptionText";
-import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { StructuredDescriptionBody, ProjectsYouWillBuildBody } from "@/components/programs/StructuredDescriptionBody";
 import { parseStructuredDescriptionSections } from "@/lib/structuredDescription";
 import type { StreamPlaylistDescriptionSections, StreamPlaylistListItem } from "@/lib/streaming-api";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
@@ -410,9 +410,9 @@ function parseBodyStructuredSections(body: string): StreamPlaylistDescriptionSec
 }
 
 const STRUCTURED_HEADINGS: { key: keyof StreamPlaylistDescriptionSections; label: string }[] = [
+  { key: "projects_you_will_build", label: "Projects you will build" },
   { key: "hook", label: "Programme Introduction" },
   { key: "core_protocol", label: "Programme Description" },
-  { key: "projects_you_will_build", label: "Projects you will build" },
   { key: "what_you_will_learn", label: "What you will learn" },
 ];
 
@@ -524,13 +524,22 @@ function StructuredPlaylistDescription({ sections }: { sections: StreamPlaylistD
       {STRUCTURED_HEADINGS.map(({ key, label }) => {
         const text = sections[key].trim();
         if (!text) return null;
-        const isList = key === "projects_you_will_build" || key === "what_you_will_learn";
+        const isLearn = key === "what_you_will_learn";
+        const isProjects = key === "projects_you_will_build";
         return (
           <section key={key} className="scroll-mt-4">
             <h3 className="border-b border-[#f5c814]/25 pb-2 text-left text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#f5c814] sm:text-[1.15rem] sm:tracking-[0.14em]">
               {label}
             </h3>
-            <div className="mt-4 text-left">{isList ? <WhatYouWillLearnBody text={text} /> : parseDescriptionToBlocks(text)}</div>
+            <div className="mt-4 text-left">
+              {isProjects ? (
+                <ProjectsYouWillBuildBody text={text} prominent />
+              ) : isLearn ? (
+                <WhatYouWillLearnBody text={text} />
+              ) : (
+                parseDescriptionToBlocks(text)
+              )}
+            </div>
           </section>
         );
       })}

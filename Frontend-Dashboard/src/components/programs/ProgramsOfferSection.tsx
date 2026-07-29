@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { PublicPlanOfferCards } from "@/components/programs/PublicPlanOfferCards";
-import { GLOBE_PACK_KEYS, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { GLOBE_PACK_KEYS, parsePackDeepLinkSlug, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 function parseHighlightPack(raw: string | null): GlobePackKey | undefined {
   const value = (raw ?? "").trim();
@@ -77,7 +77,9 @@ function ProgramsOfferSectionInner({
   knightOnly?: boolean;
 }) {
   const searchParams = useSearchParams();
-  const highlightPack = parseHighlightPack(searchParams.get("pack"));
+  const highlightPack =
+    parseHighlightPack(searchParams.get("pack")) ??
+    parsePackDeepLinkSlug(searchParams.get("slug"));
   return (
     <PublicPlanOfferCards
       size={size}

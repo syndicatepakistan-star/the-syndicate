@@ -26,6 +26,7 @@ import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
 import { startPlanCheckout } from "@/lib/plan-checkout";
 import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 import {
@@ -307,6 +308,16 @@ function PublicPlanOfferCardsInner({
 
   const purchasedSet = useMemo(() => purchasedSlugs, [purchasedSlugs]);
   const spotlightActive = highlightedPack != null;
+
+  const exitPackDeepLink = useCallback(() => {
+    setVaultPackOffer(null);
+    setDetailOffer(null);
+    setTradingModuleOffer(null);
+    setHighlightedPack(null);
+    packModalOpenedRef.current = false;
+    historyReplaceUrl("/programs#syndicate-elite-offers");
+    router.replace("/programs#syndicate-elite-offers");
+  }, [router]);
 
   useEffect(() => {
     if (!spotlightActive) return;
@@ -601,7 +612,15 @@ function PublicPlanOfferCardsInner({
           onClose={() => {
             const pack = detailOffer.plan as GlobePackKey;
             setDetailOffer(null);
-            if (GLOBE_PACK_KEYS.has(pack)) clearPlanOfferDetailsHash(pack);
+            if (GLOBE_PACK_KEYS.has(pack)) {
+              // Return to vault list when closing details opened from a pack deep link.
+              if (vaultPackOffer) {
+                clearPlanOfferDetailsHash(pack);
+                return;
+              }
+              exitPackDeepLink();
+              return;
+            }
           }}
           onUnlock={(offer) => void joinOffer(offer)}
           unlockBusy={busyPlan === "bundle"}
@@ -616,7 +635,7 @@ function PublicPlanOfferCardsInner({
           moneyMasteryActive={moneyMasteryActive}
           selectionMode={unlockCart.selectionMode}
           isInCart={unlockCart.isInCart}
-          onClose={() => setVaultPackOffer(null)}
+          onClose={exitPackDeepLink}
           onDetails={setDetailOffer}
           onModuleDetails={(offer) => {
             if (isTradingModuleSlug(offer.plan)) {

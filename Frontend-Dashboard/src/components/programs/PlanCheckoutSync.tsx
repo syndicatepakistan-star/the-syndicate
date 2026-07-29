@@ -5,6 +5,7 @@ import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { clearStreamPlaylistsCache } from "@/lib/streaming-api";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 
 /** After checkout, refresh ownership and keep the user on the main Programs catalog. */
 export function PlanCheckoutSync() {
@@ -39,7 +40,7 @@ export function PlanCheckoutSync() {
     clean.searchParams.delete("playlist");
     clean.searchParams.delete("playlist_id");
     clean.searchParams.delete("pack");
-    window.history.replaceState({}, "", clean.toString());
+    historyReplaceUrl(clean.toString());
   }, []);
 
   return null;

@@ -483,7 +483,7 @@ export function PlanOfferCard({
                           y1="50"
                           x2="100"
                           y2="50"
-                          stroke="#ffffff"
+                          stroke="rgba(156, 163, 175, 0.7)"
                           strokeWidth="1"
                           strokeLinecap="square"
                           vectorEffect="non-scaling-stroke"

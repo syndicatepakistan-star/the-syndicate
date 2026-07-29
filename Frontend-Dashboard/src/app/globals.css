@@ -9881,6 +9881,7 @@ body {
 }
 
 .plan-offer-card__pack-price-badge__strike line {
+  stroke: rgba(156, 163, 175, 0.7) !important;
   stroke-width: 1px !important;
 }
 

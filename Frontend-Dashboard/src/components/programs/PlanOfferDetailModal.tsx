@@ -220,7 +220,7 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
           <div className="mt-5 flex flex-wrap items-end gap-x-2 gap-y-1">
             {!isTradingLesson ? (
               <>
-            <span className="font-mono text-lg text-white/40 line-through decoration-1 decoration-white/55 sm:text-xl">
+            <span className="font-mono text-lg text-white/40 line-through decoration-1 decoration-zinc-400/70 sm:text-xl">
               {localizeLabel(offer.comparePrice)}
             </span>
             <span

@@ -111,7 +111,7 @@ export const PATH_GOAL_INTRO: Record<
   business_model: {
     path: "Business model mastery — eleven build-and-launch programs for apps, automation, publishing, and digital products.",
     opportunities:
-      "Flutter, N8N, A.I Content Automation for Business, Python, WordPress, Unreal Engine, Framer, Amazon KDP, Print On Demand, React, and Canva.",
+      "Flutter, N8N, Social Media Content Automation, Python, WordPress, Unreal Engine, Framer, Amazon KDP, Print On Demand, React, and Canva.",
   },
   business_psychology: {
     path: "Business behavioural phsycology — discipline, risk doctrine, and Syndicate mindset protocols that harden elite operators.",
@@ -170,8 +170,8 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
   ],
   business_model: [
     { type: "program", title: "App Building for Business (Vibe Coding)" },
-    { type: "program", title: "Business and Content A.I Automation" },
-    { type: "program", title: "A.I Content Automation for Business" },
+    { type: "program", title: "AI content Automation for Businesses" },
+    { type: "program", title: "Social Media Content Automation" },
     { type: "program", title: "Basics Python for Small Business" },
     { type: "program", title: "The Profitable Blogging Blueprint" },
     { type: "program", title: "The Gaming Business Blueprint (Build, Launch, and Sell)" },
@@ -229,7 +229,7 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "program", title: "App Building for Business (Vibe Coding)" },
     { type: "program", title: "The Zero-Inventory Clothing Business Blueprint" },
     { type: "program", title: "Business Warfare" },
-    { type: "program", title: "A.I Content Automation for Business" },
+    { type: "program", title: "Social Media Content Automation" },
     { type: "program", title: "Rapid Non-code Web Building (For Business)" },
   ],
   make_money_online: [

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { clearUnlockCelebrationStorage } from "@/lib/programUnlockFlow";
 import { markDashboardCheckoutReturn } from "@/lib/dashboardShellScroll";
 import { confirmPlaylistCheckoutSuccess } from "@/lib/streaming-api";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 
 export function PlaylistCheckoutSync() {
   useEffect(() => {
@@ -52,7 +53,7 @@ export function PlaylistCheckoutSync() {
         clean.searchParams.delete("section");
         markDashboardCheckoutReturn();
         const qs = clean.searchParams.toString();
-        window.history.replaceState({}, "", qs ? `${clean.pathname}?${qs}` : clean.pathname);
+        historyReplaceUrl(qs ? `${clean.pathname}?${qs}` : clean.pathname);
       }
     })();
     return () => {

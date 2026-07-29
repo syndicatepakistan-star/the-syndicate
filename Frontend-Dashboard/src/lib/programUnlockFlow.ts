@@ -1,4 +1,5 @@
 import { dashboardHref, dashboardProgramsHref } from "@/lib/dashboardRoutes";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import {
   buildVaultModulePlaylistHref,
   fetchVaultPlaylistMap,
@@ -81,7 +82,7 @@ export function requestDashboardProgramOpen(opts: {
   const href = dashboardProgramsHref(
     Object.fromEntries(params.entries()) as Record<string, string>,
   );
-  window.history.replaceState({ dashboardSection: "programs" }, "", href);
+  historyReplaceUrl(href, { dashboardSection: "programs" });
   opts.onNavigate?.("programs");
 
   if (opts.playlistId != null && opts.playlistId > 0) {

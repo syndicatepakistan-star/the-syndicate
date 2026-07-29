@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
-const BACK_STEP_SEEDED = "__programsBackStepSeeded";
+const SESSION_KEY = "programs-back-step-v3";
 
 function hasProgramsDeepLink(url: URL): boolean {
   if (url.pathname !== "/programs") return false;
@@ -10,39 +11,65 @@ function hasProgramsDeepLink(url: URL): boolean {
   if (url.searchParams.has("pack")) return true;
   if (url.searchParams.has("program")) return true;
   if (url.searchParams.has("playlist")) return true;
-  return Boolean(url.hash && url.hash !== "#");
+  // Detail hashes only — bare #syndicate-elite-offers is the base programs view.
+  const hash = url.hash.replace(/^#/, "").toLowerCase();
+  return hash === "details" || hash === "spotlight";
+}
+
+function isAboutBlank(): boolean {
+  return window.location.protocol === "about:" || window.location.href.startsWith("about:");
 }
 
 /**
- * If user opens a deep-link like /programs?slug=...#details,
- * seed one extra history step so Back goes to /programs first,
- * then another Back goes to the previous page (e.g. home).
+ * Deep pack/program URLs must not use raw history.replaceState + pushState with a wiped
+ * Next.js history state — that inserts about:blank into the Back stack.
+ *
+ * Seed a real App Router /programs entry, then re-open the deep link so:
+ *   deep link → Back → /programs → Back → previous page
  */
 export function ProgramsBackStepGuard() {
+  const router = useRouter();
+  const seedingRef = useRef(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    const recoverBlank = () => {
+      if (!isAboutBlank()) return;
+      window.location.replace("/programs#syndicate-elite-offers");
+    };
+
+    recoverBlank();
+    window.addEventListener("popstate", recoverBlank);
+    return () => window.removeEventListener("popstate", recoverBlank);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const current = new URL(window.location.href);
-    if (!hasProgramsDeepLink(current)) return;
+    if (current.pathname !== "/programs") return;
 
-    const state = (window.history.state ?? {}) as Record<string, unknown>;
-    if (state[BACK_STEP_SEEDED]) return;
-
-    const clean = new URL(current.toString());
-    clean.search = "";
-    clean.hash = "";
-
-    if (clean.pathname === current.pathname && clean.search === current.search && clean.hash === current.hash) {
+    if (!hasProgramsDeepLink(current)) {
+      sessionStorage.removeItem(SESSION_KEY);
       return;
     }
 
-    const cleanState = { ...state, [BACK_STEP_SEEDED]: "base" };
-    const deepState = { ...state, [BACK_STEP_SEEDED]: "deep" };
+    if (seedingRef.current) return;
 
-    // 1) Replace current entry with /programs
-    window.history.replaceState(cleanState, "", `${clean.pathname}${clean.search}${clean.hash}`);
-    // 2) Push deep-link entry back on top (visible URL unchanged)
-    window.history.pushState(deepState, "", `${current.pathname}${current.search}${current.hash}`);
-  }, []);
+    const deepPath = `${current.pathname}${current.search}${current.hash}`;
+    if (sessionStorage.getItem(SESSION_KEY) === deepPath) return;
+
+    seedingRef.current = true;
+    sessionStorage.setItem(SESSION_KEY, deepPath);
+
+    router.replace("/programs");
+    const t = window.setTimeout(() => {
+      router.push(deepPath);
+    }, 40);
+
+    return () => window.clearTimeout(t);
+  }, [router]);
 
   return null;
 }

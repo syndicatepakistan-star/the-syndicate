@@ -1,5 +1,6 @@
 import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { programPlaylistDeepLink, planOfferDeepLink, type GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import { historyPushUrl, historyReplaceUrl } from "@/lib/historyUrl";
 
 export type ProgramLibraryScrollTarget = "public" | "dashboard";
 
@@ -160,7 +161,7 @@ export function navigateToDashboardProgramCard(programId: number): void {
     url.searchParams.delete("section");
     url.searchParams.set("playlist", String(programId));
     const qs = url.searchParams.toString();
-    window.history.replaceState({}, "", qs ? `${url.pathname}?${qs}` : url.pathname);
+    historyReplaceUrl(qs ? `${url.pathname}?${qs}` : url.pathname);
   };
 
   const focus = () => {
@@ -203,7 +204,7 @@ export function navigateToPlanOfferCard(pack: GlobePackKey): void {
 
   const target = planOfferDeepLink(pack);
   if (window.location.pathname === "/programs") {
-    window.history.pushState({}, "", target);
+    historyPushUrl(target);
     focus();
     return;
   }
@@ -219,7 +220,7 @@ export function navigateToProgramLibraryCard(programId: number): void {
   }
   const target = programPlaylistDeepLink(programId);
   if (window.location.pathname === "/programs") {
-    window.history.pushState({}, "", target);
+    historyPushUrl(target);
     focusProgramCardWithRetries(programId);
     return;
   }

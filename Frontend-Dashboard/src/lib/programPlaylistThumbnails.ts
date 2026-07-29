@@ -13,6 +13,7 @@ import {
   LEVEL1_SLUG_TITLE_OVERRIDES,
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
 } from "@/lib/level1ProgramCatalog";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 /** Public paths for program playlist cards and homepage globe deep links. */
@@ -93,8 +94,8 @@ export const PUBLIC_PROGRAMS_PAGE_IDS = new Set<number>([
 export const PROGRAM_DISPLAY_TITLE_OVERRIDES: Record<number, string> = {
   13: "The Profitable Blogging Blueprint",
   14: "Rapid Non-code Web Building (For Business)",
-  16: "A.I Content Automation for Business",
-  17: "Business and Content A.I Automation",
+  16: "Social Media Content Automation",
+  17: "AI content Automation for Businesses",
   19: "The Zero-Inventory Clothing Business Blueprint",
   20: "The Gaming Business Blueprint (Build, Launch, and Sell)",
   21: "App Building for Business (Vibe Coding)",
@@ -283,7 +284,7 @@ function replaceProgramDeepLink(meta: ProgramDeepLinkMeta, mode: "details" | "sp
   applyProgramDeepLinkToUrl(url, meta, mode);
   const next = `${url.pathname}${url.search}${url.hash}`;
   if (next !== before) {
-    window.history.replaceState({}, "", next);
+    historyReplaceUrl(next);
   }
   return next;
 }
@@ -306,7 +307,7 @@ export function clearProgramDetailsHash(meta?: ProgramDeepLinkMeta): string | nu
   const url = new URL(window.location.href);
   url.hash = PROGRAM_SPOTLIGHT_HASH;
   const next = `${url.pathname}${url.search}${url.hash}`;
-  window.history.replaceState({}, "", next);
+  historyReplaceUrl(next);
   return next;
 }
 
@@ -413,7 +414,7 @@ function replacePlanOfferDeepLink(pack: GlobePackKey, mode: "details" | "spotlig
   url.searchParams.delete("program");
   url.hash = mode === "details" ? PROGRAM_DETAILS_HASH : "syndicate-elite-offers";
   const next = `${url.pathname}${url.search}${url.hash}`;
-  if (next !== before) window.history.replaceState({}, "", next);
+  if (next !== before) historyReplaceUrl(next);
   return next;
 }
 
@@ -433,7 +434,7 @@ export function clearPlanOfferDetailsHash(pack?: GlobePackKey): string | null {
   const url = new URL(window.location.href);
   url.hash = "syndicate-elite-offers";
   const next = `${url.pathname}${url.search}${url.hash}`;
-  window.history.replaceState({}, "", next);
+  historyReplaceUrl(next);
   return next;
 }
 
@@ -500,8 +501,8 @@ export const CURATED_GLOBE_TILES: readonly CuratedGlobeTile[] = [
   { src: courseThumb("rapid-noncode-web-building.png"), alt: "Rapid Non-code Web Building (For Business)", fileName: "rapid-noncode-web-building.png", href: programPlaylistDeepLink(14), programId: 14 },
   { src: courseThumb("gaming-business-blueprint.png"), alt: "The Gaming Business Blueprint (Build, Launch, and Sell)", fileName: "gaming-business-blueprint.png", href: programPlaylistDeepLink(20), programId: 20 },
   { src: courseThumb("zero-inventory-clothing-blueprint.png"), alt: "The Zero-Inventory Clothing Business Blueprint", fileName: "zero-inventory-clothing-blueprint.png", href: programPlaylistDeepLink(19), programId: 19 },
-  { src: courseThumb("ai-content-automation-business.png"), alt: "A.I Content Automation for Business", fileName: "ai-content-automation-business.png", href: programPlaylistDeepLink(16), programId: 16 },
-  { src: courseThumb("business-content-n8n-ai-automation.png"), alt: "Business and Content A.I Automation", fileName: "business-content-n8n-ai-automation.png", href: programPlaylistDeepLink(17), programId: 17 },
+  { src: courseThumb("ai-content-automation-business.png"), alt: "Social Media Content Automation", fileName: "ai-content-automation-business.png", href: programPlaylistDeepLink(16), programId: 16 },
+  { src: courseThumb("business-content-n8n-ai-automation.png"), alt: "AI content Automation for Businesses", fileName: "business-content-n8n-ai-automation.png", href: programPlaylistDeepLink(17), programId: 17 },
   { src: courseThumb("13rules.jpg"), alt: "Syndicate 13 Business Rules", fileName: "13rules.jpg", href: programPlaylistDeepLink(7), programId: 7 },
   { src: courseThumb("money-philosophy.jpg"), alt: "Syndicate Money Philosophy", fileName: "money-philosophy.jpg", href: programPlaylistDeepLink(8), programId: 8 },
   { src: courseThumb("warfare.jpg"), alt: "Business Warfare", fileName: "warfare.jpg", href: programPlaylistDeepLink(99), programId: 99 },

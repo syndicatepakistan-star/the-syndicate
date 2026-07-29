@@ -160,8 +160,8 @@ export const LEVEL1_SLUG_THUMBNAILS: Record<string, string> = {
 };
 
 export const LEVEL1_SLUG_TITLE_OVERRIDES: Record<string, string> = {
-  "level1-model-01": "Business and Content A.I Automation",
-  "level1-model-02": "A.I Content Automation for Business",
+  "level1-model-01": "AI content Automation for Businesses",
+  "level1-model-02": "Social Media Content Automation",
   "level1-model-03": "App Building for Business (Vibe Coding)",
   "level1-model-04": "The Custom App Blueprint for Business",
   "level1-model-05": "eBook Business Blueprint (Monetize Your Knowledge)",

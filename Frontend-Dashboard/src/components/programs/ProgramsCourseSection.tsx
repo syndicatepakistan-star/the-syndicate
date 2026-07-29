@@ -34,6 +34,7 @@ import {
   resolveProgramPlaylistHighlightSlug,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import {
   PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
@@ -782,7 +783,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       url.pathname = "/dashboard/programs";
       url.searchParams.delete("section");
       url.searchParams.set("playlist", String(id));
-      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      historyReplaceUrl(`${url.pathname}${url.search}${url.hash}`);
     }
   };
   openStreamPlaylistRef.current = openStreamPlaylist;
@@ -860,7 +861,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.delete("playlist");
-      window.history.replaceState({}, "", url.toString());
+      historyReplaceUrl(url.toString());
       requestAnimationFrame(() => resetProgramsViewportScroll());
     }
   };
@@ -1033,7 +1034,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       url.searchParams.delete("section");
       url.searchParams.set("playlist", String(playlistIdFromUrl));
       url.searchParams.delete("playlist_id");
-      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      historyReplaceUrl(`${url.pathname}${url.search}${url.hash}`);
     }
   }, [detailPlaylistId, secureView]);
 

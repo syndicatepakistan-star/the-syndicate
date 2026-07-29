@@ -22,6 +22,7 @@ import { resolveDjangoMediaUrl } from "@/lib/courses-api";
 import { resolveProgramPlaylistThumbnail } from "@/lib/programPlaylistCatalog";
 import { issuePlaylistCertificate } from "@/lib/certificates-api";
 import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
@@ -402,7 +403,7 @@ function goToSettingsCertificates() {
     params.set("section", "settings");
     const qs = params.toString();
     const next = `${window.location.pathname}?${qs}#${SETTINGS_CERTIFICATES_ID}`;
-    window.history.replaceState(null, "", next);
+    historyReplaceUrl(next);
   }, 200);
 }
 

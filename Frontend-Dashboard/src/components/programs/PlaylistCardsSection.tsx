@@ -9,6 +9,7 @@ import {
   type StreamPlaylistListItem,
 } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollProgramCardIntoView } from "@/lib/programCardScroll";
+import { historyReplaceUrl } from "@/lib/historyUrl";
 import {
   fillMissingPublicProgramPlaylists,
   normalizeLevel1ProgramPlaylists,
@@ -227,7 +228,7 @@ export function PlaylistCardsSection({
         clean.searchParams.delete("playlist_checkout");
         clean.searchParams.delete("session_id");
         clean.searchParams.delete("playlist_id");
-        window.history.replaceState({}, "", clean.toString());
+        historyReplaceUrl(clean.toString());
       }
     })();
   }, []);

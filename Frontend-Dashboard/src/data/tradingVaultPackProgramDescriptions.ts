@@ -1,7 +1,9 @@
 /**
  * Curated Trading Advanced Technical Analysis full-pack copy.
- * Section headers: Programme Introduction, Programme Description, What You Will Learn,
- * Exact Chart Patterns, Exact Setups, Exact Strategy.
+ * Display order: Chart Patterns, Setups, Strategy (keyword neon titles + 23 items),
+ * then Programme Introduction, Programme Description, What You Will Learn.
+ * Exact* blocks are parsed from the What You Will Learn region and rendered first
+ * with the same Title: explanation styling as Projects You Will Build on other packs.
  */
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
@@ -36,11 +38,11 @@ Using Trading Tools: How to use simple tools (like Moving Averages and RSI) to d
 Building Long-Term Wealth: Why aiming for small, consistent wins is much better than trying to get rich quick on a single lucky trade.
 
 Exact Chart Patterns
-In this complete pack, you will learn to spot the visual shapes that predict market moves:
+In this complete pack, you learn the repeating visual shapes that predict market moves. Chart patterns come first:
 
-Bull and Bear Flags: Simple sideways movements that look like a flag on a pole, showing you that the price is resting before a massive breakout.
+Bull and Bear Flags: Simple sideways movements that look like a flag on a pole, showing the price is resting before a massive breakout.
 
-The Cup and Handle: A rounded bottom shape that looks like a teacup, telling you that buyers are slowly taking control for a big upward push.
+The Cup and Handle: A rounded bottom shape that looks like a teacup, telling you buyers are slowly taking control for a big upward push.
 
 Double and Triple Tops/Bottoms: When a price tries to break a ceiling or floor two or three times and fails, signaling a massive reversal is coming.
 
@@ -50,39 +52,45 @@ Megaphones and Consolidations: A widening, chaotic pattern that shows market con
 
 Head and Shoulders: A classic three-hump pattern that warns you when a long upward trend is finally exhausted and about to fall.
 
-The M-A and W-V Patterns: Distinct letter-shaped moves that help you read the hidden roadmap of where the big money is pushing the price.
+The M-A Pattern: A distinct letter-shaped move that maps where big money is pushing price after a failed top.
+
+The W-V Pattern: The mirror letter formation that helps you read bottoms and the roadmap of the next trend leg.
 
 Exact Setups
-You will learn specific, step-by-step triggers that tell you exactly when to click buy or sell:
+Next you learn the precise triggers that tell you exactly when to click buy or sell:
 
 The Engulfing Candle Setup: When one giant price bar completely swallows the previous one, signaling a sudden and powerful change in direction.
 
-Topping and Bottoming Tails: Price bars with long "tails" that show the market tried to push the price one way, but was violently rejected by the other side.
+Topping and Bottoming Tails: Price bars with long tails that show the market tried to push one way, then was violently rejected.
 
-The Doji Setup: A specific cross-shaped candle that means the market is frozen in a tie between buyers and sellers, warning you a big decision is coming.
+The Doji Setup: A cross-shaped candle that means buyers and sellers are tied, warning you a big decision is coming.
 
-Golden and Death Crosses: A long-term setup where slow and fast moving lines cross each other, signaling a massive shift in the overall market health.
+Golden and Death Crosses: A long-term setup where slow and fast moving lines cross, signaling a major shift in market health.
 
-Gaps and Gap Fills: When a price jumps overnight leaving an empty space on the chart, and the strategy for trading when the price comes back to "fill" that empty space.
+Gaps and Gap Fills: When price jumps overnight leaving empty space, and how to trade the move back to fill that gap.
 
-Retracing to the Scene of the Crime: A highly reliable setup where you wait for a price to break out, then patiently wait for it to come back and test the exact line it just broke.
+Retracing to the Scene of the Crime: Wait for a breakout, then patiently wait for price to return and test the exact line it just broke.
 
-The Hit and Kiss: A precise setup identifying the difference between a price slightly touching a line (kiss) versus aggressively crashing into it (hit).
+The Hit and Kiss: The difference between a light touch of a level (kiss) versus an aggressive crash into it (hit).
+
+Downsloping and Upsloping Channels: Parallel trend corridors that show you where to buy dips and sell ripples inside the channel.
 
 Exact Strategy
-Your complete playbook for how to manage your money and execute trades:
+Finally, the rule-based playbook — 23 strategies total across patterns, setups, and strategy — for managing money and executing with process, not hope:
 
-The 10% Risk/Reward Rule: A strict mathematical formula to ensure you only take trades where the potential reward heavily outweighs the risk.
+The 10% Risk/Reward Rule: A strict formula so you only take trades where potential reward heavily outweighs the risk.
 
-The Confirmation Signal Strategy: A rule-based approach where you never guess; you wait for the market to give you a definitive green light before risking a penny.
+The Confirmation Signal Strategy: Never guess — wait for the market to give a definitive green light before risking a penny.
 
-Moving Average Bounces: A strategy using trailing lines on your chart to find safe, reliable places to enter a trade during a strong trend.
+Moving Average Bounces: Use trailing average lines to find safe, reliable entries during a strong trend.
 
-The Time Counts (Nova 7) Strategy: A hidden counting technique that uses the magic number 7 to predict when a price move is exhausted and ready to reverse.
+The Time Counts (Nova 7) Strategy: A counting technique using the number 7 to spot when a price move is exhausted and ready to reverse.
 
-RSI Divergence Strategy: A clever method where you compare the price on the chart to a hidden momentum tool. When they disagree, you know a trap is set and a reversal is coming.
+RSI Divergence Strategy: Compare chart price to the RSI momentum tool — when they disagree, a trap and reversal are forming.
 
-Mature vs. Immature Trading: A patience-based strategy where you learn to sit on your hands and wait for a pattern to fully develop, avoiding the fake-outs that trap impatient beginners.`;
+Mature vs. Immature Trading: Sit on your hands until a pattern fully develops, avoiding the fake-outs that trap impatient beginners.
+
+Measured Move Strategy: Project how far price is likely to travel after a breakout by measuring the prior swing that started the move.`;
 
 const PACK_DESCRIPTIONS: Partial<Record<VaultPackKey, string>> = {
   trading_technical_analysis: TRADING_VAULT_PACK_STRUCTURED_DESCRIPTION,

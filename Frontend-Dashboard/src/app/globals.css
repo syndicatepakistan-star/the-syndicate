@@ -13390,6 +13390,150 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 }
 
+/* === Public /programs — smooth scroll + keep cards visible === */
+.programs-page-root {
+  overscroll-behavior-y: contain;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.programs-page-main {
+  contain: layout style;
+}
+
+.programs-page-band {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 560px;
+}
+
+/* First offer band should paint immediately (LCP / above-the-fold). */
+.programs-page-root #syndicate-elite-offers {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+/* Soft ambient orbs — cheaper than Tailwind blur-[110px+] layers */
+.programs-page-ambient {
+  contain: strict;
+  isolation: isolate;
+  opacity: 0.9;
+  transition: opacity 120ms linear;
+}
+
+.programs-page-ambient__orb {
+  filter: blur(72px);
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.programs-page-ambient__orb--fuchsia {
+  background: rgba(217, 70, 239, 0.18);
+}
+
+.programs-page-ambient__orb--amber {
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.programs-page-ambient__orb--cyan {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+@media (max-width: 767px) {
+  .programs-page-ambient__orb {
+    filter: blur(48px);
+    opacity: 0.85;
+  }
+}
+
+/* Cards stay painted — avoid mid-scroll blank shells from content-visibility */
+.programs-page-root .plan-offer-card,
+.programs-page-root .program-playlist-card,
+.programs-page-root [data-program-playlist-id],
+.programs-page-root [data-plan-offer] {
+  content-visibility: visible !important;
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.programs-page-root .program-playlist-card__info,
+.programs-page-root .program-playlist-card__info-wrap,
+.programs-page-root .plan-offer-card__info-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+html.programs-is-scrolling,
+html.programs-is-scrolling body {
+  scroll-behavior: auto;
+}
+
+/* While scrolling: freeze expensive paint (glow auras, pulses) — keep text/media visible */
+.programs-page-root.is-scrolling .programs-page-ambient,
+html.programs-is-scrolling .programs-page-ambient {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.programs-page-root.is-scrolling .programs-page-ambient__orb,
+html.programs-is-scrolling .programs-page-ambient__orb {
+  filter: blur(28px);
+}
+
+.programs-page-root.is-scrolling .plan-offer-card,
+.programs-page-root.is-scrolling .program-playlist-card,
+.programs-page-root.is-scrolling [data-program-playlist-id],
+.programs-page-root.is-scrolling [data-plan-offer],
+html.programs-is-scrolling .programs-page-root .plan-offer-card,
+html.programs-is-scrolling .programs-page-root .program-playlist-card {
+  transition: none !important;
+}
+
+.programs-page-root.is-scrolling .plan-offer-card > span[aria-hidden],
+.programs-page-root.is-scrolling .program-playlist-card > span[aria-hidden],
+.programs-page-root.is-scrolling .plan-offer-card [class*="blur-["],
+.programs-page-root.is-scrolling .program-playlist-card [class*="blur-["],
+html.programs-is-scrolling .programs-page-root .plan-offer-card > span[aria-hidden],
+html.programs-is-scrolling .programs-page-root .program-playlist-card > span[aria-hidden] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.programs-page-root.is-scrolling .hamburger-attract,
+.programs-page-root.is-scrolling [class*="animate-pulse"],
+html.programs-is-scrolling .programs-page-root .hamburger-attract,
+html.programs-is-scrolling .programs-page-root [class*="animate-pulse"] {
+  animation-play-state: paused !important;
+}
+
+.programs-page-root.is-scrolling .program-playlist-card__info,
+.programs-page-root.is-scrolling .program-playlist-card__info-wrap,
+.programs-page-root.is-scrolling .plan-offer-card__info-panel,
+html.programs-is-scrolling .programs-page-root .program-playlist-card__info,
+html.programs-is-scrolling .programs-page-root .plan-offer-card__info-panel {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programs-page-ambient__orb {
+    filter: blur(24px);
+    opacity: 0.5;
+  }
+
+  .programs-page-root .hamburger-attract,
+  .programs-page-root [class*="animate-pulse"] {
+    animation: none !important;
+  }
+}
+
 /* === LAST WIN: Syndicate Guarantee titles — must stay after all other font-size rules === */
 html body .public-page-shell .guarantee-page-title,
 html body .public-page-shell h1.guarantee-page-title,

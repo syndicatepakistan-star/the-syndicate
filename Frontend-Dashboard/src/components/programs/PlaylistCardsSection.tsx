@@ -140,6 +140,8 @@ type Props = {
   className?: string;
   /** Scroll to and open details for this playlist when arriving from a deep link. */
   highlightPlaylistId?: number;
+  /** SSR / parent-fetched playlists for instant first paint on /programs. */
+  initialPlaylists?: StreamPlaylistListItem[];
 };
 
 function sortPlaylistsBySlugOrder(
@@ -159,6 +161,7 @@ export function PlaylistCardsSection({
   subtitle = "All playlists added from admin are shown here. Open dashboard to continue learning.",
   className,
   highlightPlaylistId,
+  initialPlaylists,
 }: Props) {
   const { formatPrice: formatLocalizedPrice } = useCurrency();
   const readInitialPlaylistsFromSession = (): StreamPlaylistListItem[] => {
@@ -174,7 +177,11 @@ export function PlaylistCardsSection({
   };
   const router = useRouter();
   const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() =>
-    fillMissingPublicProgramPlaylists(readInitialPlaylistsFromSession())
+    fillMissingPublicProgramPlaylists(
+      Array.isArray(initialPlaylists) && initialPlaylists.length > 0
+        ? initialPlaylists
+        : readInitialPlaylistsFromSession(),
+    ),
   );
   const [error, setError] = useState<string | null>(null);
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);

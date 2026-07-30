@@ -136,41 +136,68 @@ function getSlots(radius: number, count: number) {
   let xScale = 1.06
   let yScale = 1.12
   let poleGapExtra = 0
+  /** Extra px to close gaps between middle rows (2↔3, 3↔4, 4↔5) on mobile only. */
+  let middleTighten = 0
   if (typeof window !== 'undefined') {
     const w = window.innerWidth
     if (w < 420) {
       xScale = 1.08
       yScale = 1.58
-      poleGapExtra = 14
+      poleGapExtra = 17 // +3 vs prior 14 → more space 1↔2 and 5↔6
+      middleTighten = 5
     } else if (w < 640) {
       xScale = 1.07
       yScale = 1.48
-      poleGapExtra = 12
+      poleGapExtra = 15 // +3 vs 12
+      middleTighten = 4
     } else if (w < 768) {
       xScale = 1.06
       yScale = 1.4
-      poleGapExtra = 10
+      poleGapExtra = 13 // +3 vs 10
+      middleTighten = 4
     } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       xScale = 1.06
       yScale = 1.34
-      poleGapExtra = 8
+      poleGapExtra = 11 // +3 vs 8
+      middleTighten = 3
     } else {
       xScale = 1.05
       yScale = 1.08
       poleGapExtra = 0
+      middleTighten = 0
     }
   }
 
   // Even ellipse, Home at top, then clockwise — mirrored left/right pairs share the same |y|.
-  // Extra pole gap only separates row1↔row2 and row5↔row6; middle row spacing stays unchanged.
   const bottomSlot = count >= 2 ? Math.floor(count / 2) : -1
+  // 10-slot clock rows: 2=[1,9] 3=[2,8] 4=[3,7] 5=[4,6]
+  const row2 = new Set([1, 9])
+  const row3 = new Set([2, 8])
+  const row4 = new Set([3, 7])
+  const row5 = new Set([4, 6])
+
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
     let x = radius * xScale * Math.cos(angle)
     let y = radius * yScale * Math.sin(angle)
-    if (poleGapExtra > 0 && count >= 10) {
-      if (i === 0) y -= poleGapExtra
-      else if (i === bottomSlot) y += poleGapExtra
+    if (count >= 10) {
+      if (poleGapExtra > 0) {
+        if (i === 0) y -= poleGapExtra
+        else if (i === bottomSlot) y += poleGapExtra
+      }
+      if (middleTighten > 0) {
+        // Move neighboring middle rows toward each other (does not touch poles).
+        // Row2 down / row3 up → tighter 2↔3; row3 & row4 toward midline → tighter 3↔4;
+        // Row4 down / row5 up → tighter 4↔5.
+        if (row2.has(i)) y += y < 0 ? middleTighten * 0.55 : -middleTighten * 0.55
+        else if (row3.has(i)) {
+          y += y < 0 ? -middleTighten * 0.35 : middleTighten * 0.35 // toward row2
+          y += y < 0 ? middleTighten * 0.55 : -middleTighten * 0.55 // toward midline (3↔4)
+        } else if (row4.has(i)) {
+          y += y > 0 ? middleTighten * 0.35 : -middleTighten * 0.35 // toward row5
+          y += y > 0 ? -middleTighten * 0.55 : middleTighten * 0.55 // toward midline (3↔4)
+        } else if (row5.has(i)) y += y > 0 ? -middleTighten * 0.55 : middleTighten * 0.55
+      }
     }
     return { x, y }
   })

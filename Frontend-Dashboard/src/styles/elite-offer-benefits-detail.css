@@ -449,10 +449,13 @@
   text-align: center;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: clamp(10px, 1.25vw, 12px);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.35;
-  color: rgba(226, 232, 240, 0.78);
+  color: var(--lt-accent, #22d3ee);
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--lt-accent, #22d3ee) 55%, transparent),
+    0 0 22px color-mix(in srgb, var(--lt-accent, #22d3ee) 35%, transparent);
 }
 
 .elite-mm-lifetime__cta {

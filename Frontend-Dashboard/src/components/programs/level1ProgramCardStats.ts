@@ -36,7 +36,7 @@ const LEVEL1_VIDEO_COUNTS: Record<string, number> = {
   "level1-model-11": 1,
 };
 
-/** Projects You will build — from curated programme descriptions. */
+/** Build Projects — from curated programme descriptions. */
 const LEVEL1_PROJECT_COUNTS: Record<string, number> = {
   "level1-model-01": 4,
   "level1-model-02": 6,
@@ -153,7 +153,7 @@ export function level1ProgramNeonStats(options: {
     const projects = Math.max(1, level1ProgramProjectCount(slug));
     return [
       { value: String(videos), unit: "", label: "No. of Videos", tone: "gold" },
-      { value: String(projects), unit: "", label: "Projects You will build", tone: "green" },
+      { value: String(projects), unit: "", label: "Build Projects", tone: "green" },
       { value: watch.value, unit: watch.unit, label: "Watch Time", tone: "pink" },
     ];
   }

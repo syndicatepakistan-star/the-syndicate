@@ -124,48 +124,67 @@ function StatCell({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center",
+        "flex h-full min-h-0 flex-col items-center text-center",
         enlarge
-          ? "gap-0 px-0.5 py-1 sm:px-1 sm:py-1.5"
-          : "px-1.5 py-2 sm:px-2 sm:py-2.5",
+          ? "justify-start gap-0 px-0.5 pb-1.5 pt-1 sm:px-1 sm:pb-2 sm:pt-1.5"
+          : "justify-center px-1.5 py-2 sm:px-2 sm:py-2.5",
         className,
       )}
     >
+      {/* Fixed digit band so every cell's number shares the same baseline. */}
       <div
         className={cn(
-          "font-black tabular-nums leading-none tracking-tight",
-          neon.figure,
-          neon.glow,
-          enlarge
-            ? "text-[clamp(1.75rem,5.2vw,2.05rem)] sm:text-[2.05rem] md:text-[2.15rem]"
-            : compact
-              ? "text-[1.55rem]"
-              : "text-[1.85rem] sm:text-[2.15rem]",
+          "flex w-full shrink-0 items-end justify-center",
+          enlarge ? "h-[2.05rem] sm:h-[2.15rem] md:h-[2.25rem]" : "min-h-[1.85rem]",
         )}
       >
-        {block.value}
-      </div>
-      {block.unit ? (
         <div
           className={cn(
-            "font-extrabold leading-none tracking-[0.06em]",
-            unitUppercase && "uppercase tracking-[0.08em]",
+            "font-black tabular-nums leading-none tracking-tight",
             neon.figure,
+            neon.glow,
             enlarge
-              ? "mt-px text-[10px] sm:text-[11px]"
+              ? "text-[clamp(1.75rem,5.2vw,2.05rem)] sm:text-[2.05rem] md:text-[2.15rem]"
               : compact
-                ? "mt-0.5 text-[9px]"
-                : "mt-0.5 text-[10px] sm:text-[11px]",
+                ? "text-[1.55rem]"
+                : "text-[1.85rem] sm:text-[2.15rem]",
           )}
         >
-          {block.unit}
+          {block.value}
         </div>
-      ) : null}
+      </div>
+      {/* Always reserve unit row height so labels stay level across cells. */}
       <div
         className={cn(
-          "font-mono font-medium leading-tight text-white/90",
+          "flex w-full shrink-0 items-start justify-center",
+          enlarge ? "mt-px h-[0.95rem] sm:h-[1.05rem]" : "mt-0.5 min-h-[0.75rem]",
+        )}
+        aria-hidden={!block.unit}
+      >
+        {block.unit ? (
+          <div
+            className={cn(
+              "font-extrabold leading-none tracking-[0.06em]",
+              unitUppercase && "uppercase tracking-[0.08em]",
+              neon.figure,
+              enlarge
+                ? "text-[12px] sm:text-[13px]"
+                : compact
+                  ? "text-[9px]"
+                  : "text-[10px] sm:text-[11px]",
+            )}
+          >
+            {block.unit}
+          </div>
+        ) : (
+          <span className="invisible text-[12px] leading-none sm:text-[13px]">Hrs</span>
+        )}
+      </div>
+      <div
+        className={cn(
+          "w-full font-mono font-medium leading-tight text-white/90",
           enlarge
-            ? "mt-0.5 max-w-full text-[8px] leading-[1.15] sm:text-[9px]"
+            ? "mt-0.5 line-clamp-2 min-h-[2.05rem] max-w-full text-[10px] leading-[1.2] sm:min-h-[2.2rem] sm:text-[11px]"
             : compact
               ? "mt-1 max-w-full text-[8px] sm:text-[9px]"
               : "mt-1 max-w-[11rem] text-[10px] sm:text-[11px]",
@@ -183,7 +202,7 @@ function StatCell({
           className={cn(
             "mt-0.5 max-w-[11rem] font-mono font-medium leading-snug text-white/65",
             enlarge
-              ? "text-[8px]"
+              ? "text-[10px]"
               : compact
                 ? "text-[8px]"
                 : "text-[9px] sm:text-[10px]",
@@ -219,7 +238,7 @@ export function NeonStatGrid({
   return (
     <div
       className={cn(
-        "mx-auto grid h-full w-full overflow-hidden rounded-lg border border-white/10",
+        "mx-auto grid h-full w-full items-stretch overflow-hidden rounded-lg border border-white/10",
         "divide-x divide-white/10",
         cols === 3 ? "grid-cols-3" : "grid-cols-2",
         className,

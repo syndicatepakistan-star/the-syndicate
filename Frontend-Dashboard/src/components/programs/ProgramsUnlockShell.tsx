@@ -5,6 +5,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
 import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
 import { useDeferredChrome } from "@/hooks/useDeferredChrome";
+import { useProgramsPageScrollSmooth } from "@/hooks/useProgramsPageScrollSmooth";
 
 const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
 const UnlockCartPanel = dynamic(
@@ -69,6 +70,8 @@ function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
 }
 
 export function ProgramsUnlockShell({ children }: { children: ReactNode }) {
+  useProgramsPageScrollSmooth(true);
+
   return (
     <UnlockCartProvider>
       <ProgramsUnlockShellHost>{children}</ProgramsUnlockShellHost>

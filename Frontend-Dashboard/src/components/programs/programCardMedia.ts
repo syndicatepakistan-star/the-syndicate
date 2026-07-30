@@ -24,9 +24,9 @@ export const PROGRAM_CARD_INFO_PANEL =
 export const PROGRAM_CARD_TITLE_SLOT =
   "program-playlist-card__title-slot line-clamp-2 min-h-[2.35rem] sm:min-h-[2.65rem]";
 
-/** Single-row neon stats — fixed height so larger digits don't grow the card. */
+/** Neon stats band — room for +2pt labels; digits stay baseline-aligned. */
 export const PROGRAM_CARD_STATS_SLOT =
-  "program-playlist-card__stats-slot flex min-h-[4.5rem] max-h-[4.5rem] shrink-0 items-center sm:min-h-[4.75rem] sm:max-h-[4.75rem]";
+  "program-playlist-card__stats-slot flex min-h-[90px] max-h-[90px] shrink-0 items-stretch sm:min-h-[94px] sm:max-h-[94px]";
 
 /** Mobile + iPad (< xl) — match trading vault module card info block. */
 export const PROGRAM_CARD_MOBILE_INFO_FACE =

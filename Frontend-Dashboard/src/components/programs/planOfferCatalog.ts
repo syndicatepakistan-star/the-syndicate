@@ -254,7 +254,7 @@ export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] 
     desc: "Modern, high-demand business systems you build:",
     bullets: AGENTIC_PROJECT_HIGHLIGHTS,
     ctaPackPlan: "agentic_ai",
-    ctaHint: "View all of Agentic AI Pack",
+    ctaHint: "View all 30 Projects to Build",
     ctaLabel: "Details",
   },
   {
@@ -264,7 +264,7 @@ export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] 
     desc: "Modern, high-demand content businesses you build:",
     bullets: AI_CONTENT_BUILD_HIGHLIGHTS,
     ctaPackPlan: "ai_content_automation",
-    ctaHint: "View all of AI Content Automation Pack",
+    ctaHint: "View all 28 Projects to Build",
     ctaLabel: "Details",
   },
   {
@@ -274,7 +274,7 @@ export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] 
     desc: "Advanced strategies, setups, secrets & patterns you learn:",
     bullets: TRADING_LEARNING_HIGHLIGHTS,
     ctaPackPlan: "trading_technical_analysis",
-    ctaHint: "View all of Advanced Technical Trading Pack",
+    ctaHint: "View all 23 Strategies",
     ctaLabel: "Details",
   },
   {

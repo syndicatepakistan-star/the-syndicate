@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import { stripLessonPrefix } from "@/lib/descriptionText";
 import {
   parseStructuredDescriptionSections,
@@ -30,9 +30,9 @@ const EXACT_TRADING_SECTIONS: {
   colorClass: string;
   color: string;
 }[] = [
-  { key: "chart_patterns", label: "Exact Chart Patterns", colorClass: "text-blue-400", color: "#60a5fa" },
-  { key: "setups", label: "Exact Setups", colorClass: "text-rose-400", color: "#fb7185" },
-  { key: "strategy", label: "Exact Strategy", colorClass: "text-orange-300", color: "#fdba74" },
+  { key: "chart_patterns", label: "Chart Patterns", colorClass: "text-blue-400", color: "#60a5fa" },
+  { key: "setups", label: "Setups", colorClass: "text-rose-400", color: "#fb7185" },
+  { key: "strategy", label: "Strategy", colorClass: "text-orange-300", color: "#fdba74" },
 ];
 
 function exactTradingSectionKey(line: string): ExactTradingSectionKey | null {
@@ -282,7 +282,16 @@ function parseProjectsYouWillBuild(raw: string): ProjectBlock[] {
   return blocks;
 }
 
-export function ProjectsYouWillBuildBody({ text, prominent }: { text: string; prominent?: boolean }) {
+export function ProjectsYouWillBuildBody({
+  text,
+  prominent,
+  startIndex = 0,
+}: {
+  text: string;
+  prominent?: boolean;
+  /** Continue numbering from another projects list (e.g. Exact trading sections). */
+  startIndex?: number;
+}) {
   const blocks = parseProjectsYouWillBuild(text);
   if (blocks.length === 0) return null;
 
@@ -297,7 +306,7 @@ export function ProjectsYouWillBuildBody({ text, prominent }: { text: string; pr
     ? "text-[calc(17px+4pt)] font-black tabular-nums sm:text-[calc(18px+4pt)]"
     : "text-[calc(15px+4pt)] font-black tabular-nums sm:text-[calc(16px+4pt)]";
 
-  let projectIndex = 0;
+  let projectIndex = Math.max(0, startIndex);
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7">
@@ -323,7 +332,7 @@ export function ProjectsYouWillBuildBody({ text, prominent }: { text: string; pr
             </p>
           ) : null}
           {block.items.length > 0 ? (
-            <ol className="m-0 list-none space-y-4 p-0 sm:space-y-5">
+            <ol className="m-0 list-none space-y-4 p-0 sm:space-y-5" start={projectIndex + 1}>
               {block.items.map((item, ii) => {
                 const color = PROJECT_TITLE_NEONS[projectIndex % PROJECT_TITLE_NEONS.length]!;
                 const n = projectIndex + 1;
@@ -350,6 +359,10 @@ export function ProjectsYouWillBuildBody({ text, prominent }: { text: string; pr
       ))}
     </div>
   );
+}
+
+function countProjectsYouWillBuildItems(text: string): number {
+  return parseProjectsYouWillBuild(text).reduce((sum, block) => sum + block.items.length, 0);
 }
 
 function ParagraphBody({
@@ -404,57 +417,72 @@ function StructuredSectionsView({
       ? "border-b border-current/30 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] sm:text-[12px]"
       : "border-b border-current/30 pb-2 text-left text-[20px] font-bold uppercase tracking-[0.12em] sm:text-[20pt] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
 
+  const learnRaw = sections.what_you_will_learn.trim();
+  const tradingSections = learnRaw ? splitExactTradingSections(learnRaw) : null;
+  const hasExactTrading = Boolean(
+    tradingSections &&
+      EXACT_TRADING_SECTIONS.some((s) => tradingSections.exact[s.key].trim()),
+  );
+
   return (
     <div
       className={compact ? "flex flex-col gap-5 sm:gap-6" : "flex flex-col gap-8 sm:gap-10"}
       role="document"
     >
+      {hasExactTrading && tradingSections
+        ? (() => {
+            let exactItemOffset = 0;
+            return EXACT_TRADING_SECTIONS.map((exactSection) => {
+              const exactText = tradingSections.exact[exactSection.key];
+              if (!exactText) return null;
+              const startIndex = exactItemOffset;
+              exactItemOffset += countProjectsYouWillBuildItems(exactText);
+              return (
+                <section key={exactSection.key} className="scroll-mt-4">
+                  <h3
+                    className={cn(headingClass, exactSection.colorClass)}
+                    style={{
+                      color: exactSection.color,
+                      textShadow: `0 0 16px ${exactSection.color}66`,
+                    }}
+                  >
+                    {exactSection.label}
+                  </h3>
+                  <div className="mt-3 sm:mt-4">
+                    <ProjectsYouWillBuildBody
+                      text={exactText}
+                      prominent={prominent}
+                      startIndex={startIndex}
+                    />
+                  </div>
+                </section>
+              );
+            });
+          })()
+        : null}
       {STRUCTURED_HEADINGS.map(({ key, label, colorClass, color }) => {
-        const isLearn = key === "what_you_will_learn";
-        if (hidden.has(key) && !isLearn) return null;
+        if (hidden.has(key)) return null;
         const text = sections[key].trim();
         if (!text) return null;
+        const isLearn = key === "what_you_will_learn";
         const isProjects = key === "projects_you_will_build";
-        const tradingSections = isLearn ? splitExactTradingSections(text) : null;
-        const sectionText = tradingSections?.whatYouWillLearn ?? text;
+        const sectionText = isLearn && tradingSections ? tradingSections.whatYouWillLearn : text;
+        if (!sectionText) return null;
         return (
-          <Fragment key={key}>
-            {tradingSections
-              ? EXACT_TRADING_SECTIONS.map((exactSection) => {
-                  const exactText = tradingSections.exact[exactSection.key];
-                  if (!exactText) return null;
-                  return (
-                    <section key={exactSection.key} className="scroll-mt-4">
-                      <h3
-                        className={cn(headingClass, exactSection.colorClass)}
-                        style={{ color: exactSection.color }}
-                      >
-                        {exactSection.label}
-                      </h3>
-                      <div className="mt-3 sm:mt-4">
-                        <WhatYouWillLearnBody text={exactText} prominent={prominent} />
-                      </div>
-                    </section>
-                  );
-                })
-              : null}
-            {!hidden.has(key) && sectionText ? (
-              <section className="scroll-mt-4">
-                <h3 className={cn(headingClass, colorClass)} style={{ color }}>
-                  {label}
-                </h3>
-                <div className="mt-3 sm:mt-4">
-                  {isProjects ? (
-                    <ProjectsYouWillBuildBody text={sectionText} prominent={prominent} />
-                  ) : isLearn ? (
-                    <WhatYouWillLearnBody text={sectionText} prominent={prominent} />
-                  ) : (
-                    <ParagraphBody text={sectionText} compact={compact} prominent={prominent} />
-                  )}
-                </div>
-              </section>
-            ) : null}
-          </Fragment>
+          <section key={key} className="scroll-mt-4">
+            <h3 className={cn(headingClass, colorClass)} style={{ color }}>
+              {label}
+            </h3>
+            <div className="mt-3 sm:mt-4">
+              {isProjects ? (
+                <ProjectsYouWillBuildBody text={sectionText} prominent={prominent} />
+              ) : isLearn ? (
+                <WhatYouWillLearnBody text={sectionText} prominent={prominent} />
+              ) : (
+                <ParagraphBody text={sectionText} compact={compact} prominent={prominent} />
+              )}
+            </div>
+          </section>
         );
       })}
     </div>

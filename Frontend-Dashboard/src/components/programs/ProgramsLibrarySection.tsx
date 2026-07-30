@@ -1,41 +1,31 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PlaylistCardsSection } from '@/components/programs/PlaylistCardsSection'
 import {
   resolveProgramPlaylistHighlightId,
   resolveProgramPlaylistHighlightSlug,
 } from '@/lib/programPlaylistCatalog'
-import { fetchPublicStreamPlaylists, type StreamPlaylistListItem } from '@/lib/streaming-api'
+import type { StreamPlaylistListItem } from '@/lib/streaming-api'
 import { parsePackDeepLinkSlug } from '@/lib/programPlaylistThumbnails'
 
 type Props = {
   title?: string
   subtitle?: string
+  /** Server-fetched playlists — paint library immediately, refresh client-side. */
+  initialPlaylists?: StreamPlaylistListItem[]
 }
 
-export function ProgramsLibrarySection({ title, subtitle }: Props) {
+export function ProgramsLibrarySection({ title, subtitle, initialPlaylists }: Props) {
   const searchParams = useSearchParams()
   const slugParam = searchParams.get('slug')?.trim().toLowerCase() ?? undefined
   const packSlug = Boolean(parsePackDeepLinkSlug(slugParam))
   const raw = searchParams.get('program')
   const legacyId = raw ? Number.parseInt(raw, 10) : undefined
-  const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-    void fetchPublicStreamPlaylists()
-      .then((list) => {
-        if (!cancelled) setPlaylists(Array.isArray(list) ? list : [])
-      })
-      .catch(() => {
-        if (!cancelled) setPlaylists([])
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const [playlists] = useState<StreamPlaylistListItem[]>(() =>
+    Array.isArray(initialPlaylists) ? initialPlaylists : [],
+  )
 
   const highlightPlaylistId = useMemo(() => {
     // Pack marketing URLs reuse `?slug=` (e.g. money-mastery) — leave library alone.
@@ -52,6 +42,7 @@ export function ProgramsLibrarySection({ title, subtitle }: Props) {
       title={title}
       subtitle={subtitle}
       highlightPlaylistId={highlightPlaylistId}
+      initialPlaylists={initialPlaylists}
     />
   )
 }

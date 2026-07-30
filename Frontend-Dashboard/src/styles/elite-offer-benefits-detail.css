@@ -211,6 +211,9 @@
 .elite-mm-manifest__row--amber {
   --mm-accent: #f59e0b;
 }
+.elite-mm-manifest__row--orange {
+  --mm-accent: #f97316;
+}
 .elite-mm-manifest__row--green {
   --mm-accent: #34d399;
 }
@@ -365,6 +368,9 @@
 .elite-mm-lifetime__card--amber {
   --lt-accent: #f59e0b;
 }
+.elite-mm-lifetime__card--orange {
+  --lt-accent: #f97316;
+}
 .elite-mm-lifetime__card--green {
   --lt-accent: #34d399;
 }
@@ -415,6 +421,69 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--lt-accent) 75%, white);
   text-shadow: 0 0 14px color-mix(in srgb, var(--lt-accent) 45%, transparent);
+}
+
+.elite-mm-lifetime__card-title-stack {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.elite-mm-lifetime__card-title--line2 {
+  margin: 0;
+}
+
+.elite-mm-lifetime__cta-wrap {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
+  padding-top: 0.55rem;
+}
+
+.elite-mm-lifetime__cta-hint {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(10px, 1.25vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.elite-mm-lifetime__cta {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(252, 211, 77, 0.7);
+  background: linear-gradient(135deg, rgba(202, 167, 36, 0.28), rgba(98, 73, 11, 0.98));
+  padding: 0.7rem 0.9rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(11px, 1.35vw, 13px);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffe9a3;
+  box-shadow:
+    0 0 20px rgba(202, 167, 36, 0.55),
+    inset 0 0 0 1px rgba(202, 167, 36, 0.35);
+  animation: hamburger-attract 2.8s ease-in-out infinite;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.elite-mm-lifetime__cta:hover,
+.elite-mm-lifetime__cta:focus-visible {
+  filter: brightness(1.1);
+  box-shadow:
+    0 0 30px rgba(202, 167, 36, 0.85),
+    0 0 52px rgba(202, 167, 36, 0.45),
+    inset 0 0 0 1px rgba(202, 167, 36, 0.55);
 }
 
 .elite-mm-lifetime__card-desc {

@@ -85,7 +85,7 @@ LEVEL1_BUSINESS_MODEL_PROGRAMS: tuple[Level1ProgramRow, ...] = (
     _model(4, "Building Apps using React JS", "React", ""),
     _model(5, "Book Publishing On Amazon (KINDLE)", "Amazon KDP", ""),
     _model(6, "Building Games Using Unreal Engine", "Unreal Engine", ""),
-    _model(7, "Framer Crash Course", "Framer Crash Course", "Intro"),
+    _model(7, "Rapid Web Building For Business (Vibe Coding)", "Framer Crash Course", "Intro"),
     _model(8, "Graphics Design Using Canva", "Canva", "Intro"),
     _model(9, "Print On Demand Clothing", "Print On Demand", "Intro"),
     _model(10, "Python Programming", "Python", ""),

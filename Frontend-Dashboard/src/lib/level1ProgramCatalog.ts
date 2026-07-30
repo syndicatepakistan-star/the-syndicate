@@ -70,7 +70,7 @@ export const LEVEL1_CANONICAL_TITLES: Record<string, string> = {
   "level1-model-04": "Building Apps using React JS",
   "level1-model-05": "Book Publishing On Amazon (KINDLE)",
   "level1-model-06": "Building Games Using Unreal Engine",
-  "level1-model-07": "Framer Crash Course",
+  "level1-model-07": "Rapid Web Building For Business (Vibe Coding)",
   "level1-model-08": "Graphics Design Using Canva",
   "level1-model-09": "Print On Demand Clothing",
   "level1-model-10": "Python Programming",
@@ -126,12 +126,33 @@ export const LEVEL1_SLUG_DISPLAY_ORDER: readonly string[] = [
   ...PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
 ];
 
-export const LEVEL1_PSYCHOLOGY_PROGRAM_TITLES: readonly string[] = LEVEL1_PSYCHOLOGY_SLUGS.map(
-  (slug) => LEVEL1_CANONICAL_TITLES[slug] ?? slug
+/** Frontend display titles (cards, Money Mastery details) — R2 / catalog slugs unchanged. */
+export const LEVEL1_SLUG_TITLE_OVERRIDES: Record<string, string> = {
+  "level1-model-01": "AI content Automation for Businesses",
+  "level1-model-02": "Social Media Content Automation",
+  "level1-model-03": "App Building for Business (Vibe Coding)",
+  "level1-model-04": "The Custom App Blueprint for Business",
+  "level1-model-05": "eBook Business Blueprint (Monetize Your Knowledge)",
+  "level1-model-06": "The Gaming Business Blueprint (Build, Launch, and Sell)",
+  "level1-model-07": "Rapid Web Building For Business (Vibe Coding)",
+  "level1-model-08": "Graphics Design for Business (Graphics That Convert to Sales)",
+  "level1-model-09": "The Zero-Inventory Clothing Business Blueprint",
+  "level1-model-10": "Basics Python for Small Business",
+  "level1-model-11": "The Profitable Blogging Blueprint",
+  "level1-psych-07": "Micro Business Protocols",
+};
+
+export function level1ProgramDisplayTitle(slug: string): string {
+  return LEVEL1_SLUG_TITLE_OVERRIDES[slug] ?? LEVEL1_CANONICAL_TITLES[slug] ?? slug;
+}
+
+/** Titles in /programs column order — uses display overrides. */
+export const LEVEL1_PSYCHOLOGY_PROGRAM_TITLES: readonly string[] = PUBLIC_PSYCHOLOGY_SLUG_ORDER.map(
+  level1ProgramDisplayTitle,
 );
 
-export const LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES: readonly string[] = LEVEL1_BUSINESS_MODEL_SLUGS.map(
-  (slug) => LEVEL1_CANONICAL_TITLES[slug] ?? slug
+export const LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES: readonly string[] = PUBLIC_BUSINESS_MODEL_SLUG_ORDER.map(
+  level1ProgramDisplayTitle,
 );
 
 export const LEVEL1_SLUG_THUMBNAILS: Record<string, string> = {
@@ -146,30 +167,15 @@ export const LEVEL1_SLUG_THUMBNAILS: Record<string, string> = {
   "level1-psych-09": "/assets/programs/cources%20imnages/warfare.jpg",
   "level1-psych-10": "/assets/programs/cources%20imnages/13rules.jpg",
   "level1-psych-11": "/assets/programs/cources%20imnages/money-philosophy.jpg",
-  "level1-model-01": "/assets/programs/cources%20imnages/business-content-n8n-ai-automation.png",
-  "level1-model-02": "/assets/programs/cources%20imnages/ai-content-automation-business.png",
+  "level1-model-01": "/assets/programs/cources%20imnages/ai-content-automation-for-businesses.jpg",
+  "level1-model-02": "/assets/programs/cources%20imnages/social-media-content-automation.jpg",
   "level1-model-03": "/assets/programs/cources%20imnages/app-building-vibe-coding.png",
   "level1-model-04": "/assets/programs/cources%20imnages/custom-app-blueprint.png",
-  "level1-model-05": "/assets/programs/cources%20imnages/ebook-business-blueprint.png",
+  "level1-model-05": "/assets/programs/cources%20imnages/ebook-business-blueprint.jpg",
   "level1-model-06": "/assets/programs/cources%20imnages/gaming-business-blueprint.png",
   "level1-model-07": "/assets/programs/cources%20imnages/rapid-noncode-web-building.png",
   "level1-model-08": "/assets/programs/cources%20imnages/graphics-design-for-business.png",
   "level1-model-09": "/assets/programs/cources%20imnages/zero-inventory-clothing-blueprint.png",
   "level1-model-10": "/assets/programs/cources%20imnages/basics-python-small-business.png",
   "level1-model-11": "/assets/programs/cources%20imnages/profitable-blogging-blueprint.png",
-};
-
-export const LEVEL1_SLUG_TITLE_OVERRIDES: Record<string, string> = {
-  "level1-model-01": "AI content Automation for Businesses",
-  "level1-model-02": "Social Media Content Automation",
-  "level1-model-03": "App Building for Business (Vibe Coding)",
-  "level1-model-04": "The Custom App Blueprint for Business",
-  "level1-model-05": "eBook Business Blueprint (Monetize Your Knowledge)",
-  "level1-model-06": "The Gaming Business Blueprint (Build, Launch, and Sell)",
-  "level1-model-07": "Rapid Non-code Web Building (For Business)",
-  "level1-model-08": "Graphics Design for Business (Graphics That Convert to Sales)",
-  "level1-model-09": "The Zero-Inventory Clothing Business Blueprint",
-  "level1-model-10": "Basics Python for Small Business",
-  "level1-model-11": "The Profitable Blogging Blueprint",
-  "level1-psych-07": "Micro Business Protocols",
 };

@@ -71,10 +71,10 @@ export function ReadMoreText({
 
 /** Shared layout classes for vault picker modals — single inner scroll region. */
 export const VAULT_MODAL_OVERLAY_CLASS =
-  "fixed inset-0 z-[115] flex items-center justify-center overflow-hidden bg-black/90 p-3 backdrop-blur-sm sm:p-6";
+  "fixed inset-0 z-[115] flex items-start justify-center overflow-y-auto overflow-x-hidden bg-black/90 p-3 backdrop-blur-sm sm:p-6";
 
 export const VAULT_MODAL_PANEL_CLASS =
-  "relative flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 bg-[#04060d]";
+  "relative mt-2 flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 bg-[#04060d] sm:mt-4";
 
 export const VAULT_MODAL_TOP_BAR_CLASS =
   "shrink-0 border-b border-white/10 bg-[#04060d] px-4 py-3 sm:px-6 sm:py-4";

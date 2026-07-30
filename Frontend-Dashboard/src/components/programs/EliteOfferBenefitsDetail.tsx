@@ -13,6 +13,7 @@ import type { GamingBenefitItem } from "@/components/GamingBenefitCards";
 type Props = {
   plan: PrimaryElitePlanKey;
   className?: string;
+  onOpenPackDetails?: (plan: NonNullable<GamingBenefitItem["ctaPackPlan"]>) => void;
 };
 
 const manifestVariants = {
@@ -98,10 +99,12 @@ function LifetimeAccessSection({
   headingId,
   title,
   items,
+  onOpenPackDetails,
 }: {
   headingId: string;
   title: string;
   items: readonly GamingBenefitItem[];
+  onOpenPackDetails?: (plan: NonNullable<GamingBenefitItem["ctaPackPlan"]>) => void;
 }) {
   return (
     <section
@@ -123,6 +126,7 @@ function LifetimeAccessSection({
       <div className="elite-mm-lifetime__grid">
         {items.map((item, index) => {
           const hasBullets = Boolean(item.bullets && item.bullets.length > 0);
+          const showCta = Boolean(item.ctaPackPlan && onOpenPackDetails);
           return (
             <article
               key={item.title}
@@ -132,7 +136,14 @@ function LifetimeAccessSection({
                 <span className="elite-mm-lifetime__badge" aria-hidden>
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <h4 className="elite-mm-lifetime__card-title">{item.title}</h4>
+                <div className="elite-mm-lifetime__card-title-stack min-w-0">
+                  <h4 className="elite-mm-lifetime__card-title">{item.title}</h4>
+                  {item.titleLine2 ? (
+                    <p className="elite-mm-lifetime__card-title elite-mm-lifetime__card-title--line2">
+                      {item.titleLine2}
+                    </p>
+                  ) : null}
+                </div>
               </header>
               {item.desc.trim() && item.desc.trim() !== item.title.trim() ? (
                 <p className="elite-mm-lifetime__card-desc">{highlightOfferStatFigures(item.desc)}</p>
@@ -144,6 +155,20 @@ function LifetimeAccessSection({
                   ))}
                 </ul>
               ) : null}
+              {showCta ? (
+                <div className="elite-mm-lifetime__cta-wrap">
+                  {item.ctaHint ? (
+                    <p className="elite-mm-lifetime__cta-hint">{item.ctaHint}</p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="hamburger-attract elite-mm-lifetime__cta"
+                    onClick={() => onOpenPackDetails?.(item.ctaPackPlan!)}
+                  >
+                    {item.ctaLabel ?? "Details"}
+                  </button>
+                </div>
+              ) : null}
             </article>
           );
         })}
@@ -152,7 +177,11 @@ function LifetimeAccessSection({
   );
 }
 
-export function EliteOfferBenefitsDetail({ plan, className }: Props) {
+export function EliteOfferBenefitsDetail({
+  plan,
+  className,
+  onOpenPackDetails,
+}: Props) {
   const config = eliteOfferBenefitPanelProps(plan);
   const whatYouGetId = `elite-offer-what-you-get-${plan}`;
   const lifetimeId = `elite-offer-benefits-${plan}`;
@@ -179,9 +208,16 @@ export function EliteOfferBenefitsDetail({ plan, className }: Props) {
         />
       ) : null}
 
-      <p className="elite-benefit-detail__intro">{config.intro}</p>
+      {config.intro?.trim() ? (
+        <p className="elite-benefit-detail__intro">{config.intro}</p>
+      ) : null}
 
-      <LifetimeAccessSection headingId={lifetimeId} title={config.benefitsTitle} items={config.items} />
+      <LifetimeAccessSection
+        headingId={lifetimeId}
+        title={config.benefitsTitle}
+        items={config.items}
+        onOpenPackDetails={onOpenPackDetails}
+      />
     </div>
   );
 }

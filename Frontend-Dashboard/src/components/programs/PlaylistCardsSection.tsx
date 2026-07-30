@@ -50,6 +50,8 @@ import {
   PROGRAM_CARD_STATS_SLOT,
 } from "@/components/programs/programCardMedia";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { NeonStatGrid } from "@/components/programs/OfferInclusionsStatGrid";
+import { level1ProgramNeonStats } from "@/components/programs/level1ProgramCardStats";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -700,12 +702,34 @@ export function PlaylistCardsSection({
               </div>
               {!comingSoon ? (
                 <div className={PROGRAM_CARD_STATS_SLOT}>
-                  <ProgramCardStatsLines
-                    stats={streamPlaylistCardStats(pl.video_count, { slug: pl.slug, title: pl.title })}
-                    size="stream"
-                    denseMobile
-                    className="max-xl:mt-0.5"
-                  />
+                  {(() => {
+                    const neonStats = level1ProgramNeonStats({
+                      id: pl.id,
+                      slug: pl.slug,
+                      videoCount: pl.video_count,
+                    });
+                    if (neonStats) {
+                      return (
+                        <NeonStatGrid
+                          stats={neonStats}
+                          compact
+                          columns={neonStats.length === 3 ? 3 : 2}
+                          className="mt-1"
+                        />
+                      );
+                    }
+                    return (
+                      <ProgramCardStatsLines
+                        stats={streamPlaylistCardStats(pl.video_count, {
+                          slug: pl.slug,
+                          title: pl.title,
+                        })}
+                        size="stream"
+                        denseMobile
+                        className="max-xl:mt-0.5"
+                      />
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className={PROGRAM_CARD_STATS_SLOT} aria-hidden />

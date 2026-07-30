@@ -624,6 +624,13 @@ function PublicPlanOfferCardsInner({
           }}
           onUnlock={(offer) => void joinOffer(offer)}
           unlockBusy={busyPlan === "bundle"}
+          onOpenPackDetails={(plan) => {
+            const packOffer = PLAN_OFFERS.find((item) => item.plan === plan);
+            if (!packOffer) return;
+            writePlanOfferDetailsHash(plan);
+            setVaultPackOffer(null);
+            setDetailOffer(packOffer);
+          }}
         />
       ) : null}
       {vaultPackOffer ? (

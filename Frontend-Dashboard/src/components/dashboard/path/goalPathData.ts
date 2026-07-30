@@ -175,7 +175,7 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "program", title: "Basics Python for Small Business" },
     { type: "program", title: "The Profitable Blogging Blueprint" },
     { type: "program", title: "The Gaming Business Blueprint (Build, Launch, and Sell)" },
-    { type: "program", title: "Rapid Non-code Web Building (For Business)" },
+    { type: "program", title: "Rapid Web Building For Business (Vibe Coding)" },
     { type: "program", title: "eBook Business Blueprint (Monetize Your Knowledge)" },
     { type: "program", title: "The Zero-Inventory Clothing Business Blueprint" },
     { type: "program", title: "The Custom App Blueprint for Business" },
@@ -230,7 +230,7 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "program", title: "The Zero-Inventory Clothing Business Blueprint" },
     { type: "program", title: "Business Warfare" },
     { type: "program", title: "Social Media Content Automation" },
-    { type: "program", title: "Rapid Non-code Web Building (For Business)" },
+    { type: "program", title: "Rapid Web Building For Business (Vibe Coding)" },
   ],
   make_money_online: [
     { type: "program", title: "The Zero-Inventory Clothing Business Blueprint" },

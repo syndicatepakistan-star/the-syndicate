@@ -91,7 +91,7 @@ WEAPON_TO_PLAYLIST: dict[str, str] = {
     "Amazon KDP": "Book Publishing On Amazon (KINDLE)",
     "Build a Real React App": "Building Apps using React JS",
     "Building Games Using Unreal Engine": "Building Games Using Unreal Engine",
-    "Framer Crash Course": "Framer Crash Course",
+    "Framer Crash Course": "Rapid Web Building For Business (Vibe Coding)",
     "Wordpress Blog": "WordPress Blog",
     "Print On Demand": "Print On Demand Clothing",
     "FULL CANVA TUTORIAL": "Graphics Design Using Canva",

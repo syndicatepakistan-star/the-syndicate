@@ -4,6 +4,8 @@ import Image from "next/image";
 import type { CourseRec } from "@/components/dashboard/path/goalPathData";
 import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
+import { NeonStatGrid } from "@/components/programs/OfferInclusionsStatGrid";
+import { level1ProgramNeonStats } from "@/components/programs/level1ProgramCardStats";
 import { resolveOfferCardStats, streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
 import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
@@ -76,11 +78,24 @@ export function ProgramOpportunityCardContent({
 
   const kindBadge = isPack ? "Vault pack" : isModule ? "Vault module" : null;
 
-  const cardStats = playlist
-    ? streamPlaylistCardStats(playlist.video_count, { slug: playlist.slug, title: playlist.title })
-    : planOffer
-      ? resolveOfferCardStats(planOffer, isPack ? "pack" : isModule ? "module" : undefined)
-      : undefined;
+  const neonStats = playlist
+    ? level1ProgramNeonStats({
+        id: playlist.id,
+        slug: playlist.slug,
+        videoCount: playlist.video_count,
+      })
+    : null;
+  const cardStats =
+    neonStats
+      ? null
+      : playlist
+        ? streamPlaylistCardStats(playlist.video_count, {
+            slug: playlist.slug,
+            title: playlist.title,
+          })
+        : planOffer
+          ? resolveOfferCardStats(planOffer, isPack ? "pack" : isModule ? "module" : undefined)
+          : undefined;
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col pb-[10px]">
@@ -180,7 +195,14 @@ export function ProgramOpportunityCardContent({
       >
         {course.title}
       </h3>
-      {cardStats ? (
+      {neonStats ? (
+        <NeonStatGrid
+          stats={neonStats}
+          compact
+          columns={neonStats.length === 3 ? 3 : 2}
+          className="mt-1"
+        />
+      ) : cardStats ? (
         <ProgramCardStatsLines stats={cardStats} size="stream" className="mt-1" />
       ) : null}
       <p className="mt-1 line-clamp-2 min-h-[2.35rem] font-mono text-[clamp(0.62rem,0.4vw+0.48rem,0.78rem)] leading-snug text-white/88">

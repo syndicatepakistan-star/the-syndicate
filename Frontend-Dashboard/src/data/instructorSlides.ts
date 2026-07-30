@@ -69,7 +69,7 @@ export const INSTRUCTOR_SLIDES: InstructorSlide[] = [
   },
   {
     src: instructorImage("Avatar - Framer Crash Course.jpg"),
-    programName: "Framer Crash Course",
+    programName: "Rapid Web Building For Business (Vibe Coding)",
     instructorName: "Product Design Lead",
     description:
       "Prototype and publish marketing sites in Framer with motion that sells the offer. Layout systems, CMS hooks, and handoff-ready components—launch pages in days, not quarters.",

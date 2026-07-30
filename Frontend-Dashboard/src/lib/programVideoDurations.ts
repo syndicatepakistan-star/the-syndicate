@@ -15,25 +15,25 @@ const S = (hours: number, minutes: number, seconds: number): number =>
 /** Level 1 Business Psychology + Business Model (total program watch time). */
 const LEVEL1_DURATION_SECONDS: Record<string, number> = {
   "level1-psych-01": S(1, 4, 19),
-  "level1-psych-02": S(0, 58, 14),
+  "level1-psych-02": S(0, 59, 7),
   "level1-psych-03": S(1, 7, 15),
   "level1-psych-04": S(1, 10, 46),
   "level1-psych-05": S(0, 32, 29),
   "level1-psych-06": S(1, 31, 1),
   "level1-psych-07": S(1, 14, 29),
   "level1-psych-08": S(0, 54, 21),
-  "level1-psych-09": S(1, 1, 42),
-  "level1-psych-10": S(2, 0, 36),
-  "level1-psych-11": S(0, 38, 56),
-  "level1-model-01": S(12, 29, 5),
-  "level1-model-02": S(11, 58, 23),
-  "level1-model-03": S(10, 22, 1),
+  "level1-psych-09": S(1, 19, 10),
+  "level1-psych-10": S(1, 48, 18),
+  "level1-psych-11": S(0, 36, 20),
+  "level1-model-01": S(11, 49, 4),
+  "level1-model-02": S(8, 58, 59),
+  "level1-model-03": S(9, 25, 11),
   "level1-model-04": S(6, 0, 43),
-  "level1-model-05": S(3, 44, 16),
+  "level1-model-05": S(3, 46, 16),
   "level1-model-06": S(3, 32, 10),
   "level1-model-07": S(1, 58, 49),
   "level1-model-08": S(1, 58, 33),
-  "level1-model-09": S(2, 46, 49),
+  "level1-model-09": S(2, 46, 29),
   "level1-model-10": S(1, 55, 44),
   "level1-model-11": S(1, 47, 1),
 };
@@ -103,11 +103,11 @@ const AGENTIC_MODULE_SECONDS: Record<string, number> = {
 
 /**
  * Trading Advanced Technical Analysis — reviewer sheet.
- * Module/pack totals are authoritative (they reconcile: 2:19:04 + 7:33:44 + 6:10:10 + 4:43:03 ≈ 20:46).
+ * Module/pack totals are authoritative (they reconcile: 2:19:51 + 7:33:44 + 6:10:10 + 4:43:03 ≈ 20:46:48).
  */
 const TRADING_MODULE_TOTAL_SECONDS: Record<string, number> = {
-  trading_technical_analysis: S(20, 46, 0),
-  trading_scalpel_protocol: S(2, 19, 4),
+  trading_technical_analysis: S(20, 46, 48),
+  trading_scalpel_protocol: S(2, 19, 51),
   trading_master_secrets: S(7, 33, 44),
   trading_master_setups: S(6, 10, 10),
   trading_master_strategies: S(4, 43, 3),
@@ -186,8 +186,18 @@ function sumRecordValues(record: Record<string, number>): number {
   return Object.values(record).reduce((acc, value) => acc + value, 0);
 }
 
-/** Pack-level totals derived from sub-module durations. */
+/**
+ * Pack-level totals — reviewer sheet totals are authoritative
+ * (module rows still drive per-course cards; pack digits use these).
+ */
 export const VAULT_PACK_TOTAL_SECONDS: Record<string, number> = {
+  ai_content_automation: S(12, 49, 32),
+  agentic_ai: S(29, 15, 50),
+  trading_technical_analysis: TRADING_MODULE_TOTAL_SECONDS.trading_technical_analysis,
+};
+
+/** Sum of curated module lengths (sanity / fallback). */
+export const VAULT_PACK_SUMMED_MODULE_SECONDS: Record<string, number> = {
   ai_content_automation: sumRecordValues(AI_CONTENT_MODULE_SECONDS),
   agentic_ai: sumRecordValues(AGENTIC_MODULE_SECONDS),
   trading_technical_analysis: TRADING_MODULE_TOTAL_SECONDS.trading_technical_analysis,

@@ -22,6 +22,8 @@ type Props = {
   /** Money Mastery / primary offers — unlock CTA inside the details modal. */
   onUnlock?: (offer: PlanOfferDef) => void;
   unlockBusy?: boolean;
+  /** Open a mid-ticket vault pack details view from Money Mastery lifetime cards. */
+  onOpenPackDetails?: (plan: "agentic_ai" | "ai_content_automation" | "trading_technical_analysis") => void;
 };
 
 const DETAIL_THEMES: Record<
@@ -107,9 +109,10 @@ function OfferDetailCheck({ accent }: { accent: PlanOfferAccent }) {
   );
 }
 
-export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = false }: Props) {
+export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = false, onOpenPackDetails }: Props) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { localizeLabel } = useCurrency();
 
   useModalScrollLock(!!offer);
@@ -122,6 +125,24 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+    };
+  }, [offer?.plan]);
+
+  // Always start at the top of pack/program details (deep links + offer switches).
+  useEffect(() => {
+    if (!offer) return;
+    const node = scrollRef.current;
+    if (!node) return;
+    const reset = () => {
+      node.scrollTop = 0;
+      node.scrollTo({ top: 0, behavior: "auto" });
+    };
+    reset();
+    const raf = requestAnimationFrame(reset);
+    const t = window.setTimeout(reset, 50);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t);
     };
   }, [offer?.plan]);
 
@@ -162,7 +183,7 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/88 p-4 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/88 p-3 backdrop-blur-sm sm:items-start sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="plan-offer-detail-title"
@@ -170,7 +191,7 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
     >
       <div
         className={cn(
-          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative w-full overflow-hidden rounded-2xl border-2 bg-black max-w-[min(96vw,80rem)]",
+          "plan-offer-detail-modal plan-offer-detail-modal--scroll relative my-2 w-full overflow-hidden rounded-2xl border-2 bg-black max-w-[min(96vw,80rem)] sm:my-4",
           theme.modal
         )}
         onClick={(e) => e.stopPropagation()}
@@ -187,7 +208,10 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
           <X className="h-4 w-4" />
         </button>
 
-        <div className="vault-modal-scroll max-h-[min(95dvh,960px)] overflow-y-auto overscroll-contain px-6 py-8 sm:px-10 sm:py-10 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]">
+        <div
+          ref={scrollRef}
+          className="vault-modal-scroll max-h-[min(95dvh,960px)] overflow-y-auto overscroll-contain px-6 py-8 sm:px-10 sm:py-10 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch]"
+        >
           <div className="flex flex-wrap items-center gap-3">
             <span
               className={cn(
@@ -301,7 +325,7 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
                 </div>
               </>
             ) : primaryElitePlan ? (
-              <EliteOfferBenefitsDetail plan={primaryElitePlan} />
+              <EliteOfferBenefitsDetail plan={primaryElitePlan} onOpenPackDetails={onOpenPackDetails} />
             ) : (
               <StructuredDescriptionBody text={structuredDescription} prominent />
             )}

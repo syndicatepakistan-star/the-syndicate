@@ -244,6 +244,25 @@
   color: #e8b88a;
 }
 
+.gaming-benefit-item--orange {
+  border-color: rgba(249, 115, 22, 0.65);
+  box-shadow: 0 0 18px rgba(249, 115, 22, 0.28), inset 0 0 14px rgba(249, 115, 22, 0.08);
+}
+
+.gaming-benefit-item--orange .gaming-benefit-tag {
+  color: #1a0a04;
+  background: linear-gradient(180deg, #fdba74 0%, #f97316 100%);
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.55);
+}
+
+.gaming-benefit-item--orange .gaming-benefit-copy strong {
+  color: #ffedd5;
+}
+
+.gaming-benefit-item--orange .gaming-benefit-copy span {
+  color: #fdba74;
+}
+
 .gaming-benefit-item--green {
   border-color: rgba(74, 222, 128, 0.55);
   box-shadow: 0 0 18px rgba(52, 211, 153, 0.22), inset 0 0 14px rgba(52, 211, 153, 0.06);

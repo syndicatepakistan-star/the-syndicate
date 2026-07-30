@@ -38,7 +38,7 @@ const QUIZ_COURSE_TO_CANONICAL_TITLE: Record<string, string> = {
   "amazon kdp": "Book Publishing On Amazon (KINDLE)",
   "build a real react app": "Building Apps using React JS",
   "building games using unreal engine": "Building Games Using Unreal Engine",
-  "framer crash course": "Framer Crash Course",
+  "framer crash course": "Rapid Web Building For Business (Vibe Coding)",
   "wordpress blog": "WordPress Blog",
   "print on demand": "Print On Demand Clothing",
   "full canva tutorial": "Graphics Design Using Canva",

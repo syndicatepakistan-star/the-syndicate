@@ -130,12 +130,12 @@ export const MONEY_MASTERY_WHAT_YOU_GET_ITEMS: readonly GamingBenefitItem[] = [
   {
     tone: "amber",
     title: "Full Agentic AI Pack",
-    desc: "26 videos · Total video length: 29hrs 15min · Building 30 AI projects ($364 if purchased separately)",
+    desc: "26 videos · Total video length: 29hrs 15min 50s · Building 30 AI projects ($364 if purchased separately)",
   },
   {
     tone: "green",
     title: "Full AI Content Automation Pack",
-    desc: "29 videos · Total video length: 12hrs 49min · Building faceless content systems ($406 if purchased separately)",
+    desc: "29 videos · Total video length: 12hrs 49min 32s · Building faceless content systems ($406 if purchased separately)",
   },
   {
     tone: "gold",
@@ -150,7 +150,7 @@ export const MONEY_MASTERY_WHAT_YOU_GET_ITEMS: readonly GamingBenefitItem[] = [
   {
     tone: "cyan",
     title: "Full Advanced Technical Trading Pack",
-    desc: "56 videos · Total video length: 39hrs 45min ($396 if purchased separately)",
+    desc: "53 videos · Total video length: 20hrs 46min 48s ($396 if purchased separately)",
   },
   {
     tone: "violet",
@@ -168,42 +168,42 @@ export const MONEY_MASTERY_CARD_TEASER = [
 ].join("\n");
 
 export const MONEY_MASTERY_LIFETIME_FEATURES: readonly string[] = [
-  "133 Individual Video Lessons Total",
+  "130 Individual Video Lessons Total",
   "11 Business Behavioral Psychology Programs",
   "11 Business Model Programs",
   "26 Videos – Agentic Ai Pack",
   "29 Videos – Ai Content Automation Pack",
-  "56 Lessons – Advanced Candlestick Technical Analysis Pack (4 video packs)",
+  "53 Lessons – Advanced Candlestick Technical Analysis Pack (4 video packs)",
   "Access to Syndicate Dashboard",
   "Access to Syndicate Affiliate Opportunities",
   "Syndicate Certification",
 ];
 
 const AGENTIC_PROJECT_HIGHLIGHTS = [
-  "Blog writing & WhatsApp agents (n8n)",
-  "Claude Code apps, memory & advanced workflows",
-  "Google Antigravity & vibe coding systems",
-  "RAG agents, MCP servers & business automations",
-  "SEO blogging, Gmail labelling & site scrapers",
-  "Faceless Shorts / YouTube automation pipelines",
+  "n8n ops agents that run Gmail, Sheets & CRM busywork",
+  "Claude Code systems that ship sellable client apps",
+  "RAG knowledge agents for support & internal docs",
+  "MCP server workflows that connect any business tool stack",
+  "SEO blogging engines that publish without a content team",
+  "WhatsApp / inbound sales agents that qualify leads 24/7",
 ] as const;
 
 const AI_CONTENT_BUILD_HIGHLIGHTS = [
-  "Faceless YouTube channels & Shorts machines",
-  "3D docs, finance, philosophy & geography niches",
-  "AI influencers, stickman POV & motion graphics",
-  "NotebookLM clone workflows & script systems",
-  "Bulk Shorts, algorithm & policy-safe publishing",
-  "Always-on content automation that scales",
+  "Faceless YouTube channels engineered for monetization",
+  "High-RPM finance & documentary content machines",
+  "AI brand avatars & influencer pipelines for product offers",
+  "Bulk Shorts engines for always-on distribution",
+  "NotebookLM research-to-script workflows for operators",
+  "Policy-safe publishing that survives algorithm shifts",
 ] as const;
 
 const TRADING_LEARNING_HIGHLIGHTS = [
-  "The Scalpel Protocol — 1-minute chart wealth architecture",
-  "Strategies of a Master Trader — mechanical edge frameworks",
-  "Setups of a Master Trader — flags, wedges, channels & key patterns",
-  "Secrets of a Master Trader — entries, exits & risk discipline",
-  "Confirm moves with moving averages & momentum tools",
-  "Replace guesswork with calculated long-term trading systems",
+  "1-minute Scalpel Protocol — precision entries on micro charts",
+  "Flag flips, wedges & measured-move setups that pay",
+  "RSI divergences & multi-hit methodology for confirmation",
+  "Golden / Death Cross + engulfing candle execution systems",
+  "Risk vs reward rules that protect capital under pressure",
+  "Macro vs micro pattern recognition for timing big moves",
 ] as const;
 
 const DASHBOARD_FEATURE_HIGHLIGHTS = [
@@ -223,15 +223,15 @@ const AFFILIATE_BENEFIT_HIGHLIGHTS = [
 /** Lifetime-access cards (bottom section) — program lists and pack detail. Order is intentional. */
 export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] = [
   {
-    tone: "violet",
-    title: "133 Individual Video Lessons Total",
-    desc: "The complete Money Mastery lifetime vault — every pack below in one commitment.",
+    tone: "orange",
+    title: "130 Individual Video Lessons Total",
+    desc: "The complete Money Mastery lifetime vault — every pack below in one pack.",
     bullets: [
       "26 Agentic AI lessons",
       "29 AI Content Automation lessons",
       "11 Business Model programmes",
       "11 Behavioural Psychology programmes",
-      "56 Advanced Technical Trading lessons",
+      "53 Advanced Technical Trading lessons",
       "One checkout. Lifetime access. No recurring fees.",
     ],
   },
@@ -249,21 +249,33 @@ export const MONEY_MASTERY_LIFETIME_BENEFIT_ITEMS: readonly GamingBenefitItem[] 
   },
   {
     tone: "amber",
-    title: "Agentic AI Pack — 26 Videos · 30 AI Projects",
-    desc: "Build autonomous agents and systems. Projects include:",
+    title: "Agentic AI Pack — 26 Videos",
+    titleLine2: "Build 30 AI Projects",
+    desc: "Modern, high-demand business systems you build:",
     bullets: AGENTIC_PROJECT_HIGHLIGHTS,
+    ctaPackPlan: "agentic_ai",
+    ctaHint: "View all of Agentic AI Pack",
+    ctaLabel: "Details",
   },
   {
     tone: "green",
     title: "AI Content Automation Pack — 29 Videos",
-    desc: "What you build and gain in this vault:",
+    titleLine2: "Build 28 Projects",
+    desc: "Modern, high-demand content businesses you build:",
     bullets: AI_CONTENT_BUILD_HIGHLIGHTS,
+    ctaPackPlan: "ai_content_automation",
+    ctaHint: "View all of AI Content Automation Pack",
+    ctaLabel: "Details",
   },
   {
     tone: "cyan",
-    title: "Advanced Technical Trading Pack — 56 Videos",
-    desc: "Four sub-packs: Scalpel Protocol, Strategies, Setups & Secrets. You learn:",
+    title: "Advanced Technical Trading Pack — 53 Videos",
+    titleLine2: "Learn 23 Strategies",
+    desc: "Advanced strategies, setups, secrets & patterns you learn:",
     bullets: TRADING_LEARNING_HIGHLIGHTS,
+    ctaPackPlan: "trading_technical_analysis",
+    ctaHint: "View all of Advanced Technical Trading Pack",
+    ctaLabel: "Details",
   },
   {
     tone: "cyan",
@@ -330,7 +342,7 @@ export function isPrimaryElitePlan(plan: string): plan is PrimaryElitePlanKey {
 export function eliteOfferBenefitPanelProps(plan: PrimaryElitePlanKey) {
   if (plan === "bundle") {
     return {
-      intro: MONEY_MASTERY_FOUNDATION_COPY,
+      intro: "",
       whatYouGetTitle: MONEY_MASTERY_WHAT_YOU_GET_TITLE,
       whatYouGetItems: MONEY_MASTERY_WHAT_YOU_GET_ITEMS,
       whatYouGetFooter: MONEY_MASTERY_WHAT_YOU_GET_FOOTER,

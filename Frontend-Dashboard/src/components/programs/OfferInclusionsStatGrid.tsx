@@ -26,6 +26,10 @@ const TONE_NEON: Record<GamingBenefitTone, { figure: string; glow: string }> = {
     figure: "text-yellow-300",
     glow: "drop-shadow-[0_0_12px_rgba(253,224,71,0.65)]",
   },
+  orange: {
+    figure: "text-orange-400",
+    glow: "drop-shadow-[0_0_12px_rgba(251,146,60,0.65)]",
+  },
   green: {
     figure: "text-emerald-400",
     glow: "drop-shadow-[0_0_12px_rgba(52,211,153,0.65)]",
@@ -67,10 +71,10 @@ function highlightCorePhrases({
   const highlightSize =
     variant === "label"
       ? compact
-        ? "text-[13px]"
+        ? "text-[inherit]"
         : "text-[14px] sm:text-[15px]"
       : compact
-        ? "text-[12px]"
+        ? "text-[inherit]"
         : "text-[13px] sm:text-[14px]";
 
   const parts: ReactNode[] = [];
@@ -105,16 +109,25 @@ function StatCell({
   block,
   compact,
   className,
+  unitUppercase = true,
+  /** Level 1 psychology / business model cards — larger digits, tight vertical budget. */
+  enlarge = false,
 }: {
   block: MoneyMasteryStatBlock;
   compact?: boolean;
   className?: string;
+  /** Mid-ticket packs use uppercase units; Level 1 cards keep title-case Hrs/Min. */
+  unitUppercase?: boolean;
+  enlarge?: boolean;
 }) {
   const neon = TONE_NEON[block.tone as GamingBenefitTone] ?? TONE_NEON.gold;
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center px-1.5 py-2 text-center sm:px-2 sm:py-2.5",
+        "flex flex-col items-center justify-center text-center",
+        enlarge
+          ? "gap-0 px-0.5 py-1 sm:px-1 sm:py-1.5"
+          : "px-1.5 py-2 sm:px-2 sm:py-2.5",
         className,
       )}
     >
@@ -123,7 +136,11 @@ function StatCell({
           "font-black tabular-nums leading-none tracking-tight",
           neon.figure,
           neon.glow,
-          compact ? "text-[1.55rem]" : "text-[1.85rem] sm:text-[2.15rem]",
+          enlarge
+            ? "text-[clamp(1.75rem,5.2vw,2.05rem)] sm:text-[2.05rem] md:text-[2.15rem]"
+            : compact
+              ? "text-[1.55rem]"
+              : "text-[1.85rem] sm:text-[2.15rem]",
         )}
       >
         {block.value}
@@ -131,9 +148,14 @@ function StatCell({
       {block.unit ? (
         <div
           className={cn(
-            "mt-0.5 font-extrabold uppercase leading-none tracking-[0.08em]",
+            "font-extrabold leading-none tracking-[0.06em]",
+            unitUppercase && "uppercase tracking-[0.08em]",
             neon.figure,
-            compact ? "text-[9px]" : "text-[10px] sm:text-[11px]",
+            enlarge
+              ? "mt-px text-[10px] sm:text-[11px]"
+              : compact
+                ? "mt-0.5 text-[9px]"
+                : "mt-0.5 text-[10px] sm:text-[11px]",
           )}
         >
           {block.unit}
@@ -141,32 +163,78 @@ function StatCell({
       ) : null}
       <div
         className={cn(
-          "mt-1 max-w-[11rem] font-medium leading-snug text-white/90",
-          compact ? "text-[9px]" : "text-[10px] sm:text-[11px]",
+          "font-mono font-medium leading-tight text-white/90",
+          enlarge
+            ? "mt-0.5 max-w-full text-[8px] leading-[1.15] sm:text-[9px]"
+            : compact
+              ? "mt-1 max-w-full text-[8px] sm:text-[9px]"
+              : "mt-1 max-w-[11rem] text-[10px] sm:text-[11px]",
         )}
       >
         {highlightCorePhrases({
           text: block.label,
           neon,
-          compact,
+          compact: true,
           variant: "label",
         })}
       </div>
       {block.label2 ? (
         <div
           className={cn(
-            "mt-0.5 max-w-[11rem] font-medium leading-snug text-white/65",
-            compact ? "text-[8px]" : "text-[9px] sm:text-[10px]",
+            "mt-0.5 max-w-[11rem] font-mono font-medium leading-snug text-white/65",
+            enlarge
+              ? "text-[8px]"
+              : compact
+                ? "text-[8px]"
+                : "text-[9px] sm:text-[10px]",
           )}
         >
           {highlightCorePhrases({
             text: block.label2,
             neon,
-            compact,
+            compact: true,
             variant: "label2",
           })}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** Neon figure + unit + label grid only (no “What You Get” / “Plus You Get” headings). */
+export function NeonStatGrid({
+  stats,
+  className,
+  compact = false,
+  columns,
+}: {
+  stats: readonly MoneyMasteryStatBlock[];
+  className?: string;
+  compact?: boolean;
+  /** Column count; 3 = one row (Videos | Projects | Watch Time). */
+  columns?: 2 | 3 | 4;
+}) {
+  if (!stats.length) return null;
+  const cols = columns ?? (stats.length >= 3 ? 3 : 2);
+  return (
+    <div
+      className={cn(
+        "mx-auto grid h-full w-full overflow-hidden rounded-lg border border-white/10",
+        "divide-x divide-white/10",
+        cols === 3 ? "grid-cols-3" : "grid-cols-2",
+        className,
+      )}
+    >
+      {stats.map((block) => (
+        <StatCell
+          key={`${block.value}-${block.unit}-${block.label}`}
+          block={block}
+          compact={compact || cols === 3}
+          unitUppercase={false}
+          enlarge
+          className={cols === 3 ? "min-w-0 px-0.5" : undefined}
+        />
+      ))}
     </div>
   );
 }

@@ -76,9 +76,19 @@ export function PackVaultOfferModal({
       if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+    const node = scrollRef.current;
+    const reset = () => {
+      if (!node) return;
+      node.scrollTop = 0;
+      node.scrollTo({ top: 0, behavior: "auto" });
+    };
+    reset();
+    const raf = requestAnimationFrame(reset);
+    const t = window.setTimeout(reset, 50);
     return () => {
       document.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t);
     };
   }, [packOffer?.plan]);
 

@@ -2,14 +2,22 @@
 
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
-export type GamingBenefitTone = "cyan" | "violet" | "gold" | "pink" | "amber" | "green";
+export type GamingBenefitTone = "cyan" | "violet" | "gold" | "pink" | "amber" | "green" | "orange";
 
 export type GamingBenefitItem = {
   tone: GamingBenefitTone;
   title: string;
+  /** Second title line (same styling) — e.g. "Build 30 AI Projects". */
+  titleLine2?: string;
   desc: string;
   /** Optional bullet list (preferred over `desc` when present). */
   bullets?: readonly string[];
+  /** Mid-ticket pack to open from a CTA inside Money Mastery details. */
+  ctaPackPlan?: "agentic_ai" | "ai_content_automation" | "trading_technical_analysis";
+  /** Line above the Details button — e.g. "View all of Agentic AI Pack". */
+  ctaHint?: string;
+  /** Button label (default: Details). */
+  ctaLabel?: string;
 };
 
 type FrameTone = "green" | "cyan";

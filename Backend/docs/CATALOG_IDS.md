@@ -43,7 +43,7 @@ python manage.py seed_syndicate_catalog --with-videos --link-r2
 | `level1-model-04` | Building Apps using React JS | `Business Models/React JS/Intro/index.m3u8` |
 | `level1-model-05` | Book Publishing On Amazon (KINDLE) | `Business Models/Amazon KDP/Intro/index.m3u8` |
 | `level1-model-06` | Building Games Using Unreal Engine | `Business Models/Unreal Engine/Intro/index.m3u8` |
-| `level1-model-07` | Framer Crash Course | `Business Models/Framer Crash Course/Intro/index.m3u8` |
+| `level1-model-07` | Rapid Web Building For Business (Vibe Coding) | `Business Models/Framer Crash Course/Intro/index.m3u8` |
 | `level1-model-08` | Graphics Design Using Canva | `Business Models/Canva/Intro/index.m3u8` |
 | `level1-model-09` | Print On Demand Clothing | `Business Models/Print On Demand/Intro/index.m3u8` |
 | `level1-model-10` | Python Programming | `Business Models/Python Programming/Intro/index.m3u8` |

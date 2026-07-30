@@ -224,7 +224,7 @@
   "model": "video_streaming.streamplaylist",
   "pk": 14,
   "fields": {
-    "title": "Rapid Non-code Web Building (For Business)",
+    "title": "Rapid Web Building For Business (Vibe Coding)",
     "slug": "framer-crash-course",
     "category": "business_model",
     "description": "The Hook \r\nIf you rely on external developers to build your digital real estate, you do not own your empireùyou are leasing it. You are bleeding capital, burning time, and surrendering absolute control to intermediaries who dictate your speed to market. In a digital economy built on speed, dependency is a fatal vulnerability. This course is the exact strategic weapon you need to sever that leash. It is the ultimate leverage: the ability to rapidly design, animate, and deploy high-converting digital fortresses from scratch, with zero code.\r\nThe Core Protocol \r\nWe eliminate the theoretical bloat and hand you the raw, operational mechanics of Framer. You will master the exact visual architecture required to build responsive, high-performance web assets at scale. From engineering dynamic layouts with advanced Stacks and Grids to weaponizing Content Management Systems (CMS) for infinite digital scalability, this protocol gives you absolute sovereign control over your web presence. You will not just design pages; you will engineer automated, interactive digital environments that command authority and capture wealth.\r\nWhat You Will Learn\r\nIntroduction to Framer\r\nProject Planning & Setup\r\nBuilding the Navigation Bar\r\nHero Section\r\nClient & Feature Sections\r\nTestimonials & Bento Grids\r\nCall to Action (CTA) & Footer\r\nResponsive Design\r\nAnimations & Interactions\r\nCMS (Content Management System)",

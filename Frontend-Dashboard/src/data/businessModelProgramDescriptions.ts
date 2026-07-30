@@ -1,229 +1,296 @@
 /**
- * Curated Business Model program copy — fixes legacy ù encoding and overrides API text.
+ * Curated Business Model program copy — overrides API text for Level 1 models.
+ * Section order: Projects You Will Build → Programme Introduction → Programme Description → What You Will Learn.
  */
 export const BUSINESS_MODEL_PROGRAM_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  "n8n-ai-automation": `Programme Introduction
-Are you tired of doing the same repetitive tasks every single day? Copying data, answering routine emails, and managing content can take away your freedom and slow you down. This complete program shows you how to build smart AI agents that act like virtual employees. By following our step-by-step guide, you will learn to connect these AI helpers to the everyday tools you already use. After finishing this course, you will be able to automate your daily work and take back control of your time.
+  "n8n-ai-automation": `Projects You Will Build
+1. Set up an automated workflow that connects everyday apps like Google Sheets and Gmail to handle your busywork.
+2. Build a custom "virtual employee" AI agent that can use multiple tools and remember past conversations.
+3. Create a smart content machine that scrapes social media, rewrites posts in your unique voice, and saves them automatically.
+4. Design an advanced AI system that uses smart routing and prompt chaining to make complex decisions on its own.
+
+Programme Introduction
+Are you feeling overwhelmed by repetitive daily tasks and confused about how to actually use AI to help? This complete step-by-step program cuts through the noise and teaches you how to build real AI automation using N8N. By the end, you will know exactly how to create smart AI agents that do the heavy lifting for you, giving you the freedom to take control of your time and focus on what truly matters.
 
 Programme Description
-This course is a complete guide to understanding and building AI automation from the ground up using a tool called N8N. You will learn how to create automated workflows, understand how software connects through APIs, and build smart AI agents that can remember details and make decisions. We will show you exactly how to automatically read emails, organize data, and generate fresh content without writing complex code. Investing your time in this journey gives you high-value skills that make your work much easier. By the end, you will have a digital system that handles your busywork so you can focus on bigger goals.
+This program is a full journey into the world of AI automation, taking you from a total beginner to building advanced systems. You will learn how to connect different apps using APIs, design smart workflows, and build AI agents that think, remember, and create content on their own. Learning these skills is a highly valuable investment that will save you hundreds of hours, helping you work smarter and build true digital independence.
 
 What You Will Learn
-Understand the basics of AI automation and how to set up your N8N account
-Identify repetitive tasks in your day and create your first simple workflow
-Learn how APIs work so you can easily connect different software applications together
-Discover the difference between simple workflows and smart AI agents
-Build your own AI agents from scratch to act like your personal virtual employees
-Use simple text prompts and memory features to make your AI agents smarter
-Connect N8N to your inbox to automatically read, sort, and pull important data from emails
-Link your automations to databases and spreadsheets to update records without typing
-Build an automated content system that finds, rewrites, and schedules social media posts for you
-Set up advanced AI frameworks like parallel tasks and routing for faster decision-making
-Use tools like OpenRouter to test different AI models and improve your agent's responses
-Learn how to fix errors safely and keep your business data completely secure`,
+Set up your N8N account and understand the basic logic of how automation works.
+Identify repetitive tasks in your daily work and build simple workflows to handle them.
+Connect N8N to everyday applications like Google Sheets and Gmail.
+Understand what APIs are (the invisible bridges that let different software talk to each other) and how to use them.
+Learn how to safely send, receive, update, and delete data between apps.
+Discover the exact difference between a standard automation workflow and a thinking AI agent.
+Build your first AI agent from scratch to act as a helpful virtual employee.
+Give your AI agent a "memory" so it remembers past interactions and context.
+Use advanced frameworks like prompt chaining and parallel tasks to make your AI solve problems faster.
+Connect your agents to powerful AI models securely using OpenRouter.
+Format your AI's output cleanly so it perfectly fits into your databases or spreadsheets.
+Build a system that scrapes websites and social media to gather fresh content ideas.
+Train the AI to rewrite the collected content in your exact tone of voice and schedule it weekly.
+Handle errors smoothly so your automated systems run safely in the background without breaking.`,
 
-  "ai-automations": `Programme Introduction
-Are you feeling overwhelmed by the idea of starting a YouTube channel, unsure how to make engaging videos, or worried about showing your face on camera? Many beginners get stuck overthinking the technical details and never take the first step toward building an audience. This complete program provides a step-by-step blueprint for launching and growing a fully automated, faceless YouTube channel using the power of Artificial Intelligence. By the end of this journey, you will know exactly how to generate endless video ideas, create stunning visuals and voiceovers with AI, and turn your creativity into a profitable, monetized channel you fully control.
+  "ai-automations": `Projects You Will Build
+1. Launch a fully branded YouTube channel with a custom logo and banner designed by AI.
+2. Create viral, faceless "wisdom and philosophy" Shorts using AI scripts and images.
+3. Build unique, copyright-free anime Shorts that are safe to monetize.
+4. Design a custom talking AI avatar to host your videos without ever showing your face.
+5. Produce a high-quality, long-form historical documentary video.
+6. Edit a professional video in CapCut using keyframes, cinematic bars, and text effects.
+
+Programme Introduction
+Are you overwhelmed by the idea of starting a YouTube channel because you do not want to show your face or do not know how to edit videos? You are not alone. This complete step-by-step program will teach you how to use free AI tools to create amazing videos from scratch. By the end, you will take control of your time and have a fully automated YouTube channel ready to attract viewers and earn money.
 
 Programme Description
-This entire course is a practical, hands-on guide to mastering YouTube automation without ever stepping in front of a camera. You will learn how to use simple AI tools to write scripts, design logos, generate custom voiceovers, and animate talking avatars. The program covers how to produce highly popular video formats—including philosophical Shorts, anime clips, health and wellness promotions, self-improvement videos, and full-length historical documentaries. It is highly worth your time because it replaces the confusion of video production with a clear, proven system, giving you the skills to edit like a pro, rank your videos in search, and build a sustainable online income stream.
+This program is a complete guide to building a profitable, faceless YouTube channel using AI. You will learn how to write scripts, create voiceovers, generate images, and edit professional videos for both short and long-form content. Learning this skill is a highly valuable use of your time because it gives you a clear path to building a creative digital business and creating passive income streams from anywhere in the world.
 
 What You Will Learn
-Set up and brand a new YouTube channel from scratch, including an AI-generated logo and banner
-Write highly engaging video scripts quickly using artificial intelligence
-Generate lifelike, professional voiceovers using text-to-speech AI tools
-Create stunning, custom AI images and visuals that match your video's story perfectly
-Build and animate unique talking AI avatars to serve as the face of your channel
-Produce original, copyright-free anime Shorts that are fully monetizable
-Edit videos like a professional using CapCut, including text effects, transitions, and animations
-Automatically generate quizzes, stories, and Reddit-style Shorts using a single powerful AI tool
-Write compelling titles and descriptions optimized for YouTube Search (SEO) to rank your videos higher
-Create eye-catching, high-click thumbnails to attract more viewers to your videos
-Master YouTube's monetization rules to get approved and start earning ad revenue quickly
-Promote affiliate products within your videos to build a second stream of online income`,
+Set up a new YouTube channel and create a strong brand with an AI-generated logo and description.
+Write engaging video scripts quickly using smart AI text tools.
+Generate realistic, human-sounding voiceovers without ever speaking into a microphone.
+Create unique, eye-catching images and artwork using AI to match your story.
+Make highly clickable "Stoic" and philosophical videos that perform well on YouTube.
+Produce custom AI anime Shorts that bypass copyright rules so you can monetize safely.
+Build a custom talking AI avatar to act as the host of your faceless videos.
+Edit videos like a professional using CapCut, including cinematic bars, text effects, and smooth transitions.
+Remove backgrounds, use green screens, and add engaging zoom effects to keep viewers watching.
+Create simple quiz Shorts, "Would You Rather" videos, and animated text conversations using a single tool.
+Produce deep, long-form historical documentaries that can generate high ad revenue.
+Understand how to rank your videos higher in search results (SEO) so more people click on them.
+Learn exactly how YouTube monetization works (RPM, CPM) and discover ways to earn money outside of ads.`,
 
-  "framer-crash-course": `Programme Introduction
-Are you feeling lost when it comes to building a website? Do you wish you could create something professional without any coding skills? This course is here to help. By the end, you will know how to design and build a beautiful website using Framer, even if you're starting from scratch.
+  "framer-crash-course": `Projects You Will Build
+1. Set up a complete, professional Framer workspace ready for web design.
+2. Build a fully responsive landing page from scratch that looks great on any device.
+3. Add engaging animations and interactive elements to a live web page.
+4. Create a functional Content Management System (CMS) to easily update your website text and images.
+
+Programme Introduction
+Are you feeling lost when it comes to building a website? Do you wish you could create something professional without knowing how to write complicated code? This step-by-step course is here to help you get unstuck. By the end, you will know exactly how to design and launch a beautiful website using Framer, even if you are starting as a complete beginner.
 
 Programme Description
-In this course, you will learn how to use Framer, a powerful tool for creating websites without writing code. You'll master the basics step by step, from setting up your workspace to building a fully responsive landing page. This course is worth your time because it empowers you to take control of your online presence and showcase your ideas effectively.
+In this course, you will learn how to use Framer, a powerful tool for building websites visually without writing a single line of code. You will master the basics, from setting up your screen to creating a fully responsive web page that automatically adjusts for mobile phones. Learning this skill is a highly valuable use of your time because it gives you the freedom to take control of your online presence and bring your business ideas to life quickly.
 
 What You Will Learn
-What Framer is and how it can help you build websites without code
-How to set up a free Framer account and navigate the workspace
-How to create a new project and choose a template or start from scratch
-The different elements and tools available in Framer
-How to structure a web page using frames and containers
-Basic design principles for web pages and layouts
-How to add text, images, and interactive elements to your website
-How to make your website responsive for different screen sizes
-Techniques for adding animations and effects to enhance user experience
-How to use CMS (Content Management System) to manage your website content easily`,
+What Framer is and how it helps you build websites without writing code.
+How to set up a free account and easily navigate the workspace.
+How to start a new project using a template or completely from scratch.
+How to use the different design tools and elements inside Framer.
+How to structure a web page using simple frames and containers.
+Basic design rules to make your layouts look clean and professional.
+How to add text, images, and interactive buttons to your site.
+How to make your website automatically adjust for mobile phones and tablets.
+Simple ways to add animations and effects to make your site feel alive.
+How to use a CMS (Content Management System) to update your website content easily.`,
 
-  "app-building-flutter": `Programme Introduction
-Do you have great ideas for apps but feel completely lost when it comes to coding? Many beginners want to create their own digital products but struggle to find a clear path to start. This complete program solves that problem by teaching you how to build apps step by step using Flutter, a powerful tool that lets you create applications for multiple devices using just one codebase. By the end of this journey, you will have the practical skills to build your own working software from scratch, giving you the freedom to take control of your time and money.
+  "app-building-flutter": `Projects You Will Build
+1. Build a simple To-Do List and Habit Tracker with a visual heat map and offline data storage.
+2. Create a minimal E-Commerce Sneaker Shop with product pages, a working shopping cart, and payment features.
+3. Build a secure Chat and Social Media app with user profiles, live messaging, and an online database.
+4. Create a real-time Weather app that uses an API to show weather data based on the user's location.
+5. Design a custom Music Player app featuring playlists, audio playback controls, and theme settings.
+6. Build a responsive, multi-screen app that perfectly adapts its layout for mobile phones, tablets, and desktop computers.
+
+Programme Introduction
+Do you have great ideas for mobile apps but feel stuck because you do not know how to code? This complete step-by-step program is perfect for beginners who want to turn their ideas into reality without the confusion. We will teach you how to build real, working apps using Flutter, a tool that lets you create apps for both Apple and Android using just one set of code. By the end of this course, you will take control of your time and skills, giving you the freedom to build exactly what you want.
 
 Programme Description
-This course is a complete blueprint for mastering app development from the ground up. You will learn essential skills like designing user interfaces, managing data safely, and connecting your apps to online services. In this course you will build 10 practical apps, including a Counter App, a Todo App, a Sneaker Shop App, a Habit Tracker, an E-commerce App, a Notes App, a Weather App, a Music Player App, a Chat App, and a Social Media App. Mastering these tools is a highly valuable investment of your time, providing you with the power to bring your ideas to life without needing a whole team of developers.
-
-Projects You Will Build
-Counter App — a basic interactive app to understand how buttons change numbers on a screen.
-Todo App — a simple checklist that saves your daily tasks directly on your device.
-Sneaker Shop App — a visual storefront where users can browse shoes and use a shopping cart.
-Habit Tracker — a daily goal-tracking tool that uses a visual heat map to show your progress.
-E-commerce App — a minimal online store complete with product pages and a payment button.
-Notes App — a digital notebook that stores your ideas safely in an online database.
-Weather App — a live forecasting tool that pulls real-time climate data from the internet based on location.
-Music Player App — a media player that organizes playlists and controls audio playback.
-Chat App — a real-time messaging platform where users can log in, see who is online, and text each other.
-Social Media App — a community platform featuring user profiles, secure login, and a public wall to post messages.
+This course is a full journey into app development, taking you from the basic building blocks of programming all the way to creating complex, interactive apps. You will learn how to design beautiful screens, manage user data securely, and connect your apps to the internet. This program is a valuable investment in yourself, giving you the exact skills you need to become a confident, independent app builder who can bring any project to life.
 
 What You Will Learn
-Understand the basics of programming, variables, and safe coding practices in Flutter.
-Design beautiful user interfaces using flexible building blocks called widgets.
-Create a simple Counter App to learn about interactive buttons and changing data.
-Navigate smoothly between different screens and easily switch between Light Mode and Dark Mode themes.
-Collect user input and store data locally on your device to build a Todo App and a Habit Tracker.
-Manage app data efficiently using a method called Provider to keep your code organized as your apps grow.
-Design clean layouts for a Sneaker Shop App and a minimal E-commerce App with a working shopping cart.
-Set up user authentication so people can log in, and use Firebase to safely store online data for a Notes App.
-Send and receive live messages by building a secure, real-time Chat App and a Social Media App.
-Fetch live data from external internet services to create a working Weather App.
-Build a Music Player App with audio controls and visually appealing playlists.
-Design responsive apps that adapt perfectly to mobile phones, tablets, and desktop computer screens.
-Keep your users engaged by sending push notifications directly to their devices.`,
+Understand the basics of programming, including variables, loops, and basic math in code.
+Build beautiful app layouts from scratch using simple building blocks called widgets.
+Set up smooth navigation so users can easily move between different pages and menus in your app.
+Handle user input safely with text fields, buttons, and coding rules that prevent your app from crashing.
+Design custom themes and let your users easily switch between Light Mode and Dark Mode.
+Manage your app’s data cleanly using a simple method called state management.
+Store data directly on the user's device so your app works perfectly even when offline.
+Connect your app to Firebase to create secure login screens using Email, Google, and Apple.
+Read, write, update, and delete live user information using online databases.
+Pull live information from the web using APIs (tools that let your app talk to other websites) to show real-time data.
+Send push notifications to keep users engaged on both iOS and Android devices.
+Create flexible designs that automatically resize to look great on any screen size.`,
 
-  "building-apps-react-js": `Programme Introduction
+  "building-apps-react-js": `Projects You Will Build
+1. Set up a complete local React development workspace on your own computer.
+2. Build reusable website parts (components) to create a custom page layout.
+3. Create a multi-screen interactive website with working menus and navigation.
+4. Deploy your finished React application live on the internet for the world to see.
+
+Programme Introduction
 Are you tired of just watching React tutorials and never actually building anything? Many beginners get stuck watching videos without knowing how to put the pieces together. This course fixes that by showing you exactly how to build a real app, step by step. By the end, you will have the freedom to take your own ideas and turn them into working, interactive websites.
 
 Programme Description
 This course is all about creating a complete React application from start to finish. You will learn core skills, like creating reusable pieces of your website (called components) and managing user data. It is worth your time because learning by doing is the fastest way to build real skills. You will take control of your learning and build a finished project you can actually show off.
 
 What You Will Learn
-Setting up your React workspace and tools
-Understanding how React builds web pages
-Creating your first reusable website parts (components)
-Adding styles and layouts to make your app look great
-Managing data and user clicks (using state)
-Pulling in outside information to your app (fetching data)
-Adding different screens and menus to your website (routing)
-Finding and fixing common code errors
-Putting your finished app live on the internet for the world to see`,
+Set up your React workspace and tools
+Understand how React builds web pages
+Create your first reusable website parts (components)
+Add styles and layouts to make your app look great
+Manage data and user clicks (using state)
+Pull in outside information to your app (fetching data)
+Add different screens and menus to your website (routing)
+Find and fix common code errors
+Put your finished app live on the internet for the world to see`,
 
-  "amazon-kdp": `Programme Introduction
-Are you new to Amazon KDP and want to publish books to earn passive income? Or have you been trying for a while but not seeing the results you hoped for? This course is for you! We will break down the process of publishing on Amazon step by step. You'll learn how to create books that people want to read. By the end of this course, you'll feel confident in publishing your own books and starting to earn money online.
+  "amazon-kdp": `Projects You Will Build
+1. Find and validate a highly profitable book topic using proven research methods.
+2. Create and format a complete, high-quality book ready for publishing.
+3. Design an eye-catching book cover that attracts readers and drives clicks.
+4. Build a profitable launch strategy using Amazon ads to get your book noticed.
+5. Create an audiobook version of your digital book to unlock an extra income stream.
 
-Programme Description
-This course teaches you everything you need to know about Amazon KDP. You will learn how to choose the right book topics, create quality content, and launch your books effectively. You will gain skills to build a successful publishing business. This course is worth your time because it provides clear, practical steps to help you succeed in a crowded market. Join us in "THE SYNDICATE" and take control of your time and income through the power of publishing!
-
-What You Will Learn
-What Amazon KDP is and how it works
-How to choose book topics with high potential for success
-Techniques to validate your book ideas
-The process of creating high-quality content
-How to effectively work with ghostwriters
-Tips for designing eye-catching book covers
-Strategies for launching your book to maximize visibility
-Understanding Amazon ads and how to use them
-Expanding into audiobooks for additional income
-Using book traffic to promote other products`,
-
-  "building-games-using-unreal-engine": `Programme Introduction
-Are you a beginner who wants to make your own games but feels overwhelmed? This course is for you! We will guide you step by step in creating a fun GTA-style game using Unreal Engine 5. By the end, you'll have the skills to build characters, vehicles, and a whole city full of life. Get ready to take control of your game development journey!
+Programme Introduction
+Are you trying to make money online with Amazon KDP but feel lost or overwhelmed by all the steps? This course breaks down the exact steps you need to take to publish books successfully, even if you have never written a book before. By the end of this training, you will know how to find winning topics, create great books, and finally take control of your time and money.
 
 Programme Description
-This course teaches you how to build a complete game using Unreal Engine 5. You will learn how to create advanced character movements, implement a weapon system, and design interactions with non-player characters (NPCs). The skills you gain here will empower you to create your own unique gaming worlds and stories. It's a valuable investment of your time if you want to dive into game development.
+This course is a complete guide to building a profitable self-publishing business on Amazon. You will learn the entire process from start to finish, including how to come up with book ideas, hire ghostwriters, run ads, and launch audiobooks. Learning this skill is a highly valuable use of your time because it gives you a clear, step-by-step path to building a passive income stream that works for you.
 
 What You Will Learn
-Introduction to Unreal Engine 5 and its features
-How to create a new game project and set it up
-Implement advanced character movement techniques
-Create a weapon system and overlay
-Design AI for police characters who interact with players
-Build drivable vehicles and NPCs that respond to the player
-Develop a wanted system similar to popular open-world games
-Create a user-friendly phone interface within the game
-Import and animate characters and assets from other software
-Set up a health system for characters in the game
-Understand and apply behavior trees for AI decision-making`,
+Understand what Amazon KDP is and exactly how the business model works.
+Find and choose book topics that have a high potential to make money.
+Test your book ideas to make sure people actually want to read them.
+Create high-quality written content that gets good reviews.
+Hire and work with ghostwriters to write the book for you.
+Design professional book covers that grab a reader's attention.
+Launch your book using strategies that get it seen by the right audience.
+Set up and run Amazon ads to boost your book sales safely.
+Turn your written book into an audiobook to earn more income.
+Use the traffic from your books to promote other products and grow your business.`,
 
-  "graphics-design-canva": `Programme Introduction
-Are you feeling lost when it comes to design? Do you want to create eye-catching graphics and videos but don't know where to start? This course is perfect for you! In this step-by-step tutorial, you will learn how to use Canva to make stunning designs for social media, blogs, and websites. After completing this course, you'll feel confident creating your own designs from scratch.
+  "building-games-using-unreal-engine": `Projects You Will Build
+1. A fully controllable player character with smooth walking, running, and jumping animations.
+2. A working weapon system where your character can aim, shoot, and see visual effects.
+3. A complete health system with a progress bar that shows when you take damage.
+4. Smart AI police characters that can see the player, make decisions using behavior trees, and react.
+5. An open-world city filled with moving traffic vehicles and civilian characters walking around.
+6. A drivable vehicle system where your player can enter a car, drive it through the city, and exit.
+7. A functional in-game phone interface and a "wanted level" system.
+
+Programme Introduction
+Do you dream of building your own open-world games but feel stuck trying to understand the software? This complete course is designed exactly for beginners who want to turn their game ideas into a reality without the frustration. We will walk you step by step through Unreal Engine 5, showing you exactly how to build a GTA-style game from a blank screen to a living city. By the end, you will take control of your creative journey and have the confidence to build games on your own.
 
 Programme Description
-In this course, you will dive into Canva, a powerful and free design tool. You'll learn how to create beautiful graphics, videos, and animations with ease. By the end of the course, you'll have the skills to design for social media, presentations, and more. This is a valuable investment of your time that will help you take control of your creative projects.
+This program is a complete guide to game development using Unreal Engine 5. You will learn how to build every major part of an open-world game: making a character move, setting up weapons, building a city, and programming smart enemies. This course is a highly valuable use of your time because you skip the confusing jargon and focus strictly on practical, real-world skills. You will leave with a working game project and the exact tools you need to build your own digital worlds.
 
 What You Will Learn
-How to set up your Canva account and navigate the interface
-The different types of designs you can create with Canva
-How to use templates for social media posts and other projects
-How to customize text, images, and colors to match your style
-Tips for creating animated graphics and videos
-How to collaborate with others using Canva
-How to download and share your designs effectively
-Advanced features like using Canva's AI tools and effects
-Best practices for designing eye-catching visuals`,
+Create a brand new project and learn how to move around inside Unreal Engine 5.
+Add advanced movement systems so your character walks and runs smoothly.
+Set up a weapon system that allows your character to aim and fire.
+Import unique character models from outside software to use as your main player.
+Build a health system so your character takes damage correctly.
+Create an interactive in-game phone menu for the player to use.
+Build a "wanted level" system that tracks the player's actions in the game.
+Program AI police enemies that can think, react, and chase the player.
+Make streets feel alive by adding traffic vehicles that drive around the map.
+Create an open-world city environment from scratch.
+Add normal civilians who walk around and interact with the world.
+Build drivable cars that your player character can easily get into and drive.
+Code interactions so the player can talk to or engage with other characters in the city.`,
 
-  "print-on-demand": `Programme Introduction
-Are you feeling stuck trying to start an online business? Maybe you're confused about where to begin. This course is perfect for you! It shows you step-by-step how to create a successful print-on-demand store. By the end, you'll have a fully functioning website that sells custom products with ease.
+  "graphics-design-canva": `Projects You Will Build
+1. Create a custom social media post using pre-made templates.
+2. Build an eye-catching animated graphic to share online.
+3. Design and edit a short, professional video.
+4. Make a complete digital presentation from scratch.
+
+Programme Introduction
+Are you tired of struggling to make things look good online? Maybe you want to create eye-catching posts for social media, but learning complex design software feels like a massive waste of time. This course is the perfect starting point to learn Canva step by step. By the end, you will know exactly how to turn your ideas into beautiful designs in minutes. You will take control of your digital presence and never have to hire a designer for basic tasks again.
 
 Programme Description
-This course is all about print-on-demand, a simple way to sell custom products online without holding inventory. You'll learn how to design products, set up an e-commerce website, and run ads effectively. This course is worth your time because it empowers you to create a sustainable business from scratch, even if you have no experience.
+This course is a complete guide to using Canva, a free and simple design tool on the internet. You will learn how to build professional graphics, edit videos, and use smart design features without any prior experience. Learning this skill is a highly valuable use of your time because it gives you the freedom to create your own digital assets quickly and cheaply. You will walk away with real, finished projects and the confidence to design anything you need.
 
 What You Will Learn
-What print-on-demand is and how it works
-How to create a professional e-commerce website using Shopify
-Steps to design custom products that sell
-How to find reliable suppliers for printing and shipping
-Techniques for effective marketing and ads
-Ways to automate parts of your business for efficiency
-Tips for choosing a profitable niche and unique product ideas
-Insights on scaling your business as it grows`,
+Set up your Canva account and easily move around the dashboard.
+Choose the right design sizes for different social media platforms.
+Use and customize templates to save hours of work on your projects.
+Change text, fonts, images, and colors to match your personal style.
+Add animations and movement to make your graphics stand out.
+Edit and piece together short videos directly inside Canva.
+Work together with friends or team members on the same design.
+Download your finished work in high quality so it is ready to share online.
+Use Canva's smart AI tools and special effects to improve your images.
+Apply simple design rules to make everything you build look professional.`,
 
-  "python-programming": `Programme Introduction
-Are you feeling lost trying to learn Python? Maybe you're stuck at a beginner level or wasting time on confusing tutorials. This course is designed for you. It teaches you everything you need to know about Python, step by step. By the end, you'll be able to use Python confidently for things like web development, AI, and automation.
+  "print-on-demand": `Projects You Will Build
+1. Set up a fully functioning and professional e-commerce website using Shopify.
+2. Design a complete collection of custom products that are ready to be sold.
+3. Build an automated system that connects your store directly to reliable printing and shipping suppliers.
+4. Create and launch your first digital marketing campaign to attract real customers to your store.
+
+Programme Introduction
+Are you feeling stuck trying to start an online business and confused about where to begin? This step-by-step course is perfect for beginners who want to build a real business without buying expensive inventory upfront. By the end of this program, you will have a fully working online store that sells custom products, giving you the freedom to take control of your time and money.
 
 Programme Description
-This course is all about mastering Python programming. You'll start with the basics and move on to advanced topics. You'll learn how to solve problems, create applications, and automate tasks using Python. It's worth your time because Python is a powerful language that can help you build a successful career in tech.
+This course teaches you everything about print-on-demand, a simple business model where products are only printed and shipped after a customer actually buys them. You will learn how to pick a winning topic, design great items, and set up a beautiful website from scratch. Learning this skill is a highly valuable use of your time because it allows you to build a profitable online business from anywhere in the world with very little upfront cost.
 
 What You Will Learn
-Introduction to Python and its importance
-How to install Python and set up your environment
-Using Python interactive shell for coding
-Understanding expressions and syntax errors
-How to write and run Python scripts
-Introduction to variables and data types
-Working with strings and their methods
-Understanding numbers and arithmetic operations
-Using comparison and conditional statements
-Writing loops for repetitive tasks
-Creating and using functions for code organization
-Handling errors and exceptions in your code
-Exploring lists and dictionaries for data storage
-Understanding modules and libraries for code reuse
-Tips for writing clean and efficient code`,
+Understand what print-on-demand is and exactly how the business model works.
+Choose a profitable niche and come up with unique ideas for your products.
+Design custom products that people actually want to buy.
+Create a professional, easy-to-use e-commerce website using Shopify.
+Find and connect with reliable suppliers who will print and ship your items for you.
+Set up effective marketing and ads to bring shoppers to your new store.
+Automate parts of your daily tasks so your business runs smoothly in the background.
+Learn clear strategies to scale and grow your store as your sales increase.`,
 
-  "wordpress-blog": `Programme Introduction
-Are you lost when it comes to building a website? Do you want to start a blog but don't know where to begin? This course will take you from zero to having your own WordPress blog in less than two hours. You'll learn everything step by step. By the end, you'll be able to create and manage your blog with confidence.
+  "python-programming": `Projects You Will Build
+1. Set up a professional coding environment and write your first working Python script.
+2. Build a simple calculator program using Python numbers and math operations.
+3. Create an automated text-processing tool using string methods and loops.
+4. Design a simple data storage system using Python lists and dictionaries to organize information.
+
+Programme Introduction
+Are you feeling lost trying to learn Python and tired of confusing tutorials? Learning to code can feel overwhelming when you are stuck at the beginner level and do not know what to do next. This step-by-step course is designed to guide you through Python from the very beginning. By the end, you will know how to write real code, automate daily tasks, and take control of your digital skills.
 
 Programme Description
-This course is all about building your own blog using WordPress, a popular and user-friendly platform. You'll learn how to set up your blog, choose a design, and publish posts. You'll also discover how to make your blog look great on any device. It's a practical course that saves you time and gives you the skills to take control of your online presence.
+This course is a complete guide to understanding Python, one of the most useful programming languages in the world. You will learn the basics of writing code, how to organize data cleanly, and how to build simple applications. Learning Python is a highly valuable use of your time because it gives you the power to solve problems faster and opens the door to creating AI or web projects. You will walk away with a strong foundation and the confidence to start building your own software.
 
 What You Will Learn
-How to set up a WordPress blog from scratch
-Choosing a hosting provider
-Selecting and registering a domain name
-Installing WordPress on your hosting account
-Navigating the WordPress dashboard
-Cleaning up your dashboard for ease of use
-Creating a simple homepage layout
-Adding blog posts and featured images
-Designing an about page and a contact page
-Optimizing your blog for mobile devices
-Installing essential plugins for functionality
-Setting up an email newsletter sign-up form
-Connecting your blog to an email marketing service
-Enhancing your blog's security`,
+Understand what Python is and why it is so important in the tech world.
+Install Python and set up your computer for coding.
+Use the Python interactive shell to test code quickly.
+Understand basic coding grammar and how to easily fix errors.
+Write and run your own complete Python scripts.
+Store information using variables and different data types.
+Work with text (strings) and use built-in methods to change it.
+Use numbers and basic math operations inside your code.
+Make your code make decisions using conditional statements (like "if" and "else").
+Write loops to repeat tasks automatically and save hours of time.
+Create custom functions to keep your code organized and reusable.
+Find, handle, and fix errors so your programs do not crash.
+Store and manage groups of data safely using lists and dictionaries.
+Use external modules and libraries to add powerful new features to your code without starting from scratch.
+Apply professional tips for writing clean, efficient, and easy-to-read code.`,
+
+  "wordpress-blog": `Projects You Will Build
+1. Register a custom domain name and set up a live web hosting account.
+2. Build a fully functional WordPress blog with a homepage, "About" page, and "Contact" page.
+3. Write and publish your first live blog posts complete with featured images.
+4. Create an email newsletter sign-up form that connects directly to an email marketing service.
+
+Programme Introduction
+Are you confused about how to build a website from scratch? Do you want to start a blog but feel overwhelmed by all the technical steps? This course will guide you step by step to launch your own WordPress blog in just a few hours. By the end, you will take control of your digital presence and confidently share your ideas or business with the world.
+
+Programme Description
+This course is a complete guide to building a website using WordPress, the most popular website platform on the internet. You will learn how to choose a web host, design your pages, and publish your writing so it looks great on any screen. Learning this skill is a highly valuable use of your time because it gives you the freedom to build and manage your own online space without ever needing to hire an expensive developer.
+
+What You Will Learn
+Set up a WordPress blog completely from scratch.
+Choose a reliable web hosting provider to store your website online.
+Select and register your own custom domain name (your website address).
+Install WordPress directly onto your hosting account.
+Navigate and clean up the WordPress dashboard so it is easy to use.
+Create a clean, professional homepage layout.
+Write and publish blog posts with eye-catching featured images.
+Design an "About" page and a "Contact" page for your visitors.
+Make sure your blog automatically adjusts to look perfect on mobile phones.
+Install simple add-ons (called plugins) to give your website more features.
+Set up a sign-up form so readers can join your email newsletter.
+Connect your blog to an email service to stay in touch with your audience.
+Add basic security settings to keep your new website safe from hackers.`,
 };
 
 const SLUG_ALIASES: Record<string, keyof typeof BUSINESS_MODEL_PROGRAM_DESCRIPTIONS> = {
@@ -250,25 +317,39 @@ const BY_TITLE = new Map<string, string>(
     "n8n ai automation": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["n8n-ai-automation"],
     "how to build a i agents": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["n8n-ai-automation"],
     "how to build ai agents": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["n8n-ai-automation"],
+    "ai content automation for businesses": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["n8n-ai-automation"],
+    "business and content a i automation": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["n8n-ai-automation"],
     "ai automations": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["ai-automations"],
     "ai automation": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["ai-automations"],
+    "social media content automation": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["ai-automations"],
+    "a i content automation for business": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["ai-automations"],
     "app building using flutter": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["app-building-flutter"],
+    "app building for business vibe coding": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["app-building-flutter"],
     "building apps using react js": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
     "build a real react app": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
     "building a real react app": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
+    "the custom app blueprint for business": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-apps-react-js"],
     "book publishing on amazon kindle": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["amazon-kdp"],
     "amazon kdp": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["amazon-kdp"],
+    "ebook business blueprint monetize your knowledge": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["amazon-kdp"],
     "building games using unreal engine": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-games-using-unreal-engine"],
+    "the gaming business blueprint build launch and sell": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["building-games-using-unreal-engine"],
     "framer crash course": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["framer-crash-course"],
+    "rapid web building for business vibe coding": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["framer-crash-course"],
+    "rapid non code web building for business": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["framer-crash-course"],
     "graphics design using canva": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["graphics-design-canva"],
     "canva course": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["graphics-design-canva"],
     "full canva tutorial": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["graphics-design-canva"],
+    "graphics design for business graphics that convert to sales": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["graphics-design-canva"],
     "print on demand clothing": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["print-on-demand"],
     "print on demand": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["print-on-demand"],
+    "the zero inventory clothing business blueprint": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["print-on-demand"],
     "python programming": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["python-programming"],
     "python full course": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["python-programming"],
     "python": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["python-programming"],
+    "basics python for small business": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["python-programming"],
     "wordpress blog": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["wordpress-blog"],
+    "the profitable blogging blueprint": BUSINESS_MODEL_PROGRAM_DESCRIPTIONS["wordpress-blog"],
   }),
 );
 

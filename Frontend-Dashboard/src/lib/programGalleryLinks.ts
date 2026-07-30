@@ -17,9 +17,11 @@ const FILE_HINTS: Record<string, string> = {
   "app-building-vibe-coding": "App Building for Business (Vibe Coding)",
   "automaton-name-change": "Social Media Content Automation",
   "ai-content-automation-business": "Social Media Content Automation",
+  "social-media-content-automation": "Social Media Content Automation",
   "ai automations": "Social Media Content Automation",
   "N8N Ai": "AI content Automation for Businesses",
   "business-content-n8n-ai-automation": "AI content Automation for Businesses",
+  "ai-content-automation-for-businesses": "AI content Automation for Businesses",
   "cyber-dystopian-city": "eBook Business Blueprint (Monetize Your Knowledge)",
   "ebook-business-blueprint": "eBook Business Blueprint (Monetize Your Knowledge)",
   "print on demand": "The Zero-Inventory Clothing Business Blueprint",
@@ -27,7 +29,7 @@ const FILE_HINTS: Record<string, string> = {
   "gaming-business-blueprint": "The Gaming Business Blueprint (Build, Launch, and Sell)",
   "custom-app-blueprint": "The Custom App Blueprint for Business",
   "basics-python-small-business": "Basics Python for Small Business",
-  "rapid-noncode-web-building": "Rapid Non-code Web Building (For Business)",
+  "rapid-noncode-web-building": "Rapid Web Building For Business (Vibe Coding)",
 };
 
 function normalizeTitle(value: string): string {

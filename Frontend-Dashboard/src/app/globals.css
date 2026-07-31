@@ -13404,15 +13404,14 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 /*
- * Hash deep-link boot: brief hide until #businessprograms scroll lands.
- * Do not lock overflow here — that prevented scrollTo from sticking.
+ * Hash deep-link: hide MAIN only (not NavApp) until #businessprograms lands.
+ * Only applied when the URL already contains that hash (boot script).
  */
-html.programs-hash-pending,
-html.programs-hash-pending body {
+html.programs-hash-pending {
   background: #000 !important;
 }
 
-html.programs-hash-pending .programs-page-root {
+html.programs-hash-pending .programs-page-main {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -13428,12 +13427,13 @@ html.programs-hash-pending .programs-page-band {
   overscroll-behavior-y: contain;
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  /* Do NOT set transform/filter here — it traps position:fixed NavApp and warps the radial menu. */
 }
 
 .programs-page-main {
   contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .programs-page-band {

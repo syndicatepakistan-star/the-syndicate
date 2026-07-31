@@ -12,6 +12,12 @@ function readHash(): string {
   return window.location.hash.replace(/^#/, "").trim().toLowerCase();
 }
 
+function matchedDeepLinkHash(): string | null {
+  const h = readHash();
+  if (!TARGETS.has(h)) return null;
+  return h === "programs-library" ? "businessprograms" : h;
+}
+
 function readScrollMarginTop(el: HTMLElement): number {
   const raw = window.getComputedStyle(el).scrollMarginTop || "0";
   const n = Number.parseFloat(raw);
@@ -40,46 +46,40 @@ function clearPending() {
   document.getElementById(INLINE_STYLE_ID)?.remove();
 }
 
-function ensureHash(matched: string) {
-  const { pathname, search } = window.location;
-  const full = `${pathname}${search}#${matched}`;
-  if (window.location.hash.replace(/^#/, "").toLowerCase() !== matched) {
-    window.history.replaceState(window.history.state, "", full);
-  }
-}
-
 /**
- * Lands /programs#businessprograms on the PROGRAMS (psychology + business models) band.
- * Always reveals within MAX_HIDE_MS so a failed scroll cannot leave a blank page.
+ * Only when the URL already has #businessprograms / #programs-library:
+ * scroll to the PROGRAMS band, then reveal. Never invents or forces that hash
+ * onto a plain /programs visit.
  */
 export function ProgramsBusinessHashLand() {
   useEffect(() => {
     let cancelled = false;
     const timers: number[] = [];
+    let safetyTimer: number | null = null;
 
-    const finish = (matched: string | null) => {
-      if (cancelled) return;
-      // Unlock overflow first so the final scroll sticks, then show the page.
-      document.documentElement.classList.remove(HASH_PENDING_CLASS);
-      if (matched) {
-        scrollToBusinessPrograms();
-        ensureHash(matched);
+    const clearSafety = () => {
+      if (safetyTimer != null) {
+        window.clearTimeout(safetyTimer);
+        safetyTimer = null;
       }
+    };
+
+    const finishLand = () => {
+      if (cancelled) return;
+      clearSafety();
+      scrollToBusinessPrograms();
       window.requestAnimationFrame(() => {
         if (cancelled) return;
-        if (matched) scrollToBusinessPrograms();
+        scrollToBusinessPrograms();
         clearPending();
       });
     };
 
-    const run = () => {
-      const fromHash = readHash();
-      const pending = document.documentElement.classList.contains(HASH_PENDING_CLASS);
-      const matched =
-        (TARGETS.has(fromHash) ? fromHash : null) ||
-        (pending ? "businessprograms" : null);
-
+    const landFromExplicitHash = () => {
+      const matched = matchedDeepLinkHash();
       if (!matched) {
+        // Plain /programs (or unrelated hash) — never deep-link, always show UI.
+        clearSafety();
         clearPending();
         return;
       }
@@ -88,42 +88,47 @@ export function ProgramsBusinessHashLand() {
         window.history.scrollRestoration = "manual";
       }
 
-      // Keep hash in the URL (do not strip) so refresh / share still deep-link.
-      ensureHash(matched === "programs-library" ? "businessprograms" : matched);
+      clearSafety();
+      safetyTimer = window.setTimeout(() => {
+        // Reveal even if scroll failed — never leave main content / menu broken.
+        finishLand();
+      }, MAX_HIDE_MS);
 
       let attempts = 0;
       const tick = () => {
         if (cancelled) return;
+        // Hash cleared while landing (user navigated) — abort, do not re-add hash.
+        if (!matchedDeepLinkHash()) {
+          clearSafety();
+          clearPending();
+          return;
+        }
         attempts += 1;
         const ok = scrollToBusinessPrograms();
         if (ok && isNearTarget()) {
-          timers.push(window.setTimeout(() => finish(matched), 40));
+          timers.push(window.setTimeout(finishLand, 40));
           return;
         }
         if (attempts < 40) {
           timers.push(window.setTimeout(tick, 40));
           return;
         }
-        finish(matched);
+        finishLand();
       };
 
       tick();
     };
 
-    run();
-    // Hard safety: never leave the page invisible.
-    timers.push(window.setTimeout(() => finish(TARGETS.has(readHash()) ? readHash() : "businessprograms"), MAX_HIDE_MS));
+    landFromExplicitHash();
 
-    const onHash = () => {
-      if (TARGETS.has(readHash())) run();
-    };
+    const onHash = () => landFromExplicitHash();
     window.addEventListener("hashchange", onHash);
 
     return () => {
       cancelled = true;
+      clearSafety();
       timers.forEach((id) => window.clearTimeout(id));
       window.removeEventListener("hashchange", onHash);
-      // If this instance is torn down mid-flight (Strict Mode), do not leave blank UI.
       clearPending();
     };
   }, []);

@@ -52,14 +52,8 @@ export function NavApp() {
   const [activeId, setActiveId] = useState<NavSectionId>('home')
 
   const warmRoutes = useCallback(() => {
-    // On /programs keep initial menu open cheap — only warm high-intent next steps.
-    if (pathname === '/programs' || pathname.startsWith('/programs/')) {
-      router.prefetch('/membership')
-      router.prefetch('/login')
-      return
-    }
     prefetchMarketingRoutes(router)
-  }, [router, pathname])
+  }, [router])
 
   const handleToggleMenu = () => {
     if (menuOpen) {
@@ -169,13 +163,11 @@ export function NavApp() {
         </div>
       </div>
       <div className="sr-only" aria-hidden>
-        {pathname === '/programs' || pathname.startsWith('/programs/')
-          ? null
-          : MARKETING_PREFETCH_ROUTES.map((route) => (
-              <Link key={route} href={route} prefetch tabIndex={-1}>
-                {route}
-              </Link>
-            ))}
+        {MARKETING_PREFETCH_ROUTES.map((route) => (
+          <Link key={route} href={route} prefetch tabIndex={-1}>
+            {route}
+          </Link>
+        ))}
       </div>
     </div>
   )

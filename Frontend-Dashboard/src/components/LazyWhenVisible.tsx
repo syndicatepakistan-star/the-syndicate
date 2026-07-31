@@ -24,13 +24,6 @@ function matchedEagerHash(targets: string[]): string | null {
   if (typeof window === "undefined" || targets.length === 0) return null;
   const h = window.location.hash.replace(/^#/, "").trim().toLowerCase();
   if (h && targets.includes(h)) return h;
-  // Boot may still be hiding the page for this deep link.
-  if (
-    document.documentElement.classList.contains("programs-hash-pending") &&
-    (targets.includes("businessprograms") || targets.includes("programs-library"))
-  ) {
-    return "businessprograms";
-  }
   return null;
 }
 

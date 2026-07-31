@@ -35,6 +35,7 @@ import {
   PROGRAMS_LIBRARY_DESKTOP_PRIORITY_SLUGS,
   PROGRAMS_LIBRARY_MOBILE_PRIORITY_SLUGS,
 } from "@/lib/programsLibraryLcpImages";
+import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
 import { PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
@@ -62,12 +63,13 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
 import { useUnlockCartOptional } from "@/components/programs/UnlockCartContext";
+import { useUnlockActivation } from "@/components/programs/UnlockActivationContext";
 import {
   cartItemKey,
   isPlaylistUnlockCartEligible,
   playlistToCartItem,
 } from "@/lib/unlockCart";
-import toast from "react-hot-toast";
+import { lazyToast, lazyToastSuccess } from "@/lib/lazyUnlockCheckout";
 
 function playlistProgramsReturnHref(pl: StreamPlaylistListItem): string {
   const slug = pl.slug?.trim();
@@ -180,6 +182,7 @@ export function PlaylistCardsSection({
     }
   };
   const router = useRouter();
+  const fxReady = useDeferredVisualEffects();
   const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() =>
     fillMissingPublicProgramPlaylists(
       Array.isArray(initialPlaylists) && initialPlaylists.length > 0
@@ -191,6 +194,7 @@ export function PlaylistCardsSection({
   const [descriptionModalPlaylist, setDescriptionModalPlaylist] = useState<StreamPlaylistListItem | null>(null);
   const [highlightedPlaylistId, setHighlightedPlaylistId] = useState<number | null>(null);
   const unlockCart = useUnlockCartOptional();
+  const { ensureUnlockReady } = useUnlockActivation();
   const highlightHandledRef = useRef(false);
   const detailsOpenedFromHashRef = useRef(false);
   const pendingDetailsHashRef = useRef(false);
@@ -541,23 +545,26 @@ export function PlaylistCardsSection({
     : undefined;
 
   const requestPlaylistUnlock = (pl: StreamPlaylistListItem, cardTitle: string) => {
-    if (pl.is_unlocked) {
-      router.push(`/dashboard/programs?playlist=${pl.id}`);
-      return;
-    }
-    if (pl.is_coming_soon) return;
-    if (unlockCart && isPlaylistUnlockCartEligible(pl)) {
-      const thumb = resolveProgramPlaylistThumbnail(pl, null) || pl.cover_image_url || undefined;
-      const added = unlockCart.addPlaylist(pl, cardTitle, thumb || undefined);
-      if (added) {
-        toast.success(`Added to unlock bucket — ${cardTitle}`, { duration: 2800 });
-      } else {
-        toast(`Already in unlock bucket — ${cardTitle}`, { duration: 2200 });
-        unlockCart.setPanelExpanded(true);
+    void (async () => {
+      if (pl.is_unlocked) {
+        router.push(`/dashboard/programs?playlist=${pl.id}`);
+        return;
       }
-      return;
-    }
-    setError("This program cannot be added to the unlock bucket right now.");
+      if (pl.is_coming_soon) return;
+      await ensureUnlockReady();
+      if (unlockCart && isPlaylistUnlockCartEligible(pl)) {
+        const thumb = resolveProgramPlaylistThumbnail(pl, null) || pl.cover_image_url || undefined;
+        const added = unlockCart.addPlaylist(pl, cardTitle, thumb || undefined);
+        if (added) {
+          void lazyToastSuccess(`Added to unlock bucket — ${cardTitle}`, { duration: 2800 });
+        } else {
+          void lazyToast(`Already in unlock bucket — ${cardTitle}`, { duration: 2200 });
+          unlockCart.setPanelExpanded(true);
+        }
+        return;
+      }
+      setError("This program cannot be added to the unlock bucket right now.");
+    })();
   };
 
   const descriptionUnlockLabel = (() => {
@@ -600,6 +607,8 @@ export function PlaylistCardsSection({
     const comingSoon = !!pl.is_coming_soon;
     const inCart = unlockCart?.isInCartKey(cartItemKey(playlistToCartItem(pl, cardTitle))) ?? false;
     const showIdleGlow = !spotlightActive;
+    /** Border always (theme); heavy box-shadow + blur layers only after fxReady. */
+    const showFancyFx = showIdleGlow && fxReady;
     const spotlightStyle = isSpotlight
       ? ({
           ["--spotlight-a" as string]: theme.spotlightA,
@@ -618,7 +627,7 @@ export function PlaylistCardsSection({
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
           isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
-          showIdleGlow && !isSpotlight && theme.glow
+          showFancyFx && !isSpotlight && theme.glow
         )}
       >
         {isSpotlight ? (
@@ -626,8 +635,11 @@ export function PlaylistCardsSection({
             <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
             <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
           </>
-        ) : showIdleGlow ? (
-          <>
+        ) : showFancyFx ? (
+          <div
+            className="programs-fx-fade pointer-events-none absolute inset-0 z-0"
+            aria-hidden
+          >
             <span
               className={cn(
                 "pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px]",
@@ -660,7 +672,7 @@ export function PlaylistCardsSection({
               )}
               aria-hidden
             />
-          </>
+          </div>
         ) : null}
         <span
           className={cn(
@@ -816,11 +828,15 @@ export function PlaylistCardsSection({
         unlockDisabled={!!descriptionModalPlaylist?.is_coming_soon}
       />
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-        <div className="absolute left-[-8%] top-[12%] h-[250px] w-[250px] rounded-full bg-fuchsia-500/20 blur-[90px] sm:h-[380px] sm:w-[380px] sm:blur-[125px]" />
-        <div className="absolute right-[-10%] top-[20%] h-[260px] w-[260px] rounded-full bg-cyan-400/18 blur-[95px] sm:h-[400px] sm:w-[400px] sm:blur-[130px]" />
-        <div className="absolute left-1/2 top-[48%] h-[220px] w-[220px] -translate-x-1/2 rounded-full bg-amber-300/14 blur-[90px] sm:h-[340px] sm:w-[340px] sm:blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[20%] h-[230px] w-[230px] rounded-full bg-violet-400/16 blur-[95px] sm:h-[360px] sm:w-[360px] sm:blur-[130px]" />
-        <div className="absolute bottom-[-12%] right-[16%] h-[230px] w-[230px] rounded-full bg-sky-300/14 blur-[95px] sm:h-[350px] sm:w-[350px] sm:blur-[125px]" />
+        {fxReady ? (
+          <div className="programs-fx-fade">
+            <div className="absolute left-[-8%] top-[12%] h-[250px] w-[250px] rounded-full bg-fuchsia-500/20 blur-[90px] sm:h-[380px] sm:w-[380px] sm:blur-[125px]" />
+            <div className="absolute right-[-10%] top-[20%] h-[260px] w-[260px] rounded-full bg-cyan-400/18 blur-[95px] sm:h-[400px] sm:w-[400px] sm:blur-[130px]" />
+            <div className="absolute left-1/2 top-[48%] h-[220px] w-[220px] -translate-x-1/2 rounded-full bg-amber-300/14 blur-[90px] sm:h-[340px] sm:w-[340px] sm:blur-[120px]" />
+            <div className="absolute bottom-[-15%] left-[20%] h-[230px] w-[230px] rounded-full bg-violet-400/16 blur-[95px] sm:h-[360px] sm:w-[360px] sm:blur-[130px]" />
+            <div className="absolute bottom-[-12%] right-[16%] h-[230px] w-[230px] rounded-full bg-sky-300/14 blur-[95px] sm:h-[350px] sm:w-[350px] sm:blur-[125px]" />
+          </div>
+        ) : null}
       </div>
       {error ? <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{error}</div> : null}
       {!error && visiblePlaylists.length === 0 ? (

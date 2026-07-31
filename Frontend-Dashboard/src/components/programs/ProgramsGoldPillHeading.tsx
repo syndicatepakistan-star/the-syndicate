@@ -34,10 +34,10 @@ const CHROME: Record<
 > = {
   gold: {
     shell:
-      "border border-[#d4af39]/45 shadow-[0_0_18px_rgba(212,175,57,0.2),inset_0_0_18px_rgba(212,175,57,0.09)] bg-[linear-gradient(180deg,rgba(18,18,18,0.94),rgba(4,4,4,0.98))]",
+      "border border-[#d4af39]/45 shadow-[0_0_14px_rgba(212,175,57,0.14),inset_0_0_14px_rgba(212,175,57,0.06)] bg-[linear-gradient(180deg,rgba(18,18,18,0.94),rgba(4,4,4,0.98))]",
     innerRing: "border-[#d4af39]/35",
-    bar: "bg-[linear-gradient(180deg,transparent,rgba(212,175,57,0.82),transparent)]",
-    radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(212,175,57,0.22),transparent_55%)]",
+    bar: "bg-[linear-gradient(180deg,transparent,rgba(212,175,57,0.72),transparent)]",
+    radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(212,175,57,0.14),transparent_55%)]",
     title: "",
   },
   /** Gold HUD title + violet/purple pill rim and outer bloom (membership hero). */
@@ -115,11 +115,7 @@ export function ProgramsGoldPillHeading({
             c.bar
           )}
         />
-        <span className={cn("pointer-events-none absolute inset-0 rounded-[999px] opacity-60", c.radial)} />
-        <span
-          className="programs-heading-shine pointer-events-none absolute inset-y-[-20%] left-[-35%] w-[20%] bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.65)_50%,transparent_100%)] opacity-70 blur-[2px]"
-          aria-hidden
-        />
+        <span className={cn("pointer-events-none absolute inset-0 rounded-[999px] opacity-45", c.radial)} />
         <Tag
           className={cn(
             publicHeadingLightning(PILL_LIGHTNING[chrome]),

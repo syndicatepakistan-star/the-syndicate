@@ -7,6 +7,7 @@ import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillH
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
 import { ProgramsBackStepGuard } from '@/app/programs/ProgramsBackStepGuard'
+import { ProgramsPageAmbient } from '@/components/programs/ProgramsPageAmbient'
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
@@ -21,7 +22,11 @@ const ProgramsOfferSection = dynamic(
   () => import('@/components/programs/ProgramsOfferSection').then((m) => m.ProgramsOfferSection),
   {
     loading: () => (
-      <div className="mx-auto min-h-[28rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+      /* Tall reserve so #businessprograms scroll doesn’t slide onto mid-tickets when offers hydrate. */
+      <div
+        className="mx-auto min-h-[min(92vh,48rem)] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5 sm:min-h-[min(85vh,52rem)]"
+        aria-hidden
+      />
     ),
   },
 )
@@ -66,7 +71,7 @@ export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
     <div className="programs-page-root mobile-viewport-contain public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
-      {/* Money Mastery — LCP on plain /programs (collapsed while #businessprograms is pending). */}
+      {/* Money Mastery — LCP preload on plain /programs. */}
       <link
         rel="preload"
         as="image"
@@ -101,11 +106,7 @@ export default async function ProgramsPage() {
           fetchPriority={p.fetchPriority ?? "low"}
         />
       ))}
-      <div className="programs-page-ambient pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="programs-page-ambient__orb programs-page-ambient__orb--fuchsia absolute left-[-12%] top-[10%] h-[280px] w-[280px] rounded-full sm:h-[420px] sm:w-[420px]" />
-        <div className="programs-page-ambient__orb programs-page-ambient__orb--amber absolute right-[-8%] top-[38%] h-[260px] w-[260px] rounded-full sm:h-[380px] sm:w-[380px]" />
-        <div className="programs-page-ambient__orb programs-page-ambient__orb--cyan absolute bottom-[-10%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full sm:h-[440px] sm:w-[440px]" />
-      </div>
+      <ProgramsPageAmbient />
       <NavApp />
       <ProgramsBackStepGuard />
       <ProgramsBusinessHashLand />

@@ -27,6 +27,7 @@ import {
   writeUnlockCartToStorage,
 } from "@/lib/unlockCart";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useUnlockActivationOptional } from "@/components/programs/UnlockActivationContext";
 
 type UnlockCartContextValue = {
   items: UnlockCartItem[];
@@ -70,6 +71,8 @@ function consumeCheckoutConfirmedFlags(): boolean {
 
 export function UnlockCartProvider({ children }: { children: ReactNode }) {
   const { currency, formatPrice } = useCurrency();
+  const unlockActivation = useUnlockActivationOptional();
+  const unlockLive = unlockActivation?.unlockReady ?? true;
   const [items, setItems] = useState<UnlockCartItem[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [panelExpanded, setPanelExpanded] = useState(false);
@@ -145,8 +148,10 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
   }, [clearCart]);
 
   // Safety net: drop already-unlocked programs that were left in the bucket.
+  // Deferred until unlock is live (or cart already has items) so browse paint stays light.
   useEffect(() => {
     if (!hydrated) return;
+    if (!unlockLive && items.length === 0) return;
     let cancelled = false;
 
     const pruneFromServer = async () => {
@@ -180,7 +185,7 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("plan-checkout-confirmed", onCheckoutConfirmed);
       window.removeEventListener("playlist-checkout-confirmed", onCheckoutConfirmed);
     };
-  }, [hydrated, pruneOwnedItems]);
+  }, [hydrated, items.length, pruneOwnedItems, unlockLive]);
 
   const pulseBucket = useCallback(() => {
     setSelectionMode(true);

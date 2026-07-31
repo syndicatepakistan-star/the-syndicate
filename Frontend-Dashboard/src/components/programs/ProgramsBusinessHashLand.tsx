@@ -2,12 +2,17 @@
 
 import { useEffect } from "react";
 
-const HASH_PENDING_CLASS = "programs-hash-pending";
-const INLINE_STYLE_ID = "programs-hash-pending-inline";
 const TARGETS = new Set(["businessprograms", "programs-library"]);
 const SCROLL_ID = "businessprograms";
-/** Elite-offers collapse only — reveal quickly so CLS / SI stay healthy. */
-const MAX_HIDE_MS = 480;
+const OFFERS_ID = "syndicate-elite-offers";
+/** Keep re-anchoring while Elite Offers / mid-tickets hydrate and grow above. */
+const PIN_MS = 5000;
+
+/** Clear leftover hide/collapse classes from older deploys (no-op if absent). */
+function clearLegacyPending() {
+  document.documentElement.classList.remove("programs-hash-pending");
+  document.getElementById("programs-hash-pending-inline")?.remove();
+}
 
 function readHash(): string {
   return window.location.hash.replace(/^#/, "").trim().toLowerCase();
@@ -34,54 +39,52 @@ function scrollToBusinessPrograms(): boolean {
   return true;
 }
 
-function isNearTarget(slackPx = 96): boolean {
-  const el = document.getElementById(SCROLL_ID);
-  if (!el) return false;
-  const margin = readScrollMarginTop(el);
-  const top = el.getBoundingClientRect().top;
-  return top >= margin - slackPx && top <= margin + slackPx;
-}
-
-function clearPending() {
-  document.documentElement.classList.remove(HASH_PENDING_CLASS);
-  document.getElementById(INLINE_STYLE_ID)?.remove();
-}
-
 /**
- * Only when the URL already has #businessprograms / #programs-library:
- * scroll to the PROGRAMS band, then clear elite-offers collapse.
- * Main content stays painted (no black first frames).
+ * #businessprograms — scroll only (no offer collapse).
+ * Re-pins when Elite Offers / mid-ticket packs load above and would otherwise
+ * shove the viewport onto those packs. Stops if the user scrolls on purpose.
  */
 export function ProgramsBusinessHashLand() {
   useEffect(() => {
     let cancelled = false;
     const timers: number[] = [];
-    let safetyTimer: number | null = null;
+    let pinActive = false;
+    let pinUntil = 0;
+    let allowUserStop = false;
+    let resizeObserver: ResizeObserver | null = null;
 
-    const clearSafety = () => {
-      if (safetyTimer != null) {
-        window.clearTimeout(safetyTimer);
-        safetyTimer = null;
+    clearLegacyPending();
+
+    const stopPin = () => {
+      pinActive = false;
+      allowUserStop = false;
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+    };
+
+    const pinScroll = () => {
+      if (cancelled || !pinActive) return;
+      if (!matchedDeepLinkHash()) {
+        stopPin();
+        return;
       }
-    };
-
-    const finishLand = () => {
-      if (cancelled) return;
-      clearSafety();
+      if (Date.now() > pinUntil) {
+        stopPin();
+        return;
+      }
       scrollToBusinessPrograms();
-      window.requestAnimationFrame(() => {
-        if (cancelled) return;
-        scrollToBusinessPrograms();
-        clearPending();
-      });
     };
 
-    const landFromExplicitHash = () => {
-      const matched = matchedDeepLinkHash();
-      if (!matched) {
-        // Plain /programs (or unrelated hash) — never deep-link, always show UI.
-        clearSafety();
-        clearPending();
+    const onUserGesture = () => {
+      // Ignore gestures during the first moments of programmatic pinning.
+      if (!pinActive || !allowUserStop) return;
+      stopPin();
+    };
+
+    const startPin = () => {
+      clearLegacyPending();
+      if (!matchedDeepLinkHash()) {
+        stopPin();
         return;
       }
 
@@ -89,48 +92,69 @@ export function ProgramsBusinessHashLand() {
         window.history.scrollRestoration = "manual";
       }
 
-      clearSafety();
-      safetyTimer = window.setTimeout(() => {
-        // Reveal even if scroll failed — never leave main content / menu broken.
-        finishLand();
-      }, MAX_HIDE_MS);
+      pinActive = true;
+      allowUserStop = false;
+      pinUntil = Date.now() + PIN_MS;
 
-      let attempts = 0;
-      const tick = () => {
-        if (cancelled) return;
-        // Hash cleared while landing (user navigated) — abort, do not re-add hash.
-        if (!matchedDeepLinkHash()) {
-          clearSafety();
-          clearPending();
-          return;
+      scrollToBusinessPrograms();
+
+      timers.push(
+        window.setTimeout(() => {
+          if (pinActive && !cancelled) allowUserStop = true;
+        }, 450),
+      );
+
+      resizeObserver?.disconnect();
+      if (typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(() => {
+          // Elite Offers / vault row grew → re-anchor Programs.
+          pinScroll();
+        });
+        const offers = document.getElementById(OFFERS_ID);
+        const target = document.getElementById(SCROLL_ID);
+        const library = document.getElementById("programs-library");
+        if (offers) resizeObserver.observe(offers);
+        if (target) resizeObserver.observe(target);
+        if (library) resizeObserver.observe(library);
+      }
+
+      // Catch late dynamic chunks (Money Mastery + mid-ticket packs).
+      let pulses = 0;
+      const pulse = () => {
+        if (cancelled || !pinActive) return;
+        pinScroll();
+        pulses += 1;
+        if (pulses < 20 && pinActive) {
+          timers.push(window.setTimeout(pulse, 200));
         }
-        attempts += 1;
-        const ok = scrollToBusinessPrograms();
-        if (ok && isNearTarget()) {
-          timers.push(window.setTimeout(finishLand, 40));
-          return;
-        }
-        if (attempts < 40) {
-          timers.push(window.setTimeout(tick, 40));
-          return;
-        }
-        finishLand();
       };
+      timers.push(window.setTimeout(pulse, 50));
 
-      tick();
+      timers.push(
+        window.setTimeout(() => {
+          if (!cancelled) stopPin();
+        }, PIN_MS + 50),
+      );
     };
 
-    landFromExplicitHash();
+    const onHash = () => startPin();
 
-    const onHash = () => landFromExplicitHash();
+    startPin();
+
     window.addEventListener("hashchange", onHash);
+    window.addEventListener("wheel", onUserGesture, { passive: true });
+    window.addEventListener("touchmove", onUserGesture, { passive: true });
+    window.addEventListener("keydown", onUserGesture);
 
     return () => {
       cancelled = true;
-      clearSafety();
+      stopPin();
       timers.forEach((id) => window.clearTimeout(id));
       window.removeEventListener("hashchange", onHash);
-      clearPending();
+      window.removeEventListener("wheel", onUserGesture);
+      window.removeEventListener("touchmove", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+      clearLegacyPending();
     };
   }, []);
 

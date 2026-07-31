@@ -14,6 +14,7 @@ import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/progra
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 const OfferDescriptionModal = dynamic(
@@ -190,6 +191,7 @@ export function PlanOfferCard({
   onOpen,
 }: Props) {
   const { localizeLabel } = useCurrency();
+  const fxReady = useDeferredVisualEffects();
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const isLarge = size === "large";
   const isModule = size === "module";
@@ -257,39 +259,44 @@ export function PlanOfferCard({
       ) : null}
       <div
         className={cn(
-          "plan-offer-card__shell relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl transition-shadow duration-300",
+          "plan-offer-card__shell relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-500",
           cardKind === "pack" && "z-[2]",
-          !highlighted && !isModule && theme.glow,
-          !highlighted && !isModule && theme.hoverGlow,
+          !highlighted && theme.dominantBorder,
+          !highlighted && !isModule && fxReady && theme.glow,
+          !highlighted && !isModule && fxReady && theme.hoverGlow,
+          !highlighted && !isModule && !fxReady && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]",
           isModule && "plan-offer-card__vault-module-shell",
           highlighted && "plan-offer-globe-border-glow"
         )}
       >
-        {!highlighted && !isModule ? (
-          <>
-        <span
-          className={cn("pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px] transition-[opacity,filter] duration-300 group-hover/card:opacity-100 group-hover/card:saturate-125", theme.aura)}
-          aria-hidden
-        />
-        <span
-          className={cn(
-            "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
-            theme.spark
-          )}
-          aria-hidden
-        />
-        <span
-          className={cn(
-            "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px]",
-            theme.spark
-          )}
-          aria-hidden
-        />
-        <span
-          className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen"
-          aria-hidden
-        />
-          </>
+        {!highlighted && !isModule && fxReady ? (
+          <div className="programs-fx-fade" aria-hidden>
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-[-22%] z-0 rounded-[2.2rem] blur-[38px] transition-[opacity,filter] duration-300 group-hover/card:opacity-100 group-hover/card:saturate-125",
+                theme.aura,
+              )}
+              aria-hidden
+            />
+            <span
+              className={cn(
+                "pointer-events-none absolute left-[-40%] top-[8%] z-[1] h-[24%] w-[180%] -rotate-[28deg] bg-gradient-to-r opacity-85 mix-blend-screen blur-[10px]",
+                theme.spark,
+              )}
+              aria-hidden
+            />
+            <span
+              className={cn(
+                "pointer-events-none absolute right-[-28%] top-[58%] z-[1] h-[17%] w-[130%] -rotate-[24deg] bg-gradient-to-r opacity-70 mix-blend-screen blur-[12px]",
+                theme.spark,
+              )}
+              aria-hidden
+            />
+            <span
+              className="pointer-events-none absolute right-3 top-3 z-[2] h-10 w-10 rounded-full bg-white/45 blur-[14px] mix-blend-screen"
+              aria-hidden
+            />
+          </div>
         ) : null}
 
         <span className={cn("relative z-[2] m-[1px] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] bg-[#04060d] ring-1 ring-black/70", highlighted && "border-2")}>

@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import toast from "react-hot-toast";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useUnlockActivation } from "@/components/programs/UnlockActivationContext";
 import {
   LEVEL1_CATEGORY_PACKS,
   type Level1CategoryPackKey,
 } from "@/lib/level1CategoryPacks";
-import { startPlanCheckout } from "@/lib/plan-checkout";
+import {
+  lazyStartPlanCheckout,
+  lazyToastError,
+  lazyToastSuccess,
+} from "@/lib/lazyUnlockCheckout";
 
 type Level1CategoryUnlockAllButtonProps = {
   category: Level1CategoryPackKey;
@@ -31,6 +35,7 @@ export function Level1CategoryUnlockAllButton({
 }: Level1CategoryUnlockAllButtonProps) {
   const pack = LEVEL1_CATEGORY_PACKS[category];
   const { formatPrice } = useCurrency();
+  const { ensureUnlockReady } = useUnlockActivation();
   const [busy, setBusy] = useState(false);
 
   if (alreadyUnlocked) return null;
@@ -42,7 +47,8 @@ export function Level1CategoryUnlockAllButton({
     if (busy) return;
     setBusy(true);
     try {
-      const result = await startPlanCheckout({
+      await ensureUnlockReady();
+      const result = await lazyStartPlanCheckout({
         plan: pack.plan,
         billing: "monthly",
         amount: pack.checkoutAmount,
@@ -50,15 +56,17 @@ export function Level1CategoryUnlockAllButton({
       });
       if (result.status === "checkout" || result.status === "auth_required") return;
       if (result.status === "already_unlocked") {
-        toast.success(result.message || `You already unlocked all ${pack.shortLabel} programs.`);
+        await lazyToastSuccess(
+          result.message || `You already unlocked all ${pack.shortLabel} programs.`,
+        );
         await onUnlocked?.();
         return;
       }
       if (result.status === "error") {
-        toast.error(result.message);
+        await lazyToastError(result.message);
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not start checkout.");
+      await lazyToastError(e instanceof Error ? e.message : "Could not start checkout.");
     } finally {
       setBusy(false);
     }

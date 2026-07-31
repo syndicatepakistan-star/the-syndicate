@@ -23,7 +23,6 @@ import {
   resolveOfferActionLabel,
 } from "@/components/programs/vaultUnlock";
 import { fetchPurchasedPlanSlugs } from "@/lib/plan-purchases-api";
-import { startPlanCheckout } from "@/lib/plan-checkout";
 import { fetchPortalIdentity, getAuthorizationHeader } from "@/lib/portal-api";
 import { focusPlanOfferCardWithRetries } from "@/lib/programCardScroll";
 import { historyReplaceUrl } from "@/lib/historyUrl";
@@ -44,9 +43,14 @@ import {
 } from "@/lib/vaultPlaylistMap";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
-import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
+import { useUnlockActivation } from "@/components/programs/UnlockActivationContext";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
-import toast from "react-hot-toast";
+import {
+  lazyCheckoutUnlockCartItems,
+  lazyStartPlanCheckout,
+  lazyToast,
+  lazyToastSuccess,
+} from "@/lib/lazyUnlockCheckout";
 import { useDeferredChrome } from "@/hooks/useDeferredChrome";
 
 const PlanOfferDetailModal = dynamic(
@@ -183,9 +187,14 @@ function PublicPlanOfferCardsInner({
   const packModalOpenedRef = useRef(false);
   const isLarge = size === "large";
   const unlockCart = useUnlockCart();
+  const { unlockReady, ensureUnlockReady } = useUnlockActivation();
   const showUnlockChrome = useDeferredChrome(
     !shellHosted &&
-      (unlockCart.count > 0 || unlockCart.selectionMode || cartCheckoutBusy || !!cartError),
+      (unlockReady ||
+        unlockCart.count > 0 ||
+        unlockCart.selectionMode ||
+        cartCheckoutBusy ||
+        !!cartError),
   );
 
   const reloadUnlockState = useCallback(async () => {
@@ -203,14 +212,16 @@ function PublicPlanOfferCardsInner({
     setKnightSubscriptionActive(!!identity?.knight_subscription_active);
   }, []);
 
+  // Ownership / portal identity — only after unlock is live (or pack deep-link auto-activated).
   useEffect(() => {
+    if (!unlockReady && !highlightPack) return;
     const frame = window.requestAnimationFrame(() => {
       void reloadUnlockState();
     });
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [reloadUnlockState]);
+  }, [highlightPack, reloadUnlockState, unlockReady]);
 
   useEffect(() => {
     if (!purchasedSlugs.size) return;
@@ -392,7 +403,8 @@ function PublicPlanOfferCardsInner({
       setCartError(null);
       setBusyPlan(offer.plan);
       try {
-        const result = await startPlanCheckout({
+        await ensureUnlockReady();
+        const result = await lazyStartPlanCheckout({
           plan: offer.plan,
           billing: offer.billing,
           amount: offer.checkoutAmount,
@@ -421,28 +433,31 @@ function PublicPlanOfferCardsInner({
         setBusyPlan(null);
       }
     },
-    [accessTier, moneyMasteryActive, checkoutReturnPath, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState]
+    [accessTier, moneyMasteryActive, checkoutReturnPath, ensureUnlockReady, onAlreadyUnlocked, onCheckoutError, openUnlocked, purchasedSet, reloadUnlockState]
   );
 
   const requestUnlock = useCallback(
     (offer: PlanOfferDef) => {
-      if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
-        void openUnlocked(offer);
-        return;
-      }
-      if (!isUnlockCartEligible(offer)) {
-        void joinOfferDirect(offer);
-        return;
-      }
-      const added = unlockCart.addItem(offer);
-      if (added) {
-        toast.success(`Added to unlock bucket — ${offer.title}`, { duration: 2800 });
-      } else {
-        toast(`Already in unlock bucket — ${offer.title}`, { duration: 2200 });
-        unlockCart.setPanelExpanded(true);
-      }
+      void (async () => {
+        if (isVaultOfferUnlocked(offer, purchasedSet, accessTier, moneyMasteryActive)) {
+          void openUnlocked(offer);
+          return;
+        }
+        await ensureUnlockReady();
+        if (!isUnlockCartEligible(offer)) {
+          void joinOfferDirect(offer);
+          return;
+        }
+        const added = unlockCart.addItem(offer);
+        if (added) {
+          void lazyToastSuccess(`Added to unlock bucket — ${offer.title}`, { duration: 2800 });
+        } else {
+          void lazyToast(`Already in unlock bucket — ${offer.title}`, { duration: 2200 });
+          unlockCart.setPanelExpanded(true);
+        }
+      })();
     },
-    [accessTier, joinOfferDirect, moneyMasteryActive, openUnlocked, purchasedSet, unlockCart]
+    [accessTier, ensureUnlockReady, joinOfferDirect, moneyMasteryActive, openUnlocked, purchasedSet, unlockCart]
   );
 
   const checkoutUnlockCart = useCallback(async () => {
@@ -453,7 +468,8 @@ function PublicPlanOfferCardsInner({
     setError(null);
     setCartCheckoutBusy(true);
     try {
-      const result = await checkoutUnlockCartItems(cartItems, {
+      await ensureUnlockReady();
+      const result = await lazyCheckoutUnlockCartItems(cartItems, {
         postAuthNext: checkoutReturnPath,
         playlistReturnPath: "/programs",
       });
@@ -472,7 +488,7 @@ function PublicPlanOfferCardsInner({
     } finally {
       setCartCheckoutBusy(false);
     }
-  }, [cartCheckoutBusy, checkoutReturnPath, onCheckoutError, reloadUnlockState, unlockCart]);
+  }, [cartCheckoutBusy, checkoutReturnPath, ensureUnlockReady, onCheckoutError, reloadUnlockState, unlockCart]);
 
   const joinOffer = requestUnlock;
 

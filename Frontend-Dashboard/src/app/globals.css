@@ -11573,8 +11573,8 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
 .public-heading-lightning--gold {
   --heading-neon-bright: #e8c96a;
-  --heading-neon-glow: rgba(212, 175, 57, 0.68);
-  --heading-neon-haze: rgba(212, 175, 57, 0.32);
+  --heading-neon-glow: rgba(212, 175, 57, 0.5);
+  --heading-neon-haze: rgba(212, 175, 57, 0.22);
 }
 
 .public-heading-lightning--amber {
@@ -11745,9 +11745,9 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 /* Back-compat: existing pill / affiliate classes pick up gold lightning */
 .programs-heading-glow {
   --heading-neon-bright: #e8c96a;
-  --heading-neon-glow: rgba(212, 175, 57, 0.68);
-  --heading-neon-haze: rgba(212, 175, 57, 0.32);
-  animation: syndicate-heading-lightning 1.65s ease-in-out infinite;
+  --heading-neon-glow: rgba(212, 175, 57, 0.5);
+  --heading-neon-haze: rgba(212, 175, 57, 0.22);
+  animation: syndicate-heading-lightning 1.9s ease-in-out infinite;
   transition: color 0.45s ease;
   color: var(--heading-neon-bright);
 }
@@ -12521,21 +12521,21 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 @keyframes programsHeadingBgShine {
   0%,
   100% {
-    opacity: 0.45;
-    filter: brightness(0.9);
+    opacity: 0.32;
+    filter: brightness(0.92);
   }
   50% {
-    opacity: 0.9;
-    filter: brightness(1.15);
+    opacity: 0.58;
+    filter: brightness(1.06);
   }
 }
 
 .programs-heading-bg-shine {
   background:
-    radial-gradient(46% 130% at 15% 50%, rgba(212, 175, 57, 0.2), transparent 72%),
-    radial-gradient(46% 130% at 85% 50%, rgba(212, 175, 57, 0.2), transparent 72%),
-    linear-gradient(90deg, rgba(212, 175, 57, 0.04), rgba(230, 205, 130, 0.2), rgba(212, 175, 57, 0.04));
-  animation: programsHeadingBgShine 3.8s ease-in-out infinite;
+    radial-gradient(46% 130% at 15% 50%, rgba(212, 175, 57, 0.12), transparent 72%),
+    radial-gradient(46% 130% at 85% 50%, rgba(212, 175, 57, 0.12), transparent 72%),
+    linear-gradient(90deg, rgba(212, 175, 57, 0.03), rgba(230, 205, 130, 0.12), rgba(212, 175, 57, 0.03));
+  animation: programsHeadingBgShine 4.4s ease-in-out infinite;
 }
 
 @keyframes whatYouGetCoinSpin {
@@ -13403,32 +13403,32 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 }
 
+/* Soft fade-in when deferred neon blur/glow layers mount (layout size unchanged). */
+@keyframes programs-fx-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.programs-fx-fade {
+  animation: programs-fx-fade-in 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programs-fx-fade {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /*
- * Hash deep-link: keep MAIN painted (PROGRAMS cards) — only collapse elite offers
- * above the fold so Lighthouse/mobile first frames are not solid black.
+ * #businessprograms deep-link: no hide/collapse of Elite Offers.
+ * Native hash scroll only (see programs/layout.tsx + ProgramsBusinessHashLand).
+ * Legacy .programs-hash-pending rules removed — they caused CLS when restoring.
  */
-html.programs-hash-pending {
-  background: #000 !important;
-}
-
-html.programs-hash-pending #syndicate-elite-offers {
-  content-visibility: hidden !important;
-  contain-intrinsic-size: 0 0 !important;
-  min-height: 0 !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-}
-
-html.programs-hash-pending .programs-page-ambient {
-  opacity: 0.35 !important;
-}
-
-html.programs-hash-pending .programs-page-band {
-  content-visibility: visible !important;
-}
 
 /* === Public /programs — smooth scroll + keep cards visible === */
 .programs-page-root {

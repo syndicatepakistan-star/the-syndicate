@@ -3,8 +3,11 @@
 import dynamic from "next/dynamic";
 import { useCallback, useState, type ReactNode } from "react";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
-import { checkoutUnlockCartItems } from "@/lib/unlockCartCheckout";
-import { useDeferredChrome } from "@/hooks/useDeferredChrome";
+import {
+  UnlockActivationProvider,
+  useUnlockActivation,
+} from "@/components/programs/UnlockActivationContext";
+import { lazyCheckoutUnlockCartItems } from "@/lib/lazyUnlockCheckout";
 import { useProgramsPageScrollSmooth } from "@/hooks/useProgramsPageScrollSmooth";
 
 const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
@@ -15,19 +18,20 @@ const UnlockCartPanel = dynamic(
 
 function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
   const unlockCart = useUnlockCart();
+  const { unlockReady } = useUnlockActivation();
   const [cartCheckoutBusy, setCartCheckoutBusy] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
-  // Cart/toast chrome waits for interaction — unless cart already has items (restore / add).
-  const showChrome = useDeferredChrome(
-    unlockCart.count > 0 || unlockCart.selectionMode || cartCheckoutBusy || !!cartError,
-  );
+
+  // Cart/toast only after Unlock tap (or restored cart / checkout return).
+  const showChrome =
+    unlockReady || unlockCart.count > 0 || unlockCart.selectionMode || cartCheckoutBusy || !!cartError;
 
   const onCheckout = useCallback(async () => {
     if (cartCheckoutBusy || !unlockCart.items.length) return;
     setCartError(null);
     setCartCheckoutBusy(true);
     try {
-      const result = await checkoutUnlockCartItems(unlockCart.items, {
+      const result = await lazyCheckoutUnlockCartItems(unlockCart.items, {
         postAuthNext: "/dashboard/programs",
         playlistReturnPath: "/programs",
       });
@@ -69,12 +73,18 @@ function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Browse-first shell: cards paint without checkout/toast chunks.
+ * First Unlock tap activates unlockReady → loads cart chrome + checkout modules.
+ */
 export function ProgramsUnlockShell({ children }: { children: ReactNode }) {
   useProgramsPageScrollSmooth(true);
 
   return (
-    <UnlockCartProvider>
-      <ProgramsUnlockShellHost>{children}</ProgramsUnlockShellHost>
-    </UnlockCartProvider>
+    <UnlockActivationProvider>
+      <UnlockCartProvider>
+        <ProgramsUnlockShellHost>{children}</ProgramsUnlockShellHost>
+      </UnlockCartProvider>
+    </UnlockActivationProvider>
   );
 }

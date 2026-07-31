@@ -28,7 +28,7 @@ export function ProgramPlaylistCoverImage({
   objectFit = "cover",
   loading = "lazy",
   fetchPriority,
-  displayWidth = 480,
+  displayWidth = 384,
 }: Props) {
   const djangoCover = resolveDjangoMediaUrl(playlist.cover_image_url ?? null);
   const staticThumb = resolveProgramPlaylistThumbnail(playlist);
@@ -45,6 +45,7 @@ export function ProgramPlaylistCoverImage({
   }, [primarySrc]);
 
   const activeSrc = src || fallbackSrc;
+  const isPriority = loading === "eager";
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -54,11 +55,11 @@ export function ProgramPlaylistCoverImage({
             src={activeSrc}
             alt=""
             fill
-            sizes="(max-width: 640px) 48vw, (max-width: 1024px) 34vw, 360px"
-            quality={60}
+            sizes="(max-width: 640px) 46vw, (max-width: 1279px) 46vw, 340px"
+            quality={55}
             loading={loading}
-            priority={loading === "eager"}
-            fetchPriority={fetchPriority}
+            priority={isPriority}
+            fetchPriority={fetchPriority ?? (isPriority ? "high" : "auto")}
             decoding="async"
             onError={() => {
               if (fallbackSrc && src !== fallbackSrc) {

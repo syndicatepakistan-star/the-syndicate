@@ -393,7 +393,7 @@ export function PlanOfferCard({
                 alt={offer.title}
                 loading={priorityImage || offer.plan === "bundle" ? "eager" : "lazy"}
                 fetchPriority={priorityImage || offer.plan === "bundle" ? "high" : "low"}
-                decoding={priorityImage || offer.plan === "bundle" ? "sync" : "async"}
+                decoding="async"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}

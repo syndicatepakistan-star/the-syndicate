@@ -11,6 +11,10 @@ import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanT
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from '@/lib/optimizeImageUrl'
+import {
+  programsLibraryDesktopLast3Preloads,
+  programsLibraryMobileFirst3Preloads,
+} from '@/lib/programsLibraryLcpImages'
 import { buildPageMetadata } from '@/lib/seo'
 
 const ProgramsOfferSection = dynamic(
@@ -48,6 +52,8 @@ const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
 const LCP_IMAGE_SIZES = '(max-width: 640px) 92vw, (max-width: 1024px) 480px, 512px'
 const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 640, 62)
 const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 62, 828)
+const LIBRARY_MOBILE_LCP_PRELOADS = programsLibraryMobileFirst3Preloads()
+const LIBRARY_DESKTOP_LCP_PRELOADS = programsLibraryDesktopLast3Preloads()
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',
@@ -60,7 +66,7 @@ export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
     <div className="programs-page-root mobile-viewport-contain public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
-      {/* Discover Money Mastery art early — LCP candidate on mobile. */}
+      {/* Money Mastery — LCP on plain /programs (collapsed while #businessprograms is pending). */}
       <link
         rel="preload"
         as="image"
@@ -69,6 +75,32 @@ export default async function ProgramsPage() {
         imageSizes={LCP_IMAGE_SIZES}
         fetchPriority="high"
       />
+      {/* First 3 mobile library covers — #businessprograms filmstrip / LCP. */}
+      {LIBRARY_MOBILE_LCP_PRELOADS.map((p) => (
+        <link
+          key={`lib-m-${p.href}`}
+          rel="preload"
+          as="image"
+          href={p.href}
+          imageSrcSet={p.imageSrcSet}
+          imageSizes={p.imageSizes}
+          media={p.media}
+          fetchPriority={p.fetchPriority ?? "high"}
+        />
+      ))}
+      {/* Last 3 desktop business-model covers — late filmstrip / SI on xl+. */}
+      {LIBRARY_DESKTOP_LCP_PRELOADS.map((p) => (
+        <link
+          key={`lib-d-${p.href}`}
+          rel="preload"
+          as="image"
+          href={p.href}
+          imageSrcSet={p.imageSrcSet}
+          imageSizes={p.imageSizes}
+          media={p.media}
+          fetchPriority={p.fetchPriority ?? "low"}
+        />
+      ))}
       <div className="programs-page-ambient pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="programs-page-ambient__orb programs-page-ambient__orb--fuchsia absolute left-[-12%] top-[10%] h-[280px] w-[280px] rounded-full sm:h-[420px] sm:w-[420px]" />
         <div className="programs-page-ambient__orb programs-page-ambient__orb--amber absolute right-[-8%] top-[38%] h-[260px] w-[260px] rounded-full sm:h-[380px] sm:w-[380px]" />
@@ -103,28 +135,23 @@ export default async function ProgramsPage() {
         <div id="businessprograms" className="businessprograms-anchor scroll-mt-28" tabIndex={-1}>
           <ProgramsGoldPillHeading as="h2" title="Programs" />
         </div>
-        <LazyWhenVisible
-          minHeight="24rem"
-          rootMargin="280px 0px"
-          eagerOnHash={["programs-library", "businessprograms"]}
-          placeholder={
-            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-          }
-        >
-          <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
-            <Suspense
-              fallback={
-                <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
-              }
-            >
-              <ProgramsLibrarySection
-                title="Programs Library"
-                subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
-                initialPlaylists={playlists}
-              />
-            </Suspense>
-          </div>
-        </LazyWhenVisible>
+        {/*
+          Library is SSR + always mounted (not LazyWhenVisible) so #businessprograms
+          paints cards on first frame — critical for mobile LCP / filmstrip.
+        */}
+        <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
+          <Suspense
+            fallback={
+              <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+            }
+          >
+            <ProgramsLibrarySection
+              title="Programs Library"
+              subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
+              initialPlaylists={playlists}
+            />
+          </Suspense>
+        </div>
       </section>
       <LazyWhenVisible
         minHeight="18rem"

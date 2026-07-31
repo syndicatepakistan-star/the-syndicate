@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Check, X } from "lucide-react";
+import { Check, ExternalLink, X } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { isPlanOfferComingSoon, isPrimaryElitePlan, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_LAUNCHING_SOON_MESSAGE } from "@/components/programs/planOfferCatalog";
@@ -13,6 +13,7 @@ import { StructuredDescriptionBody } from "@/components/programs/StructuredDescr
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
+import { VIMEO_PACK_DEMO_LABEL, VIMEO_PACK_DEMO_URL } from "@/components/programs/packDemoLinks";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -268,6 +269,26 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
           </div>
 
           {unlockButton ? <div className="mt-6 flex justify-start">{unlockButton}</div> : null}
+
+          {isPackDetail ? (
+            <div className="mt-6 flex justify-start">
+              <a
+                href={VIMEO_PACK_DEMO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2.5",
+                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] transition sm:text-[12px]",
+                  "border-white/35 bg-white/5 text-white",
+                  "hover:border-white/55 hover:bg-white/10",
+                  theme.featureBorder,
+                )}
+              >
+                {VIMEO_PACK_DEMO_LABEL}
+                <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+              </a>
+            </div>
+          ) : null}
 
           {detailCardStats ? (
             <ProgramCardStatsLines stats={detailCardStats} size="large" className="mt-5" />

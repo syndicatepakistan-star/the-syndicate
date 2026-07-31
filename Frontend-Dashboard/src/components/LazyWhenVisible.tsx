@@ -42,7 +42,16 @@ export function LazyWhenVisible({
   const hostRef = useRef<HTMLDivElement>(null);
   const targets = useMemo(() => normalizeHashTargets(eagerOnHash), [eagerOnHash]);
   const targetsKey = targets.join("|");
-  const [visible, setVisible] = useState(false);
+  /** Sync with beforeInteractive hash boot so #businessprograms does not flash a placeholder (CLS). */
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (matchedEagerHash(targets)) return true;
+    try {
+      return Boolean((window as Window & { __PROGRAMS_EAGER_LIBRARY?: number }).__PROGRAMS_EAGER_LIBRARY);
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     if (targets.length === 0) return;

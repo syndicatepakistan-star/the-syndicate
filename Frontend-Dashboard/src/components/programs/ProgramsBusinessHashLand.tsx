@@ -6,7 +6,8 @@ const HASH_PENDING_CLASS = "programs-hash-pending";
 const INLINE_STYLE_ID = "programs-hash-pending-inline";
 const TARGETS = new Set(["businessprograms", "programs-library"]);
 const SCROLL_ID = "businessprograms";
-const MAX_HIDE_MS = 1600;
+/** Elite-offers collapse only — reveal quickly so CLS / SI stay healthy. */
+const MAX_HIDE_MS = 480;
 
 function readHash(): string {
   return window.location.hash.replace(/^#/, "").trim().toLowerCase();
@@ -48,8 +49,8 @@ function clearPending() {
 
 /**
  * Only when the URL already has #businessprograms / #programs-library:
- * scroll to the PROGRAMS band, then reveal. Never invents or forces that hash
- * onto a plain /programs visit.
+ * scroll to the PROGRAMS band, then clear elite-offers collapse.
+ * Main content stays painted (no black first frames).
  */
 export function ProgramsBusinessHashLand() {
   useEffect(() => {

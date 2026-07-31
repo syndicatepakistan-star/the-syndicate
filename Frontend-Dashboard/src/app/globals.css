@@ -13404,18 +13404,26 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 }
 
 /*
- * Hash deep-link: hide MAIN only (not NavApp) until #businessprograms lands.
- * Only applied when the URL already contains that hash (boot script).
+ * Hash deep-link: keep MAIN painted (PROGRAMS cards) — only collapse elite offers
+ * above the fold so Lighthouse/mobile first frames are not solid black.
  */
 html.programs-hash-pending {
   background: #000 !important;
 }
 
-html.programs-hash-pending .programs-page-main {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: none !important;
+html.programs-hash-pending #syndicate-elite-offers {
+  content-visibility: hidden !important;
+  contain-intrinsic-size: 0 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+html.programs-hash-pending .programs-page-ambient {
+  opacity: 0.35 !important;
 }
 
 html.programs-hash-pending .programs-page-band {
@@ -13443,6 +13451,12 @@ html.programs-hash-pending .programs-page-band {
 
 /* First offer band should paint immediately (LCP / above-the-fold). */
 .programs-page-root #syndicate-elite-offers {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+/* Library / #businessprograms — always paint (mobile LCP when deep-linked). */
+.programs-page-root #programs-library {
   content-visibility: visible;
   contain-intrinsic-size: none;
 }
@@ -13475,8 +13489,8 @@ html.programs-hash-pending .programs-page-band {
 
 @media (max-width: 767px) {
   .programs-page-ambient__orb {
-    filter: blur(48px);
-    opacity: 0.85;
+    filter: blur(36px);
+    opacity: 0.7;
   }
 }
 

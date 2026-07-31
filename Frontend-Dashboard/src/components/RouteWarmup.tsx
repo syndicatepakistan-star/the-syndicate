@@ -35,10 +35,11 @@ export default function RouteWarmup() {
     // On /programs: no idle route prefetch — Lighthouse unused-JS / TBT on mobile.
     if (isPrograms) return;
 
+    // Homepage: wait longer so hero LCP / TBT settle before prefetch pulls more JS.
     runWhenIdle(() => {
       router.prefetch("/programs");
       if (!isFounder) router.prefetch("/membership");
-    }, isFounder || isQuiz ? 2800 : 1200);
+    }, isHome ? 4200 : isFounder || isQuiz ? 2800 : 1200);
   }, [router, pathname]);
 
   return null;

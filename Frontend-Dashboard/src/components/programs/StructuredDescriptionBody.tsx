@@ -187,8 +187,16 @@ const PROJECT_TITLE_NEONS = [
 
 type ProjectItem = { title: string; description: string };
 
+/** Strip bullet markers / numbered list prefixes without eating titles like "3D Animated Story". */
+function stripProjectListPrefix(raw: string): string {
+  return raw
+    .replace(/^\s*[-*•·]\s+/, "")
+    .replace(/^\s*\d+[.)]\s+/, "")
+    .trim();
+}
+
 function splitProjectTitleDescription(raw: string): ProjectItem {
-  const cleaned = stripLessonPrefix(raw.replace(/^\s*[-*•·\d.)]+\s*/, "").trim());
+  const cleaned = stripLessonPrefix(stripProjectListPrefix(raw));
   const withoutBold = cleaned.replace(/^\*\*(.+?)\*\*\s*:?\s*/u, "$1: ").replace(/\*\*/g, "");
   const colonIdx = withoutBold.indexOf(":");
   if (colonIdx > 0 && colonIdx < 120) {
@@ -213,7 +221,7 @@ function isProjectGroupHeading(line: string): boolean {
 function isProjectEntryLine(line: string): boolean {
   if (isProjectGroupHeading(line)) return false;
   if (/^\s*[-*•·]\s+/.test(line) || /^\s*\d+[.)]\s+/.test(line)) return true;
-  const cleaned = stripLessonPrefix(line.replace(/^\s*[-*•·\d.)]+\s*/, "").trim());
+  const cleaned = stripLessonPrefix(stripProjectListPrefix(line));
   const withoutBold = cleaned.replace(/^\*\*(.+?)\*\*\s*:?\s*/u, "$1: ").replace(/\*\*/g, "");
   const colonIdx = withoutBold.indexOf(":");
   if (colonIdx <= 0 || colonIdx > 110) return false;

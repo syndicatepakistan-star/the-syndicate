@@ -85,7 +85,12 @@ export function scrollProgramCardIntoView(
 /** Scroll the public or dashboard program library block into view. */
 export function scrollToProgramLibrary(target: ProgramLibraryScrollTarget = "public"): void {
   if (typeof window === "undefined") return;
-  const id = target === "dashboard" ? "dashboard-programs-library" : "programs-library";
+  const id =
+    target === "dashboard"
+      ? "dashboard-programs-library"
+      : document.getElementById("businessprograms")
+        ? "businessprograms"
+        : "programs-library";
   const el = document.getElementById(id);
   if (el) {
     scrollWithinProgramsPanel(el, { behavior: "auto", block: "start" });
@@ -94,7 +99,7 @@ export function scrollToProgramLibrary(target: ProgramLibraryScrollTarget = "pub
   if (target === "dashboard") {
     requestDashboardShellNav("programs");
     window.setTimeout(() => {
-      const library = document.getElementById(id);
+      const library = document.getElementById("dashboard-programs-library");
       if (library) scrollWithinProgramsPanel(library, { behavior: "auto", block: "start" });
     }, 450);
   }

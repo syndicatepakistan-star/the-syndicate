@@ -229,10 +229,15 @@
 
   .what-you-get-hero-inner,
   .programs-library-max,
+  .programs-offers-shell--large,
   .affiliate-page-content > div,
   .membership-marketing-page main > div {
     max-width: var(--public-content-max-xl);
     margin-inline: auto;
+  }
+
+  .plan-offers-vault-grid {
+    max-width: min(100%, calc(84rem + 320px));
   }
 
   .site-footer-inner {
@@ -241,6 +246,10 @@
 
   .affiliate-portal-standalone main {
     max-width: min(1900px, 96vw);
+  }
+
+  .program-playlist-library-band {
+    padding-inline: clamp(0.85rem, 1.8vw, 1.75rem);
   }
 }
 
@@ -252,6 +261,10 @@
 
   .what-you-get-hero-title {
     font-size: clamp(6.5rem, 4.2vw, 8rem) !important;
+  }
+
+  .programs-offers-primary-row {
+    max-width: min(60rem, 100%);
   }
 }
 

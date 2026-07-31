@@ -573,8 +573,8 @@ function PublicPlanOfferCardsInner({
       data-globe-spotlight-active={spotlightActive ? "true" : undefined}
       style={sectionSpotlightStyle}
       className={cn(
-        "relative z-[1] mx-auto w-full overflow-visible",
-        isLarge ? "max-w-[min(100%,calc(80rem+300px))]" : "max-w-[1400px]",
+        "programs-offers-shell relative z-[1] mx-auto w-full overflow-visible",
+        isLarge ? "programs-offers-shell--large max-w-[min(100%,calc(80rem+300px))]" : "max-w-[1400px]",
         embedded
           ? "px-[var(--fluid-section-p,1rem)] py-6 sm:py-8"
           : "px-[clamp(1rem,3.2vw,1.5rem)] pb-6 sm:px-6 sm:pb-8"
@@ -593,7 +593,7 @@ function PublicPlanOfferCardsInner({
                 "mx-auto grid w-full items-stretch gap-4 overflow-x-clip sm:gap-8",
                 primaryOffers.length === 1
                   ? "max-w-lg grid-cols-1"
-                  : "max-w-4xl grid-cols-1 sm:grid-cols-2",
+                  : "programs-offers-primary-row max-w-4xl grid-cols-1 sm:grid-cols-2",
               )}
             >
               {primaryOffers.map(renderOffer)}

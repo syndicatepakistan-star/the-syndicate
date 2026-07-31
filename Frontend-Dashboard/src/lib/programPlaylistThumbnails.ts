@@ -182,6 +182,8 @@ export const PROGRAM_DETAILS_HASH = "details";
 export const PROGRAM_SPOTLIGHT_HASH = "spotlight";
 /** @deprecated Prefer PROGRAM_SPOTLIGHT_HASH for URLs; DOM section id remains `programs-library`. */
 export const PROGRAM_LIBRARY_HASH = "programs-library";
+/** Public deep link to Level-1 Business Models + Behaviour Psychology band (`/programs#businessprograms`). */
+export const BUSINESS_PROGRAMS_HASH = "businessprograms";
 
 /** Business Warfare — stable public cover (same file as program cards / globe). */
 export const BUSINESS_WARFARE_LEGACY_ID = 99;

@@ -24,8 +24,8 @@ function ProgramsOfferSectionFallback({
   return (
     <div
       className={cn(
-        "relative z-[1] mx-auto w-full overflow-visible px-[clamp(1rem,3.2vw,1.5rem)] pb-6 sm:px-6 sm:pb-8",
-        isLarge ? "max-w-[min(100%,calc(80rem+300px))]" : "max-w-[1400px]",
+        "programs-offers-shell relative z-[1] mx-auto w-full overflow-visible px-[clamp(1rem,3.2vw,1.5rem)] pb-6 sm:px-6 sm:pb-8",
+        isLarge ? "programs-offers-shell--large max-w-[min(100%,calc(80rem+300px))]" : "max-w-[1400px]",
       )}
       aria-hidden
     >

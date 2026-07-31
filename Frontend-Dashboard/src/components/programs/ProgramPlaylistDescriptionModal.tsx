@@ -775,7 +775,7 @@ export function ProgramPlaylistDescriptionModal({
       />
       <div
         className={cn(
-          "relative z-[1] flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50",
+          "program-playlist-description-modal relative z-[1] flex max-h-[min(95dvh,960px)] w-full max-w-[min(96vw,80rem)] flex-col overflow-hidden rounded-2xl border-2 border-[#f5c814]/50",
           "bg-[linear-gradient(180deg,rgba(18,18,18,0.98),rgba(6,6,8,0.99))] shadow-[0_0_40px_rgba(245,200,20,0.25),0_24px_80px_rgba(0,0,0,0.85)]",
           "[&_h3]:scroll-mt-4 font-[family-name:var(--font-body)]",
           "transition-[opacity,transform] duration-200 ease-out will-change-transform",

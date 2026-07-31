@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../styles/laptop-vostro-viewport.css";
 @import "../styles/public-marketing-responsive.css";
+@import "../styles/large-desktop-responsive.css";
 @import "../styles/gaming-benefit-cards.css";
 @import "../styles/elite-offer-benefits-detail.css";
 
@@ -13386,6 +13387,40 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
     height: 2.25rem !important;
     width: 2.25rem !important;
   }
+}
+
+/* Public /programs deep link — Level-1 psychology + business models band */
+#businessprograms,
+.businessprograms-anchor {
+  scroll-margin-top: 7rem;
+  overflow-anchor: none;
+}
+
+@media (max-width: 767px) {
+  #businessprograms,
+  .businessprograms-anchor {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+/*
+ * Hash deep-link boot: brief hide until #businessprograms scroll lands.
+ * Do not lock overflow here — that prevented scrollTo from sticking.
+ */
+html.programs-hash-pending,
+html.programs-hash-pending body {
+  background: #000 !important;
+}
+
+html.programs-hash-pending .programs-page-root {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+html.programs-hash-pending .programs-page-band {
+  content-visibility: visible !important;
 }
 
 /* === Public /programs — smooth scroll + keep cards visible === */

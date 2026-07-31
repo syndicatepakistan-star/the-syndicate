@@ -5,6 +5,7 @@ import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
+import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
 import { ProgramsBackStepGuard } from '@/app/programs/ProgramsBackStepGuard'
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
@@ -75,6 +76,7 @@ export default async function ProgramsPage() {
       </div>
       <NavApp />
       <ProgramsBackStepGuard />
+      <ProgramsBusinessHashLand />
       <main className="programs-page-main relative z-[2] w-full min-w-0 overflow-x-clip">
       <ProgramsUnlockShell>
       <section
@@ -90,26 +92,25 @@ export default async function ProgramsPage() {
         </p>
         <ProgramsOfferSection size="large" shellHosted omitKnight />
       </section>
-      <LazyWhenVisible
-        minHeight="24rem"
-        rootMargin="280px 0px"
-        eagerOnHash="programs-library"
-        className="programs-page-band"
-        placeholder={
-          <section
-            id="programs-library"
-            className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
-            aria-hidden
-          >
-            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" />
-          </section>
-        }
+      {/*
+        Anchor + PROGRAMS heading stay in SSR HTML (not behind LazyWhenVisible) so
+        /programs#businessprograms can scroll before the library grid mounts — no mid-ticket flash.
+      */}
+      <section
+        id="programs-library"
+        className="programs-page-band mobile-viewport-contain space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
       >
-        <section
-          id="programs-library"
-          className="mobile-viewport-contain scroll-mt-24 space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
-        >
+        <div id="businessprograms" className="businessprograms-anchor scroll-mt-28" tabIndex={-1}>
           <ProgramsGoldPillHeading as="h2" title="Programs" />
+        </div>
+        <LazyWhenVisible
+          minHeight="24rem"
+          rootMargin="280px 0px"
+          eagerOnHash={["programs-library", "businessprograms"]}
+          placeholder={
+            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+          }
+        >
           <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
             <Suspense
               fallback={
@@ -123,8 +124,8 @@ export default async function ProgramsPage() {
               />
             </Suspense>
           </div>
-        </section>
-      </LazyWhenVisible>
+        </LazyWhenVisible>
+      </section>
       <LazyWhenVisible
         minHeight="18rem"
         rootMargin="320px 0px"

@@ -1,5 +1,6 @@
 import Script from "next/script";
 import type { ReactNode } from "react";
+import "@/styles/programs-page.css";
 
 /**
  * Before paint for #businessprograms: scrollRestoration + early scroll.

@@ -1,0 +1,1121 @@
+/* Public /programs surface styles — imported from route layouts that need them.
+ * Keeps globals.css lighter for home/quiz/marketing first paint.
+ * Also imported by /dashboard (ProgramsCourseSection reuses the same card/vault UI).
+ */
+@import "./elite-offer-benefits-detail.css";
+
+/* --- moved from globals.css L9305-9478 --- */
+/* Elite plan offer cards (public /programs + dashboard programs grid) */
+.plan-offer-card {
+  --poc-border: rgba(34, 211, 238, 0.72);
+  --poc-glow: rgba(6, 182, 212, 0.38);
+  --poc-panel-border: rgba(34, 211, 238, 0.42);
+  --poc-open-border: rgba(103, 232, 249, 0.85);
+  --poc-open-text: #a5f3fc;
+}
+
+.plan-offer-card--amber {
+  --poc-border: rgba(251, 191, 36, 0.82);
+  --poc-glow: rgba(245, 158, 11, 0.42);
+  --poc-panel-border: rgba(251, 191, 36, 0.58);
+  --poc-open-border: rgba(251, 191, 36, 0.88);
+  --poc-open-text: #fde68a;
+}
+
+.plan-offer-card--cyan {
+  --poc-border: rgba(34, 211, 238, 0.82);
+  --poc-glow: rgba(6, 182, 212, 0.45);
+  --poc-panel-border: rgba(34, 211, 238, 0.58);
+  --poc-open-border: rgba(103, 232, 249, 0.85);
+  --poc-open-text: #a5f3fc;
+}
+
+.plan-offer-card--pink {
+  --poc-border: rgba(244, 114, 182, 0.88);
+  --poc-glow: rgba(236, 72, 153, 0.52);
+  --poc-panel-border: rgba(217, 70, 239, 0.62);
+  --poc-open-border: rgba(244, 114, 182, 0.92);
+  --poc-open-text: #fbcfe8;
+}
+
+.plan-offer-card--green {
+  --poc-border: rgba(74, 222, 128, 0.88);
+  --poc-glow: rgba(52, 211, 153, 0.52);
+  --poc-panel-border: rgba(16, 185, 129, 0.62);
+  --poc-open-border: rgba(74, 222, 128, 0.92);
+  --poc-open-text: #bbf7d0;
+}
+
+.plan-offer-card--purple {
+  --poc-border: rgba(192, 132, 252, 0.88);
+  --poc-glow: rgba(168, 85, 247, 0.52);
+  --poc-panel-border: rgba(139, 92, 246, 0.62);
+  --poc-open-border: rgba(192, 132, 252, 0.92);
+  --poc-open-text: #ddd6fe;
+}
+
+.plan-offer-card--red {
+  --poc-border: rgba(248, 113, 113, 0.88);
+  --poc-glow: rgba(239, 68, 68, 0.48);
+  --poc-panel-border: rgba(248, 113, 113, 0.58);
+}
+
+.plan-offer-card--orange {
+  --poc-border: rgba(251, 146, 60, 0.88);
+  --poc-glow: rgba(249, 115, 22, 0.48);
+  --poc-panel-border: rgba(251, 146, 60, 0.58);
+}
+
+.plan-offer-card--blue {
+  --poc-border: rgba(96, 165, 250, 0.88);
+  --poc-glow: rgba(59, 130, 246, 0.48);
+  --poc-panel-border: rgba(96, 165, 250, 0.58);
+}
+
+.plan-offer-card__shell {
+  border: 2px solid var(--poc-border);
+  background: #04060d;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 42px var(--poc-glow),
+    0 0 72px color-mix(in srgb, var(--poc-glow) 42%, transparent);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.plan-offer-card__info-panel {
+  border-color: var(--poc-panel-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 20px color-mix(in srgb, var(--poc-glow) 38%, transparent);
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__shell {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--poc-border);
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__vault-pack-body {
+  border-color: var(--poc-panel-border) !important;
+}
+
+/* Programs library category titles — always two stacked lines */
+.playlist-category-two-line,
+.playlist-business-models-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05em;
+  line-height: 1.05;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.playlist-category-two-line__lead,
+.playlist-category-two-line__tail,
+.playlist-business-models-heading__lead,
+.playlist-business-models-heading__tail {
+  display: block;
+}
+
+/* Program playlist cards — compact library layout on mobile / iPad / laptop (< xl) */
+@media (max-width: 1279px) {
+  #programs-library {
+    /* Keep a slim inset so left/right card borders + glow aren’t clipped */
+    padding-left: max(0.55rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.55rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .program-playlist-library-band {
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+  }
+
+  .program-playlist-mobile-grid {
+    gap: 0.45rem !important;
+    padding-inline: 0.15rem;
+  }
+
+  .dashboard-hamburger-chrome .dashboard-main-scroll:has([data-programs-grid-active]),
+  .dashboard-hamburger-chrome .dashboard-bounded-main-scroll:has([data-programs-grid-active]) {
+    padding-left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .dashboard-hamburger-chrome .programs-grid-chrome > :not(#dashboard-programs-library) {
+    padding-left: var(--fluid-section-p);
+    padding-right: var(--fluid-section-p);
+  }
+
+  .program-playlist-card__info,
+  .program-playlist-card__info-wrap {
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    padding-top: 0.2rem !important;
+  }
+
+  .program-playlist-card__info.rounded-xl {
+    border-radius: 0;
+    border-top-width: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+
+  .program-playlist-card__media {
+    border-radius: 0;
+  }
+
+  [data-program-playlist-id].rounded-3xl,
+  [data-program-playlist-id].rounded-2xl {
+    border-radius: 0.85rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .program-playlist-card__cover-img {
+    height: calc(100% + 5px) !important;
+  }
+}
+
+/* --- moved from globals.css L9594-10100 --- */
+/* Trading / vault module cards — one-line stats on mobile & iPad */
+@media (max-width: 1279px) {
+  .program-card-stats-lines--inline-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .program-card-stats-lines--inline-mobile > p {
+    display: contents;
+    font-size: 8px;
+    line-height: 1.25;
+  }
+
+  .program-card-stats-lines--inline-mobile > p span.font-bold {
+    font-size: 9px;
+  }
+
+  .program-card-stats-lines--inline-mobile .program-card-stats-lines__sep {
+    display: inline;
+  }
+}
+
+@media (min-width: 1280px) {
+  .program-card-stats-lines__sep {
+    display: none;
+  }
+}
+
+/* Vault pack cards — portrait title art (Trading Advanced Technical Analysis) */
+.plan-offer-card__media--portrait-cover {
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 42%, rgba(88, 28, 135, 0.22), transparent 68%),
+    radial-gradient(ellipse 70% 60% at 50% 55%, rgba(14, 116, 144, 0.14), transparent 72%),
+    #050508;
+}
+
+.plan-offer-card__media--portrait-cover img {
+  padding: 0.15rem;
+}
+
+@media (max-width: 1279px) {
+  .plan-offer-card__media--portrait-cover img {
+    padding: 0.35rem 0.5rem;
+  }
+}
+
+/* Programs library — equal column header bands + Business Models card alignment */
+.playlist-category-heading-slot--column {
+  box-sizing: border-box;
+  height: calc(28pt * 2.1);
+  min-height: calc(28pt * 2.1);
+  max-height: calc(28pt * 2.1);
+  overflow: visible;
+}
+
+.playlist-category-heading-slot--split {
+  box-sizing: border-box;
+  min-height: calc(14pt * 3.2);
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .playlist-category-heading-slot--split {
+    height: calc(28pt * 2.1);
+    min-height: calc(28pt * 2.1);
+    max-height: calc(28pt * 2.1);
+    align-items: flex-end;
+    padding-bottom: 0.25rem;
+  }
+}
+
+.playlist-business-models-cards {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Vault pack row — Agentic / AI Content / Trading full-pack cards */
+.plan-offers-vault-grid {
+  width: 100%;
+  max-width: min(100%, calc(80rem + 100px));
+  margin-inline: auto;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  padding-block: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .plan-offers-vault-grid {
+    max-width: min(100%, calc(80rem + 200px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .plan-offers-vault-grid {
+    max-width: min(100%, calc(80rem + 300px));
+  }
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--vault-pack-fill img {
+  object-fit: cover !important;
+  padding: 0 !important;
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--portrait-cover {
+  background: #050508;
+}
+
+.plan-offer-card--vault-pack .plan-offer-card__media--vault-pack-fill {
+  width: 100%;
+}
+
+/* Each cell owns stacking so neon borders/glow are not clipped by neighbors */
+.plan-offers-vault-cell {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  overflow: visible;
+  padding: 0.625rem 0.375rem;
+}
+
+.plan-offers-vault-cell:hover,
+.plan-offers-vault-cell:focus-within {
+  z-index: 20;
+}
+
+.plan-offers-vault-cell > .plan-offer-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.plan-offers-vault-cell:hover > .plan-offer-card,
+.plan-offers-vault-cell:focus-within > .plan-offer-card {
+  z-index: 2;
+}
+
+/* Vault picker — individual modules: tighter glow + grid spacing (no bleed into neighbors) */
+.vault-modules-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+  contain: layout style;
+}
+
+@media (min-width: 640px) {
+  .vault-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+}
+
+/* Trading pack — always 2 module cards per row (2×2 for four modules) */
+.vault-modules-grid--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .vault-modules-grid--pair {
+    gap: 1.5rem 2rem;
+  }
+}
+
+.vault-module-cell {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+  padding: 0.625rem;
+  overflow: visible;
+  border-radius: 1.75rem;
+  isolation: isolate;
+  content-visibility: visible;
+  contain: layout style;
+}
+
+.vault-module-cell img {
+  content-visibility: visible;
+}
+
+.vault-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 200, 20, 0.35) transparent;
+}
+
+.vault-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.vault-modal-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(245, 200, 20, 0.35);
+}
+
+@media (min-width: 640px) {
+  .vault-module-cell {
+    padding: 0.75rem;
+  }
+}
+
+.plan-offer-card--vault-module {
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  min-height: calc(13rem - 10px);
+}
+
+@media (min-width: 640px) {
+  .plan-offer-card--vault-module {
+    min-height: calc(15rem - 10px);
+  }
+}
+
+.plan-offer-card--vault-module .plan-offer-card__vault-module-shell {
+  border: 2px solid var(--poc-border);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 20px var(--poc-glow),
+    0 0 48px color-mix(in srgb, var(--poc-glow) 35%, transparent);
+}
+
+.plan-offer-card__pack-price-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 80px !important;
+  height: 40px !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  max-width: 80px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  font-size: 24pt !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow:
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plan-offer-card__pack-price-badge.plan-offer-card__pack-price-badge--compare {
+  width: auto !important;
+  min-width: 108px !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 88px !important;
+  max-height: none !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 14px 16px !important;
+  overflow: visible !important;
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
+  color: #fff5dc !important;
+}
+
+.plan-offer-card__pack-price-badge__compare {
+  position: relative !important;
+  display: inline-block !important;
+  isolation: isolate !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.02em !important;
+  color: rgba(255, 245, 220, 0.55) !important;
+  text-decoration: none !important;
+}
+
+/* SVG strikethrough overlay — 1px line so compare prices stay readable */
+.plan-offer-card__pack-price-badge__strike {
+  position: absolute !important;
+  left: -6% !important;
+  top: 0 !important;
+  width: 112% !important;
+  height: 100% !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+.plan-offer-card__pack-price-badge__strike line {
+  stroke: rgba(156, 163, 175, 0.7) !important;
+  stroke-width: 1px !important;
+}
+
+.plan-offer-card__pack-price-badge__amount {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.01em !important;
+  color: #fff5dc !important;
+}
+
+.plan-offer-card--vault-module:not(.plan-offer-card--vault-hero) .plan-offer-card__vault-price-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 80px !important;
+  height: 40px !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  max-width: 80px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  font-size: clamp(14px, 3vw, 18px) !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow:
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plan-offer-card__pack-price-badge--long {
+  font-size: clamp(14px, 3.2vw, 18px) !important;
+  letter-spacing: 0 !important;
+}
+
+.program-playlist-card__pack-price-badge {
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 80px;
+  height: 40px;
+  min-width: 80px;
+  min-height: 40px;
+  max-width: 80px;
+  max-height: 40px;
+  padding: 0;
+  border-radius: 6px;
+  line-height: 1;
+  text-align: center;
+}
+
+.program-playlist-card__pack-price-badge__amount {
+  font-size: clamp(16px, 3.8vw, 20px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.program-playlist-card__pack-price-badge__suffix {
+  margin-top: 0;
+  font-size: 5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* Mobile 2-col cards — compact price chip so it doesn't dominate the thumbnail */
+@media (max-width: 1279px) {
+  .program-playlist-card__pack-price-badge {
+    width: 48px !important;
+    height: 26px !important;
+    min-width: 48px !important;
+    min-height: 26px !important;
+    max-width: 48px !important;
+    max-height: 26px !important;
+    border-radius: 4px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__amount {
+    font-size: 11px !important;
+    font-weight: 800;
+  }
+
+  .program-playlist-card__pack-price-badge__suffix {
+    font-size: 4px !important;
+    letter-spacing: 0.04em;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .program-playlist-card__pack-price-badge {
+    width: 42px !important;
+    height: 22px !important;
+    min-width: 42px !important;
+    min-height: 22px !important;
+    max-width: 42px !important;
+    max-height: 22px !important;
+    border-radius: 3px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__amount {
+    font-size: 10px !important;
+  }
+
+  .program-playlist-card__pack-price-badge__suffix {
+    font-size: 3.5px !important;
+  }
+}
+
+#syndicate-elite-offers .plan-offer-card,
+#syndicate-elite-offers .plan-offers-vault-cell {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+.vault-hero-offer-block {
+  width: 100%;
+  max-width: 100%;
+}
+
+.vault-hero-offer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .vault-hero-offer-row {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    gap: 1rem 1.35rem;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vault-hero-offer-row {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: 1.15rem 1.75rem;
+  }
+}
+
+.vault-hero-offer-row__copy {
+  padding-top: 0.15rem;
+}
+
+.plan-offer-card--vault-hero {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.plan-offer-card--vault-hero .plan-offer-card__media--vault-hero {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 639px) {
+  .vault-hero-offer-row + div .vault-modules-grid,
+  .vault-hero-offer-row ~ div .vault-modules-grid {
+    scroll-margin-top: 0.5rem;
+  }
+}
+
+.plan-offer-card--vault-module:hover .plan-offer-card__vault-module-shell,
+.plan-offer-card--vault-module:focus-within .plan-offer-card__vault-module-shell {
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 0 28px var(--poc-glow);
+}
+
+.plan-offer-card:hover .plan-offer-card__shell,
+.plan-offer-card:focus-within .plan-offer-card__shell {
+  border-color: color-mix(in srgb, var(--poc-border) 88%, white);
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 64px var(--poc-glow),
+    0 0 120px color-mix(in srgb, var(--poc-glow) 65%, transparent);
+}
+
+.plan-offer-card:hover .plan-offer-card__info-panel,
+.plan-offer-card:focus-within .plan-offer-card__info-panel {
+  border-color: color-mix(in srgb, var(--poc-panel-border) 92%, white) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 28px color-mix(in srgb, var(--poc-glow) 52%, transparent);
+}
+
+.plan-offer-detail-modal {
+  font-family: var(--font-mono, ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace);
+}
+
+.plan-offer-detail__title {
+  font-family: "Thryon", "Thyron", var(--hud-font);
+  text-shadow:
+    0 0 22px color-mix(in srgb, currentColor 42%, transparent),
+    0 2px 12px rgba(0, 0, 0, 0.85);
+}
+
+.plan-offer-detail__feature {
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.plan-offer-detail-modal--scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* --- moved from globals.css L10396-10630 --- */
+@keyframes program-card-globe-spotlight-enter {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 1px rgba(var(--spotlight-a), 0.55),
+      0 0 12px rgba(var(--spotlight-a), 0.35);
+    filter: brightness(1);
+  }
+  100% {
+    transform: scale(1.04);
+    box-shadow:
+      0 0 0 2px rgba(var(--spotlight-a), 0.95),
+      0 0 18px rgba(var(--spotlight-a), 0.75),
+      0 0 40px rgba(var(--spotlight-b), 0.45);
+    filter: brightness(1);
+  }
+}
+
+@keyframes program-card-globe-spotlight {
+  0%,
+  100% {
+    transform: scale(1.035);
+    box-shadow:
+      0 0 0 2px rgba(var(--spotlight-a), 0.92),
+      0 0 14px rgba(var(--spotlight-a), 0.78),
+      0 0 30px rgba(var(--spotlight-a), 0.52),
+      0 0 52px rgba(var(--spotlight-b), 0.4),
+      0 0 78px rgba(var(--spotlight-b), 0.22);
+  }
+  50% {
+    transform: scale(1.045);
+    box-shadow:
+      0 0 0 3px rgba(var(--spotlight-a), 1),
+      0 0 20px rgba(var(--spotlight-a), 0.9),
+      0 0 42px rgba(var(--spotlight-a), 0.65),
+      0 0 68px rgba(var(--spotlight-b), 0.52),
+      0 0 100px rgba(var(--spotlight-b), 0.3);
+  }
+}
+
+@keyframes program-card-spotlight-field-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.program-card-globe-spotlight-host {
+  position: relative;
+  z-index: 80;
+  overflow: visible !important;
+  isolation: isolate;
+}
+
+/* Open nav must paint above globe spotlight cards (z-80 / z-120) */
+body.nav-menu-open .program-card-globe-spotlight-host,
+body.nav-menu-open article[data-globe-spotlight="true"] {
+  z-index: 1 !important;
+}
+
+body.nav-menu-open .program-card-spotlight-field,
+body.nav-menu-open .program-card-spotlight-aura {
+  opacity: 0.35 !important;
+  filter: blur(48px);
+}
+
+.program-card-spotlight-field {
+  pointer-events: none;
+  position: absolute;
+  inset: -14%;
+  z-index: 0;
+  border-radius: 2.5rem;
+  background: radial-gradient(
+    ellipse 72% 68% at 50% 50%,
+    rgba(var(--spotlight-a), 0.55) 0%,
+    rgba(var(--spotlight-b), 0.38) 32%,
+    rgba(var(--spotlight-a), 0.14) 52%,
+    transparent 72%
+  );
+  filter: blur(36px);
+  animation: program-card-spotlight-field-pulse 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.program-card-spotlight-aura {
+  pointer-events: none;
+  position: absolute;
+  inset: -10%;
+  z-index: 1;
+  border-radius: 2.2rem;
+  opacity: 0.9;
+  filter: blur(28px);
+}
+
+.program-card-globe-spotlight {
+  position: relative;
+  z-index: 2;
+  transform-origin: center center;
+  border-color: rgba(var(--spotlight-a), 0.98) !important;
+  animation:
+    program-card-globe-spotlight-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+    program-card-globe-spotlight 2.8s cubic-bezier(0.45, 0, 0.55, 1) 0.45s infinite;
+  will-change: transform, box-shadow;
+}
+
+[data-globe-spotlight-active="true"] {
+  overflow: visible !important;
+  background: radial-gradient(
+    ellipse 80% 55% at 50% 42%,
+    rgba(var(--spotlight-a), 0.1) 0%,
+    rgba(var(--spotlight-b), 0.06) 38%,
+    transparent 68%
+  );
+}
+
+[data-globe-spotlight-active="true"] .grid {
+  overflow: visible;
+}
+
+article[data-globe-spotlight="true"] {
+  position: relative;
+  z-index: 80;
+}
+
+/*
+ * Globe → program card: keep overflow alone so toggling spotlight does not
+ * resize scrollbars / reflow the page (that caused the up-down buzz).
+ * Glow paints via card z-index + overflow:visible on the spotlight host only.
+ */
+body.globe-program-spotlight article[data-globe-spotlight="true"],
+body.globe-program-spotlight .program-card-globe-spotlight-host {
+  scroll-margin-block: 20vh;
+}
+
+/* Pack offer cards — glow must stack above neighboring cards */
+article.plan-offer-card[data-globe-spotlight="true"],
+article.plan-offer-card.program-card-globe-spotlight-host {
+  position: relative;
+  z-index: 120;
+  overflow: visible !important;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-field {
+  z-index: 0;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-aura {
+  z-index: 1;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-globe-spotlight {
+  z-index: 2;
+}
+
+/* Pack spotlight — border glow only (no scale pulse) */
+@keyframes plan-offer-globe-border-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(var(--spotlight-a), 0.98),
+      0 0 18px rgba(var(--spotlight-a), 0.92),
+      0 0 36px rgba(var(--spotlight-a), 0.68),
+      0 0 56px rgba(var(--spotlight-b), 0.52),
+      0 0 80px rgba(var(--spotlight-b), 0.34);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(var(--spotlight-a), 1),
+      0 0 28px rgba(var(--spotlight-a), 0.98),
+      0 0 52px rgba(var(--spotlight-a), 0.82),
+      0 0 78px rgba(var(--spotlight-b), 0.62),
+      0 0 110px rgba(var(--spotlight-b), 0.42);
+  }
+}
+
+@keyframes plan-offer-spotlight-field-opacity {
+  0%,
+  100% {
+    opacity: 0.58;
+  }
+  50% {
+    opacity: 0.88;
+  }
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .plan-offer-globe-border-glow {
+  position: relative;
+  z-index: 2;
+  transform: none !important;
+  border-color: rgba(var(--spotlight-a), 0.98) !important;
+  animation: plan-offer-globe-border-glow 2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-field {
+  animation: plan-offer-spotlight-field-opacity 2.2s ease-in-out infinite;
+  transform: none !important;
+}
+
+article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotlight-aura {
+  animation: plan-offer-spotlight-field-opacity 2.2s ease-in-out infinite;
+  transform: none !important;
+}
+
+#syndicate-elite-offers {
+  overflow: visible !important;
+}
+
+#syndicate-elite-offers[data-globe-spotlight-active="true"],
+#syndicate-elite-offers:has(article[data-globe-spotlight="true"]) {
+  overflow: visible !important;
+}
+
+[data-globe-spotlight-active="true"] article.plan-offer-card:not([data-globe-spotlight="true"]) {
+  opacity: 0.88;
+  transition: opacity 0.35s ease;
+}
+
+[data-globe-spotlight-active="true"] article:not([data-globe-spotlight="true"]) {
+  opacity: 0.88;
+  transition: opacity 0.35s ease;
+}
+
+/* Legacy alias — keep for any stale references */
+.program-card-hamburger-glow {
+  position: relative;
+  z-index: 30;
+  overflow: visible !important;
+  animation: program-card-globe-spotlight 2.1s ease-in-out infinite;
+  will-change: transform, filter, box-shadow;
+}
+
+/* --- moved from globals.css L13392-13582 --- */
+/* Public /programs deep link — Level-1 psychology + business models band */
+#businessprograms,
+.businessprograms-anchor {
+  scroll-margin-top: 7rem;
+  overflow-anchor: none;
+}
+
+@media (max-width: 767px) {
+  #businessprograms,
+  .businessprograms-anchor {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+/* Soft fade-in when deferred neon blur/glow layers mount (layout size unchanged). */
+@keyframes programs-fx-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.programs-fx-fade {
+  animation: programs-fx-fade-in 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programs-fx-fade {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/*
+ * #businessprograms deep-link: no hide/collapse of Elite Offers.
+ * Native hash scroll only (see programs/layout.tsx + ProgramsBusinessHashLand).
+ * Legacy .programs-hash-pending rules removed — they caused CLS when restoring.
+ */
+
+/* === Public /programs — smooth scroll + keep cards visible === */
+.programs-page-root {
+  overscroll-behavior-y: contain;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Do NOT set transform/filter here — it traps position:fixed NavApp and warps the radial menu. */
+}
+
+.programs-page-main {
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.programs-page-band {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 560px;
+}
+
+/* First offer band should paint immediately (LCP / above-the-fold). */
+.programs-page-root #syndicate-elite-offers {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+/* Library / #businessprograms — always paint (mobile LCP when deep-linked). */
+.programs-page-root #programs-library {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+/* Soft ambient orbs — cheaper than Tailwind blur-[110px+] layers */
+.programs-page-ambient {
+  contain: strict;
+  isolation: isolate;
+  opacity: 0.9;
+  transition: opacity 120ms linear;
+}
+
+.programs-page-ambient__orb {
+  filter: blur(72px);
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.programs-page-ambient__orb--fuchsia {
+  background: rgba(217, 70, 239, 0.18);
+}
+
+.programs-page-ambient__orb--amber {
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.programs-page-ambient__orb--cyan {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+@media (max-width: 767px) {
+  .programs-page-ambient__orb {
+    filter: blur(36px);
+    opacity: 0.7;
+  }
+}
+
+/* Cards stay painted — avoid mid-scroll blank shells from content-visibility */
+.programs-page-root .plan-offer-card,
+.programs-page-root .program-playlist-card,
+.programs-page-root [data-program-playlist-id],
+.programs-page-root [data-plan-offer] {
+  content-visibility: visible !important;
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.programs-page-root .program-playlist-card__info,
+.programs-page-root .program-playlist-card__info-wrap,
+.programs-page-root .plan-offer-card__info-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+html.programs-is-scrolling,
+html.programs-is-scrolling body {
+  scroll-behavior: auto;
+}
+
+/* While scrolling: freeze expensive paint (glow auras, pulses) — keep text/media visible */
+.programs-page-root.is-scrolling .programs-page-ambient,
+html.programs-is-scrolling .programs-page-ambient {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.programs-page-root.is-scrolling .programs-page-ambient__orb,
+html.programs-is-scrolling .programs-page-ambient__orb {
+  filter: blur(28px);
+}
+
+.programs-page-root.is-scrolling .plan-offer-card,
+.programs-page-root.is-scrolling .program-playlist-card,
+.programs-page-root.is-scrolling [data-program-playlist-id],
+.programs-page-root.is-scrolling [data-plan-offer],
+html.programs-is-scrolling .programs-page-root .plan-offer-card,
+html.programs-is-scrolling .programs-page-root .program-playlist-card {
+  transition: none !important;
+}
+
+.programs-page-root.is-scrolling .plan-offer-card > span[aria-hidden],
+.programs-page-root.is-scrolling .program-playlist-card > span[aria-hidden],
+.programs-page-root.is-scrolling .plan-offer-card [class*="blur-["],
+.programs-page-root.is-scrolling .program-playlist-card [class*="blur-["],
+html.programs-is-scrolling .programs-page-root .plan-offer-card > span[aria-hidden],
+html.programs-is-scrolling .programs-page-root .program-playlist-card > span[aria-hidden] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.programs-page-root.is-scrolling .hamburger-attract,
+.programs-page-root.is-scrolling [class*="animate-pulse"],
+html.programs-is-scrolling .programs-page-root .hamburger-attract,
+html.programs-is-scrolling .programs-page-root [class*="animate-pulse"] {
+  animation-play-state: paused !important;
+}
+
+.programs-page-root.is-scrolling .program-playlist-card__info,
+.programs-page-root.is-scrolling .program-playlist-card__info-wrap,
+.programs-page-root.is-scrolling .plan-offer-card__info-panel,
+html.programs-is-scrolling .programs-page-root .program-playlist-card__info,
+html.programs-is-scrolling .programs-page-root .plan-offer-card__info-panel {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programs-page-ambient__orb {
+    filter: blur(24px);
+    opacity: 0.5;
+  }
+
+  .programs-page-root .hamburger-attract,
+  .programs-page-root [class*="animate-pulse"] {
+    animation: none !important;
+  }
+}
+

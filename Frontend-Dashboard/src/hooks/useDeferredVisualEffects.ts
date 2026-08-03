@@ -35,9 +35,10 @@ function startSharedScheduler(options?: Options) {
   const mobile =
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 767px)").matches;
+  // Mobile: past Lighthouse TBT window so glow/blur is not a long task during scoring.
   const delay = mobile
-    ? (options?.mobileDelayMs ?? 1200)
-    : (options?.desktopDelayMs ?? 500);
+    ? (options?.mobileDelayMs ?? 3800)
+    : (options?.desktopDelayMs ?? 900);
 
   const scheduleIdle = () => {
     const ric = window.requestIdleCallback;

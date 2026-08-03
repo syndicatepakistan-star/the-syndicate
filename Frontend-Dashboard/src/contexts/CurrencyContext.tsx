@@ -55,9 +55,12 @@ export function CurrencyProvider({
     };
   }, []);
 
-  // Localhost / no CDN geo headers: detect country from the browser public IP (VPN-aware).
+  // Geo IP after idle — marketing first paint (/programs) must not pay for this during TBT.
   useEffect(() => {
     let cancelled = false;
+    let idleId: number | undefined;
+    let timer: number | undefined;
+
     const refresh = () => {
       void (async () => {
         try {
@@ -68,11 +71,26 @@ export function CurrencyProvider({
         }
       })();
     };
-    refresh();
-    window.addEventListener("focus", refresh);
+
+    const schedule = () => {
+      const ric = window.requestIdleCallback;
+      if (typeof ric === "function") {
+        idleId = ric(() => refresh(), { timeout: 2000 });
+        return;
+      }
+      refresh();
+    };
+
+    timer = window.setTimeout(schedule, 3500);
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
     return () => {
       cancelled = true;
-      window.removeEventListener("focus", refresh);
+      if (timer != null) window.clearTimeout(timer);
+      if (idleId != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 

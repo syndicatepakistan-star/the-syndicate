@@ -495,30 +495,6 @@ function PublicPlanOfferCardsInner({
 
   const joinOffer = requestUnlock;
 
-  // Resume Unlock/Details intent from the static LCP fallback (browse-first shell).
-  useEffect(() => {
-    if (knightOnly) return;
-    let raw = "";
-    try {
-      raw = sessionStorage.getItem("programs_pending_offer") || "";
-      sessionStorage.removeItem("programs_pending_offer");
-    } catch {
-      return;
-    }
-    if (!raw) return;
-    const bundle = PLAN_OFFERS.find((o) => o.plan === "bundle");
-    if (!bundle) return;
-    if (raw === "details:bundle") {
-      setDetailOffer(bundle);
-      return;
-    }
-    if (raw === "unlock:bundle") {
-      window.setTimeout(() => {
-        requestUnlock(bundle);
-      }, 0);
-    }
-  }, [knightOnly, requestUnlock]);
-
   const renderOffer = (offer: PlanOfferDef) => {
     const vaultPack = isVaultPackKey(offer.plan) ? offer.plan : null;
     const packPlaylistOpenable =

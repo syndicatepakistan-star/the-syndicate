@@ -83,7 +83,7 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        {/* Browse-first offers: static Money Mastery LCP shell, then quiet-idle interactive island. */}
+        {/* Client-only offers (ssr:false): first HTML = Money Mastery LCP art, then interactive cards. */}
         <ProgramsOfferSectionLazy size="large" shellHosted omitKnight />
       </section>
       {/*

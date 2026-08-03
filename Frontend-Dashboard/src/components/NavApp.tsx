@@ -162,16 +162,13 @@ export function NavApp() {
           ) : null}
         </div>
       </div>
-      {/* Never mount hidden prefetch Links on /programs — they pull ~MB unused route JS (mobile TBT). */}
-      {pathname !== '/programs' ? (
-        <div className="sr-only" aria-hidden>
-          {MARKETING_PREFETCH_ROUTES.map((route) => (
-            <Link key={route} href={route} prefetch={false} tabIndex={-1}>
-              {route}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <div className="sr-only" aria-hidden>
+        {MARKETING_PREFETCH_ROUTES.map((route) => (
+          <Link key={route} href={route} prefetch tabIndex={-1}>
+            {route}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

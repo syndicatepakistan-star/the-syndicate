@@ -72,32 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const path = typeof window !== "undefined" ? window.location.pathname : "";
-    const deferAuth =
-      path === "/programs" ||
-      path === "/" ||
-      path === "/membership" ||
-      path === "/our-founder" ||
-      path === "/our-methods" ||
-      path === "/what-you-get";
-
-    // No tokens: skip network on marketing first paint.
-    if (!readStoredAccess() && !readStoredRefresh()) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    if (!deferAuth) {
-      void bootstrap();
-      return;
-    }
-
-    // Logged-in visitor on marketing: delay /me past Lighthouse TBT window.
-    const timer = window.setTimeout(() => {
-      void bootstrap();
-    }, 3600);
-    return () => window.clearTimeout(timer);
+    void bootstrap();
   }, [bootstrap]);
 
   const login = useCallback(async (_username: string, _password: string) => {

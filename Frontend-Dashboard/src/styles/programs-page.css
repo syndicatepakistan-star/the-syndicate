@@ -944,7 +944,7 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 /* Pause always-on hamburger pulse on /programs until after first paint window —
  * cuts non-composited animation work during LCP/TBT (visual resumes via CSS later). */
 .programs-page-root .hero-hamburger-pulse {
-  animation-delay: 4s;
+  animation-delay: 1.8s;
 }
 
 @media (prefers-reduced-motion: reduce) {

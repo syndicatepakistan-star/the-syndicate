@@ -53,23 +53,26 @@ import {
 } from "@/lib/lazyUnlockCheckout";
 import { useDeferredChrome } from "@/hooks/useDeferredChrome";
 
-const PlanOfferDetailModal = dynamic(
-  () => import("@/components/programs/PlanOfferDetailModal").then((m) => m.PlanOfferDetailModal),
-  { ssr: false },
-);
-const PackVaultOfferModal = dynamic(
-  () => import("@/components/programs/PackVaultOfferModal").then((m) => m.PackVaultOfferModal),
-  { ssr: false },
-);
-const TradingModuleVaultModal = dynamic(
-  () => import("@/components/programs/TradingModuleVaultModal").then((m) => m.TradingModuleVaultModal),
-  { ssr: false },
-);
 const UnlockCartPanel = dynamic(
   () => import("@/components/programs/UnlockCartPanel").then((m) => m.UnlockCartPanel),
   { ssr: false },
 );
 const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
+
+/** Mount modals only after user opens Details / vault (keeps browse chunk smaller). */
+function loadPlanOfferDetailModal() {
+  return import("@/components/programs/PlanOfferDetailModal").then((m) => m.PlanOfferDetailModal);
+}
+function loadPackVaultOfferModal() {
+  return import("@/components/programs/PackVaultOfferModal").then((m) => m.PackVaultOfferModal);
+}
+function loadTradingModuleVaultModal() {
+  return import("@/components/programs/TradingModuleVaultModal").then((m) => m.TradingModuleVaultModal);
+}
+
+const PlanOfferDetailModal = dynamic(loadPlanOfferDetailModal, { ssr: false });
+const PackVaultOfferModal = dynamic(loadPackVaultOfferModal, { ssr: false });
+const TradingModuleVaultModal = dynamic(loadTradingModuleVaultModal, { ssr: false });
 
 function LazyVaultOffersRow({
   offers,

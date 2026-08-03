@@ -941,6 +941,18 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 }
 
+/* Pause always-on hamburger pulse on /programs until after first paint window —
+ * cuts non-composited animation work during LCP/TBT (visual resumes via CSS later). */
+.programs-page-root .hero-hamburger-pulse {
+  animation-delay: 1.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programs-page-root .hero-hamburger-pulse {
+    animation: none !important;
+  }
+}
+
 /* Soft fade-in when deferred neon blur/glow layers mount (layout size unchanged). */
 @keyframes programs-fx-fade-in {
   from {

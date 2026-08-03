@@ -6,16 +6,13 @@ import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
+import { ProgramsLibraryHashPreloads } from '@/components/programs/ProgramsLibraryHashPreloads'
 import { ProgramsBackStepGuard } from '@/app/programs/ProgramsBackStepGuard'
 import { ProgramsPageAmbient } from '@/components/programs/ProgramsPageAmbient'
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from '@/lib/optimizeImageUrl'
-import {
-  programsLibraryDesktopLast3Preloads,
-  programsLibraryMobileFirst3Preloads,
-} from '@/lib/programsLibraryLcpImages'
 import { buildPageMetadata } from '@/lib/seo'
 
 const ProgramsOfferSection = dynamic(
@@ -54,11 +51,10 @@ const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
   loading: () => <div className="min-h-[260px] w-full bg-[#02050b]" aria-hidden />,
 })
 
-const LCP_IMAGE_SIZES = '(max-width: 640px) 92vw, (max-width: 1024px) 480px, 512px'
-const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 640, 62)
-const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 62, 828)
-const LIBRARY_MOBILE_LCP_PRELOADS = programsLibraryMobileFirst3Preloads()
-const LIBRARY_DESKTOP_LCP_PRELOADS = programsLibraryDesktopLast3Preloads()
+/** Mobile-first LCP — smaller file so Money Mastery paints sooner on 4G. */
+const LCP_IMAGE_SIZES = '(max-width: 640px) 92vw, (max-width: 1024px) 420px, 480px'
+const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 480, 52)
+const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 52, 640)
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',
@@ -71,7 +67,7 @@ export default async function ProgramsPage() {
   const playlists = normalizeLevel1ProgramPlaylists(await fetchPublicPlaylistsServer())
   return (
     <div className="programs-page-root mobile-viewport-contain public-page-shell relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black">
-      {/* Money Mastery — LCP preload on plain /programs. */}
+      {/* Money Mastery — sole high-priority LCP preload on plain /programs (no competing library preloads). */}
       <link
         rel="preload"
         as="image"
@@ -80,36 +76,11 @@ export default async function ProgramsPage() {
         imageSizes={LCP_IMAGE_SIZES}
         fetchPriority="high"
       />
-      {/* First 3 mobile library covers — #businessprograms filmstrip / LCP. */}
-      {LIBRARY_MOBILE_LCP_PRELOADS.map((p) => (
-        <link
-          key={`lib-m-${p.href}`}
-          rel="preload"
-          as="image"
-          href={p.href}
-          imageSrcSet={p.imageSrcSet}
-          imageSizes={p.imageSizes}
-          media={p.media}
-          fetchPriority={p.fetchPriority ?? "high"}
-        />
-      ))}
-      {/* Last 3 desktop business-model covers — late filmstrip / SI on xl+. */}
-      {LIBRARY_DESKTOP_LCP_PRELOADS.map((p) => (
-        <link
-          key={`lib-d-${p.href}`}
-          rel="preload"
-          as="image"
-          href={p.href}
-          imageSrcSet={p.imageSrcSet}
-          imageSizes={p.imageSizes}
-          media={p.media}
-          fetchPriority={p.fetchPriority ?? "low"}
-        />
-      ))}
       <ProgramsPageAmbient />
       <NavApp />
       <ProgramsBackStepGuard />
       <ProgramsBusinessHashLand />
+      <ProgramsLibraryHashPreloads />
       <main className="programs-page-main relative z-[2] w-full min-w-0 overflow-x-clip">
       <ProgramsUnlockShell>
       <section
@@ -137,22 +108,31 @@ export default async function ProgramsPage() {
           <ProgramsGoldPillHeading as="h2" title="Programs" />
         </div>
         {/*
-          Library is SSR + always mounted (not LazyWhenVisible) so #businessprograms
-          paints cards on first frame — critical for mobile LCP / filmstrip.
+          Library hydrates on scroll for plain /programs (TBT).
+          eagerOnHash + boot flag mounts immediately for #businessprograms.
         */}
-        <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
-          <Suspense
-            fallback={
-              <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
-            }
-          >
-            <ProgramsLibrarySection
-              title="Programs Library"
-              subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
-              initialPlaylists={playlists}
-            />
-          </Suspense>
-        </div>
+        <LazyWhenVisible
+          minHeight="24rem"
+          rootMargin="200px 0px"
+          eagerOnHash={["programs-library", "businessprograms"]}
+          placeholder={
+            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+          }
+        >
+          <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
+            <Suspense
+              fallback={
+                <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+              }
+            >
+              <ProgramsLibrarySection
+                title="Programs Library"
+                subtitle="Explore all admin-published playlists here. Playlist videos stay inside member dashboard."
+                initialPlaylists={playlists}
+              />
+            </Suspense>
+          </div>
+        </LazyWhenVisible>
       </section>
       <LazyWhenVisible
         minHeight="18rem"

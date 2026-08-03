@@ -8,6 +8,7 @@ const SCROLL_END_MS = 180;
 /**
  * Public /programs page: mark document + page root while the window scrolls
  * so CSS can freeze expensive blurs/animations without blanking card content.
+ * Listener attaches after idle so first-paint TBT stays lighter.
  */
 export function useProgramsPageScrollSmooth(enabled = true) {
   useEffect(() => {
@@ -16,6 +17,9 @@ export function useProgramsPageScrollSmooth(enabled = true) {
     let rafId = 0;
     let scrollEndTimer: number | null = null;
     let scrolling = false;
+    let idleId: number | undefined;
+    let startTimer: number | undefined;
+    let attached = false;
 
     const setScrolling = (active: boolean) => {
       if (scrolling === active) return;
@@ -39,9 +43,29 @@ export function useProgramsPageScrollSmooth(enabled = true) {
       }, SCROLL_END_MS);
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const attach = () => {
+      if (attached) return;
+      attached = true;
+      window.addEventListener("scroll", onScroll, { passive: true });
+    };
+
+    const schedule = () => {
+      const ric = window.requestIdleCallback;
+      if (typeof ric === "function") {
+        idleId = ric(() => attach(), { timeout: 1500 });
+        return;
+      }
+      attach();
+    };
+
+    startTimer = window.setTimeout(schedule, 400);
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      if (startTimer != null) window.clearTimeout(startTimer);
+      if (idleId != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (attached) window.removeEventListener("scroll", onScroll);
       if (rafId) window.cancelAnimationFrame(rafId);
       if (scrollEndTimer !== null) window.clearTimeout(scrollEndTimer);
       setScrolling(false);

@@ -2,39 +2,25 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
-import {
-  COOKIE_CONSENT_KEY,
-  readCookieConsent,
-  type CookieConsentValue,
-} from "@/components/CookieConsentBanner";
+import { COOKIE_CONSENT_KEY, readCookieConsent, type CookieConsentValue } from "@/components/CookieConsentBanner";
 
 const GTM_ID = "GTM-WBW2KZV6";
-/** Keep trackers out of the Lighthouse / first-paint TBT window. */
-const GTM_SAFETY_DELAY_MS = 7000;
-/** Ignore the Accept-click (and LH early taps) before arming interaction → GTM. */
-const GTM_GESTURE_ATTACH_MS = 500;
 
-/**
- * Consent gate + post-consent delay.
- * - Never loads GTM unless cookie consent === "accepted".
- * - Even with prior "accepted", waits for first real interaction OR ~7s (+ idle)
- *   so gtm.js / FB / Klaviyo stay out of cold-load TBT on /programs and all pages.
- */
+/** Loads GTM only after the visitor accepts analytics cookies. */
 export function DeferredGtm() {
-  const [consentAccepted, setConsentAccepted] = useState(false);
-  const [gtmReady, setGtmReady] = useState(false);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    const syncConsent = (value: CookieConsentValue | null = readCookieConsent()) => {
-      setConsentAccepted(value === "accepted");
+    const sync = (value: CookieConsentValue | null = readCookieConsent()) => {
+      setEnabled(value === "accepted");
     };
-    syncConsent();
+    sync();
     const onStorage = (e: StorageEvent) => {
-      if (e.key === COOKIE_CONSENT_KEY) syncConsent();
+      if (e.key === COOKIE_CONSENT_KEY) sync();
     };
     const onCustom = (e: Event) => {
       const detail = (e as CustomEvent<CookieConsentValue>).detail;
-      syncConsent(detail ?? readCookieConsent());
+      sync(detail ?? readCookieConsent());
     };
     window.addEventListener("storage", onStorage);
     window.addEventListener("syndicate-cookie-consent", onCustom);
@@ -44,71 +30,7 @@ export function DeferredGtm() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!consentAccepted) {
-      setGtmReady(false);
-      return;
-    }
-
-    let cancelled = false;
-    let idleId: number | undefined;
-    let safetyTimer: number | undefined;
-    let gestureAttachTimer: number | undefined;
-    let scheduled = false;
-
-    const detachGestures = () => {
-      window.removeEventListener("pointerdown", onInteraction);
-      window.removeEventListener("keydown", onInteraction);
-      window.removeEventListener("touchstart", onInteraction);
-    };
-
-    const loadGtm = () => {
-      if (cancelled) return;
-      setGtmReady(true);
-    };
-
-    const armViaIdle = () => {
-      if (cancelled || scheduled) return;
-      scheduled = true;
-      if (safetyTimer != null) window.clearTimeout(safetyTimer);
-      detachGestures();
-      const ric = window.requestIdleCallback;
-      if (typeof ric === "function") {
-        idleId = ric(() => loadGtm(), { timeout: 1500 });
-      } else {
-        loadGtm();
-      }
-    };
-
-    function onInteraction() {
-      armViaIdle();
-    }
-
-    // Safety: load after 7s even with no interaction (still post-consent).
-    safetyTimer = window.setTimeout(armViaIdle, GTM_SAFETY_DELAY_MS);
-
-    // Attach gesture listeners after a short beat so Accept / early LH taps do not
-    // immediately inject GTM on the same turn as consent sync.
-    gestureAttachTimer = window.setTimeout(() => {
-      if (cancelled || scheduled) return;
-      const opts: AddEventListenerOptions = { once: true, passive: true };
-      window.addEventListener("pointerdown", onInteraction, opts);
-      window.addEventListener("keydown", onInteraction, opts);
-      window.addEventListener("touchstart", onInteraction, opts);
-    }, GTM_GESTURE_ATTACH_MS);
-
-    return () => {
-      cancelled = true;
-      if (safetyTimer != null) window.clearTimeout(safetyTimer);
-      if (gestureAttachTimer != null) window.clearTimeout(gestureAttachTimer);
-      if (idleId != null && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      detachGestures();
-    };
-  }, [consentAccepted]);
-
-  if (!consentAccepted || !gtmReady) return null;
+  if (!enabled) return null;
 
   return (
     <>

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
+import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
 import { ProgramsLibraryHashPreloads } from '@/components/programs/ProgramsLibraryHashPreloads'
@@ -14,19 +15,6 @@ import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from '@/lib/optimizeImageUrl'
 import { buildPageMetadata } from '@/lib/seo'
-
-const ProgramsOfferSection = dynamic(
-  () => import('@/components/programs/ProgramsOfferSection').then((m) => m.ProgramsOfferSection),
-  {
-    loading: () => (
-      /* Tall reserve so #businessprograms scroll doesn’t slide onto mid-tickets when offers hydrate. */
-      <div
-        className="mx-auto min-h-[min(92vh,48rem)] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5 sm:min-h-[min(85vh,52rem)]"
-        aria-hidden
-      />
-    ),
-  },
-)
 
 const ProgramsLibrarySection = dynamic(
   () =>
@@ -95,6 +83,7 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
+        {/* Eager SSR (not dynamic) so Money Mastery <img> is in first HTML — mobile LCP. */}
         <ProgramsOfferSection size="large" shellHosted omitKnight />
       </section>
       {/*

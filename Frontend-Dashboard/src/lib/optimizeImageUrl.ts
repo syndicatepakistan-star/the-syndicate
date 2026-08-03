@@ -28,6 +28,17 @@ export function optimizeCoverImageSrc(src: string | undefined, width = 640): str
 /** Widths must exist in next.config.js images.deviceSizes/imageSizes. */
 const NEXT_IMAGE_WIDTHS = [256, 384, 480, 640, 768, 828, 1080, 1200] as const;
 
+/** Must match next.config.js `images.qualities` — invalid q → 400 blank images. */
+const NEXT_IMAGE_QUALITIES = [55, 60, 62, 70, 72, 75, 78, 85, 88] as const;
+
+function clampNextImageQuality(quality: number): number {
+  const allowed = NEXT_IMAGE_QUALITIES as readonly number[];
+  if (allowed.includes(quality)) return quality;
+  return allowed.reduce((best, q) =>
+    Math.abs(q - quality) < Math.abs(best - quality) ? q : best,
+  );
+}
+
 function isNextOptimizableStatic(src: string): boolean {
   return (
     src.startsWith("/") &&
@@ -44,7 +55,8 @@ function isNextOptimizableStatic(src: string): boolean {
 export function nextOptimizedImageUrl(src: string, width: number, quality = 70): string {
   if (!isNextOptimizableStatic(src)) return src;
   const w = NEXT_IMAGE_WIDTHS.find((candidate) => candidate >= width) ?? 1200;
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${quality}`;
+  const q = clampNextImageQuality(quality);
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${q}`;
 }
 
 /** srcSet across optimizer widths for plain `<img>` tags (pair with a `sizes` attr). */
@@ -55,9 +67,10 @@ export function nextOptimizedImageSrcSet(
   maxWidth = 1200,
 ): string | undefined {
   if (!isNextOptimizableStatic(src)) return undefined;
+  const q = clampNextImageQuality(quality);
   const widths = NEXT_IMAGE_WIDTHS.filter((w) => w <= maxWidth);
   const list = widths.length > 0 ? widths : [NEXT_IMAGE_WIDTHS[0]];
   return list
-    .map((w) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${quality} ${w}w`)
+    .map((w) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=${q} ${w}w`)
     .join(", ");
 }

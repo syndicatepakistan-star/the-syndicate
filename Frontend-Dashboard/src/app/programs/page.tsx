@@ -53,8 +53,9 @@ const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
 
 /** Mobile-first LCP — smaller file so Money Mastery paints sooner on 4G. */
 const LCP_IMAGE_SIZES = '(max-width: 640px) 92vw, (max-width: 1024px) 420px, 480px'
-const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 480, 52)
-const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 52, 640)
+/** Quality must be in next.config.js `images.qualities` (52 is rejected → blank card). */
+const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 480, 55)
+const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 640)
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Programs — Syndicate Vaults, Trading, Business Models & AI Packs',

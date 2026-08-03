@@ -381,11 +381,11 @@ export function PlanOfferCard({
                 src={nextOptimizedImageUrl(
                   offer.imageSrc,
                   isModule ? 384 : 480,
-                  priorityImage ? 52 : 55,
+                  55,
                 )}
                 srcSet={nextOptimizedImageSrcSet(
                   offer.imageSrc,
-                  priorityImage ? 52 : 55,
+                  55,
                   isModule ? 480 : 640,
                 )}
                 sizes={

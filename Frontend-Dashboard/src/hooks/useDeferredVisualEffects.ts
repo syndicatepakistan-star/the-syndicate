@@ -69,7 +69,8 @@ function startSharedScheduler(options?: Options) {
  * Shared across all /programs cards — one timer, not one per card (cuts TBT).
  */
 export function useDeferredVisualEffects(options?: Options): boolean {
-  const [ready, setReady] = useState(() => sharedReady);
+  // Always start false so SSR HTML matches first client paint (sharedReady can already be true).
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (sharedReady) {

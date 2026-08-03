@@ -320,12 +320,31 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
   return <UnlockCartContext.Provider value={value}>{children}</UnlockCartContext.Provider>;
 }
 
+const EMPTY_UNLOCK_CART: UnlockCartContextValue = {
+  items: [],
+  selectionMode: false,
+  setSelectionMode: () => {},
+  panelExpanded: false,
+  setPanelExpanded: () => {},
+  checkoutPulse: false,
+  addItem: () => false,
+  addPlaylist: () => false,
+  removeItem: () => {},
+  removeByKey: () => {},
+  toggleItem: () => {},
+  togglePlaylist: () => {},
+  clearCart: () => {},
+  pruneOwnedItems: () => {},
+  isInCart: () => false,
+  isInCartKey: () => false,
+  totalLabel: "$0",
+  count: 0,
+};
+
 export function useUnlockCart(): UnlockCartContextValue {
   const ctx = useContext(UnlockCartContext);
-  if (!ctx) {
-    throw new Error("useUnlockCart must be used within UnlockCartProvider");
-  }
-  return ctx;
+  // Never throw — missing provider used to blank /programs with "Application error".
+  return ctx ?? EMPTY_UNLOCK_CART;
 }
 
 export function useUnlockCartOptional(): UnlockCartContextValue | null {

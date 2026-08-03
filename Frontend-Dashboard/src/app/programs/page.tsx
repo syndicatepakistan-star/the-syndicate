@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
-import { ProgramsOfferSection } from '@/components/programs/ProgramsOfferSection'
+import { ProgramsOfferSectionLazy } from '@/components/programs/ProgramsOfferSectionLazy'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
 import { ProgramsLibraryHashPreloads } from '@/components/programs/ProgramsLibraryHashPreloads'
@@ -83,8 +83,8 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        {/* Eager SSR (not dynamic) so Money Mastery <img> is in first HTML — mobile LCP. */}
-        <ProgramsOfferSection size="large" shellHosted omitKnight />
+        {/* Client-only offers (ssr:false): first HTML = Money Mastery LCP art, then interactive cards. */}
+        <ProgramsOfferSectionLazy size="large" shellHosted omitKnight />
       </section>
       {/*
         Anchor + PROGRAMS heading stay in SSR HTML (not behind LazyWhenVisible) so
@@ -147,7 +147,7 @@ export default async function ProgramsPage() {
           className="mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pb-8 pt-4 sm:space-y-6 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pb-12 sm:pt-6 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
         >
           <ProgramsGoldPillHeading as="h2" title="The Knight" size="compact" />
-          <ProgramsOfferSection size="large" shellHosted knightOnly />
+          <ProgramsOfferSectionLazy size="large" shellHosted knightOnly />
         </section>
       </LazyWhenVisible>
       </ProgramsUnlockShell>

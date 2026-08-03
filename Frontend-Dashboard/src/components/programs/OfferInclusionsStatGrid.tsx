@@ -268,8 +268,9 @@ function SectionHeading({
   headingTone?: "orange" | "white";
 }) {
   const isWhite = headingTone === "white";
+  // <p> not <h3>: avoids h1→h3 skip under Elite Offers (Lighthouse heading-order).
   return (
-    <h3
+    <p
       className={cn(
         "mx-auto block w-full text-center font-black uppercase tracking-[0.14em]",
         isWhite
@@ -285,7 +286,7 @@ function SectionHeading({
       )}
     >
       {children}
-    </h3>
+    </p>
   );
 }
 

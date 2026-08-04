@@ -2,7 +2,7 @@
 @import "../styles/laptop-vostro-viewport.css";
 @import "../styles/public-marketing-responsive.css";
 @import "../styles/large-desktop-responsive.css";
-@import "../styles/gaming-benefit-cards.css";
+/* gaming-benefit-cards.css → GamingBenefitCards.tsx (not on /programs first paint) */
 
 :root {
   --void: #0a0a0a;
@@ -3622,8 +3622,7 @@ figcaption {
 }
 
 
-@import "./syndicate-bonus-hud.css";
-@import "./syndicate-mega-mission.css";
+/* syndicate-bonus-hud.css + syndicate-mega-mission.css → dashboard/layout.tsx only */
 
 
 .syndicate-mission-stats-chart .recharts-responsive-container {

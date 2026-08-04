@@ -1,5 +1,6 @@
 "use client";
 
+import "@/styles/gaming-benefit-cards.css";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 export type GamingBenefitTone = "cyan" | "violet" | "gold" | "pink" | "amber" | "green" | "orange";

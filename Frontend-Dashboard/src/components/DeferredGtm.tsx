@@ -2,25 +2,37 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
-import { COOKIE_CONSENT_KEY, readCookieConsent, type CookieConsentValue } from "@/components/CookieConsentBanner";
+import {
+  COOKIE_CONSENT_KEY,
+  readCookieConsent,
+  type CookieConsentValue,
+} from "@/components/CookieConsentBanner";
 
 const GTM_ID = "GTM-WBW2KZV6";
+/** Keep gtm.js / FB / Klaviyo out of the Lighthouse TBT window after Accept. */
+const GTM_SAFETY_DELAY_MS = 7000;
+/** Ignore Accept-click / early LH taps before arming gesture → GTM. */
+const GTM_GESTURE_ATTACH_MS = 500;
 
-/** Loads GTM only after the visitor accepts analytics cookies. */
+/**
+ * Consent gate + post-consent delay (site-wide; biggest win on mobile /programs).
+ * Never loads without `"accepted"`. After accept, waits for interaction OR ~7s (+ idle).
+ */
 export function DeferredGtm() {
-  const [enabled, setEnabled] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [gtmReady, setGtmReady] = useState(false);
 
   useEffect(() => {
-    const sync = (value: CookieConsentValue | null = readCookieConsent()) => {
-      setEnabled(value === "accepted");
+    const syncConsent = (value: CookieConsentValue | null = readCookieConsent()) => {
+      setConsentAccepted(value === "accepted");
     };
-    sync();
+    syncConsent();
     const onStorage = (e: StorageEvent) => {
-      if (e.key === COOKIE_CONSENT_KEY) sync();
+      if (e.key === COOKIE_CONSENT_KEY) syncConsent();
     };
     const onCustom = (e: Event) => {
       const detail = (e as CustomEvent<CookieConsentValue>).detail;
-      sync(detail ?? readCookieConsent());
+      syncConsent(detail ?? readCookieConsent());
     };
     window.addEventListener("storage", onStorage);
     window.addEventListener("syndicate-cookie-consent", onCustom);
@@ -30,7 +42,68 @@ export function DeferredGtm() {
     };
   }, []);
 
-  if (!enabled) return null;
+  useEffect(() => {
+    if (!consentAccepted) {
+      setGtmReady(false);
+      return;
+    }
+
+    let cancelled = false;
+    let idleId: number | undefined;
+    let safetyTimer: number | undefined;
+    let gestureAttachTimer: number | undefined;
+    let scheduled = false;
+
+    const detachGestures = () => {
+      window.removeEventListener("pointerdown", onInteraction);
+      window.removeEventListener("keydown", onInteraction);
+      window.removeEventListener("touchstart", onInteraction);
+    };
+
+    const loadGtm = () => {
+      if (cancelled) return;
+      setGtmReady(true);
+    };
+
+    const armViaIdle = () => {
+      if (cancelled || scheduled) return;
+      scheduled = true;
+      if (safetyTimer != null) window.clearTimeout(safetyTimer);
+      detachGestures();
+      const ric = window.requestIdleCallback;
+      if (typeof ric === "function") {
+        idleId = ric(() => loadGtm(), { timeout: 1500 });
+      } else {
+        loadGtm();
+      }
+    };
+
+    function onInteraction() {
+      armViaIdle();
+    }
+
+    safetyTimer = window.setTimeout(armViaIdle, GTM_SAFETY_DELAY_MS);
+
+    gestureAttachTimer = window.setTimeout(() => {
+      if (cancelled || scheduled) return;
+      const opts: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener("pointerdown", onInteraction, opts);
+      window.addEventListener("keydown", onInteraction, opts);
+      window.addEventListener("touchstart", onInteraction, opts);
+    }, GTM_GESTURE_ATTACH_MS);
+
+    return () => {
+      cancelled = true;
+      if (safetyTimer != null) window.clearTimeout(safetyTimer);
+      if (gestureAttachTimer != null) window.clearTimeout(gestureAttachTimer);
+      if (idleId != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      detachGestures();
+    };
+  }, [consentAccepted]);
+
+  if (!consentAccepted || !gtmReady) return null;
 
   return (
     <>

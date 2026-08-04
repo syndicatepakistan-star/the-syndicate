@@ -1,7 +1,6 @@
 @import "tailwindcss";
-@import "../styles/laptop-vostro-viewport.css";
+/* laptop-vostro + large-desktop → public/styles + media= in root layout (not render-blocking on mobile) */
 @import "../styles/public-marketing-responsive.css";
-@import "../styles/large-desktop-responsive.css";
 /* gaming-benefit-cards.css → GamingBenefitCards.tsx (not on /programs first paint) */
 
 :root {

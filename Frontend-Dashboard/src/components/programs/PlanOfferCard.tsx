@@ -385,23 +385,23 @@ export function PlanOfferCard({
               <img
                 src={nextOptimizedImageUrl(
                   offer.imageSrc,
-                  isModule ? 384 : 480,
+                  isModule ? 384 : priorityImage || offer.plan === "bundle" ? 384 : 480,
                   55,
                 )}
                 srcSet={nextOptimizedImageSrcSet(
                   offer.imageSrc,
                   55,
-                  isModule ? 480 : 640,
+                  isModule ? 480 : priorityImage || offer.plan === "bundle" ? 480 : 640,
                 )}
                 sizes={
                   isModule
-                    ? "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 320px"
-                    : priorityImage
-                      ? "(max-width: 640px) 92vw, (max-width: 1024px) 420px, 480px"
-                      : "(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 380px"
+                    ? "(max-width: 767px) 92vw, (max-width: 1024px) 44vw, 320px"
+                    : priorityImage || offer.plan === "bundle"
+                      ? "(max-width: 767px) 100vw, (max-width: 1024px) 420px, 480px"
+                      : "(max-width: 767px) 92vw, (max-width: 1024px) 44vw, 380px"
                 }
-                width={isModule ? 384 : 480}
-                height={isModule ? 240 : 300}
+                width={isModule ? 384 : priorityImage || offer.plan === "bundle" ? 384 : 480}
+                height={isModule ? 240 : priorityImage || offer.plan === "bundle" ? 480 : 300}
                 alt={offer.title}
                 loading={priorityImage || offer.plan === "bundle" ? "eager" : "lazy"}
                 fetchPriority={priorityImage || offer.plan === "bundle" ? "high" : "low"}

@@ -1,9 +1,9 @@
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from "@/components/programs/offerPlanThumbnails";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
-const LCP_SIZES = "(max-width: 640px) 92vw, (max-width: 1024px) 420px, 480px";
-const LCP_SRC = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 480, 55);
-const LCP_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 640);
+const LCP_SIZES = "(max-width: 767px) 100vw, (max-width: 1024px) 420px, 480px";
+const LCP_SRC = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 384, 55);
+const LCP_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 480);
 
 /**
  * Server-only LCP paint for /programs while elite offers JS chunk loads.
@@ -24,8 +24,8 @@ export function ProgramsEliteOffersLcpFallback() {
                 src={LCP_SRC}
                 srcSet={LCP_SRCSET}
                 sizes={LCP_SIZES}
-                width={480}
-                height={600}
+                width={384}
+                height={480}
                 alt=""
                 decoding="sync"
                 fetchPriority="high"

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Options = {
-  /** Extra wait on phones before enabling neon blur/glow (default 1200ms). */
+  /** Extra wait on phones before enabling neon blur/glow (default 2800ms). */
   mobileDelayMs?: number;
   /** Extra wait on desktop (default 500ms). */
   desktopDelayMs?: number;
@@ -36,7 +36,7 @@ function startSharedScheduler(options?: Options) {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 767px)").matches;
   const delay = mobile
-    ? (options?.mobileDelayMs ?? 1200)
+    ? (options?.mobileDelayMs ?? 2800)
     : (options?.desktopDelayMs ?? 500);
 
   const scheduleIdle = () => {

@@ -95,6 +95,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Font loads via @font-face in CSS — a global preload often finishes before
             globals.css applies the face and triggers unused-preload console noise. */}
+        {/* Desktop-only bands: non-matching media is not render-blocking on mobile PSI. */}
+        <link
+          rel="stylesheet"
+          href="/styles/laptop-vostro-viewport.css"
+          media="(min-width: 1400px) and (max-width: 1679px)"
+        />
+        <link
+          rel="stylesheet"
+          href="/styles/large-desktop-responsive.css"
+          media="(min-width: 1680px)"
+        />
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body

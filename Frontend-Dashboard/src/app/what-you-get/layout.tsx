@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import "@/styles/public-marketing-responsive.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "What You Get — The Syndicate Vault, Packs & Alliance",

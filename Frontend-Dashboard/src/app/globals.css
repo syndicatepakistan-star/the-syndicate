@@ -1,7 +1,8 @@
 @import "tailwindcss";
-/* laptop-vostro + large-desktop → public/styles + media= in root layout (not render-blocking on mobile) */
-@import "../styles/public-marketing-responsive.css";
-/* gaming-benefit-cards.css → GamingBenefitCards.tsx (not on /programs first paint) */
+/* laptop/large-desktop → DesktopBandStyles (width ≥1400 only)
+ * public-marketing-responsive → PublicMarketingStyles / route layouts (not globals)
+ * gaming-benefit-cards → GamingBenefitCards.tsx
+ */
 
 :root {
   --void: #0a0a0a;

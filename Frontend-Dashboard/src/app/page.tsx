@@ -13,6 +13,7 @@ import { HomeHeroDeferredChrome } from '@/components/home/HomeHeroDeferredChrome
 import { HomeGlobeSection } from '@/components/home/HomeGlobeSection'
 import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import { NavApp } from '@/components/NavApp'
+import { PublicMarketingStyles } from '@/components/PublicMarketingStyles'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
 import { buildPageMetadata } from '@/lib/seo'
@@ -38,6 +39,7 @@ export default async function Home() {
 
   return (
     <div className="home-page-root public-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
+      <PublicMarketingStyles />
       <JsonLd data={buildFaqPageJsonLd()} />
       <NavApp />
       <section

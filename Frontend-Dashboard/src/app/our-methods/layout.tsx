@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import "@/styles/public-marketing-responsive.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Our Methods — Syndicate Money Mastery & Operator Doctrine",

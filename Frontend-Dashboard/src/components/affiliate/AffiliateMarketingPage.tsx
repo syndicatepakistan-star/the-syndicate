@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { NavApp } from "@/components/NavApp";
+import { PublicMarketingStyles } from "@/components/PublicMarketingStyles";
 import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 import { CyberChamferFrame, CyberInsetPanel, cx } from "@/components/cyber/CyberChamferFrames";
 import type { CyberFrameAccent } from "@/components/cyber/CyberChamferFrames";
@@ -249,6 +250,7 @@ function AffiliateShowcaseBlock({ index, width, height, accent, title, body, src
 export default function AffiliateMarketingPage() {
   return (
     <div className="relative min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#04060c] font-[family-name:var(--font-body)] public-page-shell">
+      <PublicMarketingStyles />
       <AffiliateDeferredBackdrop />
 
       <NavApp />

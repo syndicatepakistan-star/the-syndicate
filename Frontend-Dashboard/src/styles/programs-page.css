@@ -1,8 +1,9 @@
 /* Public /programs surface styles — imported from route layouts that need them.
  * Keeps globals.css lighter for home/quiz/marketing first paint.
  * Also imported by /dashboard (ProgramsCourseSection reuses the same card/vault UI).
+ * elite-offer-benefits-detail.css loads with EliteOfferBenefitsDetail (details modal),
+ * not on first paint — cuts ~20KB from /programs render-blocking CSS.
  */
-@import "./elite-offer-benefits-detail.css";
 
 /* --- moved from globals.css L9305-9478 --- */
 /* Elite plan offer cards (public /programs + dashboard programs grid) */

@@ -29,10 +29,23 @@ const PROGRAMS_FONT_PRELOADS = (
   </>
 );
 
+/**
+ * Tiny critical CSS so Money Mastery LCP media can paint before the large
+ * render-blocking stylesheet finishes (cuts element render delay).
+ */
+const PROGRAMS_LCP_CRITICAL_CSS = `
+.programs-lcp-shell{position:relative;display:flex;min-height:min(92vh,48rem);flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 14px 38px rgba(0,0,0,.58)}
+.programs-lcp-media{position:relative;aspect-ratio:4/5;min-height:min(52dvh,16.5rem);max-height:min(62dvh,22rem);background:#050508}
+.programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
+@media (min-width:640px){.programs-lcp-shell{min-height:34rem}.programs-lcp-media{aspect-ratio:3/4;min-height:min(48dvh,20rem)}}
+@media (min-width:1280px){.programs-lcp-media{aspect-ratio:3/4;min-height:18.5rem;max-height:22rem}}
+`;
+
 export default function ProgramsLayout({ children }: { children: ReactNode }) {
   return (
     <>
       {PROGRAMS_FONT_PRELOADS}
+      <style dangerouslySetInnerHTML={{ __html: PROGRAMS_LCP_CRITICAL_CSS }} />
       <Script id="programs-hash-boot" strategy="beforeInteractive">
         {PROGRAMS_HASH_BOOT}
       </Script>

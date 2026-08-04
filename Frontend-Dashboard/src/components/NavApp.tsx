@@ -1,13 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import type { NavSectionId } from '@/lib/marketing-nav-routes'
 import {
   MARKETING_NAV_HREF,
-  MARKETING_PREFETCH_ROUTES,
   prefetchMarketingRoutes,
 } from '@/lib/marketing-nav-routes'
 
@@ -161,13 +159,6 @@ export function NavApp() {
             />
           ) : null}
         </div>
-      </div>
-      <div className="sr-only" aria-hidden>
-        {MARKETING_PREFETCH_ROUTES.map((route) => (
-          <Link key={route} href={route} prefetch tabIndex={-1}>
-            {route}
-          </Link>
-        ))}
       </div>
     </div>
   )

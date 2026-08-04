@@ -61,6 +61,8 @@ const nextConfig = {
       "qrcode.react",
       "react-hot-toast",
     ],
+    /** Prefer splitting CSS per route entry so /programs pulls less unused chrome. */
+    cssChunking: "strict",
   },
   devIndicators: {
     buildActivity: false

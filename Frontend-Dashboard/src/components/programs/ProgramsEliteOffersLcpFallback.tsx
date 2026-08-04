@@ -9,6 +9,7 @@ const LCP_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 
  * Server-only LCP paint for /programs while elite offers JS chunk loads.
  * Same Money Mastery art + card frame so Lighthouse LCP is not a blank pulse div.
  * Replaced (not stacked) when ProgramsOfferSection hydrates — no layout jump if heights match.
+ * Uses `.programs-lcp-*` critical CSS from programs/layout for early paint.
  */
 export function ProgramsEliteOffersLcpFallback() {
   return (
@@ -18,8 +19,8 @@ export function ProgramsEliteOffersLcpFallback() {
     >
       <div className="mx-auto grid w-full max-w-lg grid-cols-1 gap-4 sm:gap-8">
         <div className="plan-offer-card relative flex w-full flex-col text-left">
-          <div className="plan-offer-card__shell relative flex min-h-[min(92vh,48rem)] flex-col overflow-hidden rounded-3xl border-2 border-amber-300/75 bg-black shadow-[0_14px_38px_rgba(0,0,0,0.58)] sm:min-h-[min(85vh,52rem)] sm:min-h-[34rem]">
-            <div className="plan-offer-card__media plan-offer-card__media--portrait-cover relative bg-[#050508] max-xl:aspect-[4/5] max-xl:min-h-[min(52dvh,16.5rem)] max-xl:max-h-[min(62dvh,22rem)] sm:max-xl:aspect-[3/4] sm:max-xl:min-h-[min(48dvh,20rem)] xl:aspect-[3/4] xl:max-h-[22rem] xl:min-h-[18.5rem]">
+          <div className="programs-lcp-shell plan-offer-card__shell">
+            <div className="programs-lcp-media plan-offer-card__media plan-offer-card__media--portrait-cover">
               <img
                 src={LCP_SRC}
                 srcSet={LCP_SRCSET}
@@ -30,7 +31,6 @@ export function ProgramsEliteOffersLcpFallback() {
                 decoding="sync"
                 fetchPriority="high"
                 loading="eager"
-                className="absolute inset-0 h-full w-full object-cover object-[center_38%] [image-rendering:high-quality]"
               />
             </div>
             <div className="border-t border-amber-300/25 px-4 py-3 sm:px-5">

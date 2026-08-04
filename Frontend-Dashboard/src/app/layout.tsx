@@ -3,7 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { DeferredCookieConsent } from "@/components/DeferredCookieConsent";
 import { DeferredGtm } from "@/components/DeferredGtm";
 import { DesktopBandStyles } from "@/components/DesktopBandStyles";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -109,7 +109,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ServiceWorkerRegister />
           <RouteWarmup />
           {children}
-          <CookieConsentBanner />
+          <DeferredCookieConsent />
         </Providers>
       </body>
     </html>

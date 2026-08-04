@@ -51,7 +51,7 @@ export function CookieConsentBanner() {
       setVisible(false);
       return;
     }
-    const id = window.setTimeout(() => setVisible(true), 600);
+    const id = window.setTimeout(() => setVisible(true), 2500);
     return () => window.clearTimeout(id);
   }, [hideOnAuth]);
 

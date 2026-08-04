@@ -7,8 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ActivityTimelineProvider } from "@/contexts/ActivityTimelineContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { GoalsPanelProvider } from "@/contexts/GoalsPanelContext";
-import { ActivityRouteTracker } from "@/components/activity/ActivityRouteTracker";
-import TabResumeCoordinator from "@/components/TabResumeCoordinator";
 import type { CheckoutCurrency } from "@/lib/currency";
 
 const GoalsGlobalChrome = dynamic(
@@ -16,12 +14,29 @@ const GoalsGlobalChrome = dynamic(
   { ssr: false },
 );
 
+const ActivityRouteTracker = dynamic(
+  () => import("@/components/activity/ActivityRouteTracker").then((m) => m.ActivityRouteTracker),
+  { ssr: false },
+);
+
+const TabResumeCoordinator = dynamic(() => import("@/components/TabResumeCoordinator"), {
+  ssr: false,
+});
+
+function isDashboardPath(pathname: string) {
+  return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+}
+
 function DashboardOnlyChrome() {
   const pathname = usePathname();
-  if (pathname !== "/dashboard" && !pathname.startsWith("/dashboard/")) {
-    return null;
-  }
-  return <GoalsGlobalChrome />;
+  if (!isDashboardPath(pathname)) return null;
+  return (
+    <>
+      <ActivityRouteTracker />
+      <TabResumeCoordinator />
+      <GoalsGlobalChrome />
+    </>
+  );
 }
 
 export function Providers({
@@ -35,8 +50,6 @@ export function Providers({
     <CurrencyProvider initialCurrency={initialCurrency}>
       <AuthProvider>
         <ActivityTimelineProvider>
-          <ActivityRouteTracker />
-          <TabResumeCoordinator />
           <GoalsPanelProvider>
             {children}
             <DashboardOnlyChrome />

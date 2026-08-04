@@ -1,6 +1,8 @@
 @font-face {
   font-family: "Thryon";
-  src: url("/fonts/Thryon.otf") format("opentype");
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.otf") format("opentype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;

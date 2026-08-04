@@ -1,14 +1,18 @@
 "use client";
 
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
+import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 /**
- * Soft page orbs — deferred so first paint skips expensive blurs.
- * Same positions/colors as before; opacity fades in when ready.
+ * Soft page orbs — desktop only after deferred ready.
+ * Mobile/iPad: skipped (paint/TBT compromise; layout unchanged).
  */
 export function ProgramsPageAmbient() {
   const fxReady = useDeferredVisualEffects();
+  const liteViewport = useLiteVisualViewport();
+
+  if (liteViewport) return null;
 
   return (
     <div

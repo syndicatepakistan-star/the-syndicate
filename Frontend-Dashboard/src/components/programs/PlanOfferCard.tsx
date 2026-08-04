@@ -15,6 +15,7 @@ import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
+import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 const OfferDescriptionModal = dynamic(
@@ -192,6 +193,9 @@ export function PlanOfferCard({
 }: Props) {
   const { localizeLabel } = useCurrency();
   const fxReady = useDeferredVisualEffects();
+  const liteViewport = useLiteVisualViewport();
+  /** Mobile/iPad: borders only — no blur/sparks/multi-layer neon glow. */
+  const showFancyFx = fxReady && !liteViewport;
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const isLarge = size === "large";
   const isModule = size === "module";
@@ -241,7 +245,7 @@ export function PlanOfferCard({
         `plan-offer-card--${offer.accent}`,
         cardKind === "pack" && "plan-offer-card--vault-pack z-[1] hover:z-[10] focus-within:z-[10]",
         cardKind === "module" && "plan-offer-card--vault-module",
-        highlighted && "program-card-globe-spotlight-host",
+        highlighted && !liteViewport && "program-card-globe-spotlight-host",
         isLarge && !isVaultHero && "mx-auto h-full min-h-0 max-w-none max-lg:min-h-0 sm:min-h-[30rem]",
         isElitePrimary && isLarge && !isVaultHero && "sm:min-h-[34rem]",
         midTicketPack && isLarge && !isVaultHero && "sm:min-h-[34rem]",
@@ -251,7 +255,7 @@ export function PlanOfferCard({
         isCompact && "w-[min(90vw,272px)] shrink-0 sm:w-[260px] lg:w-[276px] min-h-[18rem] sm:min-h-[20rem]"
       )}
     >
-      {highlighted ? (
+      {highlighted && !liteViewport ? (
         <>
           <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
           <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
@@ -262,14 +266,15 @@ export function PlanOfferCard({
           "plan-offer-card__shell relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-2 transition-shadow duration-500",
           cardKind === "pack" && "z-[2]",
           !highlighted && theme.dominantBorder,
-          !highlighted && !isModule && fxReady && theme.glow,
-          !highlighted && !isModule && fxReady && theme.hoverGlow,
-          !highlighted && !isModule && !fxReady && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]",
+          !highlighted && !isModule && showFancyFx && theme.glow,
+          !highlighted && !isModule && showFancyFx && theme.hoverGlow,
+          !highlighted && !isModule && !showFancyFx && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]",
           isModule && "plan-offer-card__vault-module-shell",
-          highlighted && "plan-offer-globe-border-glow"
+          highlighted && !liteViewport && "plan-offer-globe-border-glow",
+          highlighted && liteViewport && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]"
         )}
       >
-        {!highlighted && !isModule && fxReady ? (
+        {!highlighted && !isModule && showFancyFx ? (
           <div className="programs-fx-fade" aria-hidden>
             <span
               className={cn(

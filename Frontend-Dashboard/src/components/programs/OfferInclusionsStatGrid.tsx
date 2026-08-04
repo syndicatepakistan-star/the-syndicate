@@ -92,7 +92,7 @@ function highlightCorePhrases({
     parts.push(
       <span
         key={`hl-${key++}`}
-        className={cn("font-black leading-snug", neon.figure, neon.glow, highlightSize)}
+        className={cn("programs-stat-neon font-black leading-snug", neon.figure, neon.glow, highlightSize)}
       >
         {text.slice(start, end)}
       </span>,
@@ -140,7 +140,7 @@ function StatCell({
       >
         <div
           className={cn(
-            "font-black tabular-nums leading-none tracking-tight",
+            "programs-stat-neon font-black tabular-nums leading-none tracking-tight",
             neon.figure,
             neon.glow,
             enlarge
@@ -274,8 +274,8 @@ function SectionHeading({
       className={cn(
         "mx-auto block w-full text-center font-black uppercase tracking-[0.14em]",
         isWhite
-          ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
-          : "text-orange-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.55)]",
+          ? "programs-stat-heading text-white"
+          : "programs-stat-heading programs-stat-heading--orange text-orange-400",
         compact
           ? isWhite
             ? "text-[15px] sm:text-[16px]"

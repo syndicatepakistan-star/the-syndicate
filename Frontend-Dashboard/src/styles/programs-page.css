@@ -953,6 +953,53 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
   }
 }
 
+/*
+ * Mobile + iPad (≤1024): perf compromise — no breath/infinite glow/blur/sparks/orbs.
+ * Borders, solid fills, copy, unlock/checkout layout unchanged. Desktop keeps full FX.
+ */
+@media (max-width: 1024px) {
+  .programs-page-root .hero-hamburger-pulse,
+  .programs-page-root .level1-unlock-all-btn.hero-hamburger-pulse {
+    animation: none !important;
+    will-change: auto;
+    /* Static chrome — no gold pulse */
+    box-shadow: none;
+  }
+
+  .programs-page-root .programs-heading-glow,
+  .programs-page-root .public-heading-lightning,
+  .programs-page-root .playlist-category-heading-lightning {
+    animation: none !important;
+  }
+
+  .programs-page-ambient,
+  .programs-fx-fade,
+  .program-card-spotlight-field,
+  .program-card-spotlight-aura {
+    display: none !important;
+  }
+
+  .program-card-globe-spotlight,
+  .plan-offer-globe-border-glow {
+    animation: none !important;
+  }
+
+  .programs-stat-neon,
+  .programs-stat-heading {
+    filter: none !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .programs-stat-heading {
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
+  }
+
+  .programs-stat-heading--orange {
+    filter: drop-shadow(0 0 10px rgba(251, 146, 60, 0.55));
+  }
+}
+
 /* Soft fade-in when deferred neon blur/glow layers mount (layout size unchanged). */
 @keyframes programs-fx-fade-in {
   from {

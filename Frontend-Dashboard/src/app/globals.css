@@ -485,10 +485,12 @@
   line-height: 1.45;
 }
 
-/* Display headings: public/fonts/Thryon.otf */
+/* Display headings: prefer woff2 (smaller/faster); otf fallback */
 @font-face {
   font-family: "Thryon";
-  src: url("/fonts/Thryon.otf") format("opentype");
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
@@ -513,7 +515,9 @@
 /* Optional alias (common typo): same file as Thryon */
 @font-face {
   font-family: "Thyron";
-  src: url("/fonts/Thryon.otf") format("opentype");
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
@@ -12275,6 +12279,36 @@ body {
 
   .dashboard-hamburger-chrome .level1-unlock-all-btn.hero-hamburger-pulse {
     animation: hero-hamburger-breathe 2.6s ease-in-out infinite !important;
+  }
+}
+
+/* Phone + iPad: static hamburger / logo (no breath or gold pulse). Desktop keeps FX. */
+@media (max-width: 1024px) {
+  .hero-logo-pulse,
+  .hero-hamburger-pulse,
+  .level1-unlock-all-btn.hero-hamburger-pulse,
+  .dashboard-hamburger-chrome .level1-unlock-all-btn.hero-hamburger-pulse {
+    animation: none !important;
+    will-change: auto;
+  }
+
+  .hero-logo-pulse::before {
+    content: none !important;
+    animation: none !important;
+  }
+
+  .hero-logo-pulse img {
+    filter: none;
+  }
+
+  .hero-hamburger-pulse {
+    box-shadow: none;
+  }
+
+  .programs-heading-glow,
+  .public-heading-lightning,
+  .playlist-category-heading-lightning {
+    animation: none !important;
   }
 }
 

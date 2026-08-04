@@ -22,7 +22,7 @@ function MidTicketPlusYouGetCell({ compact = false }: { compact?: boolean }) {
       <div className="flex items-baseline justify-center gap-1.5">
         <span
           className={cn(
-            "font-black tabular-nums leading-none tracking-tight text-sky-400",
+            "programs-stat-neon font-black tabular-nums leading-none tracking-tight text-sky-400",
             "drop-shadow-[0_0_12px_rgba(56,189,248,0.65)]",
             compact ? "text-[1.55rem]" : "text-[1.85rem] sm:text-[2.15rem]",
           )}

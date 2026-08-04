@@ -36,6 +36,7 @@ import {
   PROGRAMS_LIBRARY_MOBILE_PRIORITY_SLUGS,
 } from "@/lib/programsLibraryLcpImages";
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
+import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
 import { PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1CategoryUnlockAllButton";
@@ -183,6 +184,7 @@ export function PlaylistCardsSection({
   };
   const router = useRouter();
   const fxReady = useDeferredVisualEffects();
+  const liteViewport = useLiteVisualViewport();
   const [playlists, setPlaylists] = useState<StreamPlaylistListItem[]>(() =>
     fillMissingPublicProgramPlaylists(
       Array.isArray(initialPlaylists) && initialPlaylists.length > 0
@@ -607,8 +609,8 @@ export function PlaylistCardsSection({
     const comingSoon = !!pl.is_coming_soon;
     const inCart = unlockCart?.isInCartKey(cartItemKey(playlistToCartItem(pl, cardTitle))) ?? false;
     const showIdleGlow = !spotlightActive;
-    /** Border always (theme); heavy box-shadow + blur layers only after fxReady. */
-    const showFancyFx = showIdleGlow && fxReady;
+    /** Desktop only after fxReady — mobile/iPad: border only (no blur/neon glow). */
+    const showFancyFx = showIdleGlow && fxReady && !liteViewport;
     const spotlightStyle = isSpotlight
       ? ({
           ["--spotlight-a" as string]: theme.spotlightA,
@@ -625,12 +627,13 @@ export function PlaylistCardsSection({
         className={cn(
           "program-playlist-card group/card relative flex h-full min-h-0 w-full flex-col text-left max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[16.5rem]",
           "rounded-3xl border-2 scroll-mt-32 transition-shadow duration-500",
-          isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
+          isSpotlight && !liteViewport ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
-          showFancyFx && !isSpotlight && theme.glow
+          showFancyFx && !isSpotlight && theme.glow,
+          isSpotlight && liteViewport && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]"
         )}
       >
-        {isSpotlight ? (
+        {isSpotlight && !liteViewport ? (
           <>
             <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
             <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
@@ -678,7 +681,8 @@ export function PlaylistCardsSection({
           className={cn(
             PROGRAM_CARD_FRAME,
             "z-[2] h-full",
-            isSpotlight && "program-card-globe-spotlight border-2",
+            isSpotlight && !liteViewport && "program-card-globe-spotlight border-2",
+            isSpotlight && liteViewport && "border-2",
           )}
         >
           <div className={cn(PROGRAM_CARD_INNER_SHELL, "h-full")}>
@@ -828,7 +832,7 @@ export function PlaylistCardsSection({
         unlockDisabled={!!descriptionModalPlaylist?.is_coming_soon}
       />
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-        {fxReady ? (
+        {fxReady && !liteViewport ? (
           <div className="programs-fx-fade">
             <div className="absolute left-[-8%] top-[12%] h-[250px] w-[250px] rounded-full bg-fuchsia-500/20 blur-[90px] sm:h-[380px] sm:w-[380px] sm:blur-[125px]" />
             <div className="absolute right-[-10%] top-[20%] h-[260px] w-[260px] rounded-full bg-cyan-400/18 blur-[95px] sm:h-[400px] sm:w-[400px] sm:blur-[130px]" />

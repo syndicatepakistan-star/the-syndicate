@@ -78,6 +78,7 @@ import { Level1CategoryUnlockAllButton } from "@/components/programs/Level1Categ
 import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
 
 const lessonPanelFallback = (
   <div className="min-h-[12rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
@@ -318,6 +319,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   sectionActive = true,
 }: Props) {
   const { formatPrice: formatLocalizedPrice } = useCurrency();
+  const liteViewport = useLiteVisualViewport();
   const sectionActiveRef = useRef(sectionActive);
   sectionActiveRef.current = sectionActive;
 
@@ -1138,6 +1140,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     const isSpotlight = highlightedPlaylistId === pl.id;
     const spotlightActive = highlightedPlaylistId != null;
     const showIdleGlow = !spotlightActive;
+    const showFancyFx = showIdleGlow && !liteViewport;
     const spotlightStyle = isSpotlight
       ? ({
           ["--spotlight-a" as string]: theme.spotlightA,
@@ -1178,15 +1181,18 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
           "program-playlist-card group/card relative flex h-full w-full min-w-0 max-w-none justify-self-stretch flex-col text-left outline-none",
           "min-h-0 max-lg:min-h-0 max-lg:rounded-[0.85rem] lg:min-h-[clamp(14rem,32vh,17rem)]",
           "rounded-2xl border-2 scroll-mt-32 transition-[transform,box-shadow] duration-300 ease-out",
-          isSpotlight ? "program-card-globe-spotlight-host" : "overflow-hidden",
+          isSpotlight && !liteViewport ? "program-card-globe-spotlight-host" : "overflow-hidden",
           showIdleGlow && !isSpotlight && theme.dominantBorder,
-          showIdleGlow && !isSpotlight && theme.glow,
-          comingSoon ? "cursor-not-allowed opacity-95" : cn("cursor-pointer hover:-translate-y-0.5", showIdleGlow && !isSpotlight && theme.hoverGlow),
+          showFancyFx && !isSpotlight && theme.glow,
+          isSpotlight && liteViewport && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]",
+          comingSoon
+            ? "cursor-not-allowed opacity-95"
+            : cn("cursor-pointer hover:-translate-y-0.5", showFancyFx && !isSpotlight && theme.hoverGlow),
           !comingSoon && "focus-visible:ring-2 focus-visible:ring-[color:var(--gold-neon-border-mid)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         )}
         aria-disabled={comingSoon}
       >
-        {isSpotlight ? (
+        {isSpotlight && !liteViewport ? (
           <>
             <span className="program-card-spotlight-field" style={spotlightStyle} aria-hidden />
             <span className={cn("program-card-spotlight-aura", theme.aura)} aria-hidden />
@@ -1196,7 +1202,8 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
           className={cn(
             PROGRAM_CARD_FRAME,
             "z-[1] h-full rounded-[1.12rem] max-lg:rounded-[0.85rem]",
-            isSpotlight && "program-card-globe-spotlight border-2"
+            isSpotlight && !liteViewport && "program-card-globe-spotlight border-2",
+            isSpotlight && liteViewport && "border-2"
           )}
         >
           <span className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.28rem]" aria-hidden>
@@ -1622,10 +1629,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                     className={cn(
                       "group/card relative flex h-full w-full min-h-0 max-lg:min-h-0 lg:min-h-[clamp(14rem,32vh,17rem)] flex-col overflow-hidden text-left outline-none",
                       "rounded-2xl border-2",
-                      theme.glow,
+                      !liteViewport && theme.glow,
+                      liteViewport && "shadow-[0_14px_38px_rgba(0,0,0,0.58)]",
                       "transition-[transform,box-shadow] duration-300 ease-out",
                       !courseLocked && "hover:-translate-y-0.5",
-                      theme.hoverGlow,
+                      !liteViewport && theme.hoverGlow,
                       "focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                       courseLocked ? "cursor-not-allowed opacity-[0.78]" : "active:translate-y-0"
                     )}

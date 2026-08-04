@@ -31,10 +31,6 @@ import {
   writeProgramDetailsHash,
   clearProgramDetailsHash,
 } from "@/lib/programPlaylistThumbnails";
-import {
-  PROGRAMS_LIBRARY_DESKTOP_PRIORITY_SLUGS,
-  PROGRAMS_LIBRARY_MOBILE_PRIORITY_SLUGS,
-} from "@/lib/programsLibraryLcpImages";
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
 import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
 import { PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
@@ -594,11 +590,7 @@ export function PlaylistCardsSection({
   );
 
   const renderPlaylistCard = (pl: StreamPlaylistListItem, j: number) => {
-    const slug = (pl.slug ?? "").trim().toLowerCase();
-    /** Mobile first-3 paint order + known LCP slugs. Desktop last-3 warmed via <link preload media>. */
-    const mobilePriority = j < 3 || PROGRAMS_LIBRARY_MOBILE_PRIORITY_SLUGS.has(slug);
-    const desktopPriority = PROGRAMS_LIBRARY_DESKTOP_PRIORITY_SLUGS.has(slug);
-    const priorityCover = mobilePriority;
+    /** Library is below-fold on /programs — always lazy covers (mobile SI / FCP). */
     const grad = PROGRAM_CARD_BACKGROUNDS[j % PROGRAM_CARD_BACKGROUNDS.length];
     const cardTitle = resolveProgramPlaylistTitle(pl);
     const playlistThemeIdx = visiblePlaylists.findIndex((item) => item.id === pl.id);
@@ -690,9 +682,9 @@ export function PlaylistCardsSection({
               <ProgramPlaylistCoverImage
                 playlist={pl}
                 gradClassName={grad}
-                loading={priorityCover ? "eager" : "lazy"}
-                fetchPriority={mobilePriority ? "high" : "auto"}
-                displayWidth={mobilePriority ? 384 : desktopPriority ? 360 : 320}
+                loading="lazy"
+                fetchPriority="auto"
+                displayWidth={320}
                 objectFit="cover"
               />
               {comingSoon ? (

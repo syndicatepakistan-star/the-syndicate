@@ -103,7 +103,7 @@ export default async function ProgramsPage() {
         */}
         <LazyWhenVisible
           minHeight="24rem"
-          rootMargin="200px 0px"
+          rootMargin="80px 0px"
           eagerOnHash={["programs-library", "businessprograms"]}
           placeholder={
             <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />

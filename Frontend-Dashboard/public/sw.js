@@ -2,15 +2,14 @@
  * Device cache: first visit fetches from network; repeat visits serve static
  * assets from Cache Storage (CDN + browser disk cache still apply).
  */
-const STATIC_CACHE = "syndicate-static-v2";
-const RUNTIME_CACHE = "syndicate-runtime-v2";
+const STATIC_CACHE = "syndicate-static-v3";
+const RUNTIME_CACHE = "syndicate-runtime-v3";
 
 const PRECACHE_URLS = [
   "/assets/logo.webp",
   "/fonts/CS%20Daine%20Mono/CSDaineMono-Regular.woff2",
 ];
 
-const STATIC_PREFIXES = ["/_next/static/", "/assets/", "/fonts/"];
 const BYPASS_PREFIXES = [
   "/api/",
   "/dashboard",
@@ -21,10 +20,16 @@ const BYPASS_PREFIXES = [
 ];
 
 function isStaticAsset(pathname) {
-  if (STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return true;
+  if (pathname.startsWith("/_next/static/")) return true;
+  if (pathname.startsWith("/fonts/")) return true;
   if (pathname.startsWith("/_next/image")) return true;
+  // Cache lightweight images / fonts under /assets — never cache MP4/WebM (bg.mp4 etc.).
+  if (pathname.startsWith("/assets/")) {
+    if (/\.(mp4|webm|m4v)$/i.test(pathname)) return false;
+    return true;
+  }
   if (pathname === "/favicon.ico" || pathname === "/sw.js") return false;
-  return /\.(avif|webp|png|jpe?g|gif|svg|ico|woff2?|otf|ttf|mp4|webm|m4v)$/i.test(pathname);
+  return /\.(avif|webp|png|jpe?g|gif|svg|ico|woff2?|otf|ttf)$/i.test(pathname);
 }
 
 function shouldBypass(pathname) {

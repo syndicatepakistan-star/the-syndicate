@@ -145,6 +145,11 @@ const nextConfig = {
   async headers() {
     const immutableStatic = "public, max-age=31536000, immutable";
     const imageCache = "public, max-age=2592000, stale-while-revalidate=604800";
+    /** Edge-friendly: CDNs (Cloudflare) honor s-maxage / CDN-Cache-Control for shared edge cache. */
+    const assetEdgeCache =
+      "public, max-age=31536000, immutable, s-maxage=31536000, stale-while-revalidate=86400";
+    const videoEdgeCache =
+      "public, max-age=604800, s-maxage=2592000, stale-while-revalidate=604800";
     const publicPageCache =
       "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400";
     const securityHeaders = [
@@ -156,34 +161,55 @@ const nextConfig = {
         value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
       },
     ];
+    const edgeHint = { key: "CDN-Cache-Control", value: "public, max-age=31536000" };
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
       {
+        source: "/assets/:path*.mp4",
+        headers: [
+          { key: "Cache-Control", value: videoEdgeCache },
+          { key: "CDN-Cache-Control", value: "public, max-age=2592000" },
+        ],
+      },
+      {
+        source: "/assets/:path*.webm",
+        headers: [
+          { key: "Cache-Control", value: videoEdgeCache },
+          { key: "CDN-Cache-Control", value: "public, max-age=2592000" },
+        ],
+      },
+      {
         source: "/assets/:path*",
-        headers: [{ key: "Cache-Control", value: immutableStatic }],
+        headers: [{ key: "Cache-Control", value: assetEdgeCache }, edgeHint],
       },
       {
         source: "/fonts/:path*",
-        headers: [{ key: "Cache-Control", value: immutableStatic }],
+        headers: [{ key: "Cache-Control", value: immutableStatic }, edgeHint],
       },
       {
         source: "/instructors/:path*",
-        headers: [{ key: "Cache-Control", value: immutableStatic }],
+        headers: [{ key: "Cache-Control", value: immutableStatic }, edgeHint],
       },
       {
         source: "/_next/static/:path*",
-        headers: [{ key: "Cache-Control", value: immutableStatic }],
+        headers: [{ key: "Cache-Control", value: immutableStatic }, edgeHint],
       },
       {
         source: "/_next/image",
-        headers: [{ key: "Cache-Control", value: imageCache }],
+        headers: [
+          { key: "Cache-Control", value: imageCache },
+          { key: "CDN-Cache-Control", value: "public, max-age=2592000" },
+        ],
       },
       {
         source: "/_next/image/:path*",
-        headers: [{ key: "Cache-Control", value: imageCache }],
+        headers: [
+          { key: "Cache-Control", value: imageCache },
+          { key: "CDN-Cache-Control", value: "public, max-age=2592000" },
+        ],
       },
       {
         source: "/favicon.ico",

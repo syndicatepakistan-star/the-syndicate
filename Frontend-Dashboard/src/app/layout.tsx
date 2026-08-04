@@ -5,6 +5,7 @@ import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { DeferredGtm } from "@/components/DeferredGtm";
+import { DesktopBandStyles } from "@/components/DesktopBandStyles";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
 import {
@@ -95,23 +96,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Font loads via @font-face in CSS — a global preload often finishes before
             globals.css applies the face and triggers unused-preload console noise. */}
-        {/* Desktop-only bands: non-matching media is not render-blocking on mobile PSI. */}
-        <link
-          rel="stylesheet"
-          href="/styles/laptop-vostro-viewport.css"
-          media="(min-width: 1400px) and (max-width: 1679px)"
-        />
-        <link
-          rel="stylesheet"
-          href="/styles/large-desktop-responsive.css"
-          media="(min-width: 1680px)"
-        />
+        {/* Desktop band CSS: injected by DesktopBandStyles only when width ≥1400px. */}
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body
         className={`${jetbrainsMono.variable} min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased`}
         suppressHydrationWarning
       >
+        <DesktopBandStyles />
         <DeferredGtm />
         <Providers>
           <ServiceWorkerRegister />

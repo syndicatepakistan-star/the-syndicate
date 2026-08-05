@@ -18,11 +18,12 @@ import type { CSSProperties } from "react";
 import gsap from "gsap";
 import { Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
+import type { ChromaItem } from "@/components/ChromaGrid";
 import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
 import { DashboardMediaWarmup } from "@/components/dashboard/DashboardMediaWarmup";
 import { DeferredDashboardHudCss } from "@/components/dashboard/DeferredDashboardHudCss";
 import { DeferredDashboardProgramsFxCss } from "@/components/dashboard/DeferredDashboardProgramsFxCss";
+import { DeferredDashboardProgramsPageCss } from "@/components/dashboard/DeferredDashboardProgramsPageCss";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
@@ -33,9 +34,6 @@ import type { DashboardNavKey } from "@/components/dashboard/types";
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
 import { useGoalsPanel } from "@/contexts/GoalsPanelContext";
-import { GoalsPanel } from "@/components/ui/GoalsPanel";
-import { QuickAccessPanel } from "@/components/ui/QuickAccessPanel";
-import { MembershipOfferLanding } from "@/components/membership/MembershipOfferLanding";
 import { SyndicateModeLoadingShell } from "@/components/dashboard/SyndicateModeLoadingShell";
 import { useDashboardSmoothScroll } from "@/hooks/useDashboardSmoothScroll";
 import { useDashboardTabLifecycle } from "@/hooks/useDashboardTabLifecycle";
@@ -94,7 +92,6 @@ import {
   downloadSynCertificate,
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
-import { InstructorSlideshow } from "@/components/dashboard/InstructorSlideshow";
 import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 import {
   DASHBOARD_NAVBAR_CHROME_NEON,
@@ -202,7 +199,7 @@ const SyndicateAiChallengePanel = dynamic(
 function DashboardSectionFallback() {
   return (
     <div
-      className="dashboard-section-fallback flex min-h-[min(48vh,520px)] w-full flex-col gap-4 rounded-xl border border-white/8 bg-black/20 px-4 py-8"
+      className="dashboard-section-fallback flex min-h-[min(48vh,520px)] w-full flex-col gap-4 rounded-xl border border-white/8 bg-black px-4 py-8"
       aria-hidden
     >
       <div className="mx-auto h-2 w-56 max-w-[85%] animate-pulse rounded-full bg-[rgba(255,215,0,0.18)]" />
@@ -224,12 +221,43 @@ const SupportSectionLazy = dynamic(
 
 const ProgramsCourseSection = dynamic(
   () => import("@/components/programs/ProgramsCourseSection").then((mod) => mod.ProgramsCourseSection),
-  { ssr: false, loading: () => <DashboardSectionFallback /> }
+  {
+    // SSR allowed so /dashboard/programs is not a white blank until the chunk hydrates (LCP/FCP).
+    loading: () => <DashboardSectionFallback />,
+  },
 );
 
 const DashboardControlCenter = dynamic(
   () => import("@/components/dashboard/DashboardControlCenter"),
   { ssr: false, loading: () => <DashboardSectionFallback /> }
+);
+
+const MembershipOfferLanding = dynamic(
+  () => import("@/components/membership/MembershipOfferLanding").then((m) => m.MembershipOfferLanding),
+  { ssr: false, loading: () => <DashboardSectionFallback /> }
+);
+
+const GoalsPanel = dynamic(
+  () => import("@/components/ui/GoalsPanel").then((m) => m.GoalsPanel),
+  { ssr: false }
+);
+
+const QuickAccessPanel = dynamic(
+  () => import("@/components/ui/QuickAccessPanel").then((m) => m.QuickAccessPanel),
+  { ssr: false }
+);
+
+const InstructorSlideshow = dynamic(
+  () => import("@/components/dashboard/InstructorSlideshow").then((m) => m.InstructorSlideshow),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="min-h-[min(32rem,70vh)] w-full animate-pulse rounded-xl border border-white/10 bg-black/30 md:min-h-[min(28rem,52vh)]"
+        aria-hidden
+      />
+    ),
+  }
 );
 
 function cn(...parts: Array<string | false | null | undefined>) {
@@ -2370,9 +2398,13 @@ export default function DashboardPageClient({
     if (typeof window === "undefined") return;
     const syncFromUrl = () => {
       const path = window.location.pathname;
-      // Left the private shell entirely (e.g. Back past /dashboard) — go public home.
+      // Past the private shell floor — stay on /dashboard until logout (do not send to public `/`).
       if (!path.startsWith("/dashboard")) {
-        router.replace("/");
+        window.history.replaceState({ syndicateDashboardFloor: true }, "", "/dashboard");
+        startTransition(() => {
+          setNavKeyState("dashboard");
+          previousNavKeyRef.current = "dashboard";
+        });
         return;
       }
       const params = new URLSearchParams(window.location.search);
@@ -2748,6 +2780,10 @@ export default function DashboardPageClient({
       (typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
+    const skipMotion =
+      skipIntro ||
+      (typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches);
+
     const ctx = gsap.context(() => {
       if (!skipIntro) {
         const inAnim = gsap.utils.toArray<HTMLElement>(
@@ -2779,6 +2815,9 @@ export default function DashboardPageClient({
           clearProps: "opacity,transform",
         });
       }
+
+      // Infinite ring/glow tweens tank mobile TBT — desktop only.
+      if (skipMotion) return;
 
       if (ringOuterRef.current) {
         gsap.to(ringOuterRef.current, {
@@ -3125,6 +3164,7 @@ export default function DashboardPageClient({
       <PlaylistCheckoutSync />
       <PlanCheckoutSync />
       <DashboardMediaWarmup />
+      <DeferredDashboardProgramsPageCss />
       <DeferredDashboardProgramsFxCss />
       <DeferredDashboardHudCss active={selectedNavKey === "monk"} />
       <DashboardBackToPublic />
@@ -3621,7 +3661,10 @@ export default function DashboardPageClient({
                   : "fluid-section-p"
             )}
           >
-            <DashboardMainVideoBackground opacity={0.9} />
+            <DashboardMainVideoBackground
+              opacity={selectedNavKey === "programs" ? 0.12 : 0.22}
+              disabled={selectedNavKey === "programs"}
+            />
             <div
               role="main"
               data-main-shell-scroll

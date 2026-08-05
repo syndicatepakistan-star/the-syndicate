@@ -34,7 +34,7 @@ import {
   resolveProgramPlaylistHighlightSlug,
   resolveProgramPlaylistTitle,
 } from "@/lib/programPlaylistCatalog";
-import { historyReplaceUrl } from "@/lib/historyUrl";
+import { historyPushUrl, historyReplaceUrl } from "@/lib/historyUrl";
 import {
   PUBLIC_BUSINESS_MODEL_SLUG_ORDER,
   PUBLIC_PSYCHOLOGY_SLUG_ORDER,
@@ -787,7 +787,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       url.pathname = "/dashboard/programs";
       url.searchParams.delete("section");
       url.searchParams.set("playlist", String(id));
-      historyReplaceUrl(`${url.pathname}${url.search}${url.hash}`);
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      // Push so system Back closes the playlist → programs grid (not public `/`).
+      if (current !== next) historyPushUrl(next, { dashboardPlaylist: id });
+      else historyReplaceUrl(next, { dashboardPlaylist: id });
     }
   };
   openStreamPlaylistRef.current = openStreamPlaylist;
@@ -811,15 +815,22 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       if (checkout.is_unlocked) {
         await reloadStreamPlaylists({ forceRefresh: true });
         openStreamPlaylist(playlistId);
+        toast.success("Already purchased", { icon: "✓", duration: 3200 });
         return;
       }
       if (checkout.checkout_url) {
         window.location.href = checkout.checkout_url;
         return;
       }
-      throw new Error(checkout.message || "Could not start checkout.");
+      // No checkout URL — open the program instead of a technical error toast.
+      openStreamPlaylist(playlistId);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not start checkout.";
+      const { isTechnicalNotFoundMessage } = await import("@/lib/instructorSlideUnlock");
+      if (isTechnicalNotFoundMessage(message)) {
+        openStreamPlaylist(playlistId);
+        return;
+      }
       setCheckoutError(message);
     } finally {
       setCheckoutBusyPlaylistId(null);
@@ -864,8 +875,16 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     setDetailPlaylistId(null);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
+      const hadPlaylist = url.searchParams.has("playlist") || url.searchParams.has("playlist_id");
       url.searchParams.delete("playlist");
-      historyReplaceUrl(url.toString());
+      url.searchParams.delete("playlist_id");
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      // If open used pushState, prefer history.back() so the stack stays clean.
+      if (hadPlaylist && window.history.state && (window.history.state as { dashboardPlaylist?: number }).dashboardPlaylist) {
+        window.history.back();
+      } else {
+        historyReplaceUrl(next);
+      }
       requestAnimationFrame(() => resetProgramsViewportScroll());
     }
   };
@@ -984,9 +1003,9 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
         await Promise.all([reloadApiCourses(), reloadStreamPlaylists()]);
         const message =
           plan === "bundle"
-            ? "Money Mastery already active. All programs are unlocked."
-            : "The Knight plan is already active for this account.";
-        toast.success(message);
+            ? "Already purchased — Money Mastery"
+            : "Already purchased — Knight plan";
+        toast.success(message, { icon: "✓", duration: 3200 });
         return;
       }
       if (isVaultPackKey(plan)) {
@@ -994,11 +1013,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
         const playlistId = await resolvePlaylistIdForPlan(plan);
         if (playlistId) {
           openUnlockedPlaylistDirect(playlistId);
-          toast.success("Pack already active — opening your playlist.");
+          toast.success("Already purchased — opening your playlist", { icon: "✓", duration: 3200 });
           return;
         }
         setHighlightPack(plan);
-        toast.success("Pack already active — choose a module below.");
+        toast.success("Already purchased — choose a module below", { icon: "✓", duration: 3200 });
         return;
       }
       const offer = isVaultCourseSlug(plan)
@@ -1008,11 +1027,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       const playlistId = await resolvePlaylistIdForPlan(plan);
       if (playlistId) {
         openUnlockedPlaylistDirect(playlistId);
-        toast.success(`${label} is already active — opening now.`);
+        toast.success(`Already purchased — ${label}`, { icon: "✓", duration: 3200 });
         return;
       }
       await Promise.all([reloadApiCourses(), reloadStreamPlaylists({ forceRefresh: true })]);
-      toast.success(`${label} is already active on this account.`);
+      toast.success(`Already purchased — ${label}`, { icon: "✓", duration: 3200 });
     },
     [openUnlockedPlaylistDirect, reloadApiCourses, reloadStreamPlaylists]
   );
@@ -1038,7 +1057,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       url.searchParams.delete("section");
       url.searchParams.set("playlist", String(playlistIdFromUrl));
       url.searchParams.delete("playlist_id");
-      historyReplaceUrl(`${url.pathname}${url.search}${url.hash}`);
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      // Deep-link / popstate: replace when URL already matches; otherwise push a back step.
+      if (current === next) historyReplaceUrl(next, { dashboardPlaylist: playlistIdFromUrl });
+      else historyPushUrl(next, { dashboardPlaylist: playlistIdFromUrl });
     }
   }, [detailPlaylistId, secureView]);
 
@@ -1075,8 +1098,16 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
     const onPopState = () => {
       const params = new URLSearchParams(window.location.search);
       const raw = params.get("playlist") || params.get("playlist_id");
-      if (!raw || !/^\d+$/.test(raw)) return;
-      openPlaylistFromUrl(Number(raw));
+      if (raw && /^\d+$/.test(raw)) {
+        openPlaylistFromUrl(Number(raw));
+        return;
+      }
+      // Back cleared ?playlist= — close detail to the programs grid without another history write.
+      setSecureView("grid");
+      setDetailCourseId(null);
+      setDetailPlaylistId(null);
+      pendingPlaylistUrlRef.current = null;
+      requestAnimationFrame(() => resetProgramsInnerScrollOnly());
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);

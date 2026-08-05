@@ -34,6 +34,8 @@ type DashboardShellBackgroundProps = {
   variant?: "contained" | "viewport";
   /** Video layer opacity (CSS also targets `.dashboard-main-shell-video`). */
   opacity?: number;
+  /** Never mount the letter-rain mp4 (programs route / reduced motion / lite). */
+  disabled?: boolean;
 };
 
 const SHELL_GRADIENT =
@@ -42,7 +44,8 @@ const SHELL_GRADIENT =
 /** Cover video behind dashboard main content — not navbar or sidebar. */
 export function DashboardShellBackground({
   variant = "contained",
-  opacity = 0.2,
+  opacity = 0.22,
+  disabled = false,
 }: DashboardShellBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const startedRef = useRef(false);
@@ -51,7 +54,14 @@ export function DashboardShellBackground({
   const [skipVideo, setSkipVideo] = useState(true);
 
   useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 1024px)");
+    if (disabled) {
+      setSkipVideo(true);
+      setAllowVideo(false);
+      return;
+    }
+
+    // Phone + iPad + large tablets: never load letter-rain mp4 (Lighthouse + scroll).
+    const narrow = window.matchMedia("(max-width: 1280px)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let safetyId: number | undefined;
     let interactionCleanups: Array<() => void> = [];
@@ -67,14 +77,13 @@ export function DashboardShellBackground({
 
     const sync = () => {
       clearInteraction();
-      // Phone + iPad: poster/gradient only (no letter-rain mp4 — scroll/TBT).
       const skip = narrow.matches || reduced.matches;
       setSkipVideo(skip);
       if (skip) {
         setAllowVideo(false);
         return;
       }
-      // Desktop: do not auto-start on first view — wait for interaction or long idle.
+      // Wide desktop only: wait for interaction or long idle — never on first paint.
       const activate = () => {
         if (narrow.matches || reduced.matches) return;
         clearInteraction();
@@ -91,7 +100,7 @@ export function DashboardShellBackground({
         () => window.removeEventListener("keydown", activate),
         () => window.removeEventListener("scroll", activate),
       ];
-      safetyId = window.setTimeout(activate, 8000);
+      safetyId = window.setTimeout(activate, 12000);
     };
 
     sync();
@@ -102,7 +111,7 @@ export function DashboardShellBackground({
       narrow.removeEventListener("change", sync);
       reduced.removeEventListener("change", sync);
     };
-  }, []);
+  }, [disabled]);
 
   useEffect(() => {
     if (skipVideo || !allowVideo) return;

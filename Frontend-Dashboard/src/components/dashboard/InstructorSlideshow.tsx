@@ -64,11 +64,23 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
     setUnlockBusy(true);
     try {
       const result = await unlockInstructorSlide(active);
-      if (!result.ok && result.message) {
+      if (result.alreadyPurchased) {
+        toast.success(`Already purchased — ${active.programName}`, {
+          icon: "✓",
+          duration: 3200,
+        });
+        return;
+      }
+      // Not owned / soft failure: unlock flow already navigates to the program. No error toasts.
+      if (result.navigated || result.ok) return;
+      if (result.message && !/matches the given|not found|no stream/i.test(result.message)) {
         toast.error(result.message);
       }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not start checkout.");
+    } catch {
+      // Never surface Django "No StreamPlaylist matches…" — open programs instead.
+      if (typeof window !== "undefined") {
+        window.location.assign("/dashboard/programs");
+      }
     } finally {
       setUnlockBusy(false);
     }

@@ -422,10 +422,16 @@ export default function StreamHtmlVideoPlayer({
 
       const hls = new Hls({
         autoStartLoad: true,
-        enableWorker: false,
+        enableWorker: true,
         lowLatencyMode: false,
-        maxBufferHole: 0.6,
+        // Keep more ahead so mid-video stalls less when segments proxy through the app.
+        maxBufferLength: 45,
+        maxMaxBufferLength: 90,
+        maxBufferHole: 0.8,
         startFragPrefetch: true,
+        // Prefer lower quality first so first paint isn't stuck on a huge first segment.
+        startLevel: -1,
+        abrEwmaDefaultEstimate: 500_000,
       });
       if (cancelled) {
         hls.destroy();

@@ -57,16 +57,20 @@ export function Level1CategoryUnlockAllButton({
       if (result.status === "checkout" || result.status === "auth_required") return;
       if (result.status === "already_unlocked") {
         await lazyToastSuccess(
-          result.message || `You already unlocked all ${pack.shortLabel} programs.`,
+          result.message || `Already purchased — all ${pack.shortLabel} programs`,
+          { icon: "✓", duration: 3200 },
         );
         await onUnlocked?.();
         return;
       }
       if (result.status === "error") {
+        // Technical not-found messages are suppressed inside lazyToastError.
         await lazyToastError(result.message);
+        await onUnlocked?.();
       }
     } catch (e) {
-      await lazyToastError(e instanceof Error ? e.message : "Could not start checkout.");
+      const msg = e instanceof Error ? e.message : "Could not start checkout.";
+      await lazyToastError(msg);
     } finally {
       setBusy(false);
     }

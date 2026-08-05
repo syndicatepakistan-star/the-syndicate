@@ -49,8 +49,10 @@ import {
   lazyCheckoutUnlockCartItems,
   lazyStartPlanCheckout,
   lazyToast,
+  lazyToastAlreadyPurchased,
   lazyToastSuccess,
 } from "@/lib/lazyUnlockCheckout";
+import { isTechnicalNotFoundMessage } from "@/lib/instructorSlideUnlock";
 import { useDeferredChrome } from "@/hooks/useDeferredChrome";
 
 const UnlockCartPanel = dynamic(
@@ -418,6 +420,7 @@ function PublicPlanOfferCardsInner({
           if (onAlreadyUnlocked) {
             await onAlreadyUnlocked(offer.plan);
           } else {
+            await lazyToastAlreadyPurchased(offer.title);
             await navigateToAlreadyUnlockedProgram({
               plan: offer.plan,
               postAuthNext: checkoutReturnPath,
@@ -430,6 +433,10 @@ function PublicPlanOfferCardsInner({
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Could not start checkout.";
+        if (isTechnicalNotFoundMessage(msg)) {
+          void openUnlocked(offer);
+          return;
+        }
         if (onCheckoutError) onCheckoutError(msg);
         else setError(msg);
       } finally {
@@ -486,6 +493,10 @@ function PublicPlanOfferCardsInner({
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not start cart checkout.";
+      if (isTechnicalNotFoundMessage(msg)) {
+        await reloadUnlockState();
+        return;
+      }
       setCartError(msg);
       if (onCheckoutError) onCheckoutError(msg);
     } finally {

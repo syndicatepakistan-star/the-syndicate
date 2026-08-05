@@ -37,8 +37,8 @@ export function ProgramsEliteOffersLcpFallback({
                     width={384}
                     height={480}
                     alt=""
-                    decoding="sync"
-                    fetchPriority="high"
+                decoding="async"
+                fetchPriority="high"
                     loading="eager"
                     className="absolute inset-0 h-full w-full object-cover object-[center_38%] [image-rendering:high-quality]"
                   />

@@ -20,13 +20,6 @@ const PROGRAMS_FONT_PRELOADS = (
       type="font/woff2"
       crossOrigin="anonymous"
     />
-    <link
-      rel="preload"
-      href="/fonts/CS%20Daine%20Mono/CSDaineMono-Regular.woff2"
-      as="font"
-      type="font/woff2"
-      crossOrigin="anonymous"
-    />
   </>
 );
 

@@ -2,12 +2,11 @@
  * Device cache: first visit fetches from network; repeat visits serve static
  * assets from Cache Storage (CDN + browser disk cache still apply).
  */
-const STATIC_CACHE = "syndicate-static-v3";
-const RUNTIME_CACHE = "syndicate-runtime-v3";
+const STATIC_CACHE = "syndicate-static-v4";
+const RUNTIME_CACHE = "syndicate-runtime-v4";
 
 const PRECACHE_URLS = [
-  "/assets/logo.webp",
-  "/fonts/CS%20Daine%20Mono/CSDaineMono-Regular.woff2",
+  "/assets/logo-nav.webp",
 ];
 
 const BYPASS_PREFIXES = [

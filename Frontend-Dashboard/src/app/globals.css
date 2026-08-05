@@ -30,7 +30,7 @@
   --gold-neon-glow-strong: rgba(212, 175, 55, 0.65);
   --gold-neon-haze: rgba(212, 175, 55, 0.14);
   --hud-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --font-body: "CS Daine Mono", var(--hud-font);
+  --font-body: var(--font-mono, ui-monospace), ui-monospace, monospace;
   /* Display typeface for headings/titles */
   --font-heading: "Thryon", "Thyron", var(--hud-font);
 
@@ -130,22 +130,6 @@
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
-}
-
-@font-face {
-  font-family: "CS Daine Mono";
-  src: url("/fonts/CS%20Daine%20Mono/CSDaineMono-Regular.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "CS Daine Mono";
-  src: url("/fonts/CS%20Daine%20Mono/CSDaineMono-Italic.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 400;
-  font-style: italic;
 }
 
 /* Optional alias (common typo): same file as Thryon */
@@ -456,7 +440,7 @@
   }
 }
 
-/* Body copy: CS Daine Mono; titles use Thryon via .membership-article-title */
+/* Body copy: JetBrains Mono (--font-mono); titles use Thryon via .membership-article-title */
 .membership-article-prose {
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;

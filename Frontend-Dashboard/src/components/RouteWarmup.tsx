@@ -26,14 +26,21 @@ export default function RouteWarmup() {
     const isFounder = pathname === "/our-founder";
     const isQuiz = pathname === "/quiz" || pathname.startsWith("/quiz/");
     const isPrograms = pathname === "/programs" || pathname.startsWith("/programs/");
+    const isDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+    const isAuthHeavy =
+      pathname.startsWith("/syndicate-otp") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/signup") ||
+      pathname.startsWith("/checkout") ||
+      pathname.startsWith("/affiliate");
 
-    // Skip marketing media warmup on light pages + programs (competes with LCP).
-    if (!isFounder && !isQuiz && !isPrograms) {
+    // Never warm marketing GIF/MP4s on member shell — LH showed ~9MB (tt.gif + videos).
+    if (!isFounder && !isQuiz && !isPrograms && !isDashboard && !isAuthHeavy) {
       scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
     }
 
     // On /programs: no idle route prefetch — Lighthouse unused-JS / TBT on mobile.
-    if (isPrograms) return;
+    if (isPrograms || isDashboard) return;
 
     // Homepage: wait longer so hero LCP / TBT settle before prefetch pulls more JS.
     runWhenIdle(() => {

@@ -19,9 +19,10 @@ import gsap from "gsap";
 import { Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ChromaGrid, { type ChromaItem } from "@/components/ChromaGrid";
-import DashboardControlCenter from "@/components/dashboard/DashboardControlCenter";
 import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
 import { DashboardMediaWarmup } from "@/components/dashboard/DashboardMediaWarmup";
+import { DeferredDashboardHudCss } from "@/components/dashboard/DeferredDashboardHudCss";
+import { DeferredDashboardProgramsFxCss } from "@/components/dashboard/DeferredDashboardProgramsFxCss";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
@@ -94,11 +95,20 @@ import {
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
 import { InstructorSlideshow } from "@/components/dashboard/InstructorSlideshow";
+import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 import {
   DASHBOARD_NAVBAR_CHROME_NEON,
   getInstructorSlideNeonTheme,
   neonAccentStyleVars,
 } from "@/data/instructorSlideNeonThemes";
+
+/** Same-origin static assets → /_next/image at display size; data:/blob:/remote unchanged. */
+function dashboardThumbSrc(src: string, width: number, quality = 55): string {
+  if (!src || src.startsWith("data:") || src.startsWith("blob:") || /^https?:\/\//i.test(src)) {
+    return src;
+  }
+  return nextOptimizedImageUrl(src, width, quality);
+}
 
 type NavItem = { label: string; key: string; active?: boolean };
 type Course = {
@@ -217,6 +227,11 @@ const ProgramsCourseSection = dynamic(
   { ssr: false, loading: () => <DashboardSectionFallback /> }
 );
 
+const DashboardControlCenter = dynamic(
+  () => import("@/components/dashboard/DashboardControlCenter"),
+  { ssr: false, loading: () => <DashboardSectionFallback /> }
+);
+
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -308,12 +323,14 @@ function CheckboxSlot({ active }: { active?: boolean }) {
 function SidebarNavKeyDecor({ onClose }: { onClose?: () => void }) {
   const keyImage = (
     <img
-      src="/assets/Gold-Key.png"
+      src={nextOptimizedImageUrl("/assets/Gold-Key.png", 128, 55)}
       alt=""
-      width={120}
-      height={120}
+      width={67}
+      height={231}
       className="sidebar-nav-key-spin"
       draggable={false}
+      loading="lazy"
+      decoding="async"
     />
   );
 
@@ -1537,8 +1554,11 @@ function SettingsProfileSection({
               <label className="text-[13px] font-black uppercase tracking-[0.12em] text-fuchsia-100/90">Profile Avatar</label>
               <div className="mt-2 flex items-center gap-3">
                 <img
-                  src={profileAvatar}
+                  src={dashboardThumbSrc(profileAvatar, 128)}
                   alt="Profile avatar preview"
+                  width={56}
+                  height={56}
+                  decoding="async"
                   className="h-14 w-14 rounded-full border border-fuchsia-200/35 object-cover shadow-[0_0_12px_rgba(236,72,153,0.25)]"
                 />
                 <span className="text-[13px] text-slate-200/75">Upload your operator image for profile visibility across dashboard modules.</span>
@@ -2033,7 +2053,7 @@ export default function DashboardPageClient({
 
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [profileAvatar, setProfileAvatar] = useState<string>("/assets/a.webp");
+  const [profileAvatar, setProfileAvatar] = useState<string>("/assets/a-sm.webp");
   const [profileName, setProfileName] = useState(DEFAULT_DASHBOARD_PROFILE_NAME);
 
   useEffect(() => {
@@ -2272,28 +2292,33 @@ export default function DashboardPageClient({
     closeQuickAccessPanel();
   }, [selectedNavKey, closeGoalsPanel, closeQuickAccessPanel]);
 
-  /** Warm lazy section chunks after idle — skip phones/tablets to save data/CPU. */
+  /** Warm lazy section chunks after idle — skip phone/iPad and /programs (already loaded). */
   useEffect(() => {
     if (!authChecked || !portalUser) return;
     if (typeof window === "undefined") return;
-    const narrow = window.matchMedia("(max-width: 767px)").matches;
+    const narrow = window.matchMedia("(max-width: 1024px)").matches;
     if (narrow) return;
+    if (selectedNavKey === "programs") return;
     const warm = () => {
       void import("@/features/productivity/control-center/QuickAccessGrid");
-      void import("@/components/SyndicateAiChallengePanel");
+      if (selectedNavKey !== "monk") {
+        void import("@/components/SyndicateAiChallengePanel");
+      }
       void import("@/components/membership/MembershipContentHub");
       void import("@/components/dashboard/SupportSection");
-      void import("@/components/programs/ProgramsCourseSection");
+      if (selectedNavKey !== "programs") {
+        void import("@/components/programs/ProgramsCourseSection");
+      }
     };
     const ric = window.requestIdleCallback?.bind(window);
     const cic = window.cancelIdleCallback?.bind(window);
     if (typeof ric === "function" && typeof cic === "function") {
-      const id = ric(warm, { timeout: 5500 });
+      const id = ric(warm, { timeout: 8000 });
       return () => cic(id);
     }
-    const t = window.setTimeout(warm, 2800);
+    const t = window.setTimeout(warm, 4500);
     return () => window.clearTimeout(t);
-  }, [authChecked, portalUser]);
+  }, [authChecked, portalUser, selectedNavKey]);
 
   useEffect(() => {
     setPanelThemeMode(themeMode);
@@ -3100,6 +3125,8 @@ export default function DashboardPageClient({
       <PlaylistCheckoutSync />
       <PlanCheckoutSync />
       <DashboardMediaWarmup />
+      <DeferredDashboardProgramsFxCss />
+      <DeferredDashboardHudCss active={selectedNavKey === "monk"} />
       <DashboardBackToPublic />
       {portalUser?.king_program_selection_required ? (
         <KingProgramUnlockOverlay
@@ -3158,11 +3185,21 @@ export default function DashboardPageClient({
                   )}
                 >
                   <img
-                    src="/assets/logo.webp"
+                    src="/assets/logo-nav.webp"
                     alt=""
+                    width={200}
+                    height={80}
+                    decoding="async"
+                    fetchPriority="low"
                     className="pointer-events-none relative z-[1] h-[26px] w-auto max-w-[min(100%,100px)] object-contain opacity-[0.96] [filter:drop-shadow(0_0_14px_rgba(250,204,21,0.32))] sm:h-[34px] sm:max-w-[130px] md:h-[44px] md:max-w-[160px] lg:h-[60px] lg:max-w-[200px]"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      const img = e.currentTarget as HTMLImageElement;
+                      if (img.dataset.fallback !== "1") {
+                        img.dataset.fallback = "1";
+                        img.src = nextOptimizedImageUrl("/assets/logo.webp", 256, 55);
+                        return;
+                      }
+                      img.style.display = "none";
                     }}
                   />
                 </button>
@@ -3277,8 +3314,11 @@ export default function DashboardPageClient({
                   aria-expanded={profileOpen}
                 >
                   <img
-                    src={profileAvatar}
+                    src={dashboardThumbSrc(profileAvatar, 96)}
                     alt="Profile avatar"
+                    width={52}
+                    height={52}
+                    decoding="async"
                     className={cn(
                       "h-[26px] w-[26px] shrink-0 rounded-[3px] border border-[color:var(--neon-accent-border)] bg-black/30 object-cover sm:h-[34px] sm:w-[34px] md:h-[44px] md:w-[44px] lg:h-[52px] lg:w-[52px]",
                       profileOpen && "border-[color:var(--neon-accent-bright)]"
@@ -3599,8 +3639,8 @@ export default function DashboardPageClient({
               )}
             >
               {selectedNavKey !== "monk" && selectedNavKey !== "programs" ? (
-                <header className="mb-[clamp(0.65rem,1.5vw+0.2rem,1.1rem)] shrink-0 border-b border-[color:var(--gold-neon-border-mid)] pb-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] pr-1">
-                  <div className="mx-auto flex w-[min(100%,96vw)] max-w-[min(56rem,92vw)] justify-center px-[clamp(0.35rem,2vw,1rem)]">
+                <header className="mb-[clamp(0.65rem,1.5vw+0.2rem,1.1rem)] min-h-[3.25rem] shrink-0 border-b border-[color:var(--gold-neon-border-mid)] pb-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] pr-1">
+                  <div className="mx-auto flex min-h-[2.75rem] w-[min(100%,96vw)] max-w-[min(56rem,92vw)] items-center justify-center px-[clamp(0.35rem,2vw,1rem)]">
                     <NeonTypingBadge
                       phrases={["HONOUR · MONEY · POWER · FREEDOM"]}
                       typingSpeed={34}
@@ -3740,7 +3780,7 @@ export default function DashboardPageClient({
                   <>
                     <section
                       aria-label="Featured instructor programs"
-                      className="mb-3 w-full max-w-full shrink-0 scroll-mt-2 md:mb-8 max-lg:overflow-hidden"
+                      className="mb-3 w-full max-w-full shrink-0 scroll-mt-2 md:mb-8 max-lg:overflow-hidden min-h-[min(32rem,70vh)] md:min-h-[min(28rem,52vh)]"
                     >
                       <InstructorSlideshow showPanelBackgroundVideo={false} />
                     </section>

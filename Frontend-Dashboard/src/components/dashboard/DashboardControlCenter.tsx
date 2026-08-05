@@ -27,7 +27,15 @@ import {
   requestDashboardProgramOpen,
 } from "@/lib/programUnlockFlow";
 import { resolveContinuePlaylistId } from "@/lib/continueProgramResume";
+import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 export type { ThemeMode };
+
+function controlCenterAvatarSrc(src: string): string {
+  if (!src || src.startsWith("data:") || src.startsWith("blob:") || /^https?:\/\//i.test(src)) {
+    return src;
+  }
+  return nextOptimizedImageUrl(src, 128, 55);
+}
 
 
 function timeAgo(ts: number) {
@@ -330,8 +338,11 @@ function HeroStatusPanel({
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <img
-            src={profileAvatar}
+            src={controlCenterAvatarSrc(profileAvatar)}
             alt="Profile avatar"
+            width={84}
+            height={84}
+            decoding="async"
             className="h-[84px] w-[84px] rounded-lg border border-[color:var(--neon-accent-border)] bg-black/30 object-cover p-0.5 shadow-[0_0_24px_var(--neon-accent-glow)]"
           />
           <div className="min-w-0">

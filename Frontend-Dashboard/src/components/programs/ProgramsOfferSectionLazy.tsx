@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useLayoutEffect } from "react";
 import { ProgramsEliteOffersLcpFallback } from "@/components/programs/ProgramsEliteOffersLcpFallback";
+import { useDeferredInteractiveOffers } from "@/hooks/useDeferredInteractiveOffers";
 import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
 
 type Props = {
@@ -11,6 +12,11 @@ type Props = {
   omitKnight?: boolean;
   knightOnly?: boolean;
   highlightPack?: GlobePackKey;
+  /**
+   * When true, SSR browse card is a sibling Server Component (`#programs-lcp-browse`).
+   * This island returns null until idle so LCP <img> is never remounted by this client tree.
+   */
+  browseSibling?: boolean;
 };
 
 function KnightOfferFallback() {
@@ -23,13 +29,12 @@ function KnightOfferFallback() {
 }
 
 /**
- * Client-only offers mount after first paint so Money Mastery LCP (SSR fallback)
- * can paint before the heavy unlock/browse chunk competes for main thread.
+ * Code-split offers — mount only after idle/interaction (no `ssr: false` bomb).
+ * Default dynamic SSR is fine when mounted; we simply do not mount during TBT window.
  */
 const EliteOffersDynamic = dynamic(
   () => import("@/components/programs/ProgramsOfferSection").then((m) => m.ProgramsOfferSection),
   {
-    ssr: false,
     loading: () => <ProgramsEliteOffersLcpFallback />,
   },
 );
@@ -37,48 +42,36 @@ const EliteOffersDynamic = dynamic(
 const KnightOfferDynamic = dynamic(
   () => import("@/components/programs/ProgramsOfferSection").then((m) => m.ProgramsOfferSection),
   {
-    ssr: false,
     loading: () => <KnightOfferFallback />,
   },
 );
 
-export function ProgramsOfferSectionLazy(props: Props) {
-  const [interactiveReady, setInteractiveReady] = useState(false);
+function hideSsrBrowseSibling() {
+  const el = document.getElementById("programs-lcp-browse");
+  if (!el) return;
+  el.setAttribute("hidden", "");
+  el.style.display = "none";
+}
 
-  useEffect(() => {
-    let cancelled = false;
-    let idleHandle: number | undefined;
-    let timeoutHandle: number | undefined;
-    let raf2 = 0;
+/**
+ * Idle-deferred interactive elite offers. Pair with server `ProgramsEliteOffersLcpFallback`
+ * (`browseSibling`) so Money Mastery LCP stays a stable server <img>.
+ */
+export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
+  const interactiveReady = useDeferredInteractiveOffers({
+    safetyMs: props.knightOnly ? 4500 : 3200,
+  });
 
-    const start = () => {
-      if (!cancelled) setInteractiveReady(true);
-    };
-
-    // Two frames: commit SSR LCP fallback paint, then schedule heavy JS.
-    const raf1 = window.requestAnimationFrame(() => {
-      raf2 = window.requestAnimationFrame(() => {
-        if (typeof window.requestIdleCallback === "function") {
-          idleHandle = window.requestIdleCallback(start, { timeout: 900 });
-        } else {
-          timeoutHandle = window.setTimeout(start, 50);
-        }
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(raf1);
-      window.cancelAnimationFrame(raf2);
-      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleHandle);
-      }
-      if (timeoutHandle !== undefined) window.clearTimeout(timeoutHandle);
-    };
-  }, []);
+  useLayoutEffect(() => {
+    if (!interactiveReady || props.knightOnly) return;
+    hideSsrBrowseSibling();
+  }, [interactiveReady, props.knightOnly]);
 
   if (!interactiveReady) {
-    return props.knightOnly ? <KnightOfferFallback /> : <ProgramsEliteOffersLcpFallback />;
+    if (props.knightOnly) return <KnightOfferFallback />;
+    // Sibling server browse already paints LCP — do not duplicate / remount the img.
+    if (browseSibling) return null;
+    return <ProgramsEliteOffersLcpFallback />;
   }
 
   if (props.knightOnly) {

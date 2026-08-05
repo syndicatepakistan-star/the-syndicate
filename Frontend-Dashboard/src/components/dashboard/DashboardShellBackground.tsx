@@ -51,43 +51,54 @@ export function DashboardShellBackground({
   const [skipVideo, setSkipVideo] = useState(true);
 
   useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 767px)");
+    const narrow = window.matchMedia("(max-width: 1024px)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let idleId: number | null = null;
+    let safetyId: number | undefined;
+    let interactionCleanups: Array<() => void> = [];
 
-    const clearIdle = () => {
-      if (idleId == null) return;
-      if (typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      } else {
-        window.clearTimeout(idleId);
+    const clearInteraction = () => {
+      interactionCleanups.forEach((fn) => fn());
+      interactionCleanups = [];
+      if (safetyId !== undefined) {
+        window.clearTimeout(safetyId);
+        safetyId = undefined;
       }
-      idleId = null;
     };
 
     const sync = () => {
-      clearIdle();
+      clearInteraction();
+      // Phone + iPad: poster/gradient only (no letter-rain mp4 — scroll/TBT).
       const skip = narrow.matches || reduced.matches;
       setSkipVideo(skip);
       if (skip) {
         setAllowVideo(false);
         return;
       }
-      const ric =
-        window.requestIdleCallback ??
-        ((cb: IdleRequestCallback) => window.setTimeout(() => cb({} as IdleDeadline), 1800));
-      idleId = ric.call(
-        window,
-        () => setAllowVideo(true),
-        { timeout: 5000 },
-      ) as number;
+      // Desktop: do not auto-start on first view — wait for interaction or long idle.
+      const activate = () => {
+        if (narrow.matches || reduced.matches) return;
+        clearInteraction();
+        setAllowVideo(true);
+      };
+      const opts: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener("pointerdown", activate, opts);
+      window.addEventListener("touchstart", activate, opts);
+      window.addEventListener("keydown", activate, opts);
+      window.addEventListener("scroll", activate, opts);
+      interactionCleanups = [
+        () => window.removeEventListener("pointerdown", activate),
+        () => window.removeEventListener("touchstart", activate),
+        () => window.removeEventListener("keydown", activate),
+        () => window.removeEventListener("scroll", activate),
+      ];
+      safetyId = window.setTimeout(activate, 8000);
     };
 
     sync();
     narrow.addEventListener("change", sync);
     reduced.addEventListener("change", sync);
     return () => {
-      clearIdle();
+      clearInteraction();
       narrow.removeEventListener("change", sync);
       reduced.removeEventListener("change", sync);
     };

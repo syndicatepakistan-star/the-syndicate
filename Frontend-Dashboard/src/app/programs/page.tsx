@@ -5,6 +5,7 @@ import { NavApp } from '@/components/NavApp'
 import { ProgramsUnlockShell } from '@/components/programs/ProgramsUnlockShell'
 import { ProgramsGoldPillHeading } from '@/components/programs/ProgramsGoldPillHeading'
 import { ProgramsOfferSectionLazy } from '@/components/programs/ProgramsOfferSectionLazy'
+import { ProgramsEliteOffersLcpFallback } from '@/components/programs/ProgramsEliteOffersLcpFallback'
 import { LazyWhenVisible } from '@/components/LazyWhenVisible'
 import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusinessHashLand'
 import { ProgramsLibraryHashPreloads } from '@/components/programs/ProgramsLibraryHashPreloads'
@@ -83,8 +84,9 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        {/* SSR Money Mastery LCP art first; interactive cards mount after paint. */}
-        <ProgramsOfferSectionLazy size="large" shellHosted omitKnight />
+        {/* Stable SSR Money Mastery LCP — interactive unlock island mounts after idle (no ssr:false). */}
+        <ProgramsEliteOffersLcpFallback markedAsLcpBrowse />
+        <ProgramsOfferSectionLazy size="large" shellHosted omitKnight browseSibling />
       </section>
       {/*
         Anchor + PROGRAMS heading stay in SSR HTML (not behind LazyWhenVisible) so

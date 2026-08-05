@@ -30,7 +30,7 @@ export function shellProfileAvatarKey(ns: string) {
 }
 
 export const DEFAULT_DASHBOARD_PROFILE_NAME = "Member";
-export const DEFAULT_DASHBOARD_PROFILE_AVATAR = "/assets/a.webp";
+export const DEFAULT_DASHBOARD_PROFILE_AVATAR = "/assets/a-sm.webp";
 
 /** Same-tab sync: Syndicate Mode listens after header profile save. */
 export const DASHBOARD_PROFILE_UPDATED_EVENT = "dashboarded:profileUpdated";
@@ -156,6 +156,7 @@ export function readDashboardProfileAvatarStorageRaw(): string {
 export function resolveDashboardAvatarDisplayUrl(raw: string | null | undefined): string {
   const t = (raw ?? "").trim();
   if (!t) return DEFAULT_DASHBOARD_PROFILE_AVATAR;
+  if (t === "/assets/a.webp") return DEFAULT_DASHBOARD_PROFILE_AVATAR;
   if (t.startsWith("data:image/")) return t;
   if (t.startsWith("/")) return t;
   try {

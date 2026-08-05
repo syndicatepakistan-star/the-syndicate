@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 import "@/styles/programs-page.css";
-/* Dashboard chrome + mission HUD — keep off marketing /programs first paint. */
+/* Dashboard chrome — keep off marketing /programs first paint. */
 import "@/styles/dashboard-shell.css";
-import "@/app/syndicate-bonus-hud.css";
-import "@/app/syndicate-mega-mission.css";
+/* Mission HUD + programs FX CSS load deferred via client (see DeferredDashboard*Css). */
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Dashboard",
@@ -14,5 +13,15 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <link
+        rel="preload"
+        as="image"
+        href="/assets/logo-nav.webp"
+        fetchPriority="high"
+      />
+      {children}
+    </>
+  );
 }

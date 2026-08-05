@@ -22,6 +22,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   const [autoPlay, setAutoPlay] = useState(true);
   const [unlockBusy, setUnlockBusy] = useState(false);
   const [inView, setInView] = useState(true);
+  const [allowBgVideo, setAllowBgVideo] = useState(false);
   const slides = INSTRUCTOR_SLIDES;
   const total = slides.length;
 
@@ -96,7 +97,26 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
   }, []);
 
   useEffect(() => {
-    if (!showPanelBackgroundVideo) return;
+    if (!showPanelBackgroundVideo) {
+      setAllowBgVideo(false);
+      return;
+    }
+    const narrow = window.matchMedia("(max-width: 767px)");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => {
+      setAllowBgVideo(!(narrow.matches || reduced.matches));
+    };
+    sync();
+    narrow.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
+    return () => {
+      narrow.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, [showPanelBackgroundVideo]);
+
+  useEffect(() => {
+    if (!showPanelBackgroundVideo || !allowBgVideo) return;
     const el = videoRef.current;
     if (!el) return;
     el.muted = true;
@@ -124,7 +144,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
       el.removeEventListener("canplay", play);
       observer?.disconnect();
     };
-  }, [showPanelBackgroundVideo]);
+  }, [showPanelBackgroundVideo, allowBgVideo]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -168,7 +188,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
       aria-roledescription="carousel"
       aria-label="Featured instructor programs"
     >
-      {showPanelBackgroundVideo ? (
+      {showPanelBackgroundVideo && allowBgVideo ? (
         <div
           className="instructor-slideshow-bg pointer-events-none absolute inset-0 z-[0] overflow-hidden bg-black"
           aria-hidden
@@ -181,7 +201,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="none"
             aria-hidden
           />
           <div className="instructor-slideshow-bg-scrim absolute inset-0 z-[1]" />
@@ -279,11 +299,12 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
                     event.stopPropagation();
                     handleDotSelect(i);
                   }}
-                  className={cn(
-                    "instructor-slideshow-dot h-3 w-3 shrink-0 rounded-[4px] border-2 transition hover:scale-110 hover:border-white/45 sm:h-3.5 sm:w-3.5",
+                      className={cn(
+                    "instructor-slideshow-dot relative flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md border-0 bg-transparent p-0 transition",
+                    "before:absolute before:left-1/2 before:top-1/2 before:h-3 before:w-3 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-[4px] before:border-2 before:content-[''] sm:before:h-3.5 sm:before:w-3.5",
                     i === idx
-                      ? "border-[color:var(--instructor-neon-border)] bg-[color:var(--instructor-neon)]/45 shadow-[0_0_14px_var(--instructor-neon-glow)] scale-110"
-                      : "border-white/20 bg-white/12"
+                      ? "before:border-[color:var(--instructor-neon-border)] before:bg-[color:var(--instructor-neon)]/45 before:shadow-[0_0_14px_var(--instructor-neon-glow)] before:scale-110"
+                      : "before:border-white/20 before:bg-white/12 hover:before:border-white/45"
                   )}
                 />
               ))}
@@ -305,7 +326,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
         </div>
 
         <div
-          className="instructor-slide-media instructor-slide-media--static relative min-h-[clamp(18rem,42vh,28rem)] w-full overflow-hidden rounded-xl border-2 border-[color:var(--instructor-neon-border)]/55 bg-[#060a12] shadow-[inset_0_0_48px_rgba(0,0,0,0.5),0_0_32px_var(--instructor-neon-haze)]"
+          className="instructor-slide-media instructor-slide-media--static relative aspect-[4/3] min-h-[clamp(18rem,42vh,28rem)] w-full overflow-hidden rounded-xl border-2 border-[color:var(--instructor-neon-border)]/55 bg-[#060a12] shadow-[inset_0_0_48px_rgba(0,0,0,0.5),0_0_32px_var(--instructor-neon-haze)]"
           aria-hidden={false}
         >
           <div
@@ -320,6 +341,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             sizes="(max-width: 767px) 94vw, (max-width: 1024px) 46vw, 480px"
             quality={isLcp ? 70 : 62}
             priority={isLcp}
+            fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? undefined : "lazy"}
             decoding="async"
             className="instructor-slide-photo object-contain object-center p-3 sm:p-5"

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Options = {
-  /** Extra wait on phones before enabling neon blur/glow (default 2800ms). */
+  /** Extra wait on phones before enabling neon blur/glow (default 4000ms — past Lighthouse TBT). */
   mobileDelayMs?: number;
   /** Extra wait on desktop (default 500ms). */
   desktopDelayMs?: number;
@@ -36,13 +36,13 @@ function startSharedScheduler(options?: Options) {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 767px)").matches;
   const delay = mobile
-    ? (options?.mobileDelayMs ?? 2800)
+    ? (options?.mobileDelayMs ?? 4000)
     : (options?.desktopDelayMs ?? 500);
 
   const scheduleIdle = () => {
     const ric = window.requestIdleCallback;
     if (typeof ric === "function") {
-      idleId = ric(() => notifyReady(), { timeout: mobile ? 1000 : 600 });
+      idleId = ric(() => notifyReady(), { timeout: mobile ? 1500 : 600 });
       return;
     }
     notifyReady();

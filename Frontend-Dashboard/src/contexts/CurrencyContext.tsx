@@ -56,8 +56,12 @@ export function CurrencyProvider({
   }, []);
 
   // Localhost / no CDN geo headers: detect country from the browser public IP (VPN-aware).
+  // Marketing browse (/programs, etc.) does not need geo on first paint — idle-defer for TBT.
   useEffect(() => {
     let cancelled = false;
+    let idleHandle: number | undefined;
+    let safetyHandle: number | undefined;
+
     const refresh = () => {
       void (async () => {
         try {
@@ -68,11 +72,53 @@ export function CurrencyProvider({
         }
       })();
     };
-    refresh();
-    window.addEventListener("focus", refresh);
+
+    const path = typeof window !== "undefined" ? window.location.pathname : "";
+    const deferGeo =
+      path === "/programs" ||
+      path.startsWith("/programs/") ||
+      path === "/" ||
+      path === "/quiz" ||
+      path.startsWith("/quiz");
+
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+
+    if (!deferGeo) {
+      refresh();
+      return () => {
+        cancelled = true;
+        window.removeEventListener("focus", onFocus);
+      };
+    }
+
+    const activate = () => {
+      if (cancelled) return;
+      refresh();
+    };
+    const opts: AddEventListenerOptions = { once: true, passive: true };
+    window.addEventListener("pointerdown", activate, opts);
+    window.addEventListener("touchstart", activate, opts);
+
+    const scheduleIdle = () => {
+      if (cancelled) return;
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(activate, { timeout: 2000 });
+      } else {
+        activate();
+      }
+    };
+    safetyHandle = window.setTimeout(scheduleIdle, 4000);
+
     return () => {
       cancelled = true;
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pointerdown", activate);
+      window.removeEventListener("touchstart", activate);
+      if (safetyHandle !== undefined) window.clearTimeout(safetyHandle);
+      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
     };
   }, []);
 

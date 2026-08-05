@@ -3190,8 +3190,8 @@ export default function DashboardPageClient({
                     width={200}
                     height={80}
                     decoding="async"
-                    fetchPriority="low"
-                    className="pointer-events-none relative z-[1] h-[26px] w-auto max-w-[min(100%,100px)] object-contain opacity-[0.96] [filter:drop-shadow(0_0_14px_rgba(250,204,21,0.32))] sm:h-[34px] sm:max-w-[130px] md:h-[44px] md:max-w-[160px] lg:h-[60px] lg:max-w-[200px]"
+                    fetchPriority="high"
+                    className="pointer-events-none relative z-[1] h-[26px] w-auto max-w-[min(100%,100px)] object-contain opacity-[0.96] max-lg:[filter:none] lg:[filter:drop-shadow(0_0_14px_rgba(250,204,21,0.32))] sm:h-[34px] sm:max-w-[130px] md:h-[44px] md:max-w-[160px] lg:h-[60px] lg:max-w-[200px]"
                     onError={(e) => {
                       const img = e.currentTarget as HTMLImageElement;
                       if (img.dataset.fallback !== "1") {

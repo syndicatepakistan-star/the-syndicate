@@ -1696,7 +1696,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   return (
     <div
       className={cn(
-        "dashboard-mobile-section-root programs-section-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip",
+        "dashboard-mobile-section-root programs-section-root programs-page-root flex min-h-0 w-full max-w-full flex-col overflow-x-clip",
         (inProgramLessonView || inProgramGridView) && "min-h-0 flex-1 overflow-hidden"
       )}
     >

@@ -714,12 +714,16 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     if (!items.length) return;
     const videoIds = items.map((row) => row.stream_video.id).filter(Boolean);
     const priorityId = videoIds[activeIdx] ?? videoIds[0];
-    const neighborIds = videoIds.slice(Math.max(0, activeIdx - 1), activeIdx + 4);
+    // Only current + next episode — warming a wide window starts many HLS loads and
+    // starves the active segment on mobile (Network: High-priority segment pile-up).
+    const neighborIds = [priorityId, videoIds[activeIdx + 1]].filter(
+      (id): id is number => Number.isFinite(id) && id > 0,
+    );
 
     void (async () => {
       const prefetched = await prefetchStreamVideoPlaybacks(neighborIds, {
         priorityId,
-        concurrency: 3,
+        concurrency: 1,
       });
       setPlaybackCache((prev) => {
         const next = { ...prev };
@@ -734,7 +738,8 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
         return changed ? next : prev;
       });
 
-      const warmUrls = neighborIds
+      // Never warm HLS manifests (races hls.js); warmStreamVideoMedia already skips them.
+      const warmUrls = [priorityId]
         .map((id) => prefetched[id]?.playback_url ?? getCachedStreamVideoPlayback(id)?.playback_url)
         .filter((url): url is string => Boolean(url));
       warmStreamVideoMedia(warmUrls, { priority: true });
@@ -743,14 +748,11 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
 
   useEffect(() => {
     if (!activeVideo?.id) return;
-    const neighborIds = [activeIdx - 1, activeIdx, activeIdx + 1]
-      .map((i) => items[i]?.stream_video.id)
-      .filter((id): id is number => Number.isFinite(id) && id > 0);
-    const warmUrls = neighborIds
-      .map((id) => playbackCache[id]?.playback_url ?? (activeVideo.id === id ? activePlayback?.playback_url : null))
-      .filter((url): url is string => Boolean(url));
-    warmStreamVideoMedia(warmUrls);
-  }, [activeVideo?.id, activeIdx, items, playbackCache, activePlayback?.playback_url]);
+    // Active episode only — avoid competing High-priority downloads for neighbors.
+    const url =
+      playbackCache[activeVideo.id]?.playback_url ?? activePlayback?.playback_url ?? null;
+    if (url) warmStreamVideoMedia([url]);
+  }, [activeVideo?.id, playbackCache, activePlayback?.playback_url]);
 
   useEffect(() => {
     if (!items.length || !progressHydrated) return;

@@ -1,5 +1,10 @@
 """
-HLS manifest rewrite and segment delivery through the signed playback proxy.
+HLS manifest rewrite and segment delivery.
+
+Manifest stays on the signed app proxy (entitlement gate). When
+``STREAM_PLAYBACK_USE_S3_PRESIGNED_GET`` is true, media segments (.ts / .m4s / …)
+are rewritten to short-lived R2/S3 presigned URLs so the browser downloads
+directly from object storage instead of Railway→R2→Railway.
 """
 
 from __future__ import annotations
@@ -7,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+import time
 from functools import lru_cache
 from urllib.parse import urlencode
 
@@ -23,6 +29,15 @@ from apps.video_streaming.services.playback_kinds import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Binary media — safe to hand the browser a direct storage URL after entitlement check.
+_DIRECT_PRESIGN_SUFFIXES = (".ts", ".m4s", ".mp4", ".m4a", ".aac", ".vtt", ".webvtt")
+
+
+def _hls_direct_segment_presign_enabled() -> bool:
+    return bool(getattr(settings, "STREAM_PLAYBACK_USE_S3_PRESIGNED_GET", False)) and bool(
+        getattr(settings, "USE_S3_OBJECT_STORAGE", False)
+    )
 
 
 def _hls_manifest_body_cache_ttl() -> int:
@@ -94,6 +109,51 @@ def build_hls_media_proxy_url(
     return f"{rel}?{qs}"
 
 
+def build_hls_media_url(
+    request,
+    *,
+    video_id: int,
+    relative_path: str,
+    token: str,
+    exp: int,
+    manifest_key: str,
+) -> str:
+    """
+    Segment URL for a rewritten manifest line.
+
+    Nested playlists (.m3u8) always stay on the signed proxy so we can rewrite
+    them again. Binary segments use R2/S3 presigned GET when enabled.
+    """
+    safe_path = validate_hls_media_path(relative_path)
+    path_lower = safe_path.lower()
+    if _hls_direct_segment_presign_enabled() and path_lower.endswith(_DIRECT_PRESIGN_SUFFIXES):
+        bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", None) or "").strip()
+        if bucket:
+            try:
+                segment_key = resolve_hls_segment_storage_key(manifest_key, safe_path)
+            except ValueError:
+                segment_key = ""
+            if segment_key:
+                # Lazy import avoids circular import with playback_delivery → hls_playback.
+                from apps.video_streaming.services.playback_delivery import (
+                    playback_ttl_seconds,
+                    presigned_get_object_url,
+                )
+
+                now = int(time.time())
+                ttl = max(60, min(int(exp) - now, playback_ttl_seconds()))
+                direct = presigned_get_object_url(bucket=bucket, key=segment_key, expires_in=ttl)
+                if direct:
+                    return direct
+    return build_hls_media_proxy_url(
+        request,
+        video_id=video_id,
+        relative_path=safe_path,
+        token=token,
+        exp=exp,
+    )
+
+
 def rewrite_hls_manifest_text(
     manifest_text: str,
     *,
@@ -103,7 +163,7 @@ def rewrite_hls_manifest_text(
     token: str,
     exp: int,
 ) -> str:
-    """Rewrite playlist URIs to signed same-origin proxy URLs."""
+    """Rewrite playlist URIs to signed proxy URLs (and direct R2 for segments when enabled)."""
     out_lines: list[str] = []
     for line in (manifest_text or "").splitlines():
         stripped = line.strip()
@@ -116,12 +176,13 @@ def rewrite_hls_manifest_text(
                 def _replace_uri(match: re.Match[str]) -> str:
                     uri = match.group(1)
                     try:
-                        proxy = build_hls_media_proxy_url(
+                        proxy = build_hls_media_url(
                             request,
                             video_id=video_id,
                             relative_path=uri,
                             token=token,
                             exp=exp,
+                            manifest_key=manifest_key,
                         )
                     except ValueError:
                         return match.group(0)
@@ -133,12 +194,13 @@ def rewrite_hls_manifest_text(
             continue
         uri = stripped.split("?", 1)[0].strip()
         try:
-            proxy = build_hls_media_proxy_url(
+            proxy = build_hls_media_url(
                 request,
                 video_id=video_id,
                 relative_path=uri,
                 token=token,
                 exp=exp,
+                manifest_key=manifest_key,
             )
         except ValueError:
             out_lines.append(line)
@@ -188,7 +250,6 @@ def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
             if cached:
                 return cached
 
-    last_error: str | None = None
     for candidate in candidates:
         text = get_s3_object_text(bucket=bucket, key=candidate)
         if text and text.strip():
@@ -201,7 +262,6 @@ def fetch_hls_manifest_text(*, bucket: str, manifest_key: str) -> str:
             if candidate != candidates[0]:
                 logger.info("HLS manifest resolved via fallback key %s (requested %s)", candidate, manifest_key)
             return text
-        last_error = candidate
 
     logger.warning(
         "HLS manifest missing in bucket=%s tried=%s (admin original_video=%s)",

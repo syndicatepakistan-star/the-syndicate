@@ -132,11 +132,14 @@ On save, Django stores the key on `original_video.name`, sets `playback_kind` to
 2. The proxy rewrites segment URIs in the m3u8 to signed same-origin URLs under `/api/streaming/videos/playback/<id>/media/<segment>.ts`.
 3. Frontend uses **hls.js** (not native `<video src>` alone) for HLS; MP4 rows are unchanged.
 
-HLS always uses the Django proxy (presigned direct R2 is disabled for manifests/segments so segment auth stays consistent).
+With `STREAM_PLAYBACK_USE_S3_PRESIGNED_GET=true`, the **manifest** stays on the Django proxy
+(entitlement check), but **segments** (`.ts` / `.m4s`) are rewritten to short-lived R2
+presigned URLs so the browser downloads from Cloudflare directly. Without that flag,
+every segment still proxies Railway→R2→Railway (very slow on mobile).
 
 ### HLS CORS
 
-HLS is proxied through the API, so R2 CORS is **not** required for segment fetches when using proxy mode. If you later serve segments directly from R2, add your origins:
+With segment presign enabled, R2 CORS **is required** for the browser to fetch `.ts` files:
 
 ```json
 "AllowedOrigins": [
@@ -145,6 +148,10 @@ HLS is proxied through the API, so R2 CORS is **not** required for segment fetch
   "http://localhost:3000"
 ]
 ```
+
+Also expose: `Content-Length`, `Content-Range`, `Accept-Ranges`, `ETag`.
+
+If CORS is missing, Network will show failed R2 segment requests and the player stays on Buffering.
 
 ### HLS diagnosis
 

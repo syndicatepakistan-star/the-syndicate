@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.test import RequestFactory, SimpleTestCase, override_settings
 from django.urls import reverse
 
@@ -28,7 +30,11 @@ class HlsManifestRewriteTests(SimpleTestCase):
             "segment_000.ts\n"
             "segment_001.ts\n"
         )
-        with override_settings(ALLOWED_HOSTS=["testserver"]):
+        with override_settings(
+            ALLOWED_HOSTS=["testserver"],
+            STREAM_PLAYBACK_USE_S3_PRESIGNED_GET=False,
+            USE_S3_OBJECT_STORAGE=False,
+        ):
             out = rewrite_hls_manifest_text(
                 manifest,
                 manifest_key="test/video/index.m3u8",
@@ -45,3 +51,37 @@ class HlsManifestRewriteTests(SimpleTestCase):
             kwargs={"video_id": 42, "media_path": "segment_000.ts"},
         )
         self.assertIn(media_path, out)
+
+    @override_settings(
+        ALLOWED_HOSTS=["testserver"],
+        STREAM_PLAYBACK_USE_S3_PRESIGNED_GET=True,
+        USE_S3_OBJECT_STORAGE=True,
+        AWS_STORAGE_BUCKET_NAME="syn-bucket",
+        STREAM_SIGNED_URL_TTL_SECONDS=600,
+    )
+    def test_rewrite_segments_to_presigned_r2_when_enabled(self):
+        rf = RequestFactory()
+        request = rf.get("/")
+        manifest = "#EXTM3U\n#EXTINF:6.0,\nsegment_000.ts\n"
+        with mock.patch(
+            "apps.video_streaming.services.playback_delivery.presigned_get_object_url",
+            return_value="https://syn-bucket.r2.cloudflarestorage.com/test/video/segment_000.ts?X-Amz-Signature=abc",
+        ) as presign:
+            out = rewrite_hls_manifest_text(
+                manifest,
+                manifest_key="test/video/index.m3u8",
+                request=request,
+                video_id=42,
+                token="tok",
+                exp=9999999999,
+            )
+        self.assertIn("r2.cloudflarestorage.com", out)
+        self.assertIn("segment_000.ts", out)
+        self.assertNotIn("token=tok", out)  # direct R2 — no app token on segment
+        media_path = reverse(
+            "streaming-video-playback-hls-media",
+            kwargs={"video_id": 42, "media_path": "segment_000.ts"},
+        )
+        self.assertNotIn(media_path, out)
+        presign.assert_called()
+        self.assertEqual(presign.call_args.kwargs["key"], "test/video/segment_000.ts")

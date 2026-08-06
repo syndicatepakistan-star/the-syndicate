@@ -9,8 +9,7 @@ import { useEffect } from "react";
  */
 export function DashboardMediaWarmup() {
   useEffect(() => {
-    // Remove any stale LCP preload links left from older builds / soft navigations.
-    document.head.querySelectorAll('link[data-dashboard-lcp-preload="1"]').forEach((node) => node.remove());
+    // Drop stale video prefetch hints only — never strip the active LCP preload.
     document.head.querySelectorAll('link[data-dashboard-video-prefetch="1"]').forEach((node) => node.remove());
   }, []);
 

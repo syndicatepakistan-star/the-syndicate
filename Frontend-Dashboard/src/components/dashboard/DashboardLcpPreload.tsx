@@ -7,7 +7,8 @@ import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 const MONEY_MASTERY_LCP = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 384, 55);
-const INSTRUCTOR_LCP = INSTRUCTOR_SLIDES[0]?.src ?? "";
+/** Match InstructorSlideshow Next/Image sizes (~94vw mobile / ~480 desktop). */
+const INSTRUCTOR_LCP = nextOptimizedImageUrl(INSTRUCTOR_SLIDES[0]?.src ?? "", 640, 70);
 
 function readPlaylistOpen(): boolean {
   if (typeof window === "undefined") return false;
@@ -19,8 +20,8 @@ function readPlaylistOpen(): boolean {
 }
 
 /**
- * Exactly one high-priority image preload for the active dashboard surface.
- * Avoids unused-preload warnings (Money Mastery on playlist view, logo fighting LCP).
+ * Client SPA nav: keep exactly one high-priority image preload for the active surface.
+ * Initial HTML preload is emitted from dashboard/page.tsx (server) for first paint.
  */
 export function DashboardLcpPreload({ sectionKey }: { sectionKey: string }) {
   const pathname = usePathname() ?? "";
@@ -42,7 +43,6 @@ export function DashboardLcpPreload({ sectionKey }: { sectionKey: string }) {
     pathname === "/dashboard/programs" ||
     pathname.startsWith("/dashboard/programs/");
 
-  // Playlist lesson view: LCP is episode UI — do not preload Money Mastery.
   if (onPrograms && !playlistOpen && MONEY_MASTERY_LCP) {
     return <link rel="preload" as="image" href={MONEY_MASTERY_LCP} fetchPriority="high" />;
   }

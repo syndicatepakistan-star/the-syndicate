@@ -1,4 +1,5 @@
-/* Dashboard shell chrome — route-scoped via src/app/dashboard/layout.tsx only.
+/* Dashboard shell chrome — loaded deferred via DeferredDashboardShellCss (not marketing).
+ * Critical first-paint chrome lives inline in src/app/dashboard/layout.tsx.
  * Do not import from marketing layouts. Tokens/fonts remain in globals.css.
  */
 /* --- moved from globals.css L123-486 --- */

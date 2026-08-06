@@ -254,7 +254,7 @@ const InstructorSlideshow = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="min-h-[min(32rem,70vh)] w-full animate-pulse rounded-xl border border-white/10 bg-black/30 md:min-h-[min(28rem,52vh)]"
+        className="dashboard-featured-slideshow min-h-[min(32rem,70vh)] w-full animate-pulse rounded-xl border border-white/10 bg-black/30 md:min-h-[min(28rem,52vh)]"
         aria-hidden
       />
     ),
@@ -3684,7 +3684,7 @@ export default function DashboardPageClient({
               )}
             >
               {selectedNavKey !== "monk" && selectedNavKey !== "programs" ? (
-                <header className="mb-[clamp(0.65rem,1.5vw+0.2rem,1.1rem)] min-h-[3.25rem] shrink-0 border-b border-[color:var(--gold-neon-border-mid)] pb-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] pr-1">
+                <header className="dashboard-neon-badge-slot mb-[clamp(0.65rem,1.5vw+0.2rem,1.1rem)] min-h-[3.25rem] shrink-0 border-b border-[color:var(--gold-neon-border-mid)] pb-[clamp(0.45rem,1.2vw+0.15rem,0.85rem)] pr-1">
                   <div className="mx-auto flex min-h-[2.75rem] w-[min(100%,96vw)] max-w-[min(56rem,92vw)] items-center justify-center px-[clamp(0.35rem,2vw,1rem)]">
                     <NeonTypingBadge
                       phrases={["HONOUR · MONEY · POWER · FREEDOM"]}
@@ -3825,7 +3825,7 @@ export default function DashboardPageClient({
                   <>
                     <section
                       aria-label="Featured instructor programs"
-                      className="mb-3 w-full max-w-full shrink-0 scroll-mt-2 md:mb-8 max-lg:overflow-hidden min-h-[min(32rem,70vh)] md:min-h-[min(28rem,52vh)]"
+                      className="dashboard-featured-slideshow mb-3 w-full max-w-full shrink-0 scroll-mt-2 md:mb-8 max-lg:overflow-hidden min-h-[min(32rem,70vh)] md:min-h-[min(28rem,52vh)]"
                     >
                       <InstructorSlideshow showPanelBackgroundVideo={false} />
                     </section>

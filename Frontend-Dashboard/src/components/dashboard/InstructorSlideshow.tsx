@@ -195,6 +195,7 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
       }}
       className={cn(
         "instructor-slideshow-panel instructor-slideshow-lightning dashboard-perf-contain syndicate-mood-skip-frame cut-frame cyber-frame relative isolate overflow-hidden p-[clamp(1.1rem,2.5vw+0.5rem,1.75rem)]",
+        "min-h-[min(30rem,68vh)] md:min-h-[min(26rem,50vh)]",
         showPanelBackgroundVideo ? "glass-dark" : "bg-[rgba(4,8,14,0.92)]"
       )}
       aria-roledescription="carousel"
@@ -253,13 +254,13 @@ export function InstructorSlideshow({ showPanelBackgroundVideo = true }: { showP
             <div className="instructor-slideshow-kicker font-black uppercase tracking-[0.18em] text-white/55">
               Instructor
             </div>
-            <h3 className="instructor-slideshow-heading instructor-slideshow-heading--lightning instructor-slideshow-title m-0 font-black uppercase leading-[1.08] tracking-[0.05em]">
+            <h3 className="instructor-slideshow-heading instructor-slideshow-heading--lightning instructor-slideshow-title m-0 min-h-[2.4em] font-black uppercase leading-[1.08] tracking-[0.05em]">
               {active.programName}
             </h3>
             <p className="instructor-slideshow-instructor m-0 font-bold text-white">
               {active.instructorName}
             </p>
-            <p className="instructor-slideshow-description m-0 font-medium leading-[1.55] text-white/90">
+            <p className="instructor-slideshow-description m-0 min-h-[4.65em] font-medium leading-[1.55] text-white/90 line-clamp-4">
               {active.description}
             </p>
             <button

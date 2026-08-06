@@ -2,7 +2,7 @@
 /* laptop/large-desktop → DesktopBandStyles (width ≥1400 only)
  * public-marketing-responsive → PublicMarketingStyles / route layouts (not globals)
  * gaming-benefit-cards → GamingBenefitCards.tsx
- * dashboard-shell.css → src/app/dashboard/layout.tsx only (dashboard chrome; not marketing)
+ * dashboard-shell.css → deferred via DeferredDashboardShellCss (critical chrome inline in dashboard/layout)
  */
 
 :root {

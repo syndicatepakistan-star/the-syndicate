@@ -5,11 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient, STORAGE_SIMPLE_AUTH } from "@/lib/portal-api";
 import { AFFILIATE_REFERRAL_IDS_STORAGE_KEY } from "@/lib/affiliateReferralIds";
 import { PROFILE_AVATAR_STORAGE_KEY, PROFILE_DISPLAY_NAME_KEY } from "@/lib/dashboardProfileStorage";
-import {
-  hasPendingCheckoutIntent,
-  resumePendingCheckoutAfterAuth,
-} from "@/lib/post-auth-checkout";
-import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
 
 /** Sends users who already have a session to the app so browser Back from `/` does not land on auth screens. */
@@ -31,6 +26,9 @@ export default function RedirectWhenAuthed() {
         const safeNext =
           rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
+        const { hasPendingCheckoutIntent, resumePendingCheckoutAfterAuth } = await import(
+          "@/lib/post-auth-checkout"
+        );
         if (hasPendingCheckoutIntent({ plan, amount, playlistId })) {
           const checkout = await resumePendingCheckoutAfterAuth({
             plan,
@@ -42,6 +40,7 @@ export default function RedirectWhenAuthed() {
           if (cancelled) return;
           if (checkout.status === "checkout") return;
           if (checkout.status === "already_unlocked") {
+            const { navigateToAlreadyUnlockedProgram } = await import("@/lib/programUnlockFlow");
             await navigateToAlreadyUnlockedProgram({
               playlistId,
               plan,

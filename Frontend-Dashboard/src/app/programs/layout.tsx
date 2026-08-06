@@ -10,14 +10,21 @@ import { ProgramsDeferredFxCss } from "@/components/programs/ProgramsDeferredFxC
  */
 const PROGRAMS_HASH_BOOT = `(function(){try{var h=(location.hash||"").replace(/^#/,"").toLowerCase();if(h!=="businessprograms"&&h!=="programs-library")return;if("scrollRestoration"in history)history.scrollRestoration="manual";try{window.__PROGRAMS_EAGER_LIBRARY=1;}catch(e){}function go(){var el=document.getElementById("businessprograms");if(!el)return false;var raw=window.getComputedStyle(el).scrollMarginTop||"0";var margin=parseFloat(raw);if(!isFinite(margin))margin=112;var y=Math.max(0,Math.round(el.getBoundingClientRect().top+(window.scrollY||window.pageYOffset||0)-margin));window.scrollTo(0,y);return true;}function tick(){go();requestAnimationFrame(function(){go();});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",tick);}else{tick();}}catch(e){}})();`;
 
-/** Critical display font — Thryon.otf only (no woff2). */
+/** Critical display font — Thryon woff2 for program titles / LCP text. */
 const PROGRAMS_FONT_PRELOADS = (
   <>
     <link
       rel="preload"
-      href="/fonts/Thryon.otf"
+      href="/fonts/Thryon.woff2"
       as="font"
-      type="font/otf"
+      type="font/woff2"
+      crossOrigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/CSDaineMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
       crossOrigin="anonymous"
     />
   </>

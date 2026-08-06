@@ -11,8 +11,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { gsap } from "gsap";
 import LuxuryRedirectOverlay from "@/components/syndicate-otp/LuxuryRedirectOverlay";
+import { AUTH_LOGO_LCP_HREF } from "@/components/syndicate-otp/AuthRouteHead";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { captureAffiliateAuthLead } from "@/lib/captureAffiliateLead";
 import {
@@ -21,11 +21,6 @@ import {
   persistSimpleAuthSession,
   resolveClientApiUrl,
 } from "@/lib/portal-api";
-import {
-  hasPendingCheckoutIntent,
-  resumePendingCheckoutAfterAuth,
-} from "@/lib/post-auth-checkout";
-import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import {
   resolvePostOtpAppRedirect,
   syndicateOtpLoginHref,
@@ -123,6 +118,17 @@ function isNoAccountMessage(message: string): boolean {
     normalized.includes("not registered") ||
     normalized.includes("no active account")
   );
+}
+
+/** Local check — avoids pulling plan-checkout / streaming into the auth first paint chunk. */
+function hasPendingCheckoutIntentLite(intent: {
+  plan?: string;
+  amount?: string;
+  playlistId?: string;
+}): boolean {
+  const playlistId = (intent.playlistId || "").trim();
+  if (playlistId && /^\d+$/.test(playlistId)) return true;
+  return Boolean((intent.plan || "").trim() && (intent.amount || "").trim());
 }
 
 function scheduleSignupRedirect(
@@ -349,211 +355,272 @@ export default function AuthScreen({
     const canvas = document.getElementById("particles") as HTMLCanvasElement | null;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const context = ctx;
-
-    let width = 0;
-    let height = 0;
+    let cancelled = false;
     let rafId = 0;
+    let resizeHandler: (() => void) | null = null;
 
-    const colors = [
-      { r: 212, g: 175, b: 55 },
-      { r: 240, g: 208, b: 96 },
-      { r: 156, g: 124, b: 28 },
-      { r: 184, g: 149, b: 46 },
-      { r: 245, g: 224, b: 138 },
-      { r: 107, g: 83, b: 16 },
-    ];
+    const start = () => {
+      if (cancelled) return;
+      const ctx = canvas.getContext("2d", { alpha: true });
+      if (!ctx) return;
+      const context = ctx;
 
-    class Particle {
-      x = 0;
-      y = 0;
-      r = 0;
-      dx = 0;
-      dy = 0;
-      alpha = 0;
-      phase = 0;
-      color = colors[0];
-
-      constructor() {
-        this.reset();
+      const narrow =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(max-width: 1024px)").matches;
+      const reduced =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduced) {
+        canvas.style.display = "none";
+        return;
       }
 
-      reset() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.r = Math.random() * 2 + 0.3;
-        this.dx = (Math.random() - 0.5) * 0.3;
-        this.dy = (Math.random() - 0.5) * 0.3;
-        this.alpha = Math.random() * 0.5 + 0.1;
-        this.phase = Math.random() * Math.PI * 2;
-        this.color = colors[Math.floor(Math.random() * colors.length)];
-      }
+      let width = 0;
+      let height = 0;
+      const particleCount = narrow ? 28 : 64;
+      const useGlow = !narrow;
 
-      update(time: number) {
-        this.x += this.dx;
-        this.y += this.dy;
-        this.alpha = Math.sin(time * 0.001 + this.phase) * 0.25 + 0.35;
-        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+      const colors = [
+        { r: 212, g: 175, b: 55 },
+        { r: 240, g: 208, b: 96 },
+        { r: 156, g: 124, b: 28 },
+        { r: 184, g: 149, b: 46 },
+        { r: 245, g: 224, b: 138 },
+        { r: 107, g: 83, b: 16 },
+      ];
+
+      class Particle {
+        x = 0;
+        y = 0;
+        r = 0;
+        dx = 0;
+        dy = 0;
+        alpha = 0;
+        phase = 0;
+        color = colors[0];
+
+        constructor() {
           this.reset();
+        }
+
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.r = Math.random() * 2 + 0.3;
+          this.dx = (Math.random() - 0.5) * 0.3;
+          this.dy = (Math.random() - 0.5) * 0.3;
+          this.alpha = Math.random() * 0.5 + 0.1;
+          this.phase = Math.random() * Math.PI * 2;
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        update(time: number) {
+          this.x += this.dx;
+          this.y += this.dy;
+          this.alpha = Math.sin(time * 0.001 + this.phase) * 0.25 + 0.35;
+          if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+            this.reset();
+          }
+        }
+
+        draw() {
+          const { r, g, b } = this.color;
+          context.beginPath();
+          context.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          context.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
+          if (useGlow) {
+            context.shadowColor = `rgb(${r},${g},${b})`;
+            context.shadowBlur = this.r * 5;
+          }
+          context.fill();
         }
       }
 
-      draw() {
-        const { r, g, b } = this.color;
-        context.beginPath();
-        context.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        context.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
-        context.shadowColor = `rgb(${r},${g},${b})`;
-        context.shadowBlur = this.r * 5;
-        context.fill();
-      }
-    }
+      const particles = Array.from({ length: particleCount }, () => new Particle());
 
-    const particles = Array.from({ length: 140 }, () => new Particle());
+      resizeHandler = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      };
+      resizeHandler();
+      window.addEventListener("resize", resizeHandler);
 
-    const resize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const loop = (time: number) => {
-      context.clearRect(0, 0, width, height);
-      context.shadowBlur = 0;
-      particles.forEach((particle) => {
-        particle.update(time);
-        particle.draw();
-      });
+      const loop = (time: number) => {
+        context.clearRect(0, 0, width, height);
+        if (useGlow) context.shadowBlur = 0;
+        particles.forEach((particle) => {
+          particle.update(time);
+          particle.draw();
+        });
+        rafId = window.requestAnimationFrame(loop);
+      };
       rafId = window.requestAnimationFrame(loop);
     };
-    rafId = window.requestAnimationFrame(loop);
+
+    // Don't compete with logo/title LCP — start particles after first paint / idle.
+    let started = false;
+    const safeStart = () => {
+      if (started || cancelled) return;
+      started = true;
+      start();
+    };
+    let idleHandle: number | undefined;
+    const delay =
+      typeof window.matchMedia === "function" && window.matchMedia("(max-width: 1024px)").matches
+        ? 1200
+        : 600;
+    const safety = window.setTimeout(safeStart, delay);
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(
+        () => {
+          window.clearTimeout(safety);
+          safeStart();
+        },
+        { timeout: 1800 },
+      );
+    }
 
     return () => {
-      window.removeEventListener("resize", resize);
+      cancelled = true;
+      window.clearTimeout(safety);
+      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      if (resizeHandler) window.removeEventListener("resize", resizeHandler);
       window.cancelAnimationFrame(rafId);
     };
   }, []);
 
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.08, defaults: { ease: "power3.out" } });
+    let cancelled = false;
+    let cleanup: (() => void) | undefined;
 
-    tl.from(".hud-corner", {
-      scale: 0,
-      opacity: 0,
-      duration: 0.14,
-      stagger: 0.02,
-      ease: "back.out(2)",
-    });
-    tl.fromTo(
-      ".hud-border--top",
-      { opacity: 0, scaleX: 0.2, transformOrigin: "left center" },
-      { opacity: 0.95, scaleX: 1, duration: 0.22 },
-      "-=0.06",
-    );
-    tl.fromTo(
-      ".hud-border--right",
-      { opacity: 0, scaleY: 0.2, transformOrigin: "center top" },
-      { opacity: 0.9, scaleY: 1, duration: 0.18 },
-      "-=0.04",
-    );
-    tl.fromTo(
-      ".hud-border--bottom",
-      { opacity: 0, scaleX: 0.2, transformOrigin: "right center" },
-      { opacity: 0.95, scaleX: 1, duration: 0.2 },
-      "-=0.02",
-    );
-    tl.fromTo(
-      ".hud-border--left",
-      { opacity: 0, scaleY: 0.2, transformOrigin: "center bottom" },
-      { opacity: 0.9, scaleY: 1, duration: 0.2 },
-      "-=0.04",
-    );
-    tl.to(
-      ".hud-arc",
-      {
-        opacity: 1,
-        duration: 0.22,
-        stagger: 0.04,
-        ease: "power2.inOut",
-      },
-      "-=0.09",
-    );
+    void import("gsap").then(({ gsap }) => {
+      if (cancelled) return;
 
-    gsap.set(".hud-arc-path, .hud-arc-path--inner", {
-      strokeDasharray: 2400,
-      strokeDashoffset: 2400,
-    });
-    tl.to(
-      ".hud-arc-path, .hud-arc-path--inner",
-      {
-        strokeDashoffset: 0,
-        duration: 0.45,
-        stagger: 0.03,
-        ease: "power2.inOut",
-      },
-      "-=0.18",
-    );
+      const tl = gsap.timeline({ delay: 0.08, defaults: { ease: "power3.out" } });
 
-    tl.to(
-      ".hud-bracket",
-      {
-        opacity: 1,
-        duration: 0.2,
-        stagger: 0.03,
-      },
-      "-=0.32",
-    );
+      tl.from(".hud-corner", {
+        scale: 0,
+        opacity: 0,
+        duration: 0.14,
+        stagger: 0.02,
+        ease: "back.out(2)",
+      });
+      tl.fromTo(
+        ".hud-border--top",
+        { opacity: 0, scaleX: 0.2, transformOrigin: "left center" },
+        { opacity: 0.95, scaleX: 1, duration: 0.22 },
+        "-=0.06",
+      );
+      tl.fromTo(
+        ".hud-border--right",
+        { opacity: 0, scaleY: 0.2, transformOrigin: "center top" },
+        { opacity: 0.9, scaleY: 1, duration: 0.18 },
+        "-=0.04",
+      );
+      tl.fromTo(
+        ".hud-border--bottom",
+        { opacity: 0, scaleX: 0.2, transformOrigin: "right center" },
+        { opacity: 0.95, scaleX: 1, duration: 0.2 },
+        "-=0.02",
+      );
+      tl.fromTo(
+        ".hud-border--left",
+        { opacity: 0, scaleY: 0.2, transformOrigin: "center bottom" },
+        { opacity: 0.9, scaleY: 1, duration: 0.2 },
+        "-=0.04",
+      );
+      tl.to(
+        ".hud-arc",
+        {
+          opacity: 1,
+          duration: 0.22,
+          stagger: 0.04,
+          ease: "power2.inOut",
+        },
+        "-=0.09",
+      );
 
-    gsap.set(".hud-bracket-path, .hud-bracket-path--inner", {
-      strokeDasharray: 800,
-      strokeDashoffset: 800,
-    });
-    tl.to(
-      ".hud-bracket-path, .hud-bracket-path--inner",
-      {
-        strokeDashoffset: 0,
-        duration: 0.38,
-        stagger: 0.025,
-      },
-      "-=0.3",
-    );
+      gsap.set(".hud-arc-path, .hud-arc-path--inner", {
+        strokeDasharray: 2400,
+        strokeDashoffset: 2400,
+      });
+      tl.to(
+        ".hud-arc-path, .hud-arc-path--inner",
+        {
+          strokeDashoffset: 0,
+          duration: 0.45,
+          stagger: 0.03,
+          ease: "power2.inOut",
+        },
+        "-=0.18",
+      );
 
-    tl.to(".login-box", { opacity: 1, duration: 0.22 }, "-=0.09");
-    tl.to(
-      ".input-group",
-      { opacity: 1, x: 0, duration: 0.2, stagger: 0.045 },
-      "-=0.06",
-    );
-    tl.to(".cyber-btn", { opacity: 1, y: 0, duration: 0.18 }, "-=0.06");
-    tl.to(".auth-switch-link", { opacity: 1, y: 0, duration: 0.18 }, "-=0.1");
-    tl.to(".diamond-mark", { opacity: 0.8, duration: 0.18 }, "-=0.15");
+      tl.to(
+        ".hud-bracket",
+        {
+          opacity: 1,
+          duration: 0.2,
+          stagger: 0.03,
+        },
+        "-=0.32",
+      );
 
-    gsap.to(".hud-border", {
-      opacity: 0.55,
-      duration: 1.1,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      stagger: { each: 0.08, from: "start" },
-    });
+      gsap.set(".hud-bracket-path, .hud-bracket-path--inner", {
+        strokeDasharray: 800,
+        strokeDashoffset: 800,
+      });
+      tl.to(
+        ".hud-bracket-path, .hud-bracket-path--inner",
+        {
+          strokeDashoffset: 0,
+          duration: 0.38,
+          stagger: 0.025,
+        },
+        "-=0.3",
+      );
 
-    gsap.to(".hud-arc-path--glow, .hud-bracket-path--glow", {
-      opacity: 0.35,
-      duration: 1.25,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      stagger: 0.06,
+      tl.to(".login-box", { opacity: 1, duration: 0.22 }, "-=0.09");
+      tl.to(
+        ".input-group",
+        { opacity: 1, x: 0, duration: 0.2, stagger: 0.045 },
+        "-=0.06",
+      );
+      tl.to(".cyber-btn", { opacity: 1, y: 0, duration: 0.18 }, "-=0.06");
+      tl.to(".auth-switch-link", { opacity: 1, y: 0, duration: 0.18 }, "-=0.1");
+      tl.to(".diamond-mark", { opacity: 0.8, duration: 0.18 }, "-=0.15");
+
+      gsap.to(".hud-border", {
+        opacity: 0.55,
+        duration: 1.1,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        stagger: { each: 0.08, from: "start" },
+      });
+
+      gsap.to(".hud-arc-path--glow, .hud-bracket-path--glow", {
+        opacity: 0.35,
+        duration: 1.25,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        stagger: 0.06,
+      });
+
+      cleanup = () => {
+        tl.kill();
+        gsap.killTweensOf(
+          ".hud-corner, .hud-border, .hud-arc, .hud-arc-path, .hud-arc-path--inner, .hud-arc-path--glow, .hud-bracket, .hud-bracket-path, .hud-bracket-path--inner, .hud-bracket-path--glow, .login-box, .input-group, .cyber-btn, .auth-switch-link, .diamond-mark",
+        );
+      };
     });
 
     return () => {
-      tl.kill();
-      gsap.killTweensOf(
-        ".hud-corner, .hud-border, .hud-arc, .hud-arc-path, .hud-arc-path--inner, .hud-arc-path--glow, .hud-bracket, .hud-bracket-path, .hud-bracket-path--inner, .hud-bracket-path--glow, .login-box, .input-group, .cyber-btn, .auth-switch-link, .diamond-mark",
-      );
+      cancelled = true;
+      cleanup?.();
     };
   }, []);
 
@@ -712,7 +779,7 @@ export default function AuthScreen({
           throw new Error(data.error || "Request failed");
         }
         const signupEmail = email.trim();
-        const pendingCheckout = hasPendingCheckoutIntent({
+        const pendingCheckout = hasPendingCheckoutIntentLite({
           plan: normalizedPlan,
           amount: normalizedAmount,
           playlistId: prefilledPlaylistId,
@@ -762,6 +829,7 @@ export default function AuthScreen({
           checkout.response.ok &&
           (checkout.data.is_unlocked || checkout.data.already_purchased)
         ) {
+          const { navigateToAlreadyUnlockedProgram } = await import("@/lib/programUnlockFlow");
           await navigateToAlreadyUnlockedProgram({
             playlistId: prefilledPlaylistId,
             plan: normalizedPlan,
@@ -831,7 +899,7 @@ export default function AuthScreen({
             ? `${typeof window !== "undefined" ? window.location.origin : ""}${normalizedPostLoginNext}`
             : normalizedPostLoginNext
           : isSignupOtp
-            ? hasPendingCheckoutIntent({
+            ? hasPendingCheckoutIntentLite({
                 plan: normalizedPlan,
                 amount: normalizedAmount,
                 playlistId: prefilledPlaylistId,
@@ -843,12 +911,13 @@ export default function AuthScreen({
               : DASHBOARD_FALLBACK;
 
         if (
-          hasPendingCheckoutIntent({
+          hasPendingCheckoutIntentLite({
             plan: normalizedPlan,
             amount: normalizedAmount,
             playlistId: prefilledPlaylistId,
           })
         ) {
+          const { resumePendingCheckoutAfterAuth } = await import("@/lib/post-auth-checkout");
           const resumed = await resumePendingCheckoutAfterAuth({
             plan: normalizedPlan,
             billing: normalizedBilling,
@@ -858,6 +927,7 @@ export default function AuthScreen({
           });
           if (resumed.status === "checkout") return;
           if (resumed.status === "already_unlocked") {
+            const { navigateToAlreadyUnlockedProgram } = await import("@/lib/programUnlockFlow");
             await navigateToAlreadyUnlockedProgram({
               playlistId: prefilledPlaylistId,
               plan: normalizedPlan,
@@ -980,10 +1050,12 @@ export default function AuthScreen({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="brand-logo"
-            src="/assets/logo.webp"
+            src={AUTH_LOGO_LCP_HREF}
             alt="The Syndicate"
-            width={600}
-            height={240}
+            width={384}
+            height={154}
+            decoding="async"
+            fetchPriority="high"
           />
 
           <div className="login-header">

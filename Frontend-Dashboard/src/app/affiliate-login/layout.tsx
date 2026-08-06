@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthRouteHead } from "@/components/syndicate-otp/AuthRouteHead";
 import "../syndicate-otp/syndicate-otp.css";
 
 export const metadata: Metadata = {
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export default function AffiliateLoginLayout({ children }: { children: React.ReactNode }) {
   return (
     <div id="syndicate-otp-mount" className="min-h-dvh">
+      <AuthRouteHead />
       {children}
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import { AuthRouteHead } from "@/components/syndicate-otp/AuthRouteHead";
 import "../syndicate-otp/syndicate-otp.css";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -10,5 +11,10 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <AuthRouteHead />
+      {children}
+    </>
+  );
 }

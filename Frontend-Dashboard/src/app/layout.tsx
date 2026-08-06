@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -16,12 +15,6 @@ import {
 } from "@/lib/structuredData";
 import "./globals.css";
 /* syndicate-otp.css is loaded only in OTP / checkout / affiliate-login layouts — not on marketing pages. */
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-});
 
 const googleVerification = (process.env.GOOGLE_SITE_VERIFICATION ?? "").trim();
 
@@ -94,15 +87,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Font loads via @font-face in CSS — a global preload often finishes before
-            globals.css applies the face and triggers unused-preload console noise. */}
-        {/* Desktop band CSS: injected by DesktopBandStyles only when width ≥1400px. */}
+        {/* Site fonts: Thryon (headings) + CS Daine Mono (body/digits) — woff2 */}
+        <link
+          rel="preload"
+          href="/fonts/CSDaineMono-Regular.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/Thryon.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
-      <body
-        className={`${jetbrainsMono.variable} min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased`}
-        suppressHydrationWarning
-      >
+      <body className="min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased" suppressHydrationWarning>
         <DesktopBandStyles />
         <DeferredGtm />
         <Providers>

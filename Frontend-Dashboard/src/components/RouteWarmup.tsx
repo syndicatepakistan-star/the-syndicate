@@ -31,6 +31,7 @@ export default function RouteWarmup() {
       pathname.startsWith("/syndicate-otp") ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/signup") ||
+      pathname.startsWith("/verify-otp") ||
       pathname.startsWith("/checkout") ||
       pathname.startsWith("/affiliate");
 
@@ -39,8 +40,8 @@ export default function RouteWarmup() {
       scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
     }
 
-    // On /programs: no idle route prefetch — Lighthouse unused-JS / TBT on mobile.
-    if (isPrograms || isDashboard) return;
+    // Auth / checkout: zero route prefetch — unused JS was ~170–220 KiB on /login.
+    if (isPrograms || isDashboard || isAuthHeavy) return;
 
     // Homepage: wait longer so hero LCP / TBT settle before prefetch pulls more JS.
     runWhenIdle(() => {

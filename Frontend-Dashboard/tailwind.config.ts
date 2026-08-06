@@ -18,36 +18,14 @@ export default {
         "hud-bob": "hud-bob 2.2s ease-in-out infinite",
       },
       fontFamily: {
-        sans: [
-          "SyndicateNums",
-          "Times New Roman",
-          "Thryon",
-          "Thyron",
-          "ui-sans-serif",
-          "system-ui",
-          "sans-serif",
-        ],
-        heading: [
-          "SyndicateNums",
-          "Times New Roman",
-          "Thryon",
-          "Thyron",
-          "ui-sans-serif",
-          "system-ui",
-          "sans-serif",
-        ],
-        mono: [
-          "SyndicateNums",
-          "Times New Roman",
-          "var(--font-mono)",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "monospace",
-        ],
-      }
-    }
+        /** Paragraph / UI body — CS Daine Mono */
+        sans: ["CS Daine Mono", "ui-monospace", "monospace"],
+        /** Titles / headings — Thryon */
+        heading: ["Thryon", "Thyron", "ui-sans-serif", "system-ui", "sans-serif"],
+        /** Digits + code — CS Daine Mono */
+        mono: ["CS Daine Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 } satisfies Config;
-

@@ -30,11 +30,11 @@
   --gold-neon-glow-strong: rgba(212, 175, 55, 0.65);
   --gold-neon-haze: rgba(212, 175, 55, 0.14);
   --hud-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  /* Digits (0–9) resolve via SyndicateNums → Times New Roman; letters use Thryon.otf */
-  --font-digits: "SyndicateNums", "Times New Roman", Times, serif;
-  --font-body: var(--font-digits), "Thryon", "Thyron", var(--hud-font);
-  /* Display typeface for headings/titles */
-  --font-heading: var(--font-digits), "Thryon", "Thyron", var(--hud-font);
+  /* Body + digits: CS Daine Mono (woff2). Headings/titles: Thryon (woff2). */
+  --font-digits: "CS Daine Mono", ui-monospace, monospace;
+  --font-body: "CS Daine Mono", ui-monospace, monospace;
+  --font-heading: "Thryon", "Thyron", var(--hud-font);
+  --font-mono: "CS Daine Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Fluid layout + type (clamp) — use via var() or .fluid-* utilities */
   /* Page inset — reference ~16–20px at desktop */
@@ -123,32 +123,47 @@
   padding-top: var(--fluid-main-grid-pt);
 }
 
-/* Digits only — Times New Roman on every public/private surface */
-@font-face {
-  font-family: "SyndicateNums";
-  src: local("Times New Roman"), local("TimesNewRoman"), local("Times");
-  unicode-range: U+0030-0039;
-  font-display: swap;
-  font-weight: 100 900;
-  font-style: normal;
-}
-
-/* Display type — Thryon.otf only (no woff2) */
+/* Headings / titles — Thryon cyberpunk (woff2 preferred) */
 @font-face {
   font-family: "Thryon";
-  src: url("/fonts/Thryon.otf") format("opentype");
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.woff") format("woff");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
 }
 
-/* Optional alias (common typo): same otf file as Thryon */
+/* Optional alias (common typo) */
 @font-face {
   font-family: "Thyron";
-  src: url("/fonts/Thryon.otf") format("opentype");
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.woff") format("woff");
   font-display: swap;
   font-weight: 200 900;
   font-style: normal;
+}
+
+/* Paragraph body + digits — CS Daine Mono */
+@font-face {
+  font-family: "CS Daine Mono";
+  src:
+    url("/fonts/CSDaineMono-Regular.woff2") format("woff2"),
+    url("/fonts/CSDaineMono-Regular.woff") format("woff");
+  font-display: swap;
+  font-weight: 400 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "CS Daine Mono";
+  src:
+    url("/fonts/CSDaineMono-Italic.woff2") format("woff2"),
+    url("/fonts/CSDaineMono-Italic.woff") format("woff");
+  font-display: swap;
+  font-weight: 400 700;
+  font-style: italic;
 }
 
 /* Same display type as the top bar (“Syndicate Mode: Missions”) — Thryon + gold glow */
@@ -164,7 +179,7 @@
     0 0 34px rgba(0, 255, 255, 0.18);
 }
 
-/* Syndicate UI blocks: inherit Thryon from body; keep comfortable weight/tracking */
+/* Syndicate UI blocks: inherit body mono; keep comfortable weight/tracking */
 .syndicate-readable {
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -448,7 +463,7 @@
   }
 }
 
-/* Body copy: Thryon (+ Times digits); titles use .membership-article-title */
+/* Body copy: CS Daine Mono; titles use Thryon via .membership-article-title */
 .membership-article-prose {
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
@@ -623,9 +638,18 @@ body {
   font-family: inherit;
 }
 
-/* Keep mono stacks for code/UI chrome, but force digits through Times New Roman */
+/* Mono / UI chrome uses CS Daine Mono (same as body + digits) */
 .font-mono {
-  font-family: var(--font-digits), var(--font-mono, ui-monospace), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }
 
 .text-xxl {

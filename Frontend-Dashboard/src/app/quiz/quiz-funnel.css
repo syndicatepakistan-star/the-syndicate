@@ -1,25 +1,28 @@
 @font-face {
-  font-family: "SyndicateNums";
-  src: local("Times New Roman"), local("TimesNewRoman"), local("Times");
-  unicode-range: U+0030-0039;
-  font-display: swap;
+  font-family: "Thryon";
+  src:
+    url("/fonts/Thryon.woff2") format("woff2"),
+    url("/fonts/Thryon.woff") format("woff");
   font-weight: 100 900;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: "Thryon";
-  src: url("/fonts/Thryon.otf") format("opentype");
-  font-weight: 100 900;
+  font-family: "CS Daine Mono";
+  src:
+    url("/fonts/CSDaineMono-Regular.woff2") format("woff2"),
+    url("/fonts/CSDaineMono-Regular.woff") format("woff");
+  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
 }
 
 .quiz-funnel-root {
   color-scheme: dark;
-  --font-display: "SyndicateNums", "Thryon", sans-serif;
-  --font-ui: "SyndicateNums", "Thryon", "Segoe UI", Arial, sans-serif;
-  --font-body: "SyndicateNums", "Thryon", "Segoe UI", Arial, sans-serif;
+  --font-display: "Thryon", sans-serif;
+  --font-ui: "CS Daine Mono", ui-monospace, monospace;
+  --font-body: "CS Daine Mono", ui-monospace, monospace;
   --obsidian: #07090f;
   --steel: #111622;
   --royal: #2a4d9b;

@@ -79,6 +79,7 @@ import { categoryPlaylistsFullyUnlocked } from "@/lib/level1CategoryPacks";
 import { registerDashboardTabResumeTask } from "@/lib/dashboardTabResume";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
+import { ProgramsEliteOffersLcpFallback } from "@/components/programs/ProgramsEliteOffersLcpFallback";
 
 const lessonPanelFallback = (
   <div className="min-h-[12rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
@@ -101,8 +102,8 @@ const PublicPlanOfferCards = dynamic(
   () =>
     import("@/components/programs/PublicPlanOfferCards").then((m) => m.PublicPlanOfferCards),
   {
-    ssr: false,
-    loading: () => <div className="min-h-[20rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />,
+    // SSR + LCP-shaped fallback cuts CLS when interactive cards hydrate on /dashboard/programs.
+    loading: () => <ProgramsEliteOffersLcpFallback />,
   },
 );
 

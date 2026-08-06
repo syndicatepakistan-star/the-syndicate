@@ -780,6 +780,16 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
       const nearEnd = duration > 0 && position >= duration * 0.95;
       const resumeAt = progress?.completed || nearEnd ? 0 : position;
       pendingAutoplayRef.current = Boolean(opts?.autoplay);
+      // Kick playback URL fetch immediately so we don't wait for the hook after paint.
+      if (videoId && Number.isFinite(videoId) && videoId > 0) {
+        void fetchStreamVideoPlayback(videoId, { context: "programs" })
+          .then((payload) => {
+            setPlaybackCache((prev) => ({ ...prev, [videoId]: payload }));
+          })
+          .catch(() => {
+            /* hook / retry UI handles failure */
+          });
+      }
       setActiveIdx(index);
       setResumeStartSeconds(resumeAt);
       if (videoId) {

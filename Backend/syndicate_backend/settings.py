@@ -256,6 +256,11 @@ STREAM_HLS_MANIFEST_CACHE_SECONDS = int(
 STREAM_S3_MAX_POOL_CONNECTIONS = int(
     (os.environ.get("STREAM_S3_MAX_POOL_CONNECTIONS") or "32").strip() or "32"
 )
+# Signed playback URL lifetime (proxy token + R2/S3 segment presign). Default 25 minutes.
+STREAM_SIGNED_URL_TTL_SECONDS = int(
+    (os.environ.get("STREAM_SIGNED_URL_TTL_SECONDS") or "1500").strip() or "1500"
+)
+STREAM_SIGNED_URL_TTL_SECONDS = max(60, min(STREAM_SIGNED_URL_TTL_SECONDS, 60 * 60))
 
 
 # Application definition

@@ -170,9 +170,18 @@ export default function StreamHtmlVideoPlayer({
       const wasPaused = video.paused;
       const savedRate = video.playbackRate;
 
+      // Stop in-flight segment XHRs before swapping — reduces ERR_CONTENT_LENGTH_MISMATCH
+      // aborts and frees bandwidth for the new episode / seek target.
+      try {
+        hls.stopLoad();
+      } catch {
+        /* ignore */
+      }
+
       appliedSrcRef.current = manifestUrl;
       appliedRevisionRef.current = srcRevisionRef.current;
       setPlaybackError(null);
+      setBuffering(true);
       hlsNetworkRetriesRef.current = 0;
 
       const onManifestParsed = () => {
@@ -186,9 +195,16 @@ export default function StreamHtmlVideoPlayer({
             lateResumeAppliedKeyRef.current = lateResumeKey(url, resumeFromStart);
           }
           hls.startLoad(startPos);
+          try {
+            video.currentTime = Math.min(startPos, Math.max(0, duration - 0.05));
+          } catch {
+            /* ignore */
+          }
+        } else {
+          hls.startLoad(-1);
         }
         video.playbackRate = savedRate;
-        if (!wasPaused) {
+        if (!wasPaused || resumeFromStart > 0) {
           void video.play().catch(() => undefined);
         }
       };
@@ -201,6 +217,9 @@ export default function StreamHtmlVideoPlayer({
       const HlsClass = HlsClassRef.current;
       if (HlsClass) hls.once(HlsClass.Events.MANIFEST_PARSED, onManifestParsed);
       hls.loadSource(manifestUrl);
+      if (!hls.media) {
+        hls.attachMedia(video);
+      }
 
       if (!isHotSwap) {
         lateResumeAppliedKeyRef.current = "";
@@ -241,12 +260,21 @@ export default function StreamHtmlVideoPlayer({
   // Episode change: fresh load at the new resume position (do not hot-swap prior episode time).
   useEffect(() => {
     if (episodeKey === undefined) return;
+    const hls = hlsRef.current;
+    if (hls) {
+      try {
+        hls.stopLoad();
+      } catch {
+        /* ignore */
+      }
+    }
     appliedSrcRef.current = null;
     appliedRevisionRef.current = -1;
     lateResumeAppliedKeyRef.current = "";
     initialResumeDoneRef.current = false;
     livePositionRef.current = Number(startAtSecondsRef.current || 0);
     setPlaybackError(null);
+    setBuffering(true);
   }, [episodeKey]);
 
   useEffect(() => {
@@ -308,7 +336,20 @@ export default function StreamHtmlVideoPlayer({
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       const target = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const playbackUrl = srcRef.current;
-      if (!isHls && playbackUrl && duration > 0 && target > 0) {
+      setBuffering(true);
+      if (isHls) {
+        const hls = hlsRef.current;
+        if (hls && target >= 0) {
+          // Jump loader to the seek target instead of finishing the old segment first.
+          try {
+            hls.startLoad(Math.max(0, target - 0.15));
+          } catch {
+            /* ignore */
+          }
+        }
+        return;
+      }
+      if (playbackUrl && duration > 0 && target > 0) {
         if (seekPrefetchTimerRef.current) clearTimeout(seekPrefetchTimerRef.current);
         seekPrefetchTimerRef.current = setTimeout(() => {
           prefetchPlaybackNearTime(playbackUrl, target, duration);
@@ -422,16 +463,20 @@ export default function StreamHtmlVideoPlayer({
 
       const hls = new Hls({
         autoStartLoad: true,
-        enableWorker: true,
+        // Workers + cross-origin R2 often amplify aborted-segment Content-Length noise.
+        enableWorker: false,
         lowLatencyMode: false,
-        // Keep more ahead so mid-video stalls less when segments proxy through the app.
-        maxBufferLength: 45,
-        maxMaxBufferLength: 90,
-        maxBufferHole: 0.8,
+        // Shorter ahead-buffer = faster first frame + faster seeks (don't wait for 45s of media).
+        maxBufferLength: 18,
+        maxMaxBufferLength: 36,
+        maxBufferHole: 1.0,
+        maxStarvationDelay: 2,
         startFragPrefetch: true,
-        // Prefer lower quality first so first paint isn't stuck on a huge first segment.
         startLevel: -1,
-        abrEwmaDefaultEstimate: 500_000,
+        abrEwmaDefaultEstimate: 400_000,
+        fragLoadingTimeOut: 25_000,
+        fragLoadingMaxRetry: 4,
+        manifestLoadingTimeOut: 12_000,
       });
       if (cancelled) {
         hls.destroy();
@@ -581,6 +626,14 @@ export default function StreamHtmlVideoPlayer({
       if (!Number.isFinite(duration) || duration <= 0) return;
       const target = Math.min(Math.max(0, seekRequest.seconds), Math.max(0, duration - 0.05));
       suppressNextSeekEventRef.current = true;
+      setBuffering(true);
+      if (isHls && hlsRef.current) {
+        try {
+          hlsRef.current.startLoad(Math.max(0, target - 0.15));
+        } catch {
+          /* ignore */
+        }
+      }
       video.currentTime = target;
       if (seekRequest.autoplay) {
         void video.play().catch(() => {
@@ -597,7 +650,7 @@ export default function StreamHtmlVideoPlayer({
     return () => {
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
     };
-  }, [seekRequest]);
+  }, [seekRequest, isHls]);
 
   useEffect(() => {
     const video = videoRef.current;

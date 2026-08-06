@@ -9,35 +9,14 @@ const HudCssImport = dynamic(
 );
 
 /**
- * Mission HUD CSS is large and unused on /dashboard/programs first paint.
- * Load only when the monk/missions section is active (or after long idle on desktop).
+ * Mission HUD CSS is large and unused on /dashboard and /dashboard/programs.
+ * Load only while Syndicate Mode (monk) is active — no idle warmup on other routes.
  */
 export function DeferredDashboardHudCss({ active }: { active: boolean }) {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(active);
 
   useEffect(() => {
-    if (active) {
-      setReady(true);
-      return;
-    }
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 1024px)").matches) return;
-
-    let idleHandle: number | undefined;
-    const safety = window.setTimeout(() => {
-      if (typeof window.requestIdleCallback === "function") {
-        idleHandle = window.requestIdleCallback(() => setReady(true), { timeout: 4000 });
-      } else {
-        setReady(true);
-      }
-    }, 12000);
-
-    return () => {
-      window.clearTimeout(safety);
-      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleHandle);
-      }
-    };
+    setReady(active);
   }, [active]);
 
   return ready ? <HudCssImport /> : null;

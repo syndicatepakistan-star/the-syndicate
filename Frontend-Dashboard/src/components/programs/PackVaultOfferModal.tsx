@@ -29,7 +29,7 @@ import {
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
-import { VIMEO_PACK_DEMO_LABEL, VIMEO_PACK_DEMO_URL } from "@/components/programs/packDemoLinks";
+import { VIMEO_PACK_DEMO_LABEL } from "@/components/programs/packDemoLinks";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
@@ -316,21 +316,17 @@ export function PackVaultOfferModal({
             </div>
 
             <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
-              <a
-                href={VIMEO_PACK_DEMO_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
                 className={cn(
-                  "inline-flex w-fit max-w-full items-center gap-2 rounded-xl border-2 px-4 py-2.5",
-                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] transition sm:text-[12px]",
+                  "inline-flex w-fit max-w-full cursor-default items-center gap-2 rounded-xl border-2 px-4 py-2.5",
+                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] sm:text-[12px]",
                   "border-white/35 bg-white/5 text-white",
-                  "hover:border-white/55 hover:bg-white/10",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
                 )}
               >
                 {VIMEO_PACK_DEMO_LABEL}
                 <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
-              </a>
+              </button>
               {packUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
                   Pack unlocked — choose a module below and tap Details.

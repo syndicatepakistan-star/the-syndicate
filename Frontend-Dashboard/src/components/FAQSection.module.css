@@ -292,7 +292,7 @@
   gap: 0.85rem;
   cursor: pointer;
   text-align: left;
-  font-family: Thryon, Thyron, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
   font-size: clamp(1.05rem, 2.4vw, 1.32rem);
   letter-spacing: 0.04em;

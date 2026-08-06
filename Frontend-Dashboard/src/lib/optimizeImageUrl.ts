@@ -3,14 +3,19 @@
  */
 
 /** Cloudinary: request WebP/AVIF-friendly transforms at display width. */
-export function optimizeCloudinaryUrl(url: string, width = 640): string {
+export function optimizeCloudinaryUrl(
+  url: string,
+  width = 640,
+  opts?: { minWidth?: number },
+): string {
   if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
     return url;
   }
   if (/\/upload\/[^/]*w_\d+/.test(url)) {
     return url;
   }
-  const w = Math.max(320, Math.min(width, 1200));
+  const minW = opts?.minWidth ?? 320;
+  const w = Math.max(minW, Math.min(width, 1200));
   return url.replace("/upload/", `/upload/w_${w},q_auto:good,f_auto/`);
 }
 
@@ -25,8 +30,23 @@ export function optimizeCoverImageSrc(src: string | undefined, width = 640): str
   return src;
 }
 
+/**
+ * Playlist / sidebar episode thumbs (~100–160 CSS px). Uses a low Cloudinary floor
+ * so we don't pull 320w+ assets into a 6.4rem strip.
+ */
+export function optimizeListThumbSrc(src: string | undefined, width = 160): string | undefined {
+  if (!src) return undefined;
+  if (src.startsWith("/")) {
+    return src;
+  }
+  if (/^https?:\/\//i.test(src)) {
+    return optimizeCloudinaryUrl(src, width, { minWidth: 96 });
+  }
+  return src;
+}
+
 /** Widths must exist in next.config.js images.deviceSizes/imageSizes. */
-const NEXT_IMAGE_WIDTHS = [256, 384, 480, 640, 768, 828, 1080, 1200] as const;
+const NEXT_IMAGE_WIDTHS = [128, 256, 384, 480, 640, 768, 828, 1080, 1200] as const;
 
 /** Must match next.config.js `images.qualities` — invalid q → 400 blank images. */
 const NEXT_IMAGE_QUALITIES = [55, 60, 62, 70, 72, 75, 78, 85, 88] as const;

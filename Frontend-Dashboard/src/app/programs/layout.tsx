@@ -10,14 +10,14 @@ import { ProgramsDeferredFxCss } from "@/components/programs/ProgramsDeferredFxC
  */
 const PROGRAMS_HASH_BOOT = `(function(){try{var h=(location.hash||"").replace(/^#/,"").toLowerCase();if(h!=="businessprograms"&&h!=="programs-library")return;if("scrollRestoration"in history)history.scrollRestoration="manual";try{window.__PROGRAMS_EAGER_LIBRARY=1;}catch(e){}function go(){var el=document.getElementById("businessprograms");if(!el)return false;var raw=window.getComputedStyle(el).scrollMarginTop||"0";var margin=parseFloat(raw);if(!isFinite(margin))margin=112;var y=Math.max(0,Math.round(el.getBoundingClientRect().top+(window.scrollY||window.pageYOffset||0)-margin));window.scrollTo(0,y);return true;}function tick(){go();requestAnimationFrame(function(){go();});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",tick);}else{tick();}}catch(e){}})();`;
 
-/** Critical display fonts — discover before globals.css parses @font-face (cuts LCP render delay). */
+/** Critical display font — Thryon.otf only (no woff2). */
 const PROGRAMS_FONT_PRELOADS = (
   <>
     <link
       rel="preload"
-      href="/fonts/Thryon.woff2"
+      href="/fonts/Thryon.otf"
       as="font"
-      type="font/woff2"
+      type="font/otf"
       crossOrigin="anonymous"
     />
   </>

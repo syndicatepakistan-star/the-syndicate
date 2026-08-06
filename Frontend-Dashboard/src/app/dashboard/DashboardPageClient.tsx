@@ -26,6 +26,7 @@ import { DeferredDashboardProgramsFxCss } from "@/components/dashboard/DeferredD
 import { DeferredDashboardProgramsPageCss } from "@/components/dashboard/DeferredDashboardProgramsPageCss";
 import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
+import { DashboardLcpPreload } from "@/components/dashboard/DashboardLcpPreload";
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
 import { DashboardNavQuickSearch } from "@/components/dashboard/DashboardNavQuickSearch";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
@@ -3163,6 +3164,7 @@ export default function DashboardPageClient({
     >
       <PlaylistCheckoutSync />
       <PlanCheckoutSync />
+      <DashboardLcpPreload sectionKey={selectedNavKey} />
       <DashboardMediaWarmup />
       <DeferredDashboardProgramsPageCss />
       <DeferredDashboardProgramsFxCss />
@@ -3230,7 +3232,7 @@ export default function DashboardPageClient({
                     width={200}
                     height={80}
                     decoding="async"
-                    fetchPriority="high"
+                    fetchPriority="low"
                     className="pointer-events-none relative z-[1] h-[26px] w-auto max-w-[min(100%,100px)] object-contain opacity-[0.96] max-lg:[filter:none] lg:[filter:drop-shadow(0_0_14px_rgba(250,204,21,0.32))] sm:h-[34px] sm:max-w-[130px] md:h-[44px] md:max-w-[160px] lg:h-[60px] lg:max-w-[200px]"
                     onError={(e) => {
                       const img = e.currentTarget as HTMLImageElement;
@@ -3847,8 +3849,8 @@ export default function DashboardPageClient({
                 <div className="rounded-md border border-white/15 bg-black/35 p-4 text-[12px] text-white/72">Section available soon.</div>
               ) : null}
             </div>
-            <GoalsPanel />
-            <QuickAccessPanel />
+            {isGoalsPanelOpen ? <GoalsPanel /> : null}
+            {isQuickAccessPanelOpen ? <QuickAccessPanel /> : null}
           </motion.section>
 
           {/* Details now live inside the courses panel (scrollable). */}

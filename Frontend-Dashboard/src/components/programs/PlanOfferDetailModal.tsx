@@ -13,7 +13,7 @@ import { StructuredDescriptionBody } from "@/components/programs/StructuredDescr
 import { resolveOfferStructuredDescription } from "@/components/programs/vaultStructuredDescriptions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
-import { VIMEO_PACK_DEMO_LABEL, VIMEO_PACK_DEMO_URL } from "@/components/programs/packDemoLinks";
+import { VIMEO_PACK_DEMO_LABEL } from "@/components/programs/packDemoLinks";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -272,21 +272,18 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
 
           {isPackDetail ? (
             <div className="mt-6 flex justify-start">
-              <a
-                href={VIMEO_PACK_DEMO_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2.5",
-                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] transition sm:text-[12px]",
+                  "inline-flex cursor-default items-center gap-2 rounded-xl border-2 px-4 py-2.5",
+                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] sm:text-[12px]",
                   "border-white/35 bg-white/5 text-white",
-                  "hover:border-white/55 hover:bg-white/10",
                   theme.featureBorder,
                 )}
               >
                 {VIMEO_PACK_DEMO_LABEL}
                 <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
-              </a>
+              </button>
             </div>
           ) : null}
 

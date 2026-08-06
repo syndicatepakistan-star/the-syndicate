@@ -18,9 +18,33 @@ export default {
         "hud-bob": "hud-bob 2.2s ease-in-out infinite",
       },
       fontFamily: {
-        sans: ["var(--font-mono)", "ui-monospace", "ui-sans-serif", "system-ui", "sans-serif"],
-        heading: ["Thryon", "Thyron", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
+        sans: [
+          "SyndicateNums",
+          "Times New Roman",
+          "Thryon",
+          "Thyron",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        heading: [
+          "SyndicateNums",
+          "Times New Roman",
+          "Thryon",
+          "Thyron",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: [
+          "SyndicateNums",
+          "Times New Roman",
+          "var(--font-mono)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "monospace",
+        ],
       }
     }
   },

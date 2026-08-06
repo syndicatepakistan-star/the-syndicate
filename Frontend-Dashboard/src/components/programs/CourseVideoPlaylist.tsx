@@ -6,6 +6,7 @@ import { AlertTriangle, Play } from "lucide-react";
 import { fetchCourseVideos, postVideoProgress, resolveDjangoMediaUrl, resolveLessonVideoUrl, type VideoDto } from "@/lib/courses-api";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
+import { optimizeListThumbSrc, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 
 type Props = {
   courseId: number;
@@ -224,7 +225,13 @@ export function CourseVideoPlaylist({
         <ul className="mt-3 flex max-h-[min(52vh,560px)] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-none lg:flex-1">
           {videos.map((v, i) => {
             const on = i === activeIdx;
-            const thumbSrc = resolveDjangoMediaUrl(v.thumbnail_url);
+            const rawThumb = resolveDjangoMediaUrl(v.thumbnail_url);
+            const optimized = optimizeListThumbSrc(rawThumb ?? undefined, 160);
+            const thumbSrc = optimized
+              ? nextOptimizedImageUrl(optimized, 128, 60) !== optimized
+                ? nextOptimizedImageUrl(optimized, 128, 60)
+                : optimized
+              : undefined;
             return (
               <li key={v.id}>
                 <button
@@ -237,7 +244,16 @@ export function CourseVideoPlaylist({
                 >
                   <div className="relative h-14 w-[4.5rem] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-red-700/90 via-neutral-900 to-black">
                     {thumbSrc ? (
-                      <img src={thumbSrc} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+                      <img
+                        src={thumbSrc}
+                        alt=""
+                        width={96}
+                        height={54}
+                        loading={on || i < 4 ? "eager" : "lazy"}
+                        decoding="async"
+                        fetchPriority="auto"
+                        className="absolute inset-0 h-full w-full object-cover opacity-90"
+                      />
                     ) : null}
                     <span className="absolute right-1 top-1 z-[1] text-lg font-black leading-none text-white/25">{i + 1}</span>
                     <span className="absolute inset-0 z-[1] flex items-center justify-center">

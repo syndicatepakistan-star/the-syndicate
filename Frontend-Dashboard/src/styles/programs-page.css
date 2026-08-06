@@ -674,7 +674,7 @@
 }
 
 .plan-offer-detail__title {
-  font-family: "Thryon", "Thyron", var(--hud-font);
+  font-family: var(--font-heading);
   text-shadow:
     0 0 22px color-mix(in srgb, currentColor 42%, transparent),
     0 2px 12px rgba(0, 0, 0, 0.85);

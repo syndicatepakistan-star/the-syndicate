@@ -5864,7 +5864,7 @@ figcaption {
 }
 
 .syndicate-stats-deck .syndicate-stats-header-rail h2 {
-  font-family: "Thryon", "Thyron", var(--hud-font);
+  font-family: var(--font-heading);
   text-shadow:
     0 0 14px rgba(250, 204, 21, 0.5),
     0 0 32px rgba(34, 211, 238, 0.18);

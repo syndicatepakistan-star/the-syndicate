@@ -18,7 +18,8 @@ type DashboardSectionKeepAliveProps = {
   unmountWhenInactive?: boolean;
 };
 
-const HEAVY_SECTIONS = new Set(["programs", "monk", "resources", "quickaccess"]);
+/** Unmount when left so slideshow / control center / programs don't stay warm off-route. */
+const HEAVY_SECTIONS = new Set(["programs", "monk", "resources", "quickaccess", "dashboard"]);
 
 /** Mount a dashboard section on first visit; heavy sections unmount when left. */
 export function DashboardSectionKeepAlive({

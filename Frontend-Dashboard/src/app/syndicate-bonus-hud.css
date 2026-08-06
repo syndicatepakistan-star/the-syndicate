@@ -656,7 +656,7 @@
 }
 
 .syndicate-bonus-hud__title {
-  font-family: "Orbitron", "Rajdhani", "Arial Black", sans-serif;
+  font-family: var(--font-heading);
   font-size: clamp(0.82rem, 0.6vw + 0.64rem, 1.12rem);
   font-weight: 900;
   line-height: 1.12;
@@ -693,7 +693,7 @@
 
 .syndicate-bonus-hud__hint {
   max-width: 24rem;
-  font-family: "Rajdhani", "Segoe UI", sans-serif;
+  font-family: var(--font-heading);
   font-size: clamp(0.7rem, 0.28vw + 0.6rem, 0.86rem);
   font-weight: 600;
   line-height: 1.4;

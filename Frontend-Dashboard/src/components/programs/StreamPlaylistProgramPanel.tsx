@@ -27,7 +27,7 @@ import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
-import { optimizeCoverImageSrc, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
+import { optimizeListThumbSrc, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 import {
   resolveResumeEpisodeIndex,
   readPlaylistLastEpisodeId,
@@ -1088,10 +1088,10 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
     const v = row.stream_video;
     const on = i === activeIdx;
     const rawThumb = resolveDjangoMediaUrl(v.thumbnail_url) || playlistCoverThumb || undefined;
-    const optimized = optimizeCoverImageSrc(rawThumb, 256);
+    const optimized = optimizeListThumbSrc(rawThumb, 160);
     const thumbSrc = optimized
-      ? nextOptimizedImageUrl(optimized, 256, 60) !== optimized
-        ? nextOptimizedImageUrl(optimized, 256, 60)
+      ? nextOptimizedImageUrl(optimized, 128, 60) !== optimized
+        ? nextOptimizedImageUrl(optimized, 128, 60)
         : optimized
       : undefined;
     return (
@@ -1113,9 +1113,9 @@ export function StreamPlaylistProgramPanel({ playlistId }: Props) {
                 alt=""
                 width={128}
                 height={72}
-                loading={on ? "eager" : "lazy"}
+                loading={on || i < 3 ? "eager" : "lazy"}
                 decoding="async"
-                fetchPriority={on ? "high" : "auto"}
+                fetchPriority={on ? "low" : "auto"}
                 className="absolute inset-0 h-full w-full object-cover opacity-90"
               />
             ) : null}

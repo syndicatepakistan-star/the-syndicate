@@ -1251,7 +1251,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                 playlist={pl}
                 gradClassName={grad}
                 loading={j < 2 ? "eager" : "lazy"}
-                fetchPriority={j < 1 ? "high" : undefined}
+                fetchPriority={sectionActive && j < 1 ? "high" : "auto"}
                 objectFit="cover"
               />
               <div className={PROGRAM_CARD_LANDSCAPE_MEDIA_OVERLAY} />
@@ -1677,7 +1677,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                             playlist={courseMeta}
                             gradClassName={grad}
                             loading={i < 4 ? "eager" : "lazy"}
-                            fetchPriority={i < 2 ? "high" : "auto"}
+                            fetchPriority={sectionActive && i < 1 ? "high" : "auto"}
                             displayWidth={480}
                             objectFit="cover"
                           />

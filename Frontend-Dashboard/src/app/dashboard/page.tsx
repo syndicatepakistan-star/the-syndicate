@@ -48,7 +48,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   return (
     <>
       {lcpHref ? (
-        <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
+        <link
+          rel="preload"
+          as="image"
+          href={lcpHref}
+          // @ts-expect-error — React DOM typings lag fetchPriority on link
+          fetchPriority="high"
+          imageSrcSet={`${lcpHref} 640w`}
+          imageSizes="(max-width: 767px) 94vw, (max-width: 1024px) 46vw, 480px"
+        />
       ) : null}
       <DashboardPageClient initialSection={initialSection} />
     </>

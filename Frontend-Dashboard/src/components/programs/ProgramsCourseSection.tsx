@@ -420,26 +420,42 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   }, []);
 
   useEffect(() => {
+    if (!sectionActive) return;
     let cancelled = false;
-    void (async () => {
-      try {
-        const identity = await fetchPortalIdentity();
-        if (!cancelled) {
-          setStaff(!!identity?.is_staff);
-          setAccessTier(identity?.access_tier ?? null);
-          setMoneyMasteryActive(!!identity?.money_mastery_active);
+    let idleHandle: number | undefined;
+    const run = () => {
+      void (async () => {
+        try {
+          const identity = await fetchPortalIdentity();
+          if (!cancelled) {
+            setStaff(!!identity?.is_staff);
+            setAccessTier(identity?.access_tier ?? null);
+            setMoneyMasteryActive(!!identity?.money_mastery_active);
+          }
+          clearStreamPlaylistsCache();
+          await reloadApiCourses();
+          if (!cancelled) await reloadStreamPlaylists();
+        } catch {
+          if (!cancelled) setStaff(false);
         }
-        clearStreamPlaylistsCache();
-        await reloadApiCourses();
-        if (!cancelled) await reloadStreamPlaylists();
-      } catch {
-        if (!cancelled) setStaff(false);
+      })();
+    };
+    // Let Money Mastery LCP paint before API fan-out (main-thread + network).
+    const safety = window.setTimeout(() => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(run, { timeout: 900 });
+      } else {
+        run();
       }
-    })();
+    }, 120);
     return () => {
       cancelled = true;
+      window.clearTimeout(safety);
+      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
     };
-  }, [reloadApiCourses, reloadStreamPlaylists]);
+  }, [sectionActive, reloadApiCourses, reloadStreamPlaylists]);
 
   const refreshAfterTabResume = useCallback(() => {
     if (!hasSimpleAuthSessionClient() || !sectionActiveRef.current) return;

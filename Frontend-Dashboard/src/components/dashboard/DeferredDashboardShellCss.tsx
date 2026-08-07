@@ -9,27 +9,32 @@ const ShellCssImport = dynamic(
   { ssr: false },
 );
 
+type DeferredDashboardShellCssProps = {
+  /** Extra delay before loading ~289KB shell CSS (helps programs LCP on mobile). */
+  delayMs?: number;
+};
+
 /**
  * Load ~296KB dashboard-shell.css after first paint so it is not SSR render-blocking.
- * Critical chrome (black bg, navbar/shell reserves, slideshow/programs LCP slots) stays
- * inline in dashboard/layout.tsx — avoids white filmstrip without FOUC-ing the shell forever.
+ * Critical chrome stays inline in dashboard/layout.tsx.
  */
-export function DeferredDashboardShellCss() {
+export function DeferredDashboardShellCss({ delayMs = 80 }: DeferredDashboardShellCssProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let raf2 = 0;
     const raf1 = window.requestAnimationFrame(() => {
-      raf2 = window.requestAnimationFrame(() => setReady(true));
+      raf2 = window.requestAnimationFrame(() => {
+        if (delayMs <= 80) setReady(true);
+      });
     });
-    // Safety if rAF is starved under Lighthouse CPU throttle.
-    const safety = window.setTimeout(() => setReady(true), 80);
+    const safety = window.setTimeout(() => setReady(true), Math.max(80, delayMs));
     return () => {
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
       window.clearTimeout(safety);
     };
-  }, []);
+  }, [delayMs]);
 
   return ready ? <ShellCssImport /> : null;
 }

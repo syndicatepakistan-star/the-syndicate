@@ -15,22 +15,19 @@ import {
   type ChangeEvent,
 } from "react";
 import type { CSSProperties } from "react";
-import gsap from "gsap";
 import { Lock } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import type { ChromaItem } from "@/components/ChromaGrid";
 import { DashboardMainVideoBackground } from "@/components/dashboard/DashboardMainVideoBackground";
 import { DashboardMediaWarmup } from "@/components/dashboard/DashboardMediaWarmup";
 import { DeferredDashboardHudCss } from "@/components/dashboard/DeferredDashboardHudCss";
 import { DeferredDashboardProgramsFxCss } from "@/components/dashboard/DeferredDashboardProgramsFxCss";
 import { DeferredDashboardProgramsPageCss } from "@/components/dashboard/DeferredDashboardProgramsPageCss";
-import KingProgramUnlockOverlay from "@/components/dashboard/KingProgramUnlockOverlay";
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
 import { DashboardLcpPreload } from "@/components/dashboard/DashboardLcpPreload";
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
 import { DashboardNavQuickSearch } from "@/components/dashboard/DashboardNavQuickSearch";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
-import NeonTypingBadge from "@/components/NeonTypingBadge";
 import type { DashboardNavKey } from "@/components/dashboard/types";
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
@@ -85,20 +82,39 @@ import {
   type PortalUser
 } from "@/lib/portal-api";
 import { logoutSyndicateSession } from "@/lib/syndicateAuth";
-import toast, { Toaster } from "react-hot-toast";
-import { SynCertificateCard } from "@/components/SynCertificateCard";
+import toast from "react-hot-toast";
 import { buildCertificateVerifyUrl } from "@/lib/certificate-public-url";
 import {
   buildCertificateFilenameStem,
   downloadSynCertificate,
   formatCertificateIssuedOn,
 } from "@/lib/download-certificate";
+import { loadGsap } from "@/lib/loadGsap";
 import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
+import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 import {
   DASHBOARD_NAVBAR_CHROME_NEON,
   getInstructorSlideNeonTheme,
   neonAccentStyleVars,
 } from "@/data/instructorSlideNeonThemes";
+
+const KingProgramUnlockOverlay = dynamic(
+  () => import("@/components/dashboard/KingProgramUnlockOverlay"),
+  { ssr: false },
+);
+
+const NeonTypingBadge = dynamic(() => import("@/components/NeonTypingBadge"), { ssr: false });
+
+const SynCertificateCard = dynamic(
+  () =>
+    import("@/components/SynCertificateCard").then((mod) => mod.SynCertificateCard),
+  { ssr: false },
+);
+
+const Toaster = dynamic(
+  () => import("react-hot-toast").then((mod) => mod.Toaster),
+  { ssr: false },
+);
 
 /** Same-origin static assets → /_next/image at display size; data:/blob:/remote unchanged. */
 function dashboardThumbSrc(src: string, width: number, quality = 55): string {
@@ -252,12 +268,32 @@ const InstructorSlideshow = dynamic(
   () => import("@/components/dashboard/InstructorSlideshow").then((m) => m.InstructorSlideshow),
   {
     ssr: false,
-    loading: () => (
-      <div
-        className="dashboard-featured-slideshow min-h-[min(32rem,70vh)] w-full animate-pulse rounded-xl border border-white/10 bg-black/30 md:min-h-[min(28rem,52vh)]"
-        aria-hidden
-      />
-    ),
+    loading: () => {
+      const lcpSrc = nextOptimizedImageUrl(INSTRUCTOR_SLIDES[0]?.src ?? "", 640, 70);
+      return (
+        <div
+          className="dashboard-featured-slideshow instructor-slideshow-panel min-h-[min(32rem,70vh)] w-full rounded-xl border border-white/10 bg-black/30 md:min-h-[min(28rem,52vh)]"
+          aria-hidden
+        >
+          <div className="instructor-slide-media relative aspect-[4/3] min-h-[clamp(18rem,42vh,28rem)] w-full overflow-hidden rounded-xl bg-[#060a12]">
+            {lcpSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element -- LCP boot frame before slideshow chunk
+              <img
+                src={lcpSrc}
+                alt=""
+                width={640}
+                height={480}
+                fetchPriority="high"
+                decoding="async"
+                className="h-full w-full object-contain object-center p-3 sm:p-5"
+              />
+            ) : (
+              <div className="h-full w-full animate-pulse bg-black/40" />
+            )}
+          </div>
+        </div>
+      );
+    },
   }
 );
 
@@ -1017,7 +1053,7 @@ function ToastQueueCenter({
     <div className="pointer-events-none fixed right-3 top-[90px] z-[100] flex w-[min(360px,92vw)] flex-col gap-2">
       <AnimatePresence>
         {toast ? (
-          <motion.div
+          <m.div
             key={toast.id}
             initial={{ opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1055,7 +1091,7 @@ function ToastQueueCenter({
                 </div>
               );
             })()}
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
     </div>
@@ -1225,7 +1261,7 @@ function UserDashboardPanel({
         : "rgba(255,215,0,0.35)";
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
@@ -1418,7 +1454,7 @@ function UserDashboardPanel({
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -1890,9 +1926,11 @@ function SettingsCertificatesSection() {
             className="pointer-events-none fixed left-0 top-0 z-[-1] w-[760px]"
             // Transform keeps the card off-screen without expanding document / shell scroll.
             style={{ transform: "translateY(-120vh)" }}
+            ref={(node) => {
+              exportCardRef.current = (node?.firstElementChild as HTMLDivElement | null) ?? null;
+            }}
           >
             <SynCertificateCard
-              ref={exportCardRef}
               forExport
               ownerName={downloadTarget.name || "Member"}
               courseTitle={downloadTarget.playlistTitle || "Syndicate Program"}
@@ -1974,7 +2012,7 @@ export default function DashboardPageClient({
   const ringInnerRef = useRef<HTMLDivElement | null>(null);
   const glowPulseRef = useRef<HTMLDivElement | null>(null);
   const glitchTimerRef = useRef<number | null>(null);
-  const navGlitchTickersRef = useRef(new Map<HTMLElement, gsap.TickerCallback>());
+  const navGlitchTickersRef = useRef(new Map<HTMLElement, () => void>());
   const navGlitchTimersRef = useRef(new Map<HTMLElement, number>());
   const profileBtnRef = useRef<HTMLButtonElement | null>(null);
   const profilePanelRef = useRef<HTMLDivElement | null>(null);
@@ -2771,7 +2809,8 @@ export default function DashboardPageClient({
   }, [profileOpen]);
 
   /**
-   * Shell chrome motion (rings, intro) — mount once so section switches do not rebuild tickers/tweens.
+   * Shell chrome motion (rings, intro) — GSAP loads lazily so /dashboard/programs
+   * first paint does not pay for the animation library on mobile.
    */
   useLayoutEffect(() => {
     if (!rootRef.current) return;
@@ -2785,71 +2824,78 @@ export default function DashboardPageClient({
       skipIntro ||
       (typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches);
 
-    const ctx = gsap.context(() => {
-      if (!skipIntro) {
-        const inAnim = gsap.utils.toArray<HTMLElement>(
-          "[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])",
-        );
-        if (inAnim.length) gsap.set(inAnim, { opacity: 0, y: 10 });
-        const leftAnim = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
-        const rightAnim = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
-        if (leftAnim.length) gsap.set(leftAnim, { opacity: 0, x: -18 });
-        if (rightAnim.length) gsap.set(rightAnim, { opacity: 0, x: 18 });
+    // Clear video scroll transforms without GSAP (programs / mobile path).
+    rootRef.current.querySelectorAll<HTMLElement>("[data-dashboard-video-scroll]").forEach((el) => {
+      el.style.opacity = "1";
+      el.style.transform = "";
+    });
 
-        const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
-        const inTargets = gsap.utils.toArray<HTMLElement>(
-          "[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])",
-        );
-        const leftTargets = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
-        const rightTargets = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
-        if (inTargets.length) tl.to(inTargets, { opacity: 1, y: 0, stagger: 0.06 }, 0);
-        if (leftTargets.length) tl.to(leftTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.05);
-        if (rightTargets.length) tl.to(rightTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
-      }
+    if (skipIntro && skipMotion) return;
 
-      const videoScrollRoots = gsap.utils.toArray<HTMLElement>("[data-dashboard-video-scroll]");
-      if (videoScrollRoots.length) {
-        gsap.set(videoScrollRoots, {
-          opacity: 1,
-          y: 0,
-          x: 0,
-          clearProps: "opacity,transform",
-        });
-      }
+    let cancelled = false;
+    let revert: (() => void) | undefined;
 
-      // Infinite ring/glow tweens tank mobile TBT — desktop only.
-      if (skipMotion) return;
+    void loadGsap().then((gsap) => {
+      if (cancelled || !rootRef.current) return;
+      const ctx = gsap.context(() => {
+        if (!skipIntro) {
+          const inAnim = gsap.utils.toArray<HTMLElement>(
+            "[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])",
+          );
+          if (inAnim.length) gsap.set(inAnim, { opacity: 0, y: 10 });
+          const leftAnim = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
+          const rightAnim = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
+          if (leftAnim.length) gsap.set(leftAnim, { opacity: 0, x: -18 });
+          if (rightAnim.length) gsap.set(rightAnim, { opacity: 0, x: 18 });
 
-      if (ringOuterRef.current) {
-        gsap.to(ringOuterRef.current, {
-          rotate: 360,
-          duration: 26,
-          ease: "none",
-          repeat: -1,
-          transformOrigin: "50% 50%",
-        });
-      }
-      if (ringInnerRef.current) {
-        gsap.to(ringInnerRef.current, {
-          rotate: -360,
-          duration: 40,
-          ease: "none",
-          repeat: -1,
-          transformOrigin: "50% 50%",
-        });
-      }
-      if (glowPulseRef.current) {
-        gsap.to(glowPulseRef.current, {
-          opacity: 0.85,
-          duration: 2.8,
-          yoyo: true,
-          repeat: -1,
-          ease: "sine.inOut",
-        });
-      }
-    }, rootRef);
+          const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
+          const inTargets = gsap.utils.toArray<HTMLElement>(
+            "[data-anim='in']:not([data-main-shell-scroll] [data-anim='in'])",
+          );
+          const leftTargets = gsap.utils.toArray<HTMLElement>("[data-anim='left']");
+          const rightTargets = gsap.utils.toArray<HTMLElement>("[data-anim='right']");
+          if (inTargets.length) tl.to(inTargets, { opacity: 1, y: 0, stagger: 0.06 }, 0);
+          if (leftTargets.length) tl.to(leftTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.05);
+          if (rightTargets.length) tl.to(rightTargets, { opacity: 1, x: 0, stagger: 0.05 }, 0.12);
+        }
 
-    return () => ctx.revert();
+        if (skipMotion) return;
+
+        if (ringOuterRef.current) {
+          gsap.to(ringOuterRef.current, {
+            rotate: 360,
+            duration: 26,
+            ease: "none",
+            repeat: -1,
+            transformOrigin: "50% 50%",
+          });
+        }
+        if (ringInnerRef.current) {
+          gsap.to(ringInnerRef.current, {
+            rotate: -360,
+            duration: 40,
+            ease: "none",
+            repeat: -1,
+            transformOrigin: "50% 50%",
+          });
+        }
+        if (glowPulseRef.current) {
+          gsap.to(glowPulseRef.current, {
+            opacity: 0.85,
+            duration: 2.8,
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut",
+          });
+        }
+      }, rootRef);
+      revert = () => ctx.revert();
+    });
+
+    return () => {
+      cancelled = true;
+      revert?.();
+    };
   }, [initialSection]);
 
   /** Dashboard section reveals — run once on first visit; scoped to the active pane. */
@@ -2867,49 +2913,56 @@ export default function DashboardPageClient({
     );
     if (!pane) return;
 
-    const cards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-course-card]"));
-    if (!cards.length) return;
-
-    gsap.set(cards, { opacity: 0, y: 18 });
-    const wrap = pane.querySelector<HTMLElement>("[data-cards-wrap]");
-    let revealed = false;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (revealed) return;
-        const hit = entries.some((e) => e.isIntersecting);
-        if (!hit) return;
-        revealed = true;
-        gsap.to(cards, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 });
-        io.disconnect();
-      },
-      { root: null, threshold: 0.18 },
-    );
-    if (wrap) io.observe(wrap);
-
+    let cancelled = false;
+    let io: IntersectionObserver | undefined;
     const cardDisposers: Array<() => void> = [];
-    cards.forEach((card) => {
-      const onEnter = () => {
-        gsap.to(card, { y: -2, duration: 0.18, ease: "power2.out" });
-      };
-      const onLeave = () => {
-        gsap.to(card, { y: 0, duration: 0.2, ease: "power2.out" });
-      };
-      card.addEventListener("mouseenter", onEnter);
-      card.addEventListener("mouseleave", onLeave);
-      card.addEventListener("focus", onEnter);
-      card.addEventListener("blur", onLeave);
-      cardDisposers.push(() => {
-        card.removeEventListener("mouseenter", onEnter);
-        card.removeEventListener("mouseleave", onLeave);
-        card.removeEventListener("focus", onEnter);
-        card.removeEventListener("blur", onLeave);
+
+    void loadGsap().then((gsap) => {
+      if (cancelled || !rootRef.current) return;
+      const cards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-course-card]"));
+      if (!cards.length) return;
+
+      gsap.set(cards, { opacity: 0, y: 18 });
+      const wrap = pane.querySelector<HTMLElement>("[data-cards-wrap]");
+      let revealed = false;
+      io = new IntersectionObserver(
+        (entries) => {
+          if (revealed) return;
+          const hit = entries.some((e) => e.isIntersecting);
+          if (!hit) return;
+          revealed = true;
+          gsap.to(cards, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 });
+          io?.disconnect();
+        },
+        { root: null, threshold: 0.18 },
+      );
+      if (wrap) io.observe(wrap);
+
+      cards.forEach((card) => {
+        const onEnter = () => {
+          gsap.to(card, { y: -2, duration: 0.18, ease: "power2.out" });
+        };
+        const onLeave = () => {
+          gsap.to(card, { y: 0, duration: 0.2, ease: "power2.out" });
+        };
+        card.addEventListener("mouseenter", onEnter);
+        card.addEventListener("mouseleave", onLeave);
+        card.addEventListener("focus", onEnter);
+        card.addEventListener("blur", onLeave);
+        cardDisposers.push(() => {
+          card.removeEventListener("mouseenter", onEnter);
+          card.removeEventListener("mouseleave", onLeave);
+          card.removeEventListener("focus", onEnter);
+          card.removeEventListener("blur", onLeave);
+        });
       });
+
+      dashboardSectionAnimDoneRef.current = true;
     });
 
-    dashboardSectionAnimDoneRef.current = true;
-
     return () => {
-      io.disconnect();
+      cancelled = true;
+      io?.disconnect();
       for (const d of cardDisposers) d();
     };
   }, [selectedNavKey]);
@@ -2923,41 +2976,48 @@ export default function DashboardPageClient({
     );
     if (!pane) return;
 
-    const monkCards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-card]"));
-    if (!monkCards.length) return;
+    let cancelled = false;
+    let monkIo: IntersectionObserver | undefined;
 
-    gsap.set(monkCards, { opacity: 0, y: 18 });
-    const monkWrap = pane.querySelector<HTMLElement>("[data-monk-card]")?.parentElement ?? null;
-    let monkRevealed = false;
-    const monkIo = new IntersectionObserver(
-      (entries) => {
-        if (monkRevealed) return;
-        const hit = entries.some((e) => e.isIntersecting);
-        if (!hit) return;
-        monkRevealed = true;
-        gsap.to(monkCards, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out", stagger: 0.08 });
-        monkIo.disconnect();
-      },
-      { root: null, threshold: 0.16 },
-    );
-    if (monkWrap) monkIo.observe(monkWrap);
+    void loadGsap().then((gsap) => {
+      if (cancelled || !rootRef.current) return;
+      const monkCards = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-card]"));
+      if (!monkCards.length) return;
 
-    const monkIcons = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-icon]"));
-    monkIcons.forEach((icon, i) => {
-      gsap.to(icon, {
-        y: i % 2 === 0 ? -4 : -3,
-        rotate: i % 2 === 0 ? 1.2 : -1.2,
-        duration: 1.9 + i * 0.18,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
+      gsap.set(monkCards, { opacity: 0, y: 18 });
+      const monkWrap = pane.querySelector<HTMLElement>("[data-monk-card]")?.parentElement ?? null;
+      let monkRevealed = false;
+      monkIo = new IntersectionObserver(
+        (entries) => {
+          if (monkRevealed) return;
+          const hit = entries.some((e) => e.isIntersecting);
+          if (!hit) return;
+          monkRevealed = true;
+          gsap.to(monkCards, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out", stagger: 0.08 });
+          monkIo?.disconnect();
+        },
+        { root: null, threshold: 0.16 },
+      );
+      if (monkWrap) monkIo.observe(monkWrap);
+
+      const monkIcons = gsap.utils.toArray<HTMLElement>(pane.querySelectorAll("[data-monk-icon]"));
+      monkIcons.forEach((icon, i) => {
+        gsap.to(icon, {
+          y: i % 2 === 0 ? -4 : -3,
+          rotate: i % 2 === 0 ? 1.2 : -1.2,
+          duration: 1.9 + i * 0.18,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
       });
+
+      monkSectionAnimDoneRef.current = true;
     });
 
-    monkSectionAnimDoneRef.current = true;
-
     return () => {
-      monkIo.disconnect();
+      cancelled = true;
+      monkIo?.disconnect();
     };
   }, [selectedNavKey]);
 
@@ -2967,80 +3027,93 @@ export default function DashboardPageClient({
     const aside = sidebarRef.current;
     if (!aside) return;
 
-    const randToken = () => {
-      const t = ["+", "-", "|", "/", "\\", "·", "--", "++", "+-", "-+", "—", "_", "¦"];
-      return t[Math.floor(Math.random() * t.length)];
-    };
-    const buildGlitch = (targetLen: number) => {
-      let out = "";
-      while (out.length < targetLen) out += randToken();
-      return out.slice(0, targetLen);
-    };
-
-    const navItems = Array.from(aside.querySelectorAll<HTMLElement>(".nav-item"));
+    let cancelled = false;
     const disposers: Array<() => void> = [];
 
-    navItems.forEach((item) => {
-      const labelText = item.querySelector<HTMLElement>(".nav-label-text");
-      const glitch = item.querySelector<HTMLElement>(".nav-glitch");
-      if (!labelText || !glitch) return;
+    void loadGsap().then((gsap) => {
+      if (cancelled || !sidebarRef.current) return;
 
-      let last = 0;
-      const tick: gsap.TickerCallback = () => {
-        const now = performance.now();
-        if (now - last < 26) return;
-        last = now;
-        const raw = (labelText.textContent ?? "").replace(/\s+/g, " ").trim();
-        const len = Math.max(14, Math.min(26, raw.length + 6));
-        glitch.textContent = buildGlitch(len);
-        gsap.set(glitch, { x: gsap.utils.random(-1.4, 1.4), filter: `brightness(${gsap.utils.random(1, 1.14)})` });
+      const randToken = () => {
+        const t = ["+", "-", "|", "/", "\\", "·", "--", "++", "+-", "-+", "—", "_", "¦"];
+        return t[Math.floor(Math.random() * t.length)];
+      };
+      const buildGlitch = (targetLen: number) => {
+        let out = "";
+        while (out.length < targetLen) out += randToken();
+        return out.slice(0, targetLen);
       };
 
-      const stopNow = () => {
-        item.classList.remove("is-hover-glitch");
-        const tcb = navGlitchTickersRef.current.get(item);
-        if (tcb) gsap.ticker.remove(tcb);
-        navGlitchTickersRef.current.delete(item);
-        const timer = navGlitchTimersRef.current.get(item);
-        if (timer) window.clearTimeout(timer);
-        navGlitchTimersRef.current.delete(item);
-        gsap.set(glitch, { clearProps: "x,filter" });
-        glitch.textContent = "";
-      };
+      const navItems = Array.from(aside.querySelectorAll<HTMLElement>(".nav-item"));
 
-      const start = () => {
-        stopNow();
-        item.classList.add("is-hover-glitch");
-        last = 0;
-        const raw = (labelText.textContent ?? "").replace(/\s+/g, " ").trim();
-        const len = Math.max(14, Math.min(26, raw.length + 6));
-        glitch.textContent = buildGlitch(len);
-        gsap.set(glitch, { x: gsap.utils.random(-1.4, 1.4), filter: `brightness(${gsap.utils.random(1, 1.14)})` });
-        navGlitchTickersRef.current.set(item, tick);
-        gsap.ticker.add(tick);
-        const timer = window.setTimeout(() => stopNow(), 280);
-        navGlitchTimersRef.current.set(item, timer);
-      };
+      navItems.forEach((item) => {
+        const labelText = item.querySelector<HTMLElement>(".nav-label-text");
+        const glitch = item.querySelector<HTMLElement>(".nav-glitch");
+        if (!labelText || !glitch) return;
 
-      const stop = () => stopNow();
+        let last = 0;
+        const tick = () => {
+          const now = performance.now();
+          if (now - last < 26) return;
+          last = now;
+          const raw = (labelText.textContent ?? "").replace(/\s+/g, " ").trim();
+          const len = Math.max(14, Math.min(26, raw.length + 6));
+          glitch.textContent = buildGlitch(len);
+          gsap.set(glitch, {
+            x: gsap.utils.random(-1.4, 1.4),
+            filter: `brightness(${gsap.utils.random(1, 1.14)})`,
+          });
+        };
 
-      item.addEventListener("pointerenter", start);
-      item.addEventListener("pointerleave", stop);
-      item.addEventListener("pointercancel", stop);
-      item.addEventListener("focus", start);
-      item.addEventListener("blur", stop);
+        const stopNow = () => {
+          item.classList.remove("is-hover-glitch");
+          const tcb = navGlitchTickersRef.current.get(item);
+          if (tcb) gsap.ticker.remove(tcb);
+          navGlitchTickersRef.current.delete(item);
+          const timer = navGlitchTimersRef.current.get(item);
+          if (timer) window.clearTimeout(timer);
+          navGlitchTimersRef.current.delete(item);
+          gsap.set(glitch, { clearProps: "x,filter" });
+          glitch.textContent = "";
+        };
 
-      disposers.push(() => {
-        stopNow();
-        item.removeEventListener("pointerenter", start);
-        item.removeEventListener("pointerleave", stop);
-        item.removeEventListener("pointercancel", stop);
-        item.removeEventListener("focus", start);
-        item.removeEventListener("blur", stop);
+        const start = () => {
+          stopNow();
+          item.classList.add("is-hover-glitch");
+          last = 0;
+          const raw = (labelText.textContent ?? "").replace(/\s+/g, " ").trim();
+          const len = Math.max(14, Math.min(26, raw.length + 6));
+          glitch.textContent = buildGlitch(len);
+          gsap.set(glitch, {
+            x: gsap.utils.random(-1.4, 1.4),
+            filter: `brightness(${gsap.utils.random(1, 1.14)})`,
+          });
+          navGlitchTickersRef.current.set(item, tick);
+          gsap.ticker.add(tick);
+          const timer = window.setTimeout(() => stopNow(), 280);
+          navGlitchTimersRef.current.set(item, timer);
+        };
+
+        const stop = () => stopNow();
+
+        item.addEventListener("pointerenter", start);
+        item.addEventListener("pointerleave", stop);
+        item.addEventListener("pointercancel", stop);
+        item.addEventListener("focus", start);
+        item.addEventListener("blur", stop);
+
+        disposers.push(() => {
+          stopNow();
+          item.removeEventListener("pointerenter", start);
+          item.removeEventListener("pointerleave", stop);
+          item.removeEventListener("pointercancel", stop);
+          item.removeEventListener("focus", start);
+          item.removeEventListener("blur", stop);
+        });
       });
     });
 
     return () => {
+      cancelled = true;
       disposers.forEach((d) => d());
     };
   }, [sidebarOpen]);
@@ -3102,18 +3175,20 @@ export default function DashboardPageClient({
       const title = active.querySelector<HTMLElement>(".glitch-text");
       if (!title) return;
 
-      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
-      tl.set(active, { filter: "brightness(1.08)" });
-      if (beep) {
-        tl.to(beep, { opacity: 0.9, scaleX: 1, duration: 0.06 }, 0)
-          .fromTo(beep, { scaleX: 0.2 }, { scaleX: 1.05, duration: 0.12 }, 0)
-          .to(beep, { opacity: 0, duration: 0.18 }, 0.16);
-      }
-      tl.to(title, { x: 1.2, duration: 0.04 }, 0)
-        .to(title, { x: -1.4, duration: 0.05 }, 0.05)
-        .to(title, { x: 0.6, duration: 0.04 }, 0.11)
-        .to(title, { x: 0, duration: 0.06 }, 0.16)
-        .to(active, { filter: "brightness(1)", duration: 0.2 }, 0.22);
+      void loadGsap().then((gsap) => {
+        const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+        tl.set(active, { filter: "brightness(1.08)" });
+        if (beep) {
+          tl.to(beep, { opacity: 0.9, scaleX: 1, duration: 0.06 }, 0)
+            .fromTo(beep, { scaleX: 0.2 }, { scaleX: 1.05, duration: 0.12 }, 0)
+            .to(beep, { opacity: 0, duration: 0.18 }, 0.16);
+        }
+        tl.to(title, { x: 1.2, duration: 0.04 }, 0)
+          .to(title, { x: -1.4, duration: 0.05 }, 0.05)
+          .to(title, { x: 0.6, duration: 0.04 }, 0.11)
+          .to(title, { x: 0, duration: 0.06 }, 0.16)
+          .to(active, { filter: "brightness(1)", duration: 0.2 }, 0.22);
+      });
     }, 1000);
 
     return () => {
@@ -3123,8 +3198,16 @@ export default function DashboardPageClient({
 
   useLayoutEffect(() => {
     if (!rootRef.current) return;
-    gsap.fromTo(rootRef.current, { opacity: 0.9 }, { opacity: 1, duration: 0.22, ease: "power2.out" });
-  }, [themeMode]);
+    // Skip theme fade on programs — avoids pulling GSAP into first paint.
+    if (initialSection === "programs" || selectedNavKey === "programs") {
+      rootRef.current.style.opacity = "1";
+      return;
+    }
+    void loadGsap().then((gsap) => {
+      if (!rootRef.current) return;
+      gsap.fromTo(rootRef.current, { opacity: 0.9 }, { opacity: 1, duration: 0.22, ease: "power2.out" });
+    });
+  }, [themeMode, initialSection, selectedNavKey]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -3147,6 +3230,7 @@ export default function DashboardPageClient({
   const usesBoundedShellChrome = usesBoundedMobileShell && selectedNavKey !== "monk";
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <div
       ref={rootRef}
       data-dashboard-bounded-shell={usesBoundedShellChrome ? "" : undefined}
@@ -3166,7 +3250,7 @@ export default function DashboardPageClient({
       <PlanCheckoutSync />
       <DashboardLcpPreload sectionKey={selectedNavKey} />
       <DashboardMediaWarmup />
-      <DeferredDashboardProgramsPageCss />
+      <DeferredDashboardProgramsPageCss forceNow={selectedNavKey === "programs" || initialSection === "programs"} />
       <DeferredDashboardProgramsFxCss />
       <DeferredDashboardHudCss active={selectedNavKey === "monk"} />
       <DashboardBackToPublic />
@@ -3227,10 +3311,10 @@ export default function DashboardPageClient({
                   )}
                 >
                   <img
-                    src="/assets/logo-nav.webp"
+                    src={nextOptimizedImageUrl("/assets/logo-nav.webp", 64, 55)}
                     alt=""
-                    width={200}
-                    height={80}
+                    width={64}
+                    height={26}
                     decoding="async"
                     fetchPriority="low"
                     className="pointer-events-none relative z-[1] h-[26px] w-auto max-w-[min(100%,100px)] object-contain opacity-[0.96] max-lg:[filter:none] lg:[filter:drop-shadow(0_0_14px_rgba(250,204,21,0.32))] sm:h-[34px] sm:max-w-[130px] md:h-[44px] md:max-w-[160px] lg:h-[60px] lg:max-w-[200px]"
@@ -3238,10 +3322,10 @@ export default function DashboardPageClient({
                       const img = e.currentTarget as HTMLImageElement;
                       if (img.dataset.fallback !== "1") {
                         img.dataset.fallback = "1";
-                        img.src = nextOptimizedImageUrl("/assets/logo.webp", 256, 55);
+                        img.src = nextOptimizedImageUrl("/assets/logo.webp", 64, 55);
                         return;
                       }
-                      img.style.display = "none";
+                      img.style.visibility = "hidden";
                     }}
                   />
                 </button>
@@ -3366,7 +3450,13 @@ export default function DashboardPageClient({
                       profileOpen && "border-[color:var(--neon-accent-bright)]"
                     )}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      const img = e.currentTarget as HTMLImageElement;
+                      if (img.dataset.fallback !== "1") {
+                        img.dataset.fallback = "1";
+                        img.src = DEFAULT_DASHBOARD_PROFILE_AVATAR;
+                        return;
+                      }
+                      img.style.opacity = "0";
                     }}
                   />
                   <div className="min-w-0 flex-1 text-left leading-none max-lg:hidden">
@@ -3388,7 +3478,7 @@ export default function DashboardPageClient({
           ? createPortal(
               <AnimatePresence onExitComplete={() => setProfileMenuFixedStyle(null)}>
                 {profileOpen && profileMenuFixedStyle ? (
-                  <motion.div
+                  <m.div
                     key="profile-menu"
                     ref={profilePanelRef}
                     style={profileMenuFixedStyle}
@@ -3493,7 +3583,7 @@ export default function DashboardPageClient({
                     </button>
                   </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ) : null}
               </AnimatePresence>,
               document.body
@@ -3514,7 +3604,7 @@ export default function DashboardPageClient({
               >
                 <AnimatePresence>
                   {sidebarOpen ? (
-                    <motion.button
+                    <m.button
                       key="overlay-sidebar-dismiss"
                       type="button"
                       aria-label="Close menu"
@@ -3533,7 +3623,7 @@ export default function DashboardPageClient({
                     />
                   ) : null}
                   {sidebarOpen ? (
-                    <motion.aside
+                    <m.aside
                       key={isCompactMobileUi ? "main-sidebar-mobile" : "main-sidebar-tablet"}
                       layout={false}
                       ref={sidebarRef as unknown as React.Ref<HTMLElement>}
@@ -3594,7 +3684,7 @@ export default function DashboardPageClient({
                           onClose={!isCompactMobileUi ? closeOverlaySidebar : undefined}
                         />
                       </div>
-                    </motion.aside>
+                    </m.aside>
                   ) : null}
                 </AnimatePresence>
               </div>,
@@ -3611,7 +3701,7 @@ export default function DashboardPageClient({
         >
           <AnimatePresence initial={true}>
             {sidebarOpen && !isOverlaySidebarBp ? (
-              <motion.aside
+              <m.aside
                 key="main-sidebar"
                 layout={false}
                 ref={sidebarRef as unknown as React.Ref<HTMLElement>}
@@ -3635,12 +3725,12 @@ export default function DashboardPageClient({
                   />
                   <SidebarNavKeyDecor />
                 </div>
-              </motion.aside>
+              </m.aside>
             ) : null}
           </AnimatePresence>
 
           {/* Courses grid */}
-          <motion.section
+          <m.section
             layout={false}
             data-dashboard-main-shell
             data-dashboard-video-shell
@@ -3813,11 +3903,7 @@ export default function DashboardPageClient({
                 </div>
               </DashboardSectionKeepAlive>
               <DashboardSectionKeepAlive sectionKey="dashboard" activeKey={selectedNavKey} className="w-full">
-                {!portalUser ? (
-                  <div className="flex min-h-[min(40vh,360px)] w-full items-center justify-center text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
-                    Loading access…
-                  </div>
-                ) : isNavLocked("dashboard") ? (
+                {portalUser && isNavLocked("dashboard") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">
                     <MembershipOfferLanding embedded checkoutReturnPath="/dashboard" />
                   </div>
@@ -3830,17 +3916,24 @@ export default function DashboardPageClient({
                       <InstructorSlideshow showPanelBackgroundVideo={false} />
                     </section>
                     <div className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2">
-                      <DashboardControlCenter
-                        themeMode={themeMode}
-                        userName={profileName}
-                        profileAvatar={profileAvatar}
-                        courses={dashboardCoursesForSnapshots}
-                        dashboardNavLocks={portalUser?.dashboard_nav_locks}
-                        onNavigate={(nav) => {
-                          if (nav === "affiliate") router.push("/affiliate-login");
-                          else applyNavKey(nav);
-                        }}
-                      />
+                      {portalUser ? (
+                        <DashboardControlCenter
+                          themeMode={themeMode}
+                          userName={profileName}
+                          profileAvatar={profileAvatar}
+                          courses={dashboardCoursesForSnapshots}
+                          dashboardNavLocks={portalUser?.dashboard_nav_locks}
+                          onNavigate={(nav) => {
+                            if (nav === "affiliate") router.push("/affiliate-login");
+                            else applyNavKey(nav);
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="min-h-[12rem] w-full animate-pulse rounded-xl border border-white/10 bg-black/25"
+                          aria-hidden
+                        />
+                      )}
                     </div>
                   </>
                 )}
@@ -3851,12 +3944,13 @@ export default function DashboardPageClient({
             </div>
             {isGoalsPanelOpen ? <GoalsPanel /> : null}
             {isQuickAccessPanelOpen ? <QuickAccessPanel /> : null}
-          </motion.section>
+          </m.section>
 
           {/* Details now live inside the courses panel (scrollable). */}
         </div>
       </div>
     </div>
+    </LazyMotion>
   );
 }
 

@@ -7,6 +7,13 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0"
   },
+  "browserslist": [
+    "chrome >= 92",
+    "firefox >= 90",
+    "safari >= 15",
+    "ios_saf >= 15",
+    "not dead"
+  ],
   "dependencies": {
     "@stripe/stripe-js": "^4.10.0",
     "@use-gesture/react": "^10.3.1",

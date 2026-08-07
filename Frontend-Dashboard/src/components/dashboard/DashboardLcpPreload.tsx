@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from "@/components/programs/offerPlanThumbnails";
 import { INSTRUCTOR_SLIDES } from "@/data/instructorSlides";
 import { nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
@@ -21,11 +21,13 @@ function readPlaylistOpen(): boolean {
 
 /**
  * Client SPA nav: keep exactly one high-priority image preload for the active surface.
- * Initial HTML preload is emitted from dashboard/page.tsx (server) for first paint.
+ * First paint preload comes from dashboard/page.tsx — avoid duplicating it on hydrate.
  */
 export function DashboardLcpPreload({ sectionKey }: { sectionKey: string }) {
   const pathname = usePathname() ?? "";
   const [playlistOpen, setPlaylistOpen] = useState(readPlaylistOpen);
+  const [allowClientPreload, setAllowClientPreload] = useState(false);
+  const bootedRef = useRef(false);
 
   useEffect(() => {
     const sync = () => setPlaylistOpen(readPlaylistOpen());
@@ -37,6 +39,16 @@ export function DashboardLcpPreload({ sectionKey }: { sectionKey: string }) {
       window.removeEventListener("syndicate:url", sync);
     };
   }, [pathname, sectionKey]);
+
+  useEffect(() => {
+    if (!bootedRef.current) {
+      bootedRef.current = true;
+      return;
+    }
+    setAllowClientPreload(true);
+  }, [sectionKey, pathname]);
+
+  if (!allowClientPreload) return null;
 
   const onPrograms =
     sectionKey === "programs" ||

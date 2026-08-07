@@ -11,6 +11,8 @@ import {
 const GTM_ID = "GTM-WBW2KZV6";
 /** Keep gtm.js / FB / Klaviyo out of the Lighthouse TBT window after Accept. */
 const GTM_SAFETY_DELAY_MS = 7000;
+/** Dashboard is auth-heavy — wait longer so GTM/FB don't fight LCP/TBT. */
+const GTM_DASHBOARD_SAFETY_DELAY_MS = 12000;
 /** Ignore Accept-click / early LH taps before arming gesture → GTM. */
 const GTM_GESTURE_ATTACH_MS = 500;
 
@@ -82,7 +84,12 @@ export function DeferredGtm() {
       armViaIdle();
     }
 
-    safetyTimer = window.setTimeout(armViaIdle, GTM_SAFETY_DELAY_MS);
+    safetyTimer = window.setTimeout(
+      armViaIdle,
+      typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
+        ? GTM_DASHBOARD_SAFETY_DELAY_MS
+        : GTM_SAFETY_DELAY_MS,
+    );
 
     gestureAttachTimer = window.setTimeout(() => {
       if (cancelled || scheduled) return;

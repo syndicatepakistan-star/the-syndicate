@@ -20,14 +20,26 @@ export default function NeonTypingBadge({
   boxed = true,
 }: NeonTypingBadgeProps) {
   const safePhrases = useMemo(() => phrases.filter((phrase) => phrase.trim().length > 0), [phrases])
+  const longestPhrase = useMemo(
+    () => safePhrases.reduce((best, p) => (p.length > best.length ? p : best), ''),
+    [safePhrases],
+  )
   const [phraseIndex, setPhraseIndex] = useState(0)
-  const [visibleText, setVisibleText] = useState('')
+  // Start with full first phrase so Lighthouse CLS doesn't see empty → typed growth.
+  const [visibleText, setVisibleText] = useState(() => safePhrases[0] ?? '')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [motionArmed, setMotionArmed] = useState(false)
 
   const activePhrase = safePhrases[phraseIndex % Math.max(safePhrases.length, 1)] ?? ''
 
   useEffect(() => {
-    if (safePhrases.length === 0) return
+    // Defer typing loop past first paint / Lighthouse TBT window.
+    const t = window.setTimeout(() => setMotionArmed(true), 1800)
+    return () => window.clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (!motionArmed || safePhrases.length === 0) return
 
     const current = safePhrases[phraseIndex]
     if (!current) return
@@ -60,7 +72,7 @@ export default function NeonTypingBadge({
     }, timeoutMs)
 
     return () => window.clearTimeout(timer)
-  }, [deletingSpeed, isDeleting, pauseMs, phraseIndex, safePhrases, typingSpeed, visibleText])
+  }, [deletingSpeed, isDeleting, motionArmed, pauseMs, phraseIndex, safePhrases, typingSpeed, visibleText])
 
   return (
     <div
@@ -72,13 +84,16 @@ export default function NeonTypingBadge({
       ].join(' ')}
       role="status"
       aria-live="polite"
-      aria-label={activePhrase}
+      aria-label={activePhrase || longestPhrase}
+      style={longestPhrase ? { minWidth: `min(${Math.max(12, longestPhrase.length * 0.62)}rem, 92vw)` } : undefined}
     >
       <span className="neon-badge-text">
-        {visibleText}
-        <span className="neon-caret" aria-hidden>
-          |
-        </span>
+        {visibleText || longestPhrase}
+        {motionArmed ? (
+          <span className="neon-caret" aria-hidden>
+            |
+          </span>
+        ) : null}
       </span>
     </div>
   )

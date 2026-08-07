@@ -165,7 +165,8 @@
   src:
     url("/fonts/CSDaineMono-Italic.woff2") format("woff2"),
     url("/fonts/CSDaineMono-Italic.woff") format("woff");
-  font-display: swap;
+  /* optional = skip Italic if not ready in time — cuts critical-path variance on /dashboard LCP */
+  font-display: optional;
   font-weight: 400 700;
   font-style: italic;
 }

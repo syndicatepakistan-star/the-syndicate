@@ -10,14 +10,22 @@ const ProgramsPageCssImport = dynamic(
   { ssr: false },
 );
 
+type DeferredDashboardProgramsPageCssProps = {
+  /** Prefer this over pathname — middleware rewrite can make pathname `/dashboard`. */
+  forceNow?: boolean;
+};
+
 /**
  * programs-page.css (~24KB) — needed for /dashboard/programs, not for dashboard home LCP.
  * Load immediately on programs routes; idle-defer otherwise so /dashboard isn't blocked by it.
  */
-export function DeferredDashboardProgramsPageCss() {
+export function DeferredDashboardProgramsPageCss({
+  forceNow = false,
+}: DeferredDashboardProgramsPageCssProps) {
   const pathname = usePathname() ?? "";
-  const needsNow =
+  const pathNeedsNow =
     pathname === "/dashboard/programs" || pathname.startsWith("/dashboard/programs/");
+  const needsNow = forceNow || pathNeedsNow;
   const [ready, setReady] = useState(needsNow);
 
   useEffect(() => {

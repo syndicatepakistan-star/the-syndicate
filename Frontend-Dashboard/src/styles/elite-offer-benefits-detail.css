@@ -549,7 +549,7 @@
   margin: 1.75rem 0 1.25rem;
   font-size: clamp(1.15rem, 2.8vw, 1.65rem);
   font-weight: 800;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   letter-spacing: 0.1em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -727,7 +727,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 0.4rem;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -771,7 +771,7 @@
 
 .elite-benefit-detail__heading {
   display: block;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(21px, 2.4vw, 24px);
   font-weight: 900;
   line-height: 1.2;

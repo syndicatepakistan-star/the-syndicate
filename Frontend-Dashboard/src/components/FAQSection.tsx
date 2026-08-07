@@ -19,13 +19,12 @@ export default function FAQSection() {
     <section id="faq" className={styles.faq}>
       <div className={styles.bgMedia} aria-hidden>
         <Image
-          src="/assets/tt.gif"
+          src="/assets/tt-lite.png"
           alt=""
           fill
           sizes="100vw"
           className={styles.bgImage}
-          unoptimized
-          loading="eager"
+          loading="lazy"
           fetchPriority="low"
           decoding="async"
         />

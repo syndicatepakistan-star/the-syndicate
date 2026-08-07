@@ -1296,7 +1296,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
             >
               <div
                 className={cn(
-                  "text-left text-[clamp(13px,3.4vw,18px)] font-extrabold uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:text-[clamp(14px,2.2vw,15px)] sm:tracking-[0.07em]",
+                  "program-card-title text-left text-[clamp(13px,3.4vw,18px)] font-black uppercase leading-snug tracking-[0.04em] antialiased [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_14px_rgba(0,0,0,0.75)] sm:text-[clamp(14px,2.2vw,15px)] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
                   PROGRAM_CARD_TITLE_SLOT,
                   theme.title
@@ -1698,7 +1698,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
                         >
                           <div
                             className={cn(
-                              "line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                              "program-card-title line-clamp-2 text-left text-[clamp(10px,2.4vw,15px)] font-black uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
                               theme.title
                             )}
                           >

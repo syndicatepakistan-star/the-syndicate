@@ -189,7 +189,7 @@ export function ProgramOpportunityCardContent({
 
       <h3
         className={cn(
-          "mt-1.5 line-clamp-2 text-[clamp(0.72rem,0.55vw+0.5rem,0.92rem)] font-extrabold uppercase leading-snug tracking-[0.05em]",
+          "program-card-title mt-1.5 line-clamp-2 text-[clamp(0.72rem,0.55vw+0.5rem,0.92rem)] font-black uppercase leading-snug tracking-[0.05em]",
           skin.titleText,
         )}
       >

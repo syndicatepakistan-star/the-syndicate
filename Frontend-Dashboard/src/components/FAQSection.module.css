@@ -93,7 +93,9 @@
 
 .bgImage {
   object-fit: cover;
-  opacity: 0.32;
+  /* Compressed still — no CSS blur; mid of 40–60% as requested */
+  opacity: 0.5;
+  filter: none;
 }
 
 .bgOverlay {
@@ -113,7 +115,7 @@
 
 .title {
   text-align: center;
-  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-mono), ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(2rem, 5.2vw, 3.25rem);
   font-weight: 800;
   font-style: normal;
@@ -292,7 +294,7 @@
   gap: 0.85rem;
   cursor: pointer;
   text-align: left;
-  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-mono), ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
   font-size: clamp(1.05rem, 2.4vw, 1.32rem);
   letter-spacing: 0.04em;
@@ -395,6 +397,48 @@
     padding: 0 1.45rem 1.45rem;
     font-size: clamp(1.02rem, 1.75vw, 1.14rem);
     line-height: 1.75;
+  }
+}
+
+/* Phone + iPad — drop backdrop-filter, per-row drop-shadows, and heavy glows */
+@media (max-width: 1024px) {
+  .container {
+    filter: none;
+  }
+
+  .item {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    filter: none;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .item.open {
+    filter: none;
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.35),
+      0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .item::before {
+    opacity: 0.28;
+  }
+
+  .question {
+    text-shadow: none;
+  }
+
+  .answer {
+    text-shadow: none;
+  }
+
+  .icon {
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.2);
+  }
+
+  .tab:hover,
+  .tabActive {
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35);
   }
 }
 

@@ -123,14 +123,16 @@
   padding-top: var(--fluid-main-grid-pt);
 }
 
-/* Headings / titles — Thryon cyberpunk (woff2 preferred) */
+/* Headings / titles — Thryon cyberpunk (single master; do not faux-bold) */
 @font-face {
   font-family: "Thryon";
   src:
     url("/fonts/Thryon.woff2") format("woff2"),
-    url("/fonts/Thryon.woff") format("woff");
+    url("/fonts/Thryon.woff") format("woff"),
+    url("/fonts/Thryon.ttf") format("truetype"),
+    url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
-  font-weight: 200 900;
+  font-weight: 100 900;
   font-style: normal;
 }
 
@@ -139,9 +141,11 @@
   font-family: "Thyron";
   src:
     url("/fonts/Thryon.woff2") format("woff2"),
-    url("/fonts/Thryon.woff") format("woff");
+    url("/fonts/Thryon.woff") format("woff"),
+    url("/fonts/Thryon.ttf") format("truetype"),
+    url("/fonts/Thryon.otf") format("opentype");
   font-display: swap;
-  font-weight: 200 900;
+  font-weight: 100 900;
   font-style: normal;
 }
 
@@ -643,13 +647,25 @@ body {
   font-family: var(--font-mono);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
+.programs-stat-heading,
+p.programs-stat-heading,
+.plan-offer-card .programs-stat-heading,
+.programs-page-root .programs-stat-heading {
+  font-family: "Thryon", "Thyron", sans-serif !important;
+  font-weight: 400 !important;
+  font-synthesis: none !important;
+  -webkit-font-smoothing: antialiased;
+}
+.programs-stat-neon {
+  font-family: var(--font-mono);
+}
+
+/* Bundle + program name titles — force bold even when CS Daine only has ≤700 masters. */
+.plan-offer-card__title,
+.program-card-title {
+  font-weight: 700 !important;
+  -webkit-text-stroke: 0.35px currentColor;
+  paint-order: stroke fill;
 }
 
 .text-xxl {
@@ -1288,6 +1304,7 @@ h6 {
 }
 
 .public-heading-lightning {
+  font-family: var(--font-heading);
   animation: syndicate-heading-lightning 1.65s ease-in-out infinite;
   transition: color 0.45s ease;
   color: var(--heading-neon-bright);
@@ -1755,7 +1772,7 @@ h6 {
 
 .neon-badge-text {
   color: #fde68a;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.82rem, 2.3vw, 1.3rem);
   font-weight: 500;
   letter-spacing: 0.26em;
@@ -2711,6 +2728,17 @@ h6 {
     max-height: 100svh;
   }
 
+}
+
+/* FAQ + Certificates — kill lightning title FX on phone + iPad */
+@media (max-width: 1024px) {
+  #faq .public-heading-lightning,
+  #certificates .public-heading-lightning {
+    animation: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+    transition: none !important;
+  }
 }
 
 /* === LAST WIN: Syndicate Guarantee titles — must stay after all other font-size rules === */

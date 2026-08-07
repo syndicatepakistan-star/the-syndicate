@@ -62,9 +62,8 @@ export function shouldSkipHeavyVideoWarmup(): boolean {
 
 
 
-/** Lower-priority GIF — warmed after hero-critical assets. */
-
-export const MARKETING_DEFERRED_IMAGE_URLS = ["/assets/tt.gif"] as const;
+/** Lower-priority section stills — warmed after hero-critical assets. */
+export const MARKETING_DEFERRED_IMAGE_URLS = ["/assets/tt-lite.png", "/assets/c-lite.png"] as const;
 
 /** Warm homepage globe tiles in parallel (same-origin thumbnails). */
 export function warmGlobeGalleryImages(urls?: readonly string[]): Promise<void> {

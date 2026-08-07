@@ -26,7 +26,7 @@ const AFFILIATE_BODY_CLASS =
   'w-full font-[family-name:var(--font-body)] text-[clamp(0.9rem,2.2vw,1.05rem)] font-medium leading-relaxed tracking-normal text-cyan-100/92 text-left hyphens-auto sm:text-base md:text-lg md:text-justify'
 
 const AFFILIATE_HOW_TO_HEADING_CLASS =
-  'w-full font-[family-name:var(--font-heading)] text-[clamp(0.95rem,2.4vw,1.1rem)] font-bold uppercase tracking-[0.08em] text-fuchsia-200/95 text-left sm:tracking-[0.1em]'
+  'w-full font-[family-name:var(--font-mono)] text-[clamp(0.95rem,2.4vw,1.1rem)] font-bold uppercase tracking-[0.08em] text-fuchsia-200/95 text-left sm:tracking-[0.1em]'
 
 const AFFILIATE_HOW_TO_LIST_CLASS =
   'mt-3 w-full list-decimal space-y-2.5 pl-5 font-[family-name:var(--font-body)] text-[clamp(0.88rem,2.1vw,1rem)] font-medium leading-relaxed tracking-normal text-slate-300/95 text-left hyphens-auto marker:text-fuchsia-300/90 sm:text-[0.95rem] md:text-base'

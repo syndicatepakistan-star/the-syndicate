@@ -1,11 +1,17 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useId, useState } from 'react'
 import { Download } from 'lucide-react'
 import Image from 'next/image'
-import { SynCertificateCard } from '@/components/SynCertificateCard'
+import { useLiteVisualViewport } from '@/hooks/useLiteVisualViewport'
 import { buildCertificateVerifyUrl } from '@/lib/certificate-public-url'
 import { verifyCertificateToken } from '@/lib/certificates-api'
+
+const SynCertificateCard = dynamic(
+  () => import('@/components/SynCertificateCard').then((m) => ({ default: m.SynCertificateCard })),
+  { ssr: false },
+)
 
 type Feature = {
   title: string
@@ -36,8 +42,8 @@ const DEFAULT_FEATURES: Feature[] = [
 ]
 
 
-/** HUD icons with orbital ring + core (SMIL motion; `motion-reduce` friendly). */
-function GamingFeatureIcon({ icon }: { icon: Feature['icon'] }) {
+/** HUD icons with orbital ring + core (SMIL motion off on lite/mobile). */
+function GamingFeatureIcon({ icon, animate }: { icon: Feature['icon']; animate: boolean }) {
   const uid = useId().replace(/:/g, '')
   const orbitDur = icon === 'award' ? '9s' : icon === 'shield' ? '11s' : '13s'
   const orbitFrom = '0 16 16'
@@ -48,7 +54,7 @@ function GamingFeatureIcon({ icon }: { icon: Feature['icon'] }) {
   const g = 'drop-shadow(0 0 6px rgba(251,113,133,0.9))'
   const c = 'drop-shadow(0 0 6px rgba(34,211,238,0.95))'
   const v = 'drop-shadow(0 0 6px rgba(167,139,250,0.95))'
-  const filter = icon === 'award' ? c : icon === 'shield' ? g : v
+  const filter = animate ? (icon === 'award' ? c : icon === 'shield' ? g : v) : undefined
 
   return (
     <svg viewBox="0 0 32 32" className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden>
@@ -58,20 +64,22 @@ function GamingFeatureIcon({ icon }: { icon: Feature['icon'] }) {
           <stop offset="100%" stopColor="#e879f9" />
         </linearGradient>
       </defs>
-      <g className="motion-reduce:hidden">
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from={orbitFrom}
-          to={orbitTo}
-          dur={orbitDur}
-          repeatCount="indefinite"
-        />
+      <g className={animate ? 'motion-reduce:hidden' : undefined}>
+        {animate ? (
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from={orbitFrom}
+            to={orbitTo}
+            dur={orbitDur}
+            repeatCount="indefinite"
+          />
+        ) : null}
         <circle cx="16" cy="16" r="12.5" fill="none" stroke={ringStroke} strokeWidth="1.25" strokeDasharray="3.5 5.5" />
         <circle cx="16" cy="16" r="10" fill="none" stroke={ringStroke} strokeWidth="0.9" strokeDasharray="1.5 8" opacity="0.45" />
       </g>
-      <g style={{ filter }}>
-        <animate attributeName="opacity" values="1;0.7;1" dur={pulseDur} repeatCount="indefinite" />
+      <g style={filter ? { filter } : undefined}>
+        {animate ? <animate attributeName="opacity" values="1;0.7;1" dur={pulseDur} repeatCount="indefinite" /> : null}
         {icon === 'award' ? (
           <>
             <path
@@ -92,7 +100,9 @@ function GamingFeatureIcon({ icon }: { icon: Feature['icon'] }) {
         ) : (
           <>
             <g>
-              <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="16s" repeatCount="indefinite" />
+              {animate ? (
+                <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="16s" repeatCount="indefinite" />
+              ) : null}
               <path fill="none" stroke="#c4b5fd" strokeWidth="1.2" strokeOpacity="0.5" d="M6 16l10-10 10 10-10 10z" />
             </g>
             <path fill="none" stroke="#a78bfa" strokeWidth="2.2" strokeLinecap="square" d="M11 16l4 4 7-8" />
@@ -171,6 +181,7 @@ const buildCertificateId = () =>
 export default function CertificatesSection({
   features = DEFAULT_FEATURES,
 }: CertificatesSectionProps) {
+  const liteViewport = useLiteVisualViewport()
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [certificateId, setCertificateId] = useState(() => buildCertificateId())
   const [issuedOn, setIssuedOn] = useState(() =>
@@ -228,44 +239,48 @@ export default function CertificatesSection({
     >
       <div className="pointer-events-none absolute inset-0">
         <Image
-          src="/assets/c.gif"
+          src="/assets/c-lite.png"
           alt=""
           aria-hidden
           fill
           sizes="100vw"
-          className="object-cover opacity-30"
-          unoptimized
-          loading="eager"
+          className="object-cover opacity-50"
+          loading="lazy"
           fetchPriority="low"
           decoding="async"
         />
         <div className="absolute inset-0 bg-black/70" />
       </div>
+      {!liteViewport ? (
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[540px] w-[960px] -translate-x-1/2 -translate-y-1/2 blur-[140px] opacity-75"
+          style={{
+            background: 'radial-gradient(ellipse 80% 70%, rgba(34,211,238,0.22) 0%, rgba(168,85,247,0.2) 46%, rgba(0,0,0,0) 78%)',
+          }}
+        />
+      ) : null}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[540px] w-[960px] -translate-x-1/2 -translate-y-1/2 blur-[140px] opacity-75"
-        style={{
-          background: 'radial-gradient(ellipse 80% 70%, rgba(34,211,238,0.22) 0%, rgba(168,85,247,0.2) 46%, rgba(0,0,0,0) 78%)',
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-[0.12]"
+        className="absolute inset-0 opacity-[0.12] max-md:opacity-[0.06]"
         style={{
           backgroundImage:
             'linear-gradient(rgba(34,211,238,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.2) 1px, transparent 1px), linear-gradient(rgba(168,85,247,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.15) 1px, transparent 1px)',
           backgroundSize: '80px 80px, 80px 80px, 20px 20px, 20px 20px',
         }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)',
-        }}
-      />
+      {!liteViewport ? (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)',
+          }}
+        />
+      ) : null}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          background:
-            'radial-gradient(ellipse 90% 80% at 50% 50%, transparent 50%, rgba(0,0,0,0.74) 100%), linear-gradient(180deg, rgba(34,211,238,0.08) 0%, transparent 20%, transparent 78%, rgba(168,85,247,0.1) 100%)',
+          background: liteViewport
+            ? 'radial-gradient(ellipse 90% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%)'
+            : 'radial-gradient(ellipse 90% 80% at 50% 50%, transparent 50%, rgba(0,0,0,0.74) 100%), linear-gradient(180deg, rgba(34,211,238,0.08) 0%, transparent 20%, transparent 78%, rgba(168,85,247,0.1) 100%)',
         }}
       />
 
@@ -278,34 +293,43 @@ export default function CertificatesSection({
 
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
           <div className="relative lg:col-span-6">
-            <div
-              className="pointer-events-none absolute -inset-4 opacity-90 blur-3xl sm:-inset-6"
-              style={{
-                background:
-                  'radial-gradient(ellipse 70% 60% at 30% 20%, rgba(34,211,238,0.45) 0%, transparent 55%), radial-gradient(ellipse 65% 55% at 78% 85%, rgba(217,70,239,0.42) 0%, transparent 52%), radial-gradient(ellipse 50% 40% at 50% 50%, rgba(251,191,36,0.12) 0%, transparent 60%)',
-              }}
-            />
+            {!liteViewport ? (
+              <div
+                className="pointer-events-none absolute -inset-4 opacity-90 blur-3xl sm:-inset-6"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 70% 60% at 30% 20%, rgba(34,211,238,0.45) 0%, transparent 55%), radial-gradient(ellipse 65% 55% at 78% 85%, rgba(217,70,239,0.42) 0%, transparent 52%), radial-gradient(ellipse 50% 40% at 50% 50%, rgba(251,191,36,0.12) 0%, transparent 60%)',
+                }}
+              />
+            ) : null}
             <div
               className="relative border-[6px] p-6 sm:p-8 [clip-path:polygon(14px_0,calc(100%-14px)_0,100%_14px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-14px),0_14px)]"
               style={{
                 borderColor: 'rgba(34,211,238,0.95)',
                 background: 'linear-gradient(145deg, rgba(8,10,24,0.96) 0%, rgba(5,4,16,0.98) 52%, rgba(10,8,22,0.98) 100%)',
-                boxShadow:
-                  'inset 0 0 0 2px rgba(217,70,239,0.72), inset 0 0 0 6px rgba(34,211,238,0.32), 0 0 4px rgba(34,211,238,0.95), 0 0 100px rgba(34,211,238,0.52), 0 0 160px rgba(168,85,247,0.38), 0 0 88px rgba(217,70,239,0.35), 0 0 48px rgba(251,191,36,0.12)',
+                boxShadow: liteViewport
+                  ? 'inset 0 0 0 2px rgba(217,70,239,0.45), 0 0 0 1px rgba(34,211,238,0.5), 0 12px 32px rgba(0,0,0,0.55)'
+                  : 'inset 0 0 0 2px rgba(217,70,239,0.72), inset 0 0 0 6px rgba(34,211,238,0.32), 0 0 4px rgba(34,211,238,0.95), 0 0 100px rgba(34,211,238,0.52), 0 0 160px rgba(168,85,247,0.38), 0 0 88px rgba(217,70,239,0.35), 0 0 48px rgba(251,191,36,0.12)',
               }}
             >
-              <div
-                className="pointer-events-none absolute inset-[8px] border-[3px] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
-                style={{
-                  borderColor: 'rgba(217,70,239,0.92)',
-                  boxShadow: '0 0 20px rgba(34,211,238,0.52), inset 0 0 16px rgba(168,85,247,0.34)',
-                }}
-              />
-              <div className="pointer-events-none absolute inset-0 opacity-100 [background:linear-gradient(90deg,rgba(34,211,238,0.98),rgba(217,70,239,0.92),rgba(168,85,247,0.95))] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0,rgba(0,0,0,1)_6px,transparent_6px,transparent_calc(100%-6px),rgba(0,0,0,1)_calc(100%-6px),rgba(0,0,0,1)_100%)]" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[6px] opacity-100 [background:linear-gradient(90deg,transparent_0%,rgba(34,211,238,1)_20%,rgba(217,70,239,1)_52%,rgba(168,85,247,1)_80%,transparent_100%)]" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] opacity-95 [background:linear-gradient(90deg,transparent_0%,rgba(168,85,247,1)_22%,rgba(217,70,239,1)_52%,rgba(34,211,238,1)_78%,transparent_100%)]" />
-              <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(140%_120%_at_15%_15%,rgba(34,211,238,0.22),transparent_48%),radial-gradient(140%_120%_at_86%_84%,rgba(217,70,239,0.16),transparent_52%)]" />
-              <div className="pointer-events-none absolute inset-0 opacity-28 [background:linear-gradient(110deg,transparent_20%,rgba(168,85,247,0.16)_42%,rgba(34,211,238,0.14)_58%,transparent_78%)]" />
+              {!liteViewport ? (
+                <div
+                  className="pointer-events-none absolute inset-[8px] border-[3px] [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
+                  style={{
+                    borderColor: 'rgba(217,70,239,0.92)',
+                    boxShadow: '0 0 20px rgba(34,211,238,0.52), inset 0 0 16px rgba(168,85,247,0.34)',
+                  }}
+                />
+              ) : null}
+              {!liteViewport ? (
+                <>
+                  <div className="pointer-events-none absolute inset-0 opacity-100 [background:linear-gradient(90deg,rgba(34,211,238,0.98),rgba(217,70,239,0.92),rgba(168,85,247,0.95))] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0,rgba(0,0,0,1)_6px,transparent_6px,transparent_calc(100%-6px),rgba(0,0,0,1)_calc(100%-6px),rgba(0,0,0,1)_100%)]" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[6px] opacity-100 [background:linear-gradient(90deg,transparent_0%,rgba(34,211,238,1)_20%,rgba(217,70,239,1)_52%,rgba(168,85,247,1)_80%,transparent_100%)]" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] opacity-95 [background:linear-gradient(90deg,transparent_0%,rgba(168,85,247,1)_22%,rgba(217,70,239,1)_52%,rgba(34,211,238,1)_78%,transparent_100%)]" />
+                  <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(140%_120%_at_15%_15%,rgba(34,211,238,0.22),transparent_48%),radial-gradient(140%_120%_at_86%_84%,rgba(217,70,239,0.16),transparent_52%)]" />
+                  <div className="pointer-events-none absolute inset-0 opacity-28 [background:linear-gradient(110deg,transparent_20%,rgba(168,85,247,0.16)_42%,rgba(34,211,238,0.14)_58%,transparent_78%)]" />
+                </>
+              ) : null}
               <button
                 type="button"
                 onClick={openPreview}
@@ -313,8 +337,9 @@ export default function CertificatesSection({
                 className="relative flex min-h-[320px] w-full flex-col items-center justify-center overflow-hidden bg-[#050510] sm:min-h-[420px] [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]"
                 style={{
                   border: '3px solid rgba(34,211,238,0.82)',
-                  boxShadow:
-                    'inset 0 0 60px rgba(167,139,250,0.22), inset 0 0 120px rgba(6,182,212,0.08), 0 0 3px rgba(34,211,238,0.9), 0 0 56px rgba(34,211,238,0.42), 0 0 100px rgba(217,70,239,0.18)',
+                  boxShadow: liteViewport
+                    ? 'inset 0 0 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(34,211,238,0.35)'
+                    : 'inset 0 0 60px rgba(167,139,250,0.22), inset 0 0 120px rgba(6,182,212,0.08), 0 0 3px rgba(34,211,238,0.9), 0 0 56px rgba(34,211,238,0.42), 0 0 100px rgba(217,70,239,0.18)',
                 }}
               >
                 <div className="relative z-[2] flex w-full flex-col items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
@@ -322,15 +347,21 @@ export default function CertificatesSection({
                     className="relative mb-8 flex h-52 w-52 items-center justify-center sm:mb-10 sm:h-60 sm:w-60"
                     style={{ background: 'transparent', boxShadow: 'none' }}
                   >
-                    <div className="pointer-events-none absolute h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(253,208,47,0.42)_0%,rgba(253,208,47,0.18)_42%,transparent_75%)] blur-[18px] sm:h-56 sm:w-56" />
+                    {!liteViewport ? (
+                      <div className="pointer-events-none absolute h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(253,208,47,0.42)_0%,rgba(253,208,47,0.18)_42%,transparent_75%)] blur-[18px] sm:h-56 sm:w-56" />
+                    ) : null}
                     <Image
                       src="/assets/coin-gold.png"
                       alt=""
                       width={220}
                       height={220}
                       sizes="(max-width: 640px) 176px, 224px"
-                      className="relative z-[1] h-[78%] w-[78%] object-contain drop-shadow-[0_0_22px_rgba(251,191,36,0.75)] sm:h-[80%] sm:w-[80%]"
-                      loading="eager"
+                      className={
+                        liteViewport
+                          ? 'relative z-[1] h-[78%] w-[78%] object-contain sm:h-[80%] sm:w-[80%]'
+                          : 'relative z-[1] h-[78%] w-[78%] object-contain drop-shadow-[0_0_22px_rgba(251,191,36,0.75)] sm:h-[80%] sm:w-[80%]'
+                      }
+                      loading="lazy"
                       fetchPriority="low"
                       decoding="async"
                     />
@@ -339,20 +370,24 @@ export default function CertificatesSection({
                     <div className="mt-1 flex w-full items-center justify-center gap-2 border-2 py-3 font-mono text-sm tracking-[0.12em] text-cyan-200 [clip-path:polygon(10px_0,calc(100%-10px)_0,100%_10px,100%_calc(100%-10px),calc(100%-10px)_100%,10px_100%,0_calc(100%-10px),0_10px)]"
                       style={{
                         borderColor: 'rgba(56,189,248,0.85)',
-                        textShadow: '0 0 16px rgba(34,211,238,0.65), 0 0 32px rgba(34,211,238,0.25)',
-                        boxShadow: '0 0 40px rgba(34,211,238,0.35), inset 0 0 20px rgba(34,211,238,0.08)',
+                        textShadow: liteViewport ? 'none' : '0 0 16px rgba(34,211,238,0.65), 0 0 32px rgba(34,211,238,0.25)',
+                        boxShadow: liteViewport
+                          ? '0 0 0 1px rgba(34,211,238,0.25)'
+                          : '0 0 40px rgba(34,211,238,0.35), inset 0 0 20px rgba(34,211,238,0.08)',
                         background: 'linear-gradient(180deg, rgba(8,24,36,0.5), rgba(4,8,20,0.65))',
                       }}
                     >
-                      <Download className="h-4 w-4 shrink-0 motion-safe:animate-hud-bob motion-reduce:animate-none" />
+                      <Download className={`h-4 w-4 shrink-0 ${liteViewport ? '' : 'motion-safe:animate-hud-bob motion-reduce:animate-none'}`} />
                       Preview Sample
                     </div>
                   </div>
                 </div>
-                <div
-                  className="pointer-events-none absolute inset-0 z-[1] opacity-30"
-                  style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, transparent 50%, rgba(167,139,250,0.1) 100%)' }}
-                />
+                {!liteViewport ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 z-[1] opacity-30"
+                    style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, transparent 50%, rgba(167,139,250,0.1) 100%)' }}
+                  />
+                ) : null}
               </button>
             </div>
           </div>
@@ -362,33 +397,41 @@ export default function CertificatesSection({
               className="relative overflow-hidden p-[3px] [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,20px_100%,0_calc(100%-20px))]"
               style={{
                 background: 'linear-gradient(145deg, rgba(251,191,36,0.95) 0%, rgba(234,88,12,0.9) 45%, rgba(185,28,28,0.85) 100%)',
-                boxShadow:
-                  '0 0 3px rgba(251,191,36,0.95), 0 0 48px rgba(245,158,11,0.45), 0 0 96px rgba(234,88,12,0.22), inset 0 0 0 1px rgba(254,243,199,0.25)',
+                boxShadow: liteViewport
+                  ? '0 0 0 1px rgba(251,191,36,0.45), 0 10px 28px rgba(0,0,0,0.45)'
+                  : '0 0 3px rgba(251,191,36,0.95), 0 0 48px rgba(245,158,11,0.45), 0 0 96px rgba(234,88,12,0.22), inset 0 0 0 1px rgba(254,243,199,0.25)',
               }}
             >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-[0.14]"
-                style={{
-                  backgroundImage:
-                    'repeating-linear-gradient(-12deg, transparent 0px, transparent 6px, rgba(0,0,0,0.55) 6px, rgba(0,0,0,0.55) 8px)',
-                }}
-              />
+              {!liteViewport ? (
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-[0.14]"
+                  style={{
+                    backgroundImage:
+                      'repeating-linear-gradient(-12deg, transparent 0px, transparent 6px, rgba(0,0,0,0.55) 6px, rgba(0,0,0,0.55) 8px)',
+                  }}
+                />
+              ) : null}
               <div
                 className="relative overflow-hidden px-4 py-3 sm:px-5 sm:py-4 [clip-path:polygon(0_0,calc(100%-19px)_0,100%_19px,100%_100%,19px_100%,0_calc(100%-19px))]"
                 style={{
                   background: 'linear-gradient(168deg, rgba(14,6,2,0.98) 0%, rgba(8,4,12,0.97) 42%, rgba(12,4,8,0.98) 100%)',
-                  boxShadow: 'inset 0 0 48px rgba(245,158,11,0.06), inset 0 0 0 1px rgba(251,191,36,0.15)',
+                  boxShadow: liteViewport ? 'none' : 'inset 0 0 48px rgba(245,158,11,0.06), inset 0 0 0 1px rgba(251,191,36,0.15)',
                 }}
               >
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-50"
-                  style={{
-                    background:
-                      'radial-gradient(ellipse 90% 70% at 10% 0%, rgba(251,191,36,0.12), transparent 50%), radial-gradient(ellipse 80% 60% at 100% 100%, rgba(220,38,38,0.12), transparent 45%)',
-                  }}
-                />
+                {!liteViewport ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-50"
+                    style={{
+                      background:
+                        'radial-gradient(ellipse 90% 70% at 10% 0%, rgba(251,191,36,0.12), transparent 50%), radial-gradient(ellipse 80% 60% at 100% 100%, rgba(220,38,38,0.12), transparent 45%)',
+                    }}
+                  />
+                ) : null}
                 <div className="relative">
-                  <h3 className="text-base font-bold uppercase tracking-[0.08em] text-amber-50 sm:text-lg" style={{ textShadow: '0 0 20px rgba(251,191,36,0.45), 0 0 40px rgba(234,88,12,0.2)' }}>
+                  <h3
+                    className="text-base font-bold uppercase tracking-[0.08em] text-amber-50 sm:text-lg"
+                    style={{ textShadow: liteViewport ? 'none' : '0 0 20px rgba(251,191,36,0.45), 0 0 40px rgba(234,88,12,0.2)' }}
+                  >
                     Verify your token ID
                   </h3>
                   <p className="mt-0.5 font-mono text-[11px] leading-snug text-amber-100/65 sm:text-xs">
@@ -407,7 +450,7 @@ export default function CertificatesSection({
                       onClick={submitVerifyToken}
                       disabled={verifyLoading}
                       className="shrink-0 border-2 border-red-500/70 bg-red-950/40 px-4 py-2 font-mono text-xs font-black uppercase tracking-[0.16em] text-red-100 transition [clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)] hover:bg-red-900/50 hover:shadow-[0_0_28px_rgba(239,68,68,0.45)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                      style={{ textShadow: '0 0 14px rgba(248,113,113,0.55)' }}
+                      style={{ textShadow: liteViewport ? 'none' : '0 0 14px rgba(248,113,113,0.55)' }}
                     >
                       {verifyLoading ? 'Checking...' : 'Submit'}
                     </button>
@@ -426,42 +469,58 @@ export default function CertificatesSection({
                 className="relative overflow-hidden rounded-[4px] p-[3px]"
                 style={{
                   background: neon.ring,
-                  boxShadow: neon.outerShadow,
+                  boxShadow: liteViewport
+                    ? '0 0 0 1px rgba(255,255,255,0.12), 0 8px 20px rgba(0,0,0,0.4)'
+                    : neon.outerShadow,
                 }}
               >
-                <div
-                  className="pointer-events-none absolute inset-[8px] rounded-[2px] border-2 opacity-95"
-                  style={{
-                    borderColor: neon.innerStroke,
-                    boxShadow: neon.innerStrokeShadow,
-                  }}
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 rounded-[4px] opacity-100 [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0,rgba(0,0,0,1)_4px,transparent_4px,transparent_calc(100%-4px),rgba(0,0,0,1)_calc(100%-4px),rgba(0,0,0,1)_100%)]"
-                  style={{ background: neon.rail }}
-                />
-                <div className="pointer-events-none absolute left-3 top-3 h-5 w-5 rounded-tl-[2px] border-l-2 border-t-2" style={{ borderColor: neon.corners[0] }} />
-                <div className="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-tr-[2px] border-r-2 border-t-2" style={{ borderColor: neon.corners[1] }} />
-                <div className="pointer-events-none absolute bottom-3 left-3 h-5 w-5 rounded-bl-[2px] border-b-2 border-l-2" style={{ borderColor: neon.corners[2] }} />
-                <div className="pointer-events-none absolute bottom-3 right-3 h-5 w-5 rounded-br-[2px] border-b-2 border-r-2" style={{ borderColor: neon.corners[3] }} />
+                {!liteViewport ? (
+                  <>
+                    <div
+                      className="pointer-events-none absolute inset-[8px] rounded-[2px] border-2 opacity-95"
+                      style={{
+                        borderColor: neon.innerStroke,
+                        boxShadow: neon.innerStrokeShadow,
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute inset-0 rounded-[4px] opacity-100 [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0,rgba(0,0,0,1)_4px,transparent_4px,transparent_calc(100%-4px),rgba(0,0,0,1)_calc(100%-4px),rgba(0,0,0,1)_100%)]"
+                      style={{ background: neon.rail }}
+                    />
+                    <div className="pointer-events-none absolute left-3 top-3 h-5 w-5 rounded-tl-[2px] border-l-2 border-t-2" style={{ borderColor: neon.corners[0] }} />
+                    <div className="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-tr-[2px] border-r-2 border-t-2" style={{ borderColor: neon.corners[1] }} />
+                    <div className="pointer-events-none absolute bottom-3 left-3 h-5 w-5 rounded-bl-[2px] border-b-2 border-l-2" style={{ borderColor: neon.corners[2] }} />
+                    <div className="pointer-events-none absolute bottom-3 right-3 h-5 w-5 rounded-br-[2px] border-b-2 border-r-2" style={{ borderColor: neon.corners[3] }} />
+                  </>
+                ) : null}
                 <div
                   className="relative flex items-start gap-4 p-5 sm:gap-5 sm:p-6 [clip-path:polygon(12px_0,calc(100%-12px)_0,100%_12px,100%_calc(100%-12px),calc(100%-12px)_100%,12px_100%,0_calc(100%-12px),0_12px)]"
-                  style={{ background: neon.panelBg, boxShadow: neon.panelInset }}
+                  style={{
+                    background: neon.panelBg,
+                    boxShadow: liteViewport ? 'none' : neon.panelInset,
+                  }}
                 >
-                  <div className="pointer-events-none absolute inset-0 opacity-80 [clip-path:inherit]" style={{ background: `${neon.wash1}, ${neon.wash2}` }} />
-                  <div className="pointer-events-none absolute inset-0 opacity-35 [clip-path:inherit]" style={{ background: neon.sweep }} />
+                  {!liteViewport ? (
+                    <>
+                      <div className="pointer-events-none absolute inset-0 opacity-80 [clip-path:inherit]" style={{ background: `${neon.wash1}, ${neon.wash2}` }} />
+                      <div className="pointer-events-none absolute inset-0 opacity-35 [clip-path:inherit]" style={{ background: neon.sweep }} />
+                    </>
+                  ) : null}
                   <div
                     className="flex h-12 w-12 flex-shrink-0 items-center justify-center border-2 sm:h-14 sm:w-14 [clip-path:polygon(50%_0,100%_25%,100%_75%,50%_100%,0_75%,0_25%)]"
                     style={{
                       borderColor: neon.hexBorder,
-                      boxShadow: neon.hexShadow,
+                      boxShadow: liteViewport ? 'none' : neon.hexShadow,
                       background: neon.hexBg,
                     }}
                   >
-                    <GamingFeatureIcon icon={feature.icon} />
+                    <GamingFeatureIcon icon={feature.icon} animate={!liteViewport} />
                   </div>
                   <div className="relative min-w-0">
-                    <h3 className="mb-1.5 text-base font-bold uppercase tracking-[0.06em] text-slate-50 sm:text-lg" style={{ textShadow: neon.titleShadow }}>
+                    <h3
+                      className="mb-1.5 text-base font-bold uppercase tracking-[0.06em] text-slate-50 sm:text-lg"
+                      style={{ textShadow: liteViewport ? 'none' : neon.titleShadow }}
+                    >
                       {feature.title}
                     </h3>
                     <p className={`font-mono text-sm leading-snug sm:text-[15px] ${neon.desc}`}>
@@ -478,7 +537,7 @@ export default function CertificatesSection({
       </div>
       {isPreviewOpen ? (
         <div
-          className="fixed inset-0 z-[120] flex h-[100dvh] max-h-[100dvh] w-full items-center justify-center overflow-hidden bg-black/80 p-2 backdrop-blur-sm sm:p-3"
+          className={`fixed inset-0 z-[120] flex h-[100dvh] max-h-[100dvh] w-full items-center justify-center overflow-hidden bg-black/80 p-2 sm:p-3 ${liteViewport ? '' : 'backdrop-blur-sm'}`}
           onClick={() => setIsPreviewOpen(false)}
         >
           <button

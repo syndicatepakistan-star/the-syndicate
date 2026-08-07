@@ -752,7 +752,7 @@
 
 .mega-mission-title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.35rem, 3.5vw + 0.5rem, 2rem);
   font-weight: 900;
   line-height: 1.1;
@@ -1043,7 +1043,7 @@
 
 .mega-dystopia-brief__title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.1rem, 2.6vw, 1.4rem);
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -1135,7 +1135,7 @@
 
 .mega-dystopia-node dd {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.25rem, 3vw, 1.65rem);
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -1420,7 +1420,7 @@
 
 .mega-mission-emergency-alert__title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.1rem, 2.8vw, 1.45rem);
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -1474,7 +1474,7 @@
 
 .mega-mission-unified__stat dd {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.2rem, 3vw, 1.55rem);
   font-weight: 900;
   letter-spacing: 0.05em;
@@ -1589,7 +1589,7 @@
 
 .mega-dystopia-ops__title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.05rem, 2.4vw, 1.25rem);
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -1741,7 +1741,7 @@
 
 .mega-mission-empty__title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.45rem, 3.2vw, 1.9rem);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -1929,7 +1929,7 @@
 
 .mega-dystopia-op__mission-title {
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(1.65rem, 3.5vw + 0.5rem, 2.25rem);
   font-weight: 900;
   line-height: 1.15;

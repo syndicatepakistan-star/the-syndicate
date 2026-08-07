@@ -381,7 +381,7 @@
   border: none;
   border-bottom: 1px solid var(--gold-dim);
   padding: clamp(0.45rem, 1.2vw, 0.65rem) 4px;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.82rem, 0.35vw + 0.78rem, 1rem);
   color: var(--gold-light);
   letter-spacing: 0.18em;
@@ -471,7 +471,7 @@
   border: 1px solid var(--gold-dim);
   background: rgba(0, 0, 0, 0.35);
   color: var(--gold-light);
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.85rem, 1.8vw, 1.1rem);
   letter-spacing: 0;
   text-align: center;
@@ -531,7 +531,7 @@
 }
 
 .cyber-btn__text {
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.78rem, 0.38vw + 0.68rem, 1rem);
   font-weight: 700;
   letter-spacing: clamp(0.14em, 0.06em + 0.8vw, 0.3em);
@@ -553,7 +553,7 @@
   width: 100%;
   margin-top: clamp(0.85rem, 2.2vw, 1.4rem);
   text-align: center;
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -932,7 +932,7 @@
   position: relative;
   z-index: 2;
   margin-top: clamp(1.25rem, 3vw, 2rem);
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.65rem, 0.35vw + 0.58rem, 0.85rem);
   letter-spacing: clamp(0.2em, 0.08em + 0.6vw, 0.38em);
   text-transform: uppercase;
@@ -1043,7 +1043,7 @@
 }
 
 .luxury-redirect__eyebrow {
-  font-family: var(--font-heading);
+  font-family: var(--font-mono);
   font-size: clamp(0.58rem, 0.25vw + 0.52rem, 0.72rem);
   letter-spacing: clamp(0.35em, 0.12em + 1vw, 0.55em);
   text-transform: uppercase;

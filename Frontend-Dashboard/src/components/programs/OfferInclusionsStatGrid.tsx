@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { GamingBenefitTone } from "@/components/GamingBenefitCards";
 import {
@@ -8,6 +8,7 @@ import {
   MONEY_MASTERY_WHAT_YOU_GET_TITLE,
   type MoneyMasteryStatBlock,
 } from "@/components/programs/planOfferCatalog";
+import { thryonHeadingFont } from "@/lib/thryonHeadingFont";
 
 type Props = {
   whatYouGet: readonly MoneyMasteryStatBlock[];
@@ -268,21 +269,36 @@ function SectionHeading({
   headingTone?: "orange" | "white";
 }) {
   const isWhite = headingTone === "white";
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  // Beat any stale SW/CSS `font-mono !important` that was locking these labels to CS Daine.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const family = `${thryonHeadingFont.style.fontFamily}, "Thryon", "Thyron", sans-serif`;
+    el.style.setProperty("font-family", family, "important");
+    el.style.setProperty("font-weight", "400", "important");
+    el.style.setProperty("font-synthesis", "none", "important");
+  }, []);
+
   // <p> not <h3>: avoids h1→h3 skip under Elite Offers (Lighthouse heading-order).
+  // Thryon only has one weight — “bolder” via size + glow, not font-black (destroys strokes).
   return (
     <p
+      ref={ref}
       className={cn(
-        "mx-auto block w-full text-center font-black uppercase tracking-[0.14em]",
+        thryonHeadingFont.className,
+        "programs-stat-heading mx-auto block w-full text-center font-normal uppercase tracking-[0.16em]",
         isWhite
-          ? "programs-stat-heading text-white"
-          : "programs-stat-heading programs-stat-heading--orange text-orange-400",
+          ? "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.55)]"
+          : "programs-stat-heading--orange text-orange-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.55)]",
         compact
           ? isWhite
-            ? "text-[15px] sm:text-[16px]"
-            : "text-[12px]"
+            ? "text-[17px] sm:text-[19px]"
+            : "text-[14px]"
           : isWhite
-            ? "text-[18px] sm:text-[22px]"
-            : "text-[13px] sm:text-[15px]",
+            ? "text-[22px] sm:text-[26px]"
+            : "text-[15px] sm:text-[17px]",
       )}
     >
       {children}

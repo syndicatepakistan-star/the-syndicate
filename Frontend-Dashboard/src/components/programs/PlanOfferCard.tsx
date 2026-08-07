@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 import { KNIGHT_CARD_FEATURES, KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
+import { planOfferCardTitleLines } from "@/components/programs/planOfferCardTitle";
 import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
 import { MidTicketPackInclusions } from "@/components/programs/MidTicketPackInclusions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
@@ -224,6 +225,7 @@ export function PlanOfferCard({
     offer.plan === "agentic_ai" ||
     offer.plan === "ai_content_automation" ||
     offer.plan === "trading_technical_analysis";
+  const titleLines = planOfferCardTitleLines(offer);
   const portraitCoverArt = offer.imageMobileFit === "contain";
   const theme = PLAN_OFFER_THEMES[offer.accent];
   const spotlight = PACK_SPOTLIGHT[offer.accent];
@@ -545,7 +547,8 @@ export function PlanOfferCard({
             >
               <div
                 className={cn(
-                  "shrink-0 line-clamp-3 font-extrabold uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  "plan-offer-card__title shrink-0 font-black uppercase leading-snug tracking-[0.04em] sm:tracking-[0.07em]",
+                  titleLines.length > 1 ? "line-clamp-none" : "line-clamp-3",
                   offer.plan === "bundle"
                     ? "w-full text-center text-[#f5c814]"
                     : midTicketPack
@@ -557,7 +560,6 @@ export function PlanOfferCard({
                   midTicketPack &&
                     isLarge &&
                     "min-h-[2.4em] text-[clamp(20px,5.2vw,28px)] sm:text-[clamp(20px,2.6vw,28px)]",
-                  offer.plan === "ai_content_automation" && "line-clamp-none",
                   offer.plan !== "bundle" &&
                     !midTicketPack &&
                     boostMobileType &&
@@ -581,18 +583,17 @@ export function PlanOfferCard({
                     !isPack &&
                     "max-sm:text-[clamp(15px,4.2vw,20px)]",
                   isModule && "min-h-[2.75em] text-[10px] sm:text-[11px]",
-                  tradingMobileProgramFace && "max-xl:line-clamp-2 max-xl:min-h-0 max-xl:text-[clamp(10px,2.4vw,17px)]",
+                  tradingMobileProgramFace &&
+                    titleLines.length <= 1 &&
+                    "max-xl:line-clamp-2 max-xl:min-h-0 max-xl:text-[clamp(10px,2.4vw,17px)]",
                   isCompact && "text-[10px] sm:text-[11px]"
                 )}
               >
-                {offer.plan === "ai_content_automation" ? (
-                  <>
-                    <span className="block">AI CONTENT</span>
-                    <span className="block">AUTOMATION</span>
-                  </>
-                ) : (
-                  offer.title
-                )}
+                {titleLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
               </div>
 
               {cardStats && !midTicketPack ? (

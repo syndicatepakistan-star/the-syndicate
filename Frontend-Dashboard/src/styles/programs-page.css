@@ -91,6 +91,14 @@
     0 0 20px color-mix(in srgb, var(--poc-glow) 38%, transparent);
 }
 
+/* Bundle + program name titles — force bold (CS Daine max master is 700). */
+.plan-offer-card__title,
+.program-card-title {
+  font-weight: 700 !important;
+  -webkit-text-stroke: 0.35px currentColor;
+  paint-order: stroke fill;
+}
+
 .plan-offer-card--vault-pack .plan-offer-card__shell {
   border-width: 2px;
   border-style: solid;
@@ -752,6 +760,17 @@
   .programs-stat-heading {
     filter: none !important;
   }
+}
+
+.programs-stat-heading,
+.programs-page-root .programs-stat-heading,
+.plan-offer-card .programs-stat-heading {
+  font-family: "Thryon", "Thyron", sans-serif !important;
+  font-weight: 400 !important;
+  font-synthesis: none !important;
+}
+.programs-stat-neon {
+  font-family: var(--font-mono) !important;
 }
 
 @media (min-width: 1025px) {

@@ -308,8 +308,8 @@ export function ProjectsYouWillBuildBody({
     : "text-[15px] leading-relaxed text-white/95 sm:text-[16px] font-[family-name:var(--font-body)]";
   // Titles +4pt larger than body copy for clear scan hierarchy.
   const titleClass = prominent
-    ? "text-[calc(17px+4pt)] font-bold leading-snug sm:text-[calc(18px+4pt)] font-[family-name:var(--font-heading)]"
-    : "text-[calc(15px+4pt)] font-bold leading-snug sm:text-[calc(16px+4pt)] font-[family-name:var(--font-heading)]";
+    ? "text-[calc(17px+4pt)] font-bold leading-snug sm:text-[calc(18px+4pt)] font-[family-name:var(--font-mono)]"
+    : "text-[calc(15px+4pt)] font-bold leading-snug sm:text-[calc(16px+4pt)] font-[family-name:var(--font-mono)]";
   const numberClass = prominent
     ? "text-[calc(17px+4pt)] font-black tabular-nums sm:text-[calc(18px+4pt)]"
     : "text-[calc(15px+4pt)] font-black tabular-nums sm:text-[calc(16px+4pt)]";
@@ -420,10 +420,10 @@ function StructuredSectionsView({
 }) {
   const hidden = new Set<keyof StructuredDescriptionSections>(omitSections);
   const headingClass = prominent
-    ? "border-b border-current/30 pb-2.5 text-left text-[20pt] font-bold uppercase leading-snug tracking-[0.12em] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]"
+    ? "border-b border-current/30 pb-2.5 text-left text-[20pt] font-bold uppercase leading-snug tracking-[0.12em] sm:tracking-[0.14em] font-[family-name:var(--font-mono)]"
     : compact
-      ? "border-b border-current/30 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] sm:text-[12px]"
-      : "border-b border-current/30 pb-2 text-left text-[20px] font-bold uppercase tracking-[0.12em] sm:text-[20pt] sm:tracking-[0.14em] font-[family-name:var(--font-heading)]";
+      ? "border-b border-current/30 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] sm:text-[12px] font-[family-name:var(--font-mono)]"
+      : "border-b border-current/30 pb-2 text-left text-[20px] font-bold uppercase tracking-[0.12em] sm:text-[20pt] sm:tracking-[0.14em] font-[family-name:var(--font-mono)]";
 
   const learnRaw = sections.what_you_will_learn.trim();
   const tradingSections = learnRaw ? splitExactTradingSections(learnRaw) : null;

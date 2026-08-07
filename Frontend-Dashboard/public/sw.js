@@ -2,8 +2,8 @@
  * Device cache: first visit fetches from network; repeat visits serve static
  * assets from Cache Storage (CDN + browser disk cache still apply).
  */
-const STATIC_CACHE = "syndicate-static-v4";
-const RUNTIME_CACHE = "syndicate-runtime-v4";
+const STATIC_CACHE = "syndicate-static-v6";
+const RUNTIME_CACHE = "syndicate-runtime-v6";
 
 const PRECACHE_URLS = [
   "/assets/logo-nav.webp",
@@ -19,7 +19,8 @@ const BYPASS_PREFIXES = [
 ];
 
 function isStaticAsset(pathname) {
-  if (pathname.startsWith("/_next/static/")) return true;
+  // Never SW-cache Next JS/CSS — deploys and hard refresh must always get new bundles.
+  if (pathname.startsWith("/_next/static/")) return false;
   if (pathname.startsWith("/fonts/")) return true;
   if (pathname.startsWith("/_next/image")) return true;
   // Cache lightweight images / fonts under /assets — never cache MP4/WebM (bg.mp4 etc.).

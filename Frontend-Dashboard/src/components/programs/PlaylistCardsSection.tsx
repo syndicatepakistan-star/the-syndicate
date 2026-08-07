@@ -717,7 +717,7 @@ export function PlaylistCardsSection({
             >
               <div
                 className={cn(
-                  "text-left text-[clamp(13px,3.4vw,18px)] font-extrabold uppercase leading-snug tracking-[0.04em] sm:text-[clamp(14px,2.2vw,17px)] sm:tracking-[0.07em]",
+                  "program-card-title text-left text-[clamp(13px,3.4vw,18px)] font-black uppercase leading-snug tracking-[0.04em] sm:text-[clamp(14px,2.2vw,17px)] sm:tracking-[0.07em]",
                   PROGRAM_CARD_MOBILE_TITLE_FACE,
                   PROGRAM_CARD_TITLE_SLOT,
                   theme.title,

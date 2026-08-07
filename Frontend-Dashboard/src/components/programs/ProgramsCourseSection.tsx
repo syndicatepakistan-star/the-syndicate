@@ -444,11 +444,15 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
   const refreshAfterTabResume = useCallback(() => {
     if (!hasSimpleAuthSessionClient() || !sectionActiveRef.current) return;
     purgeExpiredStreamPlaybackCache();
-    void fetchPortalIdentity().then((identity) => {
-      setStaff(!!identity?.is_staff);
-      setAccessTier(identity?.access_tier ?? null);
-      setMoneyMasteryActive(!!identity?.money_mastery_active);
-    });
+    void fetchPortalIdentity()
+      .then((identity) => {
+        setStaff(!!identity?.is_staff);
+        setAccessTier(identity?.access_tier ?? null);
+        setMoneyMasteryActive(!!identity?.money_mastery_active);
+      })
+      .catch(() => {
+        /* identity optional on tab resume */
+      });
     clearStreamPlaylistsCache();
     void reloadStreamPlaylists({ forceRefresh: true });
     void reloadApiCourses();

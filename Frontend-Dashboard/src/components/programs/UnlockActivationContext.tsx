@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -46,30 +45,24 @@ function shouldAutoActivateUnlock(): boolean {
  */
 export function UnlockActivationProvider({ children }: { children: ReactNode }) {
   const [unlockReady, setUnlockReady] = useState(false);
-  const waitersRef = useRef<Array<() => void>>([]);
 
   useEffect(() => {
     if (shouldAutoActivateUnlock()) setUnlockReady(true);
   }, []);
 
-  useEffect(() => {
-    if (!unlockReady) return;
-    const waiters = waitersRef.current;
-    waitersRef.current = [];
-    waiters.forEach((resolve) => resolve());
-  }, [unlockReady]);
-
   const activateUnlock = useCallback(() => {
     setUnlockReady(true);
   }, []);
 
+  /**
+   * Activate unlock chrome immediately.
+   * Do not wait on React commit / waiter queues — those can hang forever under
+   * Strict Mode remounts and leave Unlock stuck on “Loading…”.
+   */
   const ensureUnlockReady = useCallback(() => {
-    if (unlockReady) return Promise.resolve();
-    return new Promise<void>((resolve) => {
-      waitersRef.current.push(resolve);
-      setUnlockReady(true);
-    });
-  }, [unlockReady]);
+    setUnlockReady(true);
+    return Promise.resolve();
+  }, []);
 
   const value = useMemo(
     () => ({ unlockReady, activateUnlock, ensureUnlockReady }),

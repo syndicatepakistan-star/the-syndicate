@@ -105,6 +105,7 @@ export async function createPlanCheckoutSession(
     "/api/auth/checkout/create-session/",
     {
       method: "POST",
+      timeoutMs: 20_000,
       body: JSON.stringify({
         return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
         selected_plan: params.plan,
@@ -126,6 +127,7 @@ export async function createUnlockCartCheckoutSession(
     "/api/auth/checkout/create-session/",
     {
       method: "POST",
+      timeoutMs: 20_000,
       body: JSON.stringify({
         return_base_url: typeof window !== "undefined" ? window.location.origin : undefined,
         cart_items: params.items.map((item) =>
@@ -160,7 +162,7 @@ export type StartPlanCheckoutResult =
 
 function redirectToCheckout(checkoutUrl: string) {
   if (typeof window === "undefined") return;
-  window.location.replace(checkoutUrl);
+  window.location.href = checkoutUrl;
 }
 
 function redirectToAuthCheckout(params: PlanCheckoutParams) {
@@ -199,6 +201,9 @@ function payloadErrorMessage(payload: PlanCheckoutSessionPayload | string, statu
   if (typeof payload.error === "string" && payload.error.trim()) return sanitize(payload.error.trim());
   if (typeof payload.detail === "string" && payload.detail.trim()) return sanitize(payload.detail.trim());
   if (status === 401 || status === 403) return "Session expired. Sign in again to continue checkout.";
+  if (status === 0) {
+    return "Cannot reach the checkout server. Start Django on :8000 (or check BACKEND_INTERNAL_URL), then try again.";
+  }
   if (status === 502 || status === 503 || status === 504) {
     return "Checkout service is temporarily unavailable. Wait a minute and try again.";
   }
@@ -226,16 +231,18 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
 
   if (ok && checkoutUrl) {
     if (Array.isArray(payload.excluded_owned) && payload.excluded_owned.length && typeof window !== "undefined") {
-      try {
-        const toast = (await import("react-hot-toast")).default;
-        toast(
-          payload.message ||
-            `Skipped ${payload.excluded_owned.length} already-owned program(s) before checkout.`,
-          { icon: "✓" },
-        );
-      } catch {
-        // Toast optional.
-      }
+      // Never await toast before redirect — that kept Unlock stuck on Loading.
+      void import("react-hot-toast")
+        .then((mod) => {
+          mod.default(
+            payload.message ||
+              `Skipped ${payload.excluded_owned!.length} already-owned program(s) before checkout.`,
+            { icon: "✓" },
+          );
+        })
+        .catch(() => {
+          // Toast optional.
+        });
     }
     redirectToCheckout(checkoutUrl);
     return { status: "checkout", checkoutUrl };
@@ -282,16 +289,17 @@ export async function startUnlockCartCheckout(
 
   if (ok && checkoutUrl) {
     if (Array.isArray(payload.excluded_owned) && payload.excluded_owned.length && typeof window !== "undefined") {
-      try {
-        const toast = (await import("react-hot-toast")).default;
-        toast(
-          payload.message ||
-            `Skipped ${payload.excluded_owned.length} already-owned program(s) before checkout.`,
-          { icon: "✓" },
-        );
-      } catch {
-        // Toast optional.
-      }
+      void import("react-hot-toast")
+        .then((mod) => {
+          mod.default(
+            payload.message ||
+              `Skipped ${payload.excluded_owned!.length} already-owned program(s) before checkout.`,
+            { icon: "✓" },
+          );
+        })
+        .catch(() => {
+          // Toast optional.
+        });
     }
     redirectToCheckout(checkoutUrl);
     return { status: "checkout", checkoutUrl };

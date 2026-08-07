@@ -375,54 +375,61 @@ export async function meRequest(accessToken: string): Promise<PortalUser> {
   return data as PortalUser;
 }
 
-/** Resolve current user for UI (JWT portal or simple DRF token login). */
+/** Resolve current user for UI (JWT portal or simple DRF token login). Never throws. */
 export async function fetchPortalIdentity(): Promise<PortalUser | null> {
-  const jwt = readStoredAccess();
-  if (jwt) {
-    try {
-      return await meRequest(jwt);
-    } catch {
-      return null;
+  try {
+    const jwt = readStoredAccess();
+    if (jwt) {
+      try {
+        return await meRequest(jwt);
+      } catch {
+        return null;
+      }
     }
+    const drf = readStoredDrfToken();
+    if (!drf) return null;
+
+    // Use portalFetch so direct Django failures fall back to same-origin proxy,
+    // and network errors return gracefully instead of throwing Failed to fetch.
+    const { ok, data } = await portalFetch<
+      PortalUser & {
+        id?: number;
+        email?: string;
+        username?: string;
+        is_staff?: boolean;
+        detail?: string;
+      }
+    >("/api/syndicate-auth/me/", { timeoutMs: 12_000 });
+
+    if (!ok || data == null || typeof data !== "object" || data.id == null) return null;
+    const email = String(data.email ?? "").trim();
+    return {
+      id: data.id,
+      username: String(data.username ?? email).trim() || email,
+      email,
+      first_name: String(data.first_name ?? ""),
+      last_name: String(data.last_name ?? ""),
+      is_staff: !!data.is_staff,
+      roles: Array.isArray(data.roles) ? data.roles : [],
+      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      access_tier: data.access_tier,
+      money_mastery_active: !!data.money_mastery_active,
+      knight_subscription_active: !!data.knight_subscription_active,
+      knight_subscription_expires_at:
+        typeof data.knight_subscription_expires_at === "string"
+          ? data.knight_subscription_expires_at
+          : null,
+      dashboard_nav_locks: data.dashboard_nav_locks,
+      king_program_selection_required: !!data.king_program_selection_required,
+      king_program_selection_completed: !!data.king_program_selection_completed,
+      king_program_selection_count:
+        typeof data.king_program_selection_count === "number" && Number.isFinite(data.king_program_selection_count)
+          ? data.king_program_selection_count
+          : 0,
+    };
+  } catch {
+    return null;
   }
-  const drf = readStoredDrfToken();
-  if (!drf) return null;
-  const res = await fetch(resolveClientApiUrl("/api/syndicate-auth/me/"), {
-    headers: { Authorization: `Token ${drf}`, Accept: "application/json" }
-  });
-  const data = (await res.json().catch(() => ({}))) as PortalUser & {
-    id?: number;
-    email?: string;
-    username?: string;
-    is_staff?: boolean;
-    detail?: string;
-  };
-  if (!res.ok || data.id == null) return null;
-  const email = String(data.email ?? "").trim();
-  return {
-    id: data.id,
-    username: String(data.username ?? email).trim() || email,
-    email,
-    first_name: String(data.first_name ?? ""),
-    last_name: String(data.last_name ?? ""),
-    is_staff: !!data.is_staff,
-    roles: Array.isArray(data.roles) ? data.roles : [],
-    permissions: Array.isArray(data.permissions) ? data.permissions : [],
-    access_tier: data.access_tier,
-    money_mastery_active: !!data.money_mastery_active,
-    knight_subscription_active: !!data.knight_subscription_active,
-    knight_subscription_expires_at:
-      typeof data.knight_subscription_expires_at === "string"
-        ? data.knight_subscription_expires_at
-        : null,
-    dashboard_nav_locks: data.dashboard_nav_locks,
-    king_program_selection_required: !!data.king_program_selection_required,
-    king_program_selection_completed: !!data.king_program_selection_completed,
-    king_program_selection_count:
-      typeof data.king_program_selection_count === "number" && Number.isFinite(data.king_program_selection_count)
-        ? data.king_program_selection_count
-        : 0,
-  };
 }
 
 export async function logoutRequest(accessToken: string): Promise<void> {
@@ -518,13 +525,40 @@ export async function portalFetch<T>(
     const data = await parseBody(res);
     return { ok: res.ok, status: res.status, data };
   } catch (e) {
+    // Retry via same-origin proxy with a fresh timeout — never reuse an aborted signal.
     if (proxyUrl && isCrossOriginClientUrl(url)) {
+      const proxyCtrl = new AbortController();
+      const proxyTid =
+        timeoutMs > 0 ? setTimeout(() => proxyCtrl.abort(), Math.min(timeoutMs, 15_000)) : undefined;
       try {
-        const res = await doFetch(proxyUrl);
+        let res = await fetch(proxyUrl, {
+          ...restInit,
+          signal: proxyCtrl.signal,
+          headers: buildHeaders(authorization),
+        });
+        if (res.status === 401 && !skipAuth && readStoredAccess() && readStoredRefresh()) {
+          const rt = readStoredRefresh();
+          if (rt) {
+            try {
+              const { access } = await refreshRequest(rt);
+              persistTokens(access, rt);
+              authorization = getAuthorizationHeader();
+              res = await fetch(proxyUrl, {
+                ...restInit,
+                signal: proxyCtrl.signal,
+                headers: buildHeaders(authorization),
+              });
+            } catch {
+              /* keep original 401 */
+            }
+          }
+        }
         const data = await parseBody(res);
         return { ok: res.ok, status: res.status, data };
       } catch {
         /* fall through */
+      } finally {
+        if (proxyTid !== undefined) clearTimeout(proxyTid);
       }
     }
     const name = e instanceof Error ? e.name : "";

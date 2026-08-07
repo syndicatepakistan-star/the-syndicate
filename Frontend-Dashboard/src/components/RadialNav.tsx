@@ -138,33 +138,46 @@ function getSlots(radius: number, count: number) {
   let poleGapExtra = 0
   /** Extra px to close gaps between middle rows (2↔3, 3↔4, 4↔5) on mobile only. */
   let middleTighten = 0
+  /** Pull row 3/4 (Affiliate↔Syn Diagnosis, Refund↔Our Founder) inward so glows don't clip. */
+  let row34SideInset = 0
   if (typeof window !== 'undefined') {
     const w = window.innerWidth
-    if (w < 420) {
+    if (w < 360) {
+      xScale = 1.08
+      yScale = 1.58
+      poleGapExtra = 17
+      middleTighten = 5
+      row34SideInset = 22
+    } else if (w < 420) {
       xScale = 1.08
       yScale = 1.58
       poleGapExtra = 17 // +3 vs prior 14 → more space 1↔2 and 5↔6
       middleTighten = 5
+      row34SideInset = 18
     } else if (w < 640) {
       xScale = 1.07
       yScale = 1.48
       poleGapExtra = 15 // +3 vs 12
       middleTighten = 4
+      row34SideInset = 14
     } else if (w < 768) {
       xScale = 1.06
       yScale = 1.4
       poleGapExtra = 13 // +3 vs 10
       middleTighten = 4
+      row34SideInset = 10
     } else if (w < RADIAL_NAV_COMPACT_MAX_WIDTH) {
       xScale = 1.06
       yScale = 1.34
       poleGapExtra = 11 // +3 vs 8
       middleTighten = 3
+      row34SideInset = 6
     } else {
       xScale = 1.05
       yScale = 1.08
       poleGapExtra = 0
       middleTighten = 0
+      row34SideInset = 0
     }
   }
 
@@ -197,6 +210,11 @@ function getSlots(radius: number, count: number) {
           y += y > 0 ? middleTighten * 0.35 : -middleTighten * 0.35 // toward row5
           y += y > 0 ? -middleTighten * 0.55 : middleTighten * 0.55 // toward midline (3↔4)
         } else if (row5.has(i)) y += y > 0 ? -middleTighten * 0.55 : middleTighten * 0.55
+      }
+      // Rows 3–4 sit widest on the ellipse; inset so pills + glow clear the viewport edge.
+      if (row34SideInset > 0 && (row3.has(i) || row4.has(i))) {
+        if (x > 0) x -= row34SideInset
+        else if (x < 0) x += row34SideInset
       }
     }
     return { x, y }

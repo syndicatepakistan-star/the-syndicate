@@ -16,7 +16,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
     },
     {
       q: "Is The Syndicate a university or Examination Syndicate?",
-      a: "No. We are not the University of the Punjab, not an Examination Syndicate, and not a degree-granting school.\nThe Syndicate is an independent operator education brand. If you searched for campus exams or academic departments, that is a different organisation. We sell digital programs, vault packs, and membership for people building leverage in business, trading, and AI systems.",
+      a: "No. The Syndicate is not a university, not an Examination Syndicate, and not a degree-granting school of any kind.\nWe are an independent online operator education brand. Campus exams, academic departments, and official examination boards are unrelated organisations. Here you get digital programs, vault packs, and membership for business, trading, and AI systems.",
     },
     {
       q: "What is The Syndicate vault / Money Mastery?",

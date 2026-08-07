@@ -45,9 +45,9 @@ import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { UnlockCartProvider, useUnlockCart } from "@/components/programs/UnlockCartContext";
 import { useUnlockActivation } from "@/components/programs/UnlockActivationContext";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
+import { startPlanCheckout } from "@/lib/plan-checkout";
 import {
   lazyCheckoutUnlockCartItems,
-  lazyStartPlanCheckout,
   lazyToast,
   lazyToastAlreadyPurchased,
   lazyToastSuccess,
@@ -210,11 +210,15 @@ function PublicPlanOfferCardsInner({
       setKnightSubscriptionActive(false);
       return;
     }
-    const [slugs, identity] = await Promise.all([fetchPurchasedPlanSlugs(), fetchPortalIdentity()]);
-    setPurchasedSlugs(new Set(slugs));
-    setAccessTier(identity?.access_tier ?? null);
-    setMoneyMasteryActive(!!identity?.money_mastery_active);
-    setKnightSubscriptionActive(!!identity?.knight_subscription_active);
+    try {
+      const [slugs, identity] = await Promise.all([fetchPurchasedPlanSlugs(), fetchPortalIdentity()]);
+      setPurchasedSlugs(new Set(slugs));
+      setAccessTier(identity?.access_tier ?? null);
+      setMoneyMasteryActive(!!identity?.money_mastery_active);
+      setKnightSubscriptionActive(!!identity?.knight_subscription_active);
+    } catch {
+      // Backend / network blips must not crash unlock UI (Failed to fetch overlay).
+    }
   }, []);
 
   // Ownership / portal identity — only after unlock is live (or pack deep-link auto-activated).
@@ -409,18 +413,30 @@ function PublicPlanOfferCardsInner({
       setBusyPlan(offer.plan);
       try {
         await ensureUnlockReady();
-        const result = await lazyStartPlanCheckout({
-          plan: offer.plan,
-          billing: offer.billing,
-          amount: offer.checkoutAmount,
-          postAuthNext: checkoutReturnPath,
-        });
+        const result = await Promise.race([
+          startPlanCheckout({
+            plan: offer.plan,
+            billing: offer.billing,
+            amount: offer.checkoutAmount,
+            postAuthNext: checkoutReturnPath,
+          }),
+          new Promise<never>((_, reject) => {
+            window.setTimeout(() => {
+              reject(new Error("Checkout is taking too long. Check that Django is running on :8000, then try again."));
+            }, 25_000);
+          }),
+        ]);
+        if (result.status === "checkout" || result.status === "auth_required") {
+          // Navigation in progress — keep button busy briefly; do not run post-success awaits.
+          return;
+        }
         if (result.status === "already_unlocked") {
-          await reloadUnlockState();
+          setBusyPlan(null);
+          void reloadUnlockState();
           if (onAlreadyUnlocked) {
             await onAlreadyUnlocked(offer.plan);
           } else {
-            await lazyToastAlreadyPurchased(offer.title);
+            void lazyToastAlreadyPurchased(offer.title);
             await navigateToAlreadyUnlockedProgram({
               plan: offer.plan,
               postAuthNext: checkoutReturnPath,
@@ -653,7 +669,7 @@ function PublicPlanOfferCardsInner({
             }
           }}
           onUnlock={(offer) => void joinOffer(offer)}
-          unlockBusy={busyPlan === "bundle"}
+          unlockBusy={busyPlan === detailOffer.plan}
           onOpenPackDetails={(plan) => {
             const packOffer = PLAN_OFFERS.find((item) => item.plan === plan);
             if (!packOffer) return;

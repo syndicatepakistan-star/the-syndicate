@@ -40,13 +40,17 @@ export function MembershipKnightHeroOffer({
 
   useEffect(() => {
     let cancelled = false;
-    void fetchPortalIdentity().then((user) => {
-      if (cancelled) return;
-      const active = !!user?.knight_subscription_active;
-      setKnightActive(active);
-      if (!active) return;
-      setKnightRemaining(formatKnightSubscriptionRemaining(user.knight_subscription_expires_at));
-    });
+    void fetchPortalIdentity()
+      .then((user) => {
+        if (cancelled) return;
+        const active = !!user?.knight_subscription_active;
+        setKnightActive(active);
+        if (!active) return;
+        setKnightRemaining(formatKnightSubscriptionRemaining(user.knight_subscription_expires_at));
+      })
+      .catch(() => {
+        /* ignore — Knight CTA still works for guests */
+      });
     return () => {
       cancelled = true;
     };

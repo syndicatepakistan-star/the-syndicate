@@ -26,6 +26,7 @@ import { DeferredDashboardProgramsPageCss } from "@/components/dashboard/Deferre
 import { DashboardBackToPublic, clearDashboardPublicBackSeed } from "@/components/dashboard/DashboardBackToPublic";
 import { DashboardLcpPreload } from "@/components/dashboard/DashboardLcpPreload";
 import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSectionKeepAlive";
+import { AdminAccessGrantPanel } from "@/components/dashboard/AdminAccessGrantPanel";
 import { DashboardNavQuickSearch } from "@/components/dashboard/DashboardNavQuickSearch";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
 import type { DashboardNavKey } from "@/components/dashboard/types";
@@ -157,7 +158,8 @@ const FEATURE_MENU_ENTRIES: FeatureMenuEntry[] = [
   { section: "More options", label: "Support", navKey: "support" },
   { section: "More options", label: "Quick Access", navKey: "quickaccess" },
   { section: "More options", label: "Affiliate", navKey: "affiliate" },
-  { section: "More options", label: "Settings", navKey: "settings" }
+  { section: "More options", label: "Settings", navKey: "settings" },
+  { section: "More options", label: "Admin", navKey: "admin" },
 ];
 
 /** Mobile/tablet: in-shell scroll (Syndicate Mode layout) — top bar fixed, content scrolls inside gold frame. */
@@ -169,6 +171,7 @@ const BOUNDED_MOBILE_SHELL_KEYS = new Set([
   "support",
   "quickaccess",
   "settings",
+  "admin",
 ]);
 
 const PROFILE_AVATAR_MAX_BYTES = Math.floor(1.5 * 1024 * 1024);
@@ -596,6 +599,18 @@ function NavIcon({ k }: { k: string }) {
           />
         </svg>
       );
+    case "admin":
+      return (
+        <svg className={base} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M12 3.8 19 7v5.2c0 4.2-2.8 7.4-7 8.8-4.2-1.4-7-4.6-7-8.8V7l7-3.2Z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+          <path d="M9.2 12.1 11 13.9l3.8-3.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     default:
       return (
         <svg className={base} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -897,54 +912,11 @@ function SyndicateModeSection() {
   );
 }
 
-function AdminReviewPanel({ themeMode }: { themeMode: ThemeMode }) {
-  const themed = themeMode !== "default";
-  const accent =
-    themeMode === "danger"
-      ? "border-[rgba(255,92,92,0.42)]"
-      : themeMode === "cyberpunk"
-        ? "border-[rgba(196,126,255,0.44)]"
-        : "border-[rgba(255,215,0,0.28)]";
+function AdminAccessSection({ themeMode }: { themeMode: ThemeMode }) {
   return (
-    <div className={cn("cut-frame-sm border bg-black/45 p-4 backdrop-blur-sm", accent)}>
-      <div className="mb-3 text-[14px] font-extrabold uppercase tracking-[0.18em] text-white/82">Admin Panel Overview</div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["Total Users", "1,284"],
-          ["Total Referrals", "146"],
-          ["Total Earnings", "$10,500"],
-          ["Active Users", "318"]
-        ].map(([k, v]) => (
-          <div key={k} className={cn("rounded-md border bg-black/40 px-3 py-2", accent)}>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/62">{k}</div>
-            <div className="mt-1 text-[22px] font-black text-[color:var(--gold)]">{v}</div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
-        <div className={cn("rounded-md border bg-black/40 p-2", accent)}><div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/62">User Activity</div><div className="flex h-20 items-end gap-1">{[40, 62, 50, 76, 68].map((v, i) => <div key={i} className="flex-1 rounded-t-sm" style={{ height: `${v}%`, background: themeMode === "danger" ? "rgba(255,90,90,0.85)" : themeMode === "cyberpunk" ? "rgba(196,126,255,0.9)" : "rgba(255,215,0,0.85)" }} />)}</div></div>
-        <div className={cn("rounded-md border bg-black/40 p-2", accent)}><div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/62">Growth Trend</div><svg viewBox="0 0 160 60" className="h-20 w-full"><polyline fill="none" stroke={themeMode === "danger" ? "rgba(255,150,90,0.9)" : themeMode === "cyberpunk" ? "rgba(0,255,255,0.9)" : "rgba(255,215,0,0.9)"} strokeWidth="3" points="8,46 36,34 64,30 92,22 122,16 152,10" /></svg></div>
-        <div className={cn("rounded-md border bg-black/40 p-2", accent)}><div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/62">Earnings Split</div><div className="grid h-20 place-items-center"><div className="h-16 w-16 rounded-full border-8 border-t-[rgba(0,191,255,0.82)] border-r-[rgba(0,191,255,0.82)] border-b-[rgba(255,215,0,0.85)] border-l-[rgba(255,215,0,0.85)]" /></div></div>
-      </div>
-      <div className="mt-3 overflow-x-auto rounded-md border border-white/15 bg-black/35">
-        <table className="w-full min-w-[420px] text-left text-[12px]">
-          <thead className="text-[10px] uppercase tracking-[0.14em] text-white/62"><tr><th className="px-3 py-2">User</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Time</th></tr></thead>
-          <tbody>
-            {[
-              ["Aariz", "signup", "2m ago"],
-              ["Maya", "purchase", "7m ago"],
-              ["Nora", "referral", "11m ago"]
-            ].map((r) => (<tr key={r.join("-")} className="border-t border-white/10 text-white/82"><td className="px-3 py-2">{r[0]}</td><td className="px-3 py-2 uppercase">{r[1]}</td><td className="px-3 py-2">{r[2]}</td></tr>))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3 text-[11px] font-bold text-white/82">
-        <div className={cn("rounded-md border bg-black/40 px-3 py-2", accent)}><span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#00ff7a]" />System Status: Active</div>
-        <div className={cn("rounded-md border bg-black/40 px-3 py-2", accent)}><span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#00bfff]" />Referral System: Operational</div>
-        <div className={cn("rounded-md border bg-black/40 px-3 py-2", accent)}><span className="mr-2 inline-block h-2 w-2 rounded-full bg-[color:var(--gold)]" />Payout System: Stable</div>
-      </div>
-      {themed ? <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">Theme-adaptive review mode active</div> : null}
-    </div>
+    <section aria-label="Admin access grants" className="relative w-full min-w-0 flex-1 scroll-mt-2 py-1 md:py-2">
+      <AdminAccessGrantPanel themeMode={themeMode} />
+    </section>
   );
 }
 
@@ -2024,20 +1996,6 @@ export default function DashboardPageClient({
   const [overlayMount, setOverlayMount] = useState(false);
   const [profileMenuFixedStyle, setProfileMenuFixedStyle] = useState<CSSProperties | null>(null);
 
-  const nav: NavItem[] = useMemo(
-    () => [
-      { key: "dashboard", label: "Dashboard", active: true },
-      { key: "programs", label: "Programs" },
-      { key: "monk", label: "Syndicate Mode" },
-      { key: "resources", label: "Membership section" },
-      { key: "support", label: "Support" },
-      { key: "quickaccess", label: "Quick Access" },
-      { key: "affiliate", label: "Affiliate" },
-      { key: "settings", label: "Settings" }
-    ],
-    []
-  );
-
   const [selectedNavKey, setNavKeyState] = useState<string>(() =>
     isDashboardSectionKey(initialSection) ? initialSection : "dashboard",
   );
@@ -2046,6 +2004,23 @@ export default function DashboardPageClient({
   const [kingSelectionState, setKingSelectionState] = useState<KingProgramSelectionState | null>(null);
   const [kingSelectionLoading, setKingSelectionLoading] = useState(false);
   const [kingSelectionError, setKingSelectionError] = useState("");
+
+  const nav: NavItem[] = useMemo(() => {
+    const items: NavItem[] = [
+      { key: "dashboard", label: "Dashboard", active: true },
+      { key: "programs", label: "Programs" },
+      { key: "monk", label: "Syndicate Mode" },
+      { key: "resources", label: "Membership section" },
+      { key: "support", label: "Support" },
+      { key: "quickaccess", label: "Quick Access" },
+      { key: "affiliate", label: "Affiliate" },
+      { key: "settings", label: "Settings" },
+    ];
+    if (portalUser?.is_staff) {
+      items.push({ key: "admin", label: "Admin" });
+    }
+    return items;
+  }, [portalUser?.is_staff]);
 
   const unlockedProgramsEnabled = !!portalUser && authChecked;
   const { programs: unlockedDashboardPrograms, unlockedCount } = useUnlockedDashboardPrograms(unlockedProgramsEnabled);
@@ -2105,7 +2080,10 @@ export default function DashboardPageClient({
         const nextPath =
           key === "dashboard"
             ? dashboardHref("dashboard", params)
-            : dashboardHref(key as "programs" | "monk" | "resources" | "support" | "quickaccess" | "settings", params);
+            : dashboardHref(
+                key as "programs" | "monk" | "resources" | "support" | "quickaccess" | "settings" | "admin",
+                params,
+              );
         const currentHref = `${window.location.pathname}${window.location.search}`;
         if (currentHref !== nextPath) {
           // pushState so browser Back walks section-by-section (not replace → public home).
@@ -2117,6 +2095,13 @@ export default function DashboardPageClient({
     },
     [nav, router]
   );
+
+  useEffect(() => {
+    if (!authChecked || !portalUser) return;
+    if (selectedNavKey === "admin" && !portalUser.is_staff) {
+      applyNavKey("dashboard");
+    }
+  }, [authChecked, portalUser, selectedNavKey, applyNavKey]);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -3390,7 +3375,11 @@ export default function DashboardPageClient({
                   <path d="M16.2 16.2L20.4 20.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
                 <DashboardNavQuickSearch
-                  entries={FEATURE_MENU_ENTRIES}
+                  entries={
+                    portalUser?.is_staff
+                      ? FEATURE_MENU_ENTRIES
+                      : FEATURE_MENU_ENTRIES.filter((e) => e.navKey !== "admin")
+                  }
                   onNavigate={applyNavKey}
                   onMatched={(hit, q) => {
                     recordEvent({
@@ -3902,6 +3891,15 @@ export default function DashboardPageClient({
                   <SettingsBillingSection />
                 </div>
               </DashboardSectionKeepAlive>
+              {portalUser?.is_staff ? (
+                <DashboardSectionKeepAlive
+                  sectionKey="admin"
+                  activeKey={selectedNavKey}
+                  className="min-h-0 min-w-0 w-full max-w-none flex-1 py-1 md:py-2"
+                >
+                  <AdminAccessSection themeMode={themeMode} />
+                </DashboardSectionKeepAlive>
+              ) : null}
               <DashboardSectionKeepAlive sectionKey="dashboard" activeKey={selectedNavKey} className="w-full">
                 {portalUser && isNavLocked("dashboard") ? (
                   <div className="flex min-h-0 min-w-0 w-full max-w-none flex-1 flex-col overflow-y-auto">

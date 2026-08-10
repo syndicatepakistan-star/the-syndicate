@@ -167,7 +167,7 @@ export function TradingModuleVaultModal({
               </div>
             </div>
 
-            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
+            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col items-start justify-start gap-3">
               {moduleUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
                   Module unlocked — review the individual lesson details below.

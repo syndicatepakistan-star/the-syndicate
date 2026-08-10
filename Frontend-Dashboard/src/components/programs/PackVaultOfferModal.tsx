@@ -315,7 +315,7 @@ export function PackVaultOfferModal({
               </div>
             </div>
 
-            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col justify-center gap-3">
+            <div className="vault-hero-offer-row__copy flex min-w-0 flex-col items-start justify-start gap-3">
               <button
                 type="button"
                 className={cn(

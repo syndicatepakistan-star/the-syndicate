@@ -93,6 +93,7 @@ export function middleware(request: NextRequest) {
     "support",
     "quickaccess",
     "settings",
+    "admin",
   ]);
 
   // Fix malformed deep links: /dashboard/programs&plan=… → /dashboard/programs?plan=…

@@ -8,6 +8,7 @@ export const DASHBOARD_SECTION_KEYS = [
   "support",
   "quickaccess",
   "settings",
+  "admin",
 ] as const;
 
 export type DashboardSectionKey = (typeof DASHBOARD_SECTION_KEYS)[number];

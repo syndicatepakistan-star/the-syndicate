@@ -22,6 +22,11 @@ from django.urls import include, path
 
 from accounts import views as accounts_views
 from apps.portal import views as portal_views
+from apps.portal.admin_grant_views import (
+    AdminGrantAccessView,
+    AdminGrantCatalogView,
+    AdminGrantLookupView,
+)
 
 from syndicate_backend.admin_forms import EmailAsUsernameAdminLoginForm
 
@@ -64,6 +69,13 @@ urlpatterns = [
     path("api/auth/guarantee/send-otp", portal_views.GuaranteeSendOtpView.as_view(), name="auth-guarantee-send-otp-noslash"),
     path("api/auth/guarantee/verify-otp", portal_views.GuaranteeVerifyOtpView.as_view(), name="auth-guarantee-verify-otp-noslash"),
     path("api/auth/guarantee/apply", portal_views.GuaranteeApplyView.as_view(), name="auth-guarantee-apply-noslash"),
+    # Staff grant-by-email (does not alter Stripe checkout / OTP login).
+    path("api/auth/admin/grants/catalog/", AdminGrantCatalogView.as_view(), name="auth-admin-grants-catalog"),
+    path("api/auth/admin/grants/lookup/", AdminGrantLookupView.as_view(), name="auth-admin-grants-lookup"),
+    path("api/auth/admin/grants/", AdminGrantAccessView.as_view(), name="auth-admin-grants"),
+    path("api/auth/admin/grants/catalog", AdminGrantCatalogView.as_view(), name="auth-admin-grants-catalog-noslash"),
+    path("api/auth/admin/grants/lookup", AdminGrantLookupView.as_view(), name="auth-admin-grants-lookup-noslash"),
+    path("api/auth/admin/grants", AdminGrantAccessView.as_view(), name="auth-admin-grants-noslash"),
     # Accounts OTP auth flow (kept separate from JWT /api/auth/login/ above).
     path("api/auth/otp-login/", accounts_views.login_view, name="auth-otp-login"),
     path("api/auth/verify-login-otp/", accounts_views.verify_login_otp_view, name="auth-verify-login-otp"),

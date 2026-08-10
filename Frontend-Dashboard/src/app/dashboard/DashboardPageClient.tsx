@@ -915,7 +915,9 @@ function SyndicateModeSection() {
 function AdminAccessSection({ themeMode }: { themeMode: ThemeMode }) {
   return (
     <section aria-label="Admin access grants" className="relative w-full min-w-0 flex-1 scroll-mt-2 py-1 md:py-2">
-      <AdminAccessGrantPanel themeMode={themeMode} />
+      <div className="relative z-[1] flex w-full min-w-0 flex-col gap-3">
+        <AdminAccessGrantPanel themeMode={themeMode} />
+      </div>
     </section>
   );
 }

@@ -198,6 +198,8 @@ export function middleware(request: NextRequest) {
     pathname === "/manifest.webmanifest" ||
     pathname === "/quiz" ||
     pathname.startsWith("/quiz/") ||
+    pathname === "/access" ||
+    pathname.startsWith("/access/") ||
     pathname === "/affiliate" ||
     pathname.startsWith("/affiliate/") ||
     pathname === "/affiliate-login" ||

@@ -18,6 +18,11 @@ export default function RedirectWhenAuthed() {
       const identity = await fetchPortalIdentity().catch(() => null);
       if (cancelled) return;
       if (identity) {
+        // Diagnosis share links / quiz gate stay on the auth screen (do not bounce to dashboard).
+        const diagnosisUnlock = (searchParams.get("diagnosis_unlock") || "").trim();
+        const diagnosisGate = (searchParams.get("gate") || "").trim() === "1";
+        if (diagnosisUnlock || diagnosisGate) return;
+
         const plan = (searchParams.get("plan") || "").trim();
         const billing = (searchParams.get("billing") || "monthly").trim();
         const amount = (searchParams.get("amount") || "").trim();

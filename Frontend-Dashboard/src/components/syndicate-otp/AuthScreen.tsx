@@ -13,8 +13,18 @@ import {
 } from "react";
 import LuxuryRedirectOverlay from "@/components/syndicate-otp/LuxuryRedirectOverlay";
 import { AUTH_LOGO_LCP_HREF } from "@/components/syndicate-otp/AuthRouteHead";
+import { DiagnosisQuizRequiredOverlay } from "@/components/diagnosis/DiagnosisQuizRequiredOverlay";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { captureAffiliateAuthLead } from "@/lib/captureAffiliateLead";
+import {
+  clearDiagnosisUnlockIntent,
+  diagnosisUnlockTitle,
+  isDiagnosisUnlockKey,
+  persistDiagnosisUnlockIntent,
+  readDiagnosisUnlockIntent,
+  type DiagnosisUnlockKey,
+  type DiagnosisUnlockResult,
+} from "@/lib/diagnosisUnlock";
 import {
   getApiDisplayHint,
   hasSimpleAuthSessionClient,
@@ -41,6 +51,8 @@ type AuthScreenProps = {
   otpFlow?: OtpFlow;
   postLoginNext?: string;
   selectedTicket?: string;
+  diagnosisUnlock?: string;
+  showDiagnosisGate?: boolean;
 };
 
 type ApiPayload = {
@@ -48,7 +60,7 @@ type ApiPayload = {
   error?: string;
   detail?: string;
   redirect_url?: string;
-  token?: string;
+  token?: string | null;
   signup_token?: string;
   checkout_url?: string;
   session_id?: string;
@@ -57,6 +69,7 @@ type ApiPayload = {
   otp_required?: boolean;
   email?: string;
   code?: string;
+  diagnosis_unlock?: DiagnosisUnlockResult;
   referral_ids?: {
     complete?: string;
     single?: string;
@@ -68,7 +81,7 @@ type ApiPayload = {
     id: number;
     username: string;
     email: string;
-  };
+  } | null;
 };
 
 function apiErrorMessage(data: ApiPayload, fallback: string): string {
@@ -183,6 +196,8 @@ export default function AuthScreen({
   otpFlow = "login",
   postLoginNext = "",
   selectedTicket = "",
+  diagnosisUnlock = "",
+  showDiagnosisGate = false,
 }: AuthScreenProps) {
   const router = useRouter();
   const [email, setEmail] = useState(prefilledEmail);
@@ -195,9 +210,34 @@ export default function AuthScreen({
   const [luxuryOpen, setLuxuryOpen] = useState(false);
   const [luxuryHref, setLuxuryHref] = useState(DASHBOARD_FALLBACK);
   const [resendBusy, setResendBusy] = useState(false);
+  const [diagnosisGate, setDiagnosisGate] = useState<DiagnosisUnlockResult | null>(null);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const redirectPendingRef = useRef(false);
   const autoSendStartedRef = useRef(false);
+
+  const resolvedDiagnosisUnlock: DiagnosisUnlockKey | null = useMemo(() => {
+    if (isDiagnosisUnlockKey(diagnosisUnlock)) return diagnosisUnlock;
+    if (typeof window === "undefined") return null;
+    return readDiagnosisUnlockIntent();
+  }, [diagnosisUnlock]);
+
+  useEffect(() => {
+    if (resolvedDiagnosisUnlock) persistDiagnosisUnlockIntent(resolvedDiagnosisUnlock);
+  }, [resolvedDiagnosisUnlock]);
+
+  useEffect(() => {
+    if (!showDiagnosisGate || !resolvedDiagnosisUnlock) return;
+    setDiagnosisGate({
+      status: "quiz_required",
+      program_key: resolvedDiagnosisUnlock,
+      program_title:
+        resolvedDiagnosisUnlock === "mastering-risk-and-uncertainty"
+          ? "Mastering Risk and Uncertainty"
+          : "The Secret To Transformation",
+      quiz_url: "/quiz",
+      detail: "To access this course you must attempt the Syndicate Diagnosis Quiz.",
+    });
+  }, [showDiagnosisGate, resolvedDiagnosisUnlock]);
 
   const isSignup = mode === "signup";
   const isOtp = mode === "otp";
@@ -228,7 +268,8 @@ export default function AuthScreen({
       !normalizedAmount &&
       !normalizedPostLoginNext &&
       !normalizedTicket &&
-      !prefilledPlaylistId.trim()
+      !prefilledPlaylistId.trim() &&
+      !resolvedDiagnosisUnlock
     ) {
       return baseHref;
     }
@@ -239,6 +280,7 @@ export default function AuthScreen({
     if (normalizedPostLoginNext) params.set("next", normalizedPostLoginNext);
     if (normalizedTicket) params.set("ticket", normalizedTicket);
     if (prefilledPlaylistId.trim()) params.set("playlist_id", prefilledPlaylistId.trim());
+    if (resolvedDiagnosisUnlock) params.set("diagnosis_unlock", resolvedDiagnosisUnlock);
     return `${baseHref}${baseHref.includes("?") ? "&" : "?"}${params.toString()}`;
   };
 
@@ -252,7 +294,7 @@ export default function AuthScreen({
     : isOtp
           ? isSignupOtp
             ? syndicateOtpSignupHref(email.trim())
-            : syndicateOtpLoginHref(email.trim(), normalizedPostLoginNext)
+            : syndicateOtpLoginHref(email.trim(), normalizedPostLoginNext, resolvedDiagnosisUnlock || "")
       : syndicateOtpSignupHref(email.trim());
   const switchHref = appendOfferParams(switchHrefBase);
   const switchText = isSignup
@@ -265,10 +307,19 @@ export default function AuthScreen({
 
   const requestBody = useMemo(() => {
     if (isOtp) {
-      return { email: email.trim(), otp: otpValue, ticket: normalizedTicket || undefined };
+      return {
+        email: email.trim(),
+        otp: otpValue,
+        ticket: normalizedTicket || undefined,
+        diagnosis_unlock: resolvedDiagnosisUnlock || undefined,
+      };
     }
-    return { email: email.trim(), ticket: normalizedTicket || undefined };
-  }, [email, isOtp, otpValue, normalizedTicket]);
+    return {
+      email: email.trim(),
+      ticket: normalizedTicket || undefined,
+      diagnosis_unlock: resolvedDiagnosisUnlock || undefined,
+    };
+  }, [email, isOtp, otpValue, normalizedTicket, resolvedDiagnosisUnlock]);
 
   useEffect(() => {
     const el = document.getElementById("syndicate-otp-mount");
@@ -284,14 +335,16 @@ export default function AuthScreen({
   const authLeadLabel = isSignup || isSignupOtp ? "Sign up lead" : "Login lead";
 
   // Already signed in (e.g. OTP consumed then HMR remount) — skip stale verify screen.
+  // Diagnosis unlock intents claim via /access or stay on verify for OTP; do not bounce away.
   useEffect(() => {
     if (!isOtp || typeof window === "undefined") return;
     if (!hasSimpleAuthSessionClient()) return;
+    if (resolvedDiagnosisUnlock) return;
     const next =
       normalizedPostLoginNext ||
       resolvePostOtpAppRedirect(process.env.NEXT_PUBLIC_POST_LOGIN_REDIRECT_URL);
     window.location.replace(next);
-  }, [isOtp, normalizedPostLoginNext]);
+  }, [isOtp, normalizedPostLoginNext, resolvedDiagnosisUnlock]);
 
   // Capture lead when OTP page opens with a known email (user may back out before verifying).
   useEffect(() => {
@@ -323,7 +376,10 @@ export default function AuthScreen({
       setError("");
       setMessage("Sending your code…");
       try {
-        const { response, data } = await postJson("/api/auth/otp-login/", { email: emailNorm });
+        const { response, data } = await postJson("/api/auth/otp-login/", {
+          email: emailNorm,
+          diagnosis_unlock: resolvedDiagnosisUnlock || undefined,
+        });
         if (isSignupRequiredResponse(response, data)) {
           showLoginSignupRequiredError(
             router,
@@ -870,6 +926,23 @@ export default function AuthScreen({
         clearOtpPendingEmail();
         setMessage(data.message || "Welcome back.");
         setOtpDigits(Array.from({ length: 6 }, () => ""));
+
+        const diagnosisResult = data.diagnosis_unlock;
+        if (diagnosisResult?.status === "quiz_required") {
+          clearDiagnosisUnlockIntent();
+          const tGate = typeof data.token === "string" ? data.token.trim() : "";
+          if (tGate && data.user) {
+            const loginEmail = (data.user?.email || email.trim()).trim();
+            persistSimpleAuthSession(tGate, {
+              email: loginEmail,
+              userId: data.user?.id,
+            });
+          }
+          redirectPendingRef.current = false;
+          setDiagnosisGate(diagnosisResult);
+          return;
+        }
+
         const t = typeof data.token === "string" ? data.token.trim() : "";
         if (t) {
           const loginEmail = (data.user?.email || email.trim()).trim();
@@ -894,6 +967,23 @@ export default function AuthScreen({
               : undefined,
           );
         }
+
+        if (diagnosisResult?.status === "unlocked") {
+          clearDiagnosisUnlockIntent();
+          const unlockPath =
+            (typeof diagnosisResult.redirect_path === "string" && diagnosisResult.redirect_path.trim()) ||
+            (typeof data.redirect_url === "string" && data.redirect_url.trim()) ||
+            "/dashboard/programs";
+          const unlockHref = unlockPath.startsWith("http")
+            ? unlockPath
+            : `${typeof window !== "undefined" ? window.location.origin : ""}${
+                unlockPath.startsWith("/") ? unlockPath : `/${unlockPath}`
+              }`;
+          setLuxuryHref(unlockHref);
+          setLuxuryOpen(true);
+          return;
+        }
+
         const nextUrl = normalizedPostLoginNext
           ? normalizedPostLoginNext.startsWith("/")
             ? `${typeof window !== "undefined" ? window.location.origin : ""}${normalizedPostLoginNext}`
@@ -1126,6 +1216,13 @@ export default function AuthScreen({
                 No password — we email you a one-time code after we recognise your address.
               </p>
             ) : null}
+            {resolvedDiagnosisUnlock && !isSignup ? (
+              <p className="form-hint">
+                Diagnosis access for{" "}
+                <strong>{diagnosisUnlockTitle(resolvedDiagnosisUnlock)}</strong>. Use the email from
+                Syn Diagnosis, then verify OTP.
+              </p>
+            ) : null}
             {isSignup && !isOtp ? (
               <p className="form-hint">
                 Enter your email to continue directly to secure checkout.
@@ -1171,6 +1268,16 @@ export default function AuthScreen({
         <polygon points="12,4 20,12 12,20 4,12" fill="none" stroke="#9c7c1c" strokeWidth="1" />
         <polygon points="12,7 17,12 12,17 7,12" fill="#d4af3780" stroke="none" />
       </svg>
+
+      {diagnosisGate ? (
+        <DiagnosisQuizRequiredOverlay
+          result={diagnosisGate}
+          onClose={() => {
+            clearDiagnosisUnlockIntent();
+            setDiagnosisGate(null);
+          }}
+        />
+      ) : null}
     </>
   );
 }

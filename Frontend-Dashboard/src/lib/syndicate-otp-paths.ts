@@ -7,10 +7,11 @@ export function syndicateOtpUiBase(): string {
   return (process.env.NEXT_PUBLIC_SYNDICATE_OTP_UI_BASE || "").replace(/\/$/, "");
 }
 
-export function syndicateOtpLoginHref(prefillEmail = "", next = ""): string {
+export function syndicateOtpLoginHref(prefillEmail = "", next = "", diagnosisUnlock = ""): string {
   const params = new URLSearchParams();
   if (prefillEmail) params.set("email", prefillEmail);
   if (next) params.set("next", next);
+  if (diagnosisUnlock) params.set("diagnosis_unlock", diagnosisUnlock);
   const q = params.toString();
   return q ? `/login?${q}` : "/login";
 }
@@ -20,12 +21,18 @@ export function syndicateOtpSignupHref(prefillEmail = ""): string {
   return prefillEmail ? `${b}/signup?email=${encodeURIComponent(prefillEmail)}` : `${b}/signup`;
 }
 
-export function syndicateOtpVerifyHref(email: string, flow: "login" | "signup", next = ""): string {
+export function syndicateOtpVerifyHref(
+  email: string,
+  flow: "login" | "signup",
+  next = "",
+  diagnosisUnlock = "",
+): string {
   const b = syndicateOtpUiBase();
   const params = new URLSearchParams();
   params.set("email", email);
   params.set("flow", flow);
   if (next) params.set("next", next);
+  if (diagnosisUnlock) params.set("diagnosis_unlock", diagnosisUnlock);
   return `${b}/verify-otp?${params.toString()}`;
 }
 

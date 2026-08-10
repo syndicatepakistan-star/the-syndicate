@@ -11,6 +11,8 @@ type PageProps = {
     amount?: string;
     next?: string;
     ticket?: string;
+    diagnosis_unlock?: string;
+    gate?: string;
   }>;
 };
 
@@ -23,6 +25,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const selectedAmount = typeof params.amount === "string" ? params.amount : "";
   const postLoginNext = typeof params.next === "string" ? params.next : "";
   const selectedTicket = typeof params.ticket === "string" ? params.ticket : "";
+  const diagnosisUnlock = typeof params.diagnosis_unlock === "string" ? params.diagnosis_unlock : "";
+  const showDiagnosisGate = params.gate === "1";
   return (
     <div id="syndicate-otp-mount" className="min-h-dvh">
       <MobileAuthBackToHome />
@@ -36,6 +40,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
         selectedAmount={selectedAmount}
         postLoginNext={postLoginNext}
         selectedTicket={selectedTicket}
+        diagnosisUnlock={diagnosisUnlock}
+        showDiagnosisGate={showDiagnosisGate}
       />
     </div>
   );

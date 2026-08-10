@@ -1952,14 +1952,19 @@ def login_view(request):
   except ValidationError:
     return _json_error("Enter a valid email address.")
 
-  if _canonical_user_for_email(email) is None and _quiz_result_for_email(email) is None:
-    return JsonResponse(
-      {
-        "error": "No account found for this email. Please sign up first.",
-        "code": "SIGNUP_REQUIRED",
-      },
-      status=404,
-    )
+  from accounts.diagnosis_program_unlock import normalize_diagnosis_unlock_key
+
+  diagnosis_key = normalize_diagnosis_unlock_key(str(payload.get("diagnosis_unlock", "") or ""))
+  # Diagnosis access URLs: allow OTP for any valid email; unlock gate runs after OTP verify.
+  if diagnosis_key is None:
+    if _canonical_user_for_email(email) is None and _quiz_result_for_email(email) is None:
+      return JsonResponse(
+        {
+          "error": "No account found for this email. Please sign up first.",
+          "code": "SIGNUP_REQUIRED",
+        },
+        status=404,
+      )
 
   login_err = _create_and_email_login_otp(email)
   if login_err is not None:
@@ -1970,6 +1975,7 @@ def login_view(request):
       "message": "Login OTP sent to your email.",
       "email": email,
       "otp_required": True,
+      "diagnosis_unlock": diagnosis_key,
     },
   )
 
@@ -1990,9 +1996,16 @@ def verify_login_otp_view(request):
   if len(otp) != 6 or not otp.isdigit():
     return _json_error("OTP must be a 6-digit code.")
 
+  from accounts.diagnosis_program_unlock import (
+    claim_diagnosis_program_unlock,
+    normalize_diagnosis_unlock_key,
+  )
+
+  diagnosis_key = normalize_diagnosis_unlock_key(str(payload.get("diagnosis_unlock", "") or ""))
+
   user = _canonical_user_for_email(email)
   quiz_result = _quiz_result_for_email(email)
-  if user is None and quiz_result is None:
+  if user is None and quiz_result is None and diagnosis_key is None:
     return _json_error("Invalid email.", status=401)
 
   try:
@@ -2008,24 +2021,106 @@ def verify_login_otp_view(request):
     return _json_error("Invalid OTP code.", status=400)
 
   login_otp.delete()
-  if quiz_result is not None:
+
+  diagnosis_payload = None
+  if diagnosis_key is not None:
+    diagnosis_payload = claim_diagnosis_program_unlock(email, diagnosis_key)
+    if diagnosis_payload.get("status") == "unlocked":
+      user = User.objects.filter(pk=diagnosis_payload["user_id"]).first() or _canonical_user_for_email(email)
+    elif diagnosis_payload.get("status") == "quiz_required":
+      # Diagnosis email missing: never unlock this program. Show gate overlay on the client.
+      # Do not create a portal account; if one already exists, still return a session token.
+      if user is None and quiz_result is None:
+        return JsonResponse(
+          {
+            "message": diagnosis_payload.get("detail") or "Syndicate Diagnosis required.",
+            "diagnosis_unlock": diagnosis_payload,
+            "token": None,
+            "user": None,
+          },
+          status=200,
+        )
+      # Existing member: complete OTP login below, but client must show quiz gate (no playlist open).
+    elif diagnosis_payload.get("status") in ("invalid_program", "playlist_missing"):
+      return _json_error(str(diagnosis_payload.get("detail") or "Unlock failed."), status=400)
+
+  if quiz_result is not None and (diagnosis_payload is None or diagnosis_payload.get("status") != "unlocked"):
     # Always sync quiz-ticket entitlements for this email on successful OTP login.
     # This also covers existing non-ticket accounts so the promised free-ticket
     # playlists/courses unlock correctly in `/programs`.
     user = _ensure_quiz_ticket_user_and_enrollment(email, selected_ticket_title=selected_ticket_title)
   elif user is None:
     return _json_error("Invalid email.", status=401)
+
   auth_token, _ = Token.objects.get_or_create(user=user)
   af_profile = ensure_affiliate_profile_for_existing_user(user)
+  redirect_url = getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/")
+  if diagnosis_payload and diagnosis_payload.get("status") == "unlocked":
+    redirect_url = diagnosis_payload.get("redirect_path") or f"/dashboard/programs?playlist={diagnosis_payload.get('playlist_id')}"
+
+  body = {
+    "message": "Login verified successfully.",
+    "token": auth_token.key,
+    "redirect_url": redirect_url,
+    "user": {"id": user.id, "username": user.username, "email": user.email},
+    "referral_ids": referral_ids_payload(af_profile),
+  }
+  if diagnosis_payload is not None:
+    body["diagnosis_unlock"] = diagnosis_payload
+  return JsonResponse(body, status=200)
+
+
+@csrf_exempt
+@require_POST
+def claim_diagnosis_unlock_view(request):
+  """
+  Already-authenticated (or email+token body) claim for diagnosis program unlock URLs.
+  Body: { diagnosis_unlock, email? } — email defaults to authenticated user.
+  """
+  payload = _read_payload(request)
+  if payload is None:
+    return _json_error("Invalid JSON payload.")
+
+  from accounts.diagnosis_program_unlock import claim_diagnosis_program_unlock, normalize_diagnosis_unlock_key
+
+  diagnosis_key = normalize_diagnosis_unlock_key(str(payload.get("diagnosis_unlock", "") or ""))
+  if not diagnosis_key:
+    return _json_error("diagnosis_unlock is required.", status=400)
+
+  auth_user = _authenticate_checkout_user(request)
+  email = str(payload.get("email", "") or "").strip().lower()
+  if auth_user is not None:
+    email = (auth_user.email or auth_user.username or email or "").strip().lower()
+  if not email:
+    return _json_error("Email is required.", status=400)
+
+  result = claim_diagnosis_program_unlock(email, diagnosis_key)
+  status_code = 200
+  if result.get("status") == "invalid_program":
+    status_code = 400
+  elif result.get("status") == "playlist_missing":
+    status_code = 404
+
+  token_key = None
+  user_payload = None
+  if result.get("status") == "unlocked" and result.get("user_id"):
+    try:
+      user = User.objects.get(pk=int(result["user_id"]))
+    except (User.DoesNotExist, TypeError, ValueError):
+      user = None
+    if user is not None:
+      auth_token, _ = Token.objects.get_or_create(user=user)
+      token_key = auth_token.key
+      user_payload = {"id": user.id, "username": user.username, "email": user.email}
+
   return JsonResponse(
     {
-      "message": "Login verified successfully.",
-      "token": auth_token.key,
-      "redirect_url": getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/"),
-      "user": {"id": user.id, "username": user.username, "email": user.email},
-      "referral_ids": referral_ids_payload(af_profile),
+      "diagnosis_unlock": result,
+      "token": token_key,
+      "user": user_payload,
+      "redirect_url": result.get("redirect_path"),
     },
-    status=200,
+    status=status_code,
   )
 
 

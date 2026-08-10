@@ -10,6 +10,7 @@ type PageProps = {
     amount?: string;
     next?: string;
     ticket?: string;
+    diagnosis_unlock?: string;
   }>;
 };
 
@@ -23,6 +24,7 @@ export default async function VerifyOtpPage({ searchParams }: PageProps) {
   const selectedAmount = typeof params.amount === "string" ? params.amount : "";
   const postLoginNext = typeof params.next === "string" ? params.next : "";
   const selectedTicket = typeof params.ticket === "string" ? params.ticket : "";
+  const diagnosisUnlock = typeof params.diagnosis_unlock === "string" ? params.diagnosis_unlock : "";
   return (
     <div id="syndicate-otp-mount" className="min-h-dvh">
       <AuthScreen
@@ -35,6 +37,7 @@ export default async function VerifyOtpPage({ searchParams }: PageProps) {
         selectedAmount={selectedAmount}
         postLoginNext={postLoginNext}
         selectedTicket={selectedTicket}
+        diagnosisUnlock={diagnosisUnlock}
       />
     </div>
   );

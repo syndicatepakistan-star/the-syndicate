@@ -2788,3 +2788,26 @@ html body .public-page-shell h2.guarantee-page-title {
   }
 }
 
+/* Privacy & Policy overlay — readable scroll bar */
+.syndicate-policy-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(251, 191, 36, 0.55) rgba(255, 255, 255, 0.06);
+}
+.syndicate-policy-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.syndicate-policy-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 1px solid rgba(251, 191, 36, 0.15);
+}
+.syndicate-policy-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.7), rgba(251, 191, 36, 0.35));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.syndicate-policy-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 0.5));
+  background-clip: padding-box;
+}
+

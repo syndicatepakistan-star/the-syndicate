@@ -174,91 +174,117 @@ export function CookieConsentBanner() {
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-[500] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2",
-        "sm:px-5 sm:pb-[max(1rem,env(safe-area-inset-bottom))]",
+        "fixed inset-x-0 bottom-0 z-[500]",
+        "px-0 pb-[max(0px,env(safe-area-inset-bottom))] pt-0",
       )}
       role="dialog"
       aria-label="Privacy and cookie preferences"
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-3xl flex-col gap-3 rounded-xl border border-amber-300/40",
-          "bg-[linear-gradient(180deg,rgba(8,10,16,0.97),rgba(2,4,10,0.98))] p-4 shadow-[0_0_28px_rgba(251,191,36,0.18)]",
-          "sm:flex-row sm:items-start sm:gap-4 sm:p-5",
-          showDetails && "max-h-[min(78dvh,640px)]",
+          "flex w-full max-w-none flex-col border-t border-amber-300/45",
+          "bg-[linear-gradient(180deg,rgba(8,10,16,0.98),rgba(2,4,10,0.99))]",
+          "shadow-[0_-12px_40px_rgba(0,0,0,0.55),0_-2px_24px_rgba(251,191,36,0.12)]",
+          showDetails ? "max-h-[min(85dvh,720px)]" : "max-h-[min(42dvh,280px)]",
         )}
       >
-        <div className="min-w-0 flex-1 text-left">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-amber-200/90">
-            Privacy &amp; Policy
-          </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-200/90 sm:text-[14px]">
-            We use essential cookies to run The Syndicate and optional analytics cookies to improve
-            the site. Privacy, terms, subscriptions, refunds, and cookies are covered here.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowDetails((v) => !v)}
-            className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300 underline-offset-2 transition hover:text-cyan-100 hover:underline"
-            aria-expanded={showDetails}
-          >
-            {showDetails ? "Hide policies" : "Read policies"}
-          </button>
-          {showDetails ? (
-            <div className="mt-2 max-h-[min(42dvh,360px)] space-y-3 overflow-y-auto border-t border-white/10 pt-2 pr-1">
-              {POLICY_BLOCKS.map((block) => (
-                <div key={block.title}>
-                  <p className="font-mono text-[11px] font-black uppercase tracking-[0.12em] text-amber-100/95">
-                    {block.title}
-                  </p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-zinc-300/90 sm:text-[13px]">
-                    {block.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch">
-          {!alreadyChose || !openedFromHash ? (
-            <>
-              <button
-                type="button"
-                onClick={() => choose("accepted")}
-                className={cn(
-                  "inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-amber-300/70",
-                  "bg-amber-400/15 px-4 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-amber-100",
-                  "transition hover:bg-amber-400/25 sm:flex-none",
-                )}
-              >
-                Accept all
-              </button>
-              <button
-                type="button"
-                onClick={() => choose("essential")}
-                className={cn(
-                  "inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-white/20",
-                  "bg-black/50 px-4 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-200",
-                  "transition hover:border-white/35 hover:text-white sm:flex-none",
-                )}
-              >
-                Essential only
-              </button>
-            </>
-          ) : (
+        {/* Top bar — title + actions */}
+        <div
+          className={cn(
+            "flex shrink-0 flex-col gap-3 border-b border-amber-300/25",
+            "px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-4",
+          )}
+        >
+          <div className="min-w-0 flex-1 text-left">
+            <p className="font-mono text-[12px] font-black uppercase tracking-[0.2em] text-amber-200 sm:text-[13px]">
+              Privacy &amp; Policy
+            </p>
+            <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-zinc-200/92 sm:text-[14px]">
+              We use essential cookies to run The Syndicate and optional analytics cookies to improve
+              the site. Privacy, terms, subscriptions, refunds, and cookies are covered here.
+            </p>
             <button
               type="button"
-              onClick={dismissPolicyOnly}
-              className={cn(
-                "inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-amber-300/70",
-                "bg-amber-400/15 px-4 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-amber-100",
-                "transition hover:bg-amber-400/25 sm:flex-none",
-              )}
+              onClick={() => setShowDetails((v) => !v)}
+              className="mt-2.5 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-cyan-300 underline-offset-2 transition hover:text-cyan-100 hover:underline sm:text-[12px]"
+              aria-expanded={showDetails}
             >
-              Close
+              {showDetails ? "Hide policies" : "Read policies"}
             </button>
-          )}
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch sm:min-w-[11.5rem]">
+            {!alreadyChose || !openedFromHash ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => choose("accepted")}
+                  className={cn(
+                    "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-amber-300/75",
+                    "bg-amber-400/18 px-4 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-amber-50",
+                    "transition hover:bg-amber-400/28 sm:flex-none",
+                  )}
+                >
+                  Accept all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => choose("essential")}
+                  className={cn(
+                    "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-white/25",
+                    "bg-black/55 px-4 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-100",
+                    "transition hover:border-white/40 hover:text-white sm:flex-none",
+                  )}
+                >
+                  Essential only
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={dismissPolicyOnly}
+                className={cn(
+                  "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-amber-300/75",
+                  "bg-amber-400/18 px-4 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-amber-50",
+                  "transition hover:bg-amber-400/28 sm:flex-none",
+                )}
+              >
+                Close
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Scrollable policy body */}
+        {showDetails ? (
+          <div
+            className={cn(
+              "syndicate-policy-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain",
+              "px-4 py-4 sm:px-6 sm:py-5",
+            )}
+          >
+            <div className="mx-auto grid w-full max-w-none gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {POLICY_BLOCKS.map((block) => (
+                <article
+                  key={block.title}
+                  className="rounded-lg border border-white/12 bg-black/35 px-3.5 py-3.5 sm:px-4 sm:py-4"
+                >
+                  <div className="mb-2 flex items-center gap-2 border-b border-amber-300/30 pb-2">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.65)]"
+                      aria-hidden
+                    />
+                    <h3 className="font-mono text-[12px] font-black uppercase tracking-[0.12em] text-amber-100 sm:text-[13px]">
+                      {block.title}
+                    </h3>
+                  </div>
+                  <p className="text-[13px] font-medium leading-relaxed text-zinc-200/95 sm:text-[14px]">
+                    {block.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

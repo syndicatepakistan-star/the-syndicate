@@ -201,9 +201,12 @@ def load_unlocked_items_for_session(session_id: str, session_meta: dict) -> list
             }
         ]
     if plan:
+        title = vault_course_product_title(plan) or plan.replace("_", " ").title()
+        if plan == "bundle":
+            title = "Money Mastery Bundle"
         return [
             {
-                "title": vault_course_product_title(plan) or plan.replace("_", " ").title(),
+                "title": title,
                 "image": "",
                 "amount": "",
                 "plan": plan,

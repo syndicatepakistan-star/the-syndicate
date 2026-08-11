@@ -407,7 +407,7 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     billingLabel: "/lifetime",
     checkoutAmount: formatTempAwareAmount("bundle", 333),
     billing: "monthly",
-    openLabel: "Unlock Full Pack",
+    openLabel: "Unlock",
     accent: "amber",
     detailTitle: "MONEY MASTERY",
     detailDescription: MONEY_MASTERY_FOUNDATION_COPY,

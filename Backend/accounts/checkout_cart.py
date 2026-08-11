@@ -11,10 +11,11 @@ from accounts.checkout_ownership import user_owns_checkout_selection
 from accounts.vault_plan_catalog import is_vault_course_plan_slug, vault_course_product_title
 from apps.video_streaming.models import StreamPlaylist
 
-_CART_BLOCKED_ROOT_PLANS = frozenset({"bundle", "king", "knight", "pawn"})
+_CART_BLOCKED_ROOT_PLANS = frozenset({"king", "knight", "pawn"})
 _KNIGHT_PLANS = frozenset({"king", "knight"})
 _RECORDABLE_ROOT_PLANS = frozenset(
     {
+        "bundle",
         "agentic_ai",
         "ai_content_automation",
         "trading_technical_analysis",
@@ -29,6 +30,7 @@ _RECORDABLE_ROOT_PLANS = frozenset(
 _KNIGHT_CHECKOUT_BLOCKED = True
 
 _PLAN_PRODUCT_TITLES = {
+    "bundle": "Money Mastery — lifetime bundle",
     "agentic_ai": "Agentic AI — lifetime access",
     "ai_content_automation": "AI Content Automation — lifetime access",
     "trading_technical_analysis": "Trading Advanced Technical Analysis — lifetime access",

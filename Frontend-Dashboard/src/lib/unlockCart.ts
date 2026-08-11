@@ -65,7 +65,9 @@ function isTradingSubmoduleSlugLocal(value: string): boolean {
 
 export function isUnlockCartEligible(offer: Pick<PlanOfferDef, "plan">): boolean {
   const plan = String(offer.plan).trim();
-  if (!plan || plan === "bundle" || isKnightPlanSlug(plan)) return false;
+  if (!plan || isKnightPlanSlug(plan)) return false;
+  // Money Mastery uses the same unlock-bucket → checkout path as vault modules.
+  if (plan === "bundle") return true;
   if (isTradingSubmoduleSlugLocal(plan)) return false;
   if (isVaultPackSlug(plan)) return true;
   if (isVaultCourseSlugLocal(plan)) return true;

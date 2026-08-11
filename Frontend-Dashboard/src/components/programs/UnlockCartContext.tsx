@@ -196,12 +196,16 @@ export function UnlockCartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (offer: PlanOfferDef) => {
-      const key = cartItemKey(offerToCartItem(offer));
+      const next = offerToCartItem(offer);
+      const key = cartItemKey(next);
       let added = false;
       setItems((prev) => {
         if (cartContainsKey(prev, key)) return prev;
         added = true;
-        return [...prev, offerToCartItem(offer)];
+        // Money Mastery unlocks the full library — keep cart to this item only.
+        if (offer.plan === "bundle") return [next];
+        const withoutBundle = prev.filter((item) => !(item.kind === "plan" && item.plan === "bundle"));
+        return [...withoutBundle, next];
       });
       if (added) pulseBucket();
       return added;

@@ -306,8 +306,15 @@ export default function CheckoutSuccessScreen({
                 }))
               : [
                   {
-                    item_id: typeof data.selected_plan === "string" ? data.selected_plan : "purchase",
-                    item_name: "Syndicate purchase",
+                    item_id:
+                      typeof data.selected_plan === "string" && data.selected_plan.trim()
+                        ? data.selected_plan.trim().toLowerCase()
+                        : "purchase",
+                    item_name:
+                      typeof data.selected_plan === "string" &&
+                      data.selected_plan.trim().toLowerCase() === "bundle"
+                        ? "Money Mastery Bundle"
+                        : "Syndicate purchase",
                     price: toNumber(data.amount_paid) ?? undefined,
                     quantity: 1,
                   },

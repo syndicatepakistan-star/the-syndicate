@@ -17,9 +17,13 @@ import { DiagnosisQuizRequiredOverlay } from "@/components/diagnosis/DiagnosisQu
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { captureAffiliateAuthLead } from "@/lib/captureAffiliateLead";
 import {
+  clearDiagnosisGate,
   clearDiagnosisUnlockIntent,
+  diagnosisDashboardGateHref,
+  diagnosisQuizRequiredResult,
   diagnosisUnlockTitle,
   isDiagnosisUnlockKey,
+  persistDiagnosisGate,
   persistDiagnosisUnlockIntent,
   readDiagnosisUnlockIntent,
   type DiagnosisUnlockKey,
@@ -227,16 +231,7 @@ export default function AuthScreen({
 
   useEffect(() => {
     if (!showDiagnosisGate || !resolvedDiagnosisUnlock) return;
-    setDiagnosisGate({
-      status: "quiz_required",
-      program_key: resolvedDiagnosisUnlock,
-      program_title:
-        resolvedDiagnosisUnlock === "mastering-risk-and-uncertainty"
-          ? "Mastering Risk and Uncertainty"
-          : "The Secret To Transformation",
-      quiz_url: "/quiz",
-      detail: "To access this course you must attempt the Syndicate Diagnosis Quiz.",
-    });
+    setDiagnosisGate(diagnosisQuizRequiredResult(resolvedDiagnosisUnlock));
   }, [showDiagnosisGate, resolvedDiagnosisUnlock]);
 
   const isSignup = mode === "signup";
@@ -924,12 +919,13 @@ export default function AuthScreen({
         }
         redirectPendingRef.current = true;
         clearOtpPendingEmail();
-        setMessage(data.message || "Welcome back.");
         setOtpDigits(Array.from({ length: 6 }, () => ""));
 
         const diagnosisResult = data.diagnosis_unlock;
         if (diagnosisResult?.status === "quiz_required") {
-          clearDiagnosisUnlockIntent();
+          const gateKey = isDiagnosisUnlockKey(diagnosisResult.program_key)
+            ? diagnosisResult.program_key
+            : resolvedDiagnosisUnlock;
           const tGate = typeof data.token === "string" ? data.token.trim() : "";
           if (tGate && data.user) {
             const loginEmail = (data.user?.email || email.trim()).trim();
@@ -938,10 +934,24 @@ export default function AuthScreen({
               userId: data.user?.id,
             });
           }
-          redirectPendingRef.current = false;
-          setDiagnosisGate(diagnosisResult);
+          if (gateKey) {
+            persistDiagnosisGate(gateKey);
+          }
+          const gateHref =
+            (typeof diagnosisResult.redirect_path === "string" &&
+              diagnosisResult.redirect_path.trim()) ||
+            (typeof data.redirect_url === "string" && data.redirect_url.trim()) ||
+            (gateKey ? diagnosisDashboardGateHref(gateKey) : "/dashboard/programs");
+          // Land on dashboard with a stable overlay — do not flash messages on /login.
+          window.location.replace(
+            gateHref.startsWith("http")
+              ? gateHref
+              : `${window.location.origin}${gateHref.startsWith("/") ? gateHref : `/${gateHref}`}`,
+          );
           return;
         }
+
+        setMessage(data.message || "Welcome back.");
 
         const t = typeof data.token === "string" ? data.token.trim() : "";
         if (t) {
@@ -970,6 +980,7 @@ export default function AuthScreen({
 
         if (diagnosisResult?.status === "unlocked") {
           clearDiagnosisUnlockIntent();
+          clearDiagnosisGate();
           const unlockPath =
             (typeof diagnosisResult.redirect_path === "string" && diagnosisResult.redirect_path.trim()) ||
             (typeof data.redirect_url === "string" && data.redirect_url.trim()) ||
@@ -1274,7 +1285,9 @@ export default function AuthScreen({
           result={diagnosisGate}
           onClose={() => {
             clearDiagnosisUnlockIntent();
+            clearDiagnosisGate();
             setDiagnosisGate(null);
+            window.location.assign("/dashboard/programs");
           }}
         />
       ) : null}

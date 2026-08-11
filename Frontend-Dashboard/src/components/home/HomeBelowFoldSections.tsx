@@ -25,6 +25,10 @@ const FAQSection = dynamic(() => import("@/components/FAQSection"), {
   ssr: false,
   loading: () => <HomeSectionPlaceholder minHeight="60dvh" titleWidth="10rem" />,
 });
+const PolicySection = dynamic(() => import("@/components/PolicySection"), {
+  ssr: false,
+  loading: () => <HomeSectionPlaceholder minHeight="50dvh" titleWidth="12rem" />,
+});
 const GlobalBottomSections = dynamic(() => import("@/components/GlobalBottomSections"), {
   ssr: false,
   loading: () => <HomeSectionPlaceholder minHeight="100dvh" titleWidth="12rem" />,
@@ -92,9 +96,24 @@ export function HomeFaqSection() {
       minHeight="60dvh"
       rootMargin="160px 0px"
       eagerOnHash="faq"
+      scrollToId="faq"
       placeholder={<HomeSectionPlaceholder minHeight="60dvh" titleWidth="10rem" />}
     >
       <FAQSection />
+    </LazyWhenVisible>
+  );
+}
+
+export function HomePolicySection() {
+  return (
+    <LazyWhenVisible
+      minHeight="50dvh"
+      rootMargin="160px 0px"
+      eagerOnHash={["policy", "privacy", "cookies", "cookie"]}
+      scrollToId="policy"
+      placeholder={<HomeSectionPlaceholder minHeight="50dvh" titleWidth="12rem" />}
+    >
+      <PolicySection />
     </LazyWhenVisible>
   );
 }

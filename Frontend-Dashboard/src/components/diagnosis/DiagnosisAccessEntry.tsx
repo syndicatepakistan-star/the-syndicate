@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation";
 import { DiagnosisQuizRequiredOverlay } from "@/components/diagnosis/DiagnosisQuizRequiredOverlay";
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import {
+  clearDiagnosisGate,
   clearDiagnosisUnlockIntent,
+  diagnosisDashboardGateHref,
   diagnosisLoginHref,
   diagnosisUnlockTitle,
+  persistDiagnosisGate,
   persistDiagnosisUnlockIntent,
   type DiagnosisUnlockKey,
   type DiagnosisUnlockResult,
@@ -19,7 +22,7 @@ type Props = { programKey: DiagnosisUnlockKey };
 
 /**
  * Unique share URL entry: stash intent and send the user through OTP login.
- * If already signed in, claim unlock immediately (or show diagnosis quiz gate).
+ * If already signed in, claim unlock immediately (or land on dashboard with diagnosis gate).
  */
 export function DiagnosisAccessEntry({ programKey }: Props) {
   const router = useRouter();
@@ -47,6 +50,7 @@ export function DiagnosisAccessEntry({ programKey }: Props) {
         const unlock = data?.diagnosis_unlock;
         if (ok && unlock?.status === "unlocked" && unlock.redirect_path) {
           clearDiagnosisUnlockIntent();
+          clearDiagnosisGate();
           if (data.token && data.user) {
             persistSimpleAuthSession(data.token, {
               email: data.user.email || data.user.username || "",
@@ -57,8 +61,11 @@ export function DiagnosisAccessEntry({ programKey }: Props) {
           return;
         }
         if (unlock?.status === "quiz_required") {
-          setGate(unlock);
-          setStatus("");
+          persistDiagnosisGate(programKey);
+          const href =
+            (typeof unlock.redirect_path === "string" && unlock.redirect_path.trim()) ||
+            diagnosisDashboardGateHref(programKey);
+          window.location.replace(href);
           return;
         }
         if (unlock?.status === "playlist_missing" || unlock?.status === "invalid_program") {
@@ -81,7 +88,8 @@ export function DiagnosisAccessEntry({ programKey }: Props) {
           result={gate}
           onClose={() => {
             clearDiagnosisUnlockIntent();
-            router.replace("/login");
+            clearDiagnosisGate();
+            router.replace("/dashboard/programs");
           }}
         />
       ) : (

@@ -27,6 +27,13 @@ function matchedEagerHash(targets: string[]): string | null {
   return null;
 }
 
+function scrollHashTargetIntoView(hashId: string) {
+  const el = document.getElementById(hashId);
+  if (!el) return false;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  return true;
+}
+
 /**
  * Mount children when near the viewport (or immediately for matching URL hashes).
  */
@@ -38,6 +45,7 @@ export function LazyWhenVisible({
   className,
   anchorId,
   eagerOnHash,
+  scrollToId,
 }: LazyWhenVisibleProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const targets = useMemo(() => normalizeHashTargets(eagerOnHash), [eagerOnHash]);
@@ -83,6 +91,37 @@ export function LazyWhenVisible({
     observer.observe(host);
     return () => observer.disconnect();
   }, [visible, rootMargin]);
+
+  // After hash-eager mount, scroll to the section (native hash scroll often runs too early).
+  useEffect(() => {
+    if (!visible) return;
+    const matched = matchedEagerHash(targets);
+    if (!matched && !scrollToId) return;
+    const targetId = (scrollToId ? scrollToId.replace(/^#/, "") : matched) || matched;
+    if (!targetId) return;
+
+    // One canonical policy URL: /#cookies|/privacy → /#policy
+    if (
+      scrollToId === "policy" &&
+      (matched === "cookies" || matched === "cookie" || matched === "privacy")
+    ) {
+      try {
+        const path = `${window.location.pathname}${window.location.search}#policy`;
+        window.history.replaceState(null, "", path);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    let tries = 0;
+    const tick = () => {
+      tries += 1;
+      if (scrollHashTargetIntoView(targetId) || tries > 20) return;
+      window.setTimeout(tick, 50);
+    };
+    const t = window.setTimeout(tick, 0);
+    return () => window.clearTimeout(t);
+  }, [visible, targetsKey, targets, scrollToId]);
 
   return (
     <div

@@ -157,7 +157,12 @@ def claim_diagnosis_program_unlock(email: str, program_key_raw: str) -> dict[str
     """
     If email is in Syn Diagnosis quiz DB → permanently unlock the program playlist.
     Otherwise → quiz_required (no unlock).
+
+    Non-diagnosis emails return immediately. Unlocked path resolves playlist + portal
+    user in parallel workers to cut OTP verify latency.
     """
+    from concurrent.futures import ThreadPoolExecutor
+
     key = normalize_diagnosis_unlock_key(program_key_raw)
     if not key:
         return {"status": "invalid_program", "detail": "Unknown diagnosis unlock program."}
@@ -165,6 +170,9 @@ def claim_diagnosis_program_unlock(email: str, program_key_raw: str) -> dict[str
     meta = DIAGNOSIS_UNLOCK_PROGRAMS[key]
     title = meta["title"]
     e = (email or "").strip().lower()
+    quiz_required_detail = (
+        "Firstly You Have To Attempt The Syndicate Diagnosis To Access This Program"
+    )
 
     if not email_in_syn_diagnosis(e):
         return {
@@ -172,12 +180,18 @@ def claim_diagnosis_program_unlock(email: str, program_key_raw: str) -> dict[str
             "program_key": key,
             "program_title": title,
             "quiz_url": "/quiz",
-            "detail": (
-                "To access this course you must attempt the Syndicate Diagnosis Quiz."
+            "detail": quiz_required_detail,
+            "redirect_path": (
+                f"/dashboard/programs?diagnosis_gate=1&diagnosis_unlock={key}"
             ),
         }
 
-    playlist = resolve_diagnosis_playlist(key)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fut_playlist = pool.submit(resolve_diagnosis_playlist, key)
+        fut_user = pool.submit(ensure_portal_user_for_diagnosis_email, e)
+        playlist = fut_playlist.result()
+        user, created = fut_user.result()
+
     if playlist is None:
         return {
             "status": "playlist_missing",
@@ -186,7 +200,6 @@ def claim_diagnosis_program_unlock(email: str, program_key_raw: str) -> dict[str
             "detail": "Program playlist is not available yet. Contact support.",
         }
 
-    user, created = ensure_portal_user_for_diagnosis_email(e)
     grant_diagnosis_playlist(user, playlist)
     redirect_path = f"/dashboard/programs?playlist={playlist.id}"
 

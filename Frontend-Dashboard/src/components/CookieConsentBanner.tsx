@@ -35,6 +35,16 @@ const POLICY_BULLETS = [
   "Affiliate attribution may use a visitor id so referrals can be credited when you complete a purchase.",
 ] as const;
 
+function readHashId(): string {
+  if (typeof window === "undefined") return "";
+  return window.location.hash.replace(/^#/, "").trim().toLowerCase();
+}
+
+/** Hashes that belong to Privacy & Policy — never open the cookie bar for these. */
+function isPolicyHash(hash: string): boolean {
+  return hash === "policy" || hash === "privacy" || hash === "cookies" || hash === "cookie" || hash === "faq";
+}
+
 /** Bottom consent bar — gates analytics until the visitor accepts. Hidden on OTP login/signup. */
 export function CookieConsentBanner() {
   const pathname = usePathname() || "";
@@ -47,12 +57,42 @@ export function CookieConsentBanner() {
     pathname.startsWith("/checkout");
 
   useEffect(() => {
-    if (hideOnAuth || readCookieConsent()) {
+    if (hideOnAuth) {
       setVisible(false);
       return;
     }
-    const id = window.setTimeout(() => setVisible(true), 2500);
-    return () => window.clearTimeout(id);
+
+    // /#cookies|/privacy → canonical /#policy (single URL for Klaviyo / legal).
+    const aliasToPolicy = () => {
+      const hash = readHashId();
+      if (hash === "cookies" || hash === "cookie" || hash === "privacy") {
+        try {
+          window.history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}${window.location.search}#policy`,
+          );
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+    aliasToPolicy();
+    window.addEventListener("hashchange", aliasToPolicy);
+
+    if (readCookieConsent()) {
+      return () => window.removeEventListener("hashchange", aliasToPolicy);
+    }
+
+    const id = window.setTimeout(() => {
+      if (isPolicyHash(readHashId())) return;
+      setVisible(true);
+    }, 2500);
+
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("hashchange", aliasToPolicy);
+    };
   }, [hideOnAuth]);
 
   if (!visible || hideOnAuth) return null;
@@ -84,7 +124,11 @@ export function CookieConsentBanner() {
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-200/90 sm:text-[14px]">
             We use essential cookies to run The Syndicate and optional analytics cookies to improve
-            the site. You can change this anytime by clearing site data.
+            the site. Full privacy details:{" "}
+            <a href="/#policy" className="text-cyan-300 underline-offset-2 hover:underline">
+              Privacy &amp; Policy
+            </a>
+            .
           </p>
           <button
             type="button"
@@ -92,7 +136,7 @@ export function CookieConsentBanner() {
             className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300 underline-offset-2 transition hover:text-cyan-100 hover:underline"
             aria-expanded={showPolicy}
           >
-            {showPolicy ? "Hide policies" : "Read policies"}
+            {showPolicy ? "Hide cookie details" : "Read cookie details"}
           </button>
           {showPolicy ? (
             <ul className="mt-2 space-y-1.5 border-t border-white/10 pt-2 text-[12px] leading-relaxed text-zinc-300/90 sm:text-[13px]">

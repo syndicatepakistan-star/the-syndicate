@@ -3,7 +3,10 @@
 import Link from "next/link";
 
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
-import type { DiagnosisUnlockResult } from "@/lib/diagnosisUnlock";
+import {
+  DIAGNOSIS_QUIZ_REQUIRED_DETAIL,
+  type DiagnosisUnlockResult,
+} from "@/lib/diagnosisUnlock";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -12,11 +15,9 @@ type Props = {
 };
 
 export function DiagnosisQuizRequiredOverlay({ result, onClose }: Props) {
-  const title = result.program_title || "this course";
+  const title = result.program_title || "this program";
   const quizUrl = result.quiz_url || "/quiz";
-  const detail =
-    result.detail ||
-    "To access this course you must attempt the Syndicate Diagnosis Quiz.";
+  const detail = result.detail || DIAGNOSIS_QUIZ_REQUIRED_DETAIL;
 
   return (
     <div
@@ -37,24 +38,23 @@ export function DiagnosisQuizRequiredOverlay({ result, onClose }: Props) {
           </p>
           <h2
             id="diagnosis-gate-title"
-            className={`${DASHBOARD_HEADING_LIGHTNING} text-[clamp(1.2rem,1.2vw+0.9rem,1.55rem)] font-black uppercase tracking-[0.1em]`}
+            className={`${DASHBOARD_HEADING_LIGHTNING} text-[clamp(1.15rem,1.2vw+0.85rem,1.5rem)] font-black uppercase tracking-[0.08em]`}
           >
-            Diagnosis required
+            Syn Diagnosis required
           </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-slate-100/90 sm:text-[16px]">
+          <p className="mt-4 text-[16px] font-semibold leading-relaxed text-amber-50 sm:text-[17px]">
             {detail}
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-slate-300/85">
-            Complete Syn Diagnosis to unlock{" "}
-            <span className="font-semibold text-amber-100">{title}</span>. Your email must be
-            registered in the diagnosis quiz.
+            Complete Syn Diagnosis, then return with the same email to unlock{" "}
+            <span className="font-semibold text-amber-100">{title}</span>.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href={quizUrl}
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-md border border-amber-300/55 bg-amber-400/20 px-5 py-3 text-center text-[14px] font-black uppercase tracking-[0.08em] text-amber-50 shadow-[0_0_18px_rgba(251,191,36,0.2)] transition hover:bg-amber-400/30"
             >
-              Take Syndicate Diagnosis Quiz
+              Syn Diagnosis
             </Link>
             {onClose ? (
               <button
@@ -62,7 +62,7 @@ export function DiagnosisQuizRequiredOverlay({ result, onClose }: Props) {
                 onClick={onClose}
                 className="inline-flex min-h-[48px] items-center justify-center rounded-md border border-white/20 bg-black/40 px-5 py-3 text-[14px] font-black uppercase tracking-[0.08em] text-slate-200 transition hover:bg-white/10"
               >
-                Close
+                Stay on dashboard
               </button>
             ) : null}
           </div>

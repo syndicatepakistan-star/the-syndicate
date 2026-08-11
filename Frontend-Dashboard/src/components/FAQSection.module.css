@@ -7,6 +7,7 @@
   min-height: auto;
   padding: 2.5rem 1rem 3rem;
   background: #020208;
+  scroll-margin-top: 5.5rem;
 }
 
 @keyframes faqGlowPulse {

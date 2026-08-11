@@ -2028,19 +2028,11 @@ def verify_login_otp_view(request):
     if diagnosis_payload.get("status") == "unlocked":
       user = User.objects.filter(pk=diagnosis_payload["user_id"]).first() or _canonical_user_for_email(email)
     elif diagnosis_payload.get("status") == "quiz_required":
-      # Diagnosis email missing: never unlock this program. Show gate overlay on the client.
-      # Do not create a portal account; if one already exists, still return a session token.
-      if user is None and quiz_result is None:
-        return JsonResponse(
-          {
-            "message": diagnosis_payload.get("detail") or "Syndicate Diagnosis required.",
-            "diagnosis_unlock": diagnosis_payload,
-            "token": None,
-            "user": None,
-          },
-          status=200,
-        )
-      # Existing member: complete OTP login below, but client must show quiz gate (no playlist open).
+      # Always issue a portal session so the client can land on dashboard + gate overlay
+      # instead of flashing a label on /login and bouncing.
+      from accounts.diagnosis_program_unlock import ensure_portal_user_for_diagnosis_email
+
+      user, _ = ensure_portal_user_for_diagnosis_email(email)
     elif diagnosis_payload.get("status") in ("invalid_program", "playlist_missing"):
       return _json_error(str(diagnosis_payload.get("detail") or "Unlock failed."), status=400)
 
@@ -2057,6 +2049,10 @@ def verify_login_otp_view(request):
   redirect_url = getattr(settings, "POST_LOGIN_REDIRECT_URL", "http://localhost:3000/")
   if diagnosis_payload and diagnosis_payload.get("status") == "unlocked":
     redirect_url = diagnosis_payload.get("redirect_path") or f"/dashboard/programs?playlist={diagnosis_payload.get('playlist_id')}"
+  elif diagnosis_payload and diagnosis_payload.get("status") == "quiz_required":
+    redirect_url = diagnosis_payload.get("redirect_path") or (
+      f"/dashboard/programs?diagnosis_gate=1&diagnosis_unlock={diagnosis_key}"
+    )
 
   body = {
     "message": "Login verified successfully.",

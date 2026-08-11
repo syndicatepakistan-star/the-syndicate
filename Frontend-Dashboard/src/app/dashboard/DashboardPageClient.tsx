@@ -29,6 +29,7 @@ import { DashboardSectionKeepAlive } from "@/components/dashboard/DashboardSecti
 import { AdminAccessGrantPanel } from "@/components/dashboard/AdminAccessGrantPanel";
 import { DashboardNavQuickSearch } from "@/components/dashboard/DashboardNavQuickSearch";
 import { NavbarNotificationBell } from "@/components/dashboard/NotificationBell";
+import { DashboardDiagnosisGateHost } from "@/components/diagnosis/DashboardDiagnosisGateHost";
 import type { DashboardNavKey } from "@/components/dashboard/types";
 import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { useActivityTimeline } from "@/contexts/ActivityTimelineContext";
@@ -3235,6 +3236,7 @@ export default function DashboardPageClient({
     >
       <PlaylistCheckoutSync />
       <PlanCheckoutSync />
+      <DashboardDiagnosisGateHost />
       <DashboardLcpPreload sectionKey={selectedNavKey} />
       <DashboardMediaWarmup />
       <DeferredDashboardProgramsPageCss forceNow={selectedNavKey === "programs" || initialSection === "programs"} />

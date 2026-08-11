@@ -40,7 +40,10 @@ function toOffer(
   accent: PlanOfferAccent,
   packPlan: VaultPackKey
 ): PlanOfferDef {
-  const price = String(row.unitPrice);
+  const price =
+    Number.isInteger(row.unitPrice) ? String(row.unitPrice) : row.unitPrice.toFixed(2);
+  const displayPrice =
+    Number.isInteger(row.unitPrice) ? `$${row.unitPrice}` : `$${row.unitPrice.toFixed(2)}`;
   const teaser = resolveVaultModuleTeaser(row.title, packPlan, row.slug);
   const isTradingModule =
     packPlan === "trading_technical_analysis" && isTradingModuleSlug(row.slug);
@@ -49,7 +52,7 @@ function toOffer(
     title: row.title,
     imageSrc: row.image,
     teaser,
-    displayPrice: `$${row.unitPrice}`,
+    displayPrice,
     comparePrice: `$${row.comparePrice}`,
     billingLabel: "/lifetime",
     checkoutAmount: price,
@@ -70,6 +73,10 @@ function mapVaultCourses(rows: VaultCourseRow[], packPlan: VaultPackKey): PlanOf
     toOffer(row, VAULT_SUB_COURSE_NEON_ACCENTS[index % VAULT_SUB_COURSE_NEON_ACCENTS.length], packPlan)
   );
 }
+
+const AGENTIC_WHATSAPP_AGENT_SLUG = "agentic_ai_c02" as const;
+/** Promo à la carte price for Build a WhatsApp Agent with n8n only. */
+const AGENTIC_WHATSAPP_AGENT_UNIT_USD = 0.5;
 
 const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Build a Blog Writing Agent With N8N", "blog writing n8n.jpg"],
@@ -98,13 +105,18 @@ const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Alternatives to N8N in 2026", "stop n8n.jpg"],
   ["VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity", "vibe coding.jpg"],
   ["Agentic Workflow for Businesses", "agentic workflow.jpg"],
-].map(([title, image], i) => ({
-  title,
-  image: packThumb("agentic ai", image),
-  slug: slugIndex("agentic_ai", i + 1),
-  unitPrice: VAULT_MODULE_UNIT_USD,
-  comparePrice: comparePriceForUnit(VAULT_MODULE_UNIT_USD),
-}));
+].map(([title, image], i) => {
+  const slug = slugIndex("agentic_ai", i + 1);
+  const unitPrice =
+    slug === AGENTIC_WHATSAPP_AGENT_SLUG ? AGENTIC_WHATSAPP_AGENT_UNIT_USD : VAULT_MODULE_UNIT_USD;
+  return {
+    title,
+    image: packThumb("agentic ai", image),
+    slug,
+    unitPrice,
+    comparePrice: comparePriceForUnit(unitPrice < 1 ? 14 : unitPrice),
+  };
+});
 
 const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Beginners Guide to Faceless YouTube in 2026 (3 hours)", "faceless youtube.jpg"],

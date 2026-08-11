@@ -279,6 +279,11 @@ def seed_all_vault_playlists(*, publish: bool = False, link_r2: bool = True, ret
         link_r2=link_r2,
         stats=stats,
     )
+    # Promo: Build a WhatsApp Agent with n8n (agentic_ai_c02) → $0.50
+    StreamPlaylist.objects.filter(vault_plan_slug="agentic_ai_c02").update(price=Decimal("0.50"))
+    StreamVideo.objects.filter(
+        streamplaylistitem__playlist__vault_plan_slug="agentic_ai_c02"
+    ).update(price=Decimal("0.50"))
     seed_indexed_pack(
         pack_folder="ai_content",
         rows=ai_content_course_rows(),

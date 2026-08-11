@@ -18,7 +18,8 @@ const GTM_GESTURE_ATTACH_MS = 500;
 
 /**
  * Consent gate + post-consent delay (site-wide; biggest win on mobile /programs).
- * Never loads without `"accepted"`. After accept, waits for interaction OR ~7s (+ idle).
+ * Loads after either "Accept all" or "Essential only". After consent, waits for
+ * interaction OR ~7s (+ idle) before injecting gtm.js.
  */
 export function DeferredGtm() {
   const [consentAccepted, setConsentAccepted] = useState(false);
@@ -26,7 +27,8 @@ export function DeferredGtm() {
 
   useEffect(() => {
     const syncConsent = (value: CookieConsentValue | null = readCookieConsent()) => {
-      setConsentAccepted(value === "accepted");
+      // Marketing GTM: load for both Accept all and Essential only.
+      setConsentAccepted(value === "accepted" || value === "essential");
     };
     syncConsent();
     const onStorage = (e: StorageEvent) => {

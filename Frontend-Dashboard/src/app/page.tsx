@@ -6,7 +6,6 @@ import {
   HomeCertificatesSection,
   HomeFaqSection,
   HomePaywallSection,
-  HomePolicySection,
   HomePricingSection,
 } from '@/components/home/HomeBelowFoldSections'
 import { HomeEntityStatement } from '@/components/home/HomeEntityStatement'
@@ -86,7 +85,6 @@ export default async function Home() {
       <HomePaywallSection />
       <HomeCertificatesSection />
       <HomeFaqSection />
-      <HomePolicySection />
       <HomeBottomSections />
     </div>
   )

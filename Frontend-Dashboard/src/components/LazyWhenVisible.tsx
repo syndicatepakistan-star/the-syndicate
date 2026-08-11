@@ -100,19 +100,6 @@ export function LazyWhenVisible({
     const targetId = (scrollToId ? scrollToId.replace(/^#/, "") : matched) || matched;
     if (!targetId) return;
 
-    // One canonical policy URL: /#cookies|/privacy → /#policy
-    if (
-      scrollToId === "policy" &&
-      (matched === "cookies" || matched === "cookie" || matched === "privacy")
-    ) {
-      try {
-        const path = `${window.location.pathname}${window.location.search}#policy`;
-        window.history.replaceState(null, "", path);
-      } catch {
-        /* ignore */
-      }
-    }
-
     let tries = 0;
     const tick = () => {
       tries += 1;

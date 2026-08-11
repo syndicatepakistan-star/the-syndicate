@@ -840,7 +840,11 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
         return;
       }
       if (checkout.checkout_url) {
-        window.location.href = checkout.checkout_url;
+        const { redirectToStripeCheckout } = await import("@/lib/gtmCommerce");
+        redirectToStripeCheckout(checkout.checkout_url, {
+          itemId: `playlist_${playlistId}`,
+          itemName: `Playlist ${playlistId}`,
+        });
         return;
       }
       // No checkout URL — open the program instead of a technical error toast.

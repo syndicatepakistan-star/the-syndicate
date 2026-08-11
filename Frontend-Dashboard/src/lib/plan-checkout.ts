@@ -1,7 +1,13 @@
-import { isKnightCheckoutBlocked, KNIGHT_LAUNCHING_SOON_MESSAGE, type CheckoutOfferKey } from "@/components/programs/planOfferCatalog";
+import {
+  isKnightCheckoutBlocked,
+  KNIGHT_LAUNCHING_SOON_MESSAGE,
+  planOfferByKey,
+  type CheckoutOfferKey,
+} from "@/components/programs/planOfferCatalog";
 import { isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { affiliateCheckoutFields } from "@/lib/affiliateAttribution";
 import { getActiveCurrency } from "@/lib/currency";
+import { redirectToStripeCheckout, type GtmCheckoutItem } from "@/lib/gtmCommerce";
 import {
   getAuthorizationHeader,
   portalFetch,
@@ -160,9 +166,18 @@ export type StartPlanCheckoutResult =
   | { status: "auth_required" }
   | { status: "error"; message: string };
 
-function redirectToCheckout(checkoutUrl: string) {
+function redirectToCheckout(
+  checkoutUrl: string,
+  meta?: { itemId?: string; itemName?: string; amount?: string; currency?: string; items?: GtmCheckoutItem[] },
+) {
   if (typeof window === "undefined") return;
-  window.location.href = checkoutUrl;
+  redirectToStripeCheckout(checkoutUrl, {
+    itemId: meta?.itemId,
+    itemName: meta?.itemName,
+    amount: meta?.amount,
+    currency: meta?.currency || getActiveCurrency(),
+    items: meta?.items,
+  });
 }
 
 function redirectToAuthCheckout(params: PlanCheckoutParams) {
@@ -244,7 +259,12 @@ export async function startPlanCheckout(params: PlanCheckoutParams): Promise<Sta
           // Toast optional.
         });
     }
-    redirectToCheckout(checkoutUrl);
+    redirectToCheckout(checkoutUrl, {
+      itemId: params.plan,
+      itemName: planOfferByKey(params.plan as Parameters<typeof planOfferByKey>[0])?.title || params.plan,
+      amount: params.amount,
+      currency: getActiveCurrency(),
+    });
     return { status: "checkout", checkoutUrl };
   }
 
@@ -301,7 +321,30 @@ export async function startUnlockCartCheckout(
           // Toast optional.
         });
     }
-    redirectToCheckout(checkoutUrl);
+    const gtmItems: GtmCheckoutItem[] = items.map((item) => {
+      const amount = Number(String(item.amount).replace(/[^0-9.]/g, ""));
+      if (item.plan) {
+        return {
+          item_id: item.plan,
+          item_name: item.title || planOfferByKey(item.plan as never)?.title || item.plan,
+          price: Number.isFinite(amount) ? amount : undefined,
+          quantity: 1,
+        };
+      }
+      return {
+        item_id: `playlist_${item.playlistId}`,
+        item_name: item.title || `Playlist ${item.playlistId}`,
+        price: Number.isFinite(amount) ? amount : undefined,
+        quantity: 1,
+      };
+    });
+    redirectToCheckout(checkoutUrl, {
+      items: gtmItems,
+      amount: firstAmount,
+      currency: getActiveCurrency(),
+      itemId: gtmItems[0]?.item_id,
+      itemName: gtmItems[0]?.item_name,
+    });
     return { status: "checkout", checkoutUrl };
   }
 

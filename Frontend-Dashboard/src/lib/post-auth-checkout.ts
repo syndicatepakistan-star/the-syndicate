@@ -51,7 +51,11 @@ export async function resumePendingCheckoutAfterAuth(
       if (checkout.is_unlocked) return { status: "already_unlocked" };
       const checkoutUrl = (checkout.checkout_url || "").trim();
       if (checkoutUrl) {
-        window.location.assign(checkoutUrl);
+        const { redirectToStripeCheckout } = await import("@/lib/gtmCommerce");
+        redirectToStripeCheckout(checkoutUrl, {
+          itemId: `playlist_${playlistId}`,
+          itemName: `Playlist ${playlistId}`,
+        });
         return { status: "checkout" };
       }
       return {

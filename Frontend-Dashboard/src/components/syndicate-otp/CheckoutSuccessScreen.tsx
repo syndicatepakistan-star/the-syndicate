@@ -277,6 +277,46 @@ export default function CheckoutSuccessScreen({
 
         setMessage(data.message || "Payment confirmed.");
 
+        try {
+          const { trackPurchase } = await import("@/lib/gtmCommerce");
+          const unlocked = Array.isArray(data.unlocked_items) ? data.unlocked_items : [];
+          const items = unlocked
+            .map((row) => ({
+              item_id: String(
+                (typeof row.plan === "string" && row.plan) ||
+                  (typeof row.playlist_id === "number" ? `playlist_${row.playlist_id}` : "") ||
+                  "",
+              ),
+              item_name: typeof row.title === "string" ? row.title : "Program",
+              price:
+                typeof row.amount === "string"
+                  ? Number(String(row.amount).replace(/[^0-9.]/g, ""))
+                  : undefined,
+              quantity: 1,
+            }))
+            .filter((it) => it.item_name);
+          trackPurchase({
+            transaction_id: sessionId,
+            currency: typeof data.currency === "string" ? data.currency : "usd",
+            value: toNumber(data.amount_paid) ?? undefined,
+            items: items.length
+              ? items.map((it) => ({
+                  ...it,
+                  price: typeof it.price === "number" && Number.isFinite(it.price) ? it.price : undefined,
+                }))
+              : [
+                  {
+                    item_id: typeof data.selected_plan === "string" ? data.selected_plan : "purchase",
+                    item_name: "Syndicate purchase",
+                    price: toNumber(data.amount_paid) ?? undefined,
+                    quantity: 1,
+                  },
+                ],
+          });
+        } catch {
+          /* GTM optional */
+        }
+
         if (data.needs_claim) {
           const fromApi: UnlockedProgramItem[] = Array.isArray(data.unlocked_items)
             ? data.unlocked_items

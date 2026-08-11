@@ -1,5 +1,6 @@
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from "@/components/programs/offerPlanThumbnails";
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
+import { formatTempAwareDisplayPrice } from "@/lib/tempTestPricing";
 
 const LCP_SIZES = "(max-width: 767px) 100vw, (max-width: 1024px) 420px, 480px";
 /** Same q/w as page preload + PlanOfferCard Money Mastery priority image. */
@@ -51,7 +52,9 @@ export function ProgramsEliteOffersLcpFallback({
                       <span className="plan-offer-card__pack-price-badge__compare text-[10px] text-white/50 line-through decoration-white/40 sm:text-[11px]">
                         $555
                       </span>
-                      <span className="plan-offer-card__pack-price-badge__amount text-[12px] sm:text-[13px]">$333</span>
+                      <span className="plan-offer-card__pack-price-badge__amount text-[12px] sm:text-[13px]">
+                        {formatTempAwareDisplayPrice("bundle", 333)}
+                      </span>
                     </span>
                   </div>
                 </div>

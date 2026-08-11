@@ -82,18 +82,24 @@ export function trackPurchase(input: {
     input.value ??
     items.reduce((sum, it) => sum + (typeof it.price === "number" ? it.price : 0) * (it.quantity ?? 1), 0);
 
+  const currency = (input.currency || "USD").toUpperCase();
   pushDataLayer({ ecommerce: null });
   pushDataLayer({
     event: "purchase",
     ecommerce: {
       transaction_id: input.transaction_id,
-      currency: (input.currency || "USD").toUpperCase(),
+      currency,
       value,
       items,
     },
     purchase_transaction_id: input.transaction_id,
     purchase_value: value,
-    purchase_currency: (input.currency || "USD").toUpperCase(),
+    purchase_currency: currency,
+    // Same flat keys as begin_checkout so existing DLVs work for FB Purchase
+    checkout_item_id: items[0]?.item_id || "",
+    checkout_item_name: items[0]?.item_name || "",
+    checkout_value: value,
+    checkout_currency: currency,
   });
 }
 

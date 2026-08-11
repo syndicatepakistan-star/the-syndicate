@@ -5,6 +5,7 @@ import {
   comparePriceForUnit,
   VAULT_MODULE_UNIT_USD,
 } from "@/lib/packPricing";
+import { tempTestPrice } from "@/lib/tempTestPricing";
 import {
   allTradingSubmoduleOffers,
   isTradingModuleSlug,
@@ -74,10 +75,6 @@ function mapVaultCourses(rows: VaultCourseRow[], packPlan: VaultPackKey): PlanOf
   );
 }
 
-const AGENTIC_WHATSAPP_AGENT_SLUG = "agentic_ai_c02" as const;
-/** Promo à la carte price for Build a WhatsApp Agent with n8n only. */
-const AGENTIC_WHATSAPP_AGENT_UNIT_USD = 0.5;
-
 const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Build a Blog Writing Agent With N8N", "blog writing n8n.jpg"],
   ["Build a WhatsApp Agent with n8n", "whatsapp agent.jpg"],
@@ -105,18 +102,13 @@ const AGENTIC_ROWS: VaultCourseRow[] = [
   ["Alternatives to N8N in 2026", "stop n8n.jpg"],
   ["VIBE CODING FULL COURSE: Gemini 3.1 + Antigravity", "vibe coding.jpg"],
   ["Agentic Workflow for Businesses", "agentic workflow.jpg"],
-].map(([title, image], i) => {
-  const slug = slugIndex("agentic_ai", i + 1);
-  const unitPrice =
-    slug === AGENTIC_WHATSAPP_AGENT_SLUG ? AGENTIC_WHATSAPP_AGENT_UNIT_USD : VAULT_MODULE_UNIT_USD;
-  return {
-    title,
-    image: packThumb("agentic ai", image),
-    slug,
-    unitPrice,
-    comparePrice: comparePriceForUnit(unitPrice < 1 ? 14 : unitPrice),
-  };
-});
+].map(([title, image], i) => ({
+  title,
+  image: packThumb("agentic ai", image),
+  slug: slugIndex("agentic_ai", i + 1),
+  unitPrice: VAULT_MODULE_UNIT_USD,
+  comparePrice: comparePriceForUnit(VAULT_MODULE_UNIT_USD),
+}));
 
 const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Beginners Guide to Faceless YouTube in 2026 (3 hours)", "faceless youtube.jpg"],
@@ -148,47 +140,52 @@ const AI_CONTENT_ROWS: VaultCourseRow[] = [
   ["Make VIRAL Life Advice Videos Using Only FREE AI Tools", "life advice.jpg"],
   ["Create Viral inspirational finance Videos with Free AI Tools", "inspirational finance.jpg"],
   ["Clone ANY YouTube Channel With AI (NotebookLM Hack)", "clone any channel.jpg"],
-].map(([title, image], i) => ({
-  title,
-  image: packThumb("ai content automation", image),
-  slug: slugIndex("ai_content", i + 1),
-  unitPrice: VAULT_MODULE_UNIT_USD,
-  comparePrice: comparePriceForUnit(VAULT_MODULE_UNIT_USD),
-}));
+].map(([title, image], i) => {
+  const slug = slugIndex("ai_content", i + 1);
+  const unitPrice = tempTestPrice(slug, VAULT_MODULE_UNIT_USD);
+  return {
+    title,
+    image: packThumb("ai content automation", image),
+    slug,
+    unitPrice,
+    comparePrice: comparePriceForUnit(unitPrice < 1 ? VAULT_MODULE_UNIT_USD : unitPrice),
+  };
+});
 
 const TRADING_MODULE_UNIT = 99;
 const TRADING_MODULE_COMPARE = 129;
 
-const TRADING_ROWS: VaultCourseRow[] = [
-  {
-    title: "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
-    image: packThumb("trading", "1- min.jpg"),
-    slug: "trading_scalpel_protocol",
-    unitPrice: TRADING_MODULE_UNIT,
-    comparePrice: TRADING_MODULE_COMPARE,
-  },
-  {
-    title: "Strategies of a Master Trader",
-    image: packThumb("trading", "strategies.jpg"),
-    slug: "trading_master_strategies",
-    unitPrice: TRADING_MODULE_UNIT,
-    comparePrice: TRADING_MODULE_COMPARE,
-  },
-  {
-    title: "Setups of a Master Trader",
-    image: packThumb("trading", "setup.jpg"),
-    slug: "trading_master_setups",
-    unitPrice: TRADING_MODULE_UNIT,
-    comparePrice: TRADING_MODULE_COMPARE,
-  },
-  {
-    title: "Secrets of a Master Trader",
-    image: packThumb("trading", "secrets.jpg"),
-    slug: "trading_master_secrets",
-    unitPrice: TRADING_MODULE_UNIT,
-    comparePrice: TRADING_MODULE_COMPARE,
-  },
-];
+const TRADING_ROWS: VaultCourseRow[] = (
+  [
+    {
+      title: "The Scalpel Protocol: Architecting Wealth on the 1-Minute Chart",
+      image: packThumb("trading", "1- min.jpg"),
+      slug: "trading_scalpel_protocol" as const,
+    },
+    {
+      title: "Strategies of a Master Trader",
+      image: packThumb("trading", "strategies.jpg"),
+      slug: "trading_master_strategies" as const,
+    },
+    {
+      title: "Setups of a Master Trader",
+      image: packThumb("trading", "setup.jpg"),
+      slug: "trading_master_setups" as const,
+    },
+    {
+      title: "Secrets of a Master Trader",
+      image: packThumb("trading", "secrets.jpg"),
+      slug: "trading_master_secrets" as const,
+    },
+  ] as const
+).map((row) => {
+  const unitPrice = tempTestPrice(row.slug, TRADING_MODULE_UNIT);
+  return {
+    ...row,
+    unitPrice,
+    comparePrice: unitPrice < 1 ? TRADING_MODULE_COMPARE : TRADING_MODULE_COMPARE,
+  };
+});
 
 export const VAULT_PACK_COURSES: Record<VaultPackKey, readonly PlanOfferDef[]> = {
   agentic_ai: mapVaultCourses(AGENTIC_ROWS, "agentic_ai"),

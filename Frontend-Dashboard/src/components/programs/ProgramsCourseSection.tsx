@@ -71,6 +71,7 @@ import {
 import { clearVaultPlaylistMapCache } from "@/lib/vaultPlaylistMap";
 import { fetchPortalIdentity, hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { buildPlaylistCheckoutAuthHref, startPlanCheckout } from "@/lib/plan-checkout";
+import { formatTempAwareAmount } from "@/lib/tempTestPricing";
 import { createPlaylistCheckoutSession, fetchStreamPlaylists, clearStreamPlaylistsCache, prefetchStreamPlaylistExperience, purgeExpiredStreamPlaybackCache, type StreamPlaylistListItem } from "@/lib/streaming-api";
 import { focusProgramCardWithRetries, scrollProgramCardIntoView } from "@/lib/programCardScroll";
 import { STREAM_PLAYLIST_CATEGORY_LABELS, PLAYLIST_CATEGORY_HEADING_CLASS, STREAM_PLAYLIST_CATEGORY_HEADING_LINES } from "@/lib/streamPlaylistCategoryLabels";
@@ -870,7 +871,7 @@ export const ProgramsCourseSection = memo(function ProgramsCourseSection({
       const result = await startPlanCheckout({
         plan: "bundle",
         billing: "monthly",
-        amount: "333",
+        amount: formatTempAwareAmount("bundle", 333),
         postAuthNext: "/dashboard/programs",
       });
       if (result.status === "checkout" || result.status === "auth_required") {

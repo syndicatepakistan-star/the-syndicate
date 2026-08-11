@@ -27,6 +27,7 @@ import {
 } from "@/lib/level1ProgramCatalog";
 import { cleanProgramDescription } from "@/lib/descriptionText";
 import { BUSINESS_MODEL_UNIT_USD, BUSINESS_PSYCHOLOGY_UNIT_USD } from "@/lib/packPricing";
+import { tempTestPrice } from "@/lib/tempTestPricing";
 import { extractProgrammeIntroductionTeaser } from "@/lib/structuredDescription";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";
 
@@ -251,16 +252,16 @@ function stubPlaylistForLevel1Slug(slug: string): StreamPlaylistListItem | null 
   const entry = BY_ID.get(legacyId);
   if (!entry) return null;
   const category = level1SlugCategory(slug);
+  const normalUnit =
+    category === "business_model" ? BUSINESS_MODEL_UNIT_USD : BUSINESS_PSYCHOLOGY_UNIT_USD;
+  const unit = tempTestPrice(slug, normalUnit);
   return {
     id: entry.id,
     title: getProgramDisplayTitle(entry.id, entry.title, slug),
     slug,
     category,
     description: entry.description,
-    price:
-      category === "business_model"
-        ? `${BUSINESS_MODEL_UNIT_USD}.00`
-        : `${BUSINESS_PSYCHOLOGY_UNIT_USD}.00`,
+    price: Number.isInteger(unit) ? `${unit}.00` : unit.toFixed(2),
     rating: "4.0",
     cover_image_url: null,
     video_count: 0,
@@ -323,11 +324,14 @@ export function normalizeLevel1ProgramPlaylists(
     let row: StreamPlaylistListItem;
     if (match) {
       usedIds.add(match.id);
+      const apiPrice = Number.parseFloat(String(match.price ?? "0")) || 0;
+      const unit = tempTestPrice(slug, apiPrice);
       row = {
         ...match,
         slug,
         category: level1SlugCategory(slug),
         title: getProgramDisplayTitle(match.id, match.title, slug),
+        price: Number.isInteger(unit) ? String(unit) : unit.toFixed(2),
         // Live Level-1 catalogue programs are always purchasable (never “Coming Soon”).
         is_coming_soon: false,
       };

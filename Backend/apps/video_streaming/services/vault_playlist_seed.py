@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils.text import slugify
 
 from accounts.trading_vault_catalog import (
@@ -279,11 +280,6 @@ def seed_all_vault_playlists(*, publish: bool = False, link_r2: bool = True, ret
         link_r2=link_r2,
         stats=stats,
     )
-    # Promo: Build a WhatsApp Agent with n8n (agentic_ai_c02) → $0.50
-    StreamPlaylist.objects.filter(vault_plan_slug="agentic_ai_c02").update(price=Decimal("0.50"))
-    StreamVideo.objects.filter(
-        streamplaylistitem__playlist__vault_plan_slug="agentic_ai_c02"
-    ).update(price=Decimal("0.50"))
     seed_indexed_pack(
         pack_folder="ai_content",
         rows=ai_content_course_rows(),
@@ -293,6 +289,23 @@ def seed_all_vault_playlists(*, publish: bool = False, link_r2: bool = True, ret
         stats=stats,
     )
     seed_trading_vault(publish=publish, link_r2=link_r2, stats=stats)
+    # TEMP test promo prices (revert after ads/GTM testing) — after trading seed so not overwritten
+    StreamPlaylist.objects.filter(vault_plan_slug="ai_content_c02").update(price=Decimal("0.50"))
+    StreamPlaylist.objects.filter(vault_plan_slug="trading_scalpel_protocol").update(price=Decimal("0.50"))
+    StreamPlaylist.objects.filter(
+        Q(slug__iexact="level1-psych-09")
+        | Q(slug__iexact="business-warfare")
+        | Q(title__iexact="Business Warfare")
+    ).update(price=Decimal("0.50"))
+    StreamPlaylist.objects.filter(
+        Q(slug__iexact="level1-model-01")
+        | Q(title__iexact="AI content Automation for Businesses")
+        | Q(title__iexact="N8N AI Automation")
+        | Q(title__iexact="A.I Content Automation for Business")
+    ).update(price=Decimal("0.50"))
+    StreamVideo.objects.filter(
+        streamplaylistitem__playlist__vault_plan_slug__in=("ai_content_c02", "trading_scalpel_protocol")
+    ).update(price=Decimal("0.50"))
     if retire_legacy:
         retire_legacy_mid_ticket_playlists(stats)
     return stats

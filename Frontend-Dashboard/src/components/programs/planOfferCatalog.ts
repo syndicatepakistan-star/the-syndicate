@@ -10,6 +10,10 @@ import {
   LEVEL1_BUSINESS_MODEL_PROGRAM_TITLES,
   LEVEL1_PSYCHOLOGY_PROGRAM_TITLES,
 } from "@/lib/level1ProgramCatalog";
+import {
+  formatTempAwareAmount,
+  formatTempAwareDisplayPrice,
+} from "@/lib/tempTestPricing";
 
 export type PlanOfferKey =
   | "bundle"
@@ -398,10 +402,10 @@ export const PLAN_OFFERS_PRIMARY: readonly PlanOfferDef[] = [
     title: "Money Mastery Bundle",
     imageSrc: OFFER_PLAN_THUMB_MONEY_MASTERY,
     teaser: MONEY_MASTERY_CARD_TEASER,
-    displayPrice: "$333",
+    displayPrice: formatTempAwareDisplayPrice("bundle", 333),
     comparePrice: "$555",
     billingLabel: "/lifetime",
-    checkoutAmount: "333",
+    checkoutAmount: formatTempAwareAmount("bundle", 333),
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     accent: "amber",

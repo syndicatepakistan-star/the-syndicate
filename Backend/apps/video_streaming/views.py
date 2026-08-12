@@ -815,6 +815,9 @@ class StreamPlaylistCheckoutSuccessView(APIView):
                 "playlist_id": playlist.id,
                 "is_unlocked": True,
                 "already_purchased": already_purchased,
+                "amount_paid": str(amount_paid),
+                "currency": currency,
+                "playlist_title": playlist.title or "",
             },
             status=status.HTTP_200_OK,
         )

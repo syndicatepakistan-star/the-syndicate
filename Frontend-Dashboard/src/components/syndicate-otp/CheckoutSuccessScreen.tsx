@@ -278,7 +278,7 @@ export default function CheckoutSuccessScreen({
         setMessage(data.message || "Payment confirmed.");
 
         try {
-          const { trackPurchase } = await import("@/lib/gtmCommerce");
+          const { trackPurchase, waitForGtmReady } = await import("@/lib/gtmCommerce");
           const unlocked = Array.isArray(data.unlocked_items) ? data.unlocked_items : [];
           const items = unlocked
             .map((row) => ({
@@ -320,6 +320,8 @@ export default function CheckoutSuccessScreen({
                   },
                 ],
           });
+          // Cached-auth path redirects fast — wait briefly so GTM can load, or stash for dashboard flush.
+          await waitForGtmReady(2500);
         } catch {
           /* GTM optional */
         }
@@ -492,9 +494,10 @@ export default function CheckoutSuccessScreen({
         }
         window.history.replaceState({}, "", "/");
         window.setTimeout(() => setLuxuryOpen(true), 80);
+        // Slightly longer than GTM wait so purchase tags can fire before leaving success page.
         window.setTimeout(() => {
           if (typeof window !== "undefined") window.location.replace(nextUrl);
-        }, 700);
+        }, 900);
       } catch (verificationError) {
         setError(
           verificationError instanceof Error

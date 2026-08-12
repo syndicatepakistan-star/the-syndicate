@@ -30,6 +30,31 @@ export function PlaylistCheckoutSync() {
         } catch {
           // Ignore storage exceptions.
         }
+
+        try {
+          const { trackPurchase, waitForGtmReady } = await import("@/lib/gtmCommerce");
+          const amount =
+            typeof result.amount_paid === "number" && Number.isFinite(result.amount_paid)
+              ? result.amount_paid
+              : undefined;
+          trackPurchase({
+            transaction_id: sessionId,
+            currency: result.currency || "usd",
+            value: amount,
+            items: [
+              {
+                item_id: playlistId ? `playlist_${playlistId}` : "playlist",
+                item_name: (result.playlist_title || "").trim() || "Playlist access",
+                price: amount,
+                quantity: 1,
+              },
+            ],
+          });
+          await waitForGtmReady(2500);
+        } catch {
+          /* GTM optional */
+        }
+
         window.dispatchEvent(
           new CustomEvent("playlist-checkout-confirmed", {
             detail: {

@@ -7,6 +7,7 @@ import {
   readCookieConsent,
   type CookieConsentValue,
 } from "@/components/CookieConsentBanner";
+import { flushPendingPurchases, hasPendingPurchaseEvents } from "@/lib/gtmCommerce";
 
 const GTM_ID = "GTM-WBW2KZV6";
 /** Keep gtm.js / FB / Klaviyo out of the Lighthouse TBT window after Accept. */
@@ -16,10 +17,22 @@ const GTM_DASHBOARD_SAFETY_DELAY_MS = 12000;
 /** Ignore Accept-click / early LH taps before arming gesture → GTM. */
 const GTM_GESTURE_ATTACH_MS = 500;
 
+function shouldLoadGtmImmediately(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.location.pathname.startsWith("/checkout/success")) return true;
+  if (window.location.search.includes("playlist_checkout=success")) return true;
+  try {
+    return hasPendingPurchaseEvents();
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Consent gate + post-consent delay (site-wide; biggest win on mobile /programs).
  * Loads after either "Accept all" or "Essential only". After consent, waits for
  * interaction OR ~7s (+ idle) before injecting gtm.js.
+ * Exception: checkout success / pending purchase → load immediately so purchase tags fire.
  */
 export function DeferredGtm() {
   const [consentAccepted, setConsentAccepted] = useState(false);
@@ -74,6 +87,10 @@ export function DeferredGtm() {
       scheduled = true;
       if (safetyTimer != null) window.clearTimeout(safetyTimer);
       detachGestures();
+      if (shouldLoadGtmImmediately()) {
+        loadGtm();
+        return;
+      }
       const ric = window.requestIdleCallback;
       if (typeof ric === "function") {
         idleId = ric(() => loadGtm(), { timeout: 1500 });
@@ -86,20 +103,24 @@ export function DeferredGtm() {
       armViaIdle();
     }
 
-    safetyTimer = window.setTimeout(
-      armViaIdle,
-      typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
-        ? GTM_DASHBOARD_SAFETY_DELAY_MS
-        : GTM_SAFETY_DELAY_MS,
-    );
+    if (shouldLoadGtmImmediately()) {
+      armViaIdle();
+    } else {
+      safetyTimer = window.setTimeout(
+        armViaIdle,
+        typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
+          ? GTM_DASHBOARD_SAFETY_DELAY_MS
+          : GTM_SAFETY_DELAY_MS,
+      );
 
-    gestureAttachTimer = window.setTimeout(() => {
-      if (cancelled || scheduled) return;
-      const opts: AddEventListenerOptions = { once: true, passive: true };
-      window.addEventListener("pointerdown", onInteraction, opts);
-      window.addEventListener("keydown", onInteraction, opts);
-      window.addEventListener("touchstart", onInteraction, opts);
-    }, GTM_GESTURE_ATTACH_MS);
+      gestureAttachTimer = window.setTimeout(() => {
+        if (cancelled || scheduled) return;
+        const opts: AddEventListenerOptions = { once: true, passive: true };
+        window.addEventListener("pointerdown", onInteraction, opts);
+        window.addEventListener("keydown", onInteraction, opts);
+        window.addEventListener("touchstart", onInteraction, opts);
+      }, GTM_GESTURE_ATTACH_MS);
+    }
 
     return () => {
       cancelled = true;
@@ -112,11 +133,25 @@ export function DeferredGtm() {
     };
   }, [consentAccepted]);
 
+  useEffect(() => {
+    if (!gtmReady || typeof window === "undefined") return;
+    const t = window.setTimeout(() => {
+      flushPendingPurchases();
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [gtmReady]);
+
   if (!consentAccepted || !gtmReady) return null;
 
   return (
     <>
-      <Script id="google-tag-manager" strategy="lazyOnload">{`
+      <Script
+        id="google-tag-manager"
+        strategy="afterInteractive"
+        onReady={() => {
+          flushPendingPurchases();
+        }}
+      >{`
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
         j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=

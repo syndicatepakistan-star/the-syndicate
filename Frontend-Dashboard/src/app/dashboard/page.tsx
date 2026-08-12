@@ -49,7 +49,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     <>
       {lcpHref ? (
         <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
-      ) : null}
+              ) : null}
       <DashboardPageClient initialSection={initialSection} />
     </>
   );

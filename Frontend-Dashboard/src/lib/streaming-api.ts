@@ -391,12 +391,18 @@ export async function confirmPlaylistCheckoutSuccess(sessionId: string): Promise
   is_unlocked: boolean;
   already_purchased?: boolean;
   message?: string;
+  amount_paid?: number;
+  currency?: string;
+  playlist_title?: string;
 }> {
   const res = await portalFetch<{
     playlist_id?: number;
     is_unlocked?: boolean;
     already_purchased?: boolean;
     message?: string;
+    amount_paid?: string | number;
+    currency?: string;
+    playlist_title?: string;
     detail?: string;
   }>(
     "/api/streaming/playlists/checkout/success/",
@@ -408,11 +414,21 @@ export async function confirmPlaylistCheckoutSuccess(sessionId: string): Promise
   if (!res.ok || !res.data?.playlist_id) {
     throw new Error(errMessage(res.status, res.data, "Could not confirm playlist payment."));
   }
+  const amountRaw = res.data.amount_paid;
+  const amountPaid =
+    typeof amountRaw === "number"
+      ? amountRaw
+      : typeof amountRaw === "string"
+        ? Number(String(amountRaw).replace(/[^0-9.]/g, ""))
+        : undefined;
   return {
     playlist_id: Number(res.data.playlist_id),
     is_unlocked: !!res.data.is_unlocked,
     already_purchased: !!res.data.already_purchased,
     message: res.data.message,
+    amount_paid: typeof amountPaid === "number" && Number.isFinite(amountPaid) ? amountPaid : undefined,
+    currency: typeof res.data.currency === "string" ? res.data.currency : undefined,
+    playlist_title: typeof res.data.playlist_title === "string" ? res.data.playlist_title : undefined,
   };
 }
 

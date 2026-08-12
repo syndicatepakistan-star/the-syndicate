@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import requests
@@ -33,6 +34,17 @@ def _split_name(full_name: str) -> tuple[str, str]:
     return parts[0], parts[1]
 
 
+def normalize_phone_e164(raw: str) -> str:
+    """
+    Quiz sends e.g. '+92 3001234567' or '+1-684 7123456789'.
+    Klaviyo profile phone_number must be E.164: + then digits only (6–15 digits).
+    """
+    digits = re.sub(r"\D", "", (raw or "").strip())
+    if len(digits) < 6 or len(digits) > 15:
+        return ""
+    return f"+{digits}"
+
+
 def subscribe_syn_diagnosis_email(
     *,
     email: str,
@@ -53,13 +65,13 @@ def subscribe_syn_diagnosis_email(
         return False
 
     first_name, last_name = _split_name(name)
+    phone_e164 = normalize_phone_e164(phone)
     props: dict[str, Any] = {
         "source": "syn_diagnosis_quiz",
         **(properties or {}),
     }
-    phone_clean = (phone or "").strip()
-    if phone_clean:
-        props.setdefault("phone_raw", phone_clean)
+    if phone_e164:
+        props.setdefault("phone_raw", phone_e164)
     # Drop empty custom props so Klaviyo stays clean.
     props = {k: v for k, v in props.items() if v is not None and str(v).strip() != ""}
 
@@ -75,6 +87,8 @@ def subscribe_syn_diagnosis_email(
             profile_attrs["first_name"] = first_name
         if last_name:
             profile_attrs["last_name"] = last_name
+        if phone_e164:
+            profile_attrs["phone_number"] = phone_e164
 
         import_res = requests.post(
             PROFILE_IMPORT_URL,
@@ -95,6 +109,19 @@ def subscribe_syn_diagnosis_email(
                 (import_res.text or "")[:300],
             )
 
+        subscribe_profile_attrs: dict[str, Any] = {
+            "email": email_norm,
+            "subscriptions": {
+                "email": {
+                    "marketing": {
+                        "consent": "SUBSCRIBED",
+                    }
+                }
+            },
+        }
+        if phone_e164:
+            subscribe_profile_attrs["phone_number"] = phone_e164
+
         subscribe_body = {
             "data": {
                 "type": "profile-subscription-bulk-create-job",
@@ -103,16 +130,7 @@ def subscribe_syn_diagnosis_email(
                         "data": [
                             {
                                 "type": "profile",
-                                "attributes": {
-                                    "email": email_norm,
-                                    "subscriptions": {
-                                        "email": {
-                                            "marketing": {
-                                                "consent": "SUBSCRIBED",
-                                            }
-                                        }
-                                    },
-                                },
+                                "attributes": subscribe_profile_attrs,
                             }
                         ]
                     }

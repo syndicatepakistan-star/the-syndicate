@@ -120,6 +120,24 @@ def submit_answers(request):
         ai_report=ai_report,
     )
 
+    # Syn Diagnosis → Klaviyo list (email sequencing). Failures never block the quiz.
+    try:
+        from .klaviyo import subscribe_syn_diagnosis_email
+
+        subscribe_syn_diagnosis_email(
+            email=email,
+            name=name,
+            phone=phone,
+            properties={
+                "syn_diagnosis_score": score,
+                "syn_diagnosis_category": designation,
+                "syn_diagnosis_virus": fatal_flaw,
+                "syn_diagnosis_course_offer": weapon_course,
+            },
+        )
+    except Exception:
+        pass
+
     return JsonResponse(
         {
             "score": score,

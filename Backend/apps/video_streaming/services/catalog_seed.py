@@ -335,9 +335,6 @@ def seed_vault_playlists_structure_only(*, publish: bool) -> VaultSeedStats:
 
     agentic_prices = [Decimal("14.00")] * len(AGENTIC_AI_COURSE_TITLES)
     ai_prices = [Decimal("14.00")] * len(AI_CONTENT_COURSE_TITLES)
-    # TEMP test: New YouTube Policy (ai_content_c02) → $0.50
-    if len(ai_prices) >= 2:
-        ai_prices[1] = Decimal("0.50")
 
     for (plan_slug, title, _thumb), price in zip(agentic_course_rows(), agentic_prices, strict=True):
         ensure_submodule_playlist(

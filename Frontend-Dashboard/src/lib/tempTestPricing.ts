@@ -5,23 +5,16 @@
  * Also run the matching video_streaming migration reverse / new migration after tests.
  */
 
-export const TEMP_TEST_PRICING_ENABLED = true;
+export const TEMP_TEST_PRICING_ENABLED = false;
 
-/** Flat promo amount used for every temp override below. */
+/** Flat promo amount used for every temp override below (unused while disabled). */
 export const TEMP_TEST_PRICE_USD = 0.5;
 
 /**
  * Plan / vault_plan_slug / level1 playlist slug → test price.
- * WhatsApp Agent (agentic_ai_c02) intentionally omitted → stays $14.
+ * Empty while test pricing is off — production catalog prices apply.
  */
-export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {
-  bundle: TEMP_TEST_PRICE_USD,
-  ai_content_c02: TEMP_TEST_PRICE_USD,
-  trading_scalpel_protocol: TEMP_TEST_PRICE_USD,
-  "level1-psych-09": TEMP_TEST_PRICE_USD,
-  "level1-model-01": TEMP_TEST_PRICE_USD,
-  "business-warfare": TEMP_TEST_PRICE_USD,
-};
+export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {};
 
 export function tempTestPrice(key: string | null | undefined, normal: number): number {
   if (!TEMP_TEST_PRICING_ENABLED || !key) return normal;

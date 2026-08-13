@@ -190,7 +190,7 @@ export const PATH_CATALOG: Record<GoalId, readonly PathItemRef[]> = {
     { type: "program", title: "The Compound Effect" },
     { type: "program", title: "Mastering Consistency" },
     { type: "program", title: "Mastering Risk and Uncertainty" },
-    { type: "program", title: "Micro Business Protocol" },
+    { type: "program", title: "Micro Business Protocols" },
     { type: "program", title: "The Secret To Transformation" },
     { type: "program", title: "Business Warfare" },
   ],

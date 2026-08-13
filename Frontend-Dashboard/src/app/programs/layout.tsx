@@ -10,30 +10,11 @@ import { ProgramsDeferredFxCss } from "@/components/programs/ProgramsDeferredFxC
  */
 const PROGRAMS_HASH_BOOT = `(function(){try{var h=(location.hash||"").replace(/^#/,"").toLowerCase();if(h!=="businessprograms"&&h!=="programs-library")return;if("scrollRestoration"in history)history.scrollRestoration="manual";try{window.__PROGRAMS_EAGER_LIBRARY=1;}catch(e){}function go(){var el=document.getElementById("businessprograms");if(!el)return false;var raw=window.getComputedStyle(el).scrollMarginTop||"0";var margin=parseFloat(raw);if(!isFinite(margin))margin=112;var y=Math.max(0,Math.round(el.getBoundingClientRect().top+(window.scrollY||window.pageYOffset||0)-margin));window.scrollTo(0,y);return true;}function tick(){go();requestAnimationFrame(function(){go();});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",tick);}else{tick();}}catch(e){}})();`;
 
-/** Critical display font — Thryon woff2 for program titles / LCP text. */
-const PROGRAMS_FONT_PRELOADS = (
-  <>
-    <link
-      rel="preload"
-      href="/fonts/Thryon.woff2"
-      as="font"
-      type="font/woff2"
-      crossOrigin="anonymous"
-    />
-    <link
-      rel="preload"
-      href="/fonts/CSDaineMono-Regular.woff2"
-      as="font"
-      type="font/woff2"
-      crossOrigin="anonymous"
-    />
-  </>
-);
-
 /**
  * Tiny critical CSS so Money Mastery LCP media can paint before the large
  * render-blocking stylesheet finishes (cuts element render delay).
  * Geometry matches PlanOfferCard elite primary (4/3, max-h 13.5rem / sm 15rem).
+ * Fonts are preloaded once in root layout — do not duplicate here (extra critical path).
  */
 const PROGRAMS_LCP_CRITICAL_CSS = `
 .programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 14px 38px rgba(0,0,0,.58)}
@@ -46,7 +27,6 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 export default function ProgramsLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      {PROGRAMS_FONT_PRELOADS}
       <style dangerouslySetInnerHTML={{ __html: PROGRAMS_LCP_CRITICAL_CSS }} />
       <Script id="programs-hash-boot" strategy="beforeInteractive">
         {PROGRAMS_HASH_BOOT}

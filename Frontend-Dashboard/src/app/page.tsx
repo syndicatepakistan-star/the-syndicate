@@ -15,6 +15,7 @@ import { HeroGlitchShell } from '@/components/home/HeroGlitchShell'
 import { NavApp } from '@/components/NavApp'
 import { PublicMarketingStyles } from '@/components/PublicMarketingStyles'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from '@/lib/optimizeImageUrl'
 import { getCuratedGlobeGalleryImages } from '@/lib/programPlaylistThumbnails'
 import { buildPageMetadata } from '@/lib/seo'
 import { buildFaqPageJsonLd, DEFAULT_SITE_DESCRIPTION, DEFAULT_SITE_TITLE } from '@/lib/structuredData'
@@ -34,11 +35,24 @@ const getLinkedProgramGalleryImages = unstable_cache(
   { revalidate: 3600 }
 )
 
+/** Mobile-first LCP — display-sized AVIF/WebP (not full 1600px logo.webp). */
+const HERO_LOGO_SIZES = '(max-width: 767px) 92vw, (max-width: 1024px) 70vw, 720px'
+const HERO_LOGO_HREF = nextOptimizedImageUrl('/assets/logo.webp', 640, 60)
+const HERO_LOGO_SRCSET = nextOptimizedImageSrcSet('/assets/logo.webp', 60, 828)
+
 export default async function Home() {
   const programGalleryImages = await getLinkedProgramGalleryImages()
 
   return (
     <div className="home-page-root public-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
+      <link
+        rel="preload"
+        as="image"
+        href={HERO_LOGO_HREF}
+        imageSrcSet={HERO_LOGO_SRCSET}
+        imageSizes={HERO_LOGO_SIZES}
+        fetchPriority="high"
+      />
       <PublicMarketingStyles />
       <JsonLd data={buildFaqPageJsonLd()} />
       <NavApp />
@@ -67,8 +81,8 @@ export default async function Home() {
               height={720}
               priority
               fetchPriority="high"
-              sizes="(max-width: 768px) 90vw, 720px"
-              quality={75}
+              sizes={HERO_LOGO_SIZES}
+              quality={60}
               className="block h-auto w-full max-w-full object-contain"
               style={{
                 maxHeight: 'clamp(160px, 76dvh, 720px)',

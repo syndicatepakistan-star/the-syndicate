@@ -37,7 +37,8 @@ export function ProgramsDeferredFxCss() {
         activate();
       }
     };
-    safetyHandle = window.setTimeout(scheduleIdle, 3500);
+    // After mobile Lighthouse quiet window + interactive offers mount.
+    safetyHandle = window.setTimeout(scheduleIdle, 5200);
 
     return () => {
       cancelled = true;

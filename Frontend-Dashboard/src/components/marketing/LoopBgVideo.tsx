@@ -19,6 +19,11 @@ type LoopBgVideoProps = {
   scrimOpacity?: number;
   /** Video layer opacity (0–1). */
   videoOpacity?: number;
+  /**
+   * Wait this many ms before attaching/playing the video (poster gradient only until then).
+   * Use on mobile heroes so LCP logo/CSS win the network.
+   */
+  deferPlayMs?: number;
 };
 
 /**
@@ -30,6 +35,7 @@ export function LoopBgVideo({
   src = MARKETING_LOOP_BG_VIDEO,
   scrimOpacity = 0.55,
   videoOpacity = 0.85,
+  deferPlayMs = 0,
 }: LoopBgVideoProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -42,8 +48,12 @@ export function LoopBgVideo({
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let visible = false;
     let started = false;
+    let armed = deferPlayMs <= 0;
+    let deferTimer: number | undefined;
+    let cancelled = false;
 
     const syncPlay = () => {
+      if (cancelled || !armed) return;
       if (reduced.matches || document.visibilityState === "hidden" || !visible) {
         if (!video.paused) video.pause();
         return;
@@ -53,11 +63,29 @@ export function LoopBgVideo({
       if (!started) {
         started = true;
         video.preload = "auto";
+        // Attach source only after arming so mobile LH does not fetch ~0.5MB during LCP.
+        if (!video.currentSrc && !video.querySelector("source")) {
+          const source = document.createElement("source");
+          source.src = src;
+          source.type = "video/mp4";
+          video.appendChild(source);
+          video.load();
+        }
       }
       void video.play().catch(() => {
         started = false;
       });
     };
+
+    const arm = () => {
+      if (cancelled || armed) return;
+      armed = true;
+      syncPlay();
+    };
+
+    if (!armed) {
+      deferTimer = window.setTimeout(arm, deferPlayMs);
+    }
 
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -75,12 +103,16 @@ export function LoopBgVideo({
     syncPlay();
 
     return () => {
+      cancelled = true;
+      if (deferTimer != null) window.clearTimeout(deferTimer);
       io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
       reduced.removeEventListener("change", onReduced);
       video.pause();
     };
-  }, [src]);
+  }, [src, deferPlayMs]);
+
+  const deferSource = deferPlayMs > 0;
 
   return (
     <div ref={hostRef} className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)} aria-hidden>
@@ -92,11 +124,12 @@ export function LoopBgVideo({
         muted
         loop
         playsInline
-        autoPlay
-        preload="metadata"
+        // No autoPlay when deferred — JS starts playback after the quiet window.
+        autoPlay={!deferSource}
+        preload={deferSource ? "none" : "metadata"}
         poster=""
       >
-        <source src={src} type="video/mp4" />
+        {!deferSource ? <source src={src} type="video/mp4" /> : null}
       </video>
       <div
         className="absolute inset-0 z-[2] bg-black"

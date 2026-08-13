@@ -30,6 +30,7 @@ import {
   readProgramDetailsHash,
   writeProgramDetailsHash,
   clearProgramDetailsHash,
+  parsePackDeepLinkSlug,
 } from "@/lib/programPlaylistThumbnails";
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
 import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
@@ -302,6 +303,9 @@ export function PlaylistCardsSection({
     // Prefer live address-bar query (updated on every Details open) over React searchParams.
     const params = new URLSearchParams(window.location.search);
     const slugParam = params.get("slug")?.trim().toLowerCase() ?? "";
+    // Pack marketing URLs (`?slug=money-mastery#details`) are owned by Elite Offers — never
+    // fall back to the first Level-1 card (that was opening Hustle Hard incorrectly).
+    if (parsePackDeepLinkSlug(slugParam)) return false;
     const programParam = Number.parseInt(params.get("program") || "", 10);
     const fromUrlSlug = slugParam
       ? resolveProgramPlaylistHighlightSlug(playlists, slugParam)
@@ -314,7 +318,12 @@ export function PlaylistCardsSection({
       highlightPlaylistId != null
         ? resolveProgramPlaylistHighlightId(playlists, highlightPlaylistId) ?? highlightPlaylistId
         : null;
+    // If the URL has an explicit slug/program that is not a Level-1 playlist, do nothing.
+    if (slugParam && fromUrlSlug == null && fromUrlProgram == null && fromHighlight == null) {
+      return false;
+    }
     const preferredId = fromUrlSlug ?? fromUrlProgram ?? fromHighlight;
+    if (preferredId == null) return false;
     const eligible = (pl: StreamPlaylistListItem) =>
       supportsProgramHashDeepLink({
         id: pl.id,
@@ -322,11 +331,7 @@ export function PlaylistCardsSection({
         title: pl.title,
         vault_plan_slug: pl.vault_plan_slug,
       });
-    const resolvedTarget =
-      (preferredId != null
-        ? visiblePlaylists.find((pl) => pl.id === preferredId && eligible(pl))
-        : undefined) ??
-      (preferredId == null ? visiblePlaylists.find(eligible) : undefined);
+    const resolvedTarget = visiblePlaylists.find((pl) => pl.id === preferredId && eligible(pl));
     if (!resolvedTarget) return false;
     // Already showing this program — don't clear/reopen (avoids flicker when URL syncs).
     if (descriptionModalPlaylistRef.current?.id === resolvedTarget.id) {

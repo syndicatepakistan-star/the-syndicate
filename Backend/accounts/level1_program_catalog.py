@@ -71,7 +71,7 @@ LEVEL1_PSYCHOLOGY_PROGRAMS: tuple[Level1ProgramRow, ...] = (
     _psych(4, "Mastering Consistency", "Mastering Consistency", "Intro"),
     _psych(5, "The Secret To Transformation", "Secret To Transformation", "Intro"),
     _psych(6, "The Compound Effect", "Compound Effect", "Intro"),
-    _psych(7, "The Micro Business Protocol", "Micro Business Protocol", "Intro"),
+    _psych(7, "Micro Business Protocols", "Micro Business Protocol", "Intro"),
     _psych(8, "Mastering Risk and Uncertainty", "Risk and Uncertainty", "Intro"),
     _psych(9, "Business Warfare", "Business Warfare", "Intro"),
     _psych(10, "Syndicate 13 Business Rules", "13 Business Rules", "Intro"),
@@ -79,17 +79,17 @@ LEVEL1_PSYCHOLOGY_PROGRAMS: tuple[Level1ProgramRow, ...] = (
 )
 
 LEVEL1_BUSINESS_MODEL_PROGRAMS: tuple[Level1ProgramRow, ...] = (
-    _model(1, "N8N AI Automation", "N8N AI Automation", "Intro"),
-    _model(2, "AI Automations", "Ai Automation", "Intro"),
-    _model(3, "App Building (using Flutter)", "App Building Flutter", "Intro"),
-    _model(4, "Building Apps using React JS", "React", ""),
-    _model(5, "Book Publishing On Amazon (KINDLE)", "Amazon KDP", ""),
-    _model(6, "Building Games Using Unreal Engine", "Unreal Engine", ""),
+    _model(1, "AI content Automation for Businesses", "N8N AI Automation", "Intro"),
+    _model(2, "Social Media Content Automation", "Ai Automation", "Intro"),
+    _model(3, "App Building for Business (Vibe Coding)", "App Building Flutter", "Intro"),
+    _model(4, "The Custom App Blueprint for Business", "React", ""),
+    _model(5, "eBook Business Blueprint (Monetize Your Knowledge)", "Amazon KDP", ""),
+    _model(6, "The Gaming Business Blueprint (Build, Launch, and Sell)", "Unreal Engine", ""),
     _model(7, "Rapid Web Building For Business (Vibe Coding)", "Framer Crash Course", "Intro"),
-    _model(8, "Graphics Design Using Canva", "Canva", "Intro"),
-    _model(9, "Print On Demand Clothing", "Print On Demand", "Intro"),
-    _model(10, "Python Programming", "Python", ""),
-    _model(11, "WordPress Blog", "WordPress Blog", "Intro"),
+    _model(8, "Graphics Design for Business (Graphics That Convert to Sales)", "Canva", "Intro"),
+    _model(9, "The Zero-Inventory Clothing Business Blueprint", "Print On Demand", "Intro"),
+    _model(10, "Basics Python for Small Business", "Python", ""),
+    _model(11, "The Profitable Blogging Blueprint", "WordPress Blog", "Intro"),
 )
 
 LEVEL1_ALL_PROGRAMS: tuple[Level1ProgramRow, ...] = LEVEL1_PSYCHOLOGY_PROGRAMS + LEVEL1_BUSINESS_MODEL_PROGRAMS

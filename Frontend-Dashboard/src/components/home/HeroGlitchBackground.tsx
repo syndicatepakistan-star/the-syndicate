@@ -20,6 +20,8 @@ export function HeroGlitchBackground({ className }: HeroGlitchBackgroundProps) {
       className={`z-[1] h-full w-full min-w-0 ${className ?? ""}`.trim()}
       scrimOpacity={0.45}
       videoOpacity={0.9}
+      // Poster first so LCP logo + CSS win the network (mobile LH + desktop quiet window).
+      deferPlayMs={3000}
     />
   );
 }

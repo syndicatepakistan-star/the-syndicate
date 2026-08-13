@@ -23,6 +23,7 @@ import {
   LEGACY_PROGRAM_ID_TO_LEVEL1_SLUG,
   LEVEL1_CANONICAL_TITLES,
   LEVEL1_SLUG_DISPLAY_ORDER,
+  LEVEL1_SLUG_TITLE_OVERRIDES,
   PUBLIC_LEVEL1_PLAYLIST_SLUGS,
 } from "@/lib/level1ProgramCatalog";
 import { cleanProgramDescription } from "@/lib/descriptionText";
@@ -230,7 +231,7 @@ function level1SlugCategory(slug: string): StreamPlaylistListItem["category"] {
 }
 
 function titleMatchesCanonical(playlistTitle: string, slug: string): boolean {
-  const canonical = LEVEL1_CANONICAL_TITLES[slug];
+  const canonical = LEVEL1_SLUG_TITLE_OVERRIDES[slug] ?? LEVEL1_CANONICAL_TITLES[slug];
   if (!canonical) return false;
   const a = normalizeTitle(playlistTitle);
   const b = normalizeTitle(canonical);

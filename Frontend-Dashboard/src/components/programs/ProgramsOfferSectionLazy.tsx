@@ -1,10 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 import { ProgramsEliteOffersLcpFallback } from "@/components/programs/ProgramsEliteOffersLcpFallback";
 import { useDeferredInteractiveOffers } from "@/hooks/useDeferredInteractiveOffers";
-import type { GlobePackKey } from "@/lib/programPlaylistThumbnails";
+import {
+  parsePackDeepLinkSlug,
+  readProgramDetailsHash,
+  type GlobePackKey,
+} from "@/lib/programPlaylistThumbnails";
 
 type Props = {
   size?: "large" | "compact";
@@ -53,21 +57,33 @@ function hideSsrBrowseSibling() {
   el.style.display = "none";
 }
 
+function hasPackDetailsDeepLink(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!readProgramDetailsHash()) return false;
+  const sp = new URLSearchParams(window.location.search);
+  return Boolean(parsePackDeepLinkSlug(sp.get("slug")) || sp.get("pack"));
+}
+
 /**
  * Idle-deferred interactive elite offers. Pair with server `ProgramsEliteOffersLcpFallback`
  * (`browseSibling`) so Money Mastery LCP stays a stable server <img>.
+ * Pack `#details` deep links mount immediately so checkout-return URLs open Money Mastery
+ * (not a Level-1 library modal).
  */
 export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
+  const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
-    safetyMs: props.knightOnly ? 4500 : 3200,
+    // Past mobile Lighthouse TBT window so Money Mastery SSR LCP stays quiet.
+    safetyMs: props.knightOnly ? 5200 : 4800,
   });
+  const ready = forcePackDetails || interactiveReady;
 
   useLayoutEffect(() => {
-    if (!interactiveReady || props.knightOnly) return;
+    if (!ready || props.knightOnly) return;
     hideSsrBrowseSibling();
-  }, [interactiveReady, props.knightOnly]);
+  }, [ready, props.knightOnly]);
 
-  if (!interactiveReady) {
+  if (!ready) {
     if (props.knightOnly) return <KnightOfferFallback />;
     // Sibling server browse already paints LCP — do not duplicate / remount the img.
     if (browseSibling) return null;

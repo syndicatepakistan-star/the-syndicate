@@ -51,7 +51,7 @@ export const PUBLIC_PSYCHOLOGY_SLUG_ORDER: readonly string[] = [
   "level1-psych-05",
 ];
 
-/** Canonical titles — sync with Backend/accounts/level1_program_catalog.py */
+/** Canonical titles — sync with Backend/accounts/level1_program_catalog.py + LEVEL1_SLUG_TITLE_OVERRIDES */
 export const LEVEL1_CANONICAL_TITLES: Record<string, string> = {
   "level1-psych-01": "The 9 to 5 Exit Strategy",
   "level1-psych-02": "Zero to One Million",
@@ -59,22 +59,22 @@ export const LEVEL1_CANONICAL_TITLES: Record<string, string> = {
   "level1-psych-04": "Mastering Consistency",
   "level1-psych-05": "The Secret To Transformation",
   "level1-psych-06": "The Compound Effect",
-  "level1-psych-07": "The Micro Business Protocol",
+  "level1-psych-07": "Micro Business Protocols",
   "level1-psych-08": "Mastering Risk and Uncertainty",
   "level1-psych-09": "Business Warfare",
   "level1-psych-10": "Syndicate 13 Business Rules",
   "level1-psych-11": "Syndicate Money Philosophy",
-  "level1-model-01": "N8N AI Automation",
-  "level1-model-02": "AI Automations",
-  "level1-model-03": "App Building (using Flutter)",
-  "level1-model-04": "Building Apps using React JS",
-  "level1-model-05": "Book Publishing On Amazon (KINDLE)",
-  "level1-model-06": "Building Games Using Unreal Engine",
+  "level1-model-01": "AI content Automation for Businesses",
+  "level1-model-02": "Social Media Content Automation",
+  "level1-model-03": "App Building for Business (Vibe Coding)",
+  "level1-model-04": "The Custom App Blueprint for Business",
+  "level1-model-05": "eBook Business Blueprint (Monetize Your Knowledge)",
+  "level1-model-06": "The Gaming Business Blueprint (Build, Launch, and Sell)",
   "level1-model-07": "Rapid Web Building For Business (Vibe Coding)",
-  "level1-model-08": "Graphics Design Using Canva",
-  "level1-model-09": "Print On Demand Clothing",
-  "level1-model-10": "Python Programming",
-  "level1-model-11": "WordPress Blog",
+  "level1-model-08": "Graphics Design for Business (Graphics That Convert to Sales)",
+  "level1-model-09": "The Zero-Inventory Clothing Business Blueprint",
+  "level1-model-10": "Basics Python for Small Business",
+  "level1-model-11": "The Profitable Blogging Blueprint",
 };
 
 /**

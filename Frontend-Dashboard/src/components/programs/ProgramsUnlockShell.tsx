@@ -74,17 +74,31 @@ function ProgramsUnlockShellHost({ children }: { children: ReactNode }) {
 }
 
 /**
- * Browse-first shell: cards paint without checkout/toast chunks.
- * First Unlock tap activates unlockReady → loads cart chrome + checkout modules.
+ * Keep UnlockCartProvider off the first paint graph until unlock is needed.
+ * Browse cards use EMPTY_UNLOCK_CART stubs until then (no throw).
+ */
+function UnlockCartGate({ children }: { children: ReactNode }) {
+  const { unlockReady } = useUnlockActivation();
+  if (!unlockReady) {
+    return <>{children}</>;
+  }
+  return (
+    <UnlockCartProvider>
+      <ProgramsUnlockShellHost>{children}</ProgramsUnlockShellHost>
+    </UnlockCartProvider>
+  );
+}
+
+/**
+ * Browse-first shell: cards paint without checkout/toast/cart context chunks.
+ * First Unlock tap (or deep-link) activates unlockReady → loads cart + checkout modules.
  */
 export function ProgramsUnlockShell({ children }: { children: ReactNode }) {
   useProgramsPageScrollSmooth(true);
 
   return (
     <UnlockActivationProvider>
-      <UnlockCartProvider>
-        <ProgramsUnlockShellHost>{children}</ProgramsUnlockShellHost>
-      </UnlockCartProvider>
+      <UnlockCartGate>{children}</UnlockCartGate>
     </UnlockActivationProvider>
   );
 }

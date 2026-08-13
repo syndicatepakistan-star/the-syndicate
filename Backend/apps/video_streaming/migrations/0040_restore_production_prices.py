@@ -44,6 +44,7 @@ def restore_production_prices(apps, schema_editor):
         | Q(title__iexact="AI content Automation for Businesses")
         | Q(title__iexact="N8N AI Automation")
         | Q(title__iexact="A.I Content Automation for Business")
+        | Q(title__iexact="Business and Content A.I Automation")
     ).update(price=Decimal("75.00"))
 
 

@@ -43,11 +43,11 @@ export default function RouteWarmup() {
     // Auth / checkout: zero route prefetch — unused JS was ~170–220 KiB on /login.
     if (isPrograms || isDashboard || isAuthHeavy) return;
 
-    // Homepage: wait longer so hero LCP / TBT settle before prefetch pulls more JS.
+    // Homepage: wait past LCP quiet window + deferred hero video before prefetch pulls more JS.
     runWhenIdle(() => {
       router.prefetch("/programs");
       if (!isFounder) router.prefetch("/membership");
-    }, isHome ? 4200 : isFounder || isQuiz ? 2800 : 1200);
+    }, isHome ? 5500 : isFounder || isQuiz ? 2800 : 1200);
   }, [router, pathname]);
 
   return null;

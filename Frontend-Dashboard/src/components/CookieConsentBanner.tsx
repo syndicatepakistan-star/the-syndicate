@@ -142,6 +142,18 @@ export function CookieConsentBanner() {
     };
   }, [hideOnAuth]);
 
+  // If consent is changed programmatically (ex: auto-consent), hide the banner immediately.
+  useEffect(() => {
+    if (hideOnAuth) return;
+    const onConsent = () => {
+      setVisible(false);
+      setOpenedFromHash(false);
+      setShowDetails(false);
+    };
+    window.addEventListener("syndicate-cookie-consent", onConsent as EventListener);
+    return () => window.removeEventListener("syndicate-cookie-consent", onConsent as EventListener);
+  }, [hideOnAuth]);
+
   if (!visible || hideOnAuth) return null;
 
   const choose = (value: CookieConsentValue) => {
@@ -228,7 +240,7 @@ export function CookieConsentBanner() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => choose("accepted")}
+                  onClick={() => choose("essential")}
                   className={cn(
                     "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-white/25",
                     "bg-black/55 px-4 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-100",

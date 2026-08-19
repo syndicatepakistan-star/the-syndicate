@@ -5,17 +5,20 @@ import Script from "next/script";
 import {
   COOKIE_CONSENT_KEY,
   readCookieConsent,
+  writeCookieConsent,
   type CookieConsentValue,
 } from "@/components/CookieConsentBanner";
 import { flushPendingPurchases, hasPendingPurchaseEvents } from "@/lib/gtmCommerce";
 
 const GTM_ID = "GTM-WBW2KZV6";
-/** Keep gtm.js / FB / Klaviyo out of the Lighthouse TBT window after Accept. */
-const GTM_SAFETY_DELAY_MS = 7000;
-/** Dashboard is auth-heavy — wait longer so GTM/FB don't fight LCP/TBT. */
-const GTM_DASHBOARD_SAFETY_DELAY_MS = 12000;
-/** Ignore Accept-click / early LH taps before arming gesture → GTM. */
-const GTM_GESTURE_ATTACH_MS = 500;
+/**
+ * Load GTM quickly without requiring a user click.
+ * - Target: start loading within ~3–4s of page load (first-time visitors).
+ * - Keeps the rest asynchronous via Next Script `afterInteractive`.
+ */
+const GTM_AUTO_CONSENT_DELAY_MS = 3000;
+/** Small grace period so the page finishes initial rendering first. */
+const GTM_POST_CONSENT_LOAD_DELAY_MS = 250;
 
 function shouldLoadGtmImmediately(): boolean {
   if (typeof window === "undefined") return false;
@@ -39,11 +42,35 @@ export function DeferredGtm() {
   const [gtmReady, setGtmReady] = useState(false);
 
   useEffect(() => {
+    // If the user hasn't chosen yet, we auto-start marketing after a short delay.
+    // This reduces the tracking gap where users never click the banner.
+    let autoConsentTimer: number | undefined;
+
     const syncConsent = (value: CookieConsentValue | null = readCookieConsent()) => {
-      // Marketing GTM: load for both Accept all and Essential only.
-      setConsentAccepted(value === "accepted" || value === "essential");
+      // GTM must load in all cases: both "accepted" and "essential".
+      const next = value === "accepted" || value === "essential";
+      setConsentAccepted(next);
+
+      // Clear any pending auto-consent as soon as we have a real choice.
+      if (autoConsentTimer != null && value !== null) {
+        window.clearTimeout(autoConsentTimer);
+        autoConsentTimer = undefined;
+      }
     };
     syncConsent();
+
+    // Arm auto-consent only for first-time visitors (no stored decision yet).
+    if (readCookieConsent() === null) {
+      autoConsentTimer = window.setTimeout(() => {
+        // Only auto-consent if user still hasn't made a choice.
+        if (readCookieConsent() === null) {
+          // User requested "no wait for click": treat no-response as accepted.
+          // Cookie banner will hide automatically (via existing consent listeners).
+          writeCookieConsent("accepted");
+        }
+      }, GTM_AUTO_CONSENT_DELAY_MS);
+    }
+
     const onStorage = (e: StorageEvent) => {
       if (e.key === COOKIE_CONSENT_KEY) syncConsent();
     };
@@ -54,83 +81,30 @@ export function DeferredGtm() {
     window.addEventListener("storage", onStorage);
     window.addEventListener("syndicate-cookie-consent", onCustom);
     return () => {
+      if (autoConsentTimer != null) window.clearTimeout(autoConsentTimer);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("syndicate-cookie-consent", onCustom);
     };
   }, []);
 
   useEffect(() => {
+    // Immediate exception: make sure checkout/purchase tagging isn't blocked by consent.
+    if (shouldLoadGtmImmediately()) {
+      setGtmReady(true);
+      return;
+    }
+
     if (!consentAccepted) {
       setGtmReady(false);
       return;
     }
 
-    let cancelled = false;
-    let idleId: number | undefined;
-    let safetyTimer: number | undefined;
-    let gestureAttachTimer: number | undefined;
-    let scheduled = false;
-
-    const detachGestures = () => {
-      window.removeEventListener("pointerdown", onInteraction);
-      window.removeEventListener("keydown", onInteraction);
-      window.removeEventListener("touchstart", onInteraction);
-    };
-
-    const loadGtm = () => {
-      if (cancelled) return;
+    // Start GTM shortly after consent becomes accepted (no long idle/gesture waits).
+    const t = window.setTimeout(() => {
       setGtmReady(true);
-    };
+    }, GTM_POST_CONSENT_LOAD_DELAY_MS);
 
-    const armViaIdle = () => {
-      if (cancelled || scheduled) return;
-      scheduled = true;
-      if (safetyTimer != null) window.clearTimeout(safetyTimer);
-      detachGestures();
-      if (shouldLoadGtmImmediately()) {
-        loadGtm();
-        return;
-      }
-      const ric = window.requestIdleCallback;
-      if (typeof ric === "function") {
-        idleId = ric(() => loadGtm(), { timeout: 1500 });
-      } else {
-        loadGtm();
-      }
-    };
-
-    function onInteraction() {
-      armViaIdle();
-    }
-
-    if (shouldLoadGtmImmediately()) {
-      armViaIdle();
-    } else {
-      safetyTimer = window.setTimeout(
-        armViaIdle,
-        typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")
-          ? GTM_DASHBOARD_SAFETY_DELAY_MS
-          : GTM_SAFETY_DELAY_MS,
-      );
-
-      gestureAttachTimer = window.setTimeout(() => {
-        if (cancelled || scheduled) return;
-        const opts: AddEventListenerOptions = { once: true, passive: true };
-        window.addEventListener("pointerdown", onInteraction, opts);
-        window.addEventListener("keydown", onInteraction, opts);
-        window.addEventListener("touchstart", onInteraction, opts);
-      }, GTM_GESTURE_ATTACH_MS);
-    }
-
-    return () => {
-      cancelled = true;
-      if (safetyTimer != null) window.clearTimeout(safetyTimer);
-      if (gestureAttachTimer != null) window.clearTimeout(gestureAttachTimer);
-      if (idleId != null && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      detachGestures();
-    };
+    return () => window.clearTimeout(t);
   }, [consentAccepted]);
 
   useEffect(() => {
@@ -141,7 +115,7 @@ export function DeferredGtm() {
     return () => window.clearTimeout(t);
   }, [gtmReady]);
 
-  if (!consentAccepted || !gtmReady) return null;
+  if (!gtmReady) return null;
 
   return (
     <>

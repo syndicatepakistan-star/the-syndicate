@@ -53,7 +53,7 @@ const POLICY_BLOCKS: { title: string; body: string }[] = [
   {
     title: "Cookies",
     body:
-      "Essential cookies keep you signed in, remember currency, and protect checkout/OTP. Optional analytics cookies run only after you Accept all. Clear site data in your browser anytime to reset this choice. Affiliate attribution may use a visitor id so referrals can be credited.",
+      "Essential cookies keep you signed in, remember currency, and protect checkout/OTP. Marketing/analytics cookies (GTM / Klaviyo) run after you choose Accept all or Reject All. Clear site data in your browser anytime to reset this choice. Affiliate attribution may use a visitor id so referrals can be credited.",
   },
 ];
 
@@ -200,8 +200,8 @@ export function CookieConsentBanner() {
               Privacy &amp; Policy
             </p>
             <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-zinc-200/92 sm:text-[14px]">
-              We use essential cookies to run The Syndicate and optional analytics cookies to improve
-              the site. Privacy, terms, subscriptions, refunds, and cookies are covered here.
+              We use essential cookies to run The Syndicate and marketing/analytics cookies (GTM / Klaviyo) for
+              analytics. Privacy, terms, subscriptions, refunds, and cookies are covered here.
             </p>
             <button
               type="button"
@@ -228,14 +228,14 @@ export function CookieConsentBanner() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => choose("essential")}
+                  onClick={() => choose("accepted")}
                   className={cn(
                     "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-white/25",
                     "bg-black/55 px-4 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-100",
                     "transition hover:border-white/40 hover:text-white sm:flex-none",
                   )}
                 >
-                  Essential only
+                  Reject All
                 </button>
               </>
             ) : (

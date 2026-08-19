@@ -443,10 +443,10 @@ export const PLAN_OFFERS_VAULT: readonly PlanOfferDef[] = [
     imageSrc: OFFER_PLAN_THUMB_AGENTIC_AI,
     teaser:
       "Manual workflows are wage labour disguised as entrepreneurship — stop babysitting tasks agents should execute. Agentic AI installs autonomous n8n pipelines, Claude Code systems, MCP servers, and RAG stacks that compound leverage while you architect the empire.",
-    displayPrice: "$150",
+    displayPrice: formatTempAwareDisplayPrice("agentic_ai", 150),
     comparePrice: "$222",
     billingLabel: "/lifetime",
-    checkoutAmount: "150",
+    checkoutAmount: formatTempAwareAmount("agentic_ai", 150),
     billing: "monthly",
     openLabel: "Unlock Full Pack",
     openAction: "vault_picker",

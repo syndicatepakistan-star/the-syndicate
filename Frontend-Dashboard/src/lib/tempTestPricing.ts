@@ -5,16 +5,18 @@
  * Also run the matching video_streaming migration reverse / new migration after tests.
  */
 
-export const TEMP_TEST_PRICING_ENABLED = false;
+export const TEMP_TEST_PRICING_ENABLED = true;
 
-/** Flat promo amount used for every temp override below (unused while disabled). */
+/** Flat promo amount used for every temp override below. */
 export const TEMP_TEST_PRICE_USD = 0.5;
 
 /**
  * Plan / vault_plan_slug / level1 playlist slug → test price.
- * Empty while test pricing is off — production catalog prices apply.
+ * Production restore: set ENABLED false and empty this map.
  */
-export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {};
+export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {
+  agentic_ai: TEMP_TEST_PRICE_USD,
+};
 
 export function tempTestPrice(key: string | null | undefined, normal: number): number {
   if (!TEMP_TEST_PRICING_ENABLED || !key) return normal;

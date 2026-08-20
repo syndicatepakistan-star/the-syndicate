@@ -3,8 +3,9 @@ from django.db import models
 
 class User(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     phone = models.CharField(max_length=50, null=True, blank=True)
+    intake_ref = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -52,3 +53,19 @@ class QuizOption(models.Model):
 
     class Meta:
         db_table = "quiz_options"
+
+
+class IntakeResponse(models.Model):
+    """Follow-up free-text answers linked to a Syn Diagnosis quiz user (via intake_ref URL)."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="intake")
+    answers = models.JSONField(default=dict)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "quiz_intake_responses"
+        ordering = ("-submitted_at",)
+
+    def __str__(self) -> str:
+        return f"Intake #{self.pk} — {self.user.email or self.user_id}"

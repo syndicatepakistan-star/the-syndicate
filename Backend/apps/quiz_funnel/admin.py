@@ -3,8 +3,11 @@ import csv
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, reverse
+from django.utils.html import format_html
 
-from .models import QuizOption, QuizQuestion, Result, User
+from .intake_data import INTAKE_QUESTIONS
+from .intake_tokens import intake_url_for_ref
+from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
 
 
 def _build_excel_response(filename: str) -> HttpResponse:
@@ -16,20 +19,30 @@ def _build_excel_response(filename: str) -> HttpResponse:
 def export_users_to_excel(modeladmin, request, queryset):
     response = _build_excel_response("quiz_users_export.csv")
     writer = csv.writer(response)
-    writer.writerow(["User Name", "Email", "Number", "Score", "Category", "Virus"])
+    intake_headers = [q["label"] for q in INTAKE_QUESTIONS]
+    writer.writerow(
+        ["User Name", "Email", "Number", "Intake Ref", "Intake URL", "Intake Done", "Score", "Category", "Virus"]
+        + intake_headers
+    )
 
-    users = queryset.select_related("result")
+    users = queryset.select_related("result", "intake")
     for user in users:
         result = getattr(user, "result", None)
+        intake = getattr(user, "intake", None)
+        answers = (intake.answers if intake else {}) or {}
         writer.writerow(
             [
                 user.name or "",
                 user.email or "",
                 user.phone or "",
+                user.intake_ref or "",
+                intake_url_for_ref(user.intake_ref or "") if user.intake_ref else "",
+                "Yes" if intake else "No",
                 result.score if result else "",
                 result.category if result else "",
                 result.virus if result else "",
             ]
+            + [answers.get(q["id"], "") for q in INTAKE_QUESTIONS]
         )
     return response
 
@@ -69,16 +82,37 @@ class ResultInline(admin.StackedInline):
     readonly_fields = ("score", "category", "virus", "course_offer", "ai_report", "created_at")
 
 
+class IntakeResponseInline(admin.StackedInline):
+    model = IntakeResponse
+    extra = 0
+    can_delete = False
+    fields = ("answers", "submitted_at", "updated_at")
+    readonly_fields = ("answers", "submitted_at", "updated_at")
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "email", "phone", "score", "category", "virus", "course_offer", "created_at")
-    search_fields = ("name", "email", "phone")
+    list_display = (
+        "id",
+        "name",
+        "email",
+        "phone",
+        "intake_ref",
+        "intake_done",
+        "score",
+        "category",
+        "virus",
+        "course_offer",
+        "created_at",
+    )
+    search_fields = ("name", "email", "phone", "intake_ref")
     ordering = ("-created_at",)
     list_filter = ("created_at",)
     date_hierarchy = "created_at"
-    inlines = [ResultInline]
+    inlines = [ResultInline, IntakeResponseInline]
     actions = [export_users_to_excel]
     change_list_template = "admin/quiz_funnel/user/change_list.html"
+    readonly_fields = ("intake_link_display", "created_at")
 
     def get_urls(self):
         urls = super().get_urls()
@@ -102,23 +136,44 @@ class UserAdmin(admin.ModelAdmin):
 
     def export_filtered_view(self, request):
         changelist = self.get_changelist_instance(request)
-        queryset = changelist.get_queryset(request).select_related("result")
+        queryset = changelist.get_queryset(request).select_related("result", "intake")
         response = _build_excel_response("quiz_users_export.csv")
         writer = csv.writer(response)
-        writer.writerow(["User Name", "Email", "Number", "Score", "Category", "Virus"])
+        intake_headers = [q["label"] for q in INTAKE_QUESTIONS]
+        writer.writerow(
+            ["User Name", "Email", "Number", "Intake Ref", "Intake URL", "Intake Done", "Score", "Category", "Virus"]
+            + intake_headers
+        )
         for user in queryset:
             result = getattr(user, "result", None)
+            intake = getattr(user, "intake", None)
+            answers = (intake.answers if intake else {}) or {}
             writer.writerow(
                 [
                     user.name or "",
                     user.email or "",
                     user.phone or "",
+                    user.intake_ref or "",
+                    intake_url_for_ref(user.intake_ref or "") if user.intake_ref else "",
+                    "Yes" if intake else "No",
                     result.score if result else "",
                     result.category if result else "",
                     result.virus if result else "",
                 ]
+                + [answers.get(q["id"], "") for q in INTAKE_QUESTIONS]
             )
         return response
+
+    @admin.display(description="Intake link")
+    def intake_link_display(self, obj):
+        if not obj.intake_ref:
+            return "—"
+        url = intake_url_for_ref(obj.intake_ref)
+        return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', url, url)
+
+    @admin.display(boolean=True, description="Intake done")
+    def intake_done(self, obj):
+        return hasattr(obj, "intake") and obj.intake is not None
 
     @admin.display(description="Score")
     def score(self, obj):
@@ -199,3 +254,15 @@ class QuizQuestionAdmin(admin.ModelAdmin):
     search_fields = ("question_text", "section")
     ordering = ("id",)
     inlines = [QuizOptionInline]
+
+
+@admin.register(IntakeResponse)
+class IntakeResponseAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "user_email", "submitted_at")
+    search_fields = ("user__email", "user__name", "user__intake_ref")
+    ordering = ("-submitted_at",)
+    readonly_fields = ("user", "answers", "submitted_at", "updated_at")
+
+    @admin.display(description="Email")
+    def user_email(self, obj):
+        return obj.user.email or "—"

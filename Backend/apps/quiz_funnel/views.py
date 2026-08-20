@@ -8,7 +8,9 @@ from django.views.decorators.http import require_GET, require_POST
 from .quiz_data import QUIZ_QUESTIONS
 from .ai_service import generate_ai_report
 from .logic import build_recommendation, get_designation_short
-from .models import QuizOption, QuizQuestion, Result, User
+from .intake_data import INTAKE_QUESTIONS, INTAKE_QUESTION_IDS
+from .intake_tokens import ensure_intake_ref, intake_url_for_ref
+from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
 
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PHONE_REGEX = re.compile(r"^[0-9+\-\s()]{7,20}$")
@@ -39,6 +41,65 @@ def seed_quiz_questions():
             )
 
 
+def _first_name(full_name: str) -> str:
+    parts = (full_name or "").strip().split(None, 1)
+    return parts[0] if parts else ""
+
+
+def _find_or_create_quiz_user(*, name: str, email: str, phone: str) -> User:
+    email_norm = email.strip().lower()
+    user = User.objects.filter(email__iexact=email_norm).order_by("-id").first()
+    if user is None:
+        user = User.objects.create(name=name, email=email_norm, phone=phone)
+    else:
+        changed = False
+        if name and (user.name or "").strip() != name:
+            user.name = name
+            changed = True
+        if phone and (user.phone or "").strip() != phone:
+            user.phone = phone
+            changed = True
+        if changed:
+            user.save(update_fields=["name", "phone"])
+    return user
+
+
+def _user_by_intake_ref(ref: str) -> User | None:
+    token = (ref or "").strip()
+    if not token:
+        return None
+    return User.objects.filter(intake_ref=token).first()
+
+
+def _intake_questions_payload():
+    return [
+        {"id": q["id"], "label": q["label"], "placeholder": q["placeholder"]}
+        for q in INTAKE_QUESTIONS
+    ]
+
+
+def _normalize_intake_answers(raw) -> dict[str, str]:
+    if not isinstance(raw, list):
+        raise ValueError("answers must be a list")
+    out: dict[str, str] = {}
+    for row in raw:
+        if not isinstance(row, dict):
+            continue
+        qid = str(row.get("question_id") or row.get("id") or "").strip()
+        if qid not in INTAKE_QUESTION_IDS:
+            continue
+        answer = str(row.get("answer") or "").strip()
+        if len(answer) < 2:
+            raise ValueError(f"Answer for '{qid}' is too short.")
+        if len(answer) > 4000:
+            raise ValueError(f"Answer for '{qid}' is too long.")
+        out[qid] = answer
+    if len(out) != len(INTAKE_QUESTION_IDS):
+        missing = INTAKE_QUESTION_IDS - set(out.keys())
+        raise ValueError(f"Missing answers for: {', '.join(sorted(missing))}")
+    return out
+
+
 @require_GET
 def fetch_quiz_questions(request):
     seed_quiz_questions()
@@ -54,6 +115,82 @@ def fetch_quiz_questions(request):
             }
         )
     return JsonResponse(payload, safe=False)
+
+
+@require_GET
+def fetch_intake_session(request):
+    ref = (request.GET.get("ref") or "").strip()
+    user = _user_by_intake_ref(ref)
+    if user is None:
+        return JsonResponse({"valid": False, "error": "Invalid or expired link."}, status=404)
+
+    already = hasattr(user, "intake") and user.intake is not None
+    return JsonResponse(
+        {
+            "valid": True,
+            "already_submitted": already,
+            "first_name": _first_name(user.name or ""),
+            "questions": _intake_questions_payload(),
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def submit_intake(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    ref = str(payload.get("ref") or "").strip()
+    user = _user_by_intake_ref(ref)
+    if user is None:
+        return JsonResponse({"ok": False, "error": "Invalid or expired link."}, status=404)
+
+    if hasattr(user, "intake") and user.intake is not None:
+        return JsonResponse(
+            {
+                "ok": True,
+                "already_submitted": True,
+                "message": "We already have your answers. Thank you.",
+            }
+        )
+
+    try:
+        answers = _normalize_intake_answers(payload.get("answers"))
+    except ValueError as exc:
+        return HttpResponseBadRequest(str(exc))
+
+    IntakeResponse.objects.create(user=user, answers=answers)
+
+    try:
+        from .klaviyo import subscribe_syn_diagnosis_email
+
+        result = getattr(user, "result", None)
+        props = {
+            "intake_ref": user.intake_ref,
+            "intake_url": intake_url_for_ref(user.intake_ref or ""),
+            "intake_completed": True,
+        }
+        if result:
+            props.update(
+                {
+                    "syn_diagnosis_score": result.score,
+                    "syn_diagnosis_category": result.category or "",
+                    "syn_diagnosis_virus": result.virus or "",
+                }
+            )
+        subscribe_syn_diagnosis_email(
+            email=user.email or "",
+            name=user.name or "",
+            phone=user.phone or "",
+            properties=props,
+        )
+    except Exception:
+        pass
+
+    return JsonResponse({"ok": True, "already_submitted": False, "message": "Thank you — your answers were saved."})
 
 
 @csrf_exempt
@@ -110,14 +247,19 @@ def submit_answers(request):
         archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
-    user = User.objects.create(name=name, email=email, phone=phone)
-    Result.objects.create(
+    user = _find_or_create_quiz_user(name=name, email=email, phone=phone)
+    intake_ref = ensure_intake_ref(user)
+    intake_url = intake_url_for_ref(intake_ref)
+
+    Result.objects.update_or_create(
         user=user,
-        score=score,
-        category=designation,
-        virus=fatal_flaw,
-        course_offer=weapon_course,
-        ai_report=ai_report,
+        defaults={
+            "score": score,
+            "category": designation,
+            "virus": fatal_flaw,
+            "course_offer": weapon_course,
+            "ai_report": ai_report,
+        },
     )
 
     # Syn Diagnosis → Klaviyo list (email sequencing). Failures never block the quiz.
@@ -133,6 +275,9 @@ def submit_answers(request):
                 "syn_diagnosis_category": designation,
                 "syn_diagnosis_virus": fatal_flaw,
                 "syn_diagnosis_course_offer": weapon_course,
+                "intake_ref": intake_ref,
+                "intake_url": intake_url,
+                "intake_completed": hasattr(user, "intake") and user.intake is not None,
             },
         )
     except Exception:
@@ -155,5 +300,7 @@ def submit_answers(request):
             "fatal_flaw": fatal_flaw,
             "ai_report": ai_report,
             "archetype_catalog": recommendation.get("archetype_catalog"),
+            "intake_ref": intake_ref,
+            "intake_url": intake_url,
         }
     )

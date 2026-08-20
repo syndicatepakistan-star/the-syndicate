@@ -50,3 +50,56 @@ export async function submitAnswers(payload: unknown): Promise<Record<string, un
   }
   return response.json();
 }
+
+export type QuizIntakeQuestion = {
+  id: string;
+  label: string;
+  placeholder: string;
+};
+
+export type QuizIntakeSession = {
+  valid: boolean;
+  already_submitted?: boolean;
+  first_name?: string;
+  questions?: QuizIntakeQuestion[];
+  error?: string;
+};
+
+export async function fetchIntakeSession(ref: string): Promise<QuizIntakeSession> {
+  const params = new URLSearchParams({ ref: ref.trim() });
+  const response = await fetchWithTimeout(buildApiUrl(`/quiz-intake?${params}`), { cache: "no-store" });
+  const data = (await response.json()) as QuizIntakeSession;
+  if (!response.ok) {
+    return { valid: false, error: data.error || "Invalid link." };
+  }
+  return data;
+}
+
+export async function submitIntake(payload: {
+  ref: string;
+  answers: Array<{ question_id: string; answer: string }>;
+}): Promise<{ ok: boolean; already_submitted?: boolean; message?: string; error?: string }> {
+  const response = await fetchWithTimeout(
+    buildApiUrl("/quiz-intake/submit"),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    REQUEST_TIMEOUT_MS,
+  );
+  const data = (await response.json()) as {
+    ok?: boolean;
+    already_submitted?: boolean;
+    message?: string;
+    error?: string;
+  };
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to submit answers.");
+  }
+  return {
+    ok: Boolean(data.ok),
+    already_submitted: data.already_submitted,
+    message: data.message,
+  };
+}

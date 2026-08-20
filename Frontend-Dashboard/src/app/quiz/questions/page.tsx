@@ -430,6 +430,10 @@ export default function QuizPage() {
       const result = await submitAnswers(payload);
       localStorage.setItem("quiz_result", JSON.stringify(result));
       localStorage.setItem("quiz_user_email", leadForm.email.trim().toLowerCase());
+      const intakeRef = typeof result.intake_ref === "string" ? result.intake_ref : "";
+      const intakeUrl = typeof result.intake_url === "string" ? result.intake_url : "";
+      if (intakeRef) localStorage.setItem("quiz_intake_ref", intakeRef);
+      if (intakeUrl) localStorage.setItem("quiz_intake_url", intakeUrl);
       router.push("/quiz/result");
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit quiz answers");

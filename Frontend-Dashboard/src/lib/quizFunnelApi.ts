@@ -62,11 +62,22 @@ export type QuizIntakeSession = {
   already_submitted?: boolean;
   first_name?: string;
   questions?: QuizIntakeQuestion[];
+  intake_ref?: string;
+  email?: string;
   error?: string;
 };
 
-export async function fetchIntakeSession(ref: string): Promise<QuizIntakeSession> {
-  const params = new URLSearchParams({ ref: ref.trim() });
+export type QuizIntakeIdentity = {
+  ref?: string;
+  email?: string;
+};
+
+export async function fetchIntakeSession(identity: QuizIntakeIdentity): Promise<QuizIntakeSession> {
+  const params = new URLSearchParams();
+  const ref = (identity.ref || "").trim();
+  const email = (identity.email || "").trim();
+  if (ref) params.set("ref", ref);
+  if (email) params.set("email", email);
   const response = await fetchWithTimeout(buildApiUrl(`/quiz-intake?${params}`), { cache: "no-store" });
   const data = (await response.json()) as QuizIntakeSession;
   if (!response.ok) {
@@ -76,7 +87,8 @@ export async function fetchIntakeSession(ref: string): Promise<QuizIntakeSession
 }
 
 export async function submitIntake(payload: {
-  ref: string;
+  ref?: string;
+  email?: string;
   answers: Array<{ question_id: string; answer: string }>;
 }): Promise<{ ok: boolean; already_submitted?: boolean; message?: string; error?: string }> {
   const response = await fetchWithTimeout(

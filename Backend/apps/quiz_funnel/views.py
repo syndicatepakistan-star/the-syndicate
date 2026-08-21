@@ -9,7 +9,7 @@ from .quiz_data import QUIZ_QUESTIONS
 from .ai_service import generate_ai_report
 from .logic import build_recommendation, get_designation_short
 from .intake_data import INTAKE_QUESTIONS, INTAKE_QUESTION_IDS
-from .intake_tokens import ensure_intake_ref, intake_url_for_ref
+from .intake_tokens import ensure_intake_ref, intake_url_for_user
 from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
 
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -66,9 +66,24 @@ def _find_or_create_quiz_user(*, name: str, email: str, phone: str) -> User:
 
 def _user_by_intake_ref(ref: str) -> User | None:
     token = (ref or "").strip()
-    if not token:
+    if not token or token.lower() in {"none", "null", "undefined"}:
         return None
     return User.objects.filter(intake_ref=token).first()
+
+
+def _user_by_intake_email(email: str) -> User | None:
+    email_norm = (email or "").strip().lower()
+    if not email_norm or not EMAIL_REGEX.match(email_norm):
+        return None
+    return User.objects.filter(email__iexact=email_norm).order_by("-id").first()
+
+
+def _resolve_intake_user(*, ref: str = "", email: str = "") -> User | None:
+    """Prefer opaque ref; fall back to quiz email (Klaviyo {{ person.email }} links)."""
+    user = _user_by_intake_ref(ref)
+    if user is not None:
+        return user
+    return _user_by_intake_email(email)
 
 
 def _intake_questions_payload():
@@ -120,9 +135,19 @@ def fetch_quiz_questions(request):
 @require_GET
 def fetch_intake_session(request):
     ref = (request.GET.get("ref") or "").strip()
-    user = _user_by_intake_ref(ref)
+    email = (request.GET.get("email") or "").strip()
+    user = _resolve_intake_user(ref=ref, email=email)
     if user is None:
-        return JsonResponse({"valid": False, "error": "Invalid or expired link."}, status=404)
+        return JsonResponse(
+            {
+                "valid": False,
+                "error": "Invalid or expired link. Use the link from your Syn Diagnosis email.",
+            },
+            status=404,
+        )
+
+    # Ensure ref exists so admin + optional ref links keep working.
+    ensure_intake_ref(user)
 
     already = hasattr(user, "intake") and user.intake is not None
     return JsonResponse(
@@ -131,6 +156,8 @@ def fetch_intake_session(request):
             "already_submitted": already,
             "first_name": _first_name(user.name or ""),
             "questions": _intake_questions_payload(),
+            "intake_ref": user.intake_ref or "",
+            "email": (user.email or "").strip().lower(),
         }
     )
 
@@ -144,9 +171,12 @@ def submit_intake(request):
         return HttpResponseBadRequest("Invalid JSON payload")
 
     ref = str(payload.get("ref") or "").strip()
-    user = _user_by_intake_ref(ref)
+    email = str(payload.get("email") or "").strip()
+    user = _resolve_intake_user(ref=ref, email=email)
     if user is None:
         return JsonResponse({"ok": False, "error": "Invalid or expired link."}, status=404)
+
+    ensure_intake_ref(user)
 
     if hasattr(user, "intake") and user.intake is not None:
         return JsonResponse(
@@ -170,7 +200,7 @@ def submit_intake(request):
         result = getattr(user, "result", None)
         props = {
             "intake_ref": user.intake_ref,
-            "intake_url": intake_url_for_ref(user.intake_ref or ""),
+            "intake_url": intake_url_for_user(user),
             "intake_completed": True,
         }
         if result:
@@ -249,7 +279,7 @@ def submit_answers(request):
 
     user = _find_or_create_quiz_user(name=name, email=email, phone=phone)
     intake_ref = ensure_intake_ref(user)
-    intake_url = intake_url_for_ref(intake_ref)
+    intake_url = intake_url_for_user(user)
 
     Result.objects.update_or_create(
         user=user,

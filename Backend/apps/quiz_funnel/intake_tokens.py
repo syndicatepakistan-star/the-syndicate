@@ -1,8 +1,9 @@
-"""Unique intake link tokens for Klaviyo personalized URLs."""
+"""Unique intake link tokens / Klaviyo personalized URLs."""
 
 from __future__ import annotations
 
 import secrets
+from urllib.parse import quote
 
 from django.conf import settings
 
@@ -14,10 +15,32 @@ def generate_intake_ref() -> str:
     return secrets.token_urlsafe(24)
 
 
+def _frontend_base() -> str:
+    return (getattr(settings, "FRONTEND_BASE_URL", "") or "https://the-syndicate.com").rstrip("/")
+
+
 def intake_url_for_ref(intake_ref: str) -> str:
-    base = (getattr(settings, "FRONTEND_BASE_URL", "") or "https://the-syndicate.com").rstrip("/")
     ref = (intake_ref or "").strip()
-    return f"{base}/quiz/intake?ref={ref}"
+    return f"{_frontend_base()}/quiz/intake?ref={ref}"
+
+
+def intake_url_for_email(email: str) -> str:
+    """
+    Klaviyo-friendly intake URL.
+
+    Uses {{ person.email }} which always personalizes (unlike custom intake_ref props).
+    """
+    email_norm = (email or "").strip().lower()
+    return f"{_frontend_base()}/quiz/intake?email={quote(email_norm, safe='')}"
+
+
+def intake_url_for_user(user: User) -> str:
+    email = (user.email or "").strip()
+    if email:
+        return intake_url_for_email(email)
+    if user.intake_ref:
+        return intake_url_for_ref(user.intake_ref)
+    return f"{_frontend_base()}/quiz/intake"
 
 
 def ensure_intake_ref(user: User) -> str:

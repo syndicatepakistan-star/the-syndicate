@@ -18,7 +18,8 @@ function accentForIndex(index: number): (typeof NEON_ACCENTS)[number] {
 
 function IntakePageInner() {
   const searchParams = useSearchParams();
-  const ref = (searchParams.get("ref") || "").trim();
+  const refParam = (searchParams.get("ref") || "").trim();
+  const emailParam = (searchParams.get("email") || "").trim();
 
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
@@ -29,10 +30,15 @@ function IntakePageInner() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
+  /** Resolved identity from API (email link may also return intake_ref). */
+  const [sessionRef, setSessionRef] = useState(refParam);
+  const [sessionEmail, setSessionEmail] = useState(emailParam);
 
   useEffect(() => {
-    if (!ref) {
-      setSessionError("This link is missing your personal code. Open the link from your Syn Diagnosis email.");
+    if (!refParam && !emailParam) {
+      setSessionError(
+        "This link is missing your email. Open the link from your Syn Diagnosis email.",
+      );
       setLoading(false);
       return;
     }
@@ -42,7 +48,7 @@ function IntakePageInner() {
       setLoading(true);
       setSessionError("");
       try {
-        const session = await fetchIntakeSession(ref);
+        const session = await fetchIntakeSession({ ref: refParam, email: emailParam });
         if (cancelled) return;
         if (!session.valid) {
           setSessionError(session.error || "Invalid or expired link.");
@@ -51,6 +57,8 @@ function IntakePageInner() {
         setFirstName(session.first_name || "");
         setAlreadySubmitted(Boolean(session.already_submitted));
         setQuestions(session.questions || []);
+        if (session.intake_ref) setSessionRef(session.intake_ref);
+        if (session.email) setSessionEmail(session.email);
         if (session.already_submitted) {
           setDone(true);
         }
@@ -66,7 +74,7 @@ function IntakePageInner() {
     return () => {
       cancelled = true;
     };
-  }, [ref]);
+  }, [refParam, emailParam]);
 
   const allFilled = useMemo(() => {
     if (questions.length === 0) return false;
@@ -74,12 +82,15 @@ function IntakePageInner() {
   }, [questions, answers]);
 
   const handleSubmit = useCallback(async () => {
-    if (!ref || !allFilled || submitting) return;
+    if ((!sessionRef && !sessionEmail && !refParam && !emailParam) || !allFilled || submitting) {
+      return;
+    }
     setSubmitting(true);
     setSubmitError("");
     try {
       const payload = {
-        ref,
+        ref: sessionRef || refParam || undefined,
+        email: sessionEmail || emailParam || undefined,
         answers: questions.map((q) => ({
           question_id: q.id,
           answer: (answers[q.id] || "").trim(),
@@ -93,7 +104,16 @@ function IntakePageInner() {
     } finally {
       setSubmitting(false);
     }
-  }, [ref, allFilled, submitting, questions, answers]);
+  }, [
+    sessionRef,
+    sessionEmail,
+    refParam,
+    emailParam,
+    allFilled,
+    submitting,
+    questions,
+    answers,
+  ]);
 
   if (loading) {
     return (

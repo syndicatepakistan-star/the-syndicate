@@ -6,7 +6,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .intake_data import INTAKE_QUESTIONS
-from .intake_tokens import intake_url_for_ref
+from .intake_tokens import intake_url_for_user
 from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
 
 
@@ -36,7 +36,7 @@ def export_users_to_excel(modeladmin, request, queryset):
                 user.email or "",
                 user.phone or "",
                 user.intake_ref or "",
-                intake_url_for_ref(user.intake_ref or "") if user.intake_ref else "",
+                intake_url_for_user(user) if (user.email or user.intake_ref) else "",
                 "Yes" if intake else "No",
                 result.score if result else "",
                 result.category if result else "",
@@ -154,7 +154,7 @@ class UserAdmin(admin.ModelAdmin):
                     user.email or "",
                     user.phone or "",
                     user.intake_ref or "",
-                    intake_url_for_ref(user.intake_ref or "") if user.intake_ref else "",
+                    intake_url_for_user(user) if (user.email or user.intake_ref) else "",
                     "Yes" if intake else "No",
                     result.score if result else "",
                     result.category if result else "",
@@ -166,9 +166,9 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description="Intake link")
     def intake_link_display(self, obj):
-        if not obj.intake_ref:
+        if not (obj.email or obj.intake_ref):
             return "—"
-        url = intake_url_for_ref(obj.intake_ref)
+        url = intake_url_for_user(obj)
         return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', url, url)
 
     @admin.display(boolean=True, description="Intake done")

@@ -28,17 +28,15 @@ export function writeCookieConsent(value: CookieConsentValue): void {
   window.dispatchEvent(new CustomEvent("syndicate-cookie-consent", { detail: value }));
 }
 
-/** Full legal copy shown inside the same bottom overlay (Klaviyo /#policy). */
-const POLICY_BLOCKS: { title: string; body: string }[] = [
+type LegalBlock = { title: string; body: string };
+type LegalView = "policy" | "terms";
+
+/** Privacy / policy copy for /#policy */
+const POLICY_BLOCKS: LegalBlock[] = [
   {
     title: "Privacy Policy",
     body:
       "We collect account details (such as email), purchase records, and technical data needed to run login, checkout, and course access. We use this to deliver The Syndicate services, prevent abuse, and improve the product. We do not sell your personal data. The above excludes text messaging originator opt-in data and consent; this information will not be shared with any third parties. The Syndicate uses cookies to help keep track of items you put into your shopping cart including when you have abandoned your cart and this information is used to determine when to send cart reminder messages via SMS.",
-  },
-  {
-    title: "Terms and Conditions",
-    body:
-      "Programs, vaults, and memberships are digital education products for personal use. Access depends on a valid purchase or membership. Content is for educational purposes; results depend on your own application. Misuse, sharing credentials, or reselling content may end access. We do not use your personal data to sell it to third parties.",
   },
   {
     title: "Subscription Conditions",
@@ -57,6 +55,20 @@ const POLICY_BLOCKS: { title: string; body: string }[] = [
   },
 ];
 
+/** Terms copy for /#terms — SMS opt-in text is exact. */
+const TERMS_BLOCKS: LegalBlock[] = [
+  {
+    title: "Terms and Conditions",
+    body:
+      "By opting in you agree to receive recurring automated promotional and personalized marketing text messages from THE SYNDICATE at the number provided. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe or HELP for assistance. Consent is not a condition of purchase. By opting in you agree to receive recurring automated promotional and personalized marketing text messages from THE SYNDICATE at the number provided. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe or HELP for assistance. Consent is not a condition of purchase.\n\nWe do not sell, rent, or share your personal information - including your mobile opt-in and SMS consent data - with third parties for advertising purposes.",
+  },
+  {
+    title: "Program Access Terms",
+    body:
+      "Programs, vaults, and memberships are digital education products for personal use. Access depends on a valid purchase or membership. Content is for educational purposes; results depend on your own application. Misuse, sharing credentials, or reselling content may end access.",
+  },
+];
+
 function readHashId(): string {
   if (typeof window === "undefined") return "";
   return window.location.hash.replace(/^#/, "").trim().toLowerCase();
@@ -66,31 +78,64 @@ function isPolicyHash(hash: string): boolean {
   return hash === "policy" || hash === "privacy" || hash === "cookies" || hash === "cookie";
 }
 
-function canonicalizePolicyHash() {
+function isTermsHash(hash: string): boolean {
+  return hash === "terms" || hash === "term" || hash === "conditions" || hash === "tos";
+}
+
+function isLegalHash(hash: string): boolean {
+  return isPolicyHash(hash) || isTermsHash(hash);
+}
+
+function legalViewFromHash(hash: string): LegalView | null {
+  if (isTermsHash(hash)) return "terms";
+  if (isPolicyHash(hash)) return "policy";
+  return null;
+}
+
+function canonicalizeLegalHash() {
   const hash = readHashId();
-  if (hash === "cookies" || hash === "cookie" || hash === "privacy") {
-    try {
+  try {
+    if (hash === "cookies" || hash === "cookie" || hash === "privacy") {
       window.history.replaceState(
         null,
         "",
         `${window.location.pathname}${window.location.search}#policy`,
       );
-    } catch {
-      /* ignore */
+      return;
     }
+    if (hash === "term" || hash === "conditions" || hash === "tos") {
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#terms`,
+      );
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearLegalHash() {
+  if (!isLegalHash(readHashId())) return;
+  try {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  } catch {
+    /* ignore */
   }
 }
 
 /**
- * Single bottom overlay for cookies consent + Privacy & Policy.
- * Public URL for Klaviyo / legal: https://the-syndicate.com/#policy
- * (No separate home-page policy section.)
+ * Bottom overlay for cookies consent + Privacy Policy (/#policy) + Terms (/#terms).
+ * Public URLs:
+ * - https://the-syndicate.com/#policy
+ * - https://the-syndicate.com/#terms
  */
 export function CookieConsentBanner() {
   const pathname = usePathname() || "";
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [openedFromHash, setOpenedFromHash] = useState(false);
+  const [legalView, setLegalView] = useState<LegalView>("policy");
 
   const hideOnAuth =
     pathname.startsWith("/syndicate-otp") ||
@@ -104,8 +149,10 @@ export function CookieConsentBanner() {
     }
 
     const syncFromHash = () => {
-      canonicalizePolicyHash();
-      if (isPolicyHash(readHashId())) {
+      canonicalizeLegalHash();
+      const view = legalViewFromHash(readHashId());
+      if (view) {
+        setLegalView(view);
         setOpenedFromHash(true);
         setShowDetails(true);
         setVisible(true);
@@ -126,13 +173,16 @@ export function CookieConsentBanner() {
     }
 
     const id = window.setTimeout(() => {
-      if (isPolicyHash(readHashId())) {
+      const view = legalViewFromHash(readHashId());
+      if (view) {
+        setLegalView(view);
         setOpenedFromHash(true);
         setShowDetails(true);
         setVisible(true);
         return;
       }
       setOpenedFromHash(false);
+      setLegalView("policy");
       setVisible(true);
     }, 2500);
 
@@ -160,28 +210,30 @@ export function CookieConsentBanner() {
     writeCookieConsent(value);
     setVisible(false);
     setOpenedFromHash(false);
-    if (isPolicyHash(readHashId())) {
-      try {
-        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-      } catch {
-        /* ignore */
-      }
-    }
+    clearLegalHash();
   };
 
-  const dismissPolicyOnly = () => {
+  const dismissLegalOnly = () => {
     setVisible(false);
     setOpenedFromHash(false);
-    if (isPolicyHash(readHashId())) {
-      try {
-        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-      } catch {
-        /* ignore */
-      }
-    }
+    clearLegalHash();
   };
 
   const alreadyChose = Boolean(readCookieConsent());
+  const blocks = legalView === "terms" ? TERMS_BLOCKS : POLICY_BLOCKS;
+  const heading = legalView === "terms" ? "Terms and Conditions" : "Privacy & Policy";
+  const intro =
+    legalView === "terms"
+      ? "SMS marketing opt-in, consent rules, and program access terms for The Syndicate."
+      : "We use essential cookies to run The Syndicate and marketing/analytics cookies (GTM / Klaviyo) for analytics. Privacy, subscriptions, refunds, and cookies are covered here. Terms and Conditions are at /#terms.";
+  const toggleLabel =
+    legalView === "terms"
+      ? showDetails
+        ? "Hide terms"
+        : "Read terms"
+      : showDetails
+        ? "Hide policies"
+        : "Read policies";
 
   return (
     <div
@@ -190,7 +242,7 @@ export function CookieConsentBanner() {
         "px-0 pb-[max(0px,env(safe-area-inset-bottom))] pt-0",
       )}
       role="dialog"
-      aria-label="Privacy and cookie preferences"
+      aria-label={legalView === "terms" ? "Terms and Conditions" : "Privacy and cookie preferences"}
     >
       <div
         className={cn(
@@ -209,11 +261,10 @@ export function CookieConsentBanner() {
         >
           <div className="min-w-0 flex-1 text-left">
             <p className="font-mono text-[12px] font-black uppercase tracking-[0.2em] text-amber-200 sm:text-[13px]">
-              Privacy &amp; Policy
+              {heading}
             </p>
             <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-zinc-200/92 sm:text-[14px]">
-              We use essential cookies to run The Syndicate and marketing/analytics cookies (GTM / Klaviyo) for
-              analytics. Privacy, terms, subscriptions, refunds, and cookies are covered here.
+              {intro}
             </p>
             <button
               type="button"
@@ -221,7 +272,7 @@ export function CookieConsentBanner() {
               className="mt-2.5 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-cyan-300 underline-offset-2 transition hover:text-cyan-100 hover:underline sm:text-[12px]"
               aria-expanded={showDetails}
             >
-              {showDetails ? "Hide policies" : "Read policies"}
+              {toggleLabel}
             </button>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch sm:min-w-[11.5rem]">
@@ -253,7 +304,7 @@ export function CookieConsentBanner() {
             ) : (
               <button
                 type="button"
-                onClick={dismissPolicyOnly}
+                onClick={dismissLegalOnly}
                 className={cn(
                   "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-amber-300/75",
                   "bg-amber-400/18 px-4 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-amber-50",
@@ -266,7 +317,7 @@ export function CookieConsentBanner() {
           </div>
         </div>
 
-        {/* Scrollable policy body */}
+        {/* Scrollable legal body */}
         {showDetails ? (
           <div
             className={cn(
@@ -274,8 +325,13 @@ export function CookieConsentBanner() {
               "px-4 py-4 sm:px-6 sm:py-5",
             )}
           >
-            <div className="mx-auto grid w-full max-w-none gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {POLICY_BLOCKS.map((block) => (
+            <div
+              className={cn(
+                "mx-auto grid w-full max-w-none gap-3",
+                legalView === "terms" ? "sm:grid-cols-1 xl:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-3",
+              )}
+            >
+              {blocks.map((block) => (
                 <article
                   key={block.title}
                   className="rounded-lg border border-white/12 bg-black/35 px-3.5 py-3.5 sm:px-4 sm:py-4"
@@ -289,7 +345,7 @@ export function CookieConsentBanner() {
                       {block.title}
                     </h3>
                   </div>
-                  <p className="text-[13px] font-medium leading-relaxed text-zinc-200/95 sm:text-[14px]">
+                  <p className="whitespace-pre-line text-[13px] font-medium leading-relaxed text-zinc-200/95 sm:text-[14px]">
                     {block.body}
                   </p>
                 </article>

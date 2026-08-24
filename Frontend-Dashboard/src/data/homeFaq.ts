@@ -70,7 +70,7 @@ export const FAQS_BY_CATEGORY: Record<FaqCategory, FaqItem[]> = {
     },
     {
       q: "How do refunds and guarantees work?",
-      a: "Refund Policy, Terms, Subscription Conditions, and Privacy Policy open from /#policy (same overlay as cookies) and in checkout documents.\nThis is training, not a get-rich guarantee. If a refund is possible, it follows the Refund Policy — nothing beyond that.",
+      a: "Privacy Policy, Subscription Conditions, Refund Policy, and Cookies open from /#policy. Terms and Conditions (including SMS opt-in) open from /#terms. Both use the same overlay as cookies, and checkout documents may also link them.\nThis is training, not a get-rich guarantee. If a refund is possible, it follows the Refund Policy — nothing beyond that.",
     },
     {
       q: "What payment methods are accepted?",

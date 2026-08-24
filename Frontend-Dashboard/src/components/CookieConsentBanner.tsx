@@ -33,12 +33,12 @@ const POLICY_BLOCKS: { title: string; body: string }[] = [
   {
     title: "Privacy Policy",
     body:
-      "We collect account details (such as email), purchase records, and technical data needed to run login, checkout, and course access. We use this to deliver The Syndicate services, prevent abuse, and improve the product. We do not sell your personal data.",
+      "We collect account details (such as email), purchase records, and technical data needed to run login, checkout, and course access. We use this to deliver The Syndicate services, prevent abuse, and improve the product. We do not sell your personal data. The above excludes text messaging originator opt-in data and consent; this information will not be shared with any third parties. The Syndicate uses cookies to help keep track of items you put into your shopping cart including when you have abandoned your cart and this information is used to determine when to send cart reminder messages via SMS.",
   },
   {
-    title: "Terms of Use",
+    title: "Terms and Conditions",
     body:
-      "Programs, vaults, and memberships are digital education products for personal use. Access depends on a valid purchase or membership. Content is for educational purposes; results depend on your own application. Misuse, sharing credentials, or reselling content may end access.",
+      "Programs, vaults, and memberships are digital education products for personal use. Access depends on a valid purchase or membership. Content is for educational purposes; results depend on your own application. Misuse, sharing credentials, or reselling content may end access. We do not use your personal data to sell it to third parties.",
   },
   {
     title: "Subscription Conditions",

@@ -6,7 +6,7 @@ INTAKE_QUESTIONS: tuple[dict[str, str], ...] = (
     {
         "id": "location",
         "label": "Where are you based?",
-        "placeholder": "City and country — e.g. Karachi, Pakistan",
+        "placeholder": "City and country (optional)",
     },
     {
         "id": "employment",

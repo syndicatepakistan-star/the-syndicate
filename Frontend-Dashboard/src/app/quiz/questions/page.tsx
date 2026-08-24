@@ -173,7 +173,7 @@ const COUNTRY_CODES = [
   { label: "Northern Mariana Islands (+1-670)", value: "+1-670" },
   { label: "Norway (+47)", value: "+47" },
   { label: "Oman (+968)", value: "+968" },
-  { label: "Pakistan (+92)", value: "+92" },
+  { label: "Phone code (+92)", value: "+92" },
   { label: "Palau (+680)", value: "+680" },
   { label: "Palestine (+970)", value: "+970" },
   { label: "Panama (+507)", value: "+507" },

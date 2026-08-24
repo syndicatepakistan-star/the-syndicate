@@ -15,7 +15,8 @@ export const TEMP_TEST_PRICE_USD = 0.5;
  * Production restore: set ENABLED false and empty this map.
  */
 export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {
-  agentic_ai: TEMP_TEST_PRICE_USD,
+  // Restore Agentic AI pack back to $150 (promo mode for other products can stay enabled).
+  agentic_ai: 150,
 };
 
 export function tempTestPrice(key: string | null | undefined, normal: number): number {

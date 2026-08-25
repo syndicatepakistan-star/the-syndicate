@@ -382,6 +382,41 @@ class StreamVideoAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse("admin:video_streaming_streamvideo_add"))
 
 
+@admin.register(StreamPlaylistPurchase)
+class StreamPlaylistPurchaseAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user_email",
+        "playlist",
+        "status",
+        "amount_paid",
+        "currency",
+        "paid_at",
+        "created_at",
+        "stripe_checkout_session_id",
+    )
+    list_display_links = ("id", "user_email", "playlist")
+    list_filter = ("status", "currency", "paid_at", "created_at")
+    search_fields = (
+        "user__email",
+        "user__username",
+        "playlist__title",
+        "playlist__slug",
+        "stripe_checkout_session_id",
+        "stripe_session_id",
+    )
+    autocomplete_fields = ("user", "playlist")
+    readonly_fields = ("created_at", "updated_at")
+    date_hierarchy = "paid_at"
+    ordering = ("-paid_at", "-id")
+    list_per_page = 50
+
+    @admin.display(description="Buyer email", ordering="user__email")
+    def user_email(self, obj: StreamPlaylistPurchase) -> str:
+        user = obj.user
+        return (getattr(user, "email", None) or getattr(user, "username", None) or str(user.pk))
+
+
 @admin.register(StreamPlaylistCertificate)
 class StreamPlaylistCertificateAdmin(admin.ModelAdmin):
     list_display = ("token_id", "holder_name", "playlist", "user", "status", "issued_at")

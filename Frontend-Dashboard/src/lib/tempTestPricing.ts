@@ -17,6 +17,9 @@ export const TEMP_TEST_PRICE_USD = 0.5;
 export const TEMP_TEST_PRICE_BY_KEY: Readonly<Record<string, number>> = {
   // Restore Agentic AI pack back to $150 (promo mode for other products can stay enabled).
   agentic_ai: 150,
+  // TEMP test: Hustle Hard (level1-psych-03) → $0.50
+  "level1-psych-03": TEMP_TEST_PRICE_USD,
+  "hustle-hard": TEMP_TEST_PRICE_USD,
 };
 
 export function tempTestPrice(key: string | null | undefined, normal: number): number {

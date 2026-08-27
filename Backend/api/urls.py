@@ -11,6 +11,7 @@ from . import views
 urlpatterns = [
     path("quiz-questions", quiz_funnel_views.fetch_quiz_questions),
     path("submit-answers", quiz_funnel_views.submit_answers),
+    path("save-quiz-lead", quiz_funnel_views.save_quiz_lead),
     path("quiz-intake", quiz_funnel_views.fetch_intake_session),
     path("quiz-intake/submit", quiz_funnel_views.submit_intake),
     path("courses/", include("apps.courses.urls")),

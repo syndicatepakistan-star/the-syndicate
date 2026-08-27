@@ -714,8 +714,9 @@ body.result-view .section-cards-grid {
 .lead-gate-copy {
   margin: 0 0 14px;
   color: #e8f2ff;
+  font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.55;
 }
 
@@ -727,8 +728,9 @@ body.result-view .section-cards-grid {
 
 .lead-gate-label {
   color: #f8fbff;
+  font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

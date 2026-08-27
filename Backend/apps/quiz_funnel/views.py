@@ -225,6 +225,65 @@ def submit_intake(request):
 
 @csrf_exempt
 @require_POST
+def save_quiz_lead(request):
+    """
+    Mid-quiz lead capture: create/update the quiz user as soon as name+email
+    (and later phone) are collected. Does not generate the final report.
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    user_meta = payload.get("user") or payload
+    name = (user_meta.get("name") or "").strip()
+    email = (user_meta.get("email") or "").strip()
+    phone = (user_meta.get("phone") or "").strip()
+
+    if len(name) < 2:
+        return HttpResponseBadRequest("Name is required.")
+    if not EMAIL_REGEX.match(email):
+        return HttpResponseBadRequest("Valid email is required.")
+    if phone and not PHONE_REGEX.match(phone):
+        return HttpResponseBadRequest("Valid phone number is required.")
+
+    user = _find_or_create_quiz_user(name=name, email=email, phone=phone or "")
+    intake_ref = ensure_intake_ref(user)
+    intake_url = intake_url_for_user(user)
+
+    # Start email sequencing as soon as we have the lead (safe no-op if unset).
+    try:
+        from .klaviyo import subscribe_syn_diagnosis_email
+
+        subscribe_syn_diagnosis_email(
+            email=email,
+            name=name,
+            phone=phone or "",
+            properties={
+                "intake_ref": intake_ref,
+                "intake_url": intake_url,
+                "quiz_lead_partial": True,
+                "quiz_lead_has_phone": bool(phone),
+                "intake_completed": hasattr(user, "intake") and user.intake is not None,
+            },
+        )
+    except Exception:
+        pass
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "intake_ref": intake_ref,
+            "intake_url": intake_url,
+            "email": (user.email or "").strip().lower(),
+            "name": user.name or "",
+            "phone": user.phone or "",
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
 def submit_answers(request):
     try:
         payload = json.loads(request.body.decode("utf-8"))

@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 import ProgressBar from "@/components/quiz-funnel/ProgressBar";
-import { submitAnswers } from "@/lib/quizFunnelApi";
+import { saveQuizLead, submitAnswers } from "@/lib/quizFunnelApi";
 import { QUIZ_QUESTIONS, type QuizQuestionRow } from "@/lib/quizQuestions";
 import { getAffiliateAttribution } from "@/lib/affiliateAttribution";
 import { trackLead } from "@/lib/affiliateApi";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { isUkPhone, markUkCitizen } from "@/lib/currency";
+import { detectPublicIpCountry, isUkPhone, markUkCitizen } from "@/lib/currency";
+import { resolveSupportedDialCode } from "@/lib/phoneDialByCountry";
 
-type LeadStep = "name" | "email" | "phone";
+/** Step 1: name + email together. Step 2: phone. */
+type LeadStep = "contact" | "phone";
 
 const COUNTRY_CODES = [
   { label: "Afghanistan (+93)", value: "+93" },
@@ -173,7 +175,7 @@ const COUNTRY_CODES = [
   { label: "Northern Mariana Islands (+1-670)", value: "+1-670" },
   { label: "Norway (+47)", value: "+47" },
   { label: "Oman (+968)", value: "+968" },
-  { label: "Phone code (+92)", value: "+92" },
+  { label: "Pakistan (+92)", value: "+92" },
   { label: "Palau (+680)", value: "+680" },
   { label: "Palestine (+970)", value: "+970" },
   { label: "Panama (+507)", value: "+507" },
@@ -273,6 +275,31 @@ export default function QuizPage() {
   });
   const [leadError, setLeadError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const countryCodeTouchedRef = useRef(false);
+  const supportedDialCodes = useMemo(() => COUNTRY_CODES.map((item) => item.value), []);
+
+  // Auto-select phone country code from public IP (VPN-aware). Do not override manual choice.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const iso = await detectPublicIpCountry();
+        if (cancelled || countryCodeTouchedRef.current) return;
+        const dial = resolveSupportedDialCode(iso, supportedDialCodes, "+44");
+        if (cancelled || countryCodeTouchedRef.current) return;
+        setLeadForm((prev) => {
+          if (countryCodeTouchedRef.current || prev.countryCode === dial) return prev;
+          return { ...prev, countryCode: dial };
+        });
+        applyPhoneCountry(dial);
+      } catch {
+        // Keep default +44 when geo lookup fails.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyPhoneCountry, supportedDialCodes]);
 
   useEffect(() => {
     if (!submitting) return undefined;
@@ -318,9 +345,10 @@ export default function QuizPage() {
     if (checkpointStep) {
       const validationMessage = validateLeadStep(checkpointStep);
       if (validationMessage) {
+        // Open the gate cleanly — don't show the error until they click Continue empty.
         setLeadStep(checkpointStep);
         setShowLeadGate(true);
-        setLeadError(validationMessage);
+        setLeadError("");
         return;
       }
     }
@@ -330,8 +358,8 @@ export default function QuizPage() {
   }
 
   function getCheckpointStep(index: number): LeadStep | null {
-    if (index === 3) return "name";
-    if (index === 9) return "email";
+    // After Q4 → name + email. After Q15 → phone. Final report still only on submit.
+    if (index === 3) return "contact";
     if (index === 14) return "phone";
     return null;
   }
@@ -344,8 +372,11 @@ export default function QuizPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{6,15}$/;
 
-    if (step === "name" && name.length < 2) return "Please enter your name to continue.";
-    if (step === "email" && !emailRegex.test(email)) return "Please enter a valid email address.";
+    if (step === "contact") {
+      if (name.length < 2) return "Please enter your name to continue.";
+      if (!emailRegex.test(email)) return "Please enter a valid email address.";
+      return "";
+    }
     if (step === "phone" && !countryCode) return "Please select a country code.";
     if (step === "phone" && !phoneRegex.test(phone)) return "Please enter a valid phone number.";
     return "";
@@ -358,25 +389,42 @@ export default function QuizPage() {
   }
 
   function validateLeadForm() {
-    const nameError = validateLeadStep("name");
-    if (nameError) return nameError;
-    const emailError = validateLeadStep("email");
-    if (emailError) return emailError;
+    const contactError = validateLeadStep("contact");
+    if (contactError) return contactError;
     const phoneError = validateLeadStep("phone");
     if (phoneError) return phoneError;
     return "";
   }
 
-  function continueAfterLead() {
+  async function persistLeadPartial(includePhone: boolean) {
+    const name = leadForm.name.trim();
+    const email = leadForm.email.trim();
+    if (name.length < 2 || !email) return;
+    try {
+      const saved = await saveQuizLead({
+        name,
+        email,
+        phone: includePhone ? buildFullPhone() : "",
+      });
+      localStorage.setItem("quiz_user_email", email.toLowerCase());
+      if (saved.intake_ref) localStorage.setItem("quiz_intake_ref", saved.intake_ref);
+      if (saved.intake_url) localStorage.setItem("quiz_intake_url", saved.intake_url);
+    } catch {
+      // Don't block the quiz if the lead save fails — final submit still creates the user.
+    }
+  }
+
+  async function continueAfterLead() {
     const validationMessage = validateLeadStep(leadStep);
     if (validationMessage) {
       setLeadError(validationMessage);
       return;
     }
-    // When the email gate (Question 11) is satisfied, fire the "Syn Diagnosis lead"
-    // for the referring affiliate so they get credit before the user even finishes
-    // the quiz. Subsequent signup / login on the dashboard will fire the auth lead.
-    if (leadStep === "email") {
+
+    // Save lead as soon as contact (or phone) is captured — report still only at the end.
+    await persistLeadPartial(leadStep === "phone");
+
+    if (leadStep === "contact") {
       const email = leadForm.email.trim();
       const attribution = getAffiliateAttribution();
       if (attribution && email) {
@@ -386,6 +434,7 @@ export default function QuizPage() {
         }).catch(() => {});
       }
     }
+
     setLeadError("");
     setShowLeadGate(false);
     setLeadStep(null);
@@ -395,11 +444,7 @@ export default function QuizPage() {
   async function handleSubmit() {
     const validationMessage = validateLeadForm();
     if (validationMessage) {
-      const missingStep: LeadStep = validateLeadStep("name")
-        ? "name"
-        : validateLeadStep("email")
-          ? "email"
-          : "phone";
+      const missingStep: LeadStep = validateLeadStep("contact") ? "contact" : "phone";
       setLeadStep(missingStep);
       setShowLeadGate(true);
       setLeadError(validationMessage || "Please complete your details to continue.");
@@ -409,6 +454,9 @@ export default function QuizPage() {
     setSubmitting(true);
     setSubmitError("");
     try {
+      // Ensure latest contact/phone is stored even if a mid-quiz save was skipped.
+      await persistLeadPartial(true);
+
       const answerList = questions.map((q) => ({
         question_id: q.id,
         selected_option: answers[q.id],
@@ -462,9 +510,8 @@ export default function QuizPage() {
                 Continue Diagnosis
               </h3>
               <p className="lead-gate-step">
-                {leadStep === "name" && "Step 1 of 3 — Name"}
-                {leadStep === "email" && "Step 2 of 3 — Email"}
-                {leadStep === "phone" && "Step 3 of 3 — Phone"}
+                {leadStep === "contact" && "Step 1 of 2 — Name & Email"}
+                {leadStep === "phone" && "Step 2 of 2 — Phone"}
               </p>
               <div className="lead-gate-ticket-callout" role="note">
                 <p className="lead-gate-ticket-callout__title">Free course ticket access</p>
@@ -474,60 +521,61 @@ export default function QuizPage() {
                 </p>
               </div>
               <p className="lead-gate-copy">
-                {leadStep === "name" &&
-                  `Use your real name so your report is generated correctly. Continue from Question ${currentIndex + 2}.`}
-                {leadStep === "email" &&
-                  `Your free ticket is linked to this email only. Continue from Question ${currentIndex + 2}.`}
-                {leadStep === "phone" &&
+                {leadStep === "contact" && (
+                  <>
+                    <span>Great start!</span>
+                    <br />
+                    <span>We know exactly which 2 Free Video Courses will help you.</span>
+                    <br />
+                    <span>Where should we send them?</span>
+                  </>
+                  )}
+                  {leadStep === "phone" &&
                   `Add a valid phone number we can reach you on. Continue from Question ${currentIndex + 2}.`}
               </p>
-              {leadStep === "name" ? (
-                <div className="lead-gate-field">
-                  <label className="lead-gate-label" htmlFor="lead-gate-name">
-                    Full name
-                  </label>
-                  <input
-                    id="lead-gate-name"
-                    placeholder="e.g. Alex Morgan"
-                    value={leadForm.name}
-                    onChange={(e) => {
-                      setLeadForm((prev) => ({ ...prev, name: e.target.value }));
-                      setLeadError("");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") continueAfterLead();
-                    }}
-                    className="quiz-input lead-gate-input"
-                    autoComplete="name"
-                    autoFocus
-                  />
-                </div>
-              ) : null}
-              {leadStep === "email" ? (
-                <div className="lead-gate-field">
-                  <label className="lead-gate-label" htmlFor="lead-gate-email">
-                    Email address
-                  </label>
-                  <input
-                    id="lead-gate-email"
-                    placeholder="e.g. you@email.com"
-                    type="email"
-                    value={leadForm.email}
-                    onChange={(e) => {
-                      setLeadForm((prev) => ({ ...prev, email: e.target.value }));
-                      setLeadError("");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") continueAfterLead();
-                    }}
-                    className="quiz-input lead-gate-input"
-                    autoComplete="email"
-                    autoFocus
-                  />
-                  <p className="lead-gate-note">
-                    Double-check spelling. You must use this exact email to claim your free course ticket.
-                  </p>
-                </div>
+              {leadStep === "contact" ? (
+                <>
+                  <div className="lead-gate-field">
+                    <label className="lead-gate-label" htmlFor="lead-gate-name">
+                      Full name
+                    </label>
+                    <input
+                      id="lead-gate-name"
+                      placeholder="e.g. Alex Morgan"
+                      value={leadForm.name}
+                      onChange={(e) => {
+                        setLeadForm((prev) => ({ ...prev, name: e.target.value }));
+                        setLeadError("");
+                      }}
+                      className="quiz-input lead-gate-input"
+                      autoComplete="name"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="lead-gate-field">
+                    <label className="lead-gate-label" htmlFor="lead-gate-email">
+                      Email address
+                    </label>
+                    <input
+                      id="lead-gate-email"
+                      placeholder="e.g. you@email.com"
+                      type="email"
+                      value={leadForm.email}
+                      onChange={(e) => {
+                        setLeadForm((prev) => ({ ...prev, email: e.target.value }));
+                        setLeadError("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void continueAfterLead();
+                      }}
+                      className="quiz-input lead-gate-input"
+                      autoComplete="email"
+                    />
+                    <p className="lead-gate-note">
+                      Double-check spelling. You must use this exact email to claim your free course ticket.
+                    </p>
+                  </div>
+                </>
               ) : null}
               {leadStep === "phone" ? (
                 <div className="lead-gate-field">
@@ -541,6 +589,7 @@ export default function QuizPage() {
                       value={leadForm.countryCode}
                       onChange={(e) => {
                         const next = e.target.value;
+                        countryCodeTouchedRef.current = true;
                         setLeadForm((prev) => ({ ...prev, countryCode: next }));
                         applyPhoneCountry(next);
                         setLeadError("");
@@ -564,7 +613,7 @@ export default function QuizPage() {
                         setLeadError("");
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") continueAfterLead();
+                        if (e.key === "Enter") void continueAfterLead();
                       }}
                       className="quiz-input lead-gate-phone"
                       autoComplete="tel-national"
@@ -576,7 +625,11 @@ export default function QuizPage() {
               ) : null}
               {leadError ? <p className="lead-gate-error">{leadError}</p> : null}
               <div className="lead-gate-actions">
-                <button type="button" className="btn btn-primary lead-gate-btn" onClick={continueAfterLead}>
+                <button
+                  type="button"
+                  className="btn btn-primary lead-gate-btn"
+                  onClick={() => void continueAfterLead()}
+                >
                   Continue Diagnosis
                 </button>
               </div>

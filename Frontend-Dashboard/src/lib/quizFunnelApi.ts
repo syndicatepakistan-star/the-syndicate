@@ -51,6 +51,56 @@ export async function submitAnswers(payload: unknown): Promise<Record<string, un
   return response.json();
 }
 
+/** Mid-quiz lead capture (name/email/phone) — does not generate the final report. */
+export async function saveQuizLead(payload: {
+  name: string;
+  email: string;
+  phone?: string;
+}): Promise<{
+  ok: boolean;
+  intake_ref?: string;
+  intake_url?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+}> {
+  const response = await fetchWithTimeout(
+    buildApiUrl("/save-quiz-lead"),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user: {
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone || "",
+        },
+      }),
+    },
+    REQUEST_TIMEOUT_MS,
+  );
+  const data = (await response.json().catch(() => ({}))) as {
+    ok?: boolean;
+    intake_ref?: string;
+    intake_url?: string;
+    email?: string;
+    name?: string;
+    phone?: string;
+    error?: string;
+  };
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to save your details.");
+  }
+  return {
+    ok: Boolean(data.ok),
+    intake_ref: data.intake_ref,
+    intake_url: data.intake_url,
+    email: data.email,
+    name: data.name,
+    phone: data.phone,
+  };
+}
+
 export type QuizIntakeQuestion = {
   id: string;
   label: string;

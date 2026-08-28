@@ -2,10 +2,6 @@
 
 Full-stack **Syndicate** dashboard (portal, membership, gold HUD UI) plus an **AI agent** that creates daily missions, scores responses, and syncs streaks, leaderboard, and admin tasks.
 
-**→ [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md)** — architecture, apps, routes, and main user flows.
-
-This repo merges the upstream challenges stack described in [Smart AI Agent — Creates & Evaluates Challenges](https://github.com/HammadAli64/Smart-AI-Agent-That-Creates-Evaluates-Challenges) with the Syndicate portal and dashboard.
-
 ## What it does
 
 - **Dashboard** — Programs, Syndicate mode, membership hub, affiliate portal, support, and goal-path UX (Next.js + GSAP).

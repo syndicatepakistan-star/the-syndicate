@@ -506,20 +506,20 @@ export default function QuizPage() {
               </h3>
               <p className="lead-gate-step">Your details</p>
               <div className="lead-gate-ticket-callout" role="note">
-                <p className="lead-gate-ticket-callout__title">Free course ticket access</p>
-                <p className="lead-gate-ticket-callout__body">
-                  Enter <strong>accurate details</strong> to receive your diagnosis report and unlock your{" "}
-                  <strong>free course ticket</strong>. Wrong information may block access to your ticket.
+                <p className="lead-gate-ticket-callout__title">Great start!</p>
+                <p className="lead-gate-ticket-callout__body">We know exactly which 2 Free Video Courses will help you.
+                Where should we send them?
+                  
                 </p>
               </div>
               <p className="lead-gate-copy">
                 {leadStep === "contact" && (
                   <>
-                    <span>Great start!</span>
+                    <span>Free course ticket access</span>
                     <br />
-                    <span>We know exactly which 2 Free Video Courses will help you.</span>
-                    <br />
-                    <span>Where should we send them?</span>
+                    <span>Enter <strong>accurate details</strong> to receive your diagnosis report and unlock your{" "}
+                    <strong>free course ticket</strong>. Wrong information may block access to your ticket.
+                    </span>
                   </>
                 )}
               </p>

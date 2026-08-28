@@ -14,8 +14,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { detectPublicIpCountry, isUkPhone, markUkCitizen } from "@/lib/currency";
 import { resolveSupportedDialCode } from "@/lib/phoneDialByCountry";
 
-/** Step 1: name + email together. Step 2: phone. */
-type LeadStep = "contact" | "phone";
+/** Single lead gate after Q4: name, email, and phone. */
+type LeadStep = "contact";
 
 const COUNTRY_CODES = [
   { label: "Afghanistan (+93)", value: "+93" },
@@ -358,9 +358,8 @@ export default function QuizPage() {
   }
 
   function getCheckpointStep(index: number): LeadStep | null {
-    // After Q4 → name + email. After Q15 → phone. Final report still only on submit.
+    // After Q4 → name, email, and phone. Final report only on submit.
     if (index === 3) return "contact";
-    if (index === 14) return "phone";
     return null;
   }
 
@@ -375,10 +374,10 @@ export default function QuizPage() {
     if (step === "contact") {
       if (name.length < 2) return "Please enter your name to continue.";
       if (!emailRegex.test(email)) return "Please enter a valid email address.";
+      if (!countryCode) return "Please select a country code.";
+      if (!phoneRegex.test(phone)) return "Please enter a valid phone number.";
       return "";
     }
-    if (step === "phone" && !countryCode) return "Please select a country code.";
-    if (step === "phone" && !phoneRegex.test(phone)) return "Please enter a valid phone number.";
     return "";
   }
 
@@ -389,14 +388,10 @@ export default function QuizPage() {
   }
 
   function validateLeadForm() {
-    const contactError = validateLeadStep("contact");
-    if (contactError) return contactError;
-    const phoneError = validateLeadStep("phone");
-    if (phoneError) return phoneError;
-    return "";
+    return validateLeadStep("contact");
   }
 
-  async function persistLeadPartial(includePhone: boolean) {
+  async function persistLeadPartial() {
     const name = leadForm.name.trim();
     const email = leadForm.email.trim();
     if (name.length < 2 || !email) return;
@@ -404,7 +399,7 @@ export default function QuizPage() {
       const saved = await saveQuizLead({
         name,
         email,
-        phone: includePhone ? buildFullPhone() : "",
+        phone: buildFullPhone(),
       });
       localStorage.setItem("quiz_user_email", email.toLowerCase());
       if (saved.intake_ref) localStorage.setItem("quiz_intake_ref", saved.intake_ref);
@@ -421,18 +416,20 @@ export default function QuizPage() {
       return;
     }
 
-    // Save lead as soon as contact (or phone) is captured — report still only at the end.
-    await persistLeadPartial(leadStep === "phone");
+    // Save lead immediately — full report still only at the end.
+    await persistLeadPartial();
 
-    if (leadStep === "contact") {
-      const email = leadForm.email.trim();
-      const attribution = getAffiliateAttribution();
-      if (attribution && email) {
-        void trackLead(attribution.affiliateId, attribution.visitorId, email, {
-          kind: "diagnosis",
-          label: "Syn Diagnosis lead",
-        }).catch(() => {});
-      }
+    const email = leadForm.email.trim();
+    const attribution = getAffiliateAttribution();
+    if (attribution && email) {
+      void trackLead(attribution.affiliateId, attribution.visitorId, email, {
+        kind: "diagnosis",
+        label: "Syn Diagnosis lead",
+      }).catch(() => {});
+    }
+
+    if (isUkPhone(leadForm.countryCode) || isUkPhone(buildFullPhone())) {
+      markUkCitizen(true);
     }
 
     setLeadError("");
@@ -444,8 +441,7 @@ export default function QuizPage() {
   async function handleSubmit() {
     const validationMessage = validateLeadForm();
     if (validationMessage) {
-      const missingStep: LeadStep = validateLeadStep("contact") ? "contact" : "phone";
-      setLeadStep(missingStep);
+      setLeadStep("contact");
       setShowLeadGate(true);
       setLeadError(validationMessage || "Please complete your details to continue.");
       return;
@@ -454,8 +450,7 @@ export default function QuizPage() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      // Ensure latest contact/phone is stored even if a mid-quiz save was skipped.
-      await persistLeadPartial(true);
+      await persistLeadPartial();
 
       const answerList = questions.map((q) => ({
         question_id: q.id,
@@ -509,10 +504,7 @@ export default function QuizPage() {
               <h3 id="lead-gate-title" className="lead-gate-title">
                 Continue Diagnosis
               </h3>
-              <p className="lead-gate-step">
-                {leadStep === "contact" && "Step 1 of 2 — Name & Email"}
-                {leadStep === "phone" && "Step 2 of 2 — Phone"}
-              </p>
+              <p className="lead-gate-step">Your details</p>
               <div className="lead-gate-ticket-callout" role="note">
                 <p className="lead-gate-ticket-callout__title">Free course ticket access</p>
                 <p className="lead-gate-ticket-callout__body">
@@ -529,9 +521,7 @@ export default function QuizPage() {
                     <br />
                     <span>Where should we send them?</span>
                   </>
-                  )}
-                  {leadStep === "phone" &&
-                  `Add a valid phone number we can reach you on. Continue from Question ${currentIndex + 2}.`}
+                )}
               </p>
               {leadStep === "contact" ? (
                 <>
@@ -565,9 +555,6 @@ export default function QuizPage() {
                         setLeadForm((prev) => ({ ...prev, email: e.target.value }));
                         setLeadError("");
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") void continueAfterLead();
-                      }}
                       className="quiz-input lead-gate-input"
                       autoComplete="email"
                     />
@@ -575,53 +562,50 @@ export default function QuizPage() {
                       Double-check spelling. You must use this exact email to claim your free course ticket.
                     </p>
                   </div>
-                </>
-              ) : null}
-              {leadStep === "phone" ? (
-                <div className="lead-gate-field">
-                  <label className="lead-gate-label" htmlFor="lead-gate-phone">
-                    Phone number
-                  </label>
-                  <div className="lead-gate-phone-row">
-                    <select
-                      id="lead-gate-country"
-                      aria-label="Country code"
-                      value={leadForm.countryCode}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        countryCodeTouchedRef.current = true;
-                        setLeadForm((prev) => ({ ...prev, countryCode: next }));
-                        applyPhoneCountry(next);
-                        setLeadError("");
-                      }}
-                      className="quiz-input lead-gate-country"
-                    >
-                      {COUNTRY_CODES.map((item) => (
-                        <option key={`${item.value}-${item.label}`} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      id="lead-gate-phone"
-                      placeholder="e.g. 7123456789"
-                      inputMode="numeric"
-                      value={leadForm.phone}
-                      onChange={(e) => {
-                        const digitsOnly = e.target.value.replace(/\D/g, "");
-                        setLeadForm((prev) => ({ ...prev, phone: digitsOnly }));
-                        setLeadError("");
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") void continueAfterLead();
-                      }}
-                      className="quiz-input lead-gate-phone"
-                      autoComplete="tel-national"
-                      autoFocus
-                    />
+                  <div className="lead-gate-field">
+                    <label className="lead-gate-label" htmlFor="lead-gate-phone">
+                      Phone number
+                    </label>
+                    <div className="lead-gate-phone-row">
+                      <select
+                        id="lead-gate-country"
+                        aria-label="Country code"
+                        value={leadForm.countryCode}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          countryCodeTouchedRef.current = true;
+                          setLeadForm((prev) => ({ ...prev, countryCode: next }));
+                          applyPhoneCountry(next);
+                          setLeadError("");
+                        }}
+                        className="quiz-input lead-gate-country"
+                      >
+                        {COUNTRY_CODES.map((item) => (
+                          <option key={`${item.value}-${item.label}`} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        id="lead-gate-phone"
+                        placeholder="e.g. 7123456789"
+                        inputMode="numeric"
+                        value={leadForm.phone}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          setLeadForm((prev) => ({ ...prev, phone: digitsOnly }));
+                          setLeadError("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void continueAfterLead();
+                        }}
+                        className="quiz-input lead-gate-phone"
+                        autoComplete="tel-national"
+                      />
+                    </div>
+                    <p className="lead-gate-note">Digits only — no spaces. Include the correct country code.</p>
                   </div>
-                  <p className="lead-gate-note">Digits only — no spaces. Include the correct country code.</p>
-                </div>
+                </>
               ) : null}
               {leadError ? <p className="lead-gate-error">{leadError}</p> : null}
               <div className="lead-gate-actions">

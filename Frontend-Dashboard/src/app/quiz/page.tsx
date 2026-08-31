@@ -16,7 +16,7 @@ export default function QuizFunnelLandingPage() {
         </p>
         <p className="landing-free-note">No strings attached. No hidden fees. No hidden obligations.</p>
         <div className="landing-top-start-wrap">
-          <Link href="/quiz/questions" prefetch={false} className="landing-top-start-link">
+          <Link href="/quiz/questions?fresh=1" prefetch={false} className="landing-top-start-link">
             <span className="btn btn-primary landing-top-start-btn">START DIAGNOSIS</span>
           </Link>
         </div>
@@ -116,7 +116,7 @@ export default function QuizFunnelLandingPage() {
           </div>
         </div>
 
-        <Link href="/quiz/questions" prefetch={false} className="landing-bottom-start-link">
+        <Link href="/quiz/questions?fresh=1" prefetch={false} className="landing-bottom-start-link">
           <span className="btn btn-primary landing-top-start-btn">START DIAGNOSIS</span>
         </Link>
       </section>

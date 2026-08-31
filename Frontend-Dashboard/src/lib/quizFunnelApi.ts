@@ -1,7 +1,10 @@
 import { getSyndicateApiBase } from "@/lib/syndicateApiBase";
 
 const REQUEST_TIMEOUT_MS = 10000;
-const SUBMIT_TIMEOUT_MS = 90000;
+/** Fast submit saves score immediately; AI report is generated in the background. */
+const SUBMIT_TIMEOUT_MS = 20000;
+const REPORT_POLL_INTERVAL_MS = 2500;
+const REPORT_POLL_MAX_ATTEMPTS = 48;
 
 function buildApiUrl(path: string): string {
   const base = getSyndicateApiBase().replace(/\/+$/, "");
@@ -46,9 +49,54 @@ export async function submitAnswers(payload: unknown): Promise<Record<string, un
   );
 
   if (!response.ok) {
-    throw new Error("Failed to submit quiz answers");
+    const data = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error || "Failed to submit quiz answers");
   }
   return response.json();
+}
+
+export type QuizResultPoll = {
+  report_ready: boolean;
+  ai_report?: string;
+  intake_ref?: string;
+  error?: string;
+};
+
+export async function fetchQuizResult(identity: {
+  ref?: string;
+  email?: string;
+}): Promise<QuizResultPoll> {
+  const params = new URLSearchParams();
+  const ref = (identity.ref || "").trim();
+  const email = (identity.email || "").trim();
+  if (ref) params.set("ref", ref);
+  if (email) params.set("email", email);
+  const response = await fetchWithTimeout(buildApiUrl(`/quiz-result?${params}`), { cache: "no-store" });
+  const data = (await response.json()) as QuizResultPoll;
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to load quiz result.");
+  }
+  return data;
+}
+
+/** Poll until the background AI report is ready (or attempts exhausted). */
+export async function waitForQuizReport(
+  identity: { ref?: string; email?: string },
+  onUpdate?: (aiReport: string) => void,
+): Promise<string | null> {
+  for (let attempt = 0; attempt < REPORT_POLL_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const data = await fetchQuizResult(identity);
+      if (data.report_ready && data.ai_report) {
+        onUpdate?.(data.ai_report);
+        return data.ai_report;
+      }
+    } catch {
+      // Keep polling — submit may have succeeded even if the first poll fails on slow networks.
+    }
+    await new Promise((resolve) => setTimeout(resolve, REPORT_POLL_INTERVAL_MS));
+  }
+  return null;
 }
 
 /** Mid-quiz lead capture (name/email/phone) — does not generate the final report. */

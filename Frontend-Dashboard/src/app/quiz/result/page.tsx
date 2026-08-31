@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
 import { QuizResultProgramCard } from "@/components/quiz-funnel/QuizResultProgramCard";
@@ -29,6 +29,7 @@ import {
   resolveWeaponNeonTheme,
   type CourseNeonTheme,
 } from "@/lib/quizResultCourseNeon";
+import { waitForQuizReport } from "@/lib/quizFunnelApi";
 
 const CyberChamferFrame = dynamic(
   () =>
@@ -80,6 +81,8 @@ type QuizResultPayload = {
   fatal_flaw?: string;
   recommended_track?: string;
   ai_report?: string;
+  report_ready?: boolean;
+  intake_ref?: string;
   archetype_catalog?: {
     business_models?: string[];
     psychology_paid?: string[];
@@ -87,6 +90,13 @@ type QuizResultPayload = {
     psychology?: string[];
   };
 };
+
+function isReportPending(snapshot: QuizResultPayload | null): boolean {
+  if (!snapshot) return false;
+  if (snapshot.report_ready === true) return false;
+  if (snapshot.report_ready === false) return true;
+  return !snapshot.ai_report?.trim();
+}
 
 function parseQuizSectionMeta(title: string) {
   const match = title.match(/^Section\s+([A-Z])\s*:?\s*(.*)$/i);
@@ -557,6 +567,9 @@ export default function ResultPage() {
   const [quizEmail, setQuizEmail] = useState("");
   const [downloadReady, setDownloadReady] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportPollError, setReportPollError] = useState("");
+  const reportPollStartedRef = useRef(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("quiz_result");
@@ -566,6 +579,45 @@ export default function ResultPage() {
     }
     setQuizEmail(quizUserEmail.trim().toLowerCase());
   }, []);
+
+  useEffect(() => {
+    if (!result || !isReportPending(result)) {
+      reportPollStartedRef.current = false;
+      return undefined;
+    }
+    if (reportPollStartedRef.current) return undefined;
+
+    reportPollStartedRef.current = true;
+    let cancelled = false;
+    setReportLoading(true);
+    setReportPollError("");
+
+    const ref =
+      (result.intake_ref || localStorage.getItem("quiz_intake_ref") || "").trim();
+    const email = (quizEmail || localStorage.getItem("quiz_user_email") || "").trim();
+
+    void waitForQuizReport({ ref, email }, (aiReport) => {
+      if (cancelled) return;
+      setResult((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ai_report: aiReport, report_ready: true };
+        localStorage.setItem("quiz_result", JSON.stringify(next));
+        return next;
+      });
+    }).then((aiReport) => {
+      if (cancelled) return;
+      setReportLoading(false);
+      if (!aiReport) {
+        setReportPollError(
+          "Your report is still generating. Keep this tab open or refresh in a minute.",
+        );
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [result, quizEmail]);
 
   useEffect(() => {
     document.documentElement.classList.add("result-view");
@@ -1036,13 +1088,30 @@ export default function ResultPage() {
   return (
     <main className="page-wrap result-page-wrap">
       <section className="card result-page-shell">
-        <BrandHeader subtitle="Your strategic report is ready." />
-        {renderStyledReport(result.ai_report ?? "", quizEmail)}
+        <BrandHeader
+          subtitle={
+            reportLoading || isReportPending(result)
+              ? "Your score is saved — finishing your diagnosis report."
+              : "Your strategic report is ready."
+          }
+        />
+        {reportLoading || isReportPending(result) ? (
+          <div className="result-report-loading">
+            <p className="result-report-loading-title">Generating your full diagnosis report…</p>
+            <span className="loading-spinner" aria-hidden="true" />
+            <p className="result-report-loading-note">
+              This usually takes 20–60 seconds on mobile. Keep this tab open.
+            </p>
+            {reportPollError ? <p className="result-report-loading-error">{reportPollError}</p> : null}
+          </div>
+        ) : (
+          renderStyledReport(result.ai_report ?? "", quizEmail)
+        )}
 
         <div className="result-actions-footer">
           <button
             className="btn btn-primary result-download-btn"
-            disabled={downloadBusy}
+            disabled={downloadBusy || reportLoading || isReportPending(result)}
             onClick={() => void downloadReportPdf()}
           >
             {downloadBusy ? "PREPARING REPORT…" : "DOWNLOAD SYNDICATE DIAGNOSIS REPORT"}

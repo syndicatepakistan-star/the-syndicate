@@ -5,6 +5,8 @@ from openai import OpenAI
 
 from .logic import build_section_c_report
 
+PENDING_AI_REPORT = "__SYNDICATE_REPORT_PENDING__"
+
 _EASY_ENGLISH_RULES = (
     "Write in simple, easy English. Use short sentences and everyday words. "
     "Avoid jargon, corporate buzzwords, and overly technical language. "
@@ -74,6 +76,33 @@ def compose_full_report(ai_report: str, archetype: str) -> str:
     return report.strip() + "\n"
 
 
+def _fallback_report(
+    *,
+    designation: str,
+    archetype: str,
+    fatal_flaw: str,
+    user_id: str,
+) -> str:
+    base = (
+        f"THE SYNDICATE DIAGNOSIS: DOSSIER {user_id}\n\n"
+        "Section A: THE DESIGNATION\n"
+        f"STATUS: {designation}\n"
+        f"ARCHETYPE: {archetype}\n"
+        "ANALYSIS: You have real potential, but your current habits are misaligned with how you think and move. "
+        "You are working hard without a stack that matches your archetype. You need a clear plan built for operators at your level.\n\n"
+        "Section B: THE VIRUS (Psychological Flaw)\n"
+        f"DETECTED VIRUS: {fatal_flaw}\n"
+        f"THE STING: {_virus_sting_copy(fatal_flaw)}\n"
+        f"THE REALITY: {_virus_reality_copy(fatal_flaw)}\n"
+        f"URGENCY OVERRIDE: {_virus_urgency_copy()}\n\n"
+        "Section D: FINAL DIRECTIVE\n"
+        "WARNING: Time is running out — every week you delay, the gap between you and disciplined operators widens.\n"
+        "Most people read this and do nothing. Do not be one of them.\n"
+        "Your free access window closes in 48 hours. Unlock the Syndicate secret techniques now or stay stuck where you are."
+    )
+    return compose_full_report(base, archetype)
+
+
 def generate_ai_report(
     score: int,
     designation: str,
@@ -85,29 +114,19 @@ def generate_ai_report(
     user_id: str,
     answers: list[dict],
     archetype_catalog: dict | None = None,
+    *,
+    force_fallback: bool = False,
 ) -> str:
     del archetype_catalog  # Section E removed — catalog is not appended to reports.
 
     api_key = (getattr(settings, "OPENAI_API_KEY", None) or "").strip()
-    if not api_key:
-        base = (
-            f"THE SYNDICATE DIAGNOSIS: DOSSIER {user_id}\n\n"
-            "Section A: THE DESIGNATION\n"
-            f"STATUS: {designation}\n"
-            f"ARCHETYPE: {archetype}\n"
-            "ANALYSIS: You have real potential, but your current habits are misaligned with how you think and move. "
-            "You are working hard without a stack that matches your archetype. You need a clear plan built for operators at your level.\n\n"
-            "Section B: THE VIRUS (Psychological Flaw)\n"
-            f"DETECTED VIRUS: {fatal_flaw}\n"
-            f"THE STING: {_virus_sting_copy(fatal_flaw)}\n"
-            f"THE REALITY: {_virus_reality_copy(fatal_flaw)}\n"
-            f"URGENCY OVERRIDE: {_virus_urgency_copy()}\n\n"
-            "Section D: FINAL DIRECTIVE\n"
-            "WARNING: Time is running out — every week you delay, the gap between you and disciplined operators widens.\n"
-            "Most people read this and do nothing. Do not be one of them.\n"
-            "Your free access window closes in 48 hours. Unlock the Syndicate secret techniques now or stay stuck where you are."
+    if force_fallback or not api_key:
+        return _fallback_report(
+            designation=designation,
+            archetype=archetype,
+            fatal_flaw=fatal_flaw,
+            user_id=user_id,
         )
-        return compose_full_report(base, archetype)
 
     client = OpenAI(api_key=api_key)
     prompt = (

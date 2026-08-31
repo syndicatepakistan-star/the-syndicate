@@ -17,6 +17,66 @@ import { resolveSupportedDialCode } from "@/lib/phoneDialByCountry";
 /** Single lead gate after Q4: name, email, and phone. */
 type LeadStep = "contact";
 
+const QUIZ_PROGRESS_KEY = "quiz_progress_v1";
+const QUIZ_SESSION_EMAIL_KEY = "quiz_session_email";
+
+type QuizProgressSnapshot = {
+  answers: Record<number, string>;
+  currentIndex: number;
+  sessionEmail?: string;
+  leadForm: {
+    name: string;
+    email: string;
+    countryCode: string;
+    phone: string;
+  };
+};
+
+function normalizeAnswerMap(raw: Record<string | number, string> | undefined): Record<number, string> {
+  if (!raw || typeof raw !== "object") return {};
+  const out: Record<number, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const id = Number(key);
+    const letter = (value || "").trim().charAt(0).toUpperCase();
+    if (Number.isFinite(id) && id > 0 && /^[ABCD]$/.test(letter)) {
+      out[id] = letter;
+    }
+  }
+  return out;
+}
+
+function readQuizProgress(totalQuestions = 17): QuizProgressSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(QUIZ_PROGRESS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as QuizProgressSnapshot;
+    if (!parsed || typeof parsed !== "object") return null;
+    const maxIndex = Math.max(0, totalQuestions - 1);
+    return {
+      answers: normalizeAnswerMap(parsed.answers as Record<string | number, string>),
+      currentIndex: Number.isFinite(parsed.currentIndex)
+        ? Math.min(maxIndex, Math.max(0, parsed.currentIndex))
+        : 0,
+      sessionEmail: (parsed.sessionEmail || parsed.leadForm?.email || "").trim().toLowerCase(),
+      leadForm: {
+        name: parsed.leadForm?.name || "",
+        email: parsed.leadForm?.email || "",
+        countryCode: parsed.leadForm?.countryCode || "+44",
+        phone: parsed.leadForm?.phone || "",
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function clearQuizProgress() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(QUIZ_PROGRESS_KEY);
+  localStorage.removeItem(QUIZ_SESSION_EMAIL_KEY);
+}
+
 const COUNTRY_CODES = [
   { label: "Afghanistan (+93)", value: "+93" },
   { label: "Albania (+355)", value: "+355" },
@@ -253,30 +313,90 @@ const COUNTRY_CODES = [
   { label: "Zimbabwe (+263)", value: "+263" },
 ];
 
+function shouldRestoreSavedProgress(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("fresh") !== "1";
+}
+
 export default function QuizPage() {
   const loadingWords = ["Money", "Power", "Freedom", "Honour"];
   const QUIZ_DURATION_SECONDS = 20 * 60;
   const router = useRouter();
   const { applyPhoneCountry } = useCurrency();
+  const savedProgressRef = useRef<QuizProgressSnapshot | null>(
+    shouldRestoreSavedProgress() ? readQuizProgress(QUIZ_QUESTIONS.length) : null,
+  );
   const [questions] = useState<QuizQuestionRow[]>(QUIZ_QUESTIONS);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [currentIndex, setCurrentIndex] = useState(() => savedProgressRef.current?.currentIndex ?? 0);
+  const [answers, setAnswers] = useState<Record<number, string>>(
+    () => savedProgressRef.current?.answers ?? {},
+  );
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingWordIndex, setLoadingWordIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION_SECONDS);
   const [showLeadGate, setShowLeadGate] = useState(false);
   const [leadStep, setLeadStep] = useState<LeadStep | null>(null);
-  const [leadForm, setLeadForm] = useState({
-    name: "",
-    email: "",
-    countryCode: "+44",
-    phone: "",
-  });
+  const [leadForm, setLeadForm] = useState(
+    () =>
+      savedProgressRef.current?.leadForm ?? {
+        name: "",
+        email: "",
+        countryCode: "+44",
+        phone: "",
+      },
+  );
   const [leadError, setLeadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const countryCodeTouchedRef = useRef(false);
   const supportedDialCodes = useMemo(() => COUNTRY_CODES.map((item) => item.value), []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("fresh") === "1") {
+      clearQuizProgress();
+      window.history.replaceState({}, "", "/quiz/questions");
+    }
+  }, []);
+
+  function resetQuizSession(options?: { keepLeadForm?: boolean }) {
+    const keepLead = options?.keepLeadForm ?? false;
+    clearQuizProgress();
+    setAnswers({});
+    setCurrentIndex(0);
+    setShowLeadGate(false);
+    setLeadStep(null);
+    setLeadError("");
+    setSubmitError("");
+    if (!keepLead) {
+      setLeadForm({
+        name: "",
+        email: "",
+        countryCode: "+44",
+        phone: "",
+      });
+      countryCodeTouchedRef.current = false;
+    }
+  }
+
+  function rememberSessionEmail(email: string) {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return;
+    localStorage.setItem(QUIZ_SESSION_EMAIL_KEY, normalized);
+  }
+
+  function maybeResetForNewEmail(email: string) {
+    const normalized = email.trim().toLowerCase();
+    const prior =
+      (savedProgressRef.current?.sessionEmail || localStorage.getItem(QUIZ_SESSION_EMAIL_KEY) || "")
+        .trim()
+        .toLowerCase();
+    if (!prior || !normalized || prior === normalized) return false;
+    resetQuizSession({ keepLeadForm: true });
+    rememberSessionEmail(normalized);
+    savedProgressRef.current = null;
+    return true;
+  }
 
   // Auto-select phone country code from public IP (VPN-aware). Do not override manual choice.
   useEffect(() => {
@@ -301,6 +421,18 @@ export default function QuizPage() {
     };
   }, [applyPhoneCountry, supportedDialCodes]);
 
+  // Persist quiz progress so refresh / slow networks do not wipe answers.
+  useEffect(() => {
+    if (typeof window === "undefined" || submitting) return;
+    const snapshot: QuizProgressSnapshot = {
+      answers,
+      currentIndex,
+      sessionEmail: leadForm.email.trim().toLowerCase(),
+      leadForm,
+    };
+    localStorage.setItem(QUIZ_PROGRESS_KEY, JSON.stringify(snapshot));
+  }, [answers, currentIndex, leadForm, submitting]);
+
   useEffect(() => {
     if (!submitting) return undefined;
     const timer = setInterval(() => {
@@ -321,13 +453,25 @@ export default function QuizPage() {
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const total = questions.length || 17;
   const selectedOption = currentQuestion ? answers[currentQuestion.id] : null;
+  const isLast = currentIndex === total - 1;
+  const answeredCount = useMemo(
+    () => questions.filter((q) => Boolean(answers[q.id])).length,
+    [questions, answers],
+  );
+  const allQuestionsAnswered = answeredCount === total;
+  const firstMissingIndex = useMemo(
+    () => questions.findIndex((q) => !answers[q.id]),
+    [questions, answers],
+  );
+  const canSubmit = isLast && allQuestionsAnswered;
   const cleanQuestionText = currentQuestion
     ? currentQuestion.question.replace(/^\[[^\]]+\]\s*/g, "")
     : "";
 
   function pickOption(optionText: string) {
     if (!currentQuestion) return;
-    const optionLetter = optionText.charAt(0);
+    const optionLetter = optionText.trim().charAt(0).toUpperCase();
+    if (!/^[ABCD]$/.test(optionLetter)) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionLetter }));
   }
 
@@ -351,6 +495,9 @@ export default function QuizPage() {
         setLeadError("");
         return;
       }
+      // Lead already filled (e.g. restored session) — still save before Q5.
+      void persistLeadPartial();
+      rememberSessionEmail(leadForm.email);
     }
     if (currentIndex < total - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -416,10 +563,12 @@ export default function QuizPage() {
       return;
     }
 
+    const email = leadForm.email.trim();
+    const wasReset = maybeResetForNewEmail(email);
+
     // Save lead immediately — full report still only at the end.
     await persistLeadPartial();
-
-    const email = leadForm.email.trim();
+    rememberSessionEmail(email);
     const attribution = getAffiliateAttribution();
     if (attribution && email) {
       void trackLead(attribution.affiliateId, attribution.visitorId, email, {
@@ -435,6 +584,10 @@ export default function QuizPage() {
     setLeadError("");
     setShowLeadGate(false);
     setLeadStep(null);
+    if (wasReset) {
+      setCurrentIndex(0);
+      return;
+    }
     setCurrentIndex((prev) => Math.min(prev + 1, total - 1));
   }
 
@@ -444,6 +597,14 @@ export default function QuizPage() {
       setLeadStep("contact");
       setShowLeadGate(true);
       setLeadError(validationMessage || "Please complete your details to continue.");
+      return;
+    }
+
+    if (!allQuestionsAnswered) {
+      setSubmitError(`Please answer all ${total} questions before submitting.`);
+      if (firstMissingIndex >= 0) {
+        setCurrentIndex(firstMissingIndex);
+      }
       return;
     }
 
@@ -477,6 +638,7 @@ export default function QuizPage() {
       const intakeUrl = typeof result.intake_url === "string" ? result.intake_url : "";
       if (intakeRef) localStorage.setItem("quiz_intake_ref", intakeRef);
       if (intakeUrl) localStorage.setItem("quiz_intake_url", intakeUrl);
+      clearQuizProgress();
       router.push("/quiz/result");
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit quiz answers");
@@ -486,12 +648,10 @@ export default function QuizPage() {
   }
 
   useEffect(() => {
-    if (loading || submitting || timeLeft > 0 || questions.length === 0) return;
+    if (loading || submitting || timeLeft > 0 || questions.length === 0 || !canSubmit) return;
     void handleSubmit();
-  }, [timeLeft, loading, submitting, questions.length]);
+  }, [timeLeft, loading, submitting, questions.length, canSubmit]);
 
-  const isLast = currentIndex === total - 1;
-  const canSubmit = Object.keys(answers).length === total;
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
 
@@ -677,7 +837,7 @@ export default function QuizPage() {
           ) : null}
           {isLast && submitting ? (
             <button type="button" className="btn btn-primary quiz-nav-btn quiz-nav-btn--submit" disabled>
-              Generating Report...
+              Saving your diagnosis...
             </button>
           ) : null}
         </div>
@@ -685,11 +845,44 @@ export default function QuizPage() {
         {isLast && submitting ? (
           <div className="submit-loading-wrap">
             <p className="loading-chant">{loadingWords[loadingWordIndex]}...</p>
+            <p className="submit-loading-note">
+              Saving your score now. Your full report will load on the next screen — keep this tab open.
+            </p>
             <span className="loading-spinner" aria-hidden="true" />
           </div>
         ) : null}
+        {isLast && !submitting && !canSubmit ? (
+          <div className="quiz-submit-hint-wrap">
+            <p className="quiz-submit-hint">
+              {allQuestionsAnswered
+                ? "Go to the last question to submit."
+                : `Answer all questions to submit (${answeredCount} of ${total} done).`}
+            </p>
+            {firstMissingIndex >= 0 ? (
+              <button
+                type="button"
+                className="btn btn-quiz-nav quiz-nav-btn quiz-submit-jump"
+                onClick={() => setCurrentIndex(firstMissingIndex)}
+              >
+                Go to question {firstMissingIndex + 1}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-quiz-nav quiz-nav-btn quiz-submit-restart"
+              onClick={() => resetQuizSession()}
+            >
+              Start over (same device)
+            </button>
+          </div>
+        ) : null}
         {isLast && !submitting && submitError ? (
-          <p className="quiz-submit-error">{submitError}</p>
+          <div className="quiz-submit-error-wrap">
+            <p className="quiz-submit-error">{submitError}</p>
+            <button type="button" className="btn btn-primary quiz-nav-btn quiz-submit-retry" onClick={() => void handleSubmit()}>
+              Retry submit
+            </button>
+          </div>
         ) : null}
       </section>
     </main>

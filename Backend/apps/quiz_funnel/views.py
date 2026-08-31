@@ -6,11 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .quiz_data import QUIZ_QUESTIONS
-from .ai_service import generate_ai_report
+from .ai_service import PENDING_AI_REPORT
 from .logic import build_recommendation, get_designation_short
 from .intake_data import INTAKE_QUESTIONS, INTAKE_QUESTION_IDS
 from .intake_tokens import ensure_intake_ref, intake_url_for_user
 from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
+from .report_tasks import schedule_ai_report_generation
 
 EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PHONE_REGEX = re.compile(r"^[0-9+\-\s()]{7,20}$")
@@ -282,6 +283,61 @@ def save_quiz_lead(request):
     )
 
 
+def _build_submit_payload(
+    *,
+    recommendation: dict,
+    intake_ref: str,
+    intake_url: str,
+    ai_report: str,
+    report_ready: bool,
+) -> dict:
+    designation = recommendation["category"]
+    weapon_course = recommendation["execution_stack"]["weapon"]
+    shield_course = recommendation["execution_stack"]["shield"]
+    protocol_course = recommendation["execution_stack"]["protocol"]
+    fatal_flaw = recommendation["detected_virus"]
+    return {
+        "score": recommendation["score"],
+        "category": designation,
+        "designation": recommendation["designation"],
+        "designation_short": get_designation_short(designation),
+        "archetype": recommendation["archetype"],
+        "detected_virus": fatal_flaw,
+        "diagnosis": recommendation["diagnosis"],
+        "execution_stack": recommendation["execution_stack"],
+        "recommended_track": weapon_course,
+        "weapon_course": weapon_course,
+        "shield_course": shield_course,
+        "protocol_course": protocol_course,
+        "fatal_flaw": fatal_flaw,
+        "ai_report": ai_report if report_ready else "",
+        "report_ready": report_ready,
+        "archetype_catalog": recommendation.get("archetype_catalog"),
+        "intake_ref": intake_ref,
+        "intake_url": intake_url,
+    }
+
+
+@require_GET
+def fetch_quiz_result(request):
+    """Poll for the AI report after a fast submit (ref or email)."""
+    ref = (request.GET.get("ref") or "").strip()
+    email = (request.GET.get("email") or "").strip()
+    user = _resolve_intake_user(ref=ref, email=email)
+    if user is None or not hasattr(user, "result"):
+        return JsonResponse({"error": "Result not found."}, status=404)
+
+    result = user.result
+    report_ready = bool(result.ai_report) and result.ai_report != PENDING_AI_REPORT
+    return JsonResponse(
+        {
+            "report_ready": report_ready,
+            "ai_report": result.ai_report if report_ready else "",
+            "intake_ref": user.intake_ref or "",
+        }
+    )
+
+
 @csrf_exempt
 @require_POST
 def submit_answers(request):
@@ -302,8 +358,8 @@ def submit_answers(request):
         return HttpResponseBadRequest("Valid email is required.")
     if not PHONE_REGEX.match(phone):
         return HttpResponseBadRequest("Valid phone number is required.")
-    if not isinstance(answers, list) or not answers:
-        return HttpResponseBadRequest("Answers are required.")
+    if not isinstance(answers, list) or len(answers) != len(QUIZ_QUESTIONS):
+        return HttpResponseBadRequest("All quiz answers are required.")
 
     normalized_answers = []
     for answer in answers:
@@ -323,19 +379,6 @@ def submit_answers(request):
     protocol_course = recommendation["execution_stack"]["protocol"]
     user_id = (email.split("@")[0] if email else name).upper().replace(" ", "_")
 
-    ai_report = generate_ai_report(
-        score=score,
-        designation=designation,
-        archetype=archetype,
-        fatal_flaw=fatal_flaw,
-        weapon_course=weapon_course,
-        shield_course=shield_course,
-        protocol_course=protocol_course,
-        user_id=user_id,
-        answers=normalized_answers,
-        archetype_catalog=recommendation.get("archetype_catalog"),
-    )
-
     user = _find_or_create_quiz_user(name=name, email=email, phone=phone)
     intake_ref = ensure_intake_ref(user)
     intake_url = intake_url_for_user(user)
@@ -347,8 +390,22 @@ def submit_answers(request):
             "category": designation,
             "virus": fatal_flaw,
             "course_offer": weapon_course,
-            "ai_report": ai_report,
+            "ai_report": PENDING_AI_REPORT,
         },
+    )
+
+    schedule_ai_report_generation(
+        user_pk=user.id,
+        score=score,
+        designation=designation,
+        archetype=archetype,
+        fatal_flaw=fatal_flaw,
+        weapon_course=weapon_course,
+        shield_course=shield_course,
+        protocol_course=protocol_course,
+        user_id=user_id,
+        answers=normalized_answers,
+        archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
     # Syn Diagnosis → Klaviyo list (email sequencing). Failures never block the quiz.
@@ -373,23 +430,11 @@ def submit_answers(request):
         pass
 
     return JsonResponse(
-        {
-            "score": score,
-            "category": designation,
-            "designation": recommendation["designation"],
-            "designation_short": get_designation_short(designation),
-            "archetype": archetype,
-            "detected_virus": fatal_flaw,
-            "diagnosis": recommendation["diagnosis"],
-            "execution_stack": recommendation["execution_stack"],
-            "recommended_track": weapon_course,
-            "weapon_course": weapon_course,
-            "shield_course": shield_course,
-            "protocol_course": protocol_course,
-            "fatal_flaw": fatal_flaw,
-            "ai_report": ai_report,
-            "archetype_catalog": recommendation.get("archetype_catalog"),
-            "intake_ref": intake_ref,
-            "intake_url": intake_url,
-        }
+        _build_submit_payload(
+            recommendation=recommendation,
+            intake_ref=intake_ref,
+            intake_url=intake_url,
+            ai_report="",
+            report_ready=False,
+        )
     )

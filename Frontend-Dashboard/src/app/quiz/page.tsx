@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CyberChamferFrame } from "@/components/cyber/CyberChamferFrames";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import { QuizFeaturedInBanner } from "@/components/quiz-funnel/QuizFeaturedInBanner";
 import { QuizPressLogosStrip } from "@/components/quiz-funnel/QuizPressLogosStrip";
 
 export default function QuizFunnelLandingPage() {
@@ -15,6 +16,7 @@ export default function QuizFunnelLandingPage() {
           You get all of these benefits for free and 4 free programmes worth $396
         </p>
         <p className="landing-free-note">No strings attached. No hidden fees. No hidden obligations.</p>
+        <QuizFeaturedInBanner />
         <div className="landing-top-start-wrap">
           <Link href="/quiz/questions?fresh=1" prefetch={false} className="landing-top-start-link">
             <span className="btn btn-primary landing-top-start-btn">START DIAGNOSIS</span>

@@ -658,6 +658,9 @@ DEFAULT_CURRENCY = (_strip_optional_quotes(os.environ.get("DEFAULT_CURRENCY") or
 KLAVIYO_PRIVATE_API_KEY = (os.environ.get("KLAVIYO_PRIVATE_API_KEY") or "").strip()
 KLAVIYO_SYN_DIAGNOSIS_LIST_ID = (os.environ.get("KLAVIYO_SYN_DIAGNOSIS_LIST_ID") or "").strip()
 
+# Outbound Syn Diagnosis lead webhook (e.g. n8n). Empty = disabled. Failures never break the quiz.
+LEAD_WEBHOOK_URL = (os.environ.get("LEAD_WEBHOOK_URL") or "").strip()
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True

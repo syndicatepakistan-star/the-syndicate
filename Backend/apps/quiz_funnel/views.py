@@ -271,6 +271,15 @@ def save_quiz_lead(request):
     except Exception:
         pass
 
+    # Outbound lead webhook (e.g. n8n). Failures never block the quiz.
+    if phone:
+        try:
+            from .lead_webhook import post_lead_webhook
+
+            post_lead_webhook(name=name, email=email, phone=phone)
+        except Exception:
+            pass
+
     return JsonResponse(
         {
             "ok": True,

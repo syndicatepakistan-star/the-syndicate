@@ -1,4 +1,4 @@
-"""Outbound Syn Diagnosis lead webhook (e.g. n8n). Safe no-op when unset or on failure."""
+"""Outbound Syn Diagnosis lead webhook (WhatsApp bot / n8n). Safe no-op when unset or on failure."""
 
 from __future__ import annotations
 
@@ -12,9 +12,15 @@ logger = logging.getLogger(__name__)
 WEBHOOK_TIMEOUT_SECONDS = 4
 
 
-def post_lead_webhook(*, name: str, email: str, phone: str) -> bool:
+def post_lead_webhook(
+    *,
+    name: str,
+    email: str,
+    phone: str,
+    intake_url: str = "",
+) -> bool:
     """
-    POST name/email/phone to LEAD_WEBHOOK_URL when a quiz lead has a phone number.
+    POST name/email/phone (+ optional intake_url) to LEAD_WEBHOOK_URL when a quiz lead has a phone.
 
     Safe no-op when LEAD_WEBHOOK_URL or phone is empty.
     Never raises — quiz lead save must succeed even if the webhook is down.
@@ -30,6 +36,9 @@ def post_lead_webhook(*, name: str, email: str, phone: str) -> bool:
         "phone": phone_norm,
         "source": "syn_diagnosis_quiz",
     }
+    intake = (intake_url or "").strip()
+    if intake:
+        payload["intake_url"] = intake
 
     try:
         response = requests.post(

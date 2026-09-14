@@ -276,7 +276,12 @@ def save_quiz_lead(request):
         try:
             from .lead_webhook import post_lead_webhook
 
-            post_lead_webhook(name=name, email=email, phone=phone)
+            post_lead_webhook(
+                name=name,
+                email=email,
+                phone=phone,
+                intake_url=intake_url,
+            )
         except Exception:
             pass
 

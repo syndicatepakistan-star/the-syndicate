@@ -661,6 +661,10 @@ KLAVIYO_SYN_DIAGNOSIS_LIST_ID = (os.environ.get("KLAVIYO_SYN_DIAGNOSIS_LIST_ID")
 # Outbound Syn Diagnosis lead webhook (e.g. n8n). Empty = disabled. Failures never break the quiz.
 LEAD_WEBHOOK_URL = (os.environ.get("LEAD_WEBHOOK_URL") or "").strip()
 
+# Hunter.io Email Verifier (Syn Diagnosis lead gate). Empty = skip remote verify.
+# https://hunter.io/api-documentation/v2#email-verifier
+HUNTER_API_KEY = (os.environ.get("HUNTER_API_KEY") or "").strip()
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True

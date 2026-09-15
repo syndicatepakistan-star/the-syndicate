@@ -112,6 +112,7 @@ export async function saveQuizLead(payload: {
   name?: string;
   phone?: string;
 }> {
+  // Hunter verify can take several seconds — allow more than the default 10s.
   const response = await fetchWithTimeout(
     buildApiUrl("/save-quiz-lead"),
     {
@@ -125,7 +126,7 @@ export async function saveQuizLead(payload: {
         },
       }),
     },
-    REQUEST_TIMEOUT_MS,
+    25000,
   );
   const data = (await response.json().catch(() => ({}))) as {
     ok?: boolean;

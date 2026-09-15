@@ -534,10 +534,10 @@ export default function QuizPage() {
     return validateLeadStep("contact");
   }
 
-  async function persistLeadPartial() {
+  async function persistLeadPartial(): Promise<string> {
     const name = leadForm.name.trim();
     const email = leadForm.email.trim();
-    if (name.length < 2 || !email) return;
+    if (name.length < 2 || !email) return "Please complete your details to continue.";
     try {
       const saved = await saveQuizLead({
         name,
@@ -547,8 +547,13 @@ export default function QuizPage() {
       localStorage.setItem("quiz_user_email", email.toLowerCase());
       if (saved.intake_ref) localStorage.setItem("quiz_intake_ref", saved.intake_ref);
       if (saved.intake_url) localStorage.setItem("quiz_intake_url", saved.intake_url);
-    } catch {
-      // Don't block the quiz if the lead save fails — final submit still creates the user.
+      return "";
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Could not verify your email. Please try again.";
+      return message;
     }
   }
 
@@ -562,8 +567,12 @@ export default function QuizPage() {
     const email = leadForm.email.trim();
     const wasReset = maybeResetForNewEmail(email);
 
-    // Save lead immediately — full report still only at the end.
-    await persistLeadPartial();
+    // Save + Hunter verify — block continue if backend rejects the email.
+    const saveError = await persistLeadPartial();
+    if (saveError) {
+      setLeadError(saveError);
+      return;
+    }
     rememberSessionEmail(email);
     const attribution = getAffiliateAttribution();
     if (attribution && email) {
@@ -607,7 +616,14 @@ export default function QuizPage() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      await persistLeadPartial();
+      const saveError = await persistLeadPartial();
+      if (saveError) {
+        setLeadStep("contact");
+        setShowLeadGate(true);
+        setLeadError(saveError);
+        setSubmitting(false);
+        return;
+      }
 
       const answerList = questions.map((q) => ({
         question_id: q.id,

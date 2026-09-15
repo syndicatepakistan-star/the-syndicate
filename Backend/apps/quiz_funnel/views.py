@@ -242,11 +242,24 @@ def save_quiz_lead(request):
     phone = (user_meta.get("phone") or "").strip()
 
     if len(name) < 2:
-        return HttpResponseBadRequest("Name is required.")
+        return JsonResponse({"ok": False, "error": "Name is required."}, status=400)
     if not EMAIL_REGEX.match(email):
-        return HttpResponseBadRequest("Valid email is required.")
+        return JsonResponse({"ok": False, "error": "Valid email is required."}, status=400)
     if phone and not PHONE_REGEX.match(phone):
-        return HttpResponseBadRequest("Valid phone number is required.")
+        return JsonResponse({"ok": False, "error": "Valid phone number is required."}, status=400)
+
+    # Hunter Email Verifier (blocks invalid / disposable when HUNTER_API_KEY is set).
+    try:
+        from .hunter_email import verify_email_with_hunter
+
+        verdict, hunter_error = verify_email_with_hunter(email)
+        if verdict == "block":
+            return JsonResponse(
+                {"ok": False, "error": hunter_error or "Please enter a valid email address."},
+                status=400,
+            )
+    except Exception:
+        pass
 
     user = _find_or_create_quiz_user(name=name, email=email, phone=phone or "")
     intake_ref = ensure_intake_ref(user)
@@ -374,6 +387,18 @@ def submit_answers(request):
         return HttpResponseBadRequest("Valid phone number is required.")
     if not isinstance(answers, list) or len(answers) != len(QUIZ_QUESTIONS):
         return HttpResponseBadRequest("All quiz answers are required.")
+
+    try:
+        from .hunter_email import verify_email_with_hunter
+
+        verdict, hunter_error = verify_email_with_hunter(email)
+        if verdict == "block":
+            return JsonResponse(
+                {"error": hunter_error or "Please enter a valid email address."},
+                status=400,
+            )
+    except Exception:
+        pass
 
     normalized_answers = []
     for answer in answers:

@@ -13,6 +13,7 @@ import { trackLead } from "@/lib/affiliateApi";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { detectPublicIpCountry, isUkPhone, markUkCitizen } from "@/lib/currency";
 import { resolveSupportedDialCode } from "@/lib/phoneDialByCountry";
+import { toE164, validateLeadContact } from "@/lib/LeadValidation";
 
 /** Single lead gate after Q4: name, email, and phone. */
 type LeadStep = "contact";
@@ -511,27 +512,22 @@ export default function QuizPage() {
   }
 
   function validateLeadStep(step: LeadStep | null) {
-    const name = leadForm.name.trim();
-    const email = leadForm.email.trim();
-    const phone = leadForm.phone.trim();
-    const countryCode = leadForm.countryCode.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{6,15}$/;
-
-    if (step === "contact") {
-      if (name.length < 2) return "Please enter your name to continue.";
-      if (!emailRegex.test(email)) return "Please enter a valid email address.";
-      if (!countryCode) return "Please select a country code.";
-      if (!phoneRegex.test(phone)) return "Please enter a valid phone number.";
-      return "";
-    }
-    return "";
+    if (step !== "contact") return "";
+    return validateLeadContact({
+      name: leadForm.name,
+      email: leadForm.email,
+      countryCode: leadForm.countryCode,
+      phone: leadForm.phone,
+    });
   }
 
+  /** Prefer E.164 (+447…) for Klaviyo; fall back to dial + digits if parse fails. */
   function buildFullPhone() {
-    const code = leadForm.countryCode.trim();
-    const number = leadForm.phone.trim();
-    return `${code} ${number}`.trim();
+    const e164 = toE164(leadForm.countryCode, leadForm.phone);
+    if (e164) return e164;
+    const code = leadForm.countryCode.trim().replace(/-/g, "");
+    const number = leadForm.phone.trim().replace(/\D/g, "").replace(/^0/, "");
+    return `${code}${number}`.trim();
   }
 
   function validateLeadForm() {

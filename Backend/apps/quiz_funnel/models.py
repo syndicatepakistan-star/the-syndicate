@@ -69,3 +69,50 @@ class IntakeResponse(models.Model):
 
     def __str__(self) -> str:
         return f"Intake #{self.pk} — {self.user.email or self.user_id}"
+
+
+class AuditBooking(models.Model):
+    """
+    Founder audit call booked after intake submit.
+    Datetimes are stored in UTC;
+    """
+
+    class Status(models.TextChoices):
+        BOOKED = "booked", "Booked"
+        CANCELLED = "cancelled", "Cancelled"
+        COMPLETED = "completed", "Completed"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="audit_bookings")
+    slot_start = models.DateTimeField(help_text="UTC start of the audit slot.")
+    slot_end = models.DateTimeField(help_text="UTC end of the audit slot.")
+    timezone = models.CharField(max_length=64, default="Asia/Karachi")
+    google_event_id = models.CharField(max_length=255, blank=True, default="")
+    meet_link = models.URLField(max_length=500, blank=True, default="")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.BOOKED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "quiz_audit_bookings"
+        ordering = ("-slot_start",)
+        indexes = [
+            models.Index(fields=["user", "status"], name="quiz_audit_user_status_idx"),
+            models.Index(fields=["slot_start"], name="quiz_audit_slot_start_idx"),
+        ]
+        constraints = [
+            # One active booked audit per quiz user (v1).
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(status="booked"),
+                name="uniq_quiz_audit_one_booked_per_user",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        email = self.user.email or f"user:{self.user_id}"
+        return f"AuditBooking {self.status} — {email} @ {self.slot_start.isoformat()}"

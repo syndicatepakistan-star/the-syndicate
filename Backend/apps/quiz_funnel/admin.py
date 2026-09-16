@@ -7,7 +7,7 @@ from django.utils.html import format_html
 
 from .intake_data import INTAKE_QUESTIONS
 from .intake_tokens import intake_url_for_user
-from .models import IntakeResponse, QuizOption, QuizQuestion, Result, User
+from .models import AuditBooking, IntakeResponse, QuizOption, QuizQuestion, Result, User
 
 
 def _build_excel_response(filename: str) -> HttpResponse:
@@ -266,3 +266,32 @@ class IntakeResponseAdmin(admin.ModelAdmin):
     @admin.display(description="Email")
     def user_email(self, obj):
         return obj.user.email or "—"
+
+
+@admin.register(AuditBooking)
+class AuditBookingAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user_email",
+        "status",
+        "slot_start",
+        "slot_end",
+        "timezone",
+        "has_meet_link",
+        "google_event_id",
+        "created_at",
+    )
+    list_filter = ("status", "timezone", "created_at")
+    search_fields = ("user__email", "user__name", "user__intake_ref", "google_event_id", "meet_link")
+    ordering = ("-slot_start",)
+    date_hierarchy = "slot_start"
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("user",)
+
+    @admin.display(description="Email", ordering="user__email")
+    def user_email(self, obj):
+        return obj.user.email or "—"
+
+    @admin.display(boolean=True, description="Meet link")
+    def has_meet_link(self, obj):
+        return bool((obj.meet_link or "").strip())

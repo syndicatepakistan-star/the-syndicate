@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from apps.portal import views as portal_views
+from apps.quiz_funnel import booking_views as quiz_booking_views
 from apps.quiz_funnel import views as quiz_funnel_views
 
 from . import auth_views
@@ -15,6 +16,8 @@ urlpatterns = [
     path("quiz-result", quiz_funnel_views.fetch_quiz_result),
     path("quiz-intake", quiz_funnel_views.fetch_intake_session),
     path("quiz-intake/submit", quiz_funnel_views.submit_intake),
+    path("booking/slots", quiz_booking_views.list_booking_slots),
+    path("booking/book", quiz_booking_views.book_audit_slot),
     path("courses/", include("apps.courses.urls")),
     path("streaming/", include("apps.video_streaming.urls")),
     path("videos/", include("apps.courses.urls_videos")),

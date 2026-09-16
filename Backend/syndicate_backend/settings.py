@@ -658,12 +658,45 @@ DEFAULT_CURRENCY = (_strip_optional_quotes(os.environ.get("DEFAULT_CURRENCY") or
 KLAVIYO_PRIVATE_API_KEY = (os.environ.get("KLAVIYO_PRIVATE_API_KEY") or "").strip()
 KLAVIYO_SYN_DIAGNOSIS_LIST_ID = (os.environ.get("KLAVIYO_SYN_DIAGNOSIS_LIST_ID") or "").strip()
 
-# Outbound Syn Diagnosis lead webhook (e.g. n8n). Empty = disabled. Failures never break the quiz.
+# Outbound Syn Diagnosis lead webhook (e.g. n8n / WhatsApp bot). Empty = disabled.
 LEAD_WEBHOOK_URL = (os.environ.get("LEAD_WEBHOOK_URL") or "").strip()
+
+# Audit booking → WhatsApp bot. Empty = disabled.
+# Example: https://your-whatsapp-bot.up.railway.app/webhook/booking
+BOOKING_WEBHOOK_URL = (os.environ.get("BOOKING_WEBHOOK_URL") or "").strip()
+BOOKING_WEBHOOK_SECRET = (os.environ.get("BOOKING_WEBHOOK_SECRET") or "").strip()
+
 
 # Hunter.io Email Verifier (Syn Diagnosis lead gate). Empty = skip remote verify.
 # https://hunter.io/api-documentation/v2#email-verifier
 HUNTER_API_KEY = (os.environ.get("HUNTER_API_KEY") or "").strip()
+
+# --- Google Calendar (founder audit booking) ---
+# OAuth for audit@… — refresh token from gcal-oauth-test (never commit real values).
+GOOGLE_OAUTH_CLIENT_ID = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+GOOGLE_OAUTH_CLIENT_SECRET = (os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
+GOOGLE_OAUTH_REFRESH_TOKEN = (os.environ.get("GOOGLE_OAUTH_REFRESH_TOKEN") or "").strip()
+GOOGLE_CALENDAR_ID = (os.environ.get("GOOGLE_CALENDAR_ID") or "primary").strip() or "primary"
+BOOKING_FOUNDER_EMAIL = (os.environ.get("BOOKING_FOUNDER_EMAIL") or "").strip()
+
+BOOKING_TIMEZONE = (os.environ.get("BOOKING_TIMEZONE") or "Asia/Karachi").strip() or "Asia/Karachi"
+BOOKING_DURATION_MINUTES = int((os.environ.get("BOOKING_DURATION_MINUTES") or "30").strip() or "30")
+BOOKING_BUFFER_MINUTES = int((os.environ.get("BOOKING_BUFFER_MINUTES") or "15").strip() or "15")
+BOOKING_DAYS_AHEAD = int((os.environ.get("BOOKING_DAYS_AHEAD") or "14").strip() or "14")
+BOOKING_HOUR_START = int((os.environ.get("BOOKING_HOUR_START") or "15").strip() or "15")
+BOOKING_HOUR_END = int((os.environ.get("BOOKING_HOUR_END") or "19").strip() or "19")
+BOOKING_MIN_NOTICE_MINUTES = int((os.environ.get("BOOKING_MIN_NOTICE_MINUTES") or "60").strip() or "60")
+# Python weekday: Mon=0 … Sun=6. Default Mon–Thu.
+_booking_weekdays_raw = (os.environ.get("BOOKING_WEEKDAYS") or "0,1,2,3").strip()
+BOOKING_WEEKDAYS = tuple(
+    sorted(
+        {
+            int(part.strip())
+            for part in _booking_weekdays_raw.split(",")
+            if part.strip().lstrip("-").isdigit() and 0 <= int(part.strip()) <= 6
+        }
+    )
+) or (0, 1, 2, 3)
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

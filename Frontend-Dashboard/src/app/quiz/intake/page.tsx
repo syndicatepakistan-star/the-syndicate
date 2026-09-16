@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import BrandHeader from "@/components/quiz-funnel/BrandHeader";
+import AuditSlotPicker from "@/components/quiz-funnel/AuditSlotPicker";
 import {
   fetchIntakeSession,
   submitIntake,
@@ -11,6 +12,8 @@ import {
 import "./quiz-intake.css";
 
 const NEON_ACCENTS = ["cyan", "fuchsia", "amber", "emerald", "violet"] as const;
+
+type IntakeStep = "form" | "booking";
 
 function accentForIndex(index: number): (typeof NEON_ACCENTS)[number] {
   return NEON_ACCENTS[index % NEON_ACCENTS.length];
@@ -24,12 +27,11 @@ function IntakePageInner() {
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [questions, setQuestions] = useState<QuizIntakeQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [done, setDone] = useState(false);
+  const [step, setStep] = useState<IntakeStep>("form");
   /** Resolved identity from API (email link may also return intake_ref). */
   const [sessionRef, setSessionRef] = useState(refParam);
   const [sessionEmail, setSessionEmail] = useState(emailParam);
@@ -55,12 +57,12 @@ function IntakePageInner() {
           return;
         }
         setFirstName(session.first_name || "");
-        setAlreadySubmitted(Boolean(session.already_submitted));
         setQuestions(session.questions || []);
         if (session.intake_ref) setSessionRef(session.intake_ref);
         if (session.email) setSessionEmail(session.email);
+        // Intake already done → go straight to audit booking (or show existing booking).
         if (session.already_submitted) {
-          setDone(true);
+          setStep("booking");
         }
       } catch {
         if (!cancelled) {
@@ -96,9 +98,8 @@ function IntakePageInner() {
           answer: (answers[q.id] || "").trim(),
         })),
       };
-      const result = await submitIntake(payload);
-      setDone(true);
-      setAlreadySubmitted(Boolean(result.already_submitted));
+      await submitIntake(payload);
+      setStep("booking");
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Submit failed. Please try again.");
     } finally {
@@ -137,21 +138,14 @@ function IntakePageInner() {
     );
   }
 
-  if (done || alreadySubmitted) {
+  if (step === "booking") {
     return (
       <main className="quiz-intake-page">
-        <section className="quiz-intake-card quiz-intake-card--success">
-          <BrandHeader
-            subtitle={
-              firstName
-                ? `${firstName} — we already have your answers.`
-                : "Thank you — your answers are saved."
-            }
-          />
-          <p className="quiz-intake-thanks">
-            Your responses are linked to your Syn Diagnosis profile. You can close this page.
-          </p>
-        </section>
+        <AuditSlotPicker
+          intakeRef={sessionRef || refParam}
+          email={sessionEmail || emailParam}
+          firstName={firstName}
+        />
       </main>
     );
   }

@@ -214,3 +214,88 @@ export async function submitIntake(payload: {
     message: data.message,
   };
 }
+
+/* ── Audit booking (Phase 3+ APIs; UI uses these) ── */
+
+export type AuditBookingSlot = {
+  start: string; // ISO UTC
+  end: string; // ISO UTC
+};
+
+export type ExistingAuditBooking = {
+  slot_start: string;
+  slot_end: string;
+  timezone?: string;
+  meet_link?: string;
+  status?: string;
+};
+
+export type AuditSlotsResponse = {
+  ok: boolean;
+  timezone: string;
+  slots: AuditBookingSlot[];
+  existing_booking: ExistingAuditBooking | null;
+  error?: string;
+};
+
+export type AuditBookResponse = {
+  ok: boolean;
+  slot_start?: string;
+  slot_end?: string;
+  timezone?: string;
+  meet_link?: string;
+  error?: string;
+};
+
+export async function fetchAuditSlots(identity: QuizIntakeIdentity): Promise<AuditSlotsResponse> {
+  const params = new URLSearchParams();
+  const ref = (identity.ref || "").trim();
+  const email = (identity.email || "").trim();
+  if (ref) params.set("ref", ref);
+  if (email) params.set("email", email);
+  const response = await fetchWithTimeout(
+    buildApiUrl(`/booking/slots?${params}`),
+    { cache: "no-store" },
+    20000,
+  );
+  const data = (await response.json().catch(() => ({}))) as AuditSlotsResponse;
+  if (!response.ok) {
+    throw new Error(data.error || "Could not load available times.");
+  }
+  return {
+    ok: Boolean(data.ok),
+    timezone: data.timezone || "Asia/Karachi",
+    slots: Array.isArray(data.slots) ? data.slots : [],
+    existing_booking: data.existing_booking ?? null,
+    error: data.error,
+  };
+}
+
+export async function bookAuditSlot(payload: {
+  ref?: string;
+  email?: string;
+  slot_start: string;
+  slot_end: string;
+}): Promise<AuditBookResponse> {
+  const response = await fetchWithTimeout(
+    buildApiUrl("/booking/book"),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    30000,
+  );
+  const data = (await response.json().catch(() => ({}))) as AuditBookResponse;
+  if (!response.ok) {
+    throw new Error(data.error || "Could not book that time. Please pick another slot.");
+  }
+  return {
+    ok: Boolean(data.ok),
+    slot_start: data.slot_start,
+    slot_end: data.slot_end,
+    timezone: data.timezone || "Asia/Karachi",
+    meet_link: data.meet_link,
+    error: data.error,
+  };
+}

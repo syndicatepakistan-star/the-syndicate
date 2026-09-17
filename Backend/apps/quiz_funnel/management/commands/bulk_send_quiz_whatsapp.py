@@ -8,6 +8,7 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from apps.quiz_funnel.booking_mailer import first_name_from
 from apps.quiz_funnel.intake_tokens import ensure_intake_ref, intake_url_for_user
 from apps.quiz_funnel.models import User
 
@@ -93,16 +94,19 @@ class Command(BaseCommand):
 
             ensure_intake_ref(user)
             intake_url = intake_url_for_user(user)
-            name = (user.name or "").strip()
+            full_name = (user.name or "").strip()
+            first = first_name_from(full_name) or full_name
             email = (user.email or "").strip().lower()
 
-            label = f"[{index}/{total}] id={user.id} {name} {phone}"
+            label = f"[{index}/{total}] id={user.id} {first} {phone}"
             if dry_run:
                 self.stdout.write(f"DRY-RUN {label} -> {intake_url}")
                 continue
 
             payload = {
-                "name": name,
+                "name": first,
+                "first_name": first,
+                "full_name": full_name,
                 "email": email,
                 "phone": phone,
                 "source": "syn_diagnosis_quiz_bulk",

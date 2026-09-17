@@ -7,6 +7,8 @@ import logging
 import requests
 from django.conf import settings
 
+from .booking_mailer import first_name_from
+
 logger = logging.getLogger(__name__)
 
 WEBHOOK_TIMEOUT_SECONDS = 4
@@ -22,6 +24,9 @@ def post_lead_webhook(
     """
     POST name/email/phone (+ optional intake_url) to LEAD_WEBHOOK_URL when a quiz lead has a phone.
 
+    ``name`` is first name only (WhatsApp greeting for the intake/audit link message).
+    Full name is also sent as ``full_name``.
+
     Safe no-op when LEAD_WEBHOOK_URL or phone is empty.
     Never raises — quiz lead save must succeed even if the webhook is down.
     """
@@ -30,8 +35,14 @@ def post_lead_webhook(
     if not url or not phone_norm:
         return False
 
+    full_name = (name or "").strip()
+    first = first_name_from(full_name) or full_name
+
     payload = {
-        "name": (name or "").strip(),
+        # Greeting field — first name only (same fix as booking WhatsApp).
+        "name": first,
+        "first_name": first,
+        "full_name": full_name,
         "email": (email or "").strip().lower(),
         "phone": phone_norm,
         "source": "syn_diagnosis_quiz",

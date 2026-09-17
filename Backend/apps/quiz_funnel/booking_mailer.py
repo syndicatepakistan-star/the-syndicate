@@ -87,8 +87,8 @@ def build_booking_confirmation_html(
           <a href="{link}" style="color:#67e8f9;word-break:break-all;">{link}</a>
         </p>
         <p style="margin:0;font-size:12px;line-height:1.65;color:#70839a;">
-          Google Calendar may also send an invite — if that email shows a different city label,
-          trust this message (and your calendar app) for the correct local time.
+          This is your booking confirmation. The time above is in the timezone you selected
+          when you booked.
         </p>
       </div>
     </div>

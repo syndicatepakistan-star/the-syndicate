@@ -261,9 +261,10 @@ def create_audit_event(
     Create Google Calendar event with Meet.
     Returns (event_id, meet_link). Raises BookingError if Meet link missing.
 
-    When display_timezone is a valid IANA zone (e.g. Europe/London), the invite
-    is labeled in that zone so Gmail shows the guest's local wall time instead
-    of the organizer calendar default (often Europe/Paris).
+    Guest-facing name fields use first name only. We do not send Google's
+    calendar invite email (sendUpdates=none): the organizer calendar is often
+    Europe/Paris, so Google's "When" line shows host TZ instead of the guest's
+    city. Confirmation + local time go out via our booking email / WhatsApp.
     """
     start = _as_utc(slot_start)
     end = _as_utc(slot_end)
@@ -274,9 +275,12 @@ def create_audit_event(
     cal_id = _calendar_id()
     founder = (getattr(settings, "BOOKING_FOUNDER_EMAIL", None) or "").strip()
     guest_email = (user.email or "").strip()
-    guest_name = (user.name or "").strip() or "Guest"
+    full_name = (user.name or "").strip() or "Guest"
+    from .booking_mailer import first_name_from, format_slot_in_timezone
 
-    summary = f"Founder Audit — {guest_name}"
+    guest_first = first_name_from(full_name) or full_name
+
+    summary = f"Founder Audit — {guest_first}"
     event_tz_name = (display_timezone or "").strip() or "UTC"
     event_tz = _safe_zoneinfo(event_tz_name)
     if event_tz is None:
@@ -287,16 +291,14 @@ def create_audit_event(
     end_local = end.astimezone(event_tz)
 
     try:
-        from .booking_mailer import format_slot_in_timezone
-
         guest_when = format_slot_in_timezone(start, end, event_tz_name)
     except Exception:
         guest_when = f"{start_local.strftime('%Y-%m-%d %H:%M')} – {end_local.strftime('%H:%M')} ({event_tz_name})"
 
     description_lines = [
         "Syn Diagnosis founder audit call.",
-        f"Guest: {guest_name}",
-        f"Guest local time: {guest_when}",
+        f"Guest: {guest_first}",
+        f"When: {guest_when}",
     ]
     if guest_email:
         description_lines.append(f"Email: {guest_email}")
@@ -307,10 +309,10 @@ def create_audit_event(
 
     attendees: list[dict[str, str]] = []
     if guest_email:
-        attendees.append({"email": guest_email, "displayName": guest_name})
+        attendees.append({"email": guest_email, "displayName": guest_first})
     if founder and founder.lower() != guest_email.lower():
         attendees.append({"email": founder})
-    # Local wall times (no offset suffix) + IANA zone — Google labels the invite correctly.
+    # Store wall times in the guest's IANA zone (calendar UI / ICS consumers).
     start_payload = {
         "dateTime": start_local.strftime("%Y-%m-%dT%H:%M:%S"),
         "timeZone": event_tz_name,
@@ -345,7 +347,8 @@ def create_audit_event(
                 calendarId=cal_id,
                 body=body,
                 conferenceDataVersion=1,
-                sendUpdates="all" if attendees else "none",
+                # Suppress Google invite email — its "When" uses organizer calendar TZ (e.g. Paris).
+                sendUpdates="none",
             )
             .execute()
         )

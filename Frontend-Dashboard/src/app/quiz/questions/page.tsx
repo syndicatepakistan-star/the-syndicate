@@ -349,6 +349,8 @@ export default function QuizPage() {
   );
   const [leadError, setLeadError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  /** Avoid re-POSTing lead (and re-triggering SMS) after a successful contact save. */
+  const leadPersistedRef = useRef(false);
   const countryCodeTouchedRef = useRef(false);
   const supportedDialCodes = useMemo(() => COUNTRY_CODES.map((item) => item.value), []);
 
@@ -396,6 +398,7 @@ export default function QuizPage() {
     resetQuizSession({ keepLeadForm: true });
     rememberSessionEmail(normalized);
     savedProgressRef.current = null;
+    leadPersistedRef.current = false;
     return true;
   }
 
@@ -496,8 +499,7 @@ export default function QuizPage() {
         setLeadError("");
         return;
       }
-      // Lead already filled (e.g. restored session) — still save before Q5.
-      void persistLeadPartial();
+      // Lead already filled (e.g. restored session) — do not re-save (duplicate SMS).
       rememberSessionEmail(leadForm.email);
     }
     if (currentIndex < total - 1) {
@@ -538,12 +540,14 @@ export default function QuizPage() {
     const name = leadForm.name.trim();
     const email = leadForm.email.trim();
     if (name.length < 2 || !email) return "Please complete your details to continue.";
+    if (leadPersistedRef.current) return "";
     try {
       const saved = await saveQuizLead({
         name,
         email,
         phone: buildFullPhone(),
       });
+      leadPersistedRef.current = true;
       localStorage.setItem("quiz_user_email", email.toLowerCase());
       if (saved.intake_ref) localStorage.setItem("quiz_intake_ref", saved.intake_ref);
       if (saved.intake_url) localStorage.setItem("quiz_intake_url", saved.intake_url);

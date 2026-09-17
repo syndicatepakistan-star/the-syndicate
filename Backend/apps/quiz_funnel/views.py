@@ -261,42 +261,52 @@ def save_quiz_lead(request):
     except Exception:
         pass
 
+    email_norm = email.strip().lower()
+    existing = User.objects.filter(email__iexact=email_norm).order_by("-id").first()
+    had_phone_before = bool(existing and (existing.phone or "").strip())
+
     user = _find_or_create_quiz_user(name=name, email=email, phone=phone or "")
     intake_ref = ensure_intake_ref(user)
     intake_url = intake_url_for_user(user)
+    # SMS/WhatsApp audit link: only on first phone capture (avoids 2–3 duplicate texts).
+    should_notify_phone = bool(phone) and not had_phone_before
 
-    # Start email sequencing as soon as we have the lead (safe no-op if unset).
-    try:
-        from .klaviyo import subscribe_syn_diagnosis_email
+    # Klaviyo + lead webhook off the request path so the contact gate stays fast.
+    from .background_jobs import run_in_background
 
-        subscribe_syn_diagnosis_email(
-            email=email,
-            name=name,
-            phone=phone or "",
-            properties={
-                "intake_ref": intake_ref,
-                "intake_url": intake_url,
-                "quiz_lead_partial": True,
-                "quiz_lead_has_phone": bool(phone),
-                "intake_completed": hasattr(user, "intake") and user.intake is not None,
-            },
-        )
-    except Exception:
-        pass
-
-    # Outbound lead webhook (e.g. n8n). Failures never block the quiz.
-    if phone:
+    def _sync_lead_side_effects() -> None:
         try:
-            from .lead_webhook import post_lead_webhook
+            from .klaviyo import subscribe_syn_diagnosis_email
 
-            post_lead_webhook(
-                name=name,
+            subscribe_syn_diagnosis_email(
                 email=email,
-                phone=phone,
-                intake_url=intake_url,
+                name=name,
+                phone=phone or "",
+                properties={
+                    "intake_ref": intake_ref,
+                    "intake_url": intake_url,
+                    "quiz_lead_partial": True,
+                    "quiz_lead_has_phone": bool(phone),
+                    "intake_completed": hasattr(user, "intake") and user.intake is not None,
+                },
             )
         except Exception:
             pass
+
+        if should_notify_phone:
+            try:
+                from .lead_webhook import post_lead_webhook
+
+                post_lead_webhook(
+                    name=name,
+                    email=email,
+                    phone=phone,
+                    intake_url=intake_url,
+                )
+            except Exception:
+                pass
+
+    run_in_background(f"quiz-lead-sync-{user.pk}", _sync_lead_side_effects)
 
     return JsonResponse(
         {
@@ -388,17 +398,7 @@ def submit_answers(request):
     if not isinstance(answers, list) or len(answers) != len(QUIZ_QUESTIONS):
         return HttpResponseBadRequest("All quiz answers are required.")
 
-    try:
-        from .hunter_email import verify_email_with_hunter
-
-        verdict, hunter_error = verify_email_with_hunter(email)
-        if verdict == "block":
-            return JsonResponse(
-                {"error": hunter_error or "Please enter a valid email address."},
-                status=400,
-            )
-    except Exception:
-        pass
+    # Hunter already ran on save-quiz-lead (contact gate) — skip here for speed.
 
     normalized_answers = []
     for answer in answers:
@@ -447,26 +447,31 @@ def submit_answers(request):
         archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
-    # Syn Diagnosis → Klaviyo list (email sequencing). Failures never block the quiz.
-    try:
-        from .klaviyo import subscribe_syn_diagnosis_email
+    # Klaviyo off the request path so submit returns immediately.
+    from .background_jobs import run_in_background
 
-        subscribe_syn_diagnosis_email(
-            email=email,
-            name=name,
-            phone=phone,
-            properties={
-                "syn_diagnosis_score": score,
-                "syn_diagnosis_category": designation,
-                "syn_diagnosis_virus": fatal_flaw,
-                "syn_diagnosis_course_offer": weapon_course,
-                "intake_ref": intake_ref,
-                "intake_url": intake_url,
-                "intake_completed": hasattr(user, "intake") and user.intake is not None,
-            },
-        )
-    except Exception:
-        pass
+    def _sync_submit_klaviyo() -> None:
+        try:
+            from .klaviyo import subscribe_syn_diagnosis_email
+
+            subscribe_syn_diagnosis_email(
+                email=email,
+                name=name,
+                phone=phone,
+                properties={
+                    "syn_diagnosis_score": score,
+                    "syn_diagnosis_category": designation,
+                    "syn_diagnosis_virus": fatal_flaw,
+                    "syn_diagnosis_course_offer": weapon_course,
+                    "intake_ref": intake_ref,
+                    "intake_url": intake_url,
+                    "intake_completed": hasattr(user, "intake") and user.intake is not None,
+                },
+            )
+        except Exception:
+            pass
+
+    run_in_background(f"quiz-submit-klaviyo-{user.pk}", _sync_submit_klaviyo)
 
     return JsonResponse(
         _build_submit_payload(

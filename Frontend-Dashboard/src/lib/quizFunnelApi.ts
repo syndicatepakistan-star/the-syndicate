@@ -2,9 +2,9 @@ import { getSyndicateApiBase } from "@/lib/syndicateApiBase";
 
 const REQUEST_TIMEOUT_MS = 10000;
 /** Fast submit saves score immediately; AI report is generated in the background. */
-const SUBMIT_TIMEOUT_MS = 20000;
-const REPORT_POLL_INTERVAL_MS = 2500;
-const REPORT_POLL_MAX_ATTEMPTS = 48;
+const SUBMIT_TIMEOUT_MS = 15000;
+const REPORT_POLL_INTERVAL_MS = 1500;
+const REPORT_POLL_MAX_ATTEMPTS = 60;
 
 function buildApiUrl(path: string): string {
   const base = getSyndicateApiBase().replace(/\/+$/, "");
@@ -112,7 +112,7 @@ export async function saveQuizLead(payload: {
   name?: string;
   phone?: string;
 }> {
-  // Hunter verify can take several seconds — allow more than the default 10s.
+  // Hunter verify is faster now — keep a modest buffer over the default 10s.
   const response = await fetchWithTimeout(
     buildApiUrl("/save-quiz-lead"),
     {
@@ -126,7 +126,7 @@ export async function saveQuizLead(payload: {
         },
       }),
     },
-    25000,
+    15000,
   );
   const data = (await response.json().catch(() => ({}))) as {
     ok?: boolean;
@@ -276,6 +276,7 @@ export async function bookAuditSlot(payload: {
   email?: string;
   slot_start: string;
   slot_end: string;
+  user_timezone?: string;
 }): Promise<AuditBookResponse> {
   const response = await fetchWithTimeout(
     buildApiUrl("/booking/book"),

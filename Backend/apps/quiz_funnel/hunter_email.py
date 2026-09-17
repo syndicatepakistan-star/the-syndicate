@@ -12,9 +12,10 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 HUNTER_VERIFIER_URL = "https://api.hunter.io/v2/email-verifier"
-REQUEST_TIMEOUT_SECONDS = 20
-MAX_PENDING_RETRIES = 2
-RETRY_SLEEP_SECONDS = 1.25
+# Keep lead-gate snappy: one quick attempt + one short pending retry.
+REQUEST_TIMEOUT_SECONDS = 8
+MAX_PENDING_RETRIES = 1
+RETRY_SLEEP_SECONDS = 0.75
 
 # Block these statuses for Syn Diagnosis leads.
 BLOCK_STATUSES = frozenset({"invalid", "disposable"})

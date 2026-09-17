@@ -83,7 +83,7 @@ def list_booking_slots(request):
 def book_audit_slot(request):
     """
     POST /api/booking/book
-    Body: { ref?, email?, slot_start, slot_end }
+    Body: { ref?, email?, slot_start, slot_end, user_timezone? }
     """
     try:
         payload = json.loads(request.body.decode("utf-8"))
@@ -94,6 +94,7 @@ def book_audit_slot(request):
     email = str(payload.get("email") or "").strip()
     slot_start = str(payload.get("slot_start") or "").strip()
     slot_end = str(payload.get("slot_end") or "").strip()
+    user_timezone = str(payload.get("user_timezone") or "").strip()
 
     user, err = _require_intake_user(ref=ref, email=email)
     if err is not None:
@@ -103,7 +104,7 @@ def book_audit_slot(request):
         return JsonResponse({"ok": False, "error": "Please select a time slot."}, status=400)
 
     try:
-        result = book_slot(user, slot_start, slot_end)
+        result = book_slot(user, slot_start, slot_end, user_timezone=user_timezone or None)
     except BookingError as exc:
         return JsonResponse({"ok": False, "error": exc.message}, status=exc.status)
     except Exception:

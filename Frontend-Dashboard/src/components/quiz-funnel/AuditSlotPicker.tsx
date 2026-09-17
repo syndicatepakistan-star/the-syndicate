@@ -364,6 +364,7 @@ export default function AuditSlotPicker({ intakeRef = "", email = "", firstName 
         email: email || undefined,
         slot_start: selectedSlot.start,
         slot_end: selectedSlot.end,
+        user_timezone: userTimeZone,
       });
       if (!result.ok || !result.slot_start || !result.slot_end) {
         throw new Error(result.error || "Booking failed.");
@@ -371,7 +372,7 @@ export default function AuditSlotPicker({ intakeRef = "", email = "", firstName 
       const saved: ExistingAuditBooking = {
         slot_start: result.slot_start,
         slot_end: result.slot_end,
-        timezone: result.timezone || founderTimeZone,
+        timezone: result.timezone || userTimeZone || founderTimeZone,
         meet_link: result.meet_link || "",
         status: "booked",
       };
@@ -385,7 +386,7 @@ export default function AuditSlotPicker({ intakeRef = "", email = "", firstName 
     } finally {
       setBooking(false);
     }
-  }, [selectedSlot, booking, intakeRef, email, founderTimeZone, loadSlots]);
+  }, [selectedSlot, booking, intakeRef, email, userTimeZone, founderTimeZone, loadSlots]);
 
   if ((confirmed || existing) && cityReady) {
     return (

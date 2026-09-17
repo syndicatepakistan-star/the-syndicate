@@ -240,14 +240,30 @@ def _extract_meet_link(event: dict) -> str:
     return ""
 
 
+def _safe_zoneinfo(name: str | None) -> ZoneInfo | None:
+    raw = (name or "").strip()
+    if not raw:
+        return None
+    try:
+        return ZoneInfo(raw)
+    except Exception:
+        return None
+
+
 def create_audit_event(
     user: User,
     slot_start: datetime,
     slot_end: datetime,
+    *,
+    display_timezone: str | None = None,
 ) -> tuple[str, str]:
     """
     Create Google Calendar event with Meet.
     Returns (event_id, meet_link). Raises BookingError if Meet link missing.
+
+    When display_timezone is a valid IANA zone (e.g. Europe/London), the invite
+    is labeled in that zone so Gmail shows the guest's local wall time instead
+    of the organizer calendar default (often Europe/Paris).
     """
     start = _as_utc(slot_start)
     end = _as_utc(slot_end)
@@ -278,11 +294,29 @@ def create_audit_event(
     if founder and founder.lower() != guest_email.lower():
         attendees.append({"email": founder})
 
+    event_tz_name = (display_timezone or "").strip() or "UTC"
+    event_tz = _safe_zoneinfo(event_tz_name)
+    if event_tz is None:
+        event_tz_name = "UTC"
+        event_tz = ZoneInfo("UTC")
+
+    start_local = start.astimezone(event_tz)
+    end_local = end.astimezone(event_tz)
+    # Local wall times (no offset suffix) + IANA zone — Google labels the invite correctly.
+    start_payload = {
+        "dateTime": start_local.strftime("%Y-%m-%dT%H:%M:%S"),
+        "timeZone": event_tz_name,
+    }
+    end_payload = {
+        "dateTime": end_local.strftime("%Y-%m-%dT%H:%M:%S"),
+        "timeZone": event_tz_name,
+    }
+
     body: dict = {
         "summary": summary,
         "description": "\n".join(description_lines),
-        "start": {"dateTime": start.isoformat().replace("+00:00", "Z"), "timeZone": "UTC"},
-        "end": {"dateTime": end.isoformat().replace("+00:00", "Z"), "timeZone": "UTC"},
+        "start": start_payload,
+        "end": end_payload,
         "conferenceData": {
             "createRequest": {
                 "requestId": f"audit-{user.pk}-{uuid.uuid4().hex[:16]}",
@@ -330,7 +364,13 @@ def create_audit_event(
     return event_id, meet_link
 
 
-def book_slot(user: User, slot_start: datetime | str, slot_end: datetime | str) -> dict:
+def book_slot(
+    user: User,
+    slot_start: datetime | str,
+    slot_end: datetime | str,
+    *,
+    user_timezone: str | None = None,
+) -> dict:
     """
     Transactional book:
     1) reject if user already has active booked
@@ -346,7 +386,12 @@ def book_slot(user: User, slot_start: datetime | str, slot_end: datetime | str) 
         if abs((end - start) - duration) > timedelta(seconds=2):
             raise BookingError("That slot length is not valid.")
 
-    tz_name = getattr(settings, "BOOKING_TIMEZONE", None) or "Asia/Karachi"
+    founder_tz = getattr(settings, "BOOKING_TIMEZONE", None) or "Asia/Karachi"
+    guest_tz_name = (user_timezone or "").strip()
+    if _safe_zoneinfo(guest_tz_name) is None:
+        guest_tz_name = founder_tz
+    # Persist + label invite in the guest's selected city TZ (e.g. Europe/London).
+    display_tz = guest_tz_name
     buffer = timedelta(minutes=int(getattr(settings, "BOOKING_BUFFER_MINUTES", 15) or 15))
     slot = Slot(start=start, end=end)
 
@@ -368,14 +413,19 @@ def book_slot(user: User, slot_start: datetime | str, slot_end: datetime | str) 
         if not _is_slot_free(slot, busy, buffer=buffer):
             raise BookingError("That time was just taken. Please pick another slot.", status=409)
 
-        event_id, meet_link = create_audit_event(user, slot.start, slot.end)
+        event_id, meet_link = create_audit_event(
+            user,
+            slot.start,
+            slot.end,
+            display_timezone=display_tz,
+        )
 
         try:
             booking = AuditBooking.objects.create(
                 user=user,
                 slot_start=slot.start,
                 slot_end=slot.end,
-                timezone=tz_name,
+                timezone=display_tz,
                 google_event_id=event_id,
                 meet_link=meet_link,
                 status=AuditBooking.Status.BOOKED,
@@ -398,7 +448,7 @@ def book_slot(user: User, slot_start: datetime | str, slot_end: datetime | str) 
         "booking_id": booking.pk,
         "slot_start": slot.as_api_dict()["start"],
         "slot_end": slot.as_api_dict()["end"],
-        "timezone": tz_name,
+        "timezone": display_tz,
         "meet_link": meet_link,
         "google_event_id": event_id,
         "status": AuditBooking.Status.BOOKED,
@@ -415,7 +465,7 @@ def book_slot(user: User, slot_start: datetime | str, slot_end: datetime | str) 
             meet_link=meet_link,
             slot_start=result["slot_start"],
             slot_end=result["slot_end"],
-            timezone=tz_name,
+            timezone=display_tz,
             intake_ref=user.intake_ref or "",
             booking_id=booking.pk,
         )

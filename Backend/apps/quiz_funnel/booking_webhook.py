@@ -7,6 +7,8 @@ import logging
 import requests
 from django.conf import settings
 
+from .booking_mailer import first_name_from
+
 logger = logging.getLogger(__name__)
 
 WEBHOOK_TIMEOUT_SECONDS = 8
@@ -27,6 +29,9 @@ def post_booking_webhook(
     """
     POST booking details to BOOKING_WEBHOOK_URL after a successful audit book.
 
+    ``name`` is the first name only (WhatsApp greeting). Full name is also sent
+    as ``full_name`` for bots that need it.
+
     Safe no-op when URL or phone is empty.
     Never raises — booking must succeed even if WhatsApp bot is down.
     """
@@ -36,8 +41,14 @@ def post_booking_webhook(
     if not url or not phone_norm or not meet:
         return False
 
+    full_name = (name or "").strip()
+    first = first_name_from(full_name) or full_name
+
     payload = {
-        "name": (name or "").strip(),
+        # Primary greeting field — first name only (fixes "Thomas Muller" → "Thomas").
+        "name": first,
+        "first_name": first,
+        "full_name": full_name,
         "email": (email or "").strip().lower(),
         "phone": phone_norm,
         "meet_link": meet,

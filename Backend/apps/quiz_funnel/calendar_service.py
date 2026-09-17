@@ -277,9 +277,26 @@ def create_audit_event(
     guest_name = (user.name or "").strip() or "Guest"
 
     summary = f"Founder Audit — {guest_name}"
+    event_tz_name = (display_timezone or "").strip() or "UTC"
+    event_tz = _safe_zoneinfo(event_tz_name)
+    if event_tz is None:
+        event_tz_name = "UTC"
+        event_tz = ZoneInfo("UTC")
+
+    start_local = start.astimezone(event_tz)
+    end_local = end.astimezone(event_tz)
+
+    try:
+        from .booking_mailer import format_slot_in_timezone
+
+        guest_when = format_slot_in_timezone(start, end, event_tz_name)
+    except Exception:
+        guest_when = f"{start_local.strftime('%Y-%m-%d %H:%M')} – {end_local.strftime('%H:%M')} ({event_tz_name})"
+
     description_lines = [
         "Syn Diagnosis founder audit call.",
         f"Guest: {guest_name}",
+        f"Guest local time: {guest_when}",
     ]
     if guest_email:
         description_lines.append(f"Email: {guest_email}")
@@ -293,15 +310,6 @@ def create_audit_event(
         attendees.append({"email": guest_email, "displayName": guest_name})
     if founder and founder.lower() != guest_email.lower():
         attendees.append({"email": founder})
-
-    event_tz_name = (display_timezone or "").strip() or "UTC"
-    event_tz = _safe_zoneinfo(event_tz_name)
-    if event_tz is None:
-        event_tz_name = "UTC"
-        event_tz = ZoneInfo("UTC")
-
-    start_local = start.astimezone(event_tz)
-    end_local = end.astimezone(event_tz)
     # Local wall times (no offset suffix) + IANA zone — Google labels the invite correctly.
     start_payload = {
         "dateTime": start_local.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -455,6 +463,7 @@ def book_slot(
     }
 
     # WhatsApp bot (safe no-op if BOOKING_WEBHOOK_URL unset / phone missing).
+    # Payload ``name`` is first name only — see booking_webhook.post_booking_webhook.
     try:
         from .booking_webhook import post_booking_webhook
 
@@ -471,6 +480,21 @@ def book_slot(
         )
     except Exception:
         logger.warning("Booking webhook call failed", exc_info=True)
+
+    # Our confirmation email — time always in invitee timezone (not Google's host TZ label).
+    try:
+        from .booking_mailer import queue_booking_confirmation_email
+
+        queue_booking_confirmation_email(
+            to_email=user.email or "",
+            full_name=user.name or "",
+            slot_start=slot.start,
+            slot_end=slot.end,
+            timezone_name=display_tz,
+            meet_link=meet_link,
+        )
+    except Exception:
+        logger.warning("Booking confirmation email queue failed", exc_info=True)
 
     return result
 

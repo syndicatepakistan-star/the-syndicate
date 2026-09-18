@@ -81,6 +81,50 @@ function applyCheckoutCurrencyCookie(request: NextRequest, response: NextRespons
   }
 }
 
+/**
+ * AppLovin enhanced user ID: mirror first-party `_axwrt` → `axwrt` (no underscore).
+ * Must be set from the site origin (not HttpOnly), path `/`, ~1 year, domain `.the-syndicate.com`.
+ * @see https://support.axon.ai / AppLovin Pixel "Enhanced user identification"
+ */
+function applyAxwrtCookie(request: NextRequest, response: NextResponse) {
+  const axwrt = request.cookies.get("_axwrt")?.value?.trim();
+  if (!axwrt) return;
+
+  const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
+  const isProdSite =
+    host === "the-syndicate.com" || host.endsWith(".the-syndicate.com");
+  const isHttps =
+    request.nextUrl.protocol === "https:" ||
+    request.headers.get("x-forwarded-proto") === "https";
+
+  const options: {
+    path: string;
+    maxAge: number;
+    sameSite: "lax";
+    httpOnly: false;
+    secure: boolean;
+    domain?: string;
+  } = {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    httpOnly: false,
+    secure: isHttps || isProdSite,
+  };
+
+  // AppLovin: domain = site with leading period, no "www". Skip on localhost/previews.
+  if (isProdSite) {
+    options.domain = ".the-syndicate.com";
+  }
+
+  response.cookies.set("axwrt", axwrt, options);
+}
+
+function applyResponseCookies(request: NextRequest, response: NextResponse) {
+  applyCheckoutCurrencyCookie(request, response);
+  applyAxwrtCookie(request, response);
+}
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const section = (request.nextUrl.searchParams.get("section") || "").trim().toLowerCase();
@@ -118,7 +162,7 @@ export function middleware(request: NextRequest) {
         // Fall through to normal routing if query fragment is unparseable.
       }
       const redirect = NextResponse.redirect(fixed);
-      applyCheckoutCurrencyCookie(request, redirect);
+      applyResponseCookies(request, redirect);
       return redirect;
     }
   }
@@ -129,7 +173,7 @@ export function middleware(request: NextRequest) {
     clean.pathname = `/dashboard/${section}`;
     clean.searchParams.delete("section");
     const redirect = NextResponse.redirect(clean);
-    applyCheckoutCurrencyCookie(request, redirect);
+    applyResponseCookies(request, redirect);
     return redirect;
   }
 
@@ -145,7 +189,7 @@ export function middleware(request: NextRequest) {
     rewriteUrl.pathname = "/dashboard";
     rewriteUrl.searchParams.set("section", pathParts[1]);
     const rewrite = NextResponse.rewrite(rewriteUrl);
-    applyCheckoutCurrencyCookie(request, rewrite);
+    applyResponseCookies(request, rewrite);
     rewrite.headers.set("Cache-Control", "private, no-store, max-age=0");
     return rewrite;
   }
@@ -159,7 +203,7 @@ export function middleware(request: NextRequest) {
     dest.searchParams.set("program", programDeepLink[1]);
     dest.hash = "spotlight";
     const redirect = NextResponse.redirect(dest);
-    applyCheckoutCurrencyCookie(request, redirect);
+    applyResponseCookies(request, redirect);
     return redirect;
   }
 
@@ -237,13 +281,13 @@ export function middleware(request: NextRequest) {
       loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     }
     const loginRedirect = NextResponse.redirect(loginUrl);
-    applyCheckoutCurrencyCookie(request, loginRedirect);
+    applyResponseCookies(request, loginRedirect);
     return loginRedirect;
   }
 
   if (!pathname.startsWith("/static/")) {
     const response = NextResponse.next();
-    applyCheckoutCurrencyCookie(request, response);
+    applyResponseCookies(request, response);
     const isRscPayload =
       request.headers.get("RSC") === "1" ||
       request.headers.get("Next-Router-Prefetch") === "1" ||

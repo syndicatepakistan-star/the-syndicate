@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import time
 
+import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Q
 
 from apps.quiz_funnel.intake_tokens import intake_url_for_user
-from apps.quiz_funnel.lead_webhook import post_lead_webhook
 from apps.quiz_funnel.models import User
 
 
 class Command(BaseCommand):
     help = (
-        "For each quiz user with a phone, POST diagnosis to LEAD_WEBHOOK_URL with "
+        "For each quiz user with phone/email, POST diagnosis to LEAD_WEBHOOK_URL with "
         "sheet_only=true so Bot A updates existing Leads rows (no WhatsApp)."
     )
 
@@ -49,9 +50,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         webhook_url = (getattr(settings, "LEAD_WEBHOOK_URL", "") or "").strip()
+        if webhook_url.upper().startswith("LEAD_WEBHOOK_URL="):
+            webhook_url = webhook_url.split("=", 1)[1].strip()
         dry_run = bool(options["dry_run"])
         if not webhook_url and not dry_run:
             raise CommandError("LEAD_WEBHOOK_URL is not set in Django settings/env.")
+        if webhook_url and not webhook_url.startswith(("http://", "https://")):
+            raise CommandError(f"LEAD_WEBHOOK_URL is not a valid URL: {webhook_url!r}")
 
         limit = int(options["limit"] or 0)
         delay = float(options["delay"] or 0)
@@ -61,11 +66,6 @@ class Command(BaseCommand):
             raise CommandError("Use only one of --only-completed / --only-not-completed.")
 
         qs = User.objects.select_related("result").order_by("id")
-        # Prefer users who can match a sheet row (phone and/or email).
-        qs = qs.exclude(phone__isnull=True, email__isnull=True)
-        # Keep rows that have at least one of phone/email non-empty.
-        from django.db.models import Q
-
         qs = qs.filter(
             (Q(phone__isnull=False) & ~Q(phone=""))
             | (Q(email__isnull=False) & ~Q(email=""))
@@ -80,7 +80,7 @@ class Command(BaseCommand):
         users = list(qs)
         total = len(users)
         if not total:
-            self.stdout.write(self.style.WARNING("No matching quiz users with phone."))
+            self.stdout.write(self.style.WARNING("No matching quiz users with phone/email."))
             return
 
         self.stdout.write(
@@ -88,7 +88,7 @@ class Command(BaseCommand):
             f"delay={delay}s dry_run={dry_run} webhook={webhook_url or '(dry-run)'}"
         )
 
-        ok = failed = 0
+        updated = skipped = failed = 0
         for index, user in enumerate(users, start=1):
             phone = (user.phone or "").strip()
             email = (user.email or "").strip().lower()
@@ -105,31 +105,84 @@ class Command(BaseCommand):
             except Exception:
                 intake_url = ""
 
-            label = f"[{index}/{total}] id={user.id} {email or '-'} {phone} → {diagnosis}"
+            label = f"[{index}/{total}] id={user.id} {email or '-'} {phone or '-'} → {diagnosis}"
             if dry_run:
                 self.stdout.write(f"DRY-RUN {label}")
                 continue
 
-            sent = post_lead_webhook(
-                name=name,
-                email=email,
-                phone=phone,
-                intake_url=intake_url,
-                diagnosis=diagnosis,
-                sheet_only=True,
-                source="syn_diagnosis_backfill",
-                timeout=45,
+            payload = {
+                "name": name,
+                "first_name": name.split(" ", 1)[0] if name else "",
+                "full_name": name,
+                "email": email,
+                "phone": phone,
+                "source": "syn_diagnosis_backfill",
+                "diagnosis": diagnosis,
+                "sheet_only": True,
+            }
+            if intake_url:
+                payload["intake_url"] = intake_url
+
+            try:
+                response = requests.post(
+                    webhook_url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=45,
+                )
+            except Exception as exc:
+                failed += 1
+                self.stdout.write(self.style.ERROR(f"FAIL {label} err={exc}"))
+                continue
+
+            body: dict = {}
+            try:
+                if response.content:
+                    parsed = response.json()
+                    if isinstance(parsed, dict):
+                        body = parsed
+            except Exception:
+                body = {}
+
+            action = str(body.get("action") or "")
+            sheet_updated = bool(body.get("sheet_updated")) or action == "sheet_diagnosis_updated"
+            sheet_skipped = action == "sheet_diagnosis_skipped" or (
+                response.ok and body.get("ok") is False
             )
-            if sent:
-                ok += 1
-                self.stdout.write(self.style.SUCCESS(f"OK {label}"))
+
+            if 200 <= response.status_code < 300 and sheet_updated:
+                updated += 1
+                self.stdout.write(self.style.SUCCESS(f"UPDATED {label}"))
+            elif 200 <= response.status_code < 300 and sheet_skipped:
+                skipped += 1
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"SKIPPED {label} (no matching Leads row — {body.get('detail') or 'not on sheet'})"
+                    )
+                )
+            elif 200 <= response.status_code < 300:
+                # Older bot deploy without sheet_updated field — treat as soft OK.
+                updated += 1
+                self.stdout.write(
+                    self.style.WARNING(f"OK(unknown) {label} action={action or '-'}")
+                )
             else:
                 failed += 1
-                self.stdout.write(self.style.ERROR(f"FAIL {label}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"FAIL {label} http={response.status_code} body={response.text[:160]}"
+                    )
+                )
 
             if index < total and delay > 0:
                 time.sleep(delay)
 
         self.stdout.write(
-            self.style.SUCCESS(f"Done. ok={ok} failed={failed} dry_run={dry_run}")
+            self.style.SUCCESS(
+                f"Done. updated={updated} skipped={skipped} failed={failed} dry_run={dry_run}"
+            )
+        )
+        self.stdout.write(
+            "Note: SKIPPED = Django user not found on Leads sheet (extra sheet rows stay blank). "
+            "group_add_* is separate — run Bot A scripts/backfill_group_columns.py"
         )

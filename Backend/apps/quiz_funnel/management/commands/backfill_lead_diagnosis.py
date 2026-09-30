@@ -9,14 +9,13 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 
-from apps.quiz_funnel.intake_tokens import intake_url_for_user
 from apps.quiz_funnel.models import User
 
 
 class Command(BaseCommand):
     help = (
-        "For each quiz user with phone/email, POST diagnosis to LEAD_WEBHOOK_URL with "
-        "sheet_only=true so Bot A updates existing Leads rows (no WhatsApp)."
+        "Sync quiz-user diagnosis to Bot A Leads sheet. "
+        "Default: ONE batch request (recommended). Use --one-by-one for legacy mode."
     )
 
     def add_arguments(self, parser):
@@ -29,13 +28,7 @@ class Command(BaseCommand):
             "--limit",
             type=int,
             default=0,
-            help="Max users to process (0 = all with phone).",
-        )
-        parser.add_argument(
-            "--delay",
-            type=float,
-            default=0.4,
-            help="Seconds between webhook calls (default 0.4).",
+            help="Max users to process (0 = all).",
         )
         parser.add_argument(
             "--only-completed",
@@ -46,6 +39,17 @@ class Command(BaseCommand):
             "--only-not-completed",
             action="store_true",
             help="Only users without a Result.",
+        )
+        parser.add_argument(
+            "--one-by-one",
+            action="store_true",
+            help="Legacy mode: POST each user separately (slow; can hit Sheets rate limits).",
+        )
+        parser.add_argument(
+            "--delay",
+            type=float,
+            default=0.4,
+            help="Delay between one-by-one calls only (default 0.4).",
         )
 
     def handle(self, *args, **options):
@@ -59,9 +63,10 @@ class Command(BaseCommand):
             raise CommandError(f"LEAD_WEBHOOK_URL is not a valid URL: {webhook_url!r}")
 
         limit = int(options["limit"] or 0)
-        delay = float(options["delay"] or 0)
         only_completed = bool(options["only_completed"])
         only_not_completed = bool(options["only_not_completed"])
+        one_by_one = bool(options["one_by_one"])
+        delay = float(options["delay"] or 0)
         if only_completed and only_not_completed:
             raise CommandError("Use only one of --only-completed / --only-not-completed.")
 
@@ -80,109 +85,144 @@ class Command(BaseCommand):
         users = list(qs)
         total = len(users)
         if not total:
-            self.stdout.write(self.style.WARNING("No matching quiz users with phone/email."))
+            self.stdout.write(self.style.WARNING("No matching quiz users."))
             return
+
+        items = []
+        for user in users:
+            items.append(
+                {
+                    "email": (user.email or "").strip().lower(),
+                    "phone": (user.phone or "").strip(),
+                    "diagnosis": (
+                        "Completed"
+                        if getattr(user, "result", None) is not None
+                        else "Not Completed"
+                    ),
+                }
+            )
 
         self.stdout.write(
             f"Backfilling diagnosis for {total} user(s). "
-            f"delay={delay}s dry_run={dry_run} webhook={webhook_url or '(dry-run)'}"
+            f"mode={'one-by-one' if one_by_one else 'batch'} "
+            f"dry_run={dry_run} webhook={webhook_url or '(dry-run)'}"
         )
 
-        updated = skipped = failed = 0
-        for index, user in enumerate(users, start=1):
-            phone = (user.phone or "").strip()
-            email = (user.email or "").strip().lower()
-            name = (user.name or "").strip()
-            diagnosis = (
-                "Completed"
-                if getattr(user, "result", None) is not None
-                else "Not Completed"
-            )
-            intake_url = ""
-            try:
-                if email or user.intake_ref:
-                    intake_url = intake_url_for_user(user)
-            except Exception:
-                intake_url = ""
+        if dry_run:
+            for index, item in enumerate(items, start=1):
+                self.stdout.write(
+                    f"DRY-RUN [{index}/{total}] {item['email'] or '-'} "
+                    f"{item['phone'] or '-'} → {item['diagnosis']}"
+                )
+            self.stdout.write(self.style.SUCCESS(f"Done. dry_run users={total}"))
+            return
 
-            label = f"[{index}/{total}] id={user.id} {email or '-'} {phone or '-'} → {diagnosis}"
-            if dry_run:
-                self.stdout.write(f"DRY-RUN {label}")
-                continue
-
-            payload = {
-                "name": name,
-                "first_name": name.split(" ", 1)[0] if name else "",
-                "full_name": name,
-                "email": email,
-                "phone": phone,
-                "source": "syn_diagnosis_backfill",
-                "diagnosis": diagnosis,
-                "sheet_only": True,
-            }
-            if intake_url:
-                payload["intake_url"] = intake_url
+        if not one_by_one:
+            batch_url = webhook_url.rstrip("/")
+            if batch_url.endswith("/webhook/lead"):
+                batch_url = batch_url[: -len("/webhook/lead")] + "/webhook/leads/backfill-diagnosis"
+            elif "/webhook/leads/backfill-diagnosis" not in batch_url:
+                batch_url = batch_url.rstrip("/") + "/webhook/leads/backfill-diagnosis"
 
             try:
                 response = requests.post(
+                    batch_url,
+                    json={"items": items},
+                    headers={"Content-Type": "application/json"},
+                    timeout=120,
+                )
+            except Exception as exc:
+                raise CommandError(f"Batch request failed: {exc}") from exc
+
+            if response.status_code == 404:
+                self.stdout.write(
+                    self.style.WARNING(
+                        "Batch endpoint 404 — Bot A may need redeploy. "
+                        "Falling back to one-by-one mode."
+                    )
+                )
+                one_by_one = True
+            elif not (200 <= response.status_code < 300):
+                raise CommandError(
+                    f"Batch HTTP {response.status_code}: {response.text[:300]}"
+                )
+            else:
+                body = response.json() if response.content else {}
+                updated = int(body.get("updated") or 0)
+                skipped = int(body.get("skipped") or 0)
+                rows_touched = int(body.get("rows_touched") or 0)
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Done batch. updated_users={updated} skipped_users={skipped} "
+                        f"sheet_rows_touched={rows_touched}"
+                    )
+                )
+                skipped_items = body.get("skipped_items") or []
+                if skipped_items:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"First skipped examples ({len(skipped_items)} shown):"
+                        )
+                    )
+                    for item in skipped_items[:20]:
+                        self.stdout.write(
+                            f"  SKIP {item.get('email') or '-'} "
+                            f"{item.get('phone') or '-'} → {item.get('diagnosis')}"
+                        )
+                self.stdout.write(
+                    "If Amy/etc still wrong: confirm Bot A GOOGLE_SHEET_ID is the same "
+                    "spreadsheet you are viewing, worksheet=Leads."
+                )
+                return
+
+        # Legacy one-by-one
+        updated = skipped = failed = 0
+        for index, item in enumerate(items, start=1):
+            label = (
+                f"[{index}/{total}] {item['email'] or '-'} "
+                f"{item['phone'] or '-'} → {item['diagnosis']}"
+            )
+            try:
+                response = requests.post(
                     webhook_url,
-                    json=payload,
+                    json={
+                        **item,
+                        "name": "",
+                        "sheet_only": True,
+                        "source": "syn_diagnosis_backfill",
+                    },
                     headers={"Content-Type": "application/json"},
                     timeout=45,
                 )
+                body = response.json() if response.content else {}
             except Exception as exc:
                 failed += 1
                 self.stdout.write(self.style.ERROR(f"FAIL {label} err={exc}"))
                 continue
-
-            body: dict = {}
-            try:
-                if response.content:
-                    parsed = response.json()
-                    if isinstance(parsed, dict):
-                        body = parsed
-            except Exception:
-                body = {}
 
             action = str(body.get("action") or "")
             sheet_updated = bool(body.get("sheet_updated")) or action == "sheet_diagnosis_updated"
             sheet_skipped = action == "sheet_diagnosis_skipped" or (
                 response.ok and body.get("ok") is False
             )
-
             if 200 <= response.status_code < 300 and sheet_updated:
                 updated += 1
                 self.stdout.write(self.style.SUCCESS(f"UPDATED {label}"))
             elif 200 <= response.status_code < 300 and sheet_skipped:
                 skipped += 1
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"SKIPPED {label} (no matching Leads row — {body.get('detail') or 'not on sheet'})"
-                    )
-                )
+                self.stdout.write(self.style.WARNING(f"SKIPPED {label}"))
             elif 200 <= response.status_code < 300:
-                # Older bot deploy without sheet_updated field — treat as soft OK.
                 updated += 1
-                self.stdout.write(
-                    self.style.WARNING(f"OK(unknown) {label} action={action or '-'}")
-                )
+                self.stdout.write(self.style.WARNING(f"OK(unknown) {label}"))
             else:
                 failed += 1
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"FAIL {label} http={response.status_code} body={response.text[:160]}"
-                    )
-                )
+                self.stdout.write(self.style.ERROR(f"FAIL {label} http={response.status_code}"))
 
             if index < total and delay > 0:
                 time.sleep(delay)
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Done. updated={updated} skipped={skipped} failed={failed} dry_run={dry_run}"
+                f"Done. updated={updated} skipped={skipped} failed={failed}"
             )
-        )
-        self.stdout.write(
-            "Note: SKIPPED = Django user not found on Leads sheet (extra sheet rows stay blank). "
-            "group_add_* is separate — run Bot A scripts/backfill_group_columns.py"
         )

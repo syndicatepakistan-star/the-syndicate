@@ -38,8 +38,17 @@ def post_lead_webhook(
     Never raises — quiz lead save must succeed even if the webhook is down.
     """
     url = (getattr(settings, "LEAD_WEBHOOK_URL", "") or "").strip()
+    # Guard against pasting "LEAD_WEBHOOK_URL=https://..." into the value field.
+    if url.upper().startswith("LEAD_WEBHOOK_URL="):
+        url = url.split("=", 1)[1].strip()
     phone_norm = (phone or "").strip()
-    if not url or not phone_norm:
+    email_norm = (email or "").strip().lower()
+    if not url:
+        return False
+    if not phone_norm and not (sheet_only and email_norm):
+        return False
+    if not url.startswith(("http://", "https://")):
+        logger.warning("LEAD_WEBHOOK_URL is not a valid http(s) URL: %r", url)
         return False
 
     full_name = (name or "").strip()
@@ -53,7 +62,7 @@ def post_lead_webhook(
         "name": first,
         "first_name": first,
         "full_name": full_name,
-        "email": (email or "").strip().lower(),
+        "email": email_norm,
         "phone": phone_norm,
         "source": (source or "syn_diagnosis_quiz").strip() or "syn_diagnosis_quiz",
         "diagnosis": diagnosis_norm,

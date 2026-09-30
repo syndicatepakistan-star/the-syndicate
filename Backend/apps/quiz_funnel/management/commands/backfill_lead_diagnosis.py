@@ -60,11 +60,15 @@ class Command(BaseCommand):
         if only_completed and only_not_completed:
             raise CommandError("Use only one of --only-completed / --only-not-completed.")
 
-        qs = (
-            User.objects.exclude(phone__isnull=True)
-            .exclude(phone="")
-            .select_related("result")
-            .order_by("id")
+        qs = User.objects.select_related("result").order_by("id")
+        # Prefer users who can match a sheet row (phone and/or email).
+        qs = qs.exclude(phone__isnull=True, email__isnull=True)
+        # Keep rows that have at least one of phone/email non-empty.
+        from django.db.models import Q
+
+        qs = qs.filter(
+            (Q(phone__isnull=False) & ~Q(phone=""))
+            | (Q(email__isnull=False) & ~Q(email=""))
         )
         if only_completed:
             qs = qs.filter(result__isnull=False)

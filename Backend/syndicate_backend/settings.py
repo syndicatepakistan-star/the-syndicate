@@ -683,11 +683,29 @@ BOOKING_TIMEZONE = (os.environ.get("BOOKING_TIMEZONE") or "Asia/Karachi").strip(
 BOOKING_DURATION_MINUTES = int((os.environ.get("BOOKING_DURATION_MINUTES") or "30").strip() or "30")
 BOOKING_BUFFER_MINUTES = int((os.environ.get("BOOKING_BUFFER_MINUTES") or "15").strip() or "15")
 BOOKING_DAYS_AHEAD = int((os.environ.get("BOOKING_DAYS_AHEAD") or "14").strip() or "14")
-BOOKING_HOUR_START = int((os.environ.get("BOOKING_HOUR_START") or "15").strip() or "15")
+# Fallback window if BOOKING_SLOT_TIMES is empty (continuous half-hour slots).
+BOOKING_HOUR_START = int((os.environ.get("BOOKING_HOUR_START") or "8").strip() or "8")
 BOOKING_HOUR_END = int((os.environ.get("BOOKING_HOUR_END") or "19").strip() or "19")
 BOOKING_MIN_NOTICE_MINUTES = int((os.environ.get("BOOKING_MIN_NOTICE_MINUTES") or "60").strip() or "60")
-# Python weekday: Mon=0 … Sun=6. Default Mon–Thu.
-_booking_weekdays_raw = (os.environ.get("BOOKING_WEEKDAYS") or "0,1,2,3").strip()
+# Explicit local (Asia/Karachi) start times — e.g. 8am, 9am, 5pm, 6:30pm PKT.
+# Format: HH:MM,HH:MM,...  Empty = use BOOKING_HOUR_START..END continuum.
+_booking_slot_times_raw = (os.environ.get("BOOKING_SLOT_TIMES") or "08:00,09:00,17:00,18:30").strip()
+BOOKING_SLOT_TIMES: tuple[tuple[int, int], ...] = tuple(
+    sorted(
+        {
+            (int(h), int(m))
+            for part in _booking_slot_times_raw.split(",")
+            if part.strip() and ":" in part
+            for h, m in [part.strip().split(":", 1)]
+            if h.isdigit()
+            and m.isdigit()
+            and 0 <= int(h) <= 23
+            and 0 <= int(m) <= 59
+        }
+    )
+)
+# Python weekday: Mon=0 … Sun=6. Default Tue–Thu (Pakistan audit windows).
+_booking_weekdays_raw = (os.environ.get("BOOKING_WEEKDAYS") or "1,2,3").strip()
 BOOKING_WEEKDAYS = tuple(
     sorted(
         {
@@ -696,7 +714,7 @@ BOOKING_WEEKDAYS = tuple(
             if part.strip().lstrip("-").isdigit() and 0 <= int(part.strip()) <= 6
         }
     )
-) or (0, 1, 2, 3)
+) or (1, 2, 3)
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

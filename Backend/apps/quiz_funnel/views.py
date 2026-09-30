@@ -297,11 +297,13 @@ def save_quiz_lead(request):
             try:
                 from .lead_webhook import post_lead_webhook
 
+                has_result = Result.objects.filter(user=user).exists()
                 post_lead_webhook(
                     name=name,
                     email=email,
                     phone=phone,
                     intake_url=intake_url,
+                    diagnosis="Completed" if has_result else "Not Completed",
                 )
             except Exception:
                 pass
@@ -447,10 +449,10 @@ def submit_answers(request):
         archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
-    # Klaviyo off the request path so submit returns immediately.
+    # Klaviyo + lead webhook (diagnosis Completed) off the request path.
     from .background_jobs import run_in_background
 
-    def _sync_submit_klaviyo() -> None:
+    def _sync_submit_side_effects() -> None:
         try:
             from .klaviyo import subscribe_syn_diagnosis_email
 
@@ -471,7 +473,21 @@ def submit_answers(request):
         except Exception:
             pass
 
-    run_in_background(f"quiz-submit-klaviyo-{user.pk}", _sync_submit_klaviyo)
+        if phone:
+            try:
+                from .lead_webhook import post_lead_webhook
+
+                post_lead_webhook(
+                    name=name,
+                    email=email,
+                    phone=phone,
+                    intake_url=intake_url,
+                    diagnosis="Completed",
+                )
+            except Exception:
+                pass
+
+    run_in_background(f"quiz-submit-sync-{user.pk}", _sync_submit_side_effects)
 
     return JsonResponse(
         _build_submit_payload(

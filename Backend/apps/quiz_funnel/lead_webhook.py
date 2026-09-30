@@ -20,12 +20,15 @@ def post_lead_webhook(
     email: str,
     phone: str,
     intake_url: str = "",
+    diagnosis: str = "Not Completed",
 ) -> bool:
     """
-    POST name/email/phone (+ optional intake_url) to LEAD_WEBHOOK_URL when a quiz lead has a phone.
+    POST name/email/phone (+ optional intake_url, diagnosis) to LEAD_WEBHOOK_URL
+    when a quiz lead has a phone.
 
     ``name`` is first name only (WhatsApp greeting for the intake/audit link message).
     Full name is also sent as ``full_name``.
+    ``diagnosis`` is ``Completed`` when the quiz Result exists, else ``Not Completed``.
 
     Safe no-op when LEAD_WEBHOOK_URL or phone is empty.
     Never raises — quiz lead save must succeed even if the webhook is down.
@@ -37,6 +40,9 @@ def post_lead_webhook(
 
     full_name = (name or "").strip()
     first = first_name_from(full_name) or full_name
+    diagnosis_norm = (
+        diagnosis if diagnosis in ("Completed", "Not Completed") else "Not Completed"
+    )
 
     payload = {
         # Greeting field — first name only (same fix as booking WhatsApp).
@@ -46,6 +52,7 @@ def post_lead_webhook(
         "email": (email or "").strip().lower(),
         "phone": phone_norm,
         "source": "syn_diagnosis_quiz",
+        "diagnosis": diagnosis_norm,
     }
     intake = (intake_url or "").strip()
     if intake:

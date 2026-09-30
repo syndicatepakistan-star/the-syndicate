@@ -108,36 +108,60 @@ def _calendar_id() -> str:
     return (getattr(settings, "GOOGLE_CALENDAR_ID", None) or "primary").strip() or "primary"
 
 
+def _slot_start_times_local() -> list[tuple[int, int]]:
+    """
+    Explicit local (PKT) slot start times as (hour, minute).
+    Prefer BOOKING_SLOT_TIMES; fall back to continuous BOOKING_HOUR_START..END.
+    """
+    configured = getattr(settings, "BOOKING_SLOT_TIMES", None) or ()
+    times: list[tuple[int, int]] = []
+    for item in configured:
+        if isinstance(item, (list, tuple)) and len(item) >= 2:
+            times.append((int(item[0]), int(item[1])))
+        elif isinstance(item, str) and ":" in item:
+            hour_s, minute_s = item.split(":", 1)
+            times.append((int(hour_s.strip()), int(minute_s.strip())))
+    if times:
+        return sorted(set(times))
+
+    duration = timedelta(minutes=int(getattr(settings, "BOOKING_DURATION_MINUTES", 30) or 30))
+    hour_start = int(getattr(settings, "BOOKING_HOUR_START", 8) or 8)
+    hour_end = int(getattr(settings, "BOOKING_HOUR_END", 19) or 19)
+    cursor = datetime(2000, 1, 1, hour_start, 0)
+    window_end = datetime(2000, 1, 1, hour_end, 0)
+    while cursor + duration <= window_end:
+        times.append((cursor.hour, cursor.minute))
+        cursor += duration
+    return times
+
+
 def generate_candidate_slots(
     *,
     now: datetime | None = None,
     days_ahead: int | None = None,
 ) -> list[Slot]:
-    """Build candidate 30-min slots in local booking TZ, returned as UTC."""
+    """Build candidate slots in local booking TZ (PKT), returned as UTC."""
     local_tz = _tz()
     now_utc = _as_utc(now or dj_timezone.now())
     now_local = now_utc.astimezone(local_tz)
 
     duration = timedelta(minutes=int(getattr(settings, "BOOKING_DURATION_MINUTES", 30) or 30))
     ahead = int(days_ahead if days_ahead is not None else getattr(settings, "BOOKING_DAYS_AHEAD", 14) or 14)
-    hour_start = int(getattr(settings, "BOOKING_HOUR_START", 15) or 15)
-    hour_end = int(getattr(settings, "BOOKING_HOUR_END", 19) or 19)
     min_notice = timedelta(minutes=int(getattr(settings, "BOOKING_MIN_NOTICE_MINUTES", 60) or 60))
-    weekdays = set(getattr(settings, "BOOKING_WEEKDAYS", (0, 1, 2, 3)) or (0, 1, 2, 3))
+    weekdays = set(getattr(settings, "BOOKING_WEEKDAYS", (1, 2, 3)) or (1, 2, 3))
     earliest = now_local + min_notice
+    start_times = _slot_start_times_local()
 
     slots: list[Slot] = []
     for day_offset in range(0, max(0, ahead) + 1):
         day: date = (now_local.date() + timedelta(days=day_offset))
         if day.weekday() not in weekdays:
             continue
-        cursor = datetime(day.year, day.month, day.day, hour_start, 0, tzinfo=local_tz)
-        window_end = datetime(day.year, day.month, day.day, hour_end, 0, tzinfo=local_tz)
-        while cursor + duration <= window_end:
+        for hour, minute in start_times:
+            cursor = datetime(day.year, day.month, day.day, hour, minute, tzinfo=local_tz)
             slot_end = cursor + duration
             if cursor >= earliest:
                 slots.append(Slot(start=_as_utc(cursor), end=_as_utc(slot_end)))
-            cursor += duration
 
     return slots
 

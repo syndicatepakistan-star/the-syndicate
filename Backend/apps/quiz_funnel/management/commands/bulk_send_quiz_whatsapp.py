@@ -60,6 +60,7 @@ class Command(BaseCommand):
         qs = (
             User.objects.exclude(phone__isnull=True)
             .exclude(phone="")
+            .select_related("result")
             .order_by("id")
         )
         if skip_id:
@@ -111,6 +112,11 @@ class Command(BaseCommand):
                 "phone": phone,
                 "source": "syn_diagnosis_quiz_bulk",
                 "intake_url": intake_url,
+                "diagnosis": (
+                    "Completed"
+                    if getattr(user, "result", None) is not None
+                    else "Not Completed"
+                ),
             }
 
             try:

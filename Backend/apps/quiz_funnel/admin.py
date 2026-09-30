@@ -21,7 +21,18 @@ def export_users_to_excel(modeladmin, request, queryset):
     writer = csv.writer(response)
     intake_headers = [q["label"] for q in INTAKE_QUESTIONS]
     writer.writerow(
-        ["User Name", "Email", "Number", "Intake Ref", "Intake URL", "Intake Done", "Score", "Category", "Virus"]
+        [
+            "User Name",
+            "Email",
+            "Number",
+            "Intake Ref",
+            "Intake URL",
+            "Intake Done",
+            "Diagnosis",
+            "Score",
+            "Category",
+            "Virus",
+        ]
         + intake_headers
     )
 
@@ -38,6 +49,7 @@ def export_users_to_excel(modeladmin, request, queryset):
                 user.intake_ref or "",
                 intake_url_for_user(user) if (user.email or user.intake_ref) else "",
                 "Yes" if intake else "No",
+                "Completed" if result else "Not Completed",
                 result.score if result else "",
                 result.category if result else "",
                 result.virus if result else "",
@@ -90,6 +102,24 @@ class IntakeResponseInline(admin.StackedInline):
     readonly_fields = ("answers", "submitted_at", "updated_at")
 
 
+class DiagnosisStatusFilter(admin.SimpleListFilter):
+    title = "Diagnosis"
+    parameter_name = "diagnosis"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("completed", "Completed"),
+            ("not_completed", "Not Completed"),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == "completed":
+            return queryset.filter(result__isnull=False)
+        if self.value() == "not_completed":
+            return queryset.filter(result__isnull=True)
+        return queryset
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = (
@@ -99,20 +129,24 @@ class UserAdmin(admin.ModelAdmin):
         "phone",
         "intake_ref",
         "intake_done",
+        "diagnosis",
         "score",
         "category",
         "virus",
         "course_offer",
         "created_at",
     )
+    list_filter = (DiagnosisStatusFilter, "created_at")
     search_fields = ("name", "email", "phone", "intake_ref")
     ordering = ("-created_at",)
-    list_filter = ("created_at",)
     date_hierarchy = "created_at"
     inlines = [ResultInline, IntakeResponseInline]
     actions = [export_users_to_excel]
     change_list_template = "admin/quiz_funnel/user/change_list.html"
     readonly_fields = ("intake_link_display", "created_at")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("result", "intake")
 
     def get_urls(self):
         urls = super().get_urls()
@@ -141,7 +175,18 @@ class UserAdmin(admin.ModelAdmin):
         writer = csv.writer(response)
         intake_headers = [q["label"] for q in INTAKE_QUESTIONS]
         writer.writerow(
-            ["User Name", "Email", "Number", "Intake Ref", "Intake URL", "Intake Done", "Score", "Category", "Virus"]
+            [
+                "User Name",
+                "Email",
+                "Number",
+                "Intake Ref",
+                "Intake URL",
+                "Intake Done",
+                "Diagnosis",
+                "Score",
+                "Category",
+                "Virus",
+            ]
             + intake_headers
         )
         for user in queryset:
@@ -156,6 +201,7 @@ class UserAdmin(admin.ModelAdmin):
                     user.intake_ref or "",
                     intake_url_for_user(user) if (user.email or user.intake_ref) else "",
                     "Yes" if intake else "No",
+                    "Completed" if result else "Not Completed",
                     result.score if result else "",
                     result.category if result else "",
                     result.virus if result else "",
@@ -173,23 +219,31 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(boolean=True, description="Intake done")
     def intake_done(self, obj):
-        return hasattr(obj, "intake") and obj.intake is not None
+        return getattr(obj, "intake", None) is not None
+
+    @admin.display(description="Diagnosis")
+    def diagnosis(self, obj):
+        return "Completed" if getattr(obj, "result", None) is not None else "Not Completed"
 
     @admin.display(description="Score")
     def score(self, obj):
-        return obj.result.score if hasattr(obj, "result") else "-"
+        result = getattr(obj, "result", None)
+        return result.score if result else "-"
 
     @admin.display(description="Category")
     def category(self, obj):
-        return obj.result.category if hasattr(obj, "result") else "-"
+        result = getattr(obj, "result", None)
+        return result.category if result else "-"
 
     @admin.display(description="Virus")
     def virus(self, obj):
-        return obj.result.virus if hasattr(obj, "result") else "-"
+        result = getattr(obj, "result", None)
+        return result.virus if result else "-"
 
     @admin.display(description="Course Offer")
     def course_offer(self, obj):
-        return obj.result.course_offer if hasattr(obj, "result") else "-"
+        result = getattr(obj, "result", None)
+        return result.course_offer if result else "-"
 
 
 @admin.register(Result)

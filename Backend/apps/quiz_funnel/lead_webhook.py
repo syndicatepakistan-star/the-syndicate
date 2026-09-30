@@ -21,6 +21,9 @@ def post_lead_webhook(
     phone: str,
     intake_url: str = "",
     diagnosis: str = "Not Completed",
+    sheet_only: bool = False,
+    source: str = "syn_diagnosis_quiz",
+    timeout: float | None = None,
 ) -> bool:
     """
     POST name/email/phone (+ optional intake_url, diagnosis) to LEAD_WEBHOOK_URL
@@ -29,6 +32,7 @@ def post_lead_webhook(
     ``name`` is first name only (WhatsApp greeting for the intake/audit link message).
     Full name is also sent as ``full_name``.
     ``diagnosis`` is ``Completed`` when the quiz Result exists, else ``Not Completed``.
+    ``sheet_only`` tells Bot A to update the Leads sheet only (no WhatsApp).
 
     Safe no-op when LEAD_WEBHOOK_URL or phone is empty.
     Never raises — quiz lead save must succeed even if the webhook is down.
@@ -51,8 +55,9 @@ def post_lead_webhook(
         "full_name": full_name,
         "email": (email or "").strip().lower(),
         "phone": phone_norm,
-        "source": "syn_diagnosis_quiz",
+        "source": (source or "syn_diagnosis_quiz").strip() or "syn_diagnosis_quiz",
         "diagnosis": diagnosis_norm,
+        "sheet_only": bool(sheet_only),
     }
     intake = (intake_url or "").strip()
     if intake:
@@ -63,7 +68,7 @@ def post_lead_webhook(
             url,
             json=payload,
             headers={"Content-Type": "application/json"},
-            timeout=WEBHOOK_TIMEOUT_SECONDS,
+            timeout=float(timeout if timeout is not None else WEBHOOK_TIMEOUT_SECONDS),
         )
         if 200 <= response.status_code < 300:
             return True

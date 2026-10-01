@@ -268,7 +268,8 @@ def save_quiz_lead(request):
     user = _find_or_create_quiz_user(name=name, email=email, phone=phone or "")
     intake_ref = ensure_intake_ref(user)
     intake_url = intake_url_for_user(user)
-    # SMS/WhatsApp audit link: only on first phone capture (avoids 2–3 duplicate texts).
+    # SMS/WhatsApp: phone capture notifies Bot A (sheet row only while Not Completed).
+    # Audit WhatsApp + group/channel fire when diagnosis becomes Completed.
     should_notify_phone = bool(phone) and not had_phone_before
 
     # Klaviyo + lead webhook off the request path so the contact gate stays fast.

@@ -261,6 +261,23 @@ def save_quiz_lead(request):
     except Exception:
         pass
 
+    # Junk patterns + Twilio Lookup (mobile line type) when credentials are set.
+    if phone:
+        try:
+            from .twilio_lookup import verify_phone_with_twilio_lookup
+
+            phone_verdict, phone_error = verify_phone_with_twilio_lookup(phone)
+            if phone_verdict == "block":
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "error": phone_error or "Please enter a valid mobile number.",
+                    },
+                    status=400,
+                )
+        except Exception:
+            pass
+
     email_norm = email.strip().lower()
     existing = User.objects.filter(email__iexact=email_norm).order_by("-id").first()
     had_phone_before = bool(existing and (existing.phone or "").strip())
@@ -402,6 +419,17 @@ def submit_answers(request):
         return HttpResponseBadRequest("All quiz answers are required.")
 
     # Hunter already ran on save-quiz-lead (contact gate) — skip here for speed.
+    # Re-check phone (junk + Twilio) in case contact gate was bypassed.
+    try:
+        from .twilio_lookup import verify_phone_with_twilio_lookup
+
+        phone_verdict, phone_error = verify_phone_with_twilio_lookup(phone)
+        if phone_verdict == "block":
+            return HttpResponseBadRequest(
+                phone_error or "Please enter a valid mobile number."
+            )
+    except Exception:
+        pass
 
     normalized_answers = []
     for answer in answers:

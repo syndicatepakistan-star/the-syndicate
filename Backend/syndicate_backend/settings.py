@@ -671,6 +671,13 @@ BOOKING_WEBHOOK_SECRET = (os.environ.get("BOOKING_WEBHOOK_SECRET") or "").strip(
 # https://hunter.io/api-documentation/v2#email-verifier
 HUNTER_API_KEY = (os.environ.get("HUNTER_API_KEY") or "").strip()
 
+# Twilio Lookup (Syn Diagnosis phone gate). Soft-skip when SID/token empty or disabled.
+TWILIO_ACCOUNT_SID = (os.environ.get("TWILIO_ACCOUNT_SID") or "").strip()
+TWILIO_AUTH_TOKEN = (os.environ.get("TWILIO_AUTH_TOKEN") or "").strip()
+TWILIO_LOOKUP_ENABLED = (os.environ.get("TWILIO_LOOKUP_ENABLED") or "true").strip()
+TWILIO_LOOKUP_ALLOW_LANDLINE = (os.environ.get("TWILIO_LOOKUP_ALLOW_LANDLINE") or "false").strip()
+TWILIO_LOOKUP_ALLOW_VOIP = (os.environ.get("TWILIO_LOOKUP_ALLOW_VOIP") or "false").strip()
+
 # --- Google Calendar (founder audit booking) ---
 # OAuth for audit@… — refresh token from gcal-oauth-test (never commit real values).
 GOOGLE_OAUTH_CLIENT_ID = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()

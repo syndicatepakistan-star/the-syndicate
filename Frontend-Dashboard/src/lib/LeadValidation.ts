@@ -159,8 +159,14 @@ export function getLeadPhoneError(countryCode: string, nationalNumber: string): 
   if (digits.length < 4) return "Phone number is too short.";
   if (digits.length > 15) return "Phone number is too long.";
 
+  const junk = junkPhoneError(digits);
+  if (junk) return junk;
+
   const candidate = buildInternationalCandidate(countryCode, nationalNumber);
   if (!candidate) return "Please enter a valid phone number.";
+
+  const junkIntl = junkPhoneError(candidate.replace(/\D/g, ""));
+  if (junkIntl) return junkIntl;
 
   try {
     if (!isValidPhoneNumber(candidate)) {
@@ -171,6 +177,59 @@ export function getLeadPhoneError(countryCode: string, nationalNumber: string): 
   }
 
   return "";
+}
+
+/** Block same-digit / sequential / placeholder numbers before libphonenumber. */
+export function junkPhoneError(rawDigits: string): string {
+  const digits = String(rawDigits || "").replace(/\D/g, "");
+  if (!digits) return "Please enter a valid phone number.";
+
+  const core = digits.length >= 10 ? digits.slice(-10) : digits;
+  if (core.length < 7) return "";
+
+  if (new Set(core).size === 1) {
+    return "Please enter a real phone number (not the same digit repeated).";
+  }
+  if (new Set(core).size < 3) {
+    return "Please enter a real phone number.";
+  }
+  if (isSequentialDigits(core)) {
+    return "Please enter a real phone number (not a sequential pattern).";
+  }
+
+  const placeholders = new Set([
+    "1234567890",
+    "0123456789",
+    "0987654321",
+    "9876543210",
+    "1111111111",
+    "0000000000",
+    "2222222222",
+    "5555555555",
+    "123456789",
+    "012345678",
+    "1234567",
+    "7654321",
+  ]);
+  if (placeholders.has(core) || placeholders.has(digits)) {
+    return "Please enter a real phone number.";
+  }
+
+  return "";
+}
+
+function isSequentialDigits(digits: string): boolean {
+  if (digits.length < 7) return false;
+  let asc = 0;
+  let desc = 0;
+  for (let i = 1; i < digits.length; i += 1) {
+    const a = Number(digits[i - 1]);
+    const b = Number(digits[i]);
+    if ((b - a + 10) % 10 === 1) asc += 1;
+    if ((a - b + 10) % 10 === 1) desc += 1;
+  }
+  const threshold = digits.length - 2;
+  return asc >= threshold || desc >= threshold;
 }
 
 /** E.164 for Klaviyo / CRM (+447…); null if invalid. */

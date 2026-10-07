@@ -56,7 +56,7 @@ import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLin
 import { NeonStatGrid } from "@/components/programs/OfferInclusionsStatGrid";
 import { level1ProgramNeonStats } from "@/components/programs/level1ProgramCardStats";
 import { streamPlaylistCardStats } from "@/components/programs/vaultProgramCardStats";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { hasSimpleAuthSessionClient } from "@/lib/portal-api";
 import { ProgramPlaylistDescriptionModal } from "@/components/programs/ProgramPlaylistDescriptionModal";
@@ -203,7 +203,10 @@ export function PlaylistCardsSection({
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    const hasInitial =
+      Array.isArray(initialPlaylists) && initialPlaylists.length > 0;
+
+    const refresh = async () => {
       try {
         const authed = hasSimpleAuthSessionClient();
         const list = authed
@@ -214,16 +217,47 @@ export function PlaylistCardsSection({
           setError(null);
         }
       } catch {
-        if (!cancelled) {
-          setPlaylists([]);
-          setError("Could not load playlists right now.");
-        }
+        // Keep SSR / session / curated fallbacks — no banner when API is unreachable.
       }
-    })();
+    };
+
+    // SSR already filled cards — defer network refresh so Slow 4G LCP isn't contested.
+    if (hasInitial) {
+      let idleHandle: number | undefined;
+      let safetyHandle: number | undefined;
+      const schedule = () => {
+        if (cancelled) return;
+        void refresh();
+      };
+      const opts: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener("pointerdown", schedule, opts);
+      window.addEventListener("touchstart", schedule, opts);
+      window.addEventListener("scroll", schedule, opts);
+      const runIdle = () => {
+        if (typeof window.requestIdleCallback === "function") {
+          idleHandle = window.requestIdleCallback(schedule, { timeout: 4000 });
+        } else {
+          schedule();
+        }
+      };
+      safetyHandle = window.setTimeout(runIdle, 4500);
+      return () => {
+        cancelled = true;
+        window.removeEventListener("pointerdown", schedule);
+        window.removeEventListener("touchstart", schedule);
+        window.removeEventListener("scroll", schedule);
+        if (safetyHandle !== undefined) window.clearTimeout(safetyHandle);
+        if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(idleHandle);
+        }
+      };
+    }
+
+    void refresh();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialPlaylists?.length]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -840,7 +874,7 @@ export function PlaylistCardsSection({
         ) : null}
       </div>
       {error ? <div className="rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-[13px] text-amber-100/90">{error}</div> : null}
-      {!error && visiblePlaylists.length === 0 ? (
+      {visiblePlaylists.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/70">No playlists are published yet.</div>
       ) : null}
 

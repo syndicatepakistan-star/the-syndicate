@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import type { GamingBenefitTone } from "@/components/GamingBenefitCards";
 import {
   MONEY_MASTERY_PLUS_YOU_GET_TITLE,

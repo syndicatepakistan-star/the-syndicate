@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, type CSSProperties } from "react";
 import { Check } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import type { PlanOfferDef, PlanOfferAccent } from "@/components/programs/planOfferCatalog";
 import { KNIGHT_CARD_FEATURES, KNIGHT_LAUNCHING_SOON_LABEL } from "@/components/programs/planOfferCatalog";
 import { planOfferCardTitleLines } from "@/components/programs/planOfferCardTitle";

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import {
   PLAN_OFFERS,
@@ -116,7 +116,7 @@ function LazyVaultOffersRow({
         : offers.map((offer) => (
             <div
               key={offer.plan}
-              className="plan-offers-vault-cell min-h-[18rem] animate-pulse rounded-2xl bg-white/[0.04]"
+              className="plan-offers-vault-cell min-h-[min(52dvh,22rem)] animate-pulse rounded-2xl bg-white/[0.04] sm:min-h-[24rem]"
               aria-hidden
             />
           ))}

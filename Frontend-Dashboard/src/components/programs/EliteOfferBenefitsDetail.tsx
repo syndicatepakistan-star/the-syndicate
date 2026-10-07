@@ -2,7 +2,7 @@
 
 import "@/styles/elite-offer-benefits-detail.css";
 import { motion } from "framer-motion";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import {
   eliteOfferBenefitPanelProps,
   type PrimaryElitePlanKey,

@@ -8,7 +8,7 @@ import {
   resolveProgramPlaylistThumbnail,
   type ProgramPlaylistLike,
 } from "@/lib/programPlaylistCatalog";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 type Props = {
   playlist: ProgramPlaylistLike & { cover_image_url?: string | null };
@@ -21,6 +21,10 @@ type Props = {
   displayWidth?: number;
 };
 
+/**
+ * Course cover (warfare / consistency / uncertainty / …).
+ * Always next/image + sized box so fill has a real aspect and CLS stays low.
+ */
 export function ProgramPlaylistCoverImage({
   playlist,
   gradClassName,
@@ -28,7 +32,7 @@ export function ProgramPlaylistCoverImage({
   objectFit = "cover",
   loading = "lazy",
   fetchPriority,
-  displayWidth = 384,
+  displayWidth = 320,
 }: Props) {
   const djangoCover = resolveDjangoMediaUrl(playlist.cover_image_url ?? null);
   const staticThumb = resolveProgramPlaylistThumbnail(playlist);
@@ -48,14 +52,14 @@ export function ProgramPlaylistCoverImage({
   const isPriority = loading === "eager";
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="relative h-full w-full">
+    <div className="absolute inset-0 overflow-hidden" style={{ contain: "layout paint" }}>
+      <div className="relative h-full w-full" style={{ aspectRatio: "16 / 9" }}>
         {activeSrc ? (
           <Image
             src={activeSrc}
             alt=""
             fill
-            sizes="(max-width: 640px) 46vw, (max-width: 1279px) 46vw, 340px"
+            sizes="(max-width: 640px) 46vw, (max-width: 1279px) 46vw, 320px"
             quality={55}
             loading={loading}
             priority={isPriority}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCardInclusions";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";

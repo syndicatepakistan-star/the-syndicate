@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, type ReactNode } from "react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 /**
  * Bold + highlight stats in Money Mastery / pack copy:

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Check, ExternalLink, X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import type { PlanOfferAccent, PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import { isPlanOfferComingSoon, isPrimaryElitePlan, KNIGHT_LAUNCHING_SOON_LABEL, KNIGHT_LAUNCHING_SOON_MESSAGE } from "@/components/programs/planOfferCatalog";
 import { EliteOfferBenefitsDetail } from "@/components/programs/EliteOfferBenefitsDetail";

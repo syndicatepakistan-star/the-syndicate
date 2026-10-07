@@ -63,6 +63,8 @@ const nextConfig = {
     ],
     /** Prefer splitting CSS per route entry so /programs pulls less unused chrome. */
     cssChunking: "strict",
+    /** Inline critical CSS + defer the rest (cuts Slow-4G render-blocking ~105KB sheet). */
+    optimizeCss: true,
   },
   devIndicators: {
     buildActivity: false

@@ -22,7 +22,10 @@ const ProgramsLibrarySection = dynamic(
     import('@/components/programs/ProgramsLibrarySection').then((m) => m.ProgramsLibrarySection),
   {
     loading: () => (
-      <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+      <div
+        className="mx-auto min-h-[min(160vh,64rem)] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5"
+        aria-hidden
+      />
     ),
   },
 )
@@ -40,10 +43,9 @@ const SiteFooter = dynamic(() => import('@/components/SiteFooter'), {
   loading: () => <div className="min-h-[260px] w-full bg-[#02050b]" aria-hidden />,
 })
 
-/** Mobile-first LCP — display-sized AVIF/WebP via /_next/image (not full JPG). */
-const LCP_IMAGE_SIZES = '(max-width: 767px) 100vw, (max-width: 1024px) 420px, 480px'
-/** Quality must be in next.config.js `images.qualities` (52 is rejected → blank card). */
-const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 384, 55)
+/** Mobile-first LCP — prefer ~360px on phones (not full-bleed 100vw decode). */
+const LCP_IMAGE_SIZES = '(max-width: 767px) 360px, (max-width: 1024px) 420px, 480px'
+const LCP_IMAGE_HREF = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 360, 55)
 const LCP_IMAGE_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 480)
 
 export const metadata: Metadata = buildPageMetadata({
@@ -75,7 +77,7 @@ export default async function ProgramsPage() {
       <ProgramsUnlockShell>
       <section
         id="syndicate-elite-offers"
-        className="programs-page-band mobile-viewport-contain relative z-[2] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
+        className="programs-page-band mobile-viewport-contain relative z-[2] min-h-[min(70vh,36rem)] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:min-h-[40rem] sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
       >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
         <p className="mx-auto max-w-3xl px-1 text-center font-mono text-[clamp(0.7rem,2.8vw,0.875rem)] leading-relaxed text-zinc-300/90 sm:text-sm xl:max-w-4xl">
@@ -94,7 +96,7 @@ export default async function ProgramsPage() {
       */}
       <section
         id="programs-library"
-        className="programs-page-band mobile-viewport-contain space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
+        className="programs-page-band mobile-viewport-contain min-h-[min(200vh,80rem)] space-y-4 overflow-x-clip px-[clamp(0.5rem,2.5vw,1rem)] py-8 max-lg:px-[0.55rem] sm:space-y-8 sm:px-6 sm:py-14 2xl:px-[clamp(1.25rem,2vw,2rem)]"
       >
         <div id="businessprograms" className="businessprograms-anchor scroll-mt-28" tabIndex={-1}>
           <ProgramsGoldPillHeading as="h2" title="Programs" />
@@ -102,19 +104,23 @@ export default async function ProgramsPage() {
         {/*
           Library hydrates on scroll for plain /programs (TBT).
           eagerOnHash + boot flag mounts immediately for #businessprograms.
+          minHeight matches section reserve so placeholder → grid swap does not jump (CLS).
         */}
         <LazyWhenVisible
-          minHeight="24rem"
+          minHeight="min(180vh, 72rem)"
           rootMargin="80px 0px"
           eagerOnHash={["programs-library", "businessprograms"]}
           placeholder={
-            <div className="mx-auto min-h-[24rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+            <div
+              className="mx-auto min-h-[min(180vh,72rem)] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5"
+              aria-hidden
+            />
           }
         >
-          <div className="programs-library-max mx-auto w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
+          <div className="programs-library-max mx-auto min-h-[min(160vh,64rem)] w-full max-w-[1400px] overflow-x-clip 2xl:max-w-[min(1680px,94vw)]">
             <Suspense
               fallback={
-                <div className="min-h-[24rem] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
+                <div className="min-h-[min(160vh,64rem)] w-full animate-pulse rounded-xl bg-white/5" aria-hidden />
               }
             >
               <ProgramsLibrarySection

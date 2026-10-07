@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import { PurchaseValueCallout } from "@/components/programs/PurchaseValueCallout";
 import {

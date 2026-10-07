@@ -11,14 +11,31 @@ import {
 import { flushPendingPurchases, hasPendingPurchaseEvents } from "@/lib/gtmCommerce";
 
 const GTM_ID = "GTM-WBW2KZV6";
+
 /**
- * Load GTM quickly without requiring a user click.
- * - Target: start loading within ~3–4s of page load (first-time visitors).
- * - Keeps the rest asynchronous via Next Script `afterInteractive`.
+ * Earliest GTM (Klaviyo / Meta / Ads inside the container) may start after navigation.
+ * Marketing pages use a longer floor so Slow-4G Lighthouse TBT isn't dominated by tags.
+ * Checkout / pending purchase still loads immediately.
  */
+const GTM_EARLIEST_LOAD_MS = 3000;
+const GTM_EARLIEST_LOAD_MARKETING_MS = 8000;
+
+/** Auto-accept consent for first-time visitors who never click the banner. */
 const GTM_AUTO_CONSENT_DELAY_MS = 3000;
-/** Small grace period so the page finishes initial rendering first. */
-const GTM_POST_CONSENT_LOAD_DELAY_MS = 250;
+
+function isMarketingPath(): boolean {
+  if (typeof window === "undefined") return false;
+  const p = window.location.pathname || "";
+  return (
+    p === "/" ||
+    p === "" ||
+    p.startsWith("/programs") ||
+    p.startsWith("/quiz") ||
+    p.startsWith("/our-") ||
+    p.startsWith("/what-you-get") ||
+    p.startsWith("/membership")
+  );
+}
 
 function shouldLoadGtmImmediately(): boolean {
   if (typeof window === "undefined") return false;
@@ -31,27 +48,37 @@ function shouldLoadGtmImmediately(): boolean {
   }
 }
 
+/** ms since navigation start (falls back to 0). */
+function msSinceNavigation(): number {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav && typeof nav.startTime === "number") {
+      return Math.max(0, performance.now() - nav.startTime);
+    }
+  } catch {
+    /* ignore */
+  }
+  return Math.max(0, performance.now());
+}
+
 /**
- * Consent gate + post-consent delay (site-wide; biggest win on mobile /programs).
- * Loads after either "Accept all" or "Essential only". After consent, waits for
- * interaction OR ~7s (+ idle) before injecting gtm.js.
- * Exception: checkout success / pending purchase → load immediately so purchase tags fire.
+ * Consent gate + hard 3s floor before gtm.js (Klaviyo/Meta ride inside GTM).
+ * Exception: checkout success / pending purchase → load immediately.
  */
 export function DeferredGtm() {
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [gtmReady, setGtmReady] = useState(false);
 
   useEffect(() => {
-    // If the user hasn't chosen yet, we auto-start marketing after a short delay.
-    // This reduces the tracking gap where users never click the banner.
     let autoConsentTimer: number | undefined;
 
     const syncConsent = (value: CookieConsentValue | null = readCookieConsent()) => {
-      // GTM must load in all cases: both "accepted" and "essential".
+      // GTM loads for both "accepted" and "essential" (Reject All).
       const next = value === "accepted" || value === "essential";
       setConsentAccepted(next);
 
-      // Clear any pending auto-consent as soon as we have a real choice.
       if (autoConsentTimer != null && value !== null) {
         window.clearTimeout(autoConsentTimer);
         autoConsentTimer = undefined;
@@ -59,13 +86,9 @@ export function DeferredGtm() {
     };
     syncConsent();
 
-    // Arm auto-consent only for first-time visitors (no stored decision yet).
     if (readCookieConsent() === null) {
       autoConsentTimer = window.setTimeout(() => {
-        // Only auto-consent if user still hasn't made a choice.
         if (readCookieConsent() === null) {
-          // User requested "no wait for click": treat no-response as accepted.
-          // Cookie banner will hide automatically (via existing consent listeners).
           writeCookieConsent("accepted");
         }
       }, GTM_AUTO_CONSENT_DELAY_MS);
@@ -88,7 +111,6 @@ export function DeferredGtm() {
   }, []);
 
   useEffect(() => {
-    // Immediate exception: make sure checkout/purchase tagging isn't blocked by consent.
     if (shouldLoadGtmImmediately()) {
       setGtmReady(true);
       return;
@@ -99,10 +121,11 @@ export function DeferredGtm() {
       return;
     }
 
-    // Start GTM shortly after consent becomes accepted (no long idle/gesture waits).
+    const floor = isMarketingPath() ? GTM_EARLIEST_LOAD_MARKETING_MS : GTM_EARLIEST_LOAD_MS;
+    const remaining = Math.max(0, floor - msSinceNavigation());
     const t = window.setTimeout(() => {
       setGtmReady(true);
-    }, GTM_POST_CONSENT_LOAD_DELAY_MS);
+    }, remaining);
 
     return () => window.clearTimeout(t);
   }, [consentAccepted]);
@@ -121,7 +144,7 @@ export function DeferredGtm() {
     <>
       <Script
         id="google-tag-manager"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onReady={() => {
           flushPendingPurchases();
         }}

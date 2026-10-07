@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { AlertTriangle, Play } from "lucide-react";
 import { fetchCourseVideos, postVideoProgress, resolveDjangoMediaUrl, resolveLessonVideoUrl, type VideoDto } from "@/lib/courses-api";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { optimizeListThumbSrc, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 

@@ -6,6 +6,7 @@ Datetimes in DB / API payloads: UTC. Slot generation window: Asia/Karachi (confi
 
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone as dj_timezone
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -71,7 +73,37 @@ def _parse_iso_utc(value: str) -> datetime:
     return _as_utc(parsed)
 
 
-def get_credentials() -> Credentials:
+def _service_account_credentials() -> Credentials | None:
+    """Permanent calendar auth: SA key + calendar shared with SA email on audit@."""
+    raw_json = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_JSON", None) or "").strip()
+    key_file = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_FILE", None) or "").strip()
+    scopes = list(CALENDAR_SCOPES)
+
+    if raw_json:
+        try:
+            info = json.loads(raw_json)
+        except json.JSONDecodeError as exc:
+            logger.exception("Invalid GOOGLE_SERVICE_ACCOUNT_JSON")
+            raise BookingError(
+                "Audit booking is not configured correctly. Please try again later.",
+                status=503,
+            ) from exc
+        return service_account.Credentials.from_service_account_info(info, scopes=scopes)
+
+    if key_file:
+        try:
+            return service_account.Credentials.from_service_account_file(key_file, scopes=scopes)
+        except OSError as exc:
+            logger.exception("Could not read GOOGLE_SERVICE_ACCOUNT_FILE")
+            raise BookingError(
+                "Audit booking is not configured correctly. Please try again later.",
+                status=503,
+            ) from exc
+
+    return None
+
+
+def _oauth_user_credentials() -> Credentials:
     client_id = (getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", None) or "").strip()
     client_secret = (getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", None) or "").strip()
     refresh_token = (getattr(settings, "GOOGLE_OAUTH_REFRESH_TOKEN", None) or "").strip()
@@ -98,6 +130,14 @@ def get_credentials() -> Credentials:
             status=503,
         ) from exc
     return creds
+
+
+def get_credentials() -> Credentials:
+    sa_creds = _service_account_credentials()
+    if sa_creds is not None:
+        return sa_creds
+    logger.warning("Using legacy Google OAuth refresh token for calendar; set GOOGLE_SERVICE_ACCOUNT_JSON.")
+    return _oauth_user_credentials()
 
 
 def _calendar_service():

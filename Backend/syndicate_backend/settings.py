@@ -679,7 +679,10 @@ TWILIO_LOOKUP_ALLOW_LANDLINE = (os.environ.get("TWILIO_LOOKUP_ALLOW_LANDLINE") o
 TWILIO_LOOKUP_ALLOW_VOIP = (os.environ.get("TWILIO_LOOKUP_ALLOW_VOIP") or "false").strip()
 
 # --- Google Calendar (founder audit booking) ---
-# OAuth for audit@… — refresh token from gcal-oauth-test (never commit real values).
+# Preferred: service account JSON (share audit calendar with SA email — no expiring refresh token).
+GOOGLE_SERVICE_ACCOUNT_JSON = (os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON") or "").strip()
+GOOGLE_SERVICE_ACCOUNT_FILE = (os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE") or "").strip()
+# Legacy fallback only if SA is not configured:
 GOOGLE_OAUTH_CLIENT_ID = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
 GOOGLE_OAUTH_CLIENT_SECRET = (os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
 GOOGLE_OAUTH_REFRESH_TOKEN = (os.environ.get("GOOGLE_OAUTH_REFRESH_TOKEN") or "").strip()

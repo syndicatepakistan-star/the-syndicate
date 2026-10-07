@@ -42,7 +42,9 @@ export function QuizFeaturedInBanner() {
                   width={160}
                   height={48}
                   className="quiz-featured-in__img"
-                  quality={75}
+                  quality={60}
+                  loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 640px) 96px, 140px"
                 />
               </a>
@@ -54,7 +56,9 @@ export function QuizFeaturedInBanner() {
                   width={160}
                   height={48}
                   className="quiz-featured-in__img"
-                  quality={75}
+                  quality={60}
+                  loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 640px) 96px, 140px"
                 />
               </span>

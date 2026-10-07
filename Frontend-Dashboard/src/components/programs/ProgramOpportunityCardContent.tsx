@@ -10,7 +10,7 @@ import { resolveOfferCardStats, streamPlaylistCardStats } from "@/components/pro
 import { optimizeCoverImageSrc } from "@/lib/optimizeImageUrl";
 import { ProgramPlaylistCoverImage } from "@/components/programs/ProgramPlaylistCoverImage";
 import { PROGRAM_CARD_LANDSCAPE_MEDIA } from "@/components/programs/programCardMedia";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatPrice } from "@/lib/currency";
 import type { StreamPlaylistListItem } from "@/lib/streaming-api";

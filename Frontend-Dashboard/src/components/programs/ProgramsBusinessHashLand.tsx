@@ -6,7 +6,9 @@ const TARGETS = new Set(["businessprograms", "programs-library"]);
 const SCROLL_ID = "businessprograms";
 const OFFERS_ID = "syndicate-elite-offers";
 /** Keep re-anchoring while Elite Offers / mid-tickets hydrate and grow above. */
-const PIN_MS = 5000;
+const PIN_MS = 3200;
+/** Fixed margin — avoid getComputedStyle forced reflow on Slow 4G. */
+const SCROLL_MARGIN_PX = 112;
 
 /** Clear leftover hide/collapse classes from older deploys (no-op if absent). */
 function clearLegacyPending() {
@@ -24,17 +26,13 @@ function matchedDeepLinkHash(): string | null {
   return h === "programs-library" ? "businessprograms" : h;
 }
 
-function readScrollMarginTop(el: HTMLElement): number {
-  const raw = window.getComputedStyle(el).scrollMarginTop || "0";
-  const n = Number.parseFloat(raw);
-  return Number.isFinite(n) ? n : 0;
-}
-
 function scrollToBusinessPrograms(): boolean {
   const el = document.getElementById(SCROLL_ID);
   if (!el) return false;
-  const margin = readScrollMarginTop(el);
-  const y = Math.max(0, Math.round(el.getBoundingClientRect().top + window.scrollY - margin));
+  const y = Math.max(
+    0,
+    Math.round(el.getBoundingClientRect().top + window.scrollY - SCROLL_MARGIN_PX),
+  );
   window.scrollTo({ top: y, left: 0, behavior: "auto" });
   return true;
 }
@@ -118,17 +116,17 @@ export function ProgramsBusinessHashLand() {
         if (library) resizeObserver.observe(library);
       }
 
-      // Catch late dynamic chunks (Money Mastery + mid-ticket packs).
+      // Catch late dynamic chunks — fewer forced scrolls on Slow 4G.
       let pulses = 0;
       const pulse = () => {
         if (cancelled || !pinActive) return;
         pinScroll();
         pulses += 1;
-        if (pulses < 20 && pinActive) {
-          timers.push(window.setTimeout(pulse, 200));
+        if (pulses < 8 && pinActive) {
+          timers.push(window.setTimeout(pulse, 350));
         }
       };
-      timers.push(window.setTimeout(pulse, 50));
+      timers.push(window.setTimeout(pulse, 80));
 
       timers.push(
         window.setTimeout(() => {

@@ -18,9 +18,11 @@ export default function BrandHeader({ subtitle, subtitleClassName = "" }: BrandH
           className="brand-logo"
           width={176}
           height={70}
-          priority
-          quality={68}
-          sizes="(max-width: 380px) 120px, (max-width: 640px) 140px, (max-width: 900px) 160px, 176px"
+          // Heading is quiz LCP — don't steal high priority from brand-title text.
+          loading="eager"
+          fetchPriority="auto"
+          quality={60}
+          sizes="(max-width: 380px) 120px, (max-width: 640px) 140px, 160px"
         />
       </div>
       <div>

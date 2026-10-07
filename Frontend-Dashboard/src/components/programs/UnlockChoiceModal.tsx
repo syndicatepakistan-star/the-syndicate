@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { Lock, ShoppingBag, Sparkles, X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import type { PlanOfferDef } from "@/components/programs/planOfferCatalog";
 import {
   VAULT_MODAL_BODY_CLASS,

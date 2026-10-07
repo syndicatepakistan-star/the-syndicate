@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 type Props = {
   children: ReactNode;

@@ -105,10 +105,17 @@ export function NavApp() {
 
   return (
     <div
-      className={`fixed left-0 right-0 top-0 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-75 ease-out pt-2 ${
+      className={`site-top-nav fixed left-0 right-0 top-0 flex flex-col bg-gradient-to-b from-black/45 via-black/20 to-transparent transition-[height] duration-75 ease-out pt-2 ${
         menuOpen ? 'z-[400]' : 'z-50'
       }`}
       style={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        top: 0,
+        zIndex: menuOpen ? 400 : 50,
+        display: 'flex',
+        flexDirection: 'column',
         height: menuOpen ? '100dvh' : '69px',
         minHeight: menuOpen ? '100dvh' : undefined,
         overflow: menuOpen ? 'visible' : 'hidden',

@@ -73,7 +73,7 @@ export function warmGlobeGalleryImages(urls?: readonly string[]): Promise<void> 
   return Promise.all(list.map((src) => warmImage(src))).then(() => undefined);
 }
 
-/** Programs hero band: background MP4 + globe tiles together (parallel network + decode). */
+/** Programs hero band: globe tiles + desktop MP4 (mobile skips video — static band). */
 export function warmProgramsSectionAssets(globeUrls?: readonly string[]): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   const globeList = globeUrls?.length ? globeUrls : [];
@@ -81,6 +81,9 @@ export function warmProgramsSectionAssets(globeUrls?: readonly string[]): Promis
     globeList.length === 0 || globeList.every((src) => isImageWarm(src))
       ? Promise.resolve()
       : warmGlobeGalleryImages(globeList);
+  if (shouldSkipHeavyVideoWarmup()) {
+    return globeWarm;
+  }
   const videoWarm = isVideoWarm(PROGRAMS_SECTION_VIDEO)
     ? Promise.resolve()
     : warmVideo(PROGRAMS_SECTION_VIDEO);
@@ -386,9 +389,12 @@ export function scheduleMarketingMediaWarmup(options?: { deferProgramsBand?: boo
 
   stagedWarmupStarted = true;
 
-
-
-  void warmImage(MARKETING_IMAGE_URLS[0]);
+  // Home LCP already loads optimized logo via next/image — don't compete with raw /assets/logo.webp.
+  const path = window.location.pathname || "";
+  const isHome = path === "/" || path === "";
+  if (!isHome) {
+    void warmImage(MARKETING_IMAGE_URLS[0]);
+  }
 
   if (shouldSkipHeavyVideoWarmup()) {
     // Phones / slow connections: never bulk-download background MP4s. Videos that

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/dashboard/dashboardPrimitives";
 
 /** Compressed ~2s loop used on public hero/footer (and shared with dashboard shell). */
@@ -10,6 +10,8 @@ export const QUIZ_LOOP_BG_VIDEO = "/assets/bg-loop.mp4";
 
 const POSTER_GRADIENT =
   "radial-gradient(ellipse 90% 70% at 50% 15%, rgba(34,211,238,0.16), transparent 58%), radial-gradient(ellipse 80% 55% at 85% 78%, rgba(245,158,11,0.12), transparent 52%), linear-gradient(180deg, #070a12 0%, #030407 55%, #000 100%)";
+
+const MOBILE_STATIC_MQ = "(max-width: 767px)";
 
 type LoopBgVideoProps = {
   className?: string;
@@ -24,11 +26,17 @@ type LoopBgVideoProps = {
    * Use on mobile heroes so LCP logo/CSS win the network.
    */
   deferPlayMs?: number;
+  /**
+   * On phones: never mount/fetch the MP4 — poster gradient only (Slow 4G / LH media payload).
+   * Default true. Desktop / tablet still play the loop.
+   */
+  preferStaticOnMobile?: boolean;
 };
 
 /**
  * Infinite muted background loop for hero/footer/quiz.
- * Plays on mobile + desktop; pauses when off-screen or tab hidden; respects reduced motion (poster only).
+ * Mobile: static poster only when preferStaticOnMobile (default).
+ * Desktop: plays when on-screen; pauses when off-screen / tab hidden / reduced motion.
  */
 export function LoopBgVideo({
   className,
@@ -36,11 +44,32 @@ export function LoopBgVideo({
   scrimOpacity = 0.55,
   videoOpacity = 0.85,
   deferPlayMs = 0,
+  preferStaticOnMobile = true,
 }: LoopBgVideoProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [staticOnly, setStaticOnly] = useState(preferStaticOnMobile);
 
   useEffect(() => {
+    if (!preferStaticOnMobile) {
+      setStaticOnly(false);
+      return;
+    }
+    const narrow = window.matchMedia(MOBILE_STATIC_MQ);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setStaticOnly(narrow.matches || reduced.matches);
+    sync();
+    narrow.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
+    return () => {
+      narrow.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, [preferStaticOnMobile]);
+
+  useEffect(() => {
+    if (staticOnly) return;
+
     const host = hostRef.current;
     const video = videoRef.current;
     if (!host || !video) return;
@@ -63,7 +92,6 @@ export function LoopBgVideo({
       if (!started) {
         started = true;
         video.preload = "auto";
-        // Attach source only after arming so mobile LH does not fetch ~0.5MB during LCP.
         if (!video.currentSrc && !video.querySelector("source")) {
           const source = document.createElement("source");
           source.src = src;
@@ -110,27 +138,28 @@ export function LoopBgVideo({
       reduced.removeEventListener("change", onReduced);
       video.pause();
     };
-  }, [src, deferPlayMs]);
+  }, [src, deferPlayMs, staticOnly]);
 
   const deferSource = deferPlayMs > 0;
 
   return (
     <div ref={hostRef} className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)} aria-hidden>
       <div className="absolute inset-0 z-0" style={{ background: POSTER_GRADIENT }} />
-      <video
-        ref={videoRef}
-        className="absolute inset-0 z-[1] h-full w-full object-cover"
-        style={{ opacity: videoOpacity }}
-        muted
-        loop
-        playsInline
-        // No autoPlay when deferred — JS starts playback after the quiet window.
-        autoPlay={!deferSource}
-        preload={deferSource ? "none" : "metadata"}
-        poster=""
-      >
-        {!deferSource ? <source src={src} type="video/mp4" /> : null}
-      </video>
+      {!staticOnly ? (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 z-[1] h-full w-full object-cover"
+          style={{ opacity: videoOpacity }}
+          muted
+          loop
+          playsInline
+          autoPlay={!deferSource}
+          preload={deferSource ? "none" : "metadata"}
+          poster=""
+        >
+          {!deferSource ? <source src={src} type="video/mp4" /> : null}
+        </video>
+      ) : null}
       <div
         className="absolute inset-0 z-[2] bg-black"
         style={{ opacity: scrimOpacity }}

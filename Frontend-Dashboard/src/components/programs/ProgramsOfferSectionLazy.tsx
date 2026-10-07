@@ -53,8 +53,16 @@ const KnightOfferDynamic = dynamic(
 function hideSsrBrowseSibling() {
   const el = document.getElementById("programs-lcp-browse");
   if (!el) return;
+  // Keep layout box briefly out of paint (less jump than display:none mid-frame).
   el.setAttribute("hidden", "");
-  el.style.display = "none";
+  el.setAttribute("aria-hidden", "true");
+  el.style.visibility = "hidden";
+  el.style.pointerEvents = "none";
+  el.style.position = "absolute";
+  el.style.width = "1px";
+  el.style.height = "1px";
+  el.style.overflow = "hidden";
+  el.style.clipPath = "inset(50%)";
 }
 
 function hasPackDetailsDeepLink(): boolean {

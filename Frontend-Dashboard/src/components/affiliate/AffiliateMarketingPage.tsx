@@ -110,11 +110,29 @@ function showcaseLazyMinHeight(layout: ShowcaseLayout): string {
   }
 }
 
-/** Defers heavy background MP4 until the browser is idle — hero paints with CSS only first. */
+/** Defers heavy background MP4 until idle on desktop; phones never load the MP4. */
 function AffiliateDeferredBackdrop() {
   const [videoReady, setVideoReady] = useState(false);
+  const [allowVideo, setAllowVideo] = useState(false);
 
   useEffect(() => {
+    const narrow = window.matchMedia("(max-width: 767px)");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setAllowVideo(!(narrow.matches || reduced.matches));
+    sync();
+    narrow.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
+    return () => {
+      narrow.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!allowVideo) {
+      setVideoReady(false);
+      return;
+    }
     let cancelled = false;
     const enable = () => {
       if (!cancelled) setVideoReady(true);
@@ -131,7 +149,7 @@ function AffiliateDeferredBackdrop() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [allowVideo]);
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">

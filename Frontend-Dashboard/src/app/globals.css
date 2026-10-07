@@ -155,7 +155,8 @@
   src:
     url("/fonts/CSDaineMono-Regular.woff2") format("woff2"),
     url("/fonts/CSDaineMono-Regular.woff") format("woff");
-  font-display: swap;
+  /* optional — do not block LCP/FCP waiting on body mono */
+  font-display: optional;
   font-weight: 400 700;
   font-style: normal;
 }

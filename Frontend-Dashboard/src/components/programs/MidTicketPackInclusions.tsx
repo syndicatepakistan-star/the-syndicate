@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { OfferInclusionsStatGrid } from "@/components/programs/OfferInclusionsStatGrid";
 import type { VaultPackKey } from "@/components/programs/planOfferCatalog";
 import { midTicketWhatYouGetBlocks } from "@/components/programs/midTicketPackStats";

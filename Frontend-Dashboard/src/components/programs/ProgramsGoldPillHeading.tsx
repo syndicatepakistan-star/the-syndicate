@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { publicHeadingLightning, type PublicHeadingLightningVariant } from "@/lib/publicHeadingLightning";
 
 const PILL_LIGHTNING: Record<ProgramsGoldPillHeadingChrome, PublicHeadingLightningVariant> = {

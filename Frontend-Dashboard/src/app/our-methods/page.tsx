@@ -16,6 +16,7 @@ export default function OurMethodsPage() {
         <ViewportDecorVideo
           src="/assets/video.mp4"
           alwaysOn
+          preferStaticOnMobile
           className="absolute inset-0 h-full w-full object-cover opacity-25"
         />
         <div className="absolute left-[-10%] top-[8%] h-[280px] w-[280px] rounded-full bg-cyan-400/14 blur-3xl" />

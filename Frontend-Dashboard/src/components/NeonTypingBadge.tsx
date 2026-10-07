@@ -24,8 +24,10 @@ export default function NeonTypingBadge({
     () => safePhrases.reduce((best, p) => (p.length > best.length ? p : best), ''),
     [safePhrases],
   )
+  /** Single slogan (home hero) — static text avoids LH CLS from type/delete loops. */
+  const staticOnly = safePhrases.length <= 1
+
   const [phraseIndex, setPhraseIndex] = useState(0)
-  // Start with full first phrase so Lighthouse CLS doesn't see empty → typed growth.
   const [visibleText, setVisibleText] = useState(() => safePhrases[0] ?? '')
   const [isDeleting, setIsDeleting] = useState(false)
   const [motionArmed, setMotionArmed] = useState(false)
@@ -33,13 +35,13 @@ export default function NeonTypingBadge({
   const activePhrase = safePhrases[phraseIndex % Math.max(safePhrases.length, 1)] ?? ''
 
   useEffect(() => {
-    // Defer typing loop past first paint / Lighthouse TBT window.
-    const t = window.setTimeout(() => setMotionArmed(true), 1800)
+    if (staticOnly) return
+    const t = window.setTimeout(() => setMotionArmed(true), 2200)
     return () => window.clearTimeout(t)
-  }, [])
+  }, [staticOnly])
 
   useEffect(() => {
-    if (!motionArmed || safePhrases.length === 0) return
+    if (staticOnly || !motionArmed || safePhrases.length === 0) return
 
     const current = safePhrases[phraseIndex]
     if (!current) return
@@ -72,7 +74,19 @@ export default function NeonTypingBadge({
     }, timeoutMs)
 
     return () => window.clearTimeout(timer)
-  }, [deletingSpeed, isDeleting, motionArmed, pauseMs, phraseIndex, safePhrases, typingSpeed, visibleText])
+  }, [
+    deletingSpeed,
+    isDeleting,
+    motionArmed,
+    pauseMs,
+    phraseIndex,
+    safePhrases,
+    staticOnly,
+    typingSpeed,
+    visibleText,
+  ])
+
+  const displayText = staticOnly ? activePhrase || longestPhrase : visibleText || longestPhrase
 
   return (
     <div
@@ -85,11 +99,18 @@ export default function NeonTypingBadge({
       role="status"
       aria-live="polite"
       aria-label={activePhrase || longestPhrase}
-      style={longestPhrase ? { minWidth: `min(${Math.max(12, longestPhrase.length * 0.62)}rem, 92vw)` } : undefined}
+      style={
+        longestPhrase
+          ? {
+              minWidth: `min(${Math.max(12, longestPhrase.length * 0.62)}rem, 92vw)`,
+              minHeight: '3.25rem',
+            }
+          : { minHeight: '3.25rem' }
+      }
     >
       <span className="neon-badge-text">
-        {visibleText || longestPhrase}
-        {motionArmed ? (
+        {displayText}
+        {!staticOnly && motionArmed ? (
           <span className="neon-caret" aria-hidden>
             |
           </span>

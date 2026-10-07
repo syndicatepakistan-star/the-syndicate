@@ -2,7 +2,7 @@
 
 import { useDeferredVisualEffects } from "@/hooks/useDeferredVisualEffects";
 import { useLiteVisualViewport } from "@/hooks/useLiteVisualViewport";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 /**
  * Soft page orbs — desktop only after deferred ready.

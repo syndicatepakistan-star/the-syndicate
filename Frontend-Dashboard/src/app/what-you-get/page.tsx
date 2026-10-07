@@ -175,7 +175,11 @@ function WhatYouGetNextMovePanel({
 
 export default function WhatYouGetPage() {
   useEffect(() => {
-    void warmVideo('/assets/bg-video.mp4')
+    // Desktop only — phones use preferStaticOnMobile (no MP4 fetch).
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+      return;
+    }
+    void warmVideo("/assets/bg-video.mp4");
   }, [])
 
   return (
@@ -191,6 +195,7 @@ export default function WhatYouGetPage() {
               priority
               alwaysOn
               fill
+              preferStaticOnMobile
               videoClassName="opacity-50"
             />
             <div className="absolute inset-0 bg-black/32" aria-hidden />

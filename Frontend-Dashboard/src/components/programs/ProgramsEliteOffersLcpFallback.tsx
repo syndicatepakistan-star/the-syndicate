@@ -2,9 +2,9 @@ import { OFFER_PLAN_THUMB_MONEY_MASTERY } from "@/components/programs/offerPlanT
 import { nextOptimizedImageSrcSet, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 import { formatTempAwareDisplayPrice } from "@/lib/tempTestPricing";
 
-const LCP_SIZES = "(max-width: 767px) 100vw, (max-width: 1024px) 420px, 480px";
-/** Same q/w as page preload + PlanOfferCard Money Mastery priority image. */
-const LCP_SRC = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 384, 55);
+const LCP_SIZES = "(max-width: 767px) 360px, (max-width: 1024px) 420px, 480px";
+/** Same q/w as page preload — mobile stays near 360w. */
+const LCP_SRC = nextOptimizedImageUrl(OFFER_PLAN_THUMB_MONEY_MASTERY, 360, 55);
 const LCP_SRCSET = nextOptimizedImageSrcSet(OFFER_PLAN_THUMB_MONEY_MASTERY, 55, 480);
 
 /**
@@ -35,10 +35,10 @@ export function ProgramsEliteOffersLcpFallback({
                     src={LCP_SRC}
                     srcSet={LCP_SRCSET}
                     sizes={LCP_SIZES}
-                    width={384}
-                    height={480}
+                    width={360}
+                    height={450}
                     alt=""
-                    decoding="sync"
+                    decoding="async"
                     fetchPriority="high"
                     loading="eager"
                     className="absolute inset-0 h-full w-full object-cover object-[center_38%] [image-rendering:high-quality]"

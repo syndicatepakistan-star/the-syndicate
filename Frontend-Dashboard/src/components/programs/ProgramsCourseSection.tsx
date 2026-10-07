@@ -24,7 +24,8 @@ import { isVaultCourseSlug, isVaultPackKey, vaultCourseBySlug } from "@/componen
 import { hasMoneyMasteryAccess } from "@/components/programs/vaultUnlock";
 import { navigateToAlreadyUnlockedProgram } from "@/lib/programUnlockFlow";
 import { markDashboardCheckoutReturn, resetProgramsInnerScrollOnly } from "@/lib/dashboardShellScroll";
-import { cn, DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
+import { DASHBOARD_HEADING_LIGHTNING } from "@/components/dashboard/dashboardPrimitives";
 import { fetchCoursesList, resolveDjangoMediaUrl, type CourseDto } from "@/lib/courses-api";
 import {
   normalizeLevel1ProgramPlaylists,

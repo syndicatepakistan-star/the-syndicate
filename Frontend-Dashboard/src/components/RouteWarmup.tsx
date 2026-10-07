@@ -40,14 +40,20 @@ export default function RouteWarmup() {
       scheduleMarketingMediaWarmup({ deferProgramsBand: isHome });
     }
 
-    // Auth / checkout: zero route prefetch — unused JS was ~170–220 KiB on /login.
+    // Auth / checkout / quiz mobile: zero route prefetch — unused JS competes with LCP/TBT.
     if (isPrograms || isDashboard || isAuthHeavy) return;
 
-    // Homepage: wait past LCP quiet window + deferred hero video before prefetch pulls more JS.
+    const isMobile =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(max-width: 767px)").matches;
+    if (isQuiz && isMobile) return;
+
+    // Homepage: wait past LCP quiet window before prefetch pulls more JS (mobile longer).
+    const homeDelay = isMobile ? 12000 : 7000;
     runWhenIdle(() => {
       router.prefetch("/programs");
       if (!isFounder) router.prefetch("/membership");
-    }, isHome ? 5500 : isFounder || isQuiz ? 2800 : 1200);
+    }, isHome ? homeDelay : isFounder || isQuiz ? 2800 : 1200);
   }, [router, pathname]);
 
   return null;

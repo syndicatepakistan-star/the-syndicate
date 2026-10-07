@@ -6,7 +6,7 @@ import {
   parseStructuredDescriptionSections,
   type StructuredDescriptionSections,
 } from "@/lib/structuredDescription";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 export type { StructuredDescriptionSections };
 

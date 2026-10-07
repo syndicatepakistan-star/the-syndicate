@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ExternalLink, X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { LazyVaultModuleCell } from "@/components/programs/LazyVaultModuleCell";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
 import { PurchaseValueCallout } from "@/components/programs/PurchaseValueCallout";

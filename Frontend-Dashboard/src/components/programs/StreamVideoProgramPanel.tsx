@@ -7,7 +7,7 @@ import {
   fetchStreamVideoDetail,
   type StreamVideoDetail
 } from "@/lib/streaming-api";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 type Props = {
   streamVideoId: number;

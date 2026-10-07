@@ -25,7 +25,7 @@ import { requestDashboardShellNav } from "@/lib/dashboardShellNavEvent";
 import { historyReplaceUrl } from "@/lib/historyUrl";
 import { formatPrice } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { StructuredDescriptionBody } from "@/components/programs/StructuredDescriptionBody";
 import { optimizeListThumbSrc, nextOptimizedImageUrl } from "@/lib/optimizeImageUrl";
 import {

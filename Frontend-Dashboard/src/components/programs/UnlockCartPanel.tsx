@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Lock, ShoppingBag, Trash2, X } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 import { CyberChamferFrame, type CyberFrameAccent } from "@/components/cyber/CyberChamferFrames";
 import { useUnlockCart } from "@/components/programs/UnlockCartContext";
 import { cartItemKey } from "@/lib/unlockCart";

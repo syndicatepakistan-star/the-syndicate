@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-/** Registers device cache worker in production — static assets reuse local cache after first visit. */
+/** Registers device cache worker late — never competes with first-load LCP/TBT. */
 export default function ServiceWorkerRegister() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
@@ -14,13 +14,27 @@ export default function ServiceWorkerRegister() {
       });
     };
 
-    if (document.readyState === "complete") {
-      register();
-      return;
-    }
+    const path = window.location.pathname || "";
+    const isHome = path === "/" || path === "";
+    const isMarketingHeavy =
+      isHome || path === "/programs" || path.startsWith("/programs/") || path === "/quiz" || path.startsWith("/quiz/");
+    const delayMs = isMarketingHeavy ? 12000 : 4000;
 
-    window.addEventListener("load", register, { once: true });
-    return () => window.removeEventListener("load", register);
+    let idleId: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(register, { timeout: 3000 });
+      } else {
+        register();
+      }
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+      if (idleId !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+    };
   }, []);
 
   return null;

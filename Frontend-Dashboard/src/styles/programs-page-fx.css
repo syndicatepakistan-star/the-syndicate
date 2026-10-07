@@ -264,16 +264,22 @@ article.plan-offer-card.program-card-globe-spotlight-host .program-card-spotligh
 
 /* Soft ambient orbs — cheaper than Tailwind blur-[110px+] layers */
 .programs-page-ambient {
+  position: absolute;
+  inset: 0;
   contain: strict;
   isolation: isolate;
   opacity: 0.9;
   transition: opacity 120ms linear;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .programs-page-ambient__orb {
+  position: absolute;
   filter: blur(72px);
   will-change: opacity;
   transform: translateZ(0);
+  border-radius: 9999px;
 }
 
 .programs-page-ambient__orb--fuchsia {

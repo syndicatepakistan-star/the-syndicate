@@ -184,8 +184,10 @@
 }
 
 @media (max-width: 1024px) {
+  /* Keep cover flush to the aspect box — avoid +5px overflow that shifts layout (CLS). */
   .program-playlist-card__cover-img {
-    height: calc(100% + 5px) !important;
+    height: 100% !important;
+    width: 100% !important;
   }
 }
 
@@ -796,16 +798,24 @@
   contain-intrinsic-size: auto 560px;
 }
 
-/* First offer band should paint immediately (LCP / above-the-fold). */
+/* First offer band — reserve height so idle island swap does not CLS. */
 .programs-page-root #syndicate-elite-offers {
   content-visibility: visible;
   contain-intrinsic-size: none;
+  min-height: min(70vh, 36rem);
 }
 
-/* Library / #businessprograms — always paint (mobile LCP when deep-linked). */
+@media (min-width: 640px) {
+  .programs-page-root #syndicate-elite-offers {
+    min-height: 40rem;
+  }
+}
+
+/* Library / #businessprograms — always paint; reserve height to cut LazyWhenVisible CLS. */
 .programs-page-root #programs-library {
   content-visibility: visible;
-  contain-intrinsic-size: none;
+  contain-intrinsic-size: auto 80rem;
+  min-height: min(200vh, 80rem);
 }
 
 /* Cards stay painted — avoid mid-scroll blank shells from content-visibility */

@@ -25,6 +25,8 @@ export default function DeferredLetterGlitch(_props: Record<string, unknown>) {
       className="quiz-glitch-canvas absolute inset-0 h-full w-full"
       scrimOpacity={0.48}
       videoOpacity={0.88}
+      preferStaticOnMobile
+      deferPlayMs={3500}
     />
   );
 }

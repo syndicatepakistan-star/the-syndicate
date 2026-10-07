@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Lock, Unlock } from "lucide-react";
-import { cn } from "@/components/dashboard/dashboardPrimitives";
+import { cn } from "@/lib/cn";
 
 type Props = {
   programTitle: string;

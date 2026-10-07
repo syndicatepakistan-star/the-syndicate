@@ -4,6 +4,7 @@ import RouteWarmup from "@/components/RouteWarmup";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { DeferredCookieConsent } from "@/components/DeferredCookieConsent";
 import { DeferredGtm } from "@/components/DeferredGtm";
+import { DeferredGlobalsCss } from "@/components/DeferredGlobalsCss";
 import { DesktopBandStyles } from "@/components/DesktopBandStyles";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { absoluteUrl, DEFAULT_OG_IMAGE_PATH, getSiteUrl, SITE_NAME } from "@/lib/seo";
@@ -13,7 +14,8 @@ import {
   DEFAULT_SITE_DESCRIPTION,
   DEFAULT_SITE_TITLE,
 } from "@/lib/structuredData";
-import "./globals.css";
+/** Tiny non-blocking-first paint shell; full Tailwind/globals via DeferredGlobalsCss. */
+import "./critical-shell.css";
 /* syndicate-otp.css is loaded only in OTP / checkout / affiliate-login layouts — not on marketing pages. */
 
 const googleVerification = (process.env.GOOGLE_SITE_VERIFICATION ?? "").trim();
@@ -87,24 +89,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Site fonts: Thryon (headings) + CS Daine Mono (body/digits) — woff2 */}
-        <link
-          rel="preload"
-          href="/fonts/CSDaineMono-Regular.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/Thryon.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        {/* No font preload here — logo LCP must win Slow 4G bandwidth (Thryon/CS Daine via deferred CSS). */}
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body className="min-h-screen min-w-0 overflow-x-hidden bg-black text-white antialiased" suppressHydrationWarning>
+        <DeferredGlobalsCss />
         <DesktopBandStyles />
         <DeferredGtm />
         <Providers>

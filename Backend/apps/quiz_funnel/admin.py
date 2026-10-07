@@ -341,6 +341,7 @@ class AuditBookingAdmin(admin.ModelAdmin):
     date_hierarchy = "slot_start"
     readonly_fields = ("created_at", "updated_at")
     raw_id_fields = ("user",)
+    actions = ("resend_booking_confirmation",)
 
     @admin.display(description="Email", ordering="user__email")
     def user_email(self, obj):
@@ -349,3 +350,50 @@ class AuditBookingAdmin(admin.ModelAdmin):
     @admin.display(boolean=True, description="Meet link")
     def has_meet_link(self, obj):
         return bool((obj.meet_link or "").strip())
+
+    @admin.action(description="Resend email + WhatsApp confirmation")
+    def resend_booking_confirmation(self, request, queryset):
+        from .booking_mailer import send_booking_confirmation_email
+        from .booking_webhook import post_booking_webhook
+        from .calendar_service import _as_utc
+
+        sent = 0
+        for booking in queryset.select_related("user"):
+            if booking.status != AuditBooking.Status.BOOKED:
+                continue
+            user = booking.user
+            slot_start = _as_utc(booking.slot_start)
+            slot_end = _as_utc(booking.slot_end)
+            start_iso = slot_start.isoformat().replace("+00:00", "Z")
+            end_iso = slot_end.isoformat().replace("+00:00", "Z")
+            tz = booking.timezone or "Asia/Karachi"
+            meet = (booking.meet_link or "").strip()
+            try:
+                send_booking_confirmation_email(
+                    to_email=user.email or "",
+                    full_name=user.name or "",
+                    slot_start=slot_start,
+                    slot_end=slot_end,
+                    timezone_name=tz,
+                    meet_link=meet,
+                )
+            except Exception:
+                self.message_user(
+                    request,
+                    f"Email failed for booking #{booking.pk} ({user.email})",
+                    level="ERROR",
+                )
+                continue
+            post_booking_webhook(
+                name=user.name or "",
+                email=user.email or "",
+                phone=user.phone or "",
+                meet_link=meet,
+                slot_start=start_iso,
+                slot_end=end_iso,
+                timezone=tz,
+                intake_ref=user.intake_ref or "",
+                booking_id=booking.pk,
+            )
+            sent += 1
+        self.message_user(request, f"Resent confirmation for {sent} booking(s).")

@@ -62,7 +62,23 @@ def build_booking_confirmation_html(
     greet = f"Hi {escape(first_name)}," if first_name else "Hi,"
     when = escape(local_when)
     tz = escape((timezone_name or "").replace("_", " "))
-    link = escape(meet_link)
+    meet = (meet_link or "").strip()
+    link = escape(meet)
+    if meet:
+        meet_block = f"""
+        <p style="margin:0 0 10px;font-size:14px;color:#c7d8e8;">
+          Join with Google Meet:
+        </p>
+        <p style="margin:0 0 18px;">
+          <a href="{link}" style="color:#67e8f9;word-break:break-all;">{link}</a>
+        </p>
+        """
+    else:
+        meet_block = """
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#c7d8e8;">
+          Your Google Meet link will be shared by WhatsApp or email before the call.
+        </p>
+        """
     return f"""
   <div style="margin:0;padding:34px 16px;background:#020305;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:#d8e5f2;">
     <div style="max-width:640px;margin:0 auto;border:1px solid #cda936;border-radius:16px;background:#070a10;overflow:hidden;">
@@ -80,12 +96,7 @@ def build_booking_confirmation_html(
           <div style="font-size:11px;letter-spacing:1.5px;color:#7ddbf4;text-transform:uppercase;">When</div>
           <div style="margin-top:8px;font-size:17px;font-weight:700;color:#facc15;line-height:1.4;">{when}</div>
         </div>
-        <p style="margin:0 0 10px;font-size:14px;color:#c7d8e8;">
-          Join with Google Meet:
-        </p>
-        <p style="margin:0 0 18px;">
-          <a href="{link}" style="color:#67e8f9;word-break:break-all;">{link}</a>
-        </p>
+        {meet_block}
         <p style="margin:0;font-size:12px;line-height:1.65;color:#70839a;">
           This is your booking confirmation. The time above is in the timezone you selected
           when you booked.
@@ -106,10 +117,10 @@ def send_booking_confirmation_email(
     meet_link: str,
 ) -> None:
     email = (to_email or "").strip().lower()
-    meet = (meet_link or "").strip()
-    if not email or not meet:
+    if not email:
         return
 
+    meet = (meet_link or "").strip()
     first = first_name_from(full_name)
     local_when = format_slot_in_timezone(slot_start, slot_end, timezone_name)
     subject = f"Your founder audit is booked — {local_when}"

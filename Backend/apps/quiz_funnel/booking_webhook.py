@@ -38,7 +38,8 @@ def post_booking_webhook(
     url = (getattr(settings, "BOOKING_WEBHOOK_URL", None) or "").strip()
     phone_norm = (phone or "").strip()
     meet = (meet_link or "").strip()
-    if not url or not phone_norm or not meet:
+    # Meet optional — bare service-account calendar auth cannot create Meet links.
+    if not url or not phone_norm:
         return False
 
     full_name = (name or "").strip()

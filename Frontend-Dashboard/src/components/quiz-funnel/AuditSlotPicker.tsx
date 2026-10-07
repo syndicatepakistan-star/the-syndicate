@@ -128,7 +128,9 @@ function BookingSuccess({
         }
       />
       <p className="quiz-intake-intro quiz-intake-booking__intro">
-        Save this time. Join with the Google Meet link below when it starts.
+        {meet
+          ? "Save this time. Join with the Google Meet link below when it starts."
+          : "Save this time. A confirmation with details will arrive by email / WhatsApp shortly."}
       </p>
       <div className="quiz-intake-booking__confirm-card quiz-intake-booking__confirm-card--done">
         <UserTimeSummary
@@ -149,7 +151,7 @@ function BookingSuccess({
         </a>
       ) : (
         <p className="quiz-intake-thanks">
-          Your booking is saved. The Meet link will arrive by email / WhatsApp shortly.
+          Your booking is saved. Confirmation is on the way by email / WhatsApp. The host will share the Meet link before your call.
         </p>
       )}
     </section>

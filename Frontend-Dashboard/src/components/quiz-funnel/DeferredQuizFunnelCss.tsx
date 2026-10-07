@@ -10,8 +10,8 @@ const QuizFunnelCssImport = dynamic(
 );
 
 /**
- * Defers the large quiz-funnel.css until shortly after first paint.
- * Critical landing CSS is inlined in quiz/layout.tsx.
+ * Defers the large quiz-funnel.css until shortly after first paint on `/quiz` landing.
+ * Result / questions / intake load immediately so Details modal and cards keep prior styling.
  * Does not touch GTM.
  */
 export function DeferredQuizFunnelCss() {
@@ -25,6 +25,16 @@ export function DeferredQuizFunnelCss() {
     const activate = () => {
       if (!cancelled) setReady(true);
     };
+
+    // Result / questions / intake need full funnel CSS immediately (Details modal, cards).
+    // Only defer on the landing `/quiz` page for LCP.
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (path !== "/quiz") {
+      activate();
+      return () => {
+        cancelled = true;
+      };
+    }
 
     const opts: AddEventListenerOptions = { once: true, passive: true };
     window.addEventListener("pointerdown", activate, opts);

@@ -322,6 +322,116 @@ def _extract_meet_link(event: dict) -> str:
     return ""
 
 
+def attach_meet_to_event(event_id: str, *, request_key: str = "") -> str:
+    """
+    Patch an existing calendar event to add Google Meet.
+    Requires Domain-Wide Delegation (GOOGLE_CALENDAR_DELEGATE_EMAIL).
+    Returns meet_link or raises BookingError.
+    """
+    eid = (event_id or "").strip()
+    if not eid:
+        raise BookingError("Missing Google event id.", status=400)
+    if not _calendar_delegate_email():
+        raise BookingError(
+            "GOOGLE_CALENDAR_DELEGATE_EMAIL is not set. Finish Domain-Wide Delegation first.",
+            status=503,
+        )
+
+    service = _calendar_service()
+    cal_id = _calendar_id()
+    key = (request_key or eid)[:48]
+    body = {
+        "conferenceData": {
+            "createRequest": {
+                "requestId": f"repair-{key}-{uuid.uuid4().hex[:12]}",
+                "conferenceSolutionKey": {"type": "hangoutsMeet"},
+            }
+        }
+    }
+    try:
+        event = (
+            service.events()
+            .patch(
+                calendarId=cal_id,
+                eventId=eid,
+                body=body,
+                conferenceDataVersion=1,
+                sendUpdates="none",
+            )
+            .execute()
+        )
+    except Exception as exc:
+        logger.exception("Failed to attach Meet to event_id=%s", eid)
+        raise BookingError(
+            "Could not create a Google Meet link on the existing event.",
+            status=502,
+        ) from exc
+
+    meet = _extract_meet_link(event)
+    if not meet:
+        raise BookingError(
+            "Google did not return a Meet link. Check Domain-Wide Delegation.",
+            status=502,
+        )
+    return meet
+
+
+def notify_booking_channels(booking: AuditBooking) -> None:
+    """Send email + WhatsApp for an existing AuditBooking (Meet optional)."""
+    user = booking.user
+    meet = (booking.meet_link or "").strip()
+    tz = booking.timezone or (getattr(settings, "BOOKING_TIMEZONE", None) or "Asia/Karachi")
+    slot_start = _as_utc(booking.slot_start)
+    slot_end = _as_utc(booking.slot_end)
+    start_iso = slot_start.isoformat().replace("+00:00", "Z")
+    end_iso = slot_end.isoformat().replace("+00:00", "Z")
+
+    from .booking_mailer import send_booking_confirmation_email
+    from .booking_webhook import post_booking_webhook
+
+    send_booking_confirmation_email(
+        to_email=user.email or "",
+        full_name=user.name or "",
+        slot_start=slot_start,
+        slot_end=slot_end,
+        timezone_name=tz,
+        meet_link=meet,
+    )
+    post_booking_webhook(
+        name=user.name or "",
+        email=user.email or "",
+        phone=user.phone or "",
+        meet_link=meet,
+        slot_start=start_iso,
+        slot_end=end_iso,
+        timezone=tz,
+        intake_ref=user.intake_ref or "",
+        booking_id=booking.pk,
+    )
+
+
+def repair_booking_meet_and_notify(
+    booking: AuditBooking,
+    *,
+    notify: bool = True,
+) -> str:
+    """
+    Ensure Meet exists on the Google event, save meet_link, optionally notify.
+    Returns meet_link.
+    """
+    meet = (booking.meet_link or "").strip()
+    event_id = (booking.google_event_id or "").strip()
+    if not meet:
+        if not event_id:
+            raise BookingError(f"Booking #{booking.pk} has no Google event id.", status=400)
+        meet = attach_meet_to_event(event_id, request_key=str(booking.pk))
+        booking.meet_link = meet
+        booking.save(update_fields=["meet_link", "updated_at"])
+    if notify:
+        notify_booking_channels(booking)
+    return meet
+
+
 def _safe_zoneinfo(name: str | None) -> ZoneInfo | None:
     raw = (name or "").strip()
     if not raw:

@@ -5,7 +5,8 @@ export const DEFAULT_SITE_URL = "https://the-syndicate.com";
 
 export const SITE_NAME = "The Syndicate";
 
-export const DEFAULT_OG_IMAGE_PATH = "/assets/logo.png";
+/** Small favicon for link-share previews (WhatsApp/iMessage/etc.). */
+export const DEFAULT_OG_IMAGE_PATH = "/favicon-48.png";
 
 export type PressFeature = {
   publisher: string;
@@ -121,10 +122,10 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       title,
       description,
-      images: [{ url: image, alt: SITE_NAME }],
+      images: [{ url: image, width: 48, height: 48, alt: SITE_NAME }],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
       images: [image],

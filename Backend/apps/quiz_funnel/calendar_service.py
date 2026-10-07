@@ -340,13 +340,13 @@ def create_audit_event(
     display_timezone: str | None = None,
 ) -> tuple[str, str]:
     """
-    Create Google Calendar event with Meet.
-    Returns (event_id, meet_link). Raises BookingError if Meet link missing.
+    Create Google Calendar event (with Meet when auth allows it).
+
+    Returns (event_id, meet_link). meet_link may be empty for bare service-account
+    auth — Google blocks Meet conferenceData without Domain-Wide Delegation.
 
     Guest-facing name fields use first name only. We do not send Google's
-    calendar invite email (sendUpdates=none): the organizer calendar is often
-    Europe/Paris, so Google's "When" line shows host TZ instead of the guest's
-    city. Confirmation + local time go out via our booking email / WhatsApp.
+    calendar invite email (sendUpdates=none). Confirmation goes via email / WhatsApp.
     """
     start = _as_utc(slot_start)
     end = _as_utc(slot_end)
@@ -404,23 +404,35 @@ def create_audit_event(
         "timeZone": event_tz_name,
     }
 
+    # Bare SA: no attendees + no Meet conferenceData (Google returns 403/400 without DWD).
+    # With GOOGLE_CALENDAR_DELEGATE_EMAIL + Domain-Wide Delegation, both work.
+    sa_bare = _service_account_configured() and not _calendar_delegate_email()
+    can_invite = not sa_bare
+    want_meet = not sa_bare
+
     body: dict = {
         "summary": summary,
         "description": "\n".join(description_lines),
         "start": start_payload,
         "end": end_payload,
-        "conferenceData": {
-            "createRequest": {
-                "requestId": f"audit-{user.pk}-{uuid.uuid4().hex[:16]}",
-                "conferenceSolutionKey": {"type": "hangoutsMeet"},
-            }
-        },
         "guestsCanModify": False,
         "guestsCanInviteOthers": False,
         "guestsCanSeeOtherGuests": True,
     }
-    # Bare SA cannot invite guests (403) unless Domain-Wide Delegation + with_subject is set.
-    can_invite = (not _service_account_configured()) or bool(_calendar_delegate_email())
+    if want_meet:
+        body["conferenceData"] = {
+            "createRequest": {
+                "requestId": f"audit-{user.pk}-{uuid.uuid4().hex[:16]}",
+                "conferenceSolutionKey": {"type": "hangoutsMeet"},
+            }
+        }
+    else:
+        description_lines.append("Meet: host will share Google Meet via WhatsApp / email.")
+        body["description"] = "\n".join(description_lines)
+        logger.info(
+            "Creating audit event without Meet conferenceData (SA without domain delegation)."
+        )
+
     if attendees and can_invite:
         body["attendees"] = attendees
     elif attendees and not can_invite:
@@ -429,39 +441,69 @@ def create_audit_event(
             "(guest still notified via email/WhatsApp)."
         )
 
-    try:
-        event = (
+    def _insert(event_body: dict, *, with_conference: bool):
+        return (
             service.events()
             .insert(
                 calendarId=cal_id,
-                body=body,
-                conferenceDataVersion=1,
+                body=event_body,
+                conferenceDataVersion=1 if with_conference else 0,
                 # Suppress Google invite email — its "When" uses organizer calendar TZ (e.g. Paris).
                 sendUpdates="none",
             )
             .execute()
         )
+
+    try:
+        event = _insert(body, with_conference=want_meet)
     except Exception as exc:
-        logger.exception("Google event create failed for user_id=%s", user.pk)
-        raise BookingError(
-            "Could not create the audit meeting. Please try another slot.",
-            status=502,
-        ) from exc
+        # Meet not available for this identity — retry once as a plain calendar event.
+        err_text = str(exc)
+        if want_meet and ("Invalid conference type" in err_text or "conference" in err_text.lower()):
+            logger.warning(
+                "Meet conference unsupported for calendar auth; retrying without Meet user_id=%s",
+                user.pk,
+            )
+            body.pop("conferenceData", None)
+            lines = list(description_lines)
+            if not any(line.startswith("Meet:") for line in lines):
+                lines.append("Meet: host will share Google Meet via WhatsApp / email.")
+            body["description"] = "\n".join(lines)
+            try:
+                event = _insert(body, with_conference=False)
+                want_meet = False
+            except Exception as retry_exc:
+                logger.exception("Google event create failed for user_id=%s", user.pk)
+                raise BookingError(
+                    "Could not create the audit meeting. Please try another slot.",
+                    status=502,
+                ) from retry_exc
+        else:
+            logger.exception("Google event create failed for user_id=%s", user.pk)
+            raise BookingError(
+                "Could not create the audit meeting. Please try another slot.",
+                status=502,
+            ) from exc
 
     event_id = str(event.get("id") or "").strip()
     meet_link = _extract_meet_link(event)
-    if not event_id or not meet_link:
-        # Avoid half-success: attempt delete if we got an id without Meet.
-        if event_id:
-            try:
-                service.events().delete(calendarId=cal_id, eventId=event_id, sendUpdates="none").execute()
-            except Exception:
-                logger.exception("Failed to roll back Google event %s without Meet link", event_id)
+    if not event_id:
+        raise BookingError(
+            "Could not create the audit meeting. Please try another slot.",
+            status=502,
+        )
+    if want_meet and not meet_link:
+        # Avoid half-success when Meet was required but missing.
+        try:
+            service.events().delete(calendarId=cal_id, eventId=event_id, sendUpdates="none").execute()
+        except Exception:
+            logger.exception("Failed to roll back Google event %s without Meet link", event_id)
         raise BookingError(
             "Could not create a Google Meet link. Please try again.",
             status=502,
         )
-    return event_id, meet_link
+    # SA path: empty meet_link is OK — WhatsApp/email confirmation still fires.
+    return event_id, meet_link or ""
 
 
 def book_slot(

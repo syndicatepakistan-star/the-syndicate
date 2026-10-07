@@ -5,8 +5,11 @@ export const DEFAULT_SITE_URL = "https://the-syndicate.com";
 
 export const SITE_NAME = "The Syndicate";
 
-/** Small favicon for link-share previews (WhatsApp/iMessage/etc.). */
-export const DEFAULT_OG_IMAGE_PATH = "/favicon-48.png";
+/**
+ * Square logo for link-share previews (WhatsApp/iMessage/etc.).
+ * WhatsApp ignores tiny favicons (< ~200px); use 400×400 og-icon.png.
+ */
+export const DEFAULT_OG_IMAGE_PATH = "/og-icon.png";
 
 export type PressFeature = {
   publisher: string;
@@ -122,7 +125,7 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       title,
       description,
-      images: [{ url: image, width: 48, height: 48, alt: SITE_NAME }],
+      images: [{ url: image, width: 400, height: 400, alt: SITE_NAME }],
     },
     twitter: {
       card: "summary",

@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: DEFAULT_SITE_TITLE,
     description: DEFAULT_SITE_DESCRIPTION,
-    images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE_PATH), width: 48, height: 48, alt: SITE_NAME }],
+    images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE_PATH), width: 400, height: 400, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary",

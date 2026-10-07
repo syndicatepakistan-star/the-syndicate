@@ -73,11 +73,23 @@ def _parse_iso_utc(value: str) -> datetime:
     return _as_utc(parsed)
 
 
+def _service_account_configured() -> bool:
+    raw_json = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_JSON", None) or "").strip()
+    key_file = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_FILE", None) or "").strip()
+    return bool(raw_json or key_file)
+
+
+def _calendar_delegate_email() -> str:
+    """Only set after Workspace Domain-Wide Delegation is configured for the SA."""
+    return (getattr(settings, "GOOGLE_CALENDAR_DELEGATE_EMAIL", None) or "").strip()
+
+
 def _service_account_credentials() -> Credentials | None:
     """Permanent calendar auth: SA key + calendar shared with SA email on audit@."""
     raw_json = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_JSON", None) or "").strip()
     key_file = (getattr(settings, "GOOGLE_SERVICE_ACCOUNT_FILE", None) or "").strip()
     scopes = list(CALENDAR_SCOPES)
+    creds: Credentials | None = None
 
     if raw_json:
         try:
@@ -88,11 +100,10 @@ def _service_account_credentials() -> Credentials | None:
                 "Audit booking is not configured correctly. Please try again later.",
                 status=503,
             ) from exc
-        return service_account.Credentials.from_service_account_info(info, scopes=scopes)
-
-    if key_file:
+        creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+    elif key_file:
         try:
-            return service_account.Credentials.from_service_account_file(key_file, scopes=scopes)
+            creds = service_account.Credentials.from_service_account_file(key_file, scopes=scopes)
         except OSError as exc:
             logger.exception("Could not read GOOGLE_SERVICE_ACCOUNT_FILE")
             raise BookingError(
@@ -100,7 +111,14 @@ def _service_account_credentials() -> Credentials | None:
                 status=503,
             ) from exc
 
-    return None
+    if creds is None:
+        return None
+
+    # Domain-Wide Delegation: impersonate audit@ so attendees + Meet work.
+    delegate = _calendar_delegate_email()
+    if delegate:
+        return creds.with_subject(delegate)
+    return creds
 
 
 def _oauth_user_credentials() -> Credentials:
@@ -401,8 +419,15 @@ def create_audit_event(
         "guestsCanInviteOthers": False,
         "guestsCanSeeOtherGuests": True,
     }
-    if attendees:
+    # Bare SA cannot invite guests (403) unless Domain-Wide Delegation + with_subject is set.
+    can_invite = (not _service_account_configured()) or bool(_calendar_delegate_email())
+    if attendees and can_invite:
         body["attendees"] = attendees
+    elif attendees and not can_invite:
+        logger.info(
+            "Skipping calendar attendees for SA without GOOGLE_CALENDAR_DELEGATE_EMAIL "
+            "(guest still notified via email/WhatsApp)."
+        )
 
     try:
         event = (

@@ -682,6 +682,8 @@ TWILIO_LOOKUP_ALLOW_VOIP = (os.environ.get("TWILIO_LOOKUP_ALLOW_VOIP") or "false
 # Preferred: service account JSON (share audit calendar with SA email — no expiring refresh token).
 GOOGLE_SERVICE_ACCOUNT_JSON = (os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON") or "").strip()
 GOOGLE_SERVICE_ACCOUNT_FILE = (os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE") or "").strip()
+# Optional: Workspace Domain-Wide Delegation — SA impersonates this user (enables attendees + Meet).
+GOOGLE_CALENDAR_DELEGATE_EMAIL = (os.environ.get("GOOGLE_CALENDAR_DELEGATE_EMAIL") or "").strip()
 # Legacy fallback only if SA is not configured:
 GOOGLE_OAUTH_CLIENT_ID = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
 GOOGLE_OAUTH_CLIENT_SECRET = (os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
@@ -690,7 +692,7 @@ GOOGLE_CALENDAR_ID = (os.environ.get("GOOGLE_CALENDAR_ID") or "primary").strip()
 BOOKING_FOUNDER_EMAIL = (os.environ.get("BOOKING_FOUNDER_EMAIL") or "").strip()
 
 BOOKING_TIMEZONE = (os.environ.get("BOOKING_TIMEZONE") or "Asia/Karachi").strip() or "Asia/Karachi"
-BOOKING_DURATION_MINUTES = int((os.environ.get("BOOKING_DURATION_MINUTES") or "30").strip() or "30")
+BOOKING_DURATION_MINUTES = int((os.environ.get("BOOKING_DURATION_MINUTES") or "60").strip() or "60")
 BOOKING_BUFFER_MINUTES = int((os.environ.get("BOOKING_BUFFER_MINUTES") or "15").strip() or "15")
 BOOKING_DAYS_AHEAD = int((os.environ.get("BOOKING_DAYS_AHEAD") or "14").strip() or "14")
 # Fallback window if BOOKING_SLOT_TIMES is empty (continuous half-hour slots).

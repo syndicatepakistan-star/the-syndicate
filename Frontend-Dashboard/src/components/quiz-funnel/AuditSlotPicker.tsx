@@ -100,7 +100,7 @@ function UserTimeSummary({
           {formatSlotRange(slotStart, slotEnd, userTimeZone)}
         </p>
         <p className="quiz-intake-booking__confirm-tz">
-          {userCityLabel || formatTimezoneLabel(userTimeZone)} · 30 minutes
+          {userCityLabel || formatTimezoneLabel(userTimeZone)} · 60 minutes
         </p>
       </div>
     </div>
@@ -430,7 +430,7 @@ export default function AuditSlotPicker({ intakeRef = "", email = "", firstName 
         }
       />
       <p className="quiz-intake-intro quiz-intake-booking__intro">
-        Pick a 30-minute slot in <strong>your local time</strong>. Times adjust when you change
+        Pick a 60-minute slot in <strong>your local time</strong>. Times adjust when you change
         city.
       </p>
 

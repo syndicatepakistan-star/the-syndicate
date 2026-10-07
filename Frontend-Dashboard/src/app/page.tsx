@@ -33,7 +33,8 @@ const HERO_LOGO_640 = '/assets/logo-lcp-640.webp'
 
 /** Critical hero CSS — paints before deferred Tailwind; must match final geometry (CLS). */
 const HOME_LCP_CRITICAL_CSS = `
-.home-page-root{background:#000;min-height:100dvh;min-width:0;overflow-x:clip;contain:paint}
+/* No contain/transform on .home-page-root — traps position:fixed NavApp and warps radial menu. */
+.home-page-root{background:#000;min-height:100dvh;min-width:0;overflow-x:clip}
 #heroSection{position:relative;height:100dvh;min-height:100dvh;max-height:100dvh;width:100%;overflow:hidden;background:#000;contain:layout paint}
 #heroSection>.relative.z-10{position:relative;z-index:10;height:100dvh;min-height:100dvh;width:100%;min-width:0;pointer-events:none}
 .home-hero-lcp-wrap{pointer-events:none;position:absolute;left:50%;top:50%;z-index:19;width:100%;max-width:min(1020px,calc(100% - 2rem));transform:translate(-50%,-50%);padding:0 .75rem;box-sizing:border-box}
@@ -51,7 +52,7 @@ export default function Home() {
   const programGalleryImages = getCuratedGlobeGalleryImages()
 
   return (
-    <div className="home-page-root public-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
+    <>
       <style dangerouslySetInnerHTML={{ __html: HOME_LCP_CRITICAL_CSS }} />
       {/* Mobile preload — 360 only (no 640 in srcset) */}
       <link
@@ -75,56 +76,59 @@ export default function Home() {
       />
       <DeferredPublicMarketingStyles />
       <JsonLd data={buildFaqPageJsonLd()} />
+      {/* Outside .home-page-root so position:fixed radial menu matches other pages. */}
       <NavApp />
-      <section
-        id="heroSection"
-        className="relative h-[100dvh] min-h-[100dvh] w-full min-w-0 overflow-hidden"
-      >
-        <HeroGlitchShell
-          glitchSpeed={70}
-          centerVignette
-          outerVignette
-          smooth
-          glitchColors={['#4a2b72', '#61dca3', '#61b3dc']}
-          layerOpacity={0.3}
-        />
-        <HomeHeroDeferredChrome />
-        <div className="home-hero-lcp-wrap">
-          <div className="hero-logo-pulse mx-auto w-full max-w-full">
-            <picture>
-              <source
-                media="(max-width: 767px)"
-                srcSet={`${HERO_LOGO_320} 320w, ${HERO_LOGO_360} 360w`}
-                sizes="320px"
-              />
-              <source
-                media="(min-width: 768px)"
-                srcSet={`${HERO_LOGO_360} 360w, ${HERO_LOGO_640} 640w`}
-                sizes="(max-width: 1024px) 360px, 640px"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={HERO_LOGO_360}
-                width={360}
-                height={144}
-                alt="ONEM Logo"
-                fetchPriority="high"
-                decoding="sync"
-                className="home-hero-lcp-logo"
-              />
-            </picture>
+      <div className="home-page-root public-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-black [overflow-anchor:none]">
+        <section
+          id="heroSection"
+          className="relative h-[100dvh] min-h-[100dvh] w-full min-w-0 overflow-hidden"
+        >
+          <HeroGlitchShell
+            glitchSpeed={70}
+            centerVignette
+            outerVignette
+            smooth
+            glitchColors={['#4a2b72', '#61dca3', '#61b3dc']}
+            layerOpacity={0.3}
+          />
+          <HomeHeroDeferredChrome />
+          <div className="home-hero-lcp-wrap">
+            <div className="hero-logo-pulse mx-auto w-full max-w-full">
+              <picture>
+                <source
+                  media="(max-width: 767px)"
+                  srcSet={`${HERO_LOGO_320} 320w, ${HERO_LOGO_360} 360w`}
+                  sizes="320px"
+                />
+                <source
+                  media="(min-width: 768px)"
+                  srcSet={`${HERO_LOGO_360} 360w, ${HERO_LOGO_640} 640w`}
+                  sizes="(max-width: 1024px) 360px, 640px"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={HERO_LOGO_360}
+                  width={360}
+                  height={144}
+                  alt="ONEM Logo"
+                  fetchPriority="high"
+                  decoding="sync"
+                  className="home-hero-lcp-logo"
+                />
+              </picture>
+            </div>
           </div>
-        </div>
-        <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
-      </section>
+          <div className="relative z-10 h-[100dvh] min-h-[100dvh] w-full min-w-0" aria-hidden />
+        </section>
 
-      <HomeEntityStatement />
-      <HomeGlobeSection images={programGalleryImages} />
-      <HomePricingSection />
-      <HomePaywallSection />
-      <HomeCertificatesSection />
-      <HomeFaqSection />
-      <HomeBottomSections />
-    </div>
+        <HomeEntityStatement />
+        <HomeGlobeSection images={programGalleryImages} />
+        <HomePricingSection />
+        <HomePaywallSection />
+        <HomeCertificatesSection />
+        <HomeFaqSection />
+        <HomeBottomSections />
+      </div>
+    </>
   )
 }

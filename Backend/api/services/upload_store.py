@@ -13,23 +13,29 @@ from django.core.files.uploadedfile import UploadedFile
 
 from api.models import UploadedDocument
 from api.services.document_extract import extract_text_from_bytes
+from api.services.upload_policy import DOC_PROFILE, STAFF_DOC_PROFILE, UploadProfile, assert_upload_bytes
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_SUFFIXES = frozenset({".pdf", ".txt", ".md", ".markdown", ".docx"})
+SUPPORTED_SUFFIXES = DOC_PROFILE.allowed_suffixes
 
 # Typed payload between prepare_upload_bytes (validation / extract) and persist_upload_to_storage (S3/disk).
 UploadPrepared = dict
 
 
-def prepare_upload_bytes(data: bytes, original_name: str) -> tuple[UploadPrepared | None, str | None]:
+def prepare_upload_bytes(
+    data: bytes,
+    original_name: str,
+    *,
+    profile: UploadProfile | None = None,
+) -> tuple[UploadPrepared | None, str | None]:
     """Validate, hash, extract text — no database or object storage (safe inside admin form validation)."""
     name = (original_name or "upload").strip() or "upload"
+    # Default: staff-sized profile (Django admin + staff API). Callers can pass DOC_PROFILE for tighter caps.
+    err = assert_upload_bytes(data, name, profile=profile or STAFF_DOC_PROFILE)
+    if err:
+        return None, err
     suffix = Path(name).suffix.lower()
-    if suffix not in SUPPORTED_SUFFIXES:
-        return None, f"Unsupported type. Use one of: {', '.join(sorted(SUPPORTED_SUFFIXES))}"
-    if not data:
-        return None, "Empty file."
     content_hash = hashlib.sha256(data).hexdigest()
     try:
         text = extract_text_from_bytes(data, suffix)
@@ -61,9 +67,14 @@ def persist_upload_to_storage(prepared: UploadPrepared) -> tuple[str | None, str
     return f"inline/{h}{suffix}", None
 
 
-def store_upload_bytes(data: bytes, original_name: str) -> tuple[UploadedDocument | None, str | None]:
+def store_upload_bytes(
+    data: bytes,
+    original_name: str,
+    *,
+    profile: UploadProfile | None = None,
+) -> tuple[UploadedDocument | None, str | None]:
     """API path: prepare + storage + single DB create."""
-    prepared, err = prepare_upload_bytes(data, original_name)
+    prepared, err = prepare_upload_bytes(data, original_name, profile=profile)
     if err:
         return None, err
     stored_path, err = persist_upload_to_storage(prepared)
@@ -81,11 +92,22 @@ def store_upload_bytes(data: bytes, original_name: str) -> tuple[UploadedDocumen
     return doc, None
 
 
-def store_uploaded_file(f: UploadedFile) -> tuple[UploadedDocument | None, str | None]:
+def store_uploaded_file(
+    f: UploadedFile,
+    *,
+    profile: UploadProfile | None = None,
+) -> tuple[UploadedDocument | None, str | None]:
     """
     Read upload in memory, extract text, save UploadedDocument.
     Does not write under data/uploads/ (avoids read-only / ephemeral disk issues on Railway).
+    Staff/admin callers should use STAFF_DOC_PROFILE (default).
     """
+    from api.services.upload_policy import assert_uploaded_file
+
+    use_profile = profile or STAFF_DOC_PROFILE
+    early = assert_uploaded_file(f, profile=use_profile)
+    if early:
+        return None, early
     name = getattr(f, "name", "upload") or "upload"
     data = b"".join(f.chunks())
-    return store_upload_bytes(data, name)
+    return store_upload_bytes(data, name, profile=use_profile)

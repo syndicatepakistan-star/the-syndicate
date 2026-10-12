@@ -1,6 +1,7 @@
 import csv
 
 from django.contrib import admin
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -120,6 +121,65 @@ class DiagnosisStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
+class AuditCompleteFilter(admin.SimpleListFilter):
+    """Intake form submitted = audit complete (matches Intake done column)."""
+
+    title = "Audit"
+    parameter_name = "audit"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("completed", "Completed"),
+            ("not_completed", "Not Completed"),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == "completed":
+            return queryset.filter(intake__isnull=False)
+        if self.value() == "not_completed":
+            return queryset.filter(intake__isnull=True)
+        return queryset
+
+
+class AuditBookingFilter(admin.SimpleListFilter):
+    title = "Audit booking"
+    parameter_name = "audit_booking"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("booked", "Booked"),
+            ("not_booked", "Not Booked"),
+            ("completed", "Completed"),
+            ("cancelled", "Cancelled"),
+            ("never", "Never booked"),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if not value:
+            return queryset
+        booking_exists = AuditBooking.objects.filter(user_id=OuterRef("pk"))
+        if value == "booked":
+            return queryset.filter(
+                Exists(booking_exists.filter(status=AuditBooking.Status.BOOKED))
+            )
+        if value == "not_booked":
+            return queryset.filter(
+                ~Exists(booking_exists.filter(status=AuditBooking.Status.BOOKED))
+            )
+        if value == "completed":
+            return queryset.filter(
+                Exists(booking_exists.filter(status=AuditBooking.Status.COMPLETED))
+            )
+        if value == "cancelled":
+            return queryset.filter(
+                Exists(booking_exists.filter(status=AuditBooking.Status.CANCELLED))
+            )
+        if value == "never":
+            return queryset.filter(~Exists(booking_exists))
+        return queryset
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = (
@@ -129,6 +189,7 @@ class UserAdmin(admin.ModelAdmin):
         "phone",
         "intake_ref",
         "intake_done",
+        "audit_booking_status",
         "diagnosis",
         "score",
         "category",
@@ -136,7 +197,7 @@ class UserAdmin(admin.ModelAdmin):
         "course_offer",
         "created_at",
     )
-    list_filter = (DiagnosisStatusFilter, "created_at")
+    list_filter = (DiagnosisStatusFilter, AuditCompleteFilter, AuditBookingFilter, "created_at")
     search_fields = ("name", "email", "phone", "intake_ref")
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
@@ -146,7 +207,12 @@ class UserAdmin(admin.ModelAdmin):
     readonly_fields = ("intake_link_display", "created_at")
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("result", "intake")
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("result", "intake")
+            .prefetch_related("audit_bookings")
+        )
 
     def get_urls(self):
         urls = super().get_urls()
@@ -220,6 +286,22 @@ class UserAdmin(admin.ModelAdmin):
     @admin.display(boolean=True, description="Intake done")
     def intake_done(self, obj):
         return getattr(obj, "intake", None) is not None
+
+    @admin.display(description="Audit booking")
+    def audit_booking_status(self, obj):
+        bookings = list(obj.audit_bookings.all())
+        if not bookings:
+            return "Not Booked"
+        # Prefer active booked, then completed, then latest by slot.
+        for status in (
+            AuditBooking.Status.BOOKED,
+            AuditBooking.Status.COMPLETED,
+            AuditBooking.Status.CANCELLED,
+        ):
+            match = next((b for b in bookings if b.status == status), None)
+            if match:
+                return match.get_status_display()
+        return bookings[0].get_status_display()
 
     @admin.display(description="Diagnosis")
     def diagnosis(self, obj):

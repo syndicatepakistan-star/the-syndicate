@@ -17,6 +17,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.models import MindsetKnowledge
+from api.services.upload_policy import VIDEO_PROFILE, assert_uploaded_file
+from apps.portal.api_guards import require_knight_tier_response
 
 from .models import (
     AdminAssignedTask,
@@ -26,14 +28,14 @@ from .models import (
     ReferralRestore,
     SyndicateUserProgress,
 )
-
-ADMIN_TASK_MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024
 from .device_batch_async import (
     device_generation_lock,
     is_device_generation_inflight,
     start_device_ai_batch_phase2,
 )
-from apps.portal.api_guards import require_knight_tier_response
+ADMIN_TASK_MAX_ATTACHMENT_BYTES = VIDEO_PROFILE.max_bytes
+ADMIN_TASK_MAX_RESPONSE_CHARS = 8_000
+
 from .services import (
     DAILY_SYSTEM_BATCH_SIZE,
     create_user_custom_challenge,
@@ -848,19 +850,14 @@ def admin_tasks_active(request):
     return Response({"results": rows})
 
 
-def _admin_task_attachment_is_video(upload) -> bool:
-    if upload is None or getattr(upload, "size", 0) == 0:
-        return False
-    ct = (getattr(upload, "content_type", None) or "").strip().lower()
-    if ct.startswith("video/"):
-        return True
-    name = (getattr(upload, "name", "") or "").lower()
-    return name.endswith((".webm", ".mp4", ".mov", ".mkv", ".m4v", ".ogv", ".avi"))
-
-
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def admin_task_submit(request):
     """Create one device submission for an admin-assigned task (multipart with required video)."""
+    blocked = require_knight_tier_response(request)
+    if blocked is not None:
+        return blocked
+
     device = _user_device_key(request)
     try:
         task_id = int(request.data.get("task_id"))
@@ -869,6 +866,11 @@ def admin_task_submit(request):
     response_text = (request.data.get("response_text") or "").strip()
     if len(response_text) < 3:
         return Response({"detail": "response_text too short"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(response_text) > ADMIN_TASK_MAX_RESPONSE_CHARS:
+        return Response(
+            {"detail": f"response_text too long (max {ADMIN_TASK_MAX_RESPONSE_CHARS} characters)."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     try:
         task = AdminAssignedTask.objects.get(id=task_id, active=True)
     except AdminAssignedTask.DoesNotExist:
@@ -885,15 +887,18 @@ def admin_task_submit(request):
     upload = request.FILES.get("attachment")
     if upload is not None and getattr(upload, "size", 0) == 0:
         upload = None
-    if not _admin_task_attachment_is_video(upload):
+    policy_err = assert_uploaded_file(upload, profile=VIDEO_PROFILE)
+    if policy_err:
         return Response(
             {
-                "detail": "A video attachment is required. Record or upload a video file (e.g. MP4 or WebM), max 50MB.",
+                "detail": (
+                    "A video attachment is required. Record or upload a real video file "
+                    f"(MP4/WebM/etc.), max {ADMIN_TASK_MAX_ATTACHMENT_BYTES // (1024 * 1024)}MB. "
+                    f"({policy_err})"
+                ),
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-    if upload.size > ADMIN_TASK_MAX_ATTACHMENT_BYTES:
-        return Response({"detail": "Attachment too large (max 50MB)."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Authoritative duration: from when the admin posted the bonus until this submit (server clock).
     elapsed_from_challenge_start = max(0, int((now - task.created_at).total_seconds()))

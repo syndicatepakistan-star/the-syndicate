@@ -14,8 +14,10 @@ from django.core.files.storage import default_storage
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
+
+from api.services.upload_policy import STAFF_DOC_PROFILE, is_staff_uploader
 
 from apps.challenges.models import GeneratedChallenge
 from apps.challenges.services import ensure_daily_challenges_for_device
@@ -25,6 +27,13 @@ from .services.document_extract import extract_text, extract_text_from_bytes, fi
 from .services.openai_client import extract_mindsets_from_document, normalize_mindset_ingest_payload
 from .services.storage_urls import document_presigned_download_url
 from .services.upload_store import SUPPORTED_SUFFIXES, store_uploaded_file
+
+
+class IsStaffOrSuperuser(BasePermission):
+    """Document ingest / bootstrap — staff & superuser only (never regular members)."""
+
+    def has_permission(self, request, view):
+        return bool(request.user and is_staff_uploader(request.user))
 
 
 def _record_ingest_attempt(doc: UploadedDocument, *, success: bool, error: str | None = None) -> None:
@@ -173,13 +182,14 @@ def mindset_status(_request):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, IsStaffOrSuperuser])
 def upload_document(request):
-    """Multipart: field ``file`` (pdf, txt, md, docx). Saves document only; call ``/api/documents/ingest/`` to run the mindset agent."""
+    """Multipart: field ``file`` (pdf, txt, md, docx). Staff/superuser only — not regular users."""
     f = request.FILES.get("file")
     if not f:
         return Response({"detail": "Missing file field."}, status=status.HTTP_400_BAD_REQUEST)
 
-    doc, err = store_uploaded_file(f)
+    doc, err = store_uploaded_file(f, profile=STAFF_DOC_PROFILE)
     if err:
         return Response({"detail": err}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -237,8 +247,9 @@ def document_download_url(request, document_id: int):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, IsStaffOrSuperuser])
 def ingest_document(request):
-    """Process uploaded document: extract mindsets via OpenAI."""
+    """Process uploaded document: extract mindsets via OpenAI. Staff/superuser only."""
     doc_id = request.data.get("document_id")
     if not doc_id:
         return Response({"detail": "document_id required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -257,9 +268,11 @@ def ingest_document(request):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, IsStaffOrSuperuser])
 def syndicate_bootstrap(request):
     """
     Scan data/uploads/, register files, optionally ingest + generate today's challenge.
+    Staff/superuser only — not regular users.
 
     Body: auto_ingest (default true), auto_challenge (default true), mood (default "stressed"),
           force_reingest (default false).

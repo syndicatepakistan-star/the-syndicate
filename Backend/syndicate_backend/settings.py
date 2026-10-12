@@ -224,10 +224,9 @@ USE_S3_OBJECT_STORAGE = _s3_object_storage_cfg is not None
 SYNDICATE_DATA_DIR = BASE_DIR / "data"
 SYNDICATE_MAX_DOC_CHARS = 120_000
 
-# Admin/API multipart uploads.
-# Keep large request acceptance high for admin video uploads, but keep in-memory buffering small
-# so large files spool to temporary files on disk instead of exhausting RAM.
-_DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "15360").strip() or "15360")
+# Admin/API multipart uploads (staff docs up to 100MB + challenge videos 50MB).
+# Large staff streaming videos use R2 multipart (STREAM_DIRECT_UPLOAD_*), not this limit.
+_DATA_UPLOAD_MAX_MB = int((os.environ.get("DATA_UPLOAD_MAX_MB") or "128").strip() or "128")
 DATA_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _DATA_UPLOAD_MAX_MB * 1024 * 1024)
 _FILE_UPLOAD_MAX_MEMORY_MB = int((os.environ.get("FILE_UPLOAD_MAX_MEMORY_MB") or "8").strip() or "8")
 FILE_UPLOAD_MAX_MEMORY_SIZE = max(2_621_440, _FILE_UPLOAD_MAX_MEMORY_MB * 1024 * 1024)

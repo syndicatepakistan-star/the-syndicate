@@ -1,0 +1,122 @@
+"use client";
+
+import { useCallback, useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
+import { ExternalLink, X } from "lucide-react";
+import { cn } from "@/lib/cn";
+import {
+  resolvePackDemoUrl,
+  VIMEO_PACK_DEMO_LABEL,
+} from "@/components/programs/packDemoLinks";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+
+type Props = {
+  /** Pack plan slug: bundle | agentic_ai | ai_content_automation | trading_technical_analysis */
+  plan: string;
+  className?: string;
+  /** Extra border theme from parent modal (colors only). */
+  borderClassName?: string;
+};
+
+/**
+ * Same visual CTA as before — opens a lightweight player only after click.
+ * Video src is set on open so /programs first paint never downloads demos.
+ */
+export function PackDemoWatchButton({ plan, className, borderClassName }: Props) {
+  const titleId = useId();
+  const demoUrl = resolvePackDemoUrl(plan);
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  useModalScrollLock(open);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const onOpen = useCallback(() => {
+    if (!demoUrl) return;
+    setOpen(true);
+  }, [demoUrl]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={!demoUrl}
+        title={demoUrl ? VIMEO_PACK_DEMO_LABEL : "Demo video coming soon"}
+        aria-label={demoUrl ? VIMEO_PACK_DEMO_LABEL : "Demo video coming soon"}
+        className={cn(
+          "inline-flex w-fit max-w-full items-center gap-2 rounded-xl border-2 px-4 py-2.5",
+          "font-mono text-[11px] font-black uppercase tracking-[0.14em] sm:text-[12px]",
+          "border-white/35 bg-white/5 text-white",
+          demoUrl
+            ? "cursor-pointer transition hover:border-white/55 hover:bg-white/10"
+            : "cursor-default opacity-70",
+          borderClassName,
+          className,
+        )}
+      >
+        {VIMEO_PACK_DEMO_LABEL}
+        <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+      </button>
+
+      {mounted && open && demoUrl
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-[2px]"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              onClick={() => setOpen(false)}
+            >
+              <div
+                className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_0_48px_rgba(0,0,0,0.65)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                  <p
+                    id={titleId}
+                    className="font-mono text-[11px] font-black uppercase tracking-[0.14em] text-white/85"
+                  >
+                    {VIMEO_PACK_DEMO_LABEL}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/25 text-white/80 hover:border-white/45 hover:text-white"
+                    aria-label="Close demo video"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+                <div className="aspect-video w-full bg-black">
+                  {/* src only while open — no preload on Programs page */}
+                  <video
+                    key={demoUrl}
+                    src={demoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full"
+                  >
+                    <a href={demoUrl} target="_blank" rel="noopener noreferrer">
+                      Open demo video
+                    </a>
+                  </video>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}

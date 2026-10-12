@@ -24,6 +24,14 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 @media (min-width:640px){.programs-lcp-media{max-height:15rem}}
 .programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
 .programs-offers-shell{position:relative;z-index:1;margin:0 auto;width:100%;max-width:min(100%,calc(80rem + 300px));overflow:visible}
+/* First-paint: keep heading/button colors, pause CLS-heavy animations until .programs-page-root--fx-ready */
+.programs-page-root:not(.programs-page-root--fx-ready) .public-heading-lightning,
+.programs-page-root:not(.programs-page-root--fx-ready) .playlist-category-heading-lightning,
+.programs-page-root:not(.programs-page-root--fx-ready) .hero-hamburger-pulse,
+.programs-page-root:not(.programs-page-root--fx-ready) .level1-unlock-all-btn,
+.programs-page-root:not(.programs-page-root--fx-ready) .hamburger-attract{
+  animation:none!important
+}
 `;
 
 export default function ProgramsLayout({ children }: { children: ReactNode }) {

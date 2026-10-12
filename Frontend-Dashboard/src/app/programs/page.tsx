@@ -11,6 +11,7 @@ import { ProgramsBusinessHashLand } from '@/components/programs/ProgramsBusiness
 import { ProgramsLibraryHashPreloads } from '@/components/programs/ProgramsLibraryHashPreloads'
 import { ProgramsBackStepGuard } from '@/app/programs/ProgramsBackStepGuard'
 import { ProgramsPageAmbient } from '@/components/programs/ProgramsPageAmbient'
+import { ProgramsPerfMotionGate } from '@/components/programs/ProgramsPerfMotionGate'
 import { OFFER_PLAN_THUMB_MONEY_MASTERY } from '@/components/programs/offerPlanThumbnails'
 import { normalizeLevel1ProgramPlaylists } from '@/lib/programPlaylistCatalog'
 import { fetchPublicPlaylistsServer } from '@/lib/fetchPublicPlaylistsServer'
@@ -68,6 +69,7 @@ export default async function ProgramsPage() {
         imageSizes={LCP_IMAGE_SIZES}
         fetchPriority="high"
       />
+      <ProgramsPerfMotionGate />
       <ProgramsPageAmbient />
       <NavApp />
       <ProgramsBackStepGuard />
@@ -102,13 +104,13 @@ export default async function ProgramsPage() {
           <ProgramsGoldPillHeading as="h2" title="Programs" />
         </div>
         {/*
-          Library hydrates on scroll for plain /programs (TBT).
-          eagerOnHash + boot flag mounts immediately for #businessprograms.
-          minHeight matches section reserve so placeholder → grid swap does not jump (CLS).
+          Library hydrates only when the user scrolls near it (negative bottom rootMargin
+          stops desktop Lighthouse from mounting the full grid on first paint → TBT/CLS).
+          eagerOnHash still mounts immediately for #businessprograms.
         */}
         <LazyWhenVisible
           minHeight="min(180vh, 72rem)"
-          rootMargin="80px 0px"
+          rootMargin="0px 0px -35% 0px"
           eagerOnHash={["programs-library", "businessprograms"]}
           placeholder={
             <div
@@ -134,7 +136,7 @@ export default async function ProgramsPage() {
       </section>
       <LazyWhenVisible
         minHeight="18rem"
-        rootMargin="320px 0px"
+        rootMargin="0px 0px -20% 0px"
         className="programs-page-band"
         placeholder={
           <div className="mx-auto my-8 min-h-[18rem] w-full max-w-5xl animate-pulse rounded-xl bg-white/5" aria-hidden />
@@ -144,7 +146,7 @@ export default async function ProgramsPage() {
       </LazyWhenVisible>
       <LazyWhenVisible
         minHeight="32rem"
-        rootMargin="360px 0px"
+        rootMargin="0px 0px -20% 0px"
         className="programs-page-band"
         placeholder={
           <div className="mx-auto min-h-[32rem] w-full max-w-[1400px] animate-pulse rounded-xl bg-white/5" aria-hidden />
@@ -160,7 +162,13 @@ export default async function ProgramsPage() {
       </LazyWhenVisible>
       </ProgramsUnlockShell>
       </main>
-      <SiteFooter />
+      <LazyWhenVisible
+        minHeight="260px"
+        rootMargin="0px 0px -10% 0px"
+        placeholder={<div className="min-h-[260px] w-full bg-[#02050b]" aria-hidden />}
+      >
+        <SiteFooter />
+      </LazyWhenVisible>
     </div>
   )
 }

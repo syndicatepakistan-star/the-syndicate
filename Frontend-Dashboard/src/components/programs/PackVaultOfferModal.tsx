@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ExternalLink, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { LazyVaultModuleCell } from "@/components/programs/LazyVaultModuleCell";
 import { PlanOfferCard } from "@/components/programs/PlanOfferCard";
@@ -29,7 +29,7 @@ import {
 import { isVaultOfferUnlocked, resolveOfferActionLabel } from "@/components/programs/vaultUnlock";
 import { isUnlockCartEligible } from "@/lib/unlockCart";
 import { resolveOfferCardStats } from "@/components/programs/vaultProgramCardStats";
-import { VIMEO_PACK_DEMO_LABEL } from "@/components/programs/packDemoLinks";
+import { PackDemoWatchButton } from "@/components/programs/PackDemoWatchButton";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
@@ -316,17 +316,7 @@ export function PackVaultOfferModal({
             </div>
 
             <div className="vault-hero-offer-row__copy flex min-w-0 flex-col items-start justify-start gap-3">
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex w-fit max-w-full cursor-default items-center gap-2 rounded-xl border-2 px-4 py-2.5",
-                  "font-mono text-[11px] font-black uppercase tracking-[0.14em] sm:text-[12px]",
-                  "border-white/35 bg-white/5 text-white",
-                )}
-              >
-                {VIMEO_PACK_DEMO_LABEL}
-                <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
-              </button>
+              <PackDemoWatchButton plan={packOffer.plan} />
               {packUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
                   Pack unlocked — choose a module below and tap Details.

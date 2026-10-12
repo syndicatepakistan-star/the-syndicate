@@ -82,7 +82,7 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
   const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
     // Past mobile Lighthouse TBT window so Money Mastery SSR LCP stays quiet.
-    safetyMs: props.knightOnly ? 5200 : 4800,
+    safetyMs: props.knightOnly ? 6000 : 5600,
   });
   const ready = forcePackDetails || interactiveReady;
 

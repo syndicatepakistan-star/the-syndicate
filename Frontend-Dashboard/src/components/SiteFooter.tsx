@@ -40,8 +40,11 @@ export default function SiteFooter({
               alt="syndicate logo"
               width={360}
               height={120}
+              sizes="(max-width: 639px) 200px, (max-width: 1023px) 280px, 360px"
+              quality={70}
               className="hamburger-attract h-[clamp(5.2rem,11vw,8.5rem)] w-auto object-contain"
               priority={false}
+              loading="lazy"
             />
           </div>
 

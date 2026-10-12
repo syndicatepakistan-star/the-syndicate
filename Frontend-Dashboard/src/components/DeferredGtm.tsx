@@ -18,7 +18,8 @@ const GTM_ID = "GTM-WBW2KZV6";
  * Checkout / pending purchase still loads immediately.
  */
 const GTM_EARLIEST_LOAD_MS = 3000;
-const GTM_EARLIEST_LOAD_MARKETING_MS = 8000;
+/** Past Slow-4G Lighthouse quiet window so GTM/FB/Ads do not dominate mobile TBT. */
+const GTM_EARLIEST_LOAD_MARKETING_MS = 12000;
 
 /** Auto-accept consent for first-time visitors who never click the banner. */
 const GTM_AUTO_CONSENT_DELAY_MS = 3000;

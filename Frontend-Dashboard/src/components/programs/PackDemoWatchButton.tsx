@@ -5,28 +5,39 @@ import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
+  MODULE_DEMO_LABEL,
   resolvePackDemoUrl,
   VIMEO_PACK_DEMO_LABEL,
 } from "@/components/programs/packDemoLinks";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 type Props = {
-  /** Pack plan slug: bundle | agentic_ai | ai_content_automation | trading_technical_analysis */
+  /** Pack or module plan slug (e.g. agentic_ai, agentic_ai_c14). */
   plan: string;
   className?: string;
-  /** Extra border theme from parent modal (colors only). */
   borderClassName?: string;
+  /** Shorter label + sizing for module cards. */
+  compact?: boolean;
+  /** Hide entirely when no CDN URL (default true for less clutter). */
+  hideWhenMissing?: boolean;
 };
 
 /**
- * Same visual CTA as before — opens a lightweight player only after click.
- * Video src is set on open so /programs first paint never downloads demos.
+ * Opens a lightweight player only after click.
+ * Video src is set on open — never downloads on Programs first paint.
  */
-export function PackDemoWatchButton({ plan, className, borderClassName }: Props) {
+export function PackDemoWatchButton({
+  plan,
+  className,
+  borderClassName,
+  compact = false,
+  hideWhenMissing = true,
+}: Props) {
   const titleId = useId();
   const demoUrl = resolvePackDemoUrl(plan);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const label = compact ? MODULE_DEMO_LABEL : VIMEO_PACK_DEMO_LABEL;
 
   useEffect(() => setMounted(true), []);
   useModalScrollLock(open);
@@ -45,18 +56,23 @@ export function PackDemoWatchButton({ plan, className, borderClassName }: Props)
     setOpen(true);
   }, [demoUrl]);
 
+  if (!demoUrl && hideWhenMissing) return null;
+
   return (
     <>
       <button
         type="button"
         onClick={onOpen}
         disabled={!demoUrl}
-        title={demoUrl ? VIMEO_PACK_DEMO_LABEL : "Demo video coming soon"}
-        aria-label={demoUrl ? VIMEO_PACK_DEMO_LABEL : "Demo video coming soon"}
+        title={demoUrl ? label : "Demo video coming soon"}
+        aria-label={demoUrl ? label : "Demo video coming soon"}
         className={cn(
-          "inline-flex w-fit max-w-full items-center gap-2 rounded-xl border-2 px-4 py-2.5",
-          "font-mono text-[11px] font-black uppercase tracking-[0.14em] sm:text-[12px]",
-          "border-white/35 bg-white/5 text-white",
+          "inline-flex w-full max-w-full items-center justify-center gap-2 rounded-xl border-2",
+          "font-mono font-black uppercase text-white",
+          compact
+            ? "gap-1.5 px-1.5 py-1.5 text-[9px] tracking-[0.09em] sm:text-[10px]"
+            : "w-fit gap-2 px-4 py-2.5 text-[11px] tracking-[0.14em] sm:text-[12px]",
+          "border-white/35 bg-white/5",
           demoUrl
             ? "cursor-pointer transition hover:border-white/55 hover:bg-white/10"
             : "cursor-default opacity-70",
@@ -64,8 +80,11 @@ export function PackDemoWatchButton({ plan, className, borderClassName }: Props)
           className,
         )}
       >
-        {VIMEO_PACK_DEMO_LABEL}
-        <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+        {label}
+        <ExternalLink
+          className={cn("shrink-0 opacity-80", compact ? "h-3 w-3" : "h-3.5 w-3.5")}
+          aria-hidden
+        />
       </button>
 
       {mounted && open && demoUrl
@@ -86,7 +105,7 @@ export function PackDemoWatchButton({ plan, className, borderClassName }: Props)
                     id={titleId}
                     className="font-mono text-[11px] font-black uppercase tracking-[0.14em] text-white/85"
                   >
-                    {VIMEO_PACK_DEMO_LABEL}
+                    {label}
                   </p>
                   <button
                     type="button"
@@ -98,7 +117,6 @@ export function PackDemoWatchButton({ plan, className, borderClassName }: Props)
                   </button>
                 </div>
                 <div className="aspect-video w-full bg-black">
-                  {/* src only while open — no preload on Programs page */}
                   <video
                     key={demoUrl}
                     src={demoUrl}

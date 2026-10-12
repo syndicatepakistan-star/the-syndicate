@@ -316,7 +316,7 @@ export function PackVaultOfferModal({
             </div>
 
             <div className="vault-hero-offer-row__copy flex min-w-0 flex-col items-start justify-start gap-3">
-              <PackDemoWatchButton plan={packOffer.plan} />
+              <PackDemoWatchButton plan={packOffer.plan} hideWhenMissing />
               {packUnlocked ? (
                 <p className="text-left font-mono text-[11px] text-emerald-300/90">
                   Pack unlocked — choose a module below and tap Details.

@@ -11,6 +11,8 @@ import { MoneyMasteryCardInclusions } from "@/components/programs/MoneyMasteryCa
 import { MidTicketPackInclusions } from "@/components/programs/MidTicketPackInclusions";
 import { ProgramCardStatsLines } from "@/components/programs/ProgramCardStatsLines";
 import { ReadMoreText } from "@/components/programs/ReadMoreText";
+import { PackDemoWatchButton } from "@/components/programs/PackDemoWatchButton";
+import { hasPublicDemo } from "@/components/programs/packDemoLinks";
 import { isTradingModuleSlug, isTradingSubmoduleSlug } from "@/components/programs/tradingVaultCatalog";
 import { isVaultPackKey } from "@/components/programs/vaultPackCatalog";
 import type { ProgramCardStats } from "@/components/programs/vaultProgramCardStats";
@@ -680,6 +682,18 @@ export function PlanOfferCard({
               ) : null}
               <span className="sr-only">_</span>
 
+              {isModule && hasPublicDemo(offer.plan) ? (
+                <div
+                  className={cn(
+                    "relative z-10 shrink-0",
+                    isModule && "mt-2",
+                    tradingMobileProgramFace && "max-xl:mt-auto",
+                  )}
+                >
+                  <PackDemoWatchButton plan={offer.plan} compact />
+                </div>
+              ) : null}
+
               <div
                 className={cn(
                   hidePrimaryAction ? "grid grid-cols-1" : "grid grid-cols-2",
@@ -687,6 +701,7 @@ export function PlanOfferCard({
                   isLarge && isPack && "gap-1.5 pt-2 sm:gap-2",
                   isLarge && !isPack && "gap-2 pt-2 sm:gap-2.5",
                   isModule && "mt-2 gap-1",
+                  isModule && hasPublicDemo(offer.plan) && "mt-1",
                   tradingMobileProgramFace && "max-xl:mt-auto max-xl:gap-1.5",
                   isCompact && isPack && "mt-1.5 gap-1",
                   isCompact && !isPack && "mt-2 gap-1"

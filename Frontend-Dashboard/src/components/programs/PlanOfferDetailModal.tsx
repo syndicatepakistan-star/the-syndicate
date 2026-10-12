@@ -273,7 +273,11 @@ export function PlanOfferDetailModal({ offer, onClose, onUnlock, unlockBusy = fa
 
           {showPackDemo ? (
             <div className="mt-6 flex justify-start">
-              <PackDemoWatchButton plan={offer.plan} borderClassName={theme.featureBorder} />
+              <PackDemoWatchButton
+                plan={offer.plan}
+                borderClassName={theme.featureBorder}
+                hideWhenMissing
+              />
             </div>
           ) : null}
 

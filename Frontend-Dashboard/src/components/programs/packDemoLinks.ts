@@ -25,7 +25,7 @@ const DEMO_CDN_BASE = (
 
 const AGENTIC_TRAILER_DIR = "Programs Demos/Ai Automation Trailer";
 const AI_CONTENT_TRAILER_DIR = "Programs Demos/Ai Content Automation";
-
+const Trading_Technical_Analysis_DIR = "Programs Demos/Trading Trailer";
 /**
  * Pack-level trailers (whole vault / Money Mastery).
  * Leave blank until you upload a true pack trailer.
@@ -133,6 +133,13 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   ai_content_c28: `${AI_CONTENT_TRAILER_DIR}/Create Viral inspirational finance Videos with Fre_converted.mp4`,
   // c29 Clone ANY YouTube Channel With AI (NotebookLM Hack)
   ai_content_c29: `${AI_CONTENT_TRAILER_DIR}/Clone ANY YouTube Channel With AI (NotebookLM Hack_converted.mp4`,
+
+  // Trading Technical Analysis Modules
+  trading_scalpel_protocol: `${Trading_Technical_Analysis_DIR}/The Scalpel Protocol Architecting Wealth on the 1-Minute Chart_converted.mp4`,
+  trading_master_strategies: `${Trading_Technical_Analysis_DIR}/Starategies_converted.mp4`,
+  trading_master_setups: `${Trading_Technical_Analysis_DIR}/Setups_converted.mp4`,
+  trading_master_secrets: `${Trading_Technical_Analysis_DIR}/Secrets_converted.mp4`,
+
 };
 
 /** Rare full-URL overrides (pack or module plan slug → https://…). */

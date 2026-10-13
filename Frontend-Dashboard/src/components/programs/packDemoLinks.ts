@@ -24,7 +24,7 @@ const DEMO_CDN_BASE = (
   .replace(/\/+$/, "");
 
 const AGENTIC_TRAILER_DIR = "Programs Demos/Ai Automation Trailer";
-const AI_CONTENT_TRAILER_DIR = "Programs Demos/AI Content Trailer";
+const AI_CONTENT_TRAILER_DIR = "Programs Demos/Ai Content Automation";
 
 /**
  * Pack-level trailers (whole vault / Money Mastery).
@@ -46,7 +46,7 @@ const PACK_DEMO_OBJECT_KEYS: Partial<Record<PackDemoKey, string>> = {
  * - agentic_ai_c22 n8n MCP Servers tutorial
  * - agentic_ai_c26 Agentic Workflow for Businesses
  *
- * If AI Content folder name in R2 differs from `AI Content Trailer`, update AI_CONTENT_TRAILER_DIR.
+ * AI Content R2 folder: `Programs Demos/Ai Content Automation`
  */
 const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   // ——— Agentic AI (ai_content uses ai_content_c##) ———

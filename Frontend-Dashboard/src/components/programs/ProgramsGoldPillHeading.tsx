@@ -100,7 +100,14 @@ export function ProgramsGoldPillHeading({
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] justify-center px-[clamp(1rem,3.2vw,1.5rem)] sm:px-6">
-      <div className={cn("relative max-w-full overflow-hidden rounded-[999px]", c.shell, shellPad)}>
+      <div
+        className={cn(
+          "programs-gold-pill relative max-w-full overflow-hidden rounded-[999px]",
+          size === "compact" && "programs-gold-pill--compact",
+          c.shell,
+          shellPad
+        )}
+      >
         <span className="programs-heading-bg-shine pointer-events-none absolute inset-0 rounded-[999px]" />
         <span className={cn("pointer-events-none absolute inset-[4px] rounded-[999px] border", c.innerRing)} />
         <span
@@ -118,6 +125,7 @@ export function ProgramsGoldPillHeading({
         <span className={cn("pointer-events-none absolute inset-0 rounded-[999px] opacity-45", c.radial)} />
         <Tag
           className={cn(
+            "programs-gold-pill__title",
             publicHeadingLightning(PILL_LIGHTNING[chrome]),
             "relative text-center font-black uppercase tracking-[0.14em]",
             c.title,

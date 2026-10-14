@@ -79,7 +79,7 @@ export default async function ProgramsPage() {
       <ProgramsUnlockShell>
       <section
         id="syndicate-elite-offers"
-        className="programs-page-band mobile-viewport-contain relative z-[2] min-h-[min(70vh,36rem)] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:min-h-[40rem] sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
+        className="programs-page-band mobile-viewport-contain relative z-[2] min-h-[min(160vh,72rem)] scroll-mt-24 space-y-4 overflow-visible px-[clamp(0.5rem,2.5vw,1rem)] pt-6 sm:min-h-[56rem] sm:space-y-8 sm:px-[clamp(1rem,3.2vw,1.5rem)] sm:pt-10 lg:min-h-[48rem] 2xl:px-[clamp(1.5rem,2vw,2.5rem)]"
       >
         <ProgramsGoldPillHeading as="h1" title="Syndicate Elite Offers" size="compact" />
         <p className="mx-auto max-w-3xl px-1 text-center font-mono text-[clamp(0.7rem,2.8vw,0.875rem)] leading-relaxed text-zinc-300/90 sm:text-sm xl:max-w-4xl">

@@ -81,8 +81,8 @@ function hasPackDetailsDeepLink(): boolean {
 export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
   const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
-    // Past mobile Lighthouse TBT window so Money Mastery SSR LCP stays quiet.
-    safetyMs: props.knightOnly ? 6000 : 5600,
+    // Past mobile Lighthouse CLS/TBT window so Money Mastery SSR LCP stays quiet.
+    safetyMs: props.knightOnly ? 7000 : 6800,
   });
   const ready = forcePackDetails || interactiveReady;
 

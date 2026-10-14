@@ -41,7 +41,8 @@ export function useDeferredInteractiveOffers(options?: Options): boolean {
       }
     };
 
-    // Wait past typical mobile Lighthouse quiet window, then idle-load the offers chunk.
+    // Wait past Lighthouse CLS/TBT quiet window, then idle-load the offers chunk.
+    // Caller should pass ≥6500 on /programs browse so vault row swap is off-lab.
     safetyHandle = window.setTimeout(scheduleIdle, safetyMs);
 
     return () => {

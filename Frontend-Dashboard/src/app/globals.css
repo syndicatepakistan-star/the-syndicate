@@ -131,7 +131,8 @@
     url("/fonts/Thryon.woff") format("woff"),
     url("/fonts/Thryon.ttf") format("truetype"),
     url("/fonts/Thryon.otf") format("opentype");
-  font-display: swap;
+  /* optional — no late font swap CLS (PageSpeed killer on /programs headings) */
+  font-display: optional;
   font-weight: 100 900;
   font-style: normal;
 }
@@ -144,7 +145,7 @@
     url("/fonts/Thryon.woff") format("woff"),
     url("/fonts/Thryon.ttf") format("truetype"),
     url("/fonts/Thryon.otf") format("opentype");
-  font-display: swap;
+  font-display: optional;
   font-weight: 100 900;
   font-style: normal;
 }
@@ -1269,97 +1270,40 @@ p.programs-stat-heading,
 }
 
 /* Shared instructor-style heading lightning (public site + dashboard + pill titles) */
+/* Opacity only (composited) — no color/filter keyframes (those hurt CLS). */
 @keyframes syndicate-heading-lightning {
   0%,
-  100% {
-    color: color-mix(in srgb, var(--heading-neon-bright, #c4b5fd) 88%, white);
-    text-shadow:
-      0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 14px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 26px var(--heading-neon-haze, rgba(139, 92, 246, 0.28));
-    filter: drop-shadow(0 0 2px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
-  }
-  42% {
-    color: var(--heading-neon-bright, #c4b5fd);
-    text-shadow:
-      0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 22px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 40px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 58px var(--heading-neon-haze, rgba(139, 92, 246, 0.28)),
-      0 0 72px var(--heading-neon-haze, rgba(139, 92, 246, 0.28));
-    filter: drop-shadow(0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
-      drop-shadow(0 0 14px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
+  100%,
+  42%,
+  52% {
+    opacity: 1;
   }
   48% {
-    text-shadow:
-      0 0 4px var(--heading-neon-haze, rgba(139, 92, 246, 0.28)),
-      0 0 10px var(--heading-neon-haze, rgba(139, 92, 246, 0.28));
-    filter: none;
-  }
-  52% {
-    text-shadow:
-      0 0 8px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 18px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 34px var(--heading-neon-haze, rgba(139, 92, 246, 0.28));
-    filter: drop-shadow(0 0 4px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
+    opacity: 0.78;
   }
 }
 
 .public-heading-lightning {
   font-family: var(--font-heading);
   animation: syndicate-heading-lightning 1.65s ease-in-out infinite;
-  transition: color 0.45s ease;
   color: var(--heading-neon-bright);
+  text-shadow:
+    0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
+    0 0 22px var(--heading-neon-haze, rgba(139, 92, 246, 0.28));
+  filter: drop-shadow(0 0 4px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)));
 }
 
 /* Programs library column titles — 72pt-scale glow + lightning flicker */
 @keyframes playlist-category-heading-lightning {
   0%,
-  100% {
-    color: color-mix(in srgb, var(--heading-neon-bright, #c4b5fd) 90%, white);
-    text-shadow:
-      0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 24px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 42px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)),
-      0 0 64px var(--heading-neon-haze, rgba(139, 92, 246, 0.32)),
-      0 0 88px var(--heading-neon-haze, rgba(139, 92, 246, 0.22));
-    filter: drop-shadow(0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
-      drop-shadow(0 0 16px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)));
-  }
-  36% {
-    color: #fff;
-    text-shadow:
-      0 0 14px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 32px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 56px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 80px var(--heading-neon-glow, rgba(167, 139, 250, 0.45)),
-      0 0 104px var(--heading-neon-haze, rgba(139, 92, 246, 0.36)),
-      0 0 128px var(--heading-neon-haze, rgba(139, 92, 246, 0.24));
-    filter: drop-shadow(0 0 10px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
-      drop-shadow(0 0 24px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)))
-      drop-shadow(0 0 48px var(--heading-neon-haze, rgba(139, 92, 246, 0.32)));
+  100%,
+  36%,
+  46%,
+  52% {
+    opacity: 1;
   }
   43% {
-    color: color-mix(in srgb, var(--heading-neon-bright, #c4b5fd) 55%, transparent);
-    text-shadow:
-      0 0 6px var(--heading-neon-haze, rgba(139, 92, 246, 0.28)),
-      0 0 14px var(--heading-neon-haze, rgba(139, 92, 246, 0.22));
-    filter: none;
-  }
-  46% {
-    color: var(--heading-neon-bright, #c4b5fd);
-    text-shadow:
-      0 0 18px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 38px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 62px var(--heading-neon-haze, rgba(139, 92, 246, 0.32));
-    filter: drop-shadow(0 0 8px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
-  }
-  52% {
-    text-shadow:
-      0 0 12px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 28px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)),
-      0 0 50px var(--heading-neon-haze, rgba(139, 92, 246, 0.32));
-    filter: drop-shadow(0 0 6px var(--heading-neon-glow, rgba(167, 139, 250, 0.55)));
+    opacity: 0.6;
   }
 }
 

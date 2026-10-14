@@ -19,7 +19,7 @@ export const thryonHeadingFont = localFont({
       style: "normal",
     },
   ],
-  display: "swap",
+  display: "optional",
   adjustFontFallback: false,
   fallback: ["Thryon", "Thyron", "ui-sans-serif", "system-ui", "sans-serif"],
 });

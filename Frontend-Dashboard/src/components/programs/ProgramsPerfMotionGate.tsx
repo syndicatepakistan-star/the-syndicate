@@ -36,8 +36,8 @@ export function ProgramsPerfMotionGate() {
       }
     };
 
-    // Past typical mobile Lighthouse TBT/CLS window; interaction unlocks sooner.
-    safetyHandle = window.setTimeout(scheduleIdle, 5200);
+    // Past Lighthouse lab CLS session (~5s) + mobile TBT quiet window.
+    safetyHandle = window.setTimeout(scheduleIdle, 7500);
 
     return () => {
       cancelled = true;

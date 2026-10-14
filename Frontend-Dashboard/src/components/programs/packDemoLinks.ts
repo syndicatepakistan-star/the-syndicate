@@ -59,7 +59,7 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   agentic_ai_c06: `${AGENTIC_TRAILER_DIR}/Claude Code just changed Memory Forever (Tutorial)_converted.mp4`,
   agentic_ai_c07: `${AGENTIC_TRAILER_DIR}/10 Insane Claude Cowork Automations Nobody Is Talking About-_converted.mp4`,
   agentic_ai_c08: `${AGENTIC_TRAILER_DIR}/Scrap Any Website with N8N_converted.mp4`,
-  agentic_ai_c09: `${AGENTIC_TRAILER_DIR}/n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)_converted.mp4`,
+  agentic_ai_c09: `${AGENTIC_TRAILER_DIR}/Set up Google Credentials in n8n in 5 minutes (2025)_converted.mp4`,
   agentic_ai_c10: `${AGENTIC_TRAILER_DIR}/Google Antigravity FULL COURSE 2 HOURS_converted.mp4`,
   agentic_ai_c11: `${AGENTIC_TRAILER_DIR}/n8n Tutorial 37 Tips and Tricks (n8n Mastercl_converted.mp4`,
   agentic_ai_c12: `${AGENTIC_TRAILER_DIR}/CLAUDE CODE ADVANCED COURSE — 3 HOURS_converted.mp4`,
@@ -72,11 +72,11 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   agentic_ai_c19: `${AGENTIC_TRAILER_DIR}/From Zero to RAG Agent_converted.mp4`,
   agentic_ai_c20: `${AGENTIC_TRAILER_DIR}/Insane Youtube Automation!_converted.mp4`,
   agentic_ai_c21: `${AGENTIC_TRAILER_DIR}/n8n Blogging Automation_ Generate SEO Blogs in Minutes_converted.mp4`,
-  agentic_ai_c22: `${AGENTIC_TRAILER_DIR}/Agentic WorkFlow For Buisnesses-2_converted.mp4`,
+  agentic_ai_c22: `${AGENTIC_TRAILER_DIR}/n8n Tutorial Build ANYTHING with MCP Servers in n8n (Beginner to Pro)_converted.mp4`,
   agentic_ai_c23: `${AGENTIC_TRAILER_DIR}/Never label gmail emails again_converted.mp4`,
   agentic_ai_c24: `${AGENTIC_TRAILER_DIR}/Stop Learning n8n in 2026.._converted.mp4`,
   agentic_ai_c25: `${AGENTIC_TRAILER_DIR}/VIBE CODING FULL COURSE_ Gemini 3_converted.mp4`,
-  agentic_ai_c26: `${AGENTIC_TRAILER_DIR}/Set up Google Credentials in n8n in 5 minutes (2025)_converted.mp4`,
+  agentic_ai_c26: `${AGENTIC_TRAILER_DIR}/Agentic WorkFlow For Buisnesses-2_converted.mp4`,
   // ——— AI Content Automation (29 modules) ———
   // c01 Beginners Guide to Faceless YouTube in 2026 (3 hours)
   ai_content_c01: `${AI_CONTENT_TRAILER_DIR}/Beginners Guide to Faceless YouTube in 2026 (3 hours)_converted.mp4`,

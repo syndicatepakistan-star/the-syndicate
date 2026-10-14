@@ -68,6 +68,8 @@ import {
   playlistToCartItem,
 } from "@/lib/unlockCart";
 import { lazyToast, lazyToastSuccess } from "@/lib/lazyUnlockCheckout";
+import { PackDemoWatchButton } from "@/components/programs/PackDemoWatchButton";
+import { hasPublicDemo } from "@/components/programs/packDemoLinks";
 
 function playlistProgramsReturnHref(pl: StreamPlaylistListItem): string {
   const slug = pl.slug?.trim();
@@ -798,7 +800,18 @@ export function PlaylistCardsSection({
               ) : (
                 <div className={PROGRAM_CARD_STATS_SLOT} aria-hidden />
               )}
-              <div className={cn("mt-auto grid grid-cols-2 gap-1.5 sm:gap-2", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
+              {hasPublicDemo(pl.slug) ? (
+                <div className={cn("mt-auto shrink-0", PROGRAM_CARD_MOBILE_ACTIONS_FACE)}>
+                  <PackDemoWatchButton plan={pl.slug} compact />
+                </div>
+              ) : null}
+              <div
+                className={cn(
+                  "grid grid-cols-2 gap-1.5 sm:gap-2",
+                  PROGRAM_CARD_MOBILE_ACTIONS_FACE,
+                  hasPublicDemo(pl.slug) ? "mt-1" : "mt-auto",
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => openProgramDetails(pl)}

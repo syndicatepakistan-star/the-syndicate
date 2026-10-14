@@ -26,6 +26,7 @@ const DEMO_CDN_BASE = (
 const AGENTIC_TRAILER_DIR = "Programs Demos/Ai Automation Trailer";
 const AI_CONTENT_TRAILER_DIR = "Programs Demos/Ai Content Automation";
 const Trading_Technical_Analysis_DIR = "Programs Demos/Trading Trailer";
+const BUSINESS_MODELS_TRAILER_DIR = "Programs Demos/11 Business Models Trailer";
 /**
  * Pack-level trailers (whole vault / Money Mastery).
  * Leave blank until you upload a true pack trailer.
@@ -139,6 +140,30 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   trading_master_strategies: `${Trading_Technical_Analysis_DIR}/Starategies_converted.mp4`,
   trading_master_setups: `${Trading_Technical_Analysis_DIR}/Setups_converted.mp4`,
   trading_master_secrets: `${Trading_Technical_Analysis_DIR}/Secrets_converted.mp4`,
+
+  // ——— 11 Business Models (Level 1) ———
+  // level1-model-01 AI / N8N automation
+  "level1-model-01": `${BUSINESS_MODELS_TRAILER_DIR}/N8N AI Automation_converted.mp4`,
+  // level1-model-02 Social / YouTube AI automation
+  "level1-model-02": `${BUSINESS_MODELS_TRAILER_DIR}/Youtube AI Automation_converted.mp4`,
+  // level1-model-03 App Building Flutter
+  "level1-model-03": `${BUSINESS_MODELS_TRAILER_DIR}/App Building using Flutter_converted.mp4`,
+  // level1-model-04 Custom App / React
+  "level1-model-04": `${BUSINESS_MODELS_TRAILER_DIR}/Build a real react app_converted.mp4`,
+  // level1-model-05 Amazon KDP / eBook
+  "level1-model-05": `${BUSINESS_MODELS_TRAILER_DIR}/Amazon KDP_converted.mp4`,
+  // level1-model-06 Gaming / Unreal
+  "level1-model-06": `${BUSINESS_MODELS_TRAILER_DIR}/Building Games Using Unreal Engine_converted.mp4`,
+  // level1-model-07 Framer
+  "level1-model-07": `${BUSINESS_MODELS_TRAILER_DIR}/Framer Crash Course_converted.mp4`,
+  // level1-model-08 Canva
+  "level1-model-08": `${BUSINESS_MODELS_TRAILER_DIR}/Canva for Begineers_converted.mp4`,
+  // level1-model-09 Print On Demand
+  "level1-model-09": `${BUSINESS_MODELS_TRAILER_DIR}/Print On Demand_converted.mp4`,
+  // level1-model-10 Python
+  "level1-model-10": `${BUSINESS_MODELS_TRAILER_DIR}/Python Full Course_converted.mp4`,
+  // level1-model-11 WordPress Blog
+  "level1-model-11": `${BUSINESS_MODELS_TRAILER_DIR}/WordPress Blog_converted.mp4`,
 
 };
 

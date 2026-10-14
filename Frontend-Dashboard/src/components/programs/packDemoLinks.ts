@@ -169,22 +169,14 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   "level1-model-11": `${BUSINESS_MODELS_TRAILER_DIR}/WordPress Blog_converted.mp4`,
 
   // ——— Business Behaviour Psychology (Level 1) ———
-  // level1-psych-01 The 9 to 5 Exit Strategy
   "level1-psych-01": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/5.2 - 9 to 5 Exit_converted.mp4`,
   // level1-psych-02 Zero to One Million — not uploaded yet
-  // level1-psych-03 Hustle Hard
   "level1-psych-03": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.4 - Hustle Hard_converted.mp4`,
-  // level1-psych-04 Mastering Consistency
   "level1-psych-04": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/6.1 Mastering Consistency_converted.mp4`,
-  // level1-psych-05 The Secret To Transformation
   "level1-psych-05": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/3.2 - Secret to Transformation_converted.mp4`,
-  // level1-psych-06 The Compound Effect
   "level1-psych-06": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.1 - Compound effect_converted.mp4`,
-  // level1-psych-07 Micro Business Protocols
   "level1-psych-07": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/Micro Business protocol_converted.mp4`,
-  // level1-psych-08 Mastering Risk and Uncertainty
   "level1-psych-08": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.1 Mastering Risk_converted.mp4`,
-  // level1-psych-09 Business Warfare
   "level1-psych-09": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/03 - Businesswar fare_converted.mp4`,
   // level1-psych-10 Syndicate 13 Business Rules — not uploaded yet
   // level1-psych-11 Syndicate Money Philosophy — not uploaded yet

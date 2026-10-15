@@ -50,19 +50,17 @@ const KnightOfferDynamic = dynamic(
   },
 );
 
+/**
+ * Hide SSR LCP browse from interaction/paint only — keep its in-flow box.
+ * Collapsing to 1px/absolute was causing desktop CLS ~0.88.
+ */
 function hideSsrBrowseSibling() {
   const el = document.getElementById("programs-lcp-browse");
   if (!el) return;
-  // Keep layout box briefly out of paint (less jump than display:none mid-frame).
-  el.setAttribute("hidden", "");
   el.setAttribute("aria-hidden", "true");
   el.style.visibility = "hidden";
   el.style.pointerEvents = "none";
-  el.style.position = "absolute";
-  el.style.width = "1px";
-  el.style.height = "1px";
-  el.style.overflow = "hidden";
-  el.style.clipPath = "inset(50%)";
+  el.style.userSelect = "none";
 }
 
 function hasPackDetailsDeepLink(): boolean {
@@ -100,6 +98,14 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
 
   if (props.knightOnly) {
     return <KnightOfferDynamic {...props} />;
+  }
+  // Overlay interactive cards on the reserved SSR shell (same footprint, no layout collapse).
+  if (browseSibling) {
+    return (
+      <div className="programs-offers-interactive-layer absolute inset-0 z-[2] w-full">
+        <EliteOffersDynamic {...props} />
+      </div>
+    );
   }
   return <EliteOffersDynamic {...props} />;
 }

@@ -22,10 +22,19 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 @media (min-width:1024px){#syndicate-elite-offers{min-height:48rem}}
 .programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 14px 38px rgba(0,0,0,.58)}
 @media (min-width:640px){.programs-lcp-shell{min-height:34rem}}
-.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508}
+.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508;contain:layout paint;content-visibility:visible}
 @media (min-width:640px){.programs-lcp-media{max-height:15rem}}
-.programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
+.programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%;content-visibility:visible}
 .programs-offers-shell{position:relative;z-index:1;margin:0 auto;width:100%;max-width:min(100%,calc(80rem + 300px));overflow:visible}
+/* SSR shell sizes the host; interactive layer paints on top without collapsing layout */
+.programs-offers-lcp-host{position:relative;width:100%;isolation:isolate}
+.programs-offers-interactive-layer{position:absolute;inset:0;z-index:2;width:100%}
+.programs-vault-slot{min-height:22rem;border-radius:1rem;background:rgba(255,255,255,.04);contain:layout style paint}
+@media (min-width:640px){.programs-vault-slot{min-height:24rem}}
+/* Stable hamburger hit-box before Tailwind (tiny CLS on mobile) */
+.programs-page-root .hero-hamburger-pulse{
+  min-width:44px;min-height:44px;box-sizing:border-box;contain:layout
+}
 /* Match deferred programs-page.css compare badge — prevents $555/$333 balloon CLS */
 .programs-lcp-media .plan-offer-card__pack-price-badge--compare{
   display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;

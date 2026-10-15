@@ -79,7 +79,7 @@ export function ProgramsEliteOffersLcpFallback({
           {VAULT_SLOT_KEYS.map((key) => (
             <div
               key={key}
-              className="plan-offers-vault-cell min-h-[min(52dvh,22rem)] animate-pulse rounded-2xl bg-white/[0.04] sm:min-h-[24rem]"
+              className="plan-offers-vault-cell programs-vault-slot min-h-[22rem] rounded-2xl bg-white/[0.04] sm:min-h-[24rem]"
             />
           ))}
         </div>

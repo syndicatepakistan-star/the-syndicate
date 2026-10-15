@@ -177,10 +177,9 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   "level1-psych-06": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.1 - Compound effect_converted.mp4`,
   "level1-psych-07": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/Micro Business protocol_converted.mp4`,
   "level1-psych-08": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.1 Mastering Risk_converted.mp4`,
-  // R2 object name has two spaces after "03" (03  - …)
   "level1-psych-09": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/03  - Businesswar fare_converted.mp4`,
-  // level1-psych-10 Syndicate 13 Business Rules — not uploaded yet
-  // level1-psych-11 Syndicate Money Philosophy — not uploaded yet
+  "level1-psych-10": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/Business Rules_converted.mp4`,
+  "level1-psych-11": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/Money Philosophy_converted.mp4`,
 
 };
 

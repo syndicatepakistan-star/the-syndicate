@@ -88,9 +88,11 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        {/* Stable SSR Money Mastery LCP — interactive mounts after idle (normal flow swap). */}
-        <ProgramsEliteOffersLcpFallback markedAsLcpBrowse />
-        <ProgramsOfferSectionLazy size="large" shellHosted omitKnight browseSibling />
+        {/* Host keeps SSR height; interactive overlays after idle (no collapse CLS). */}
+        <div className="programs-offers-lcp-host relative z-[1] w-full">
+          <ProgramsEliteOffersLcpFallback markedAsLcpBrowse />
+          <ProgramsOfferSectionLazy size="large" shellHosted omitKnight browseSibling />
+        </div>
       </section>
       {/*
         Anchor + PROGRAMS heading stay in SSR HTML (not behind LazyWhenVisible) so

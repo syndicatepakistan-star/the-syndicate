@@ -16,10 +16,12 @@ const PROGRAMS_HASH_BOOT = `(function(){try{var h=(location.hash||"").replace(/^
 const PROGRAMS_LCP_CRITICAL_CSS = `
 .programs-page-root{background:#000;min-height:100dvh;min-width:0;overflow-x:clip;color:#fff}
 .programs-page-main{position:relative;z-index:2;width:100%;min-width:0;overflow-x:clip}
-/* Reserve elite stack height so vault row can appear without shoving library (no absolute overlay) */
+/* Reserve full elite stack (Money Mastery + 3 vault slots) so interactive hydrate does not CLS */
 #syndicate-elite-offers{position:relative;z-index:2;min-height:min(160vh,72rem)}
 @media (min-width:640px){#syndicate-elite-offers{min-height:56rem}}
 @media (min-width:1024px){#syndicate-elite-offers{min-height:48rem}}
+.programs-offers-lcp-host{position:relative;z-index:1;width:100%}
+.programs-offers-interactive-layer{position:absolute;top:0;left:0;right:0;z-index:2;width:100%;min-height:100%}
 /* Lighter first-paint shadow — heavy glow delays LCP paint on Slow 4G */
 .programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 8px 20px rgba(0,0,0,.45)}
 @media (min-width:640px){.programs-lcp-shell{min-height:34rem}}

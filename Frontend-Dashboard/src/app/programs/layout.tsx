@@ -17,29 +17,20 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 .programs-page-root{background:#000;min-height:100dvh;min-width:0;overflow-x:clip;color:#fff}
 .programs-page-main{position:relative;z-index:2;width:100%;min-width:0;overflow-x:clip}
 /* Reserve full elite stack (Money Mastery + 3 vault slots) so interactive hydrate does not CLS */
-#syndicate-elite-offers{position:relative;z-index:2;min-height:min(160vh,72rem);overflow:visible}
+#syndicate-elite-offers{position:relative;z-index:2;min-height:min(160vh,72rem)}
 @media (min-width:640px){#syndicate-elite-offers{min-height:56rem}}
 @media (min-width:1024px){#syndicate-elite-offers{min-height:48rem}}
-/* Swap host: in-flow reserve; never clips offer cards */
-.programs-elite-offers-swap{position:relative;width:100%;min-width:0;overflow:visible}
 .programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 14px 38px rgba(0,0,0,.58)}
 @media (min-width:640px){.programs-lcp-shell{min-height:34rem}}
-/* LCP media — paint ASAP; contain only paint (not size) so badge/content never clipped */
-.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508;content-visibility:visible;contain:paint}
+.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508}
 @media (min-width:640px){.programs-lcp-media{max-height:15rem}}
-.programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%;content-visibility:visible}
+.programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
 .programs-offers-shell{position:relative;z-index:1;margin:0 auto;width:100%;max-width:min(100%,calc(80rem + 300px));overflow:visible}
-/* Stable vault slots — fixed rem (no dvh jump); defer paint work until after LCP */
-.plan-offers-vault-cell{min-height:22rem;box-sizing:border-box}
-@media (min-width:640px){.plan-offers-vault-cell{min-height:24rem}}
-.programs-page-root:not(.programs-page-root--fx-ready) #programs-lcp-browse .plan-offers-vault-grid{
-  content-visibility:auto;contain-intrinsic-size:auto 22rem
-}
 /* Match deferred programs-page.css compare badge — prevents $555/$333 balloon CLS */
 .programs-lcp-media .plan-offer-card__pack-price-badge--compare{
   display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
   box-sizing:border-box!important;min-width:108px!important;width:auto!important;min-height:88px!important;height:auto!important;
-  padding:14px 16px!important;gap:8px!important;border-radius:6px!important;contain:layout;
+  padding:14px 16px!important;gap:8px!important;border-radius:6px!important;contain:layout size;
   background:#000!important;border:1px solid rgba(252,211,77,.7);color:#fff5dc!important;font-weight:900;line-height:1.15!important
 }
 .programs-lcp-media .plan-offer-card__pack-price-badge__compare{
@@ -70,16 +61,12 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 #programs-library{min-height:min(200vh,80rem)}
 #syndicate-elite-offers.programs-page-band{
   padding-left:clamp(.5rem,2.5vw,1rem);padding-right:clamp(.5rem,2.5vw,1rem);padding-top:1.5rem;
-  box-sizing:border-box;overflow:visible
+  box-sizing:border-box
 }
 @media (min-width:640px){
   #syndicate-elite-offers.programs-page-band{
     padding-left:clamp(1rem,3.2vw,1.5rem);padding-right:clamp(1rem,3.2vw,1.5rem);padding-top:2.5rem
   }
-}
-/* Hamburger — reserved min box from first paint (no shrink / no clip of bars) */
-.programs-page-root .site-top-nav .hero-hamburger-pulse{
-  box-sizing:border-box;min-width:44px;min-height:44px;flex-shrink:0
 }
 /* First-paint: keep heading/button colors, pause CLS-heavy animations until .programs-page-root--fx-ready */
 .programs-page-root:not(.programs-page-root--fx-ready) .public-heading-lightning,

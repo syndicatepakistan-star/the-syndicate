@@ -20,12 +20,9 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 #syndicate-elite-offers{position:relative;z-index:2;min-height:min(160vh,72rem)}
 @media (min-width:640px){#syndicate-elite-offers{min-height:56rem}}
 @media (min-width:1024px){#syndicate-elite-offers{min-height:48rem}}
-.programs-offers-lcp-host{position:relative;z-index:1;width:100%}
-.programs-offers-interactive-layer{position:absolute;top:0;left:0;right:0;z-index:2;width:100%;min-height:100%}
-/* Lighter first-paint shadow — heavy glow delays LCP paint on Slow 4G */
-.programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.programs-lcp-shell{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:1.5rem;border:2px solid rgba(252,211,77,.75);background:#000;box-shadow:0 14px 38px rgba(0,0,0,.58)}
 @media (min-width:640px){.programs-lcp-shell{min-height:34rem}}
-.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508;contain:paint}
+.programs-lcp-media{position:relative;aspect-ratio:4/3;max-height:13.5rem;min-height:0;flex-shrink:0;overflow:hidden;border-radius:1rem;border:2px solid rgba(255,255,255,.2);background:#050508}
 @media (min-width:640px){.programs-lcp-media{max-height:15rem}}
 .programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
 .programs-offers-shell{position:relative;z-index:1;margin:0 auto;width:100%;max-width:min(100%,calc(80rem + 300px));overflow:visible}
@@ -48,7 +45,7 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
   position:relative;display:inline-flex;max-width:100%;align-items:center;justify-content:center;
   box-sizing:border-box;overflow:hidden;border-radius:999px;
   border:1px solid rgba(212,175,57,.45);background:linear-gradient(180deg,rgba(18,18,18,.94),rgba(4,4,4,.98));
-  box-shadow:0 0 8px rgba(212,175,57,.1);
+  box-shadow:0 0 14px rgba(212,175,57,.14),inset 0 0 14px rgba(212,175,57,.06);
   min-height:3.25rem;padding:.75rem 1.25rem
 }
 @media (min-width:640px){.programs-gold-pill{min-height:4.25rem;padding:1rem 2.5rem}}
@@ -71,20 +68,13 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
     padding-left:clamp(1rem,3.2vw,1.5rem);padding-right:clamp(1rem,3.2vw,1.5rem);padding-top:2.5rem
   }
 }
-/* First-paint: no glow/filter/animation — cuts mobile LCP element-render-delay */
+/* First-paint: keep heading/button colors, pause CLS-heavy animations until .programs-page-root--fx-ready */
 .programs-page-root:not(.programs-page-root--fx-ready) .public-heading-lightning,
 .programs-page-root:not(.programs-page-root--fx-ready) .playlist-category-heading-lightning,
 .programs-page-root:not(.programs-page-root--fx-ready) .hero-hamburger-pulse,
 .programs-page-root:not(.programs-page-root--fx-ready) .level1-unlock-all-btn,
 .programs-page-root:not(.programs-page-root--fx-ready) .hamburger-attract{
-  animation:none!important;opacity:1!important;filter:none!important;text-shadow:none!important
-}
-.programs-page-root .public-heading-lightning{
-  text-shadow:0 0 6px var(--heading-neon-glow,rgba(212,175,57,.35));
-  filter:none
-}
-.programs-page-root.programs-page-root--fx-ready .public-heading-lightning{
-  text-shadow:0 0 8px var(--heading-neon-glow,rgba(212,175,57,.4))
+  animation:none!important;opacity:1!important;filter:none!important
 }
 `;
 

@@ -75,12 +75,11 @@ export function ProgramsEliteOffersLcpFallback({
           </article>
         </div>
         {/* Same footprint as LazyVaultOffersRow placeholders — prevents vault row CLS on hydrate */}
-        {/* Match LazyVaultOffersRow placeholders exactly (fixed rem — no dvh CLS). */}
         <div className="plan-offers-vault-grid grid w-full grid-cols-1 items-stretch gap-5 overflow-visible sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 lg:gap-12">
           {VAULT_SLOT_KEYS.map((key) => (
             <div
               key={key}
-              className="plan-offers-vault-cell min-h-[28rem] rounded-2xl bg-white/[0.04] sm:min-h-[34rem]"
+              className="plan-offers-vault-cell min-h-[min(52dvh,22rem)] animate-pulse rounded-2xl bg-white/[0.04] sm:min-h-[24rem]"
             />
           ))}
         </div>

@@ -50,18 +50,19 @@ const KnightOfferDynamic = dynamic(
   },
 );
 
-/**
- * Hide SSR browse WITHOUT collapsing its box.
- * Collapsing to 1px/absolute was desktop CLS ~0.88 (Lighthouse blames #programs-lcp-browse).
- * Interactive layer paints on top; SSR keeps height so the page does not jump.
- */
 function hideSsrBrowseSibling() {
   const el = document.getElementById("programs-lcp-browse");
   if (!el) return;
+  // Keep layout box briefly out of paint (less jump than display:none mid-frame).
+  el.setAttribute("hidden", "");
   el.setAttribute("aria-hidden", "true");
   el.style.visibility = "hidden";
   el.style.pointerEvents = "none";
-  el.style.userSelect = "none";
+  el.style.position = "absolute";
+  el.style.width = "1px";
+  el.style.height = "1px";
+  el.style.overflow = "hidden";
+  el.style.clipPath = "inset(50%)";
 }
 
 function hasPackDetailsDeepLink(): boolean {
@@ -100,15 +101,5 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
   if (props.knightOnly) {
     return <KnightOfferDynamic {...props} />;
   }
-
-  // Overlay on the SSR browse host — same unlock flow, no layout collapse CLS.
-  if (browseSibling) {
-    return (
-      <div className="programs-offers-interactive-layer absolute left-0 right-0 top-0 z-[2] w-full min-h-full">
-        <EliteOffersDynamic {...props} />
-      </div>
-    );
-  }
-
   return <EliteOffersDynamic {...props} />;
 }

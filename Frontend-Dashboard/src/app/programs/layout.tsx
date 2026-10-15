@@ -26,6 +26,14 @@ const PROGRAMS_LCP_CRITICAL_CSS = `
 @media (min-width:640px){.programs-lcp-media{max-height:15rem}}
 .programs-lcp-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
 .programs-offers-shell{position:relative;z-index:1;margin:0 auto;width:100%;max-width:min(100%,calc(80rem + 300px));overflow:visible}
+.programs-offers-swap-host{position:relative;width:100%;min-width:0}
+/* Vault slots: fixed rem (not dvh) — mobile URL-bar dvh changes were shifting cells */
+#programs-lcp-browse .plan-offers-vault-cell{min-height:22rem}
+@media (min-width:640px){#programs-lcp-browse .plan-offers-vault-cell{min-height:24rem}}
+/* Skip painting below-fold vault shells until needed — keeps LCP bandwidth/paint on Money Mastery */
+#programs-lcp-browse .plan-offers-vault-grid{
+  content-visibility:auto;contain-intrinsic-size:auto 72rem
+}
 /* Match deferred programs-page.css compare badge — prevents $555/$333 balloon CLS */
 .programs-lcp-media .plan-offer-card__pack-price-badge--compare{
   display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;

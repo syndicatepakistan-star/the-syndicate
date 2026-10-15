@@ -60,29 +60,29 @@ function hideSsrBrowseSibling() {
   if (!el || el.dataset.retired === "1") return;
   el.dataset.retired = "1";
 
-  const host =
-    el.closest(".programs-elite-offers-swap") ??
+  const hostEl =
+    (el.closest(".programs-elite-offers-swap") as HTMLElement | null) ??
     document.getElementById("syndicate-elite-offers");
   const browseH = Math.ceil(el.getBoundingClientRect().height);
-  if (host && browseH > 0) {
-    const locked = Math.max(browseH, Math.ceil(host.getBoundingClientRect().height));
-    host.style.minHeight = `${locked}px`;
+  if (hostEl && browseH > 0) {
+    const locked = Math.max(browseH, Math.ceil(hostEl.getBoundingClientRect().height));
+    hostEl.style.minHeight = `${locked}px`;
   }
 
   el.setAttribute("aria-hidden", "true");
-  el.hidden = true;
+  el.setAttribute("hidden", "");
   el.style.setProperty("display", "none", "important");
 
   // After interactive shell paints, match host to real content (grow OK, no cut).
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      if (!host) return;
-      const interactive = host.querySelector(
+      if (!hostEl) return;
+      const interactive = hostEl.querySelector(
         ".programs-offers-shell:not(#programs-lcp-browse)",
       ) as HTMLElement | null;
       if (!interactive) return;
       const nextH = Math.ceil(interactive.getBoundingClientRect().height);
-      if (nextH > 0) host.style.minHeight = `${nextH}px`;
+      if (nextH > 0) hostEl.style.minHeight = `${nextH}px`;
     });
   });
 }

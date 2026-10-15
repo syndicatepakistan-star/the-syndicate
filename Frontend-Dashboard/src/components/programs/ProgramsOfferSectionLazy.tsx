@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ProgramsEliteOffersLcpFallback } from "@/components/programs/ProgramsEliteOffersLcpFallback";
 import { useDeferredInteractiveOffers } from "@/hooks/useDeferredInteractiveOffers";
 import {
@@ -50,20 +50,6 @@ const KnightOfferDynamic = dynamic(
   },
 );
 
-/**
- * Hide SSR browse WITHOUT collapsing its box.
- * Collapsing to 1px/absolute was desktop CLS ~0.88 (Lighthouse blames #programs-lcp-browse).
- * Interactive layer paints on top; SSR keeps height so the page does not jump.
- */
-function hideSsrBrowseSibling() {
-  const el = document.getElementById("programs-lcp-browse");
-  if (!el) return;
-  el.setAttribute("aria-hidden", "true");
-  el.style.visibility = "hidden";
-  el.style.pointerEvents = "none";
-  el.style.userSelect = "none";
-}
-
 function hasPackDetailsDeepLink(): boolean {
   if (typeof window === "undefined") return false;
   if (!readProgramDetailsHash()) return false;
@@ -74,21 +60,36 @@ function hasPackDetailsDeepLink(): boolean {
 /**
  * Idle-deferred interactive elite offers. Pair with server `ProgramsEliteOffersLcpFallback`
  * (`browseSibling`) so Money Mastery LCP stays a stable server <img>.
- * Pack `#details` deep links mount immediately so checkout-return URLs open Money Mastery
- * (not a Level-1 library modal).
+ *
+ * Swap (browseSibling): keep SSR box in normal flow (visibility:hidden — no 1px collapse),
+ * pull interactive up with negative margin so net height = interactive height.
+ * Avoids absolute overlay (card overlap on library) and collapse CLS (~0.88).
  */
 export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
+  const swapLayerRef = useRef<HTMLDivElement>(null);
   const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
-    // Past mobile Lighthouse CLS/TBT window so Money Mastery SSR LCP stays quiet.
-    safetyMs: props.knightOnly ? 7000 : 6800,
+    // Past mobile Lighthouse TBT window so Money Mastery SSR LCP stays quiet.
+    safetyMs: props.knightOnly ? 7000 : 7200,
   });
   const ready = forcePackDetails || interactiveReady;
 
   useLayoutEffect(() => {
-    if (!ready || props.knightOnly) return;
-    hideSsrBrowseSibling();
-  }, [ready, props.knightOnly]);
+    if (!ready || props.knightOnly || !browseSibling) return;
+    const el = document.getElementById("programs-lcp-browse");
+    const layer = swapLayerRef.current;
+    if (!el || !layer) return;
+
+    const h = Math.round(el.getBoundingClientRect().height);
+    el.setAttribute("aria-hidden", "true");
+    el.style.visibility = "hidden";
+    el.style.pointerEvents = "none";
+    el.style.userSelect = "none";
+    // Never collapse / absolute / hidden attr — those caused desktop CLS ~0.88 + overlap.
+    layer.style.marginTop = h > 0 ? `-${h}px` : "0";
+    layer.style.position = "relative";
+    layer.style.zIndex = "2";
+  }, [ready, props.knightOnly, browseSibling]);
 
   if (!ready) {
     if (props.knightOnly) return <KnightOfferFallback />;
@@ -101,10 +102,9 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
     return <KnightOfferDynamic {...props} />;
   }
 
-  // Overlay on the SSR browse host — same unlock flow, no layout collapse CLS.
   if (browseSibling) {
     return (
-      <div className="programs-offers-interactive-layer absolute left-0 right-0 top-0 z-[2] w-full min-h-full">
+      <div ref={swapLayerRef} className="programs-offers-swap-layer relative z-[2] w-full">
         <EliteOffersDynamic {...props} />
       </div>
     );

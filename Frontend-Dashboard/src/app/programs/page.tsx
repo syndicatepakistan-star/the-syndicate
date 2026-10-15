@@ -88,8 +88,8 @@ export default async function ProgramsPage() {
           Syndicate behaviour psychology. Unlock a full pack or strike one course. Not campus theory. Operator
           curriculum.
         </p>
-        {/* Stable SSR Money Mastery LCP — interactive unlock overlays the same box after idle. */}
-        <div className="programs-offers-lcp-host relative w-full">
+        {/* Stable SSR LCP + deferred interactive — same swap host so retire never collapses layout. */}
+        <div className="programs-elite-offers-swap relative w-full min-w-0 overflow-visible">
           <ProgramsEliteOffersLcpFallback markedAsLcpBrowse />
           <ProgramsOfferSectionLazy size="large" shellHosted omitKnight browseSibling />
         </div>

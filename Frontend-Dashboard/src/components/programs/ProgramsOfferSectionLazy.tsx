@@ -51,16 +51,40 @@ const KnightOfferDynamic = dynamic(
 );
 
 /**
- * Hide SSR LCP browse from interaction/paint only — keep its in-flow box.
- * Collapsing to 1px/absolute was causing desktop CLS ~0.88.
+ * Retire SSR browse without collapsing layout (desktop CLS ~0.88 was from
+ * absolute/1px shrink). Lock host min-height first, then hide — interactive
+ * sibling fills the same reserved space; nothing below jumps.
  */
 function hideSsrBrowseSibling() {
   const el = document.getElementById("programs-lcp-browse");
-  if (!el) return;
+  if (!el || el.dataset.retired === "1") return;
+  el.dataset.retired = "1";
+
+  const host =
+    el.closest(".programs-elite-offers-swap") ??
+    document.getElementById("syndicate-elite-offers");
+  const browseH = Math.ceil(el.getBoundingClientRect().height);
+  if (host && browseH > 0) {
+    const locked = Math.max(browseH, Math.ceil(host.getBoundingClientRect().height));
+    host.style.minHeight = `${locked}px`;
+  }
+
   el.setAttribute("aria-hidden", "true");
-  el.style.visibility = "hidden";
-  el.style.pointerEvents = "none";
-  el.style.userSelect = "none";
+  el.hidden = true;
+  el.style.setProperty("display", "none", "important");
+
+  // After interactive shell paints, match host to real content (grow OK, no cut).
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!host) return;
+      const interactive = host.querySelector(
+        ".programs-offers-shell:not(#programs-lcp-browse)",
+      ) as HTMLElement | null;
+      if (!interactive) return;
+      const nextH = Math.ceil(interactive.getBoundingClientRect().height);
+      if (nextH > 0) host.style.minHeight = `${nextH}px`;
+    });
+  });
 }
 
 function hasPackDetailsDeepLink(): boolean {
@@ -98,14 +122,6 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
 
   if (props.knightOnly) {
     return <KnightOfferDynamic {...props} />;
-  }
-  // Overlay interactive cards on the reserved SSR shell (same footprint, no layout collapse).
-  if (browseSibling) {
-    return (
-      <div className="programs-offers-interactive-layer absolute inset-0 z-[2] w-full">
-        <EliteOffersDynamic {...props} />
-      </div>
-    );
   }
   return <EliteOffersDynamic {...props} />;
 }

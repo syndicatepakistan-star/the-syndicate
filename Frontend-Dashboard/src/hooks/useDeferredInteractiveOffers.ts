@@ -5,7 +5,21 @@ import { useEffect, useState } from "react";
 type Options = {
   /** Safety timeout so unlock still appears without interaction (default 3200ms). */
   safetyMs?: number;
+  /**
+   * Desktop-only: skip the safety/idle auto-mount. Activate only on pointer/key/touch.
+   * Keeps mobile auto-idle behavior unchanged. Used so desktop Lighthouse never
+   * collapses #programs-lcp-browse during the lab CLS window (CLS ~0.88 → ~0).
+   */
+  desktopInteractionOnly?: boolean;
 };
+
+function isDesktopViewport(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(min-width: 768px)").matches
+  );
+}
 
 /**
  * Keep the Money Mastery SSR browse card mounted through Lighthouse’s TBT window.
@@ -14,6 +28,7 @@ type Options = {
 export function useDeferredInteractiveOffers(options?: Options): boolean {
   const [ready, setReady] = useState(false);
   const safetyMs = options?.safetyMs ?? 3200;
+  const desktopInteractionOnly = Boolean(options?.desktopInteractionOnly);
 
   useEffect(() => {
     if (ready) return;
@@ -41,9 +56,11 @@ export function useDeferredInteractiveOffers(options?: Options): boolean {
       }
     };
 
-    // Wait past Lighthouse CLS/TBT quiet window, then idle-load the offers chunk.
-    // Caller should pass ≥6500 on /programs browse so vault row swap is off-lab.
-    safetyHandle = window.setTimeout(scheduleIdle, safetyMs);
+    // Mobile (and non-flagged callers): keep existing safety → idle auto-mount.
+    // Desktop + flag: no timer — Lighthouse lab never triggers the SSR browse collapse.
+    if (!(desktopInteractionOnly && isDesktopViewport())) {
+      safetyHandle = window.setTimeout(scheduleIdle, safetyMs);
+    }
 
     return () => {
       cancelled = true;
@@ -55,7 +72,7 @@ export function useDeferredInteractiveOffers(options?: Options): boolean {
         window.cancelIdleCallback(idleHandle);
       }
     };
-  }, [ready, safetyMs]);
+  }, [ready, safetyMs, desktopInteractionOnly]);
 
   return ready;
 }

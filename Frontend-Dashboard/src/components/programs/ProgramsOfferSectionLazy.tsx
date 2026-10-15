@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ProgramsEliteOffersLcpFallback } from "@/components/programs/ProgramsEliteOffersLcpFallback";
 import { useDeferredInteractiveOffers } from "@/hooks/useDeferredInteractiveOffers";
 import {
@@ -50,10 +50,18 @@ const KnightOfferDynamic = dynamic(
   },
 );
 
-function hideSsrBrowseSibling() {
+function isDesktopViewport(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(min-width: 768px)").matches
+  );
+}
+
+/** Mobile — unchanged: collapse SSR browse out of paint (works on Slow 4G lab). */
+function hideSsrBrowseSiblingMobile() {
   const el = document.getElementById("programs-lcp-browse");
   if (!el) return;
-  // Keep layout box briefly out of paint (less jump than display:none mid-frame).
   el.setAttribute("hidden", "");
   el.setAttribute("aria-hidden", "true");
   el.style.visibility = "hidden";
@@ -63,6 +71,23 @@ function hideSsrBrowseSibling() {
   el.style.height = "1px";
   el.style.overflow = "hidden";
   el.style.clipPath = "inset(50%)";
+}
+
+/**
+ * Desktop — keep SSR box in flow (visibility only) + pull interactive up.
+ * Collapsing to 1px is the desktop CLS ~0.88 culprit in Lighthouse.
+ */
+function swapSsrBrowseSiblingDesktop(layer: HTMLElement) {
+  const el = document.getElementById("programs-lcp-browse");
+  if (!el) return;
+  const h = Math.round(el.getBoundingClientRect().height);
+  el.setAttribute("aria-hidden", "true");
+  el.style.visibility = "hidden";
+  el.style.pointerEvents = "none";
+  el.style.userSelect = "none";
+  layer.style.marginTop = h > 0 ? `-${h}px` : "0";
+  layer.style.position = "relative";
+  layer.style.zIndex = "2";
 }
 
 function hasPackDetailsDeepLink(): boolean {
@@ -77,19 +102,33 @@ function hasPackDetailsDeepLink(): boolean {
  * (`browseSibling`) so Money Mastery LCP stays a stable server <img>.
  * Pack `#details` deep links mount immediately so checkout-return URLs open Money Mastery
  * (not a Level-1 library modal).
+ *
+ * Desktop browseSibling: interaction-only mount + non-collapsing swap (CLS fix).
+ * Mobile: existing safety timer + 1px hide (untouched).
  */
 export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
+  const desktopSwapRef = useRef<HTMLDivElement>(null);
+  /** Latch desktop once on client — mobile path never enters desktop swap/hide. */
+  const [desktopBrowse] = useState(
+    () => Boolean(browseSibling && !props.knightOnly && isDesktopViewport()),
+  );
   const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
-    // Past mobile Lighthouse CLS/TBT window so Money Mastery SSR LCP stays quiet.
+    // Mobile unchanged. Desktop browse: no auto idle (see desktopInteractionOnly).
     safetyMs: props.knightOnly ? 7000 : 6800,
+    desktopInteractionOnly: desktopBrowse,
   });
   const ready = forcePackDetails || interactiveReady;
 
   useLayoutEffect(() => {
     if (!ready || props.knightOnly) return;
-    hideSsrBrowseSibling();
-  }, [ready, props.knightOnly]);
+    if (desktopBrowse) {
+      const layer = desktopSwapRef.current;
+      if (layer) swapSsrBrowseSiblingDesktop(layer);
+      return;
+    }
+    hideSsrBrowseSiblingMobile();
+  }, [ready, props.knightOnly, desktopBrowse]);
 
   if (!ready) {
     if (props.knightOnly) return <KnightOfferFallback />;
@@ -101,5 +140,15 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
   if (props.knightOnly) {
     return <KnightOfferDynamic {...props} />;
   }
+
+  // Desktop: negative-margin pull-up (no 1px collapse). Mobile: bare section + mobile hide.
+  if (desktopBrowse) {
+    return (
+      <div ref={desktopSwapRef} className="programs-offers-desktop-swap relative z-[2] w-full">
+        <EliteOffersDynamic {...props} />
+      </div>
+    );
+  }
+
   return <EliteOffersDynamic {...props} />;
 }

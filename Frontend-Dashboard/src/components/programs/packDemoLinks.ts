@@ -130,7 +130,7 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
   // c25 The Secret NotebookLM Workflow Every YouTuber Needs!
   ai_content_c25: `${AI_CONTENT_TRAILER_DIR}/The Secret NotebookLM Workflow Every YouTuber Needs!_converted.mp4`,
   // c26 Create viral 3D documentary videos using ai(FERN 3D STYLE)
-  ai_content_c26: `${AI_CONTENT_TRAILER_DIR}/How to create viral 3D documentary videos using ai(FERN 3D STYLE)_converted.mp4`,
+  ai_content_c26: `${AI_CONTENT_TRAILER_DIR}/How to create viral 3D documentary  videos using ai(FERN 3D STYLE)_converted.mp4`,
   // c27 Make VIRAL Life Advice Videos Using Only FREE AI Tools
   ai_content_c27: `${AI_CONTENT_TRAILER_DIR}/How I Make VIRAL Life Advice Videos Using Only FREE AI Tools (FULL COURSE)_converted.mp4`,
   // c28 Create Viral inspirational finance Videos with Free AI Tools
@@ -170,7 +170,7 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
 
   // ——— Business Behaviour Psychology (Level 1) ———
   "level1-psych-01": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/5.2 - 9 to 5 Exit_converted.mp4`,
-  // level1-psych-02 Zero to One Million — not uploaded yet
+  "level1-psych-02": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/0 to 1 Million_converted.mp4`,
   "level1-psych-03": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.4 - Hustle Hard_converted.mp4`,
   "level1-psych-04": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/6.1 Mastering Consistency_converted.mp4`,
   "level1-psych-05": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/3.2 - Secret to Transformation_converted.mp4`,

@@ -33,94 +33,14 @@ function KnightOfferFallback() {
 }
 
 /**
- * Swap without collapsing layout (old 1px/`hidden` path caused desktop CLS ~0.88).
- * SSR stays in normal flow (visibility:hidden keeps its box). Interactive overlays it.
+ * Code-split offers — mount only after idle/interaction (no `ssr: false` bomb).
+ * Default dynamic SSR is fine when mounted; we simply do not mount during TBT window.
  */
-function parkSsrBrowseSibling(): boolean {
-  const el = document.getElementById("programs-lcp-browse");
-  if (!el) return true;
-
-  const host =
-    (document.getElementById("programs-offers-swap-host") as HTMLElement | null) ??
-    (el.parentElement as HTMLElement | null);
-  const interactive = host?.querySelector<HTMLElement>(
-    ".programs-offers-shell:not(#programs-lcp-browse)",
-  );
-  if (!interactive) return false;
-
-  if (host) {
-    host.classList.add("programs-offers-swap-host");
-    host.style.position = "relative";
-    const lockH = Math.max(el.offsetHeight, interactive.scrollHeight, interactive.offsetHeight, 1);
-    host.style.minHeight = `${lockH}px`;
-  }
-
-  // Keep SSR box in document flow — never absolute/1px/display:none.
-  el.removeAttribute("hidden");
-  el.setAttribute("aria-hidden", "true");
-  el.style.visibility = "hidden";
-  el.style.pointerEvents = "none";
-  el.style.position = "";
-  el.style.width = "";
-  el.style.height = "";
-  el.style.overflow = "";
-  el.style.clipPath = "";
-  el.style.zIndex = "";
-
-  // Interactive sits on top of the reserved SSR footprint.
-  interactive.style.position = "absolute";
-  interactive.style.left = "0";
-  interactive.style.right = "0";
-  interactive.style.top = "0";
-  interactive.style.width = "100%";
-  interactive.style.zIndex = "2";
-  interactive.style.margin = "0";
-  return true;
-}
-
-/** Runs in the same commit as interactive offers mount — before paint. */
-function ProgramsOffersSwapPark() {
-  useLayoutEffect(() => {
-    parkSsrBrowseSibling();
-  }, []);
-  return null;
-}
-
-function hasPackDetailsDeepLink(): boolean {
-  if (typeof window === "undefined") return false;
-  if (!readProgramDetailsHash()) return false;
-  const sp = new URLSearchParams(window.location.search);
-  return Boolean(parsePackDeepLinkSlug(sp.get("slug")) || sp.get("pack"));
-}
-
-type OfferSectionProps = {
-  size?: "large" | "compact";
-  shellHosted?: boolean;
-  omitKnight?: boolean;
-  knightOnly?: boolean;
-  highlightPack?: GlobePackKey;
-};
-
 const EliteOffersDynamic = dynamic(
-  () =>
-    import("@/components/programs/ProgramsOfferSection").then((m) => {
-      const Section = m.ProgramsOfferSection;
-      function EliteOffersWithPark(props: OfferSectionProps) {
-        return (
-          <>
-            <Section {...props} />
-            <ProgramsOffersSwapPark />
-          </>
-        );
-      }
-      return EliteOffersWithPark;
-    }),
-  { loading: () => null },
-);
-
-const EliteOffersDynamicWithFallback = dynamic(
   () => import("@/components/programs/ProgramsOfferSection").then((m) => m.ProgramsOfferSection),
-  { loading: () => <ProgramsEliteOffersLcpFallback /> },
+  {
+    loading: () => <ProgramsEliteOffersLcpFallback />,
+  },
 );
 
 const KnightOfferDynamic = dynamic(
@@ -131,6 +51,27 @@ const KnightOfferDynamic = dynamic(
 );
 
 /**
+ * Hide SSR browse WITHOUT collapsing its box.
+ * Collapsing to 1px/absolute was desktop CLS ~0.88 (Lighthouse blames #programs-lcp-browse).
+ * Interactive layer paints on top; SSR keeps height so the page does not jump.
+ */
+function hideSsrBrowseSibling() {
+  const el = document.getElementById("programs-lcp-browse");
+  if (!el) return;
+  el.setAttribute("aria-hidden", "true");
+  el.style.visibility = "hidden";
+  el.style.pointerEvents = "none";
+  el.style.userSelect = "none";
+}
+
+function hasPackDetailsDeepLink(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!readProgramDetailsHash()) return false;
+  const sp = new URLSearchParams(window.location.search);
+  return Boolean(parsePackDeepLinkSlug(sp.get("slug")) || sp.get("pack"));
+}
+
+/**
  * Idle-deferred interactive elite offers. Pair with server `ProgramsEliteOffersLcpFallback`
  * (`browseSibling`) so Money Mastery LCP stays a stable server <img>.
  * Pack `#details` deep links mount immediately so checkout-return URLs open Money Mastery
@@ -139,10 +80,15 @@ const KnightOfferDynamic = dynamic(
 export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Props) {
   const [forcePackDetails] = useState(() => hasPackDetailsDeepLink());
   const interactiveReady = useDeferredInteractiveOffers({
-    // Interaction unlocks immediately; auto idle stays past lab CLS window.
-    safetyMs: props.knightOnly ? 7000 : 7200,
+    // Past mobile Lighthouse CLS/TBT window so Money Mastery SSR LCP stays quiet.
+    safetyMs: props.knightOnly ? 7000 : 6800,
   });
   const ready = forcePackDetails || interactiveReady;
+
+  useLayoutEffect(() => {
+    if (!ready || props.knightOnly) return;
+    hideSsrBrowseSibling();
+  }, [ready, props.knightOnly]);
 
   if (!ready) {
     if (props.knightOnly) return <KnightOfferFallback />;
@@ -154,8 +100,15 @@ export function ProgramsOfferSectionLazy({ browseSibling = false, ...props }: Pr
   if (props.knightOnly) {
     return <KnightOfferDynamic {...props} />;
   }
+
+  // Overlay on the SSR browse host — same unlock flow, no layout collapse CLS.
   if (browseSibling) {
-    return <EliteOffersDynamic {...props} />;
+    return (
+      <div className="programs-offers-interactive-layer absolute left-0 right-0 top-0 z-[2] w-full min-h-full">
+        <EliteOffersDynamic {...props} />
+      </div>
+    );
   }
-  return <EliteOffersDynamicWithFallback {...props} />;
+
+  return <EliteOffersDynamic {...props} />;
 }

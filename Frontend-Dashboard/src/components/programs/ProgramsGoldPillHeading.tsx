@@ -34,10 +34,10 @@ const CHROME: Record<
 > = {
   gold: {
     shell:
-      "border border-[#d4af39]/45 shadow-[0_0_14px_rgba(212,175,57,0.14),inset_0_0_14px_rgba(212,175,57,0.06)] bg-[linear-gradient(180deg,rgba(18,18,18,0.94),rgba(4,4,4,0.98))]",
+      "border border-[#d4af39]/45 shadow-[0_0_8px_rgba(212,175,57,0.1)] bg-[linear-gradient(180deg,rgba(18,18,18,0.94),rgba(4,4,4,0.98))]",
     innerRing: "border-[#d4af39]/35",
     bar: "bg-[linear-gradient(180deg,transparent,rgba(212,175,57,0.72),transparent)]",
-    radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(212,175,57,0.14),transparent_55%)]",
+    radial: "bg-[radial-gradient(120%_130%_at_50%_-25%,rgba(212,175,57,0.1),transparent_55%)]",
     title: "",
   },
   /** Gold HUD title + violet/purple pill rim and outer bloom (membership hero). */

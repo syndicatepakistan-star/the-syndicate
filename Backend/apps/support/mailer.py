@@ -5,21 +5,29 @@ from django.conf import settings
 from accounts.syndicate_otp_mailer import send_syndicate_otp_html_email
 
 
+_DEFAULT_SUPPORT_INBOX = "syndicatepakistan@gmail.com"
+
+
 def _support_recipients(priority: str) -> list[str]:
     critical = (getattr(settings, "SUPPORT_EMAIL_CRITICAL", None) or "").strip()
     elevated = (getattr(settings, "SUPPORT_EMAIL_ELEVATED", None) or "").strip()
     normal = (getattr(settings, "SUPPORT_EMAIL_NORMAL", None) or "").strip()
-    fallback = (getattr(settings, "SUPPORT_EMAIL", None) or "").strip()
+    fallback = (getattr(settings, "SUPPORT_EMAIL", None) or "").strip() or _DEFAULT_SUPPORT_INBOX
 
+    chosen: list[str] = []
     if priority == "critical" and critical:
-        return [a.strip() for a in critical.split(",") if a.strip()]
-    if priority == "elevated" and elevated:
-        return [a.strip() for a in elevated.split(",") if a.strip()]
-    if normal:
-        return [a.strip() for a in normal.split(",") if a.strip()]
-    if fallback:
-        return [a.strip() for a in fallback.split(",") if a.strip()]
-    return []
+        chosen = [a.strip() for a in critical.split(",") if a.strip()]
+    elif priority == "elevated" and elevated:
+        chosen = [a.strip() for a in elevated.split(",") if a.strip()]
+    elif normal:
+        chosen = [a.strip() for a in normal.split(",") if a.strip()]
+    elif fallback:
+        chosen = [a.strip() for a in fallback.split(",") if a.strip()]
+
+    # Always notify the main Syndicate inbox.
+    if _DEFAULT_SUPPORT_INBOX not in chosen:
+        chosen.append(_DEFAULT_SUPPORT_INBOX)
+    return chosen
 
 
 def _priority_label(priority: str) -> str:

@@ -297,7 +297,7 @@ INSTALLED_APPS.extend(
     ]
 )
 
-SUPPORT_EMAIL = (os.environ.get("SUPPORT_EMAIL") or "").strip()
+SUPPORT_EMAIL = (os.environ.get("SUPPORT_EMAIL") or "syndicatepakistan@gmail.com").strip()
 SUPPORT_EMAIL_NORMAL = (os.environ.get("SUPPORT_EMAIL_NORMAL") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_ELEVATED = (os.environ.get("SUPPORT_EMAIL_ELEVATED") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_CRITICAL = (os.environ.get("SUPPORT_EMAIL_CRITICAL") or SUPPORT_EMAIL_ELEVATED or SUPPORT_EMAIL).strip()

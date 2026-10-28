@@ -600,7 +600,12 @@ export default function QuizPage() {
     setCurrentIndex((prev) => Math.min(prev + 1, total - 1));
   }
 
+  const submitOnceRef = useRef(false);
+
   async function handleSubmit() {
+    // Guard timer auto-submit + click / Strict Mode double-fire (prevents 3× WhatsApp).
+    if (submitOnceRef.current || submitting) return;
+
     const validationMessage = validateLeadForm();
     if (validationMessage) {
       setLeadStep("contact");
@@ -617,6 +622,7 @@ export default function QuizPage() {
       return;
     }
 
+    submitOnceRef.current = true;
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -657,6 +663,7 @@ export default function QuizPage() {
       clearQuizProgress();
       router.push("/quiz/result");
     } catch (err: unknown) {
+      submitOnceRef.current = false;
       setSubmitError(err instanceof Error ? err.message : "Failed to submit quiz answers");
     } finally {
       setSubmitting(false);

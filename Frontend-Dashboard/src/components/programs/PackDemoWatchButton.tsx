@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -10,6 +10,24 @@ import {
   VIMEO_PACK_DEMO_LABEL,
 } from "@/components/programs/packDemoLinks";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+
+type HlsConstructor = typeof import("hls.js").default;
+type HlsInstance = InstanceType<HlsConstructor>;
+type HlsModule = { default: HlsConstructor };
+
+let hlsModulePromise: Promise<HlsModule> | null = null;
+
+function loadHlsModule(): Promise<HlsModule> {
+  if (!hlsModulePromise) {
+    hlsModulePromise = import("hls.js") as Promise<HlsModule>;
+  }
+  return hlsModulePromise;
+}
+
+function isHlsDemoUrl(url: string): boolean {
+  const clean = url.split("?")[0]?.toLowerCase() || "";
+  return clean.endsWith(".m3u8");
+}
 
 type Props = {
   /** Pack or module plan slug (e.g. agentic_ai, agentic_ai_c14). */
@@ -25,6 +43,7 @@ type Props = {
 /**
  * Opens a lightweight player only after click.
  * Video src is set on open — never downloads on Programs first paint.
+ * Supports public MP4 and HLS (.m3u8) demos on the CDN.
  */
 export function PackDemoWatchButton({
   plan,
@@ -37,6 +56,8 @@ export function PackDemoWatchButton({
   const demoUrl = resolvePackDemoUrl(plan);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<HlsInstance | null>(null);
   const label = compact ? MODULE_DEMO_LABEL : VIMEO_PACK_DEMO_LABEL;
 
   useEffect(() => setMounted(true), []);
@@ -50,6 +71,72 @@ export function PackDemoWatchButton({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !demoUrl) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+
+    const destroyHls = () => {
+      const hls = hlsRef.current;
+      hlsRef.current = null;
+      if (hls) {
+        try {
+          hls.destroy();
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    destroyHls();
+
+    if (!isHlsDemoUrl(demoUrl)) {
+      video.src = demoUrl;
+      video.load();
+      return () => {
+        cancelled = true;
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+
+    // Safari / iOS: native HLS
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = demoUrl;
+      video.load();
+      return () => {
+        cancelled = true;
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+
+    void loadHlsModule().then((mod) => {
+      if (cancelled || !videoRef.current) return;
+      const Hls = mod.default;
+      if (!Hls.isSupported()) {
+        videoRef.current.src = demoUrl;
+        videoRef.current.load();
+        return;
+      }
+      const hls = new Hls({ enableWorker: true });
+      hlsRef.current = hls;
+      hls.loadSource(demoUrl);
+      hls.attachMedia(videoRef.current);
+    });
+
+    return () => {
+      cancelled = true;
+      destroyHls();
+      if (videoRef.current) {
+        videoRef.current.removeAttribute("src");
+        videoRef.current.load();
+      }
+    };
+  }, [open, demoUrl]);
 
   const onOpen = useCallback(() => {
     if (!demoUrl) return;
@@ -118,8 +205,8 @@ export function PackDemoWatchButton({
                 </div>
                 <div className="aspect-video w-full bg-black">
                   <video
+                    ref={videoRef}
                     key={demoUrl}
-                    src={demoUrl}
                     controls
                     playsInline
                     preload="metadata"

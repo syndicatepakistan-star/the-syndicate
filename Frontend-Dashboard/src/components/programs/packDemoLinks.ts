@@ -1,5 +1,6 @@
 /**
- * PUBLIC demo / trailer MP4s only (R2 `syn-demos` → cdn.the-syndicate.com).
+ * PUBLIC demo / trailer media (R2 `syn-demos` → cdn.the-syndicate.com).
+ * Supports MP4 and HLS (`index.m3u8` + segments in the same folder).
  *
  * Two levels (independent of private Stream / syn-bucket):
  * 1) Pack trailers  → Watch Demo on Money Mastery / vault pack modals
@@ -170,7 +171,7 @@ const MODULE_DEMO_OBJECT_KEYS: Record<string, string> = {
 
   // ——— Business Behaviour Psychology (Level 1) ———
   "level1-psych-01": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/5.2 - 9 to 5 Exit_converted.mp4`,
-  "level1-psych-02": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/0 to 1 Million_converted.mp4`,
+  "level1-psych-02": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/0 to 1M/index.m3u8`,
   "level1-psych-03": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/4.4 - Hustle Hard_converted.mp4`,
   "level1-psych-04": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/6.1 Mastering Consistency_converted.mp4`,
   "level1-psych-05": `${BUSINESS_PSYCHOLOGY_TRAILER_DIR}/3.2 - Secret to Transformation_converted.mp4`,

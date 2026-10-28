@@ -322,6 +322,7 @@ def save_quiz_lead(request):
                     phone=phone,
                     intake_url=intake_url,
                     diagnosis="Completed" if has_result else "Not Completed",
+                    user_pk=user.pk,
                 )
             except Exception:
                 pass
@@ -453,7 +454,7 @@ def submit_answers(request):
     intake_ref = ensure_intake_ref(user)
     intake_url = intake_url_for_user(user)
 
-    Result.objects.update_or_create(
+    _result_obj, result_created = Result.objects.update_or_create(
         user=user,
         defaults={
             "score": score,
@@ -478,8 +479,24 @@ def submit_answers(request):
         archetype_catalog=recommendation.get("archetype_catalog"),
     )
 
-    # Klaviyo + lead webhook (diagnosis Completed) off the request path.
+    # Klaviyo always; Completed WhatsApp webhook at most once (dedupe races/retries).
     from .background_jobs import run_in_background
+    from .lead_webhook import claim_completed_webhook_once
+
+    # Claim before spawning threads so parallel submit HTTP calls share one winner.
+    should_notify_completed = bool(phone) and claim_completed_webhook_once(
+        email=email,
+        phone=phone,
+        user_pk=user.pk,
+    )
+    if phone and not should_notify_completed:
+        import logging
+
+        logging.getLogger(__name__).info(
+            "Skipping duplicate Completed lead webhook email=%s result_created=%s",
+            (email or "").strip().lower(),
+            result_created,
+        )
 
     def _sync_submit_side_effects() -> None:
         try:
@@ -502,7 +519,7 @@ def submit_answers(request):
         except Exception:
             pass
 
-        if phone:
+        if should_notify_completed:
             try:
                 from .lead_webhook import post_lead_webhook
 
@@ -512,6 +529,9 @@ def submit_answers(request):
                     phone=phone,
                     intake_url=intake_url,
                     diagnosis="Completed",
+                    user_pk=user.pk,
+                    # Already claimed above — do not double-claim inside post.
+                    skip_completed_dedupe=True,
                 )
             except Exception:
                 pass

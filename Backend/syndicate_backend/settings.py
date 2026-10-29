@@ -301,6 +301,9 @@ SUPPORT_EMAIL = (os.environ.get("SUPPORT_EMAIL") or "syndicatepakistan@gmail.com
 SUPPORT_EMAIL_NORMAL = (os.environ.get("SUPPORT_EMAIL_NORMAL") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_ELEVATED = (os.environ.get("SUPPORT_EMAIL_ELEVATED") or SUPPORT_EMAIL).strip()
 SUPPORT_EMAIL_CRITICAL = (os.environ.get("SUPPORT_EMAIL_CRITICAL") or SUPPORT_EMAIL_ELEVATED or SUPPORT_EMAIL).strip()
+# Whapi (same channel as WhatsApp Bot) — used to text support confirmations when user has a phone.
+WHAPI_API_URL = (os.environ.get("WHAPI_API_URL") or "https://gate.whapi.cloud/").strip() or "https://gate.whapi.cloud/"
+WHAPI_TOKEN = (os.environ.get("WHAPI_TOKEN") or "").strip()
 # Comma-separated inbox for affiliate withdrawal alerts (falls back to SUPPORT_EMAIL_*).
 AFFILIATE_WITHDRAWAL_ALERT_EMAIL = (
     os.environ.get("AFFILIATE_WITHDRAWAL_ALERT_EMAIL") or "syndicatepakistan@gmail.com"

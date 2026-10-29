@@ -12,6 +12,7 @@ from apps.portal.permissions import IsAuthenticatedStrict
 
 from .mailer import send_support_staff_alert, send_support_user_confirmation
 from .models import SupportMessage, SupportThread
+from .whatsapp import resolve_user_whatsapp_phone, send_support_whatsapp_confirmation
 
 MIN_MESSAGE_LEN = 12
 MAX_MESSAGE_LEN = 4000
@@ -154,7 +155,22 @@ def support_threads(request):
 
     try:
         if user_email:
-            send_support_user_confirmation(to_email=user_email, thread_id=str(thread.id), priority=priority)
+            send_support_user_confirmation(
+                to_email=user_email,
+                priority=priority,
+                is_follow_up=False,
+            )
+    except Exception:
+        pass
+
+    try:
+        phone = resolve_user_whatsapp_phone(user)
+        if phone:
+            send_support_whatsapp_confirmation(
+                phone=phone,
+                priority=priority,
+                is_follow_up=False,
+            )
     except Exception:
         pass
 
@@ -202,6 +218,27 @@ def support_thread_detail(request, thread_id):
             message=message.strip(),
             is_follow_up=True,
         )
+    except Exception:
+        pass
+
+    try:
+        if user_email:
+            send_support_user_confirmation(
+                to_email=user_email,
+                priority=thread.priority,
+                is_follow_up=True,
+            )
+    except Exception:
+        pass
+
+    try:
+        phone = resolve_user_whatsapp_phone(user)
+        if phone:
+            send_support_whatsapp_confirmation(
+                phone=phone,
+                priority=thread.priority,
+                is_follow_up=True,
+            )
     except Exception:
         pass
 

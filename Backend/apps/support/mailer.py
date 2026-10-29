@@ -4,6 +4,7 @@ from django.conf import settings
 
 from accounts.syndicate_otp_mailer import send_syndicate_otp_html_email
 
+from .whatsapp import support_user_message
 
 _DEFAULT_SUPPORT_INBOX = "syndicatepakistan@gmail.com"
 
@@ -96,19 +97,29 @@ def send_support_staff_alert(
         send_syndicate_otp_html_email(addr, subject, html)
 
 
-def send_support_user_confirmation(*, to_email: str, thread_id: str, priority: str) -> None:
+def send_support_user_confirmation(
+    *,
+    to_email: str,
+    priority: str,
+    is_follow_up: bool = False,
+) -> None:
     if not to_email:
         return
     label = _priority_label(priority)
-    subject = f"We received your support request ({label})"
+    body = support_user_message(priority=priority, is_follow_up=is_follow_up)
+    subject = (
+        f"We received your support reply ({label})"
+        if is_follow_up
+        else f"We received your support request ({label})"
+    )
+    safe_body = body.replace("<", "&lt;").replace(">", "&gt;")
     html = (
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:system-ui,sans-serif;background:#0a0f14;color:#e2e8f0;padding:24px;">'
         "<tr><td>"
         '<table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;border:1px solid #cda936;border-radius:8px;">'
         '<tr><td style="padding:20px;">'
         '<h1 style="margin:0 0 12px;font-size:18px;color:#facc15;">Request received</h1>'
-        f'<p style="font-size:14px;line-height:1.6;color:#cbd5e1;">Your request <strong>#{str(thread_id)[:8]}</strong> '
-        f"({label}) is in our queue. Check dashboard Support for replies.</p>"
+        f'<p style="margin:0;font-size:14px;line-height:1.6;color:#cbd5e1;">{safe_body}</p>'
         "</td></tr></table>"
         "</td></tr></table>"
     )
